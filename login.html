@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Inventário - Login</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .login-header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .login-header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .login-form {
+            padding: 40px 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group i {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            margin-top: 12px;
+        }
+
+        .password-toggle {
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: #667eea;
+        }
+
+        .login-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: auto;
+        }
+
+        .forgot-password {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-password:hover {
+            color: #764ba2;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+        }
+
+        .loading.active {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c33;
+            display: none;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3c3;
+            display: none;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 12px;
+            border-top: 1px solid #eee;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                margin: 10px;
+            }
+            
+            .login-header {
+                padding: 30px 20px;
+            }
+            
+            .login-form {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1><i class="fas fa-boxes"></i> Sistema de Inventário</h1>
+            <p>Faça login para acessar o sistema</p>
+        </div>
+        
+        <div class="login-form">
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Usuário</label>
+                    <input type="text" id="username" name="username" required autocomplete="username">
+                    <i class="fas fa-user"></i>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password">
+                    <i class="fas fa-eye password-toggle" id="passwordToggle"></i>
+                </div>
+                
+                <div class="login-options">
+                    <div class="remember-me">
+                        <input type="checkbox" id="rememberMe" name="rememberMe">
+                        <label for="rememberMe">Lembrar-me</label>
+                    </div>
+                    <a href="#" class="forgot-password">Esqueci minha senha</a>
+                </div>
+                
+                <button type="submit" class="login-btn" id="loginBtn">
+                    <span class="loading" id="loading"></span>
+                    <span id="btnText">Entrar</span>
+                </button>
+            </form>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2024 Sistema de Inventário. Todos os direitos reservados.</p>
+        </div>
+    </div>
+
+    <script>
+        // Toggle password visibility
+        const passwordToggle = document.getElementById('passwordToggle');
+        const passwordInput = document.getElementById('password');
+        
+        passwordToggle.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+        
+        // Form submission
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const loading = document.getElementById('loading');
+        const btnText = document.getElementById('btnText');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Hide previous messages
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            
+            // Show loading state
+            loginBtn.disabled = true;
+            loading.classList.add('active');
+            btnText.textContent = 'Entrando...';
+            
+            // Simulate login request (replace with actual API call)
+            setTimeout(() => {
+                // Reset button state
+                loginBtn.disabled = false;
+                loading.classList.remove('active');
+                btnText.textContent = 'Entrar';
+                
+                // Demo credentials check
+                if (username === 'admin' && password === 'admin123') {
+                    successMessage.textContent = 'Login realizado com sucesso! Redirecionando...';
+                    successMessage.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
+                } else {
+                    errorMessage.textContent = 'Usuário ou senha incorretos. Tente novamente.';
+                    errorMessage.style.display = 'block';
+                    
+                    // Shake animation for error
+                    loginForm.style.animation = 'shake 0.5s';
+                    setTimeout(() => {
+                        loginForm.style.animation = '';
+                    }, 500);
+                }
+            }, 2000);
+        });
+        
+        // Add shake animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Focus on username field when page loads
+        window.addEventListener('load', function() {
+            document.getElementById('username').focus();
+        });
+        
+        // Enter key navigation
+        document.getElementById('username').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('password').focus();
+            }
+        });
+    </script>
+</body>
+</html>

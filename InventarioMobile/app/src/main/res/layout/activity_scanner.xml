@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".presentation.scanner.ScannerActivity">
+
+    <!-- AppBar -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationIconTint="@android:color/white" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Conteúdo principal -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <!-- Card com instruções -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            app:cardElevation="4dp"
+            app:cardCornerRadius="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Scanner QR Code"
+                    android:textAppearance="?attr/textAppearanceHeadline6"
+                    android:textColor="?attr/colorPrimary"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Posicione o QR Code dentro da área de captura"
+                    android:textAppearance="?attr/textAppearanceBody2" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card contador de coletas -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="16dp"
+            app:cardElevation="4dp"
+            app:cardCornerRadius="8dp"
+            app:cardBackgroundColor="?attr/colorSecondaryContainer">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_check_circle"
+                    android:tint="?attr/colorOnSecondaryContainer"
+                    android:layout_marginEnd="12dp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Itens coletados:"
+                    android:textAppearance="?attr/textAppearanceBody1"
+                    android:textColor="?attr/colorOnSecondaryContainer" />
+
+                <TextView
+                    android:id="@+id/textColetasCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textAppearance="?attr/textAppearanceHeadline6"
+                    android:textColor="?attr/colorOnSecondaryContainer"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Status do scanner -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp">
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="12dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/textStatus"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Iniciando câmera..."
+                android:textAppearance="?attr/textAppearanceBody1"
+                android:textColor="?attr/colorOnSurface"
+                android:gravity="center" />
+
+        </LinearLayout>
+
+        <!-- Área de visualização da câmera (será gerenciada pelo ZXing) -->
+        <FrameLayout
+            android:id="@+id/cameraPreview"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_margin="16dp"
+            android:background="@color/black">
+
+            <!-- Overlay com bordas do scanner -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/scanner_overlay" />
+
+            <!-- Texto de instrução sobreposto -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Posicione o QR Code aqui"
+                android:textColor="@color/white"
+                android:textAppearance="?attr/textAppearanceBody1"
+                android:background="@color/black_transparent"
+                android:padding="8dp"
+                android:layout_marginTop="200dp" />
+
+        </FrameLayout>
+
+        <!-- Card com informações do patrimônio -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardPatrimonioInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:visibility="gone"
+            app:cardElevation="4dp"
+            app:cardCornerRadius="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Patrimônio Encontrado"
+                    android:textAppearance="?attr/textAppearanceHeadline6"
+                    android:textColor="?attr/colorPrimary"
+                    android:gravity="center" />
+
+                <TextView
+                    android:id="@+id/textPatrimonioNumero"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textAppearance="?attr/textAppearanceSubtitle1"
+                    android:textStyle="bold"
+                    tools:text="Número: 123456" />
+
+                <TextView
+                    android:id="@+id/textPatrimonioDescricao"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textAppearance="?attr/textAppearanceBody2"
+                    tools:text="Descrição: Computador Desktop" />
+
+                <TextView
+                    android:id="@+id/textPatrimonioSala"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textAppearance="?attr/textAppearanceBody2"
+                    tools:text="Sala: Laboratório de Informática" />
+
+                <TextView
+                    android:id="@+id/textPatrimonioStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textAppearance="?attr/textAppearanceBody2"
+                    android:textStyle="bold"
+                    tools:text="Status: Não coletado" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Botões de ação -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="16dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonColetar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="Coletar"
+                android:visibility="gone"
+                style="@style/Widget.MaterialComponents.Button" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonRetry"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="Tentar Novamente"
+                android:visibility="gone"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonCancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Cancelar"
+                style="@style/Widget.MaterialComponents.Button.TextButton" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

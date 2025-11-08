@@ -1,0 +1,191 @@
+package com.inventario.service;
+
+import com.inventario.dao.InventarioDAO;
+import com.inventario.dao.InventarioSetorDAO;
+import com.inventario.dao.ParticipanteInventarioDAO;
+import com.inventario.model.Inventario;
+import com.inventario.model.ParticipanteInventario;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Serviço para operações com Inventário
+ * 
+ * @author Sistema de Inventário
+ * @version 1.0.0
+ */
+@Service
+@Transactional
+public class InventarioService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(InventarioService.class);
+    
+    private final InventarioDAO inventarioDAO;
+    private final InventarioSetorDAO inventarioSetorDAO;
+    private final ParticipanteInventarioDAO participanteInventarioDAO;
+    
+    public InventarioService() {
+        this.inventarioDAO = new InventarioDAO();
+        this.inventarioSetorDAO = new InventarioSetorDAO();
+        this.participanteInventarioDAO = new ParticipanteInventarioDAO();
+    }
+    
+    public InventarioService(InventarioDAO inventarioDAO, 
+                            InventarioSetorDAO inventarioSetorDAO,
+                            ParticipanteInventarioDAO participanteInventarioDAO) {
+        this.inventarioDAO = inventarioDAO;
+        this.inventarioSetorDAO = inventarioSetorDAO;
+        this.participanteInventarioDAO = participanteInventarioDAO;
+    }
+    
+    /**
+     * Lista todos os inventários
+     */
+    public List<Inventario> listarTodos() {
+        return inventarioDAO.listarInventarios();
+    }
+    
+    /**
+     * Lista todos os inventários (alias para listarTodos)
+     */
+    public List<Inventario> listarInventarios() {
+        return listarTodos();
+    }
+    
+    /**
+     * Busca inventário por ID
+     */
+    public Inventario buscarPorId(int id) {
+        return inventarioDAO.buscarInventarioPorId(id);
+    }
+    
+    /**
+     * Busca inventário ativo
+     */
+    public Inventario buscarInventarioAtivo() {
+        return inventarioDAO.buscarInventarioPorStatus("ATIVO");
+    }
+    
+    /**
+     * Salva um novo inventário
+     */
+    public boolean salvar(Inventario inventario) throws BusinessException {
+        validarInventario(inventario);
+        Integer id = inventarioDAO.inserir(inventario);
+        if (id != null && id > 0) {
+            inventario.setId(id);
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Atualiza um inventário existente
+     */
+    public boolean atualizar(Inventario inventario) throws BusinessException {
+        validarInventario(inventario);
+        return inventarioDAO.atualizar(inventario);
+    }
+    
+    /**
+     * Finaliza um inventário
+     */
+    public boolean finalizar(int idInventario) throws BusinessException {
+        return inventarioDAO.finalizar(idInventario);
+    }
+    
+    /**
+     * Salva configuração de setores do inventário
+     */
+    public boolean salvarConfiguracaoSetores(int idInventario, boolean incluirTodos, List<Integer> idsSetores) 
+            throws BusinessException {
+        return inventarioSetorDAO.salvarConfiguracaoSetores(idInventario, incluirTodos, idsSetores);
+    }
+    
+    /**
+     * Salva configuração de participantes do inventário
+     */
+    public boolean salvarConfiguracaoParticipantes(int idInventario, boolean incluirTodos, List<Integer> idsUsuarios) 
+            throws BusinessException {
+        try {
+            // Limpar participantes existentes
+            List<ParticipanteInventario> participantesExistentes = participanteInventarioDAO.listarParticipantesInventario(idInventario);
+            for (ParticipanteInventario participante : participantesExistentes) {
+                participanteInventarioDAO.removerParticipante(idInventario, participante.getIdUsuario());
+            }
+            
+            // Adicionar novos participantes
+            boolean sucesso = true;
+            for (Integer idUsuario : idsUsuarios) {
+                try {
+                    ParticipanteInventario participante = new ParticipanteInventario(idInventario, idUsuario, "COLETOR");
+                    boolean adicionado = participanteInventarioDAO.adicionarParticipante(participante);
+                    if (!adicionado) {
+                        sucesso = false;
+                    }
+                } catch (Exception e) {
+                    logger.error("Erro ao adicionar participante {} ao inventário {}", idUsuario, idInventario, e);
+                    sucesso = false;
+                }
+            }
+            return sucesso;
+        } catch (Exception e) {
+            logger.error("Erro ao salvar configuração de participantes do inventário: {}", idInventario, e);
+            throw new BusinessException("Erro ao salvar configuração de participantes: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Busca participantes de um inventário
+     */
+    public List<ParticipanteInventario> buscarParticipantes(int idInventario) {
+        try {
+            return participanteInventarioDAO.listarParticipantesInventario(idInventario);
+        } catch (Exception e) {
+            logger.error("Erro ao buscar participantes do inventário: {}", idInventario, e);
+            return new ArrayList<>();
+        }
+    }
+    
+    /**
+     * Busca inventário por status
+     */
+    public Inventario buscarPorStatus(String status) {
+        try {
+            return inventarioDAO.buscarInventarioPorStatus(status);
+        } catch (Exception e) {
+            logger.error("Erro ao buscar inventário por status: {}", status, e);
+            return null;
+        }
+    }
+    
+    /**
+     * Valida dados do inventário
+     */
+    private void validarInventario(Inventario inventario) throws BusinessException {
+        if (inventario == null) {
+            throw new BusinessException("Inventário não pode ser nulo");
+        }
+        
+        if (inventario.getNome() == null || inventario.getNome().trim().isEmpty()) {
+            throw new BusinessException("Nome do inventário é obrigatório");
+        }
+        
+        if (inventario.getDataInicio() == null) {
+            throw new BusinessException("Data de início é obrigatória");
+        }
+        
+        if (inventario.getDataFim() == null) {
+            throw new BusinessException("Data de fim é obrigatória");
+        }
+        
+        if (inventario.getDataInicio().after(inventario.getDataFim())) {
+            throw new BusinessException("Data de início não pode ser posterior à data de fim");
+        }
+    }
+}

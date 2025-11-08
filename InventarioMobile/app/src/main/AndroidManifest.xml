@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Permissões necessárias -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
+    <!-- Permissões de câmera com configurações específicas para Android 14 -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    
+    <!-- Permissões de armazenamento -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    
+    <!-- Permissões de localização -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    
+    <!-- Permissão de vibração para feedback tátil -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    
+    <!-- Permissão de áudio para busca por voz -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    
+    <!-- Permissões de biometria -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+    
+    <!-- Permissões específicas para Android 14+ -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
+    <!-- Permissões para compatibilidade com Android 14 -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    
+    <!-- Features de câmera com configurações específicas para Android 14 -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="true" />
+    <uses-feature
+        android:name="android.hardware.camera2"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.flash"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.front"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.any"
+        android:required="true" />
+
+    <application
+        android:name=".InventarioMobileApplication"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.InventarioMobile"
+        android:usesCleartextTraffic="true"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:requestLegacyExternalStorage="false"
+        android:preserveLegacyExternalStorage="false"
+        android:enableOnBackInvokedCallback="true"
+        tools:targetApi="34">
+        
+        <!-- Splash Screen Activity -->
+        <activity
+            android:name=".ui.splash.SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.InventarioMobile.Splash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+        <!-- Main Activity -->
+        <activity
+            android:name=".presentation.main.MainActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
+        <!-- Login Activity -->
+        <activity
+            android:name=".presentation.login.LoginActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize" />
+        
+        <!-- Scanner Activity -->
+        <activity
+            android:name=".presentation.scanner.ScannerActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar" />
+        
+        <!-- Sala Selection Activity -->
+        <activity
+            android:name=".presentation.sala.SalaSelectionActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
+        <!-- Manual Collection Activity -->
+        <activity
+            android:name=".presentation.coleta.ManualCollectionActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
+        <!-- Collection View Activity -->
+        <activity
+            android:name=".presentation.coleta.CollectionViewActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
+        <!-- Descricao Selection Activity -->
+        <activity
+            android:name=".presentation.descricao.DescricaoSelectionActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
+        <!-- Network Diagnostic Activity -->
+        <activity
+            android:name=".presentation.activity.NetworkDiagnosticActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
+        <!-- Settings Activity -->
+        <activity
+            android:name=".presentation.settings.SettingsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
+        <!-- Statistics Activity -->
+        <activity
+            android:name=".presentation.statistics.StatisticsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
+        <!-- Sync Activity -->
+        <activity
+            android:name=".presentation.sync.SyncActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
+        <!-- Pending Collections Activity -->
+        <activity
+            android:name=".presentation.sync.PendingCollectionsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
+        <!-- Inventario Activity -->
+        <activity
+            android:name=".presentation.inventario.InventarioActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustPan" />
+        
+        <!-- Filtros Activity -->
+        <activity
+            android:name=".presentation.inventario.FiltrosActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
+        <!-- Work Manager para sincronização -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
+        
+        <!-- File Provider para compartilhamento de arquivos -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+        
+    </application>
+
+</manifest>

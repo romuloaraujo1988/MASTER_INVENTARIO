@@ -1,0 +1,4 @@
+Host=localhost;Port=5432;Database=sispatrimonio;Username=postgres;Password=Romulo@2020;
+localhost:5432
+sispatrimonio
+postgres

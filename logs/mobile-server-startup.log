@@ -1,0 +1,7 @@
+[2025-11-02 15:06:40] [INFO] Iniciando script de servidor mobile
+[2025-11-02 15:06:40] [INFO] Java encontrado: openjdk version "21.0.7" 2025-04-15 LTS
+[2025-11-02 15:06:40] [WARN] Porta 8081 está em uso. Tentando liberar...
+[2025-11-02 15:06:42] [WARN] Parando processo na porta 8081 (PID: 14688)
+[2025-11-02 15:06:49] [INFO] Compilando projeto...
+[2025-11-02 15:06:52] [INFO] Iniciando servidor mobile com argumentos: spring-boot:run -Dspring-boot.run.profiles=mobile -Dspring-boot.run.main-class=com.inventario.MobileApiApplication -Dspring-boot.run.jvmArguments="-Dspring.profiles.active=mobile -Dserver.port=8081 -Dserver.address=0.0.0.0 -Dspring.config.location=classpath:/ -Dlogging.level.com.inventario=DEBUG"
+[2025-11-02 15:06:56] [INFO] Servidor mobile finalizado

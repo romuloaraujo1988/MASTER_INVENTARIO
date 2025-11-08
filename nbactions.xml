@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+        <action>
+            <actionName>run</actionName>
+            <packagings>
+                <packaging>jar</packaging>
+            </packagings>
+            <goals>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:3.1.0:exec</goal>
+            </goals>
+            <properties>
+                <exec.vmArgs></exec.vmArgs>
+                <exec.args>${exec.vmArgs} -classpath %classpath ${exec.mainClass} ${exec.appArgs}</exec.args>
+                <exec.appArgs></exec.appArgs>
+                <exec.mainClass>com.inventario.SistemaInventarioApplication</exec.mainClass>
+                <exec.executable>java</exec.executable>
+            </properties>
+        </action>
+        <action>
+            <actionName>debug</actionName>
+            <packagings>
+                <packaging>jar</packaging>
+            </packagings>
+            <goals>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:3.1.0:exec</goal>
+            </goals>
+            <properties>
+                <exec.vmArgs>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address}</exec.vmArgs>
+                <exec.args>${exec.vmArgs} -classpath %classpath ${exec.mainClass} ${exec.appArgs}</exec.args>
+                <exec.appArgs></exec.appArgs>
+                <exec.mainClass>com.inventario.SistemaInventarioApplication</exec.mainClass>
+                <exec.executable>java</exec.executable>
+                <jpda.listen>true</jpda.listen>
+            </properties>
+        </action>
+        <action>
+            <actionName>profile</actionName>
+            <packagings>
+                <packaging>jar</packaging>
+            </packagings>
+            <goals>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:3.1.0:exec</goal>
+            </goals>
+            <properties>
+                <exec.vmArgs></exec.vmArgs>
+                <exec.args>${exec.vmArgs} -classpath %classpath ${exec.mainClass} ${exec.appArgs}</exec.args>
+                <exec.mainClass>com.inventario.SistemaInventarioApplication</exec.mainClass>
+                <exec.executable>java</exec.executable>
+            </properties>
+        </action>
+        <action>
+            <actionName>CUSTOM-mobile-server</actionName>
+            <displayName>Iniciar Servidor Mobile</displayName>
+            <packagings>
+                <packaging>jar</packaging>
+            </packagings>
+            <goals>
+                <goal>spring-boot:run</goal>
+            </goals>
+            <properties>
+                <spring-boot.run.profiles>mobile</spring-boot.run.profiles>
+                <spring-boot.run.main-class>com.inventario.MobileApiApplication</spring-boot.run.main-class>
+                <spring-boot.run.jvmArguments>-Dspring.profiles.active=mobile -Dserver.port=8081</spring-boot.run.jvmArguments>
+            </properties>
+        </action>
+        <action>
+            <actionName>CUSTOM-mobile-server-debug</actionName>
+            <displayName>Debug Servidor Mobile</displayName>
+            <packagings>
+                <packaging>jar</packaging>
+            </packagings>
+            <goals>
+                <goal>spring-boot:run</goal>
+            </goals>
+            <properties>
+                <spring-boot.run.profiles>mobile</spring-boot.run.profiles>
+                <spring-boot.run.main-class>com.inventario.MobileApiApplication</spring-boot.run.main-class>
+                <spring-boot.run.jvmArguments>-Dspring.profiles.active=mobile -Dserver.port=8081 -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005</spring-boot.run.jvmArguments>
+                <jpda.listen>true</jpda.listen>
+            </properties>
+        </action>
+</actions>

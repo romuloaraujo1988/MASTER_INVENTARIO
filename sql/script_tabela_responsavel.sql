@@ -1,0 +1,42 @@
+-- Script para criação da TABELA_RESPONSAVEL
+-- Sistema de Inventário IFMT
+
+CREATE TABLE IF NOT EXISTS TABELA_RESPONSAVEL (
+    ID SERIAL PRIMARY KEY,
+    NOME VARCHAR(255) NOT NULL,
+    CPF VARCHAR(14) UNIQUE,
+    EMAIL VARCHAR(255),
+    TELEFONE VARCHAR(20),
+    CARGO VARCHAR(100),
+    ID_SETOR INTEGER,
+    ATIVO BOOLEAN DEFAULT TRUE,
+    DATA_CADASTRO TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ID_SETOR) REFERENCES TABELA_SETOR(ID)
+);
+
+-- Índices
+CREATE INDEX IF NOT EXISTS idx_responsavel_nome ON TABELA_RESPONSAVEL(NOME);
+CREATE INDEX IF NOT EXISTS idx_responsavel_cpf ON TABELA_RESPONSAVEL(CPF);
+CREATE INDEX IF NOT EXISTS idx_responsavel_setor ON TABELA_RESPONSAVEL(ID_SETOR);
+CREATE INDEX IF NOT EXISTS idx_responsavel_ativo ON TABELA_RESPONSAVEL(ATIVO);
+
+-- Comentários
+COMMENT ON TABLE TABELA_RESPONSAVEL IS 'Tabela de responsáveis pelos patrimônios';
+COMMENT ON COLUMN TABELA_RESPONSAVEL.NOME IS 'Nome completo do responsável';
+COMMENT ON COLUMN TABELA_RESPONSAVEL.CPF IS 'CPF do responsável';
+COMMENT ON COLUMN TABELA_RESPONSAVEL.EMAIL IS 'Email de contato';
+COMMENT ON COLUMN TABELA_RESPONSAVEL.TELEFONE IS 'Telefone de contato';
+COMMENT ON COLUMN TABELA_RESPONSAVEL.CARGO IS 'Cargo/função do responsável';
+COMMENT ON COLUMN TABELA_RESPONSAVEL.ID_SETOR IS 'Setor ao qual o responsável pertence';
+COMMENT ON COLUMN TABELA_RESPONSAVEL.ATIVO IS 'Indica se o responsável está ativo';
+
+-- Inserção de dados básicos
+INSERT INTO TABELA_RESPONSAVEL (NOME, CARGO, EMAIL) VALUES 
+('ADMINISTRADOR GERAL', 'Administrador', 'admin@ifmt.edu.br'),
+('COORDENADOR TI', 'Coordenador de TI', 'ti@ifmt.edu.br'),
+('COORDENADOR ENSINO', 'Coordenador de Ensino', 'ensino@ifmt.edu.br'),
+('BIBLIOTECÁRIO CHEFE', 'Bibliotecário', 'biblioteca@ifmt.edu.br'),
+('RESPONSÁVEL LABORATÓRIOS', 'Técnico de Laboratório', 'laboratorios@ifmt.edu.br')
+ON CONFLICT DO NOTHING;
+
+PRINT 'Tabela RESPONSAVEL criada com sucesso!';

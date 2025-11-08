@@ -1,0 +1,647 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <!-- Spring Boot Parent para gerenciamento de dependências -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.0</version>
+        <relativePath/>
+    </parent>
+    
+    <groupId>com.inventario</groupId>
+    <artifactId>sistema-inventario</artifactId>
+    <version>1.2.0</version>
+    <packaging>jar</packaging>
+    <name>Sistema de Coleta de Inventário</name>
+    <description>Sistema de Controle de Coleta de Inventário de Patrimônio</description>
+    
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        
+        <!-- Versões mais recentes do Apache POI e dependências -->
+        <poi.version>5.4.0</poi.version>
+        <commons-io.version>2.18.0</commons-io.version>
+        <commons-compress.version>1.27.1</commons-compress.version>
+        <commons-collections4.version>4.5.0-M2</commons-collections4.version>
+        <commons-math3.version>3.6.1</commons-math3.version>
+        <log4j.version>2.24.3</log4j.version>
+        <xmlbeans.version>5.2.2</xmlbeans.version>
+    </properties>
+    
+    <!-- Dependency Management para forçar versões específicas -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- Apache POI 5.x - Versões atualizadas -->
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-scratchpad</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            
+            <!-- Commons IO - Versão compatível com POI 5.x -->
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.version}</version>
+            </dependency>
+            
+            <!-- Commons Compress - Versão compatível com POI 5.x -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${commons-compress.version}</version>
+            </dependency>
+            
+            <!-- Commons Collections4 - Necessário para POI 5.x -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-collections4</artifactId>
+                <version>${commons-collections4.version}</version>
+            </dependency>
+            
+            <!-- Commons Math3 - Necessário para POI 5.x -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-math3</artifactId>
+                <version>${commons-math3.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    
+    <dependencies>
+        <!-- Spring Boot Starters -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+        <!-- Spring Boot Log4j2 Starter -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+        
+        <!-- SLF4J API - Explicitamente adicionado -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+        <!-- Jakarta Servlet API - Necessário para Spring Boot 3.x -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+        </dependency>
+        
+        <!-- Database -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        
+        <!-- SQLite for offline mode -->
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.44.1.0</version>
+        </dependency>
+        
+        <!-- Utilities -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        
+        <!-- Javax Annotation API for @PostConstruct -->
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <version>1.3.2</version>
+        </dependency>
+        
+        <!-- Charts for Dashboard -->
+        <dependency>
+            <groupId>org.jfree</groupId>
+            <artifactId>jfreechart</artifactId>
+            <version>1.5.5</version>
+        </dependency>
+        
+        <!-- Apache POI 5.x for Excel Export - Versões controladas por dependencyManagement -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-scratchpad</artifactId>
+        </dependency>
+        
+        <!-- Apache Commons Collections4 - Necessário para Apache POI 5.x -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+        </dependency>
+        
+        <!-- Apache Commons IO - Versão compatível com POI 5.x -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+        
+        <!-- Apache Commons Compress - Versão compatível com POI 5.x -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+        </dependency>
+        
+        <!-- Apache Commons Math3 - Necessário para POI 5.x -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+        </dependency>
+        
+        <!-- SparseBitSet - Dependência do POI 5.x -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>SparseBitSet</artifactId>
+            <version>1.3</version>
+        </dependency>
+        
+        <!-- XMLBeans - Necessário para Apache POI OOXML -->
+        <dependency>
+            <groupId>org.apache.xmlbeans</groupId>
+            <artifactId>xmlbeans</artifactId>
+            <version>${xmlbeans.version}</version>
+        </dependency>
+        
+        <!-- Apache POI OOXML Schemas FULL - Contém todos os schemas necessários -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml-full</artifactId>
+            <version>${poi.version}</version>
+        </dependency>
+        
+        <!-- Curvesapi - Necessário para Apache POI -->
+        <dependency>
+            <groupId>com.github.virtuald</groupId>
+            <artifactId>curvesapi</artifactId>
+            <version>1.08</version>
+        </dependency>
+        
+        <!-- iText for PDF Export -->
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>kernel</artifactId>
+            <version>7.2.5</version>
+        </dependency>
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>layout</artifactId>
+            <version>7.2.5</version>
+        </dependency>
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>io</artifactId>
+            <version>7.2.5</version>
+        </dependency>
+        
+        <!-- ZXing for QR Code generation and reading -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.2</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>3.5.2</version>
+        </dependency>
+        
+        <!-- ========================================= -->
+        <!-- INTELIGÊNCIA ARTIFICIAL                   -->
+        <!-- ========================================= -->
+
+        <!-- ========================================= -->
+        <!-- API MOBILE - JWT E SEGURANÇA             -->
+        <!-- ========================================= -->
+        
+        <!-- JWT Dependencies -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.11.5</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.11.5</version>
+            <scope>runtime</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.11.5</version>
+            <scope>runtime</scope>
+        </dependency>
+        
+        <!-- Swagger/OpenAPI Documentation -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.0.2</version>
+        </dependency>
+        
+        <!-- Cache Redis (opcional para produção) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+            <optional>true</optional>
+        </dependency>
+        
+        <!-- ========================================= -->
+        <!-- ESCALABILIDADE E PERFORMANCE             -->
+        <!-- ========================================= -->
+        
+        <!-- Spring Boot Cache -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        
+        <!-- Caffeine Cache (cache em memória de alta performance) -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+        
+        <!-- Micrometer Prometheus (métricas para Prometheus) -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        
+        <!-- Micrometer Core (métricas) -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+        </dependency>
+        
+        <!-- Testing -->
+        <dependency>                                          
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    
+    <build>
+        <finalName>sistema-inventario-${project.version}</finalName>
+        
+        <plugins>
+            <!-- Maven Compiler Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            
+            <!-- Maven Dependency Plugin para copiar dependências -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/mobile-server/lib</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <!-- Maven JAR Plugin para criar JAR sem dependências -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>com.inventario.MobileApiApplication</mainClass>
+                        </manifest>
+                    </archive>
+                    <outputDirectory>${project.build.directory}/mobile-server</outputDirectory>
+                </configuration>
+            </plugin>
+            
+            <!-- Antrun Plugin para organizar estrutura final -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>prepare-mobile-server</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <!-- Criar diretório mobile-server se não existir -->
+                                <mkdir dir="${project.build.directory}/mobile-server"/>
+                                
+                                <!-- Copiar arquivos de configuração -->
+                                <copy todir="${project.build.directory}/mobile-server">
+                                    <fileset dir="${project.build.outputDirectory}">
+                                        <include name="application*.properties"/>
+                                        <include name="application*.yml"/>
+                                    </fileset>
+                                </copy>
+                                
+                                <!-- Criar script de execução Windows -->
+                                <echo file="${project.build.directory}/mobile-server/start-mobile-server.bat">@echo off
+echo Iniciando Servidor Mobile do Sistema de Inventario...
+java -jar sistema-inventario-${project.version}.jar --spring.profiles.active=mobile
+pause</echo>
+                                
+                                <!-- Criar script de execução Linux/Mac -->
+                                <echo file="${project.build.directory}/mobile-server/start-mobile-server.sh">#!/bin/bash
+echo "Iniciando Servidor Mobile do Sistema de Inventario..."
+java -jar sistema-inventario-${project.version}.jar --spring.profiles.active=mobile</echo>
+                                
+                                <!-- Tornar script executável no Linux/Mac -->
+                                <chmod file="${project.build.directory}/mobile-server/start-mobile-server.sh" perm="755"/>
+                                
+                                <!-- Criar arquivo README -->
+                                <echo file="${project.build.directory}/mobile-server/README.txt">SERVIDOR MOBILE - SISTEMA DE INVENTARIO
+========================================
+
+Este diretório contém o servidor mobile do Sistema de Inventário.
+
+ESTRUTURA:
+- sistema-inventario-${project.version}.jar: Aplicação principal
+- lib/: Dependências externas
+- application-mobile.properties: Configurações do servidor mobile
+- start-mobile-server.bat: Script para Windows
+- start-mobile-server.sh: Script para Linux/Mac
+
+EXECUÇÃO:
+Windows: Execute start-mobile-server.bat
+Linux/Mac: Execute ./start-mobile-server.sh
+Manual: java -jar sistema-inventario-${project.version}.jar --spring.profiles.active=mobile
+
+ACESSO:
+URL: http://localhost:8080/inventario
+Swagger: http://localhost:8080/inventario/swagger-ui.html
+
+REQUISITOS:
+- Java 21 ou superior
+- PostgreSQL configurado e rodando
+- Configurações de banco em application-mobile.properties</echo>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <!-- Spring Boot Maven Plugin -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.inventario.SistemaInventarioApplication</mainClass>
+                    <executable>true</executable>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>exec</classifier>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <!-- Exec Maven Plugin para executar a aplicação -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>com.inventario.SistemaInventarioApplication</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    
+    <!-- Profile para criar fat JAR quando necessário -->
+    <profiles>
+        <!-- Profile para Mobile API -->
+        <profile>
+            <id>mobile</id>
+            <properties>
+                <spring.profiles.active>mobile</spring.profiles.active>
+                <main.class>com.inventario.MobileApiApplication</main.class>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <configuration>
+                            <mainClass>com.inventario.MobileApiApplication</mainClass>
+                            <profiles>
+                                <profile>mobile</profile>
+                            </profiles>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        
+        <profile>
+            <id>fat-jar</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <configuration>
+                            <mainClass>com.inventario.SistemaInventarioApplication</mainClass>
+                            <executable>true</executable>
+                            <layout>JAR</layout>
+                            <skip>false</skip>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>repackage</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        
+        <!-- Perfil para gerar JAR otimizado (similar ao NetBeans) -->
+        <profile>
+            <id>thin-jar</id>
+            <properties>
+                <!-- Desabilita completamente o Spring Boot plugin -->
+                <spring-boot.repackage.skip>true</spring-boot.repackage.skip>
+            </properties>
+            <build>
+                <plugins>
+                    <!-- Maven JAR Plugin - Gera JAR pequeno com classpath externo -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>3.3.0</version>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <addClasspath>true</addClasspath>
+                                    <classpathPrefix>lib/</classpathPrefix>
+                                    <mainClass>com.inventario.SistemaInventarioApplication</mainClass>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </plugin>
+                    
+                    <!-- Maven Dependency Plugin - Copia dependências para lib/ -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>3.6.1</version>
+                        <executions>
+                            <execution>
+                                <id>copy-dependencies</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>copy-dependencies</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                                    <overWriteReleases>false</overWriteReleases>
+                                    <overWriteSnapshots>false</overWriteSnapshots>
+                                    <overWriteIfNewer>true</overWriteIfNewer>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

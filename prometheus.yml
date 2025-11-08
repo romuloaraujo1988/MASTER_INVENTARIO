@@ -1,0 +1,59 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'inventario-mobile'
+    environment: 'production'
+
+# Alertmanager configuration (opcional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
+
+# Regras de alerta
+rule_files:
+  # - "alerts.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Monitorar o próprio Prometheus
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Monitorar aplicação Spring Boot
+  - job_name: 'inventario-mobile'
+    metrics_path: '/inventario/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['mobile-api:8081']
+        labels:
+          application: 'inventario-mobile-api'
+          instance: 'mobile-api-1'
+    
+    # Se tiver múltiplas instâncias, adicionar aqui:
+    # - targets: ['mobile-api-2:8081']
+    #   labels:
+    #     application: 'inventario-mobile-api'
+    #     instance: 'mobile-api-2'
+    # - targets: ['mobile-api-3:8081']
+    #   labels:
+    #     application: 'inventario-mobile-api'
+    #     instance: 'mobile-api-3'
+
+  # Monitorar PostgreSQL (requer postgres_exporter)
+  # - job_name: 'postgres'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+
+  # Monitorar Redis (requer redis_exporter)
+  # - job_name: 'redis'
+  #   static_configs:
+  #     - targets: ['redis-exporter:9121']
+
+  # Monitorar Nginx
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    metrics_path: '/nginx_status'

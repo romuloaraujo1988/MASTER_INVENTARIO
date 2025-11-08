@@ -1,0 +1,280 @@
+@startuml Diagrama de Classes - Controllers e Services
+!theme plain
+title Sistema de Inventário - Controllers e Services
+
+package "Controllers" {
+    class AIEnhancedChatbotController {
+        -ChatbotService chatbotService
+        -AIIntegrationService aiService
+        +processMessage(String): ChatbotResponse
+        +getConversationHistory(): List<ChatMessage>
+        +resetConversation(): void
+        +provideFeedback(String, boolean): void
+        +getSystemStatus(): Map<String, Object>
+    }
+
+    class LegalDocumentController {
+        -LegalDocumentProcessor processor
+        -LegalKnowledgeIntegrator integrator
+        +uploadDocument(MultipartFile): ResponseEntity
+        +processDocument(Integer): ResponseEntity
+        +searchDocuments(String): ResponseEntity
+        +getDocumentAnalysis(Integer): ResponseEntity
+        +deleteDocument(Integer): ResponseEntity
+    }
+
+    class ChatbotController {
+        -ChatbotService chatbotService
+        +sendMessage(ChatMessage): ChatbotResponse
+        +getHistory(): List<ChatMessage>
+        +clearHistory(): void
+        +provideFeedback(FeedbackRequest): void
+    }
+
+    class AIIntegrationController {
+        -AIIntegrationService aiService
+        -AIDataAnalysisService dataAnalysisService
+        +categorizePatrimonio(Integer): ResponseEntity
+        +predictMaintenance(Integer): ResponseEntity
+        +analyzeUsagePattern(Integer): ResponseEntity
+        +getAIStatistics(): ResponseEntity
+        +trainModel(String): ResponseEntity
+    }
+
+    class AIPerformanceController {
+        -AIPerformanceAnalyzer analyzer
+        +getPerformanceMetrics(): ResponseEntity
+        +optimizeModel(String): ResponseEntity
+        +getModelAccuracy(String): ResponseEntity
+        +generatePerformanceReport(): ResponseEntity
+    }
+}
+
+package "Services" {
+    class ChatbotService {
+        -PatrimonioDAO patrimonioDAO
+        -SetorDAO setorDAO
+        -AIIntegrationService aiService
+        -AIDataAnalysisService aiDataAnalysisService
+        -LegalKnowledgeIntegrator legalIntegrator
+        -EnhancedFeedbackProcessor feedbackProcessor
+        +processMessage(String): ChatbotResponse
+        +searchPatrimonio(String): List<Patrimonio>
+        +generateReport(String): String
+        +analyzeQuery(String): String
+        +provideFeedback(String, boolean): void
+        +getConversationHistory(): List<ChatMessage>
+        +resetConversation(): void
+    }
+
+    class AIIntegrationService {
+        -PatrimonioCategorizationService categorizationService
+        -PredictiveAnalysisService predictiveService
+        -ExecutorService executorService
+        +initialize(): void
+        +categorizePatrimonio(Patrimonio): CategorizationResult
+        +predictMaintenance(Patrimonio): MaintenancePrediction
+        +analyzeUsagePattern(List<Patrimonio>): UsagePrediction
+        +trainCategorizationModel(List<Patrimonio>): void
+        +getModelStatistics(): Map<String, Object>
+    }
+
+    class AIDataAnalysisService {
+        -BusinessAnalyticsEngine analyticsEngine
+        -NeuralPatternAnalyzer patternAnalyzer
+        +analyzePatrimonioData(List<Patrimonio>): AnalyticalQueryResult
+        +generateInsights(String): List<String>
+        +detectAnomalies(List<Patrimonio>): List<String>
+        +predictTrends(String): PredictionResult
+        +optimizeInventoryDistribution(): Map<String, Object>
+    }
+
+    class CampusService {
+        -CampusDAO campusDAO
+        +inserirCampus(Campus): Integer
+        +atualizarCampus(Campus): boolean
+        +buscarCampusPorId(Integer): Campus
+        +listarCampusAtivos(): List<Campus>
+        +excluirCampus(Integer): boolean
+        +validarCampus(Campus): boolean
+        +campusExistePorNome(String): boolean
+    }
+
+    class AutenticacaoService {
+        -UsuarioDAO usuarioDAO
+        +autenticar(String, String): Usuario
+        +validarSessao(String): boolean
+        +alterarSenha(Integer, String, String): boolean
+        +bloquearUsuario(Integer): void
+        +desbloquearUsuario(Integer): void
+        +registrarTentativaLogin(Integer): void
+    }
+
+    class QRCodeService {
+        -QRCodeDAO qrCodeDAO
+        -PatrimonioDAO patrimonioDAO
+        +gerarQRCode(Integer): String
+        +validarQRCode(String): boolean
+        +buscarPatrimonioPorQRCode(String): Patrimonio
+        +atualizarQRCode(Integer, String): boolean
+        +desativarQRCode(Integer): boolean
+    }
+
+    class DescricaoResumoService {
+        +gerarResumo(String): String
+        +extrairPalavrasChave(String): List<String>
+        +categorizarDescricao(String): String
+        +validarDescricao(String): boolean
+    }
+}
+
+package "AI Services" {
+    class PatrimonioCategorizationService {
+        -WekaClassifier classifier
+        -TrainingDataValidator validator
+        +initializeModel(): void
+        +categorizePatrimonio(Patrimonio): CategorizationResult
+        +trainModel(List<Patrimonio>): void
+        +validateTrainingData(List<Patrimonio>): ValidationResult
+        +getModelAccuracy(): double
+    }
+
+    class PredictiveAnalysisService {
+        -MaintenancePredictor maintenancePredictor
+        -UsageAnalyzer usageAnalyzer
+        -DepreciationCalculator depreciationCalculator
+        +initializeModels(): void
+        +predictMaintenance(Patrimonio): MaintenancePrediction
+        +analyzeUsagePattern(List<Patrimonio>): UsagePrediction
+        +calculateDepreciation(Patrimonio): DepreciationPrediction
+        +optimizeMaintenanceSchedule(): List<MaintenancePrediction>
+    }
+
+    class LegalDocumentProcessor {
+        -DocumentClassifier classifier
+        -TextExtractor extractor
+        +processDocument(LegalDocument): ProcessingResult
+        +extractText(byte[]): String
+        +classifyDocument(String): DocumentType
+        +analyzeContent(String): AnalysisResult
+        +generateSummary(String): String
+    }
+
+    class LegalKnowledgeIntegrator {
+        -KnowledgeBaseService knowledgeBase
+        -SemanticAnalyzer semanticAnalyzer
+        +integrateDocument(LegalDocument): void
+        +searchKnowledge(String): List<KnowledgeEntry>
+        +updateKnowledgeBase(String, String): void
+        +analyzeSemanticSimilarity(String, String): double
+        +generateLegalInsights(String): List<String>
+    }
+
+    class BusinessAnalyticsEngine {
+        -StatisticalAnalyzer statisticalAnalyzer
+        -TrendAnalyzer trendAnalyzer
+        +analyzeInventoryTrends(): Map<String, Object>
+        +generateBusinessInsights(): List<String>
+        +calculateKPIs(): Map<String, BigDecimal>
+        +predictInventoryNeeds(): List<PredictionResult>
+        +optimizeResourceAllocation(): Map<String, Object>
+    }
+
+    class UnifiedConfigurationManager {
+        -Map<String, Object> configurations
+        -ConfigurationValidator validator
+        +getConfiguration(String): Object
+        +setConfiguration(String, Object): void
+        +saveConfigurations(): void
+        +loadConfigurations(): void
+        +resetAllToDefaults(): void
+        +validateConfiguration(String, Object): boolean
+    }
+}
+
+package "DAO" {
+    class PatrimonioDAO {
+        +inserirPatrimonio(Patrimonio): void
+        +atualizarPatrimonio(Patrimonio): void
+        +buscarPatrimonioPorId(int): Patrimonio
+        +buscarPatrimonioPorNumero(String): Patrimonio
+        +listarPatrimonios(): List<Patrimonio>
+        +excluirPatrimonio(int): void
+        +buscarPatrimoniosPorResponsavel(int): List<Patrimonio>
+        +buscarPatrimoniosPorSala(int): List<Patrimonio>
+        +contarPatrimonios(): int
+    }
+
+    class SetorDAO {
+        +inserirSetor(Setor): void
+        +atualizarSetor(Setor): void
+        +buscarSetorPorId(int): Setor
+        +listarSetores(): List<Setor>
+        +excluirSetor(int): void
+        +buscarSetoresPorCampus(Integer): List<Setor>
+        +setorExistePorNome(String): boolean
+    }
+
+    class ResponsavelDAO {
+        +inserirResponsavel(Responsavel): void
+        +atualizarResponsavel(Responsavel): void
+        +buscarResponsavelPorId(int): Responsavel
+        +listarResponsaveis(): List<Responsavel>
+        +excluirResponsavel(int): void
+        +buscarResponsaveisPorSetor(int): List<Responsavel>
+        +responsavelExistePorCpf(String): boolean
+    }
+
+    class InventarioDAO {
+        +inserirInventario(Inventario): Integer
+        +atualizarInventario(Inventario): void
+        +buscarInventarioPorId(Integer): Inventario
+        +listarInventarios(): List<Inventario>
+        +excluirInventario(Integer): void
+        +buscarInventariosPorAno(Integer): List<Inventario>
+        +buscarInventarioAtivo(): Inventario
+    }
+
+    class ColetaDAO {
+        +inserirColeta(Coleta): void
+        +atualizarColeta(Coleta): void
+        +buscarColetaPorId(int): Coleta
+        +listarColetas(): List<Coleta>
+        +buscarColetasPorInventario(int): List<Coleta>
+        +buscarColetasPorPatrimonio(int): List<Coleta>
+        +contarColetasPorStatus(String): int
+    }
+}
+
+' Relacionamentos entre Controllers e Services
+AIEnhancedChatbotController --> ChatbotService
+AIEnhancedChatbotController --> AIIntegrationService
+LegalDocumentController --> LegalDocumentProcessor
+LegalDocumentController --> LegalKnowledgeIntegrator
+ChatbotController --> ChatbotService
+AIIntegrationController --> AIIntegrationService
+AIIntegrationController --> AIDataAnalysisService
+AIPerformanceController --> AIPerformanceAnalyzer
+
+' Relacionamentos entre Services e DAOs
+ChatbotService --> PatrimonioDAO
+ChatbotService --> SetorDAO
+ChatbotService --> AIIntegrationService
+ChatbotService --> AIDataAnalysisService
+ChatbotService --> LegalKnowledgeIntegrator
+AIIntegrationService --> PatrimonioCategorizationService
+AIIntegrationService --> PredictiveAnalysisService
+CampusService --> CampusDAO
+AutenticacaoService --> UsuarioDAO
+QRCodeService --> QRCodeDAO
+QRCodeService --> PatrimonioDAO
+
+' Relacionamentos entre AI Services
+AIDataAnalysisService --> BusinessAnalyticsEngine
+LegalKnowledgeIntegrator --> KnowledgeBaseService
+PatrimonioCategorizationService --> TrainingDataValidator
+PredictiveAnalysisService --> MaintenancePredictor
+PredictiveAnalysisService --> UsageAnalyzer
+PredictiveAnalysisService --> DepreciationCalculator
+
+@enduml

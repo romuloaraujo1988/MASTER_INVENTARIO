@@ -1,0 +1,17 @@
+# Pasta de distribuição
+dist/
+
+# Arquivos de build
+target/
+build/
+
+# Logs
+logs/
+*.log
+
+# Backups
+backup/
+*.bak
+
+# Configurações locais
+config/application-local.properties

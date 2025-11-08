@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 
+        Configuração padrão do servidor
+        
+        IMPORTANTE: Estes são valores PADRÃO que serão usados apenas se o usuário
+        não tiver configurado um IP manualmente no app.
+        
+        Para alterar o IP padrão:
+        1. Edite o valor de default_server_ip abaixo
+        2. Recompile o app
+        
+        O usuário sempre pode alterar o IP nas configurações do app.
+    -->
+    
+    <!-- IP padrão do servidor (pode ser alterado aqui) -->
+    <string name="default_server_ip">192.168.10.107</string>
+    
+    <!-- Porta padrão do servidor -->
+    <integer name="default_server_port">8081</integer>
+    
+    <!-- Context path do servidor -->
+    <string name="default_context_path">/inventario</string>
+    
+    <!-- Usar HTTPS por padrão? (true/false) -->
+    <bool name="default_use_https">false</bool>
+    
+    <!-- 
+        IPs sugeridos para o usuário escolher
+        Adicione aqui IPs comuns da sua rede
+    -->
+    <string-array name="suggested_server_ips">
+        <item>10.14.250.228</item>
+        <item>192.168.11.136</item>
+        <item>10.14.250.238</item>
+        <item>192.168.10.107</item>
+        <item>192.168.1.100</item>
+        <item>192.168.0.100</item>
+        <item>10.0.0.100</item>
+        <item>localhost</item>
+    </string-array>
+    
+    <!-- Mensagens de ajuda -->
+    <string name="server_config_help">
+        Como descobrir o IP do servidor:\n\n
+        1. No servidor Windows, abra o Prompt de Comando\n
+        2. Digite: ipconfig\n
+        3. Procure por \"Endereço IPv4\"\n
+        4. Use esse IP aqui no app\n\n
+        Exemplo: 192.168.11.136
+    </string>
+    
+    <string name="server_validation_testing">Testando conexão com o servidor...</string>
+    <string name="server_validation_success">Servidor configurado corretamente!</string>
+    <string name="server_validation_failed">Não foi possível conectar ao servidor</string>
+</resources>

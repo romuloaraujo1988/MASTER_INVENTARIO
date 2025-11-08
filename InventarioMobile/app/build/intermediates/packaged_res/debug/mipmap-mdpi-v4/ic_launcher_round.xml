@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    
+    <!-- Background Circle -->
+    <path
+        android:fillColor="#1976D2"
+        android:pathData="M24,24m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"/>
+    
+    <!-- Main Clipboard/Inventory Icon -->
+    <group android:translateX="24" android:translateY="24">
+        <!-- Clipboard Background -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M-7,-10 L7,-10 C7.7,-10 8,-9.3 8,-8.5 L8,8.5 C8,9.3 7.7,10 7,10 L-7,10 C-7.7,10 -8,9.3 -8,8.5 L-8,-8.5 C-8,-9.3 -7.7,-10 -7,-10 Z"/>
+        
+        <!-- Clipboard Clip -->
+        <path
+            android:fillColor="#FFC107"
+            android:pathData="M-3.5,-11.5 L3.5,-11.5 C4.3,-11.5 5,-10.8 5,-10 L5,-7 C5,-6.2 4.3,-5.5 3.5,-5.5 L-3.5,-5.5 C-4.3,-5.5 -5,-6.2 -5,-7 L-5,-10 C-5,-10.8 -4.3,-11.5 -3.5,-11.5 Z"/>
+        
+        <!-- Inventory Lines -->
+        <path
+            android:fillColor="#1976D2"
+            android:pathData="M-5,-4.5 L5,-4.5 L5,-3 L-5,-3 Z"/>
+        <path
+            android:fillColor="#1976D2"
+            android:pathData="M-5,-0.5 L5,-0.5 L5,1 L-5,1 Z"/>
+        <path
+            android:fillColor="#1976D2"
+            android:pathData="M-5,3.5 L5,3.5 L5,5 L-5,5 Z"/>
+        <path
+            android:fillColor="#1976D2"
+            android:pathData="M-5,7.5 L2,7.5 L2,9 L-5,9 Z"/>
+        
+        <!-- Checkmarks -->
+        <path
+            android:fillColor="#4CAF50"
+            android:pathData="M-6.5,-4 L-6,-3.5 L-4.5,-5 L-4,-4.5 L-6,-2.5 L-7,-3.5 Z"/>
+        <path
+            android:fillColor="#4CAF50"
+            android:pathData="M-6.5,0 L-6,0.5 L-4.5,-1 L-4,-0.5 L-6,1.5 L-7,0.5 Z"/>
+        <path
+            android:fillColor="#4CAF50"
+            android:pathData="M-6.5,4 L-6,4.5 L-4.5,3 L-4,3.5 L-6,5.5 L-7,4.5 Z"/>
+    </group>
+    
+</vector>

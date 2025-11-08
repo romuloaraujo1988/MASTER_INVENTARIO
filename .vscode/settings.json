@@ -1,0 +1,42 @@
+{
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.project.referencedLibraries": [
+        "lib/opennlp-tools-2.3.0.jar",
+        "lib/protobuf-java-3.19.6.jar",
+        "lib/spring-boot-3.2.0.jar",
+        "lib/spring-boot-autoconfigure-3.2.0.jar",
+        "lib/spring-boot-starter-3.2.0.jar",
+        "lib/spring-boot-starter-web-3.2.0.jar",
+        "lib/spring-web-6.1.1.jar",
+        "lib/spring-webmvc-6.1.1.jar",
+        "lib/**/*.jar"
+    ],
+    "java.project.sourcePaths": [
+        "src/main/java"
+    ],
+    "java.project.outputPath": "target/classes",
+    "java.clean.workspace": true,
+    "java.configuration.runtimes": [],
+    "java.import.gradle.enabled": false,
+    "java.import.maven.enabled": false,
+    "java.configuration.maven.globalSettings": null,
+    "java.configuration.maven.userSettings": null,
+    "java.import.maven.offline": true,
+    "java.maven.downloadSources": false,
+    "java.project.buildpath": "classpath",
+    "java.completion.enabled": true,
+    "java.errors.incompleteClasspath.severity": "warning",
+    "java.dependency.packagePresentation": "hierarchical",
+    "java.dependency.syncWithFolderExplorer": true,
+    "java.autobuild.enabled": true,
+    "java.maxConcurrentBuilds": 1,
+    "java.compile.nullAnalysis.nonnull": [],
+    "java.compile.nullAnalysis.nullable": [],
+    "java.saveActions.organizeImports": true,
+    "java.configuration.maven.userSettings": null,
+    "java.import.maven.offline": false,
+    "java.maven.downloadSources": true,
+    "java.debug.settings.onBuildFailureProceed": true,
+    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx32G -Xms100m -Xlog:disable"
+}

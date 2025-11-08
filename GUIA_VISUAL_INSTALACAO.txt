@@ -1,0 +1,224 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║                    GUIA VISUAL DE INSTALAÇÃO - SIHCP MOBILE                 ║
+║                         Correção do Scanner QR Code                          ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  PASSO 1: DESINSTALAR APP ANTIGO                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    📱 No smartphone:
+    
+    Configurações → Aplicativos → SIHCP Mobile → Desinstalar
+    
+    ✓ Confirme a desinstalação
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  PASSO 2: INSTALAR NOVO APK                                                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │  OPÇÃO A: INSTALAÇÃO AUTOMÁTICA (USB)                                  │
+    └─────────────────────────────────────────────────────────────────────────┘
+    
+    1. Conecte o smartphone ao computador via USB
+    
+    2. No computador, clique duas vezes em:
+       
+       📄 instalar-app-debug.bat
+    
+    3. Aguarde a mensagem de sucesso
+    
+    
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │  OPÇÃO B: INSTALAÇÃO MANUAL                                             │
+    └─────────────────────────────────────────────────────────────────────────┘
+    
+    1. Copie o arquivo para o smartphone:
+       
+       📦 SIHCP-Mobile-Debug.apk (9.8 MB)
+    
+    2. No smartphone, abra o arquivo APK
+    
+    3. Permita instalação de fontes desconhecidas (se solicitado)
+    
+    4. Toque em "Instalar"
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  PASSO 3: PRIMEIRO ACESSO                                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    1. Abra o app SIHCP Mobile
+    
+    2. Faça login com suas credenciais:
+       
+       👤 Usuário: _____________
+       🔒 Senha:   _____________
+    
+    3. Aguarde o carregamento do dashboard
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  PASSO 4: TESTAR SCANNER QR CODE                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    1. No dashboard, toque em:
+       
+       📷 Coleta Rápida (QR Code)
+    
+    2. Selecione uma sala da lista
+    
+    3. ⚠️  IMPORTANTE: Quando solicitado, toque em:
+       
+       ✓ PERMITIR (permissão de câmera)
+    
+    4. A câmera deve abrir automaticamente
+    
+    5. Posicione um QR Code de patrimônio na área de captura
+    
+    6. O sistema deve:
+       ✓ Ler o QR Code
+       ✓ Buscar o patrimônio
+       ✓ Exibir informações
+       ✓ Permitir coletar
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  VERIFICAÇÃO DE PERMISSÕES                                                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    Se a câmera não abrir:
+    
+    📱 Configurações → Aplicativos → SIHCP Mobile → Permissões
+    
+    Certifique-se que está PERMITIDO:
+    
+    ✓ Câmera
+    ✓ Armazenamento (se necessário)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  FLUXO COMPLETO                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    Dashboard
+        ↓
+    Coleta Rápida (QR Code)
+        ↓
+    Selecionar Sala
+        ↓
+    [PERMITIR CÂMERA] ← IMPORTANTE!
+        ↓
+    Scanner (Câmera abre)
+        ↓
+    Escanear QR Code
+        ↓
+    Ver Informações do Patrimônio
+        ↓
+    Coletar Item
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  INFORMAÇÕES EXIBIDAS APÓS ESCANEAR                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    ┌────────────────────────────────────────────────────────────────────────┐
+    │  Patrimônio Encontrado                                                 │
+    ├────────────────────────────────────────────────────────────────────────┤
+    │  Número: 123456                                                        │
+    │  Descrição: Computador Desktop                                         │
+    │  Sala: Laboratório de Informática                                      │
+    │  Status: Não coletado                                                  │
+    ├────────────────────────────────────────────────────────────────────────┤
+    │  [Coletar]  [Tentar Novamente]  [Cancelar]                            │
+    └────────────────────────────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  TROUBLESHOOTING RÁPIDO                                                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    ❌ Scanner não abre
+       → Verificar permissão de câmera
+       → Reiniciar aplicativo
+    
+    ❌ Câmera não funciona
+       → Fechar outros apps que usam câmera
+       → Reiniciar smartphone
+    
+    ❌ QR Code não é lido
+       → Melhorar iluminação
+       → Limpar lente da câmera
+       → Aproximar/afastar câmera
+    
+    ❌ Patrimônio não encontrado
+       → Verificar se QR Code é válido
+       → Sincronizar dados
+       → Verificar conexão com servidor
+    
+    ❌ App trava
+       → Limpar cache do app
+       → Desinstalar e reinstalar
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  ARQUIVOS DISPONÍVEIS                                                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    📦 SIHCP-Mobile-Debug.apk              ← Aplicativo (9.8 MB)
+    🚀 instalar-app-debug.bat              ← Script de instalação (CMD)
+    🚀 instalar-app-debug.ps1              ← Script de instalação (PowerShell)
+    📄 LEIA-ME-PRIMEIRO.md                 ← Início rápido
+    📄 RESUMO_CORRECAO_SCANNER.md          ← Resumo executivo
+    📄 INSTRUCOES_INSTALACAO_APP.md        ← Guia completo
+    📄 CHECKLIST_INSTALACAO.md             ← Checklist detalhado
+    📄 SOLUCAO_ERRO_SCANNER_QRCODE.md      ← Detalhes técnicos
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  INFORMAÇÕES TÉCNICAS                                                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    Nome:           SIHCP Mobile
+    Package:        com.inventario.mobile.debug
+    Versão:         1.1 (versionCode 2)
+    Build Type:     Debug
+    Tamanho:        9.8 MB
+    Data:           27/10/2025
+    
+    Tecnologias:
+    - Kotlin
+    - Android SDK 34
+    - ZXing 3.5.2 (Scanner QR Code)
+    - Room Database
+    - Retrofit (API)
+
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  STATUS                                                                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+    ✅ Código verificado
+    ✅ Build realizado
+    ✅ APK gerado
+    ✅ Scripts criados
+    ✅ Documentação completa
+    ✅ PRONTO PARA INSTALAÇÃO
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║                         COMECE AGORA!                                        ║
+║                                                                              ║
+║                  Execute: instalar-app-debug.bat                             ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+Data: 27/10/2025
+Versão do Guia: 1.0

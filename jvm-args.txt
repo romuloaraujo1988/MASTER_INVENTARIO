@@ -1,0 +1,10 @@
+# Argumentos JVM para desabilitar JMX e evitar erros de conectividade
+-Dcom.sun.management.jmxremote=false
+-Dcom.sun.management.jmxremote.port=
+-Dcom.sun.management.jmxremote.authenticate=false
+-Dcom.sun.management.jmxremote.ssl=false
+-Dspring.jmx.enabled=false
+-Djava.awt.headless=true
+
+# Para usar estes argumentos, adicione ao comando java:
+# java @jvm-args.txt -cp ... com.inventario.Main

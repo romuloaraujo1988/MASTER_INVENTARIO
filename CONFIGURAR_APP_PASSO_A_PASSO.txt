@@ -1,0 +1,218 @@
+================================================================================
+  COMO CONFIGURAR O APP ANDROID - PASSO A PASSO
+================================================================================
+
+SITUACAO ATUAL:
+---------------
+✅ Servidor está rodando
+✅ IP do computador: 10.14.250.236
+✅ Porta: 8081
+✅ Firewall liberado
+✅ Servidor respondendo: {"service":"SIHCP Mobile API","status":"UP"}
+
+PROBLEMA:
+---------
+❌ App Android não consegue fazer login
+
+CAUSA MAIS PROVAVEL:
+--------------------
+O app está configurado com IP antigo ou não está configurado.
+
+================================================================================
+  SOLUCAO: CONFIGURAR IP NO APP
+================================================================================
+
+PASSO 1: ABRIR O APP
+---------------------
+1. Pegue seu smartphone Android
+2. Abra o app "Inventário Mobile" ou "SIHCP"
+3. Se aparecer tela de login, procure por:
+   - Ícone de engrenagem (⚙️)
+   - Botão "Configurações"
+   - Botão "Settings"
+   - Menu (três pontos ⋮)
+
+PASSO 2: ACESSAR CONFIGURAÇÕES
+-------------------------------
+Procure por uma das opções:
+- "Configurações do Servidor"
+- "Server Settings"
+- "Configurar Conexão"
+- "Network Settings"
+
+Se não encontrar, pode estar na tela inicial antes do login.
+
+PASSO 3: CONFIGURAR O SERVIDOR
+-------------------------------
+Digite EXATAMENTE:
+
+   ┌─────────────────────────────────────┐
+   │ IP do Servidor:                     │
+   │ 10.14.250.236                       │
+   └─────────────────────────────────────┘
+
+   ┌─────────────────────────────────────┐
+   │ Porta:                              │
+   │ 8081                                │
+   └─────────────────────────────────────┘
+
+   ┌─────────────────────────────────────┐
+   │ Protocolo:                          │
+   │ ○ HTTP  ◉ HTTPS                     │
+   │ (Selecione HTTP)                    │
+   └─────────────────────────────────────┘
+
+PASSO 4: TESTAR CONEXÃO
+------------------------
+1. Clique em "Testar Conexão" ou "Test Connection"
+2. Aguarde alguns segundos
+3. Deve aparecer: "✓ Conexão estabelecida com sucesso"
+
+Se der erro:
+- Verifique se digitou o IP corretamente
+- Verifique se está na mesma rede WiFi do computador
+- Veja SOLUÇÃO ALTERNATIVA abaixo
+
+PASSO 5: FAZER LOGIN
+---------------------
+Após configurar e testar:
+
+   ┌─────────────────────────────────────┐
+   │ Usuário:                            │
+   │ admin                               │
+   └─────────────────────────────────────┘
+
+   ┌─────────────────────────────────────┐
+   │ Senha:                              │
+   │ admin123                            │
+   └─────────────────────────────────────┘
+
+   [  ENTRAR  ]
+
+================================================================================
+  SOLUCAO ALTERNATIVA: TESTAR NO NAVEGADOR PRIMEIRO
+================================================================================
+
+ANTES de configurar o app, teste no navegador do celular:
+
+1. Abra o Chrome ou navegador do celular
+2. Digite na barra de endereço:
+
+   http://10.14.250.236:8081/inventario/api/mobile/health
+
+3. Pressione Enter
+
+RESULTADO ESPERADO:
+-------------------
+Deve aparecer algo como:
+
+   {"service":"SIHCP Mobile API","version":"1.0.0","status":"UP"}
+
+SE FUNCIONAR NO NAVEGADOR:
+--------------------------
+✅ Rede está OK
+✅ Servidor está acessível
+→ Configure o app com o IP acima
+
+SE NÃO FUNCIONAR NO NAVEGADOR:
+-------------------------------
+❌ Problema de rede
+→ Veja checklist abaixo
+
+================================================================================
+  CHECKLIST DE PROBLEMAS DE REDE
+================================================================================
+
+[ ] 1. MESMA REDE WIFI
+   - Computador e celular devem estar na MESMA rede WiFi
+   - Não use dados móveis no celular
+   - Verifique o nome da rede WiFi em ambos
+
+[ ] 2. VPN DESATIVADA
+   - Desative VPN no celular
+   - Desative VPN no computador
+
+[ ] 3. MODO AVIAO
+   - Certifique-se que modo avião está DESLIGADO
+   - WiFi deve estar LIGADO
+
+[ ] 4. ISOLAMENTO DE AP (Roteador)
+   - Alguns roteadores bloqueiam comunicação entre dispositivos
+   - Verifique configurações do roteador
+   - Procure por "AP Isolation" ou "Client Isolation"
+   - Deve estar DESABILITADO
+
+[ ] 5. FIREWALL DO ROTEADOR
+   - Alguns roteadores têm firewall próprio
+   - Verifique se porta 8081 está liberada
+
+================================================================================
+  COMANDOS PARA VERIFICAR NO COMPUTADOR
+================================================================================
+
+Abra o PowerShell ou CMD e execute:
+
+1. Ver IP do computador:
+   ipconfig | findstr "IPv4"
+
+2. Verificar se servidor está rodando:
+   netstat -ano | findstr :8081
+
+3. Testar servidor localmente:
+   curl http://localhost:8081/inventario/api/mobile/health
+
+4. Liberar firewall (se necessário):
+   netsh advfirewall firewall add rule name="Inventario" dir=in action=allow protocol=TCP localport=8081
+
+================================================================================
+  SE NADA FUNCIONAR
+================================================================================
+
+OPÇÃO 1: Reinstalar o app
+--------------------------
+1. Desinstale o app do celular
+2. Instale novamente: dist\InventarioMobile-v1.1-debug-IP-10.14.250.236.apk
+3. Configure o IP novamente
+
+OPÇÃO 2: Limpar dados do app
+-----------------------------
+1. Configurações do Android
+2. Apps > Inventário Mobile
+3. Armazenamento > Limpar dados
+4. Abra o app novamente
+5. Configure o IP
+
+OPÇÃO 3: Usar outro dispositivo
+--------------------------------
+Teste com outro celular ou tablet para verificar se o problema é:
+- No app
+- No celular
+- Na rede
+
+================================================================================
+  INFORMACOES TECNICAS
+================================================================================
+
+URL Base: http://10.14.250.236:8081/inventario
+API Path: /api/mobile
+
+Endpoints principais:
+- Health: /api/mobile/health
+- Login: /api/mobile/auth/login
+- Dashboard: /api/mobile/dashboard/stats
+- Coletas: /api/mobile/coletas
+
+Credenciais padrão:
+- Usuário: admin
+- Senha: admin123
+
+================================================================================
+  SUPORTE
+================================================================================
+
+Se precisar de ajuda:
+1. Execute: testar-servidor-mobile.bat
+2. Tire print da tela do erro no app
+3. Verifique logs em: logs\sistema-inventario.log
+
+================================================================================

@@ -1,0 +1,270 @@
+@startuml Diagrama de Casos de Uso
+!theme plain
+title Sistema de Inventário - Casos de Uso
+
+left to right direction
+
+actor "Administrador" as Admin
+actor "Gestor" as Gestor
+actor "Operador" as Operador
+actor "Usuário Consulta" as Consulta
+actor "Coletor" as Coletor
+actor "Sistema IA" as IA
+
+package "Sistema de Inventário" {
+    
+    package "Gestão de Usuários" {
+        usecase "Gerenciar Usuários" as UC01
+        usecase "Autenticar Usuário" as UC02
+        usecase "Alterar Senha" as UC03
+        usecase "Bloquear/Desbloquear Usuário" as UC04
+        usecase "Definir Perfis de Acesso" as UC05
+    }
+    
+    package "Gestão de Patrimônio" {
+        usecase "Cadastrar Patrimônio" as UC06
+        usecase "Consultar Patrimônio" as UC07
+        usecase "Atualizar Patrimônio" as UC08
+        usecase "Excluir Patrimônio" as UC09
+        usecase "Gerar QR Code" as UC10
+        usecase "Ler QR Code" as UC11
+        usecase "Categorizar Patrimônio" as UC12
+    }
+    
+    package "Gestão Organizacional" {
+        usecase "Gerenciar Campus" as UC13
+        usecase "Gerenciar Setores" as UC14
+        usecase "Gerenciar Salas" as UC15
+        usecase "Gerenciar Responsáveis" as UC16
+    }
+    
+    package "Processo de Inventário" {
+        usecase "Criar Inventário" as UC17
+        usecase "Planejar Inventário" as UC18
+        usecase "Executar Coleta" as UC19
+        usecase "Registrar Divergências" as UC20
+        usecase "Finalizar Inventário" as UC21
+        usecase "Monitorar Progresso" as UC22
+    }
+    
+    package "Coleta de Dados" {
+        usecase "Coletar Patrimônio" as UC23
+        usecase "Registrar Localização" as UC24
+        usecase "Fotografar Patrimônio" as UC25
+        usecase "Registrar Estado Conservação" as UC26
+        usecase "Identificar Itens sem Etiqueta" as UC27
+        usecase "Sincronizar Dados Offline" as UC28
+    }
+    
+    package "Relatórios e Análises" {
+        usecase "Gerar Relatórios" as UC29
+        usecase "Exportar Dados" as UC30
+        usecase "Visualizar Dashboards" as UC31
+        usecase "Analisar Estatísticas" as UC32
+        usecase "Gerar Relatório PDF" as UC33
+        usecase "Exportar Excel" as UC34
+    }
+    
+    package "Inteligência Artificial" {
+        usecase "Categorizar Automaticamente" as UC35
+        usecase "Predizer Manutenção" as UC36
+        usecase "Analisar Padrões de Uso" as UC37
+        usecase "Otimizar Distribuição" as UC38
+        usecase "Treinar Modelos IA" as UC39
+        usecase "Monitorar Performance IA" as UC40
+    }
+    
+    package "Chatbot e Assistência" {
+        usecase "Interagir com Chatbot" as UC41
+        usecase "Consultar Informações" as UC42
+        usecase "Obter Análises IA" as UC43
+        usecase "Fornecer Feedback" as UC44
+        usecase "Buscar Patrimônios" as UC45
+    }
+    
+    package "Documentos Legais" {
+        usecase "Processar Documentos" as UC46
+        usecase "Classificar Documentos" as UC47
+        usecase "Extrair Informações" as UC48
+        usecase "Integrar Conhecimento" as UC49
+        usecase "Buscar Documentos" as UC50
+    }
+    
+    package "Configuração e Manutenção" {
+        usecase "Configurar Sistema" as UC51
+        usecase "Gerenciar Backup" as UC52
+        usecase "Monitorar Sistema" as UC53
+        usecase "Configurar IA" as UC54
+        usecase "Atualizar Base Conhecimento" as UC55
+    }
+}
+
+' Relacionamentos dos Atores com Casos de Uso
+
+' Administrador - Acesso total
+Admin --> UC01
+Admin --> UC02
+Admin --> UC04
+Admin --> UC05
+Admin --> UC06
+Admin --> UC08
+Admin --> UC09
+Admin --> UC13
+Admin --> UC14
+Admin --> UC15
+Admin --> UC16
+Admin --> UC17
+Admin --> UC18
+Admin --> UC21
+Admin --> UC29
+Admin --> UC30
+Admin --> UC31
+Admin --> UC32
+Admin --> UC33
+Admin --> UC34
+Admin --> UC39
+Admin --> UC40
+Admin --> UC41
+Admin --> UC42
+Admin --> UC43
+Admin --> UC44
+Admin --> UC45
+Admin --> UC46
+Admin --> UC47
+Admin --> UC48
+Admin --> UC49
+Admin --> UC50
+Admin --> UC51
+Admin --> UC52
+Admin --> UC53
+Admin --> UC54
+Admin --> UC55
+
+' Gestor - Gestão e relatórios
+Gestor --> UC02
+Gestor --> UC03
+Gestor --> UC06
+Gestor --> UC07
+Gestor --> UC08
+Gestor --> UC14
+Gestor --> UC15
+Gestor --> UC16
+Gestor --> UC17
+Gestor --> UC18
+Gestor --> UC21
+Gestor --> UC22
+Gestor --> UC29
+Gestor --> UC30
+Gestor --> UC31
+Gestor --> UC32
+Gestor --> UC33
+Gestor --> UC34
+Gestor --> UC38
+Gestor --> UC41
+Gestor --> UC42
+Gestor --> UC43
+Gestor --> UC44
+Gestor --> UC45
+
+' Operador - Operações básicas
+Operador --> UC02
+Operador --> UC03
+Operador --> UC06
+Operador --> UC07
+Operador --> UC08
+Operador --> UC10
+Operador --> UC11
+Operador --> UC19
+Operador --> UC20
+Operador --> UC22
+Operador --> UC23
+Operador --> UC24
+Operador --> UC25
+Operador --> UC26
+Operador --> UC27
+Operador --> UC28
+Operador --> UC29
+Operador --> UC41
+Operador --> UC42
+Operador --> UC45
+
+' Usuário Consulta - Apenas consultas
+Consulta --> UC02
+Consulta --> UC03
+Consulta --> UC07
+Consulta --> UC11
+Consulta --> UC29
+Consulta --> UC31
+Consulta --> UC41
+Consulta --> UC42
+Consulta --> UC45
+
+' Coletor - Coleta de dados
+Coletor --> UC11
+Coletor --> UC19
+Coletor --> UC23
+Coletor --> UC24
+Coletor --> UC25
+Coletor --> UC26
+Coletor --> UC27
+Coletor --> UC28
+
+' Sistema IA - Processos automatizados
+IA --> UC12
+IA --> UC35
+IA --> UC36
+IA --> UC37
+IA --> UC38
+IA --> UC39
+IA --> UC43
+IA --> UC47
+IA --> UC48
+IA --> UC49
+IA --> UC55
+
+' Relacionamentos de Extensão e Inclusão
+UC06 ..> UC10 : <<include>>
+UC08 ..> UC12 : <<extend>>
+UC19 ..> UC23 : <<include>>
+UC19 ..> UC24 : <<include>>
+UC19 ..> UC25 : <<extend>>
+UC19 ..> UC26 : <<include>>
+UC20 ..> UC27 : <<extend>>
+UC23 ..> UC11 : <<include>>
+UC29 ..> UC33 : <<extend>>
+UC29 ..> UC34 : <<extend>>
+UC35 ..> UC39 : <<include>>
+UC36 ..> UC39 : <<include>>
+UC37 ..> UC39 : <<include>>
+UC41 ..> UC42 : <<include>>
+UC41 ..> UC43 : <<extend>>
+UC41 ..> UC45 : <<include>>
+UC46 ..> UC47 : <<include>>
+UC46 ..> UC48 : <<include>>
+UC47 ..> UC49 : <<extend>>
+UC48 ..> UC49 : <<extend>>
+
+' Relacionamentos de Herança
+Admin --|> Gestor
+Gestor --|> Operador
+Operador --|> Consulta
+
+note right of IA
+  O Sistema IA executa
+  processos automatizados
+  de análise e categorização
+end note
+
+note bottom of UC28
+  Funcionalidade para
+  trabalho offline com
+  sincronização posterior
+end note
+
+note bottom of UC35
+  Categorização automática
+  usando algoritmos de
+  machine learning
+end note
+
+@enduml

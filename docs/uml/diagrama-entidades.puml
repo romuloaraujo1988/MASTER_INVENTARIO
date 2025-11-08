@@ -1,0 +1,461 @@
+@startuml Diagrama de Classes - Entidades Principais
+!theme plain
+title Sistema de Inventário - Entidades Principais
+
+package "Model" {
+    class Patrimonio {
+        -int id
+        -String numero
+        -String status
+        -String descricao
+        -String rotulos
+        -int idResponsavel
+        -BigDecimal valorAquisicao
+        -BigDecimal valorDepreciado
+        -String numeroNotaFiscal
+        -String numeroSerie
+        -String modelo
+        -String marca
+        -Date dataEntrada
+        -Date dataAquisicao
+        -Timestamp dataCarga
+        -String fornecedor
+        -int idSala
+        -String estadoConservacao
+        -String observacoes
+        -String situacao
+        -String descricaoResumida
+        -String categoria
+        -String nomeResponsavel
+        -String nomeSala
+        +getId(): int
+        +setId(int): void
+        +getNumero(): String
+        +setNumero(String): void
+        +getDescricao(): String
+        +setDescricao(String): void
+        +getValorAquisicao(): BigDecimal
+        +setValorAquisicao(BigDecimal): void
+        +getDataAquisicao(): Date
+        +setDataAquisicao(Date): void
+        +getIdResponsavel(): int
+        +setIdResponsavel(int): void
+        +getIdSala(): int
+        +setIdSala(int): void
+        +getEstadoConservacao(): String
+        +setEstadoConservacao(String): void
+        +getCategoria(): String
+        +setCategoria(String): void
+        +getDescricaoResumida(): String
+        +setDescricaoResumida(String): void
+    }
+
+    class Setor {
+        -int id
+        -String nome
+        -String descricao
+        -String responsavelSetor
+        -String telefone
+        -String email
+        -String observacoes
+        -Boolean ativo
+        -Timestamp dataCriacao
+        -Integer idCampus
+        +getId(): int
+        +setId(int): void
+        +getNome(): String
+        +setNome(String): void
+        +getDescricao(): String
+        +setDescricao(String): void
+        +getResponsavelSetor(): String
+        +setResponsavelSetor(String): void
+        +getTelefone(): String
+        +setTelefone(String): void
+        +getEmail(): String
+        +setEmail(String): void
+        +getAtivo(): Boolean
+        +setAtivo(Boolean): void
+        +getIdCampus(): Integer
+        +setIdCampus(Integer): void
+    }
+
+    class Responsavel {
+        -int id
+        -String nome
+        -String cpf
+        -String email
+        -String telefone
+        -String cargo
+        -int idSetor
+        -Boolean ativo
+        -Timestamp dataCadastro
+        -String nomeSetor
+        +getId(): int
+        +setId(int): void
+        +getNome(): String
+        +setNome(String): void
+        +getCpf(): String
+        +setCpf(String): void
+        +getEmail(): String
+        +setEmail(String): void
+        +getTelefone(): String
+        +setTelefone(String): void
+        +getCargo(): String
+        +setCargo(String): void
+        +getIdSetor(): int
+        +setIdSetor(int): void
+        +getAtivo(): Boolean
+        +setAtivo(Boolean): void
+    }
+
+    class Sala {
+        -int idSala
+        -String descricao
+        -String numeroSala
+        -Integer andar
+        -String bloco
+        -Integer idSetor
+        -Integer capacidade
+        -Double areaM2
+        -String tipoSala
+        -Boolean ativo
+        -Timestamp dataCadastro
+        -String observacoes
+        -String nomeSetor
+        +getIdSala(): int
+        +setIdSala(int): void
+        +getNumeroSala(): String
+        +setNumeroSala(String): void
+        +getDescricao(): String
+        +setDescricao(String): void
+        +getIdSetor(): Integer
+        +setIdSetor(Integer): void
+        +getAtivo(): Boolean
+        +setAtivo(Boolean): void
+    }
+
+    class Campus {
+        -Integer id
+        -String nome
+        -String sigla
+        -String endereco
+        -String cidade
+        -String estado
+        -String cep
+        -String telefone
+        -String email
+        -String cnpj
+        -Boolean ativo
+        -LocalDateTime dataCriacao
+        +getId(): Integer
+        +setId(Integer): void
+        +getNome(): String
+        +setNome(String): void
+        +getSigla(): String
+        +setSigla(String): void
+        +getEndereco(): String
+        +setEndereco(String): void
+        +getCidade(): String
+        +setCidade(String): void
+        +getEstado(): String
+        +setEstado(String): void
+        +getCep(): String
+        +setCep(String): void
+        +getTelefone(): String
+        +setTelefone(String): void
+        +getEmail(): String
+        +setEmail(String): void
+        +getCnpj(): String
+        +setCnpj(String): void
+        +getAtivo(): Boolean
+        +setAtivo(Boolean): void
+    }
+
+    class Inventario {
+        -Integer id
+        -String nome
+        -Integer ano
+        -Date dataInicio
+        -Date dataFim
+        -String observacao
+        -String tipoInventario
+        -String statusInventario
+        -String responsavelInventario
+        -Integer totalPatrimonios
+        -Integer patrimoniosColetados
+        -BigDecimal percentualConclusao
+        -LocalDateTime dataCriacao
+        -LocalDateTime dataAtualizacao
+        +getId(): Integer
+        +setId(Integer): void
+        +getNome(): String
+        +setNome(String): void
+        +getAno(): Integer
+        +setAno(Integer): void
+        +getDataInicio(): Date
+        +setDataInicio(Date): void
+        +getDataFim(): Date
+        +setDataFim(Date): void
+        +getStatusInventario(): String
+        +setStatusInventario(String): void
+        +getResponsavelInventario(): String
+        +setResponsavelInventario(String): void
+        +getTotalPatrimonios(): Integer
+        +setTotalPatrimonios(Integer): void
+        +getPatrimoniosColetados(): Integer
+        +setPatrimoniosColetados(Integer): void
+        +getPercentualConclusao(): BigDecimal
+        +setPercentualConclusao(BigDecimal): void
+    }
+
+    class Coleta {
+        -int id
+        -int idInventario
+        -int idPatrimonio
+        -int idColetor
+        -int idParticipanteInventario
+        -Timestamp dataColeta
+        -String statusColeta
+        -String observacaoColeta
+        -String localizacaoAtual
+        -String localizacaoEncontrada
+        -String estadoEncontrado
+        -boolean divergencia
+        -String motivoDivergencia
+        -BigDecimal latitude
+        -BigDecimal longitude
+        -String fotoPatrimonio
+        -boolean semEtiqueta
+        -String descricaoItemSemEtiqueta
+        -String categoriaItemSemEtiqueta
+        +getId(): int
+        +setId(int): void
+        +getIdInventario(): int
+        +setIdInventario(int): void
+        +getIdPatrimonio(): int
+        +setIdPatrimonio(int): void
+        +getIdColetor(): int
+        +setIdColetor(int): void
+        +getDataColeta(): Timestamp
+        +setDataColeta(Timestamp): void
+        +getStatusColeta(): String
+        +setStatusColeta(String): void
+        +getObservacaoColeta(): String
+        +setObservacaoColeta(String): void
+        +isDivergencia(): boolean
+        +setDivergencia(boolean): void
+        +getLatitude(): BigDecimal
+        +setLatitude(BigDecimal): void
+        +getLongitude(): BigDecimal
+        +setLongitude(BigDecimal): void
+    }
+
+    class Usuario {
+        -Integer id
+        -String login
+        -String senhaHash
+        -String nomeCompleto
+        -String email
+        -String matricula
+        -PerfilUsuario perfil
+        -Integer idSetor
+        -String nomeSetor
+        -Boolean ativo
+        -LocalDateTime dataCriacao
+        -LocalDateTime dataUltimoAcesso
+        -Integer tentativasLogin
+        -Boolean bloqueado
+        -LocalDateTime dataBloqueio
+        -LocalDateTime dataExpiracaoSenha
+        -Boolean primeiroAcesso
+        -String observacoes
+        +getId(): Integer
+        +setId(Integer): void
+        +getLogin(): String
+        +setLogin(String): void
+        +getSenhaHash(): String
+        +setSenhaHash(String): void
+        +getNomeCompleto(): String
+        +setNomeCompleto(String): void
+        +getEmail(): String
+        +setEmail(String): void
+        +getMatricula(): String
+        +setMatricula(String): void
+        +getPerfil(): PerfilUsuario
+        +setPerfil(PerfilUsuario): void
+        +getIdSetor(): Integer
+        +setIdSetor(Integer): void
+        +getAtivo(): Boolean
+        +setAtivo(Boolean): void
+        +getTentativasLogin(): Integer
+        +setTentativasLogin(Integer): void
+        +getBloqueado(): Boolean
+        +setBloqueado(Boolean): void
+    }
+
+    enum PerfilUsuario {
+        ADMINISTRADOR
+        GESTOR
+        OPERADOR
+        CONSULTA
+    }
+
+    class Coletor {
+        -int id
+        -String nome
+        -String cpf
+        -String email
+        -String telefone
+        -Boolean ativo
+        -Timestamp dataCadastro
+        +getId(): int
+        +setId(int): void
+        +getNome(): String
+        +setNome(String): void
+        +getCpf(): String
+        +setCpf(String): void
+        +getEmail(): String
+        +setEmail(String): void
+        +getTelefone(): String
+        +setTelefone(String): void
+        +getAtivo(): Boolean
+        +setAtivo(Boolean): void
+    }
+
+    class QRCode {
+        -Integer id
+        -String codigo
+        -Integer idPatrimonio
+        -LocalDateTime dataGeracao
+        -Boolean ativo
+        -String observacoes
+        +getId(): Integer
+        +setId(Integer): void
+        +getCodigo(): String
+        +setCodigo(String): void
+        +getIdPatrimonio(): Integer
+        +setIdPatrimonio(Integer): void
+        +getDataGeracao(): LocalDateTime
+        +setDataGeracao(LocalDateTime): void
+        +getAtivo(): Boolean
+        +setAtivo(Boolean): void
+    }
+
+    class ParticipanteInventario {
+        -Integer idParticipante
+        -Integer idInventario
+        -Integer idUsuario
+        -String nomeUsuario
+        -String papel
+        -LocalDateTime dataInclusao
+        -LocalDateTime dataRemocao
+        -Boolean ativo
+        -String observacoes
+        -LocalDateTime dataUltimaAtualizacao
+        +getIdParticipante(): Integer
+        +setIdParticipante(Integer): void
+        +getIdInventario(): Integer
+        +setIdInventario(Integer): void
+        +getIdUsuario(): Integer
+        +setIdUsuario(Integer): void
+        +getPapel(): String
+        +setPapel(String): void
+        +getAtivo(): Boolean
+        +setAtivo(Boolean): void
+        +isCoordenador(): boolean
+        +isColetor(): boolean
+        +isObservador(): boolean
+    }
+
+    class SalaInventario {
+        -Integer idSalaInventario
+        -Integer idSala
+        -Integer idInventario
+        -Integer idParticipante
+        -Boolean coletaFinalizada
+        -LocalDateTime dataInicioColeta
+        -LocalDateTime dataFinalizacaoColeta
+        -String observacoesFinalizacao
+        -Integer totalItensColetados
+        -Integer totalItensSemEtiqueta
+        -BigDecimal percentualConclusao
+        -String statusColeta
+        -LocalDateTime dataCadastro
+        +getIdSalaInventario(): Integer
+        +setIdSalaInventario(Integer): void
+        +getIdSala(): Integer
+        +setIdSala(Integer): void
+        +getIdInventario(): Integer
+        +setIdInventario(Integer): void
+        +getColetaFinalizada(): Boolean
+        +setColetaFinalizada(Boolean): void
+        +iniciarColeta(): void
+        +finalizarColeta(String): void
+    }
+
+    class InventarioSetor {
+        -Integer id
+        -Integer idInventario
+        -Integer idSetor
+        -Boolean incluirTodosSetores
+        -LocalDateTime dataInclusao
+        -Boolean ativo
+        -String observacoes
+        +getId(): Integer
+        +setId(Integer): void
+        +getIdInventario(): Integer
+        +setIdInventario(Integer): void
+        +getIdSetor(): Integer
+        +setIdSetor(Integer): void
+        +getIncluirTodosSetores(): Boolean
+        +setIncluirTodosSetores(Boolean): void
+        +isIncluirTodos(): boolean
+        +isSetorEspecifico(): boolean
+    }
+
+    class MobileConnection {
+        -String sessionId
+        -String ipAddress
+        -String hostname
+        -String username
+        -String deviceInfo
+        -String appVersion
+        -LocalDateTime lastHeartbeat
+        -LocalDateTime connectedAt
+        -boolean isActive
+        +getSessionId(): String
+        +setSessionId(String): void
+        +getIpAddress(): String
+        +setIpAddress(String): void
+        +getUsername(): String
+        +setUsername(String): void
+        +updateHeartbeat(): void
+        +isExpired(): boolean
+        +getConnectionDuration(): String
+    }
+}
+
+' Relacionamentos
+Campus ||--o{ Setor : "possui"
+Setor ||--o{ Responsavel : "possui"
+Setor ||--o{ Sala : "possui"
+Setor ||--o{ Usuario : "pertence"
+Responsavel ||--o{ Patrimonio : "responsável por"
+Sala ||--o{ Patrimonio : "localizado em"
+Inventario ||--o{ Coleta : "possui"
+Patrimonio ||--o{ Coleta : "coletado em"
+Patrimonio ||--o{ QRCode : "possui"
+Coletor ||--o{ Coleta : "realiza"
+Usuario }o--|| PerfilUsuario : "possui"
+
+' Novos relacionamentos
+Inventario ||--o{ ParticipanteInventario : "possui"
+Usuario ||--o{ ParticipanteInventario : "participa"
+Inventario ||--o{ SalaInventario : "possui"
+Sala ||--o{ SalaInventario : "inventariada em"
+ParticipanteInventario ||--o{ SalaInventario : "responsável por"
+Inventario ||--o{ InventarioSetor : "possui"
+Setor ||--o{ InventarioSetor : "incluído em"
+Usuario ||--o{ MobileConnection : "conecta via"
+
+@enduml

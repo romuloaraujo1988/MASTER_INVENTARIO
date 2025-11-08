@@ -1,0 +1,81 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "TesteColetaCompleto",
+            "request": "launch",
+            "mainClass": "com.inventario.test.TesteColetaCompleto",
+            "projectName": "MASTER_INVENTARIO"
+        },
+        {
+            "type": "java",
+            "name": "JLogin",
+            "request": "launch",
+            "mainClass": "com.inventario.view.JLogin",
+            "projectName": "MASTER_INVENTARIO"
+        },
+        {
+            "type": "java",
+            "name": "SistemaInventarioApplication",
+            "request": "launch",
+            "mainClass": "com.inventario.SistemaInventarioApplication",
+            "projectName": "MASTER_INVENTARIO",
+            "classPaths": [
+                "${workspaceFolder}/target/classes",
+                "${workspaceFolder}/lib/*.jar"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "UltraSimpleChatbotServer",
+            "request": "launch",
+            "mainClass": "com.inventario.chatbot.UltraSimpleChatbotServer",
+            "projectName": "MASTER_INVENTARIO"
+        },
+        {
+            "type": "java",
+            "name": "AtivarUsuarioAdmin",
+            "request": "launch",
+            "mainClass": "AtivarUsuarioAdmin",
+            "projectName": "MASTER_INVENTARIO"
+        },
+        {
+            "type": "java",
+            "name": "TesteNovosPatroesConversacao",
+            "request": "launch",
+            "mainClass": "TesteNovosPatroesConversacao",
+            "projectName": "MASTER_INVENTARIO"
+        },
+        {
+            "type": "java",
+            "name": "ChatbotWebServer",
+            "request": "launch",
+            "mainClass": "com.inventario.chatbot.ChatbotWebServer",
+            "projectName": "MASTER_INVENTARIO",
+            "classPaths": [
+                "${workspaceFolder}/target/classes",
+                "${workspaceFolder}/lib/*.jar"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "Launch Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Launch SistemaInventarioWebApplication",
+            "request": "launch",
+            "mainClass": "com.inventario.SistemaInventarioWebApplication",
+            "projectName": "MASTER_INVENTARIO",
+            "args": "",
+            "console": "internalConsole",
+            "classPaths": [
+                "${workspaceFolder}/target/classes",
+                "${workspaceFolder}/lib/*.jar"
+            ]
+        }
+    ]
+}

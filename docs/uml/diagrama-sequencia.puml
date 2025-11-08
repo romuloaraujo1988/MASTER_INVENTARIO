@@ -1,0 +1,329 @@
+@startuml Diagrama de Sequência - Principais Fluxos
+!theme plain
+title Sistema de Inventário - Diagramas de Sequência
+
+== Fluxo 1: Cadastro de Patrimônio com Categorização IA ==
+
+actor "Operador" as Op
+participant "PatrimonioController" as PC
+participant "PatrimonioService" as PS
+participant "PatrimonioDAO" as PD
+participant "AIIntegrationService" as AIS
+participant "PatrimonioCategorizationService" as PCS
+participant "QRCodeService" as QRS
+database "Database" as DB
+
+Op -> PC: cadastrarPatrimonio(patrimonio)
+activate PC
+
+PC -> PS: validarEInserir(patrimonio)
+activate PS
+
+PS -> PS: validarDados(patrimonio)
+
+PS -> PD: inserirPatrimonio(patrimonio)
+activate PD
+
+PD -> DB: INSERT INTO TABELA_PATRIMONIO
+activate DB
+DB --> PD: id_patrimonio
+deactivate DB
+
+PD --> PS: patrimonio_com_id
+deactivate PD
+
+PS -> AIS: categorizePatrimonio(patrimonio)
+activate AIS
+
+AIS -> PCS: categorize(patrimonio)
+activate PCS
+
+PCS -> PCS: extrairCaracteristicas(patrimonio)
+PCS -> PCS: aplicarModelo(caracteristicas)
+
+PCS --> AIS: CategorizationResult
+deactivate PCS
+
+AIS --> PS: categoria_sugerida
+deactivate AIS
+
+PS -> PD: atualizarCategoria(id, categoria)
+activate PD
+
+PD -> DB: UPDATE TABELA_PATRIMONIO SET CATEGORIA
+activate DB
+DB --> PD: success
+deactivate DB
+
+PD --> PS: success
+deactivate PD
+
+PS -> QRS: gerarQRCode(id_patrimonio)
+activate QRS
+
+QRS -> QRS: gerarCodigo()
+QRS -> DB: INSERT INTO TABELA_QRCODE
+activate DB
+DB --> QRS: success
+deactivate DB
+
+QRS --> PS: qr_code
+deactivate QRS
+
+PS --> PC: patrimonio_completo
+deactivate PS
+
+PC --> Op: resultado_cadastro
+deactivate PC
+
+== Fluxo 2: Processo de Coleta com Divergência ==
+
+actor "Coletor" as Col
+participant "ColetaApp" as CA
+participant "ColetaService" as CS
+participant "ColetaDAO" as CD
+participant "PatrimonioDAO" as PD2
+participant "OfflineManager" as OM
+database "SQLite" as SL
+database "Database" as DB2
+
+Col -> CA: lerQRCode(codigo)
+activate CA
+
+CA -> CA: decodificarQR(codigo)
+
+CA -> CS: buscarPatrimonio(codigo_qr)
+activate CS
+
+alt Sistema Online
+    CS -> PD2: buscarPorQRCode(codigo)
+    activate PD2
+    
+    PD2 -> DB2: SELECT FROM TABELA_PATRIMONIO
+    activate DB2
+    DB2 --> PD2: patrimonio_data
+    deactivate DB2
+    
+    PD2 --> CS: patrimonio
+    deactivate PD2
+else Sistema Offline
+    CS -> OM: buscarPatrimonioLocal(codigo)
+    activate OM
+    
+    OM -> SL: SELECT FROM patrimonio_cache
+    activate SL
+    SL --> OM: patrimonio_data
+    deactivate SL
+    
+    OM --> CS: patrimonio
+    deactivate OM
+end
+
+CS --> CA: patrimonio_encontrado
+deactivate CS
+
+CA --> Col: exibir_patrimonio
+deactivate CA
+
+Col -> CA: registrarColeta(dados_coleta)
+activate CA
+
+CA -> CA: capturarLocalizacao()
+CA -> CA: verificarDivergencia()
+
+alt Divergência Detectada
+    CA -> Col: solicitar_justificativa
+    Col -> CA: fornecer_motivo(motivo)
+    CA -> CA: registrarDivergencia(motivo)
+end
+
+CA -> CS: salvarColeta(coleta)
+activate CS
+
+alt Sistema Online
+    CS -> CD: inserirColeta(coleta)
+    activate CD
+    
+    CD -> DB2: INSERT INTO TABELA_COLETA
+    activate DB2
+    DB2 --> CD: success
+    deactivate DB2
+    
+    CD --> CS: coleta_id
+    deactivate CD
+else Sistema Offline
+    CS -> OM: salvarColetaLocal(coleta)
+    activate OM
+    
+    OM -> SL: INSERT INTO coleta_pendente
+    activate SL
+    SL --> OM: success
+    deactivate SL
+    
+    OM --> CS: pendente_sync
+    deactivate OM
+end
+
+CS --> CA: resultado
+deactivate CS
+
+CA --> Col: coleta_registrada
+deactivate CA
+
+== Fluxo 3: Interação com Chatbot IA ==
+
+actor "Usuário" as User
+participant "ChatbotController" as CC
+participant "ChatbotService" as CBS
+participant "AIDataAnalysisService" as ADAS
+participant "PatrimonioDAO" as PD3
+participant "ConversationMemory" as CM
+participant "ContextualIntentDetector" as CID
+database "Database" as DB3
+
+User -> CC: enviarMensagem("Quantos patrimônios temos no setor TI?")
+activate CC
+
+CC -> CBS: processMessage(mensagem)
+activate CBS
+
+CBS -> CM: adicionarMensagem(mensagem)
+activate CM
+CM -> CM: armazenarContexto()
+CM --> CBS: contexto_atualizado
+deactivate CM
+
+CBS -> CID: detectarIntencao(mensagem, contexto)
+activate CID
+
+CID -> CID: analisarPalavrasChave()
+CID -> CID: classificarIntencao()
+
+CID --> CBS: "CONSULTA_ESTATISTICA_SETOR"
+deactivate CID
+
+CBS -> CBS: extrairParametros(mensagem)
+note right: Extrai "setor TI"
+
+CBS -> PD3: buscarSetorPorNome("TI")
+activate PD3
+
+PD3 -> DB3: SELECT FROM TABELA_SETOR WHERE nome LIKE '%TI%'
+activate DB3
+DB3 --> PD3: setor_data
+deactivate DB3
+
+PD3 --> CBS: setor_id
+deactivate PD3
+
+CBS -> PD3: contarPatrimoniosPorSetor(setor_id)
+activate PD3
+
+PD3 -> DB3: SELECT COUNT(*) FROM TABELA_PATRIMONIO p JOIN TABELA_SALA s ON p.ID_SALA = s.ID JOIN TABELA_SETOR st ON s.ID_SETOR = st.ID WHERE st.ID = ?
+activate DB3
+DB3 --> PD3: count_result
+deactivate DB3
+
+PD3 --> CBS: total_patrimonios
+deactivate PD3
+
+CBS -> ADAS: gerarInsights(setor_id, total_patrimonios)
+activate ADAS
+
+ADAS -> ADAS: analisarDistribuicao()
+ADAS -> ADAS: compararComOutrosSetores()
+
+ADAS --> CBS: insights_adicionais
+deactivate ADAS
+
+CBS -> CBS: formatarResposta(total, insights)
+
+CBS -> CM: adicionarResposta(resposta)
+activate CM
+CM --> CBS: success
+deactivate CM
+
+CBS --> CC: ChatbotResponse
+deactivate CBS
+
+CC --> User: "O setor TI possui 127 patrimônios. Representa 15% do total institucional..."
+deactivate CC
+
+== Fluxo 4: Sincronização de Dados Offline ==
+
+participant "OfflineManager" as OM2
+participant "DataSynchronizer" as DS
+participant "ConnectivityManager" as ConnM
+participant "ColetaDAO" as CD2
+participant "PatrimonioDAO" as PD4
+database "SQLite" as SL2
+database "Database" as DB4
+
+OM2 -> ConnM: verificarConectividade()
+activate ConnM
+ConnM --> OM2: conectado = true
+deactivate ConnM
+
+OM2 -> DS: iniciarSincronizacao()
+activate DS
+
+DS -> SL2: SELECT * FROM coleta_pendente
+activate SL2
+SL2 --> DS: lista_coletas_pendentes
+deactivate SL2
+
+loop Para cada coleta pendente
+    DS -> CD2: inserirColeta(coleta)
+    activate CD2
+    
+    CD2 -> DB4: INSERT INTO TABELA_COLETA
+    activate DB4
+    
+    alt Sucesso
+        DB4 --> CD2: coleta_id
+        CD2 --> DS: success
+        
+        DS -> SL2: DELETE FROM coleta_pendente WHERE id = ?
+        activate SL2
+        SL2 --> DS: deleted
+        deactivate SL2
+        
+    else Erro
+        DB4 --> CD2: error
+        CD2 --> DS: error
+        DS -> DS: registrarErro(coleta_id)
+    end
+    
+    deactivate DB4
+    deactivate CD2
+end
+
+DS -> SL2: SELECT * FROM patrimonio_cache WHERE data_sync < ?
+activate SL2
+SL2 --> DS: patrimonios_desatualizados
+deactivate SL2
+
+loop Para cada patrimônio desatualizado
+    DS -> PD4: buscarPatrimonioPorId(id)
+    activate PD4
+    
+    PD4 -> DB4: SELECT FROM TABELA_PATRIMONIO WHERE id = ?
+    activate DB4
+    DB4 --> PD4: patrimonio_atualizado
+    deactivate DB4
+    
+    PD4 --> DS: patrimonio_data
+    deactivate PD4
+    
+    DS -> SL2: UPDATE patrimonio_cache SET ... WHERE id = ?
+    activate SL2
+    SL2 --> DS: updated
+    deactivate SL2
+end
+
+DS --> OM2: relatorio_sincronizacao
+deactivate DS
+
+OM2 -> OM2: notificarUsuario(relatorio)
+
+@enduml

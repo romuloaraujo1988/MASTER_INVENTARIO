@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context=".presentation.coleta.ManualCollectionActivity">
+
+    <!-- Informação da Sala -->
+    <TextView
+        android:id="@+id/tvSalaInfo"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/info_background"
+        android:padding="12dp"
+        android:textColor="@color/text_primary"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Sala: Laboratório de Informática 1" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardInput"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvSalaInfo">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Coleta Manual"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/black" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Digite o número do patrimônio para coletar"
+                android:textSize="14sp"
+                android:textColor="@android:color/darker_gray" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:hint="Número do Patrimônio"
+                app:boxStrokeColor="@color/colorPrimary"
+                app:hintTextColor="@color/colorPrimary"
+                app:endIconMode="custom"
+                app:endIconDrawable="@drawable/ic_mic"
+                app:endIconTint="@color/primary"
+                app:endIconContentDescription="Busca por voz">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etPatrimonioNumber"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:textSize="18sp"
+                    android:imeOptions="actionDone" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:gravity="end">
+
+                <Button
+                    android:id="@+id/btnClear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Limpar"
+                    android:backgroundTint="@android:color/darker_gray"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+                <Button
+                    android:id="@+id/btnSearch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Buscar"
+                    android:backgroundTint="@color/colorSecondary"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+                <Button
+                    android:id="@+id/btnCollect"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Coletar"
+                    android:enabled="false"
+                    android:backgroundTint="@color/colorPrimary" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Progress Bar -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cardInput" />
+
+    <!-- Informações do Patrimônio -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardPatrimonioInfo"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="@color/background_light"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/progressBar">
+
+        <TextView
+            android:id="@+id/tvPatrimonioInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary"
+            android:lineSpacingExtra="4dp"
+            tools:text="Patrimônio: 123456\nDescrição: Computador Dell\nStatus: Disponível para coleta" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <TextView
+        android:id="@+id/tvCollectionCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Total coletado: 0"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cardPatrimonioInfo" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvCollectionCount">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="💡 Dicas:"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="🎤 Clique no microfone para busca por voz"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="📷 Use o scanner QR Code para coleta rápida"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,17 @@
+{
+    "java.project.sourcePaths": [
+        "src/main/java"
+    ],
+    "java.project.outputPath": "target/classes",
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "target/classes"
+    ],
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.import.gradle.enabled": false,
+    "java.import.maven.enabled": false,
+    "java.maven.downloadSources": false,
+    "java.autobuild.enabled": true,
+    "java.maxConcurrentBuilds": 1
+}

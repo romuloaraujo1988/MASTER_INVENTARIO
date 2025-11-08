@@ -1,0 +1,184 @@
+@startuml Diagrama de Componentes - Arquitetura do Sistema
+!theme plain
+title Sistema de Inventário - Arquitetura de Componentes
+
+!define RECTANGLE class
+
+package "Camada de Apresentação" {
+    component [Interface Web] as WebUI {
+        portin " " as WebUI_in
+        portout " " as WebUI_out
+    }
+    
+    component [Aplicativo Mobile] as MobileApp {
+        portin " " as Mobile_in
+        portout " " as Mobile_out
+    }
+    
+    component [Chatbot Interface] as ChatUI {
+        portin " " as Chat_in
+        portout " " as Chat_out
+    }
+}
+
+package "Camada de Controle" {
+    component [Controllers REST] as Controllers {
+        portin " " as Ctrl_in
+        portout " " as Ctrl_out
+        
+        component [PatrimonioController]
+        component [InventarioController]
+        component [ColetaController]
+        component [RelatorioController]
+        component [ChatbotController]
+        component [AIController]
+    }
+    
+    component [Security Filter] as Security {
+        portin " " as Sec_in
+        portout " " as Sec_out
+    }
+    
+    component [Exception Handler] as ExHandler {
+        portin " " as Ex_in
+        portout " " as Ex_out
+    }
+}
+
+package "Camada de Negócio" {
+    component [Core Services] as CoreServices {
+        portin " " as Core_in
+        portout " " as Core_out
+        
+        component [PatrimonioService]
+        component [InventarioService]
+        component [ColetaService]
+        component [RelatorioService]
+        component [UsuarioService]
+        component [CampusService]
+    }
+    
+    component [AI Services] as AIServices {
+        portin " " as AI_in
+        portout " " as AI_out
+        
+        component [AIIntegrationService]
+        component [ChatbotService]
+        component [PatrimonioCategorizationService]
+        component [PredictiveAnalysisService]
+        component [AIDataAnalysisService]
+        component [LegalKnowledgeIntegrator]
+    }
+    
+    component [Utility Services] as UtilServices {
+        portin " " as Util_in
+        portout " " as Util_out
+        
+        component [QRCodeService]
+        component [EmailService]
+        component [ReportGeneratorService]
+        component [ValidationService]
+    }
+}
+
+package "Camada de Integração" {
+    component [External APIs] as ExtAPIs {
+        portin " " as Ext_in
+        portout " " as Ext_out
+        
+        component [OpenAI API]
+        component [Email Provider]
+        component [Cloud Storage]
+    }
+    
+    component [Configuration Manager] as ConfigMgr {
+        portin " " as Config_in
+        portout " " as Config_out
+        
+        component [UnifiedConfigurationManager]
+        component [AIConfigurationManager]
+    }
+}
+
+package "Camada de Dados" {
+    component [Data Access Layer] as DAL {
+        portin " " as DAL_in
+        portout " " as DAL_out
+        
+        component [PatrimonioDAO]
+        component [InventarioDAO]
+        component [ColetaDAO]
+        component [UsuarioDAO]
+        component [RelatorioDAO]
+    }
+    
+    component [Offline Manager] as OfflineMgr {
+        portin " " as Offline_in
+        portout " " as Offline_out
+        
+        component [DataSynchronizer]
+        component [ConnectivityManager]
+        component [CacheManager]
+    }
+}
+
+package "Camada de Persistência" {
+    database "PostgreSQL\nDatabase" as MainDB {
+        portin " " as DB_in
+    }
+    
+    database "SQLite\nLocal Cache" as LocalDB {
+        portin " " as Local_in
+    }
+    
+    storage "File System\nReports & QR Codes" as FileSystem {
+        portin " " as FS_in
+    }
+}
+
+' Conexões da Camada de Apresentação
+WebUI_out --> Ctrl_in : HTTP/REST
+Mobile_out --> Ctrl_in : HTTP/REST
+Chat_out --> Ctrl_in : WebSocket/REST
+
+' Conexões da Camada de Controle
+Ctrl_out --> Core_in : Service Calls
+Ctrl_out --> AI_in : AI Service Calls
+Sec_out --> Ctrl_in : Authentication
+Ex_out --> Ctrl_in : Error Handling
+
+' Conexões da Camada de Negócio
+Core_out --> DAL_in : Data Operations
+Core_out --> Util_in : Utility Functions
+AI_out --> Ext_in : External AI APIs
+AI_out --> Config_in : Configuration
+Util_out --> FS_in : File Operations
+
+' Conexões da Camada de Integração
+Ext_out --> AI_in : API Responses
+Config_out --> Core_in : Configuration Data
+Config_out --> AI_in : AI Configuration
+
+' Conexões da Camada de Dados
+DAL_out --> DB_in : SQL Queries
+Offline_out --> Local_in : Local Storage
+Offline_out --> DB_in : Synchronization
+
+' Conexões Especiais para Mobile Offline
+Mobile_out -.-> Offline_in : Offline Mode
+Offline_out -.-> Mobile_in : Sync Notifications
+
+' Notas explicativas
+note top of WebUI : Interface web responsiva\ncom funcionalidades completas
+note top of MobileApp : App mobile para coleta\ncom suporte offline
+note top of ChatUI : Interface de chatbot\ncom IA integrada
+
+note right of AIServices : Serviços de IA para:\n- Categorização automática\n- Análise preditiva\n- Processamento de linguagem natural\n- Integração com conhecimento legal
+
+note right of OfflineMgr : Gerenciamento offline:\n- Cache local\n- Sincronização automática\n- Detecção de conectividade
+
+note bottom of MainDB : Banco principal:\n- Dados mestres\n- Transações\n- Histórico completo
+
+note bottom of LocalDB : Cache local:\n- Dados para coleta offline\n- Sincronização pendente\n- Configurações locais
+
+@enduml
