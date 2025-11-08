@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Main-Class: com.inventario.SistemaInventarioApplication
+Class-Path: .
+Implementation-Title: Sistema de Inventário
+Implementation-Version: 1.2.0
+Implementation-Vendor: IFMT
+Specification-Title: Sistema de Controle de Inventário de Patrimônio
+Specification-Version: 1.2.0
+Specification-Vendor: IFMT
+Created-By: Maven Build System
+Build-Jdk: 21
+Application-Name: Sistema de Inventário
+Permissions: all-permissions
+Caller-Allowable-Codebase: *
+Trusted-Only: false
