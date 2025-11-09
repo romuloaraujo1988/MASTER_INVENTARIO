@@ -1,6 +1,6 @@
 package com.inventario.service;
 
-import com.inventario.dao.InventarioDAO;
+import com.inventario.dao.InventarioDAORefactored;
 import com.inventario.dao.InventarioSetorDAO;
 import com.inventario.dao.ParticipanteInventarioDAO;
 import com.inventario.model.Inventario;
@@ -25,17 +25,17 @@ public class InventarioService {
     
     private static final Logger logger = LoggerFactory.getLogger(InventarioService.class);
     
-    private final InventarioDAO inventarioDAO;
+    private final InventarioDAORefactored inventarioDAO;
     private final InventarioSetorDAO inventarioSetorDAO;
     private final ParticipanteInventarioDAO participanteInventarioDAO;
     
     public InventarioService() {
-        this.inventarioDAO = new InventarioDAO();
+        this.inventarioDAO = new InventarioDAORefactored();
         this.inventarioSetorDAO = new InventarioSetorDAO();
         this.participanteInventarioDAO = new ParticipanteInventarioDAO();
     }
     
-    public InventarioService(InventarioDAO inventarioDAO, 
+    public InventarioService(InventarioDAORefactored inventarioDAO, 
                             InventarioSetorDAO inventarioSetorDAO,
                             ParticipanteInventarioDAO participanteInventarioDAO) {
         this.inventarioDAO = inventarioDAO;
@@ -47,7 +47,12 @@ public class InventarioService {
      * Lista todos os inventários
      */
     public List<Inventario> listarTodos() {
-        return inventarioDAO.listarInventarios();
+        try {
+            return inventarioDAO.findAll();
+        } catch (Exception e) {
+            logger.error("Erro ao listar inventários", e);
+            return new ArrayList<>();
+        }
     }
     
     /**
@@ -61,42 +66,64 @@ public class InventarioService {
      * Busca inventário por ID
      */
     public Inventario buscarPorId(int id) {
-        return inventarioDAO.buscarInventarioPorId(id);
+        try {
+            return inventarioDAO.findById(id);
+        } catch (Exception e) {
+            logger.error("Erro ao buscar inventário por ID: {}", id, e);
+            return null;
+        }
     }
     
     /**
      * Busca inventário ativo
      */
     public Inventario buscarInventarioAtivo() {
-        return inventarioDAO.buscarInventarioPorStatus("ATIVO");
+        try {
+            return inventarioDAO.buscarPorStatus("ATIVO");
+        } catch (Exception e) {
+            logger.error("Erro ao buscar inventário ativo", e);
+            return null;
+        }
     }
     
     /**
      * Salva um novo inventário
      */
     public boolean salvar(Inventario inventario) throws BusinessException {
-        validarInventario(inventario);
-        Integer id = inventarioDAO.inserir(inventario);
-        if (id != null && id > 0) {
-            inventario.setId(id);
+        try {
+            validarInventario(inventario);
+            inventarioDAO.insert(inventario);
             return true;
+        } catch (Exception e) {
+            logger.error("Erro ao salvar inventário", e);
+            throw new BusinessException("Erro ao salvar inventário: " + e.getMessage());
         }
-        return false;
     }
     
     /**
      * Atualiza um inventário existente
      */
     public boolean atualizar(Inventario inventario) throws BusinessException {
-        validarInventario(inventario);
-        return inventarioDAO.atualizar(inventario);
+        try {
+            validarInventario(inventario);
+            inventarioDAO.update(inventario);
+            return true;
+        } catch (Exception e) {
+            logger.error("Erro ao atualizar inventário", e);
+            throw new BusinessException("Erro ao atualizar inventário: " + e.getMessage());
+        }
     }
     
     /**
      * Finaliza um inventário
      */
     public boolean finalizar(int idInventario) throws BusinessException {
-        return inventarioDAO.finalizar(idInventario);
+        try {
+            return inventarioDAO.finalizar(idInventario);
+        } catch (Exception e) {
+            logger.error("Erro ao finalizar inventário: {}", idInventario, e);
+            throw new BusinessException("Erro ao finalizar inventário: " + e.getMessage());
+        }
     }
     
     /**
@@ -104,7 +131,12 @@ public class InventarioService {
      */
     public boolean salvarConfiguracaoSetores(int idInventario, boolean incluirTodos, List<Integer> idsSetores) 
             throws BusinessException {
-        return inventarioSetorDAO.salvarConfiguracaoSetores(idInventario, incluirTodos, idsSetores);
+        try {
+            return inventarioSetorDAO.salvarConfiguracaoSetores(idInventario, incluirTodos, idsSetores);
+        } catch (Exception e) {
+            logger.error("Erro ao salvar configuração de setores do inventário: {}", idInventario, e);
+            throw new BusinessException("Erro ao salvar configuração de setores: " + e.getMessage());
+        }
     }
     
     /**
@@ -157,7 +189,7 @@ public class InventarioService {
      */
     public Inventario buscarPorStatus(String status) {
         try {
-            return inventarioDAO.buscarInventarioPorStatus(status);
+            return inventarioDAO.buscarPorStatus(status);
         } catch (Exception e) {
             logger.error("Erro ao buscar inventário por status: {}", status, e);
             return null;

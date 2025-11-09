@@ -32,7 +32,7 @@ public class MobileDashboardController {
     private com.inventario.dao.ColetaDAO coletaDAO;
     
     @Autowired
-    private com.inventario.dao.InventarioDAO inventarioDAO;
+    private com.inventario.dao.InventarioDAORefactored inventarioDAO;
     
     @Autowired
     private com.inventario.service.UsuarioService usuarioService;
@@ -60,7 +60,7 @@ public class MobileDashboardController {
             // Buscar inventário ativo (EM_ANDAMENTO)
             com.inventario.model.Inventario inventarioAtivo = null;
             try {
-                inventarioAtivo = inventarioDAO.buscarInventarioPorStatus(com.inventario.model.Inventario.STATUS_EM_ANDAMENTO);
+                inventarioAtivo = inventarioDAO.buscarPorStatus(com.inventario.model.Inventario.STATUS_EM_ANDAMENTO);
                 if (inventarioAtivo != null) {
                     logger.info("Inventário ativo encontrado: ID={}, Nome={}", inventarioAtivo.getId(), inventarioAtivo.getNome());
                 } else {

@@ -42,7 +42,6 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\RelatorioFrame.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\ImportacaoCSVFrameRefactored.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\security\CustomUserDetailsService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\repository\InventarioRepository.java
-D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\ColetaDAORefactored.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\print\EtiquetaData.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\InventarioDAORefactored.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\DatabaseConfiguration.java
@@ -91,13 +90,13 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\VersionInfo.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\RelatorioExcelGenerator.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\ColetaFrame_v2.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\SoundNotification.java
-D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\ColetorDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\notification\NotificationManager.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\ImportacaoExcel.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\service\MobileAuthService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\service\MobileDashboardService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\DescricaoResumoService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileResponsavelDTO.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\repository\impl\PatrimonioRepositoryImpl.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileSalaDTO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\AsyncConfig.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileResponsavelController.java
@@ -108,7 +107,6 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\CsvExcelGenerator.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\ImageUtils.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\PatrimonioFrame.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\notification\ToastNotification.java
-D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\QRCodeDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\ValidationUtils.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\offline\OfflineConfigManager.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\security\JwtUtil.java
@@ -125,11 +123,11 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileColeta
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\offline\SyncFrame.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\BusinessException.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\AutenticacaoService.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\repository\ColetaRepository.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\SingleInstanceManager.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\config\MobileServerConfig.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\security\JwtAuthenticationFilter.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\ResponsavelService.java
-D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\QRCodeService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\InventarioService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\service\MobileSyncService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\ParticipanteInventarioDAO.java
@@ -151,7 +149,6 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\ColetaService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\test\TesteAdminColeta.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\DatabaseConfigManager.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\ServiceFactory.java
-D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\InventarioDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\MainFrame.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\DispositivoRegistroDTO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\IconPreview.java
@@ -183,6 +180,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\SetorFrame.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\util\SiadsLayoutFormatter.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\ParticipanteInventario.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\RelatorioColetaDAO.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\exception\RepositoryException.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\security\MobileJwtAuthenticationFilter.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\view\SiadsExportDialog.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\MobileConnectionService.java
@@ -198,6 +196,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\BaseDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\ImportacaoCSVFrame.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\ColetaDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileColetaController.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\repository\impl\ColetaRepositoryImpl.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\PortManager.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\service\SiadsIntegrationService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\AutenticacaoServiceAPI.java

@@ -4,8 +4,6 @@ import com.inventario.service.PatrimonioService;
 import com.inventario.repository.impl.PatrimonioRepositoryImpl;
 import com.inventario.dao.PatrimonioDAORefactored;
 import com.inventario.model.Patrimonio;
-import com.inventario.model.QRCode;
-import com.inventario.service.QRCodeService;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
@@ -19,10 +17,10 @@ import java.util.Optional;
 
 /**
  * Frame para gerenciamento de QR Codes
+ * NOTA: Funcionalidade de QR Code desabilitada temporariamente
  */
 public class QRCodeFrame extends JFrame {
     
-    private final QRCodeService qrCodeService;
     private final PatrimonioService patrimonioService;
     
     // Componentes da interface

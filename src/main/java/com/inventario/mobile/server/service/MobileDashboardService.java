@@ -2,7 +2,7 @@ package com.inventario.mobile.server.service;
 
 import com.inventario.dao.PatrimonioDAORefactored;
 import com.inventario.dao.ColetaDAO;
-import com.inventario.dao.InventarioDAO;
+import com.inventario.dao.InventarioDAORefactored;
 import com.inventario.model.Inventario;
 import com.inventario.model.Coleta;
 import com.inventario.mobile.server.dto.DashboardStatsDTO;
@@ -28,12 +28,12 @@ public class MobileDashboardService {
     
     private final PatrimonioDAORefactored patrimonioDAO;
     private final ColetaDAO coletaDAO;
-    private final InventarioDAO inventarioDAO;
+    private final InventarioDAORefactored inventarioDAO;
     
     public MobileDashboardService() {
         this.patrimonioDAO = new PatrimonioDAORefactored();
         this.coletaDAO = new ColetaDAO();
-        this.inventarioDAO = new InventarioDAO();
+        this.inventarioDAO = new InventarioDAORefactored();
     }
     
     /**

@@ -1,7 +1,7 @@
 package com.inventario.mobile.server.service;
 
 import com.inventario.dao.ColetaDAO;
-import com.inventario.dao.InventarioDAO;
+import com.inventario.dao.InventarioDAORefactored;
 import com.inventario.dao.PatrimonioDAORefactored;
 import com.inventario.dao.UsuarioDAORefactored;
 import com.inventario.dao.ParticipanteInventarioDAO;
@@ -38,26 +38,16 @@ public class MobileColetaService {
 
     private final ColetaDAO coletaDAO;
     private final PatrimonioDAORefactored patrimonioDAO;
-    private final InventarioDAO inventarioDAO;
+    private final InventarioDAORefactored inventarioDAO;
     private final UsuarioDAORefactored usuarioDAO;
     private final ParticipanteInventarioDAO participanteInventarioDAO;
-    
-    // Serviços para funcionalidades avançadas
-    private final com.inventario.service.PatrimonioService patrimonioService;
-    private final com.inventario.service.ColetaService coletaService;
-    private final com.inventario.service.InventarioService inventarioService;
 
     public MobileColetaService() {
         this.coletaDAO = new ColetaDAO();
         this.patrimonioDAO = new PatrimonioDAORefactored();
-        this.inventarioDAO = new InventarioDAO();
+        this.inventarioDAO = new InventarioDAORefactored();
         this.usuarioDAO = new UsuarioDAORefactored();
         this.participanteInventarioDAO = new ParticipanteInventarioDAO();
-        
-        // Obter serviços do ServiceFactory (agora com métodos estáticos)
-        this.patrimonioService = com.inventario.service.ServiceFactory.getPatrimonioService();
-        this.coletaService = com.inventario.service.ServiceFactory.getColetaService();
-        this.inventarioService = com.inventario.service.ServiceFactory.getInventarioService();
     }
 
     /**
@@ -85,7 +75,7 @@ public class MobileColetaService {
         }
 
         // Buscar inventário
-        Inventario inventario = inventarioDAO.buscarInventarioPorId(request.getIdInventario());
+        Inventario inventario = inventarioDAO.findById(request.getIdInventario());
         if (inventario == null) {
             throw new IllegalArgumentException("Inventário não encontrado: " + request.getIdInventario());
         }
@@ -195,7 +185,7 @@ public class MobileColetaService {
         List<MobileColetaResponse> responses = new ArrayList<>();
 
         for (Coleta coleta : coletas) {
-            Inventario inventario = inventarioDAO.buscarInventarioPorId(coleta.getIdInventario());
+            Inventario inventario = inventarioDAO.findById(coleta.getIdInventario());
             responses.add(converterParaResponse(coleta, usuario, inventario));
         }
 
@@ -219,7 +209,7 @@ public class MobileColetaService {
 
         for (Coleta coleta : coletas) {
             if ("PENDENTE".equals(coleta.getStatusColeta())) {
-                Inventario inventario = inventarioDAO.buscarInventarioPorId(coleta.getIdInventario());
+                Inventario inventario = inventarioDAO.findById(coleta.getIdInventario());
                 responses.add(converterParaResponse(coleta, usuario, inventario));
             }
         }
@@ -246,7 +236,7 @@ public class MobileColetaService {
             if (count >= limit)
                 break;
 
-            Inventario inventario = inventarioDAO.buscarInventarioPorId(coleta.getIdInventario());
+            Inventario inventario = inventarioDAO.findById(coleta.getIdInventario());
             responses.add(converterParaResponse(coleta, usuario, inventario));
             count++;
         }
@@ -276,7 +266,7 @@ public class MobileColetaService {
             throw new SecurityException("Sem permissão para acessar esta coleta");
         }
 
-        Inventario inventario = inventarioDAO.buscarInventarioPorId(coleta.getIdInventario());
+        Inventario inventario = inventarioDAO.findById(coleta.getIdInventario());
         return converterParaResponse(coleta, usuario, inventario);
     }
 
@@ -315,7 +305,7 @@ public class MobileColetaService {
 
         coletaDAO.atualizarColeta(coleta);
 
-        Inventario inventario = inventarioDAO.buscarInventarioPorId(coleta.getIdInventario());
+        Inventario inventario = inventarioDAO.findById(coleta.getIdInventario());
         return converterParaResponse(coleta, usuario, inventario);
     }
 
@@ -428,8 +418,7 @@ public class MobileColetaService {
         try {
             // Se não informou inventário, buscar o ativo
             if (idInventario == null) {
-                com.inventario.model.Inventario inventarioAtivo = 
-                    inventarioService.buscarPorStatus("EM_ANDAMENTO");
+                Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
                 if (inventarioAtivo != null) {
                     idInventario = inventarioAtivo.getId();
                 } else {
@@ -437,9 +426,8 @@ public class MobileColetaService {
                 }
             }
             
-            // Buscar patrimônios pela descrição usando o serviço
-            List<com.inventario.model.Patrimonio> todosPatrimonios = 
-                patrimonioService.buscarPendentesPorDescricao(termoBusca, idInventario, coletaService);
+            // Buscar patrimônios pela descrição
+            List<Patrimonio> todosPatrimonios = patrimonioDAO.buscarPorDescricao(termoBusca);
             
             if (todosPatrimonios.isEmpty()) {
                 return Map.of(
@@ -449,9 +437,18 @@ public class MobileColetaService {
                 );
             }
             
+            // Filtrar apenas os não coletados
+            final Integer finalIdInventario = idInventario;
+            List<Patrimonio> patrimoniosPendentes = new ArrayList<>();
+            for (Patrimonio p : todosPatrimonios) {
+                if (!coletaDAO.coletaExiste(finalIdInventario, p.getId())) {
+                    patrimoniosPendentes.add(p);
+                }
+            }
+            
             // Agrupar por descrição e contar
-            Map<String, Integer> contagemPorDescricao = new java.util.HashMap<>();
-            for (com.inventario.model.Patrimonio p : todosPatrimonios) {
+            Map<String, Integer> contagemPorDescricao = new HashMap<>();
+            for (Patrimonio p : patrimoniosPendentes) {
                 String desc = p.getDescricao();
                 if (desc != null && !desc.trim().isEmpty()) {
                     contagemPorDescricao.put(desc, contagemPorDescricao.getOrDefault(desc, 0) + 1);
@@ -459,7 +456,7 @@ public class MobileColetaService {
             }
             
             // Criar lista de descrições com contagem
-            List<Map<String, Object>> descricoes = new java.util.ArrayList<>();
+            List<Map<String, Object>> descricoes = new ArrayList<>();
             for (Map.Entry<String, Integer> entry : contagemPorDescricao.entrySet()) {
                 descricoes.add(Map.of(
                     "descricao", entry.getKey(),
@@ -467,26 +464,18 @@ public class MobileColetaService {
                 ));
             }
             
-            // Obter estatísticas gerais
-            Map<String, Object> stats = patrimonioService.obterEstatisticasColeta(
-                patrimonioService.buscarPorDescricao(termoBusca),
-                idInventario,
-                coletaService
-            );
-            
             // Montar resposta
-            Map<String, Object> resultado = new java.util.HashMap<>();
+            Map<String, Object> resultado = new HashMap<>();
             resultado.put("descricoes", descricoes);
             resultado.put("total", descricoes.size());
-            resultado.put("totalPatrimoniosPendentes", todosPatrimonios.size());
-            resultado.put("estatisticas", stats);
+            resultado.put("totalPatrimoniosPendentes", patrimoniosPendentes.size());
             resultado.put("mensagem", String.format(
                 "Encontradas %d descrição(ões) com %d patrimônio(s) pendente(s)",
-                descricoes.size(), todosPatrimonios.size()
+                descricoes.size(), patrimoniosPendentes.size()
             ));
             
             logger.info("Retornando {} descrições pendentes com {} patrimônios total", 
-                descricoes.size(), todosPatrimonios.size());
+                descricoes.size(), patrimoniosPendentes.size());
             
             return resultado;
             

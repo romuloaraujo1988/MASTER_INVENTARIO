@@ -1,7 +1,7 @@
 package com.inventario.service;
 
 import com.inventario.dao.DashboardColetaDAO;
-import com.inventario.dao.InventarioDAO;
+import com.inventario.dao.InventarioDAORefactored;
 import com.inventario.model.Inventario;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,14 +24,14 @@ public class DashboardService {
     private static final Logger logger = LoggerFactory.getLogger(DashboardService.class);
     
     private final DashboardColetaDAO dashboardDAO;
-    private final InventarioDAO inventarioDAO;
+    private final InventarioDAORefactored inventarioDAO;
     
     public DashboardService() {
         this.dashboardDAO = new DashboardColetaDAO();
-        this.inventarioDAO = new InventarioDAO();
+        this.inventarioDAO = new InventarioDAORefactored();
     }
     
-    public DashboardService(DashboardColetaDAO dashboardDAO, InventarioDAO inventarioDAO) {
+    public DashboardService(DashboardColetaDAO dashboardDAO, InventarioDAORefactored inventarioDAO) {
         this.dashboardDAO = dashboardDAO;
         this.inventarioDAO = inventarioDAO;
     }
