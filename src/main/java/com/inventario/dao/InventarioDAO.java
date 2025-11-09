@@ -21,7 +21,7 @@ import java.util.List;
  * @version 2.0 - Refatorado
  */
 @Repository
-public class InventarioDAORefactored extends BaseDAO<Inventario, Integer> {
+public class InventarioDAO extends BaseDAO<Inventario, Integer> {
     
     // ==================== MÉTODOS ABSTRATOS IMPLEMENTADOS ====================
     

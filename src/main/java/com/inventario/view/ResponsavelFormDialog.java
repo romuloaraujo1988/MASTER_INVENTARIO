@@ -3,7 +3,7 @@ package com.inventario.view;
 import javax.swing.*;
 import java.awt.*;
 import com.inventario.model.Responsavel;
-import com.inventario.dao.ResponsavelDAORefactored;
+import com.inventario.dao.ResponsavelDAO;
 import com.inventario.dao.SetorDAORefactored;
 import com.inventario.model.Setor;
 import java.util.List;
@@ -210,7 +210,7 @@ public class ResponsavelFormDialog extends JDialog {
              
              try {
                   // Salvar no banco de dados
-                  ResponsavelDAORefactored responsavelDAO = new ResponsavelDAORefactored();
+                  ResponsavelDAO responsavelDAO = new ResponsavelDAO();
                   if (responsavel.getId() == 0) {
                       responsavelDAO.inserirResponsavel(responsavel);
                       JOptionPane.showMessageDialog(this, "Responsável cadastrado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);

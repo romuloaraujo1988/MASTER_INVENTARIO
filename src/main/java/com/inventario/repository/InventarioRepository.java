@@ -1,7 +1,7 @@
 package com.inventario.repository;
 
 import com.inventario.model.Inventario;
-import com.inventario.dao.InventarioDAORefactored;
+import com.inventario.dao.InventarioDAO;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -16,13 +16,13 @@ import java.util.Optional;
 @Repository
 public class InventarioRepository implements com.inventario.repository.Repository<Inventario, Integer> {
     
-    private final InventarioDAORefactored dao;
+    private final InventarioDAO dao;
     
     public InventarioRepository() {
-        this.dao = new InventarioDAORefactored();
+        this.dao = new InventarioDAO();
     }
     
-    public InventarioRepository(InventarioDAORefactored dao) {
+    public InventarioRepository(InventarioDAO dao) {
         this.dao = dao;
     }
     

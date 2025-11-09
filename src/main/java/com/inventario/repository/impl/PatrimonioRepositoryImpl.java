@@ -1,6 +1,6 @@
 package com.inventario.repository.impl;
 
-import com.inventario.dao.PatrimonioDAORefactored;
+import com.inventario.dao.PatrimonioDAO;
 import com.inventario.exception.RepositoryException;
 import com.inventario.model.Patrimonio;
 import com.inventario.repository.PatrimonioRepository;
@@ -26,10 +26,10 @@ public class PatrimonioRepositoryImpl implements PatrimonioRepository {
     
     private static final Logger logger = LoggerFactory.getLogger(PatrimonioRepositoryImpl.class);
     
-    private final PatrimonioDAORefactored patrimonioDAO;
+    private final PatrimonioDAO patrimonioDAO;
     
     @Autowired
-    public PatrimonioRepositoryImpl(PatrimonioDAORefactored patrimonioDAO) {
+    public PatrimonioRepositoryImpl(PatrimonioDAO patrimonioDAO) {
         this.patrimonioDAO = patrimonioDAO;
     }
     

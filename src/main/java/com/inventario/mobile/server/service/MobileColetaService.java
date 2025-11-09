@@ -1,8 +1,8 @@
 package com.inventario.mobile.server.service;
 
 import com.inventario.dao.ColetaDAO;
-import com.inventario.dao.InventarioDAORefactored;
-import com.inventario.dao.PatrimonioDAORefactored;
+import com.inventario.dao.InventarioDAO;
+import com.inventario.dao.PatrimonioDAO;
 import com.inventario.dao.UsuarioDAORefactored;
 import com.inventario.dao.ParticipanteInventarioDAO;
 import com.inventario.model.Coleta;
@@ -37,15 +37,15 @@ public class MobileColetaService {
     private static final Logger logger = LoggerFactory.getLogger(MobileColetaService.class);
 
     private final ColetaDAO coletaDAO;
-    private final PatrimonioDAORefactored patrimonioDAO;
-    private final InventarioDAORefactored inventarioDAO;
+    private final PatrimonioDAO patrimonioDAO;
+    private final InventarioDAO inventarioDAO;
     private final UsuarioDAORefactored usuarioDAO;
     private final ParticipanteInventarioDAO participanteInventarioDAO;
 
     public MobileColetaService() {
         this.coletaDAO = new ColetaDAO();
-        this.patrimonioDAO = new PatrimonioDAORefactored();
-        this.inventarioDAO = new InventarioDAORefactored();
+        this.patrimonioDAO = new PatrimonioDAO();
+        this.inventarioDAO = new InventarioDAO();
         this.usuarioDAO = new UsuarioDAORefactored();
         this.participanteInventarioDAO = new ParticipanteInventarioDAO();
     }

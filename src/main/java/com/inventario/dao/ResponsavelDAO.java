@@ -22,7 +22,7 @@ import java.util.List;
  * @version 2.0 - Refatorado
  */
 @Repository
-public class ResponsavelDAORefactored extends BaseDAO<Responsavel, Integer> {
+public class ResponsavelDAO extends BaseDAO<Responsavel, Integer> {
     
     // ==================== MÉTODOS ABSTRATOS IMPLEMENTADOS ====================
     

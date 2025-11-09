@@ -1,6 +1,6 @@
 package com.inventario.service;
 
-import com.inventario.dao.ResponsavelDAORefactored;
+import com.inventario.dao.ResponsavelDAO;
 import com.inventario.model.Responsavel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,13 +26,13 @@ public class ResponsavelService {
     private static final Logger logger = LoggerFactory.getLogger(ResponsavelService.class);
     
     @Autowired
-    private ResponsavelDAORefactored responsavelDAO;
+    private ResponsavelDAO responsavelDAO;
     
     public ResponsavelService() {
-        this.responsavelDAO = new ResponsavelDAORefactored();
+        this.responsavelDAO = new ResponsavelDAO();
     }
     
-    public ResponsavelService(ResponsavelDAORefactored responsavelDAO) {
+    public ResponsavelService(ResponsavelDAO responsavelDAO) {
         this.responsavelDAO = responsavelDAO;
     }
     

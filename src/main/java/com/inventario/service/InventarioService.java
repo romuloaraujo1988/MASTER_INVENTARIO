@@ -1,6 +1,6 @@
 package com.inventario.service;
 
-import com.inventario.dao.InventarioDAORefactored;
+import com.inventario.dao.InventarioDAO;
 import com.inventario.dao.InventarioSetorDAO;
 import com.inventario.dao.ParticipanteInventarioDAO;
 import com.inventario.model.Inventario;
@@ -25,17 +25,17 @@ public class InventarioService {
     
     private static final Logger logger = LoggerFactory.getLogger(InventarioService.class);
     
-    private final InventarioDAORefactored inventarioDAO;
+    private final InventarioDAO inventarioDAO;
     private final InventarioSetorDAO inventarioSetorDAO;
     private final ParticipanteInventarioDAO participanteInventarioDAO;
     
     public InventarioService() {
-        this.inventarioDAO = new InventarioDAORefactored();
+        this.inventarioDAO = new InventarioDAO();
         this.inventarioSetorDAO = new InventarioSetorDAO();
         this.participanteInventarioDAO = new ParticipanteInventarioDAO();
     }
     
-    public InventarioService(InventarioDAORefactored inventarioDAO, 
+    public InventarioService(InventarioDAO inventarioDAO, 
                             InventarioSetorDAO inventarioSetorDAO,
                             ParticipanteInventarioDAO participanteInventarioDAO) {
         this.inventarioDAO = inventarioDAO;

@@ -1,7 +1,7 @@
 package com.inventario.util;
 
-import com.inventario.dao.PatrimonioDAORefactored;
-import com.inventario.dao.ResponsavelDAORefactored;
+import com.inventario.dao.PatrimonioDAO;
+import com.inventario.dao.ResponsavelDAO;
 import com.inventario.dao.SalaDAORefactored;
 import com.inventario.dao.SetorDAORefactored;
 import com.inventario.model.Patrimonio;
@@ -32,8 +32,8 @@ public class ImportacaoCSV {
     }
     
     // DAOs para acesso aos dados
-    private final PatrimonioDAORefactored patrimonioDAO;
-    private final ResponsavelDAORefactored responsavelDAO;
+    private final PatrimonioDAO patrimonioDAO;
+    private final ResponsavelDAO responsavelDAO;
     private final SalaDAORefactored salaDAO;
     private final SetorDAORefactored setorDAO;
     
@@ -78,8 +78,8 @@ public class ImportacaoCSV {
      * Construtor
      */
     public ImportacaoCSV() {
-        this.patrimonioDAO = new PatrimonioDAORefactored();
-        this.responsavelDAO = new ResponsavelDAORefactored();
+        this.patrimonioDAO = new PatrimonioDAO();
+        this.responsavelDAO = new ResponsavelDAO();
         this.salaDAO = new SalaDAORefactored();
         this.setorDAO = new SetorDAORefactored();
     }

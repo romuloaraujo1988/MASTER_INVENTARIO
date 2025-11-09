@@ -1,7 +1,7 @@
 package com.inventario.mobile.server.controller;
 
 import com.inventario.mobile.server.dto.ApiResponse;
-import com.inventario.dao.PatrimonioDAORefactored;
+import com.inventario.dao.PatrimonioDAO;
 import com.inventario.model.Patrimonio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,7 +25,7 @@ public class MobileDescricaoController {
     private static final Logger logger = LoggerFactory.getLogger(MobileDescricaoController.class);
     
     @Autowired
-    private PatrimonioDAORefactored patrimonioDAO;
+    private PatrimonioDAO patrimonioDAO;
     
     /**
      * Listar descrições únicas de patrimônios

@@ -26,13 +26,13 @@ public class MobileDashboardController {
     private static final Logger logger = LoggerFactory.getLogger(MobileDashboardController.class);
     
     @Autowired
-    private com.inventario.dao.PatrimonioDAORefactored patrimonioDAO;
+    private com.inventario.dao.PatrimonioDAO patrimonioDAO;
     
     @Autowired
     private com.inventario.dao.ColetaDAO coletaDAO;
     
     @Autowired
-    private com.inventario.dao.InventarioDAORefactored inventarioDAO;
+    private com.inventario.dao.InventarioDAO inventarioDAO;
     
     @Autowired
     private com.inventario.service.UsuarioService usuarioService;

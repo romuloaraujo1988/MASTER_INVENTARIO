@@ -1,6 +1,6 @@
 package com.inventario.mobile.server.service;
 
-import com.inventario.dao.ResponsavelDAORefactored;
+import com.inventario.dao.ResponsavelDAO;
 import com.inventario.model.Responsavel;
 import com.inventario.mobile.server.dto.MobileResponsavelDTO;
 import org.springframework.stereotype.Service;
@@ -19,10 +19,10 @@ public class MobileResponsavelService {
     
     private static final Logger logger = LoggerFactory.getLogger(MobileResponsavelService.class);
     
-    private final ResponsavelDAORefactored responsavelDAO;
+    private final ResponsavelDAO responsavelDAO;
     
     public MobileResponsavelService() {
-        this.responsavelDAO = new ResponsavelDAORefactored();
+        this.responsavelDAO = new ResponsavelDAO();
     }
     
     /**

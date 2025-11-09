@@ -1,6 +1,6 @@
 package com.inventario.service;
 
-import com.inventario.dao.PatrimonioDAORefactored;
+import com.inventario.dao.PatrimonioDAO;
 import com.inventario.model.Patrimonio;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,18 +18,18 @@ import java.util.List;
  */
 public class DataSyncService {
     
-    private final PatrimonioDAORefactored patrimonioDAO;
+    private final PatrimonioDAO patrimonioDAO;
     private final ObjectMapper objectMapper;
     private final String jsonFilePath;
     
     public DataSyncService() {
-        this.patrimonioDAO = new PatrimonioDAORefactored();
+        this.patrimonioDAO = new PatrimonioDAO();
         this.objectMapper = new ObjectMapper();
         this.jsonFilePath = "ai_training_optimized.json";
     }
     
     public DataSyncService(String customJsonPath) {
-        this.patrimonioDAO = new PatrimonioDAORefactored();
+        this.patrimonioDAO = new PatrimonioDAO();
         this.objectMapper = new ObjectMapper();
         this.jsonFilePath = customJsonPath;
     }

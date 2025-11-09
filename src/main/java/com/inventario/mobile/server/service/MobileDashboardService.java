@@ -1,8 +1,8 @@
 package com.inventario.mobile.server.service;
 
-import com.inventario.dao.PatrimonioDAORefactored;
+import com.inventario.dao.PatrimonioDAO;
 import com.inventario.dao.ColetaDAO;
-import com.inventario.dao.InventarioDAORefactored;
+import com.inventario.dao.InventarioDAO;
 import com.inventario.model.Inventario;
 import com.inventario.model.Coleta;
 import com.inventario.mobile.server.dto.DashboardStatsDTO;
@@ -26,14 +26,14 @@ public class MobileDashboardService {
     
     private static final Logger logger = LoggerFactory.getLogger(MobileDashboardService.class);
     
-    private final PatrimonioDAORefactored patrimonioDAO;
+    private final PatrimonioDAO patrimonioDAO;
     private final ColetaDAO coletaDAO;
-    private final InventarioDAORefactored inventarioDAO;
+    private final InventarioDAO inventarioDAO;
     
     public MobileDashboardService() {
-        this.patrimonioDAO = new PatrimonioDAORefactored();
+        this.patrimonioDAO = new PatrimonioDAO();
         this.coletaDAO = new ColetaDAO();
-        this.inventarioDAO = new InventarioDAORefactored();
+        this.inventarioDAO = new InventarioDAO();
     }
     
     /**

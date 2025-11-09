@@ -1,6 +1,6 @@
 package com.inventario.siads.dao;
 
-import com.inventario.dao.PatrimonioDAORefactored;
+import com.inventario.dao.PatrimonioDAO;
 import com.inventario.model.Patrimonio;
 import com.inventario.util.ConnectionManager;
 import java.sql.Connection;
@@ -14,7 +14,7 @@ import java.util.List;
  * Extensão do PatrimonioDAORefactored com métodos específicos para SIADS
  * Fornece consultas otimizadas para exportação de dados patrimoniais
  */
-public class SiadsPatrimonioDAO extends PatrimonioDAORefactored {
+public class SiadsPatrimonioDAO extends PatrimonioDAO {
     
     /**
      * Lista todos os patrimônios com informações completas para SIADS

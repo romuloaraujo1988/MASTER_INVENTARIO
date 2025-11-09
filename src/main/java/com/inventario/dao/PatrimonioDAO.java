@@ -18,7 +18,7 @@ import java.util.List;
  * REDUÇÃO: ~500 linhas → ~200 linhas (-60%)
  */
 @Repository
-public class PatrimonioDAORefactored extends BaseDAO<Patrimonio, Integer> {
+public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
     
     // ========== Implementação dos Métodos Abstratos ==========
     

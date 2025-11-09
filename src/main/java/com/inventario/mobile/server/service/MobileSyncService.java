@@ -23,14 +23,14 @@ public class MobileSyncService {
     
     private static final Logger logger = LoggerFactory.getLogger(MobileSyncService.class);
     
-    private final PatrimonioDAORefactored patrimonioDAO;
+    private final PatrimonioDAO patrimonioDAO;
     private final com.inventario.service.InventarioService inventarioService;
     private final com.inventario.service.SalaService salaService;
     private final com.inventario.service.ResponsavelService responsavelService;
     private final com.inventario.service.SetorService setorService;
     
     public MobileSyncService() {
-        this.patrimonioDAO = new PatrimonioDAORefactored();
+        this.patrimonioDAO = new PatrimonioDAO();
         
         // Obter services do ServiceFactory (agora com métodos estáticos)
         this.inventarioService = ServiceFactory.getInventarioService();

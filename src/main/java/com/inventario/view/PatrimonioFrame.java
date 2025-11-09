@@ -6,7 +6,7 @@ import java.awt.*;
 import com.inventario.service.PatrimonioService;
 import com.inventario.model.Patrimonio;
 import com.inventario.repository.impl.PatrimonioRepositoryImpl;
-import com.inventario.dao.PatrimonioDAORefactored;
+import com.inventario.dao.PatrimonioDAO;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -39,7 +39,7 @@ public class PatrimonioFrame extends JFrame {
     public PatrimonioFrame() {
         // Instantiate service directly (no Spring context in Swing app)
         // Create the full dependency chain: DAO -> Repository -> Service
-        PatrimonioDAORefactored patrimonioDAO = new PatrimonioDAORefactored();
+        PatrimonioDAO patrimonioDAO = new PatrimonioDAO();
         PatrimonioRepositoryImpl patrimonioRepository = new PatrimonioRepositoryImpl(patrimonioDAO);
         this.patrimonioService = new PatrimonioService(patrimonioRepository);
         initComponents();
