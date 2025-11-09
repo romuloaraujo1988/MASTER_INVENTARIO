@@ -439,6 +439,50 @@ class InventarioRepository(
     
     suspend fun sincronizarTodosDados(): Int = 0
     
+    suspend fun buscarDescricoesNaoColetadas(): List<String> {
+        return try {
+            android.util.Log.d("InventarioRepository", "═══════════════════════════════════════════")
+            android.util.Log.d("InventarioRepository", "BUSCANDO DESCRIÇÕES NÃO COLETADAS")
+            android.util.Log.d("InventarioRepository", "═══════════════════════════════════════════")
+            
+            val response = apiService.getDescricoesNaoColetadas()
+            
+            android.util.Log.d("InventarioRepository", "Response code: ${response.code()}")
+            android.util.Log.d("InventarioRepository", "Response successful: ${response.isSuccessful}")
+            
+            if (response.isSuccessful && response.body() != null) {
+                val apiResponse = response.body()!!
+                android.util.Log.d("InventarioRepository", "API Response success: ${apiResponse.success}")
+                
+                if (apiResponse.success && apiResponse.data != null) {
+                    val descricoes = apiResponse.data
+                    
+                    android.util.Log.d("InventarioRepository", "✓ ${descricoes.size} descrições não coletadas encontradas!")
+                    descricoes.take(10).forEachIndexed { index, desc ->
+                        android.util.Log.d("InventarioRepository", "  [$index] $desc")
+                    }
+                    
+                    descricoes
+                } else {
+                    android.util.Log.w("InventarioRepository", "API retornou success=false ou data=null")
+                    emptyList()
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                android.util.Log.e("InventarioRepository", "✗ Erro HTTP ${response.code()}: $errorBody")
+                emptyList()
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("InventarioRepository", "═══════════════════════════════════════════")
+            android.util.Log.e("InventarioRepository", "EXCEÇÃO AO BUSCAR DESCRIÇÕES")
+            android.util.Log.e("InventarioRepository", "Tipo: ${e.javaClass.simpleName}")
+            android.util.Log.e("InventarioRepository", "Mensagem: ${e.message}")
+            android.util.Log.e("InventarioRepository", "Stack trace:", e)
+            android.util.Log.e("InventarioRepository", "═══════════════════════════════════════════")
+            emptyList()
+        }
+    }
+    
     suspend fun getCurrentUser(): com.inventario.mobile.data.model.Usuario? {
         return try {
             android.util.Log.d("InventarioRepository", "Buscando usuário atual do LocalDataManager")

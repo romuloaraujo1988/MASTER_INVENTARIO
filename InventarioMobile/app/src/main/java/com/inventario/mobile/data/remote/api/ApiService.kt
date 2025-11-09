@@ -140,4 +140,8 @@ interface ApiService {
     suspend fun getDashboardStats(): Response<ApiResponse<DashboardStatsDto>>
     
     @GET("api/mobile/dashboard/stats/{inventarioId}")
-    suspend fun getDashboardStatsByInventario(@Path("inventarioId") inventarioId: Int): Response<ApiResponse<Dashboa
+    suspend fun getDashboardStatsByInventario(@Path("inventarioId") inventarioId: Int): Response<ApiResponse<DashboardStatsDto>>
+    
+    @GET("api/mobile/dashboard/coletas-evolucao")
+    suspend fun getColetasEvolucao(@Query("dias") dias: Int = 7): Response<ApiResponse<List<ColetasPorDiaDto>>>
+}
