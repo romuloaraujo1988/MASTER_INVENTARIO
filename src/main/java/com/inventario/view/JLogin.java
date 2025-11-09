@@ -18,7 +18,7 @@ public class JLogin extends JFrame {
     private static final Color DANGER_COLOR = new Color(231, 76, 60);
     private static final Color CARD_COLOR = Color.WHITE;
     private static final Color TEXT_COLOR = new Color(44, 62, 80);
-    private static final Color PLACEHOLDER_COLOR = new Color(149, 165, 166);
+    //private static final Color PLACEHOLDER_COLOR = new Color(149, 165, 166);
 
     // Componentes
     private JTextField txtUsuario;
