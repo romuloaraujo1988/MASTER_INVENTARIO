@@ -61,6 +61,9 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
         
+        // Definir ícone personalizado
+        setIconImages(com.inventario.util.IconManager.getAppIconImages());
+        
         // Criar e configurar a barra de menu
         criarBarraMenu();
         
@@ -763,27 +766,39 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
     }
     
     private void mostrarSobre() {
-        String sobre = "SIHCP - Sistema de Histórico e Coleta Patrimonial\n\n" +
-                      "Versão: 1.0.0\n" +
-                      "Desenvolvido para o Instituto Federal de Mato Grosso\n\n" +
-                      "Sistema para gerenciamento de inventário de patrimônio.\n\n" +
-                      "Atalhos de Teclado:\n" +
-                      "F1 - Manual do Usuário\n" +
-                      "F2 - Gerenciar Inventários\n" +
-                      "F3 - Coleta de Dados\n" +
-                      "F4 - Gerenciar Patrimônio\n" +
-                      "F5 - Salas\n" +
-                      "F6 - Setores\n" +
-                      "F7 - Responsáveis\n" +
-                      "F8 - Usuários\n" +
-                      "F12 - Configurações\n" +
-                      "Ctrl+N - Novo Inventário\n" +
-                      "Ctrl+O - Abrir Inventário\n" +
-                      "Ctrl+S - Salvar\n" +
-                      "Ctrl+R - Relatório\n" +
-                      "Alt+F4 - Sair";
+        // Criar painel com informações de versão e atalhos
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        JOptionPane.showMessageDialog(this, sobre, "Sobre o Sistema", JOptionPane.INFORMATION_MESSAGE);
+        // Informações de versão do Git
+        JLabel versionLabel = new JLabel(com.inventario.util.VersionInfo.getVersionInfoHtml());
+        panel.add(versionLabel, BorderLayout.NORTH);
+        
+        // Atalhos de teclado
+        String atalhos = "<html><body style='font-family: Arial, sans-serif;'>" +
+                        "<h3>Atalhos de Teclado:</h3>" +
+                        "<table border='0' cellpadding='3'>" +
+                        "<tr><td><b>F1</b></td><td>Manual do Usuário</td></tr>" +
+                        "<tr><td><b>F2</b></td><td>Gerenciar Inventários</td></tr>" +
+                        "<tr><td><b>F3</b></td><td>Coleta de Dados</td></tr>" +
+                        "<tr><td><b>F4</b></td><td>Gerenciar Patrimônio</td></tr>" +
+                        "<tr><td><b>F5</b></td><td>Salas</td></tr>" +
+                        "<tr><td><b>F6</b></td><td>Setores</td></tr>" +
+                        "<tr><td><b>F7</b></td><td>Responsáveis</td></tr>" +
+                        "<tr><td><b>F8</b></td><td>Usuários</td></tr>" +
+                        "<tr><td><b>F9</b></td><td>Sincronização Offline</td></tr>" +
+                        "<tr><td><b>F12</b></td><td>Configurações</td></tr>" +
+                        "<tr><td><b>Ctrl+N</b></td><td>Novo Inventário</td></tr>" +
+                        "<tr><td><b>Ctrl+O</b></td><td>Abrir Inventário</td></tr>" +
+                        "<tr><td><b>Ctrl+S</b></td><td>Salvar</td></tr>" +
+                        "<tr><td><b>Ctrl+R</b></td><td>Relatório</td></tr>" +
+                        "<tr><td><b>Alt+F4</b></td><td>Sair</td></tr>" +
+                        "</table></body></html>";
+        
+        JLabel atalhoLabel = new JLabel(atalhos);
+        panel.add(atalhoLabel, BorderLayout.CENTER);
+        
+        JOptionPane.showMessageDialog(this, panel, "Sobre o Sistema", JOptionPane.INFORMATION_MESSAGE);
     }
     
     // Métodos para controle de status do inventário

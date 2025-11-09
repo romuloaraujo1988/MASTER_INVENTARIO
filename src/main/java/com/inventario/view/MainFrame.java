@@ -53,6 +53,9 @@ public class MainFrame extends JFrame {
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
 
+        // Definir ícone personalizado
+        setIconImages(com.inventario.util.IconManager.getAppIconImages());
+
         // Centralizar na tela
         setSize(1200, 800);
         setLocationRelativeTo(null);
@@ -905,12 +908,14 @@ public class MainFrame extends JFrame {
     }
 
     private void mostrarSobre() {
-        String sobre = "SIHCP - Sistema de Histórico e Coleta Patrimonial\n\n" +
-                "Versão: 1.0.0\n" +
-                "Desenvolvido para o Instituto Federal de Mato Grosso\n\n" +
-                "Sistema para gerenciamento de inventário de patrimônio.";
-
-        ModernDialog.showMessage(this, sobre, "Sobre", JOptionPane.INFORMATION_MESSAGE);
+        // Usar JLabel com HTML para melhor formatação
+        JLabel label = new JLabel(com.inventario.util.VersionInfo.getVersionInfoHtml());
+        label.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JOptionPane.showMessageDialog(this, 
+            label, 
+            "Sobre o Sistema", 
+            JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void forcarModoOffline() {

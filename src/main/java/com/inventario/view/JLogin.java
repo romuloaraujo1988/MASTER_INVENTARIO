@@ -51,6 +51,9 @@ public class JLogin extends JFrame {
         setTitle("SIHCP - Sistema de Histórico e Coleta Patrimonial - Login");
         setSize(450, 600);
         setResizable(false);
+        
+        // Definir ícone personalizado
+        setIconImages(com.inventario.util.IconManager.getAppIconImages());
 
         // Painel principal com gradiente
         JPanel mainPanel = new JPanel() {
