@@ -290,7 +290,7 @@ public class MainFrame extends JFrame {
         // Verificar se é usuário CONSULTA
         boolean isConsulta = usuarioLogado.getPerfil().name().equals("CONSULTA");
 
-        // Botões principais simples
+        // Botões principais simples - com tamanho máximo controlado
         gbc.gridwidth = 1;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 1.0;
@@ -300,7 +300,6 @@ public class MainFrame extends JFrame {
             // Para usuários CONSULTA, mostrar apenas o dashboard centralizado
             JButton btnDashboard = createSimpleButton("Dashboard", "📈");
             btnDashboard.addActionListener(e -> abrirDashboardColeta());
-            btnDashboard.setPreferredSize(new Dimension(200, 100));
             gbc.gridx = 1;
             gbc.gridy = 2;
             gbc.gridwidth = 1;
@@ -470,9 +469,10 @@ public class MainFrame extends JFrame {
             }
         };
 
-        button.setPreferredSize(new Dimension(180, 170));
-        button.setMinimumSize(new Dimension(180, 170));
-        button.setMaximumSize(new Dimension(180, 170));
+        // Tamanhos controlados - preferido e máximo
+        button.setPreferredSize(new Dimension(200, 150));
+        button.setMinimumSize(new Dimension(150, 120));
+        button.setMaximumSize(new Dimension(250, 180)); // Limita o crescimento máximo
         button.setContentAreaFilled(false);
         button.setBorderPainted(false);
         button.setFocusPainted(false);
