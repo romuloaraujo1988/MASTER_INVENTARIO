@@ -1,180 +1,221 @@
 package com.inventario.mobile.presentation.sync
 
-import android.app.AlertDialog
 import android.os.Bundle
-import android.util.Log
 import android.view.View
-import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.flow.collect
 import com.inventario.mobile.R
-import com.google.android.material.appbar.MaterialToolbar
+import com.inventario.mobile.databinding.ActivitySyncBinding
+import com.inventario.mobile.data.local.database.AppDatabase
+import com.inventario.mobile.data.repository.SyncRepository
+import com.inventario.mobile.utils.NetworkUtils
+import com.inventario.mobile.utils.PreferencesManager
+import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * Activity para gerenciar sincronização de dados
+ */
 class SyncActivity : AppCompatActivity() {
-
-    private lateinit var viewModel: SyncViewModel
     
-    // Views
-    private lateinit var toolbar: MaterialToolbar
-    private lateinit var progressCard: View
-    private lateinit var btnSync: Button
-    private lateinit var btnRefresh: Button
-    private lateinit var btnViewPendingCollections: Button
-    private lateinit var btnClearPendingCollections: Button
-    private lateinit var tvLastSync: TextView
-    private lateinit var tvPendingCount: TextView
-    private lateinit var progressBar: ProgressBar
-    private lateinit var tvSyncMessage: TextView
-
+    private lateinit var binding: ActivitySyncBinding
+    private lateinit var syncRepository: SyncRepository
+    private lateinit var preferencesManager: PreferencesManager
+    
+    private val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_sync)
+        binding = ActivitySyncBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         
-        // Inicializar ViewModel
-        val repository = com.inventario.mobile.data.repository.InventarioRepository(
-            com.inventario.mobile.data.remote.api.MockApiService(),
-            com.inventario.mobile.data.local.LocalDataManager(this)
-        )
-        val factory = SyncViewModelFactory(repository)
-        viewModel = ViewModelProvider(this, factory)[SyncViewModel::class.java]
-        
-        setupUI()
-        setupObservers()
+        setupToolbar()
+        initializeRepository()
         setupListeners()
-        
-        // Carregar status inicial
-        viewModel.loadSyncStatus()
+        updateUI()
     }
-
-    private fun setupUI() {
-        // Configurar toolbar
-        toolbar = findViewById(R.id.toolbar)
-        setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        
-        // Configurar listener do botão de voltar
-        toolbar.setNavigationOnClickListener {
-            finish()
-        }
-        
-        // Inicializar views
-        progressCard = findViewById(R.id.progressCard)
-        btnSync = findViewById(R.id.btnSync)
-        btnRefresh = findViewById(R.id.btnRefresh)
-        btnViewPendingCollections = findViewById(R.id.btnViewPendingCollections)
-        btnClearPendingCollections = findViewById(R.id.btnClearPendingCollections)
-        tvLastSync = findViewById(R.id.tvLastSync)
-        tvPendingCount = findViewById(R.id.tvPendingCount)
-        progressBar = findViewById(R.id.progressBar)
-        tvSyncMessage = findViewById(R.id.tvSyncMessage)
-    }
-
-    private fun setupObservers() {
-        // Observar o estado do ViewModel usando StateFlow
-        lifecycleScope.launchWhenStarted {
-            viewModel.uiState.collect { uiState ->
-            // Loading state
-            if (uiState.isLoading) {
-                progressCard.visibility = View.VISIBLE
-                progressBar.visibility = View.VISIBLE
-                tvSyncMessage.text = "Carregando..."
-            } else {
-                progressBar.visibility = View.GONE
-            }
-            
-            // Syncing state
-            progressCard.visibility = if (uiState.isSyncing) View.VISIBLE else View.GONE
-            btnSync.isEnabled = !uiState.isSyncing
-            btnRefresh.isEnabled = !uiState.isSyncing
-            
-            // Last sync time
-            tvLastSync.text = if (uiState.lastSyncTime != null) {
-                "Última sincronização: ${uiState.lastSyncTime}"
-            } else {
-                "Nenhuma sincronização realizada"
-            }
-            
-            // Pending sync count
-            tvPendingCount.text = when (uiState.pendingSyncCount) {
-                0 -> "Todos os dados estão sincronizados"
-                1 -> "1 item aguardando sincronização"
-                else -> "${uiState.pendingSyncCount} itens aguardando sincronização"
-            }
-            
-            // Sync progress
-            progressBar.progress = uiState.syncProgress
-            
-            // Sync message
-            tvSyncMessage.text = uiState.syncMessage
-            
-            // Error handling
-             uiState.errorMessage?.let { errorMessage ->
-                 Toast.makeText(this@SyncActivity, errorMessage, Toast.LENGTH_LONG).show()
-                 Log.e("SyncActivity", "Erro: $errorMessage")
-             }
-            
-            // Delete state
-            btnClearPendingCollections.isEnabled = !uiState.isDeleting
-            if (uiState.isDeleting) {
-                btnClearPendingCollections.text = "Excluindo..."
-            } else {
-                btnClearPendingCollections.text = "Excluir Coletas Pendentes"
-            }
-            
-            // Delete success
-             if (uiState.deleteSuccess) {
-                 Toast.makeText(this@SyncActivity, "Coletas pendentes excluídas com sucesso!", Toast.LENGTH_SHORT).show()
-                 viewModel.clearMessages()
-             }
-            }
-        }
-    }
-
-    private fun setupListeners() {
-        btnSync.setOnClickListener {
-            try {
-                viewModel.startSync()
-            } catch (e: Exception) {
-                Log.e("SyncActivity", "Erro ao iniciar sincronização", e)
-                Toast.makeText(this, "Erro ao iniciar sincronização", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        btnRefresh.setOnClickListener {
-            try {
-                viewModel.loadSyncStatus()
-            } catch (e: Exception) {
-                Log.e("SyncActivity", "Erro ao atualizar status", e)
-                Toast.makeText(this, "Erro ao atualizar status", Toast.LENGTH_SHORT).show()
-            }
-        }
-        
-        btnViewPendingCollections.setOnClickListener {
-            startActivity(PendingCollectionsActivity.newIntent(this))
-        }
-        
-        btnClearPendingCollections.setOnClickListener {
-            showDeleteConfirmationDialog()
+    
+    private fun setupToolbar() {
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.apply {
+            setDisplayHomeAsUpEnabled(true)
+            title = "Sincronização de Dados"
         }
     }
     
-    private fun showDeleteConfirmationDialog() {
+    private fun initializeRepository() {
+        preferencesManager = PreferencesManager(this)
+        
+        val database = AppDatabase.getInstance(this)
+        val apiService = com.inventario.mobile.data.remote.api.ApiClient.getApiService(this)
+        
+        // Criar instâncias das APIs
+        val patrimonioApi = apiService.create(com.inventario.mobile.api.PatrimonioApi::class.java)
+        val salaApi = apiService.create(com.inventario.mobile.api.SalaApi::class.java)
+        
+        syncRepository = SyncRepository(
+            context = this,
+            patrimonioApi = patrimonioApi,
+            salaApi = salaApi,
+            patrimonioDao = database.patrimonioDao(),
+            salaDao = database.salaDao(),
+            sincronizacaoDao = database.sincronizacaoDao(),
+            preferencesManager = preferencesManager
+        )
+    }
+    
+    private fun setupListeners() {
+        binding.btnSyncNow.setOnClickListener {
+            forceSyncFromServer()
+        }
+        
+        binding.btnClearData.setOnClickListener {
+            showClearDataConfirmation()
+        }
+        
+        binding.btnRefresh.setOnClickListener {
+            updateUI()
+        }
+    }
+    
+    private fun updateUI() {
+        lifecycleScope.launch {
+            try {
+                // Status de rede
+                val isOnline = NetworkUtils.isNetworkAvailable(this@SyncActivity)
+                val connectionType = NetworkUtils.getConnectionType(this@SyncActivity)
+                
+                binding.tvNetworkStatus.text = if (isOnline) {
+                    "✓ Online ($connectionType)"
+                } else {
+                    "✗ Offline"
+                }
+                binding.tvNetworkStatus.setTextColor(
+                    getColor(if (isOnline) R.color.success else R.color.error)
+                )
+                
+                // Estatísticas locais
+                val stats = syncRepository.getLocalStats()
+                binding.tvPatrimoniosCount.text = stats["patrimonios"]?.toString() ?: "0"
+                binding.tvSalasCount.text = stats["salas"]?.toString() ?: "0"
+                binding.tvColetadosCount.text = stats["coletados"]?.toString() ?: "0"
+                binding.tvPendentesCount.text = stats["pendentes"]?.toString() ?: "0"
+                
+                // Última sincronização
+                val lastSync = syncRepository.getLastSync()
+                if (lastSync != null) {
+                    binding.tvLastSyncDate.text = dateFormat.format(lastSync.dataHora)
+                    binding.tvLastSyncStatus.text = if (lastSync.sucesso) {
+                        "✓ Sucesso"
+                    } else {
+                        "✗ Falha"
+                    }
+                    binding.tvLastSyncStatus.setTextColor(
+                        getColor(if (lastSync.sucesso) R.color.success else R.color.error)
+                    )
+                    binding.tvLastSyncDetails.text = lastSync.mensagem
+                    
+                    binding.cardLastSync.visibility = View.VISIBLE
+                } else {
+                    binding.cardLastSync.visibility = View.GONE
+                }
+                
+                // Habilitar/desabilitar botão de sincronização
+                binding.btnSyncNow.isEnabled = isOnline
+                
+            } catch (e: Exception) {
+                showError("Erro ao atualizar interface: ${e.message}")
+            }
+        }
+    }
+    
+    private fun forceSyncFromServer() {
+        lifecycleScope.launch {
+            try {
+                // Mostrar loading
+                binding.progressBar.visibility = View.VISIBLE
+                binding.btnSyncNow.isEnabled = false
+                binding.tvSyncProgress.visibility = View.VISIBLE
+                binding.tvSyncProgress.text = "Sincronizando dados do servidor..."
+                
+                // Executar sincronização
+                val result = syncRepository.forceSyncFromServer()
+                
+                if (result.isSuccess) {
+                    val syncResult = result.getOrNull()!!
+                    
+                    val message = """
+                        Sincronização concluída com sucesso!
+                        
+                        Patrimônios: ${syncResult.patrimoniosSincronizados}
+                        Salas: ${syncResult.salasSincronizadas}
+                        Tempo: ${syncResult.tempoDecorrido}ms
+                    """.trimIndent()
+                    
+                    showSuccess(message)
+                    updateUI()
+                } else {
+                    val error = result.exceptionOrNull()
+                    showError("Erro na sincronização: ${error?.message}")
+                }
+                
+            } catch (e: Exception) {
+                showError("Erro ao sincronizar: ${e.message}")
+            } finally {
+                binding.progressBar.visibility = View.GONE
+                binding.btnSyncNow.isEnabled = true
+                binding.tvSyncProgress.visibility = View.GONE
+            }
+        }
+    }
+    
+    private fun showClearDataConfirmation() {
         androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Confirmar Exclusão")
-            .setMessage("Tem certeza que deseja excluir todas as coletas pendentes de sincronização?\n\nEsta ação não pode ser desfeita.")
-            .setPositiveButton("Excluir") { _, _ ->
-                viewModel.clearPendingCollections()
+            .setTitle("Limpar Dados Locais")
+            .setMessage("Tem certeza que deseja limpar todos os dados locais?\n\nIsso removerá todos os patrimônios e salas do banco local. Você precisará sincronizar novamente.")
+            .setPositiveButton("Sim, Limpar") { _, _ ->
+                clearLocalData()
             }
             .setNegativeButton("Cancelar", null)
-            .setIcon(android.R.drawable.ic_dialog_alert)
             .show()
     }
-
+    
+    private fun clearLocalData() {
+        lifecycleScope.launch {
+            try {
+                binding.progressBar.visibility = View.VISIBLE
+                
+                val result = syncRepository.clearLocalData()
+                
+                if (result.isSuccess) {
+                    showSuccess("Dados locais limpos com sucesso!")
+                    updateUI()
+                } else {
+                    showError("Erro ao limpar dados: ${result.exceptionOrNull()?.message}")
+                }
+                
+            } catch (e: Exception) {
+                showError("Erro ao limpar dados: ${e.message}")
+            } finally {
+                binding.progressBar.visibility = View.GONE
+            }
+        }
+    }
+    
+    private fun showSuccess(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)
+            .setBackgroundTint(getColor(R.color.success))
+            .show()
+    }
+    
+    private fun showError(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)
+            .setBackgroundTint(getColor(R.color.error))
+            .show()
+    }
+    
     override fun onSupportNavigateUp(): Boolean {
         finish()
         return true

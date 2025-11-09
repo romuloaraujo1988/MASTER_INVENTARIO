@@ -1,181 +1,149 @@
 package com.inventario.mobile.data.repository
 
-import com.inventario.mobile.data.local.dao.PatrimonioDao
-import com.inventario.mobile.data.mapper.PatrimonioMapper
-import com.inventario.mobile.data.remote.api.PatrimonioApi
-import com.inventario.mobile.domain.model.Patrimonio
-import com.inventario.mobile.domain.repository.PatrimonioRepository
+import android.content.Context
+import android.util.Log
+import com.inventario.mobile.data.observer.ConnectivityObserver
+import com.inventario.mobile.data.observer.NetworkConnectivityObserver
+import com.inventario.mobile.data.strategy.DataSourceStrategyFactory
+import com.inventario.mobile.data.strategy.DataSourceType
+import com.inventario.mobile.model.Patrimonio
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * Implementação do repositório de Patrimônio
- * Estratégia: Offline-first com sincronização
+ * Repository Pattern com Strategy Pattern
+ * Gerencia acesso a patrimônios com fallback automático entre fontes de dados
  */
-class PatrimonioRepositoryImpl @Inject constructor(
-    private val patrimonioDao: PatrimonioDao,
-    private val patrimonioApi: PatrimonioApi,
-    private val mapper: PatrimonioMapper
-) : PatrimonioRepository {
+class PatrimonioRepositoryImpl(
+    private val context: Context,
+    private val strategyFactory: DataSourceStrategyFactory
+) {
     
-    override fun getAllPatrimonios(): Flow<List<Patrimonio>> {
-        return patrimonioDao.observarNaoColetados()
-            .map { entities -> mapper.toDomainList(entities) }
+    companion object {
+        private const val TAG = "PatrimonioRepository"
     }
     
-    override suspend fun getPatrimonioById(id: Long): Patrimonio? {
-        return patrimonioDao.buscarPorId(id.toInt())?.let { mapper.toDomain(it) }
+    // Observer de conectividade
+    private val connectivityObserver: ConnectivityObserver = NetworkConnectivityObserver(context)
+    
+    // Estado atual da fonte de dados
+    private val _currentDataSource = MutableStateFlow(DataSourceType.REMOTE)
+    val currentDataSource: Flow<DataSourceType> = _currentDataSource.asStateFlow()
+    
+    /**
+     * Observa mudanças de conectividade
+     */
+    fun observeConnectivity(): Flow<ConnectivityObserver.Status> {
+        return connectivityObserver.observe()
     }
     
-    override suspend fun getPatrimonioByNumero(numeroPatrimonio: String): Patrimonio? {
-        return buscarPorNumero(numeroPatrimonio)
-    }
-    
-    override suspend fun getPatrimonioByQrCode(qrCode: String): Patrimonio? {
-        // QR Code geralmente contém o número do patrimônio
-        return buscarPorNumero(qrCode)
-    }
-    
-    override suspend fun getPatrimoniosBySetor(setorId: Long): List<Patrimonio> {
-        // TODO: Implementar quando necessário
-        return emptyList()
-    }
-    
-    override suspend fun getPatrimoniosBySala(salaId: Long): List<Patrimonio> {
-        return patrimonioDao.buscarPorSalaNaoColetados(salaId.toInt())
-            .map { mapper.toDomain(it) }
-    }
-    
-    override suspend fun getPatrimoniosNaoSincronizados(): List<Patrimonio> {
-        // TODO: Implementar quando necessário
-        return emptyList()
-    }
-    
-    override suspend fun searchPatrimonios(query: String): List<Patrimonio> {
-        return buscarPorDescricaoNaoColetados(query)
-    }
-    
-    override suspend fun insertPatrimonio(patrimonio: Patrimonio): Long {
-        val entity = mapper.toEntity(patrimonio)
-        patrimonioDao.inserir(entity)
-        return patrimonio.id.toLong()
-    }
-    
-    override suspend fun insertPatrimonios(patrimonios: List<Patrimonio>) {
-        val entities = mapper.toEntityList(patrimonios)
-        patrimonioDao.inserirTodos(entities)
-    }
-    
-    override suspend fun updatePatrimonio(patrimonio: Patrimonio) {
-        val entity = mapper.toEntity(patrimonio)
-        patrimonioDao.inserir(entity) // Room usa REPLACE strategy
-    }
-    
-    override suspend fun marcarComoSincronizado(id: Long, servidorId: Long) {
-        // TODO: Implementar quando necessário
-    }
-    
-    override suspend fun deletePatrimonio(patrimonio: Patrimonio) {
-        // Não implementado - patrimônios não são deletados localmente
-    }
-    
-    override suspend fun deletePatrimonioById(id: Long) {
-        // Não implementado - patrimônios não são deletados localmente
-    }
-    
-    override suspend fun getPatrimonioCount(): Int {
-        return patrimonioDao.contarTodos()
-    }
-    
-    override suspend fun getPatrimoniosNaoSincronizadosCount(): Int {
-        return 0 // TODO: Implementar quando necessário
-    }
-    
-    override suspend fun sincronizarPatrimonios(): Result<Unit> {
+    /**
+     * Busca todos os patrimônios
+     * Usa estratégia apropriada automaticamente
+     */
+    suspend fun getPatrimonios(): Result<List<Patrimonio>> {
         return try {
-            // Buscar patrimônios do servidor
-            val response = patrimonioApi.buscarTodos()
+            Log.d(TAG, "═══════════════════════════════════════")
+            Log.d(TAG, "BUSCANDO PATRIMÔNIOS")
             
-            if (response.success) {
-                // Converter DTOs para Domain
-                val patrimonios = response.data ?: emptyList()
-                
-                // Salvar no banco local
-                insertPatrimonios(patrimonios)
-                
-                Result.success(Unit)
+            val strategy = strategyFactory.getStrategy()
+            _currentDataSource.value = strategy.getSourceType()
+            
+            Log.d(TAG, "Fonte de dados: ${strategy.getSourceType()}")
+            
+            val result = strategy.getPatrimonios()
+            
+            if (result.isSuccess) {
+                val patrimonios = result.getOrNull() ?: emptyList()
+                Log.d(TAG, "✓ ${patrimonios.size} patrimônios obtidos")
             } else {
-                Result.failure(Exception(response.message))
+                Log.e(TAG, "✗ Erro ao buscar patrimônios: ${result.exceptionOrNull()?.message}")
             }
+            
+            Log.d(TAG, "═══════════════════════════════════════")
+            
+            result
         } catch (e: Exception) {
+            Log.e(TAG, "Erro inesperado ao buscar patrimônios", e)
             Result.failure(e)
         }
     }
     
-    override suspend fun enviarPatrimoniosParaServidor(): Result<Unit> {
-        // Não aplicável - patrimônios não são criados no app
-        return Result.success(Unit)
-    }
-    
-    // ========== Novos métodos Clean Architecture ==========
-    
-    override suspend fun buscarPorNumero(numero: String): Patrimonio? {
+    /**
+     * Busca patrimônio por número
+     * Usa estratégia apropriada automaticamente
+     */
+    suspend fun getPatrimonioPorNumero(numero: String): Result<Patrimonio> {
         return try {
-            // 1. Tentar buscar do banco local primeiro (offline-first)
-            val localResult = patrimonioDao.buscarPorNumero(numero)
-            if (localResult != null) {
-                return mapper.toDomain(localResult)
+            Log.d(TAG, "Buscando patrimônio: $numero")
+            
+            val strategy = strategyFactory.getStrategy()
+            _currentDataSource.value = strategy.getSourceType()
+            
+            Log.d(TAG, "Fonte de dados: ${strategy.getSourceType()}")
+            
+            val result = strategy.getPatrimonioPorNumero(numero)
+            
+            if (result.isSuccess) {
+                Log.d(TAG, "✓ Patrimônio encontrado")
+            } else {
+                Log.w(TAG, "✗ Patrimônio não encontrado: ${result.exceptionOrNull()?.message}")
             }
             
-            // 2. Se não encontrou localmente, buscar do servidor
-            val response = patrimonioApi.buscarPorNumero(numero)
-            if (response.success && response.data != null) {
-                // Salvar no banco local para próximas consultas
-                val entity = mapper.toEntity(response.data)
-                patrimonioDao.inserir(entity)
-                return response.data
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro inesperado ao buscar patrimônio", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Força uso da fonte remota (servidor)
+     */
+    suspend fun getPatrimoniosFromRemote(): Result<List<Patrimonio>> {
+        return try {
+            Log.d(TAG, "Forçando busca REMOTA")
+            
+            val strategy = strategyFactory.getRemoteStrategy()
+            
+            if (!strategy.isAvailable()) {
+                return Result.failure(Exception("Servidor não disponível. Verifique sua conexão."))
             }
             
-            null
+            _currentDataSource.value = DataSourceType.REMOTE
+            strategy.getPatrimonios()
         } catch (e: Exception) {
-            // Em caso de erro, retornar resultado local se existir
-            patrimonioDao.buscarPorNumero(numero)?.let { mapper.toDomain(it) }
+            Log.e(TAG, "Erro ao buscar do servidor", e)
+            Result.failure(e)
         }
     }
     
-    override suspend fun buscarDescricoesNaoColetadas(): List<String> {
+    /**
+     * Força uso da fonte local (banco SQLite)
+     */
+    suspend fun getPatrimoniosFromLocal(): Result<List<Patrimonio>> {
         return try {
-            // 1. Tentar buscar do servidor (dados mais atualizados)
-            val response = patrimonioApi.buscarDescricoesNaoColetadas(null)
-            if (response.success && response.data != null) {
-                return response.data
+            Log.d(TAG, "Forçando busca LOCAL")
+            
+            val strategy = strategyFactory.getLocalStrategy()
+            
+            if (!strategy.isAvailable()) {
+                return Result.failure(Exception("Banco local vazio. Sincronize os dados primeiro."))
             }
             
-            // 2. Se falhar, buscar do banco local
-            patrimonioDao.buscarDescricoesNaoColetadas()
+            _currentDataSource.value = DataSourceType.LOCAL
+            strategy.getPatrimonios()
         } catch (e: Exception) {
-            // Em caso de erro de rede, usar dados locais
-            patrimonioDao.buscarDescricoesNaoColetadas()
+            Log.e(TAG, "Erro ao buscar do banco local", e)
+            Result.failure(e)
         }
     }
     
-    override suspend fun buscarPorDescricaoNaoColetados(descricao: String): List<Patrimonio> {
-        return try {
-            // Offline-first: buscar do banco local
-            val entities = patrimonioDao.buscarPorDescricaoNaoColetados(descricao)
-            mapper.toDomainList(entities)
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
-    
-    suspend fun getAllPatrimoniosList(): List<Patrimonio> {
-        return try {
-            val entities = patrimonioDao.getAllPatrimoniosList()
-            mapper.toDomainList(entities)
-        } catch (e: Exception) {
-            emptyList()
-        }
+    /**
+     * Verifica qual fonte de dados está disponível
+     */
+    suspend fun getAvailableDataSource(): DataSourceType {
+        return strategyFactory.getAvailableSourceType()
     }
 }
