@@ -974,25 +974,6 @@ public class ColetaDAO {
     }
 
     /**
-     * Normaliza texto removendo acentos e caracteres especiais
-     */
-    private String normalizarTexto(String texto) {
-        if (texto == null) return "";
-        
-        // Remover acentos manualmente (versão simplificada)
-        return texto.toLowerCase()
-                   .replace("á", "a").replace("à", "a").replace("ã", "a").replace("â", "a")
-                   .replace("é", "e").replace("ê", "e")
-                   .replace("í", "i")
-                   .replace("ó", "o").replace("ô", "o").replace("õ", "o")
-                   .replace("ú", "u").replace("ü", "u")
-                   .replace("ç", "c")
-                   .replaceAll("[^a-z0-9\\s]", " ")
-                   .replaceAll("\\s+", " ")
-                   .trim();
-    }
-
-    /**
      * Busca patrimônios por descrição na tabela_patrimonio
      * Este método busca diretamente na tabela de patrimônios, não na tabela de coletas
      * @param descricao Descrição para buscar
