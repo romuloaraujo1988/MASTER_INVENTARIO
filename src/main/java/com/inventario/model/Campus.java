@@ -14,6 +14,7 @@ public class Campus {
     private String nome;
     private String local;
     private String cnpj;
+    private String codigoUorg; // Codigo da Unidade Organizacional no SIADS
     private String diretor;
     private String cursos;
     private String telefone;
@@ -118,6 +119,14 @@ public class Campus {
     
     public void setObservacoes(String observacoes) {
         this.observacoes = observacoes;
+    }
+    
+    public String getCodigoUorg() {
+        return codigoUorg;
+    }
+    
+    public void setCodigoUorg(String codigoUorg) {
+        this.codigoUorg = codigoUorg;
     }
     
     public Boolean getAtivo() {

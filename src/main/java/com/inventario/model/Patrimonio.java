@@ -41,6 +41,12 @@ public class Patrimonio {
     private String nomeResponsavel;
     private String nomeSala;
     
+    // Campos transientes para SIADS
+    private String cpfResponsavel;
+    private String matriculaResponsavel;
+    private String nomeSetor;
+    private String codigoUOrg; // Código da Unidade Organizacional no SIADS
+    
     // Constantes para formatação
     private static final NumberFormat CURRENCY_FORMAT = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR"));
     // Removido SimpleDateFormat - usando DateFormatUtils centralizado
@@ -466,5 +472,38 @@ public class Patrimonio {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+    
+    // Getters e Setters para campos SIADS
+    public String getCpfResponsavel() {
+        return cpfResponsavel;
+    }
+    
+    public void setCpfResponsavel(String cpfResponsavel) {
+        this.cpfResponsavel = cpfResponsavel;
+    }
+    
+    public String getMatriculaResponsavel() {
+        return matriculaResponsavel;
+    }
+    
+    public void setMatriculaResponsavel(String matriculaResponsavel) {
+        this.matriculaResponsavel = matriculaResponsavel;
+    }
+    
+    public String getNomeSetor() {
+        return nomeSetor;
+    }
+    
+    public void setNomeSetor(String nomeSetor) {
+        this.nomeSetor = nomeSetor;
+    }
+    
+    public String getCodigoUOrg() {
+        return codigoUOrg;
+    }
+    
+    public void setCodigoUOrg(String codigoUOrg) {
+        this.codigoUOrg = codigoUOrg;
     }
 }

@@ -7,8 +7,6 @@ import com.inventario.view.ui.ModernButtons;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 public class CampusFormDialog extends JDialog {
     private Campus campus;
@@ -18,6 +16,7 @@ public class CampusFormDialog extends JDialog {
     private JTextField campoNome;
     private JTextField campoLocal;
     private JTextField campoCnpj;
+    private JTextField campoCodigoUorg;
     private JTextField campoDiretor;
     private JTextField campoCursos;
     private JTextField campoTelefone;
@@ -67,6 +66,10 @@ public class CampusFormDialog extends JDialog {
         
         // Campo CNPJ
         painelCampos.add(criarCampoFormulario("🏢 CNPJ *", campoCnpj = new JTextField()));
+        painelCampos.add(Box.createVerticalStrut(15));
+        
+        // Campo Código UOrg
+        painelCampos.add(criarCampoFormulario("🔢 Código UOrg (SIADS)", campoCodigoUorg = new JTextField()));
         painelCampos.add(Box.createVerticalStrut(15));
         
         // Campo Diretor
@@ -173,6 +176,7 @@ public class CampusFormDialog extends JDialog {
         adicionarEfeitoFocus(campoNome);
         adicionarEfeitoFocus(campoLocal);
         adicionarEfeitoFocus(campoCnpj);
+        adicionarEfeitoFocus(campoCodigoUorg);
         adicionarEfeitoFocus(campoDiretor);
         adicionarEfeitoFocus(campoCursos);
         adicionarEfeitoFocus(campoTelefone);
@@ -234,6 +238,7 @@ public class CampusFormDialog extends JDialog {
             campoNome.setText(campus.getNome());
             campoLocal.setText(campus.getLocal());
             campoCnpj.setText(campus.getCnpj());
+            campoCodigoUorg.setText(campus.getCodigoUorg());
             campoDiretor.setText(campus.getDiretor());
             campoCursos.setText(campus.getCursos());
             campoTelefone.setText(campus.getTelefone());
@@ -271,6 +276,7 @@ public class CampusFormDialog extends JDialog {
             campus.setNome(campoNome.getText().trim());
             campus.setLocal(campoLocal.getText().trim());
             campus.setCnpj(campoCnpj.getText().trim());
+            campus.setCodigoUorg(campoCodigoUorg.getText().trim());
             campus.setDiretor(campoDiretor.getText().trim());
             campus.setCursos(campoCursos.getText().trim());
             campus.setTelefone(campoTelefone.getText().trim());

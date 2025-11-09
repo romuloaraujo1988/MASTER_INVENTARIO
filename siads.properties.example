@@ -1,0 +1,22 @@
+# Configurações SIADS - Sistema Integrado de Administração de Serviços
+# Copie este arquivo para siads.properties e configure com os dados da sua instituição
+
+# Código do Órgão (fornecido pelo governo federal)
+# Exemplo: 25000 para IFMT
+siads.codigo.orgao=25000
+
+# Código da Unidade Gestora
+# Exemplo: 158000 para IFMT Campus Cuiabá
+siads.codigo.ug=00001
+
+# CPF do responsável pelo sistema (11 dígitos, sem pontuação)
+# Este CPF será usado como responsável pela geração dos arquivos
+siads.cpf.responsavel=00000000000
+
+# Nome da instituição (para referência)
+siads.nome.instituicao=IFMT - Instituto Federal de Mato Grosso
+
+# Observações:
+# - Os códigos devem ser obtidos junto ao órgão responsável pelo SIADS
+# - O CPF deve ser de um servidor autorizado
+# - Mantenha este arquivo seguro e não compartilhe publicamente
