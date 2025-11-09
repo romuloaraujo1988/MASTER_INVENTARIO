@@ -8,7 +8,6 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\WebSocketConfig.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\ConnectedDevicesManager.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\view\SiadsConfigDialog.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\FormUtils.java
-D:\MASTER_INVENTARIO\src\main\java\com\inventario\test\TesteColetaCompleto.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\AlterarSenhaDialog.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\DashboardColetaFrame.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\RelatorioService.java
@@ -112,7 +111,6 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\offline\OfflineConfigManager.j
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\security\JwtUtil.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\config\CorsConfig.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\Sala.java
-D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\QRCodeFrame.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileSalaController.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\SalaInventario.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\DispositivoMobile.java
@@ -146,19 +144,16 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\dto\mobile\LoginRequest.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\PasswordUtil.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\test\SiadsLayoutFormatterTest.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\ColetaService.java
-D:\MASTER_INVENTARIO\src\main\java\com\inventario\test\TesteAdminColeta.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\DatabaseConfigManager.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\ServiceFactory.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\MainFrame.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\DispositivoRegistroDTO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\IconPreview.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\DataSyncService.java
-D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileTestController.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\ImportacaoCSV.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\CampusFormDialog.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\DashboardStatsDTO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\test\SiadsExportTest.java
-D:\MASTER_INVENTARIO\src\main\java\com\inventario\test\TesteColetores.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\SalaDAORefactored.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\service\SiadsConverterService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\Coletor.java

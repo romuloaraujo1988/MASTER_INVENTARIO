@@ -1,6 +1,5 @@
 package com.inventario.view;
 
-import com.inventario.service.ServiceFactory;
 import com.inventario.service.SalaService;
 import com.inventario.service.SetorService;
 import com.inventario.service.BusinessException;
@@ -37,9 +36,9 @@ public class SalaFormDialog extends JDialog {
         super(parent, sala == null ? "Nova Sala" : "Editar Sala", true);
         this.sala = sala;
         
-        ServiceFactory factory = ServiceFactory.getInstance();
-        this.salaService = factory.getSalaService();
-        this.setorService = factory.getSetorService();
+        // Criar serviços diretamente
+        this.salaService = new com.inventario.service.SalaService();
+        this.setorService = new com.inventario.service.SetorService();
         
         initializeComponents();
         carregarSetores();

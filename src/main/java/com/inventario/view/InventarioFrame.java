@@ -1052,16 +1052,10 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
     }
     
     private void abrirGerenciamentoQRCodes() {
-        try {
-            com.inventario.view.QRCodeFrame qrCodeFrame = new com.inventario.view.QRCodeFrame();
-            qrCodeFrame.setVisible(true);
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, 
-                "Erro ao abrir gerenciamento de QR Codes: " + e.getMessage(), 
-                "Erro", 
-                JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
-        }
+        JOptionPane.showMessageDialog(this, 
+            "Funcionalidade de QR Code temporariamente desabilitada.", 
+            "Informação", 
+            JOptionPane.INFORMATION_MESSAGE);
     }
     
     // ==================== MÉTODOS DO MODO OFFLINE ====================

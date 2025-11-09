@@ -194,10 +194,11 @@ public class ImportacaoCSV {
                 Patrimonio patrimonioExistente = patrimoniosExistentes.get(0);
                 // Atualizar patrimônio existente
                 preencherPatrimonio(patrimonioExistente, campos);
-                if (patrimonioDAO.atualizarPatrimonio(patrimonioExistente)) {
+                try {
+                    patrimonioDAO.update(patrimonioExistente);
                     itensAtualizados++;
-                } else {
-                    String erro = "Linha " + (linhasProcessadas + 1) + ": Erro ao atualizar patrimônio " + numeroPatrimonio;
+                } catch (SQLException e) {
+                    String erro = "Linha " + (linhasProcessadas + 1) + ": Erro ao atualizar patrimônio " + numeroPatrimonio + " - " + e.getMessage();
                     listaErros.add(erro);
                     erros++;
                     if (progressCallback != null) {
@@ -209,10 +210,11 @@ public class ImportacaoCSV {
                 Patrimonio novoPatrimonio = new Patrimonio();
                 preencherPatrimonio(novoPatrimonio, campos);
                 
-                if (patrimonioDAO.inserirPatrimonio(novoPatrimonio)) {
+                try {
+                    patrimonioDAO.insert(novoPatrimonio);
                     itensInseridos++;
-                } else {
-                    String erro = "Linha " + (linhasProcessadas + 1) + ": Erro ao inserir patrimônio " + numeroPatrimonio;
+                } catch (SQLException e) {
+                    String erro = "Linha " + (linhasProcessadas + 1) + ": Erro ao inserir patrimônio " + numeroPatrimonio + " - " + e.getMessage();
                     listaErros.add(erro);
                     erros++;
                     if (progressCallback != null) {
@@ -384,11 +386,14 @@ public class ImportacaoCSV {
             }
         }
         
-        Integer idResponsavel = responsavelDAO.inserirResponsavelComId(novoResponsavel);
-        if (idResponsavel != null) {
-            novoResponsavel.setId(idResponsavel);
-            cacheResponsaveis.put(nomeCompleto, novoResponsavel);
-            return novoResponsavel;
+        try {
+            responsavelDAO.insert(novoResponsavel);
+            if (novoResponsavel.getId() > 0) {
+                cacheResponsaveis.put(nomeCompleto, novoResponsavel);
+                return novoResponsavel;
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao inserir responsável: " + e.getMessage());
         }
         
         return null;
@@ -432,13 +437,15 @@ public class ImportacaoCSV {
             }
         }
         
-        if (salaDAO.inserirSala(novaSala)) {
+        try {
+            salaDAO.insert(novaSala);
             // O ID foi setado pelo DAO
             cacheSalas.put(nomeSala, novaSala);
             return novaSala;
+        } catch (SQLException e) {
+            System.err.println("Erro ao inserir sala: " + e.getMessage());
+            return null;
         }
-        
-        return null;
     }
     
     /**
