@@ -41,7 +41,7 @@ public class DataSyncService {
         System.out.println("[SYNC] Iniciando sincronização de dados...");
         
         // Buscar dados do banco
-        List<Patrimonio> patrimonios = patrimonioDAO.listarTodos();
+        List<Patrimonio> patrimonios = patrimonioDAO.findAll();
         System.out.println("[SYNC] Encontrados " + patrimonios.size() + " patrimônios no banco");
         
         // Ler arquivo JSON atual
@@ -116,7 +116,7 @@ public class DataSyncService {
      * Gera estatísticas atualizadas baseadas nos dados do banco
      */
     public String generateUpdatedStatistics() throws SQLException {
-        List<Patrimonio> patrimonios = patrimonioDAO.listarTodos();
+        List<Patrimonio> patrimonios = patrimonioDAO.findAll();
         
         int totalPatrimonios = patrimonios.size();
         long ativos = patrimonios.stream().filter(p -> "Ativo".equals(p.getStatus())).count();
