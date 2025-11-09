@@ -18,7 +18,7 @@ import java.sql.Timestamp;
 public class DateFormatUtils {
     
     // Locale brasileiro para formatação
-    private static final Locale LOCALE_BR = new Locale("pt", "BR");
+    private static final Locale LOCALE_BR = Locale.forLanguageTag("pt-BR");
     
     // Formatos de data padronizados
     public static final String PATTERN_DATE = "dd/MM/yyyy";

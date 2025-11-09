@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 // Formatação de datas centralizada em DateFormatUtils
 import com.inventario.util.DateFormatUtils;
 import java.util.HashMap;
