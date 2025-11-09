@@ -1,7 +1,6 @@
 package com.inventario.view;
 
 import com.inventario.model.Inventario;
-import com.inventario.service.ServiceFactory;
 import com.inventario.service.DashboardService;
 import com.inventario.view.ui.ButtonStyleFactory;
 import org.jfree.chart.ChartFactory;
@@ -58,7 +57,8 @@ public class DashboardColetaFrame extends JFrame {
     private JComboBox<String> comboUsuarios;
     
     public DashboardColetaFrame() {
-        this.dashboardService = ServiceFactory.getInstance().getDashboardService();
+        // Instantiate service directly (no Spring context in Swing app)
+        this.dashboardService = new DashboardService();
         obterInventarioAtivo();
         initializeComponents();
         aplicarTemaModerno();
@@ -409,7 +409,7 @@ public class DashboardColetaFrame extends JFrame {
     // Métodos para criar gráficos modernos e interativos
     
     private JFreeChart criarGraficoPizzaStatus() {
-        DefaultPieDataset dataset = new DefaultPieDataset();
+        DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
         dataset.setValue("Coletados", 0);
         dataset.setValue("Não Inventariados", 0);
         dataset.setValue("Não Encontrados", 0);
@@ -426,7 +426,7 @@ public class DashboardColetaFrame extends JFrame {
         chart.setBackgroundPaint(Color.WHITE);
         chart.setBorderVisible(false);
         
-        PiePlot plot = (PiePlot) chart.getPlot();
+        PiePlot<String> plot = (PiePlot<String>) chart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
         plot.setOutlineVisible(false);
         plot.setSectionPaint("Coletados", new Color(46, 204, 113));
@@ -440,7 +440,7 @@ public class DashboardColetaFrame extends JFrame {
     }
     
     private JFreeChart criarGraficoPizzaEtiquetas() {
-        DefaultPieDataset dataset = new DefaultPieDataset();
+        DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
         dataset.setValue("Com Etiqueta", 0);
         dataset.setValue("Sem Etiqueta", 0);
         
@@ -455,7 +455,7 @@ public class DashboardColetaFrame extends JFrame {
         chart.setBackgroundPaint(Color.WHITE);
         chart.setBorderVisible(false);
         
-        PiePlot plot = (PiePlot) chart.getPlot();
+        PiePlot<String> plot = (PiePlot<String>) chart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
         plot.setOutlineVisible(false);
         plot.setSectionPaint("Com Etiqueta", new Color(46, 204, 113));
@@ -818,13 +818,13 @@ public class DashboardColetaFrame extends JFrame {
     
     private void atualizarGraficos(Map<String, Integer> estatisticas) {
         // Atualizar gráfico de status
-        DefaultPieDataset datasetStatus = new DefaultPieDataset();
+        DefaultPieDataset<String> datasetStatus = new DefaultPieDataset<>();
         datasetStatus.setValue("Coletados", estatisticas.get("itens_coletados"));
         datasetStatus.setValue("Não Inventariados", estatisticas.get("itens_nao_encontrados"));
         datasetStatus.setValue("Não Encontrados", estatisticas.get("itens_nao_coletados"));
         
         JFreeChart chartStatus = painelGraficoStatus.getChart();
-        ((PiePlot) chartStatus.getPlot()).setDataset(datasetStatus);
+        ((PiePlot<String>) chartStatus.getPlot()).setDataset(datasetStatus);
         
         // Atualizar gráfico de etiquetas
         atualizarGraficoEtiquetas(estatisticas);
@@ -835,14 +835,14 @@ public class DashboardColetaFrame extends JFrame {
     }
     
     private void atualizarGraficoEtiquetas(Map<String, Integer> estatisticas) {
-        DefaultPieDataset datasetEtiquetas = new DefaultPieDataset();
+        DefaultPieDataset<String> datasetEtiquetas = new DefaultPieDataset<>();
         int comPatrimonio = estatisticas.get("itens_coletados");
         int semPatrimonio = estatisticas.getOrDefault("itens_sem_patrimonio", 0);
         datasetEtiquetas.setValue("Com Patrimônio", comPatrimonio);
         datasetEtiquetas.setValue("Sem Patrimônio", semPatrimonio);
         
         JFreeChart chart = painelGraficoEtiquetas.getChart();
-        ((PiePlot) chart.getPlot()).setDataset(datasetEtiquetas);
+        ((PiePlot<String>) chart.getPlot()).setDataset(datasetEtiquetas);
     }
     
     private void atualizarGraficosResponsaveis() {

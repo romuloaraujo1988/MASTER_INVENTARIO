@@ -9,7 +9,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import com.inventario.model.Campus;
-import com.inventario.service.ServiceFactory;
 import com.inventario.service.CampusService;
 import com.inventario.view.ui.ButtonStyleFactory;
 
@@ -25,7 +24,8 @@ public class CampusFrame extends JFrame {
     private JButton btnNovo, btnEditar, btnExcluir, btnBuscar;
     
     public CampusFrame() {
-        this.campusService = ServiceFactory.getInstance().getCampusService();
+        // Instantiate service directly (no Spring context in Swing app)
+        this.campusService = new CampusService();
         initComponents();
         aplicarEstiloModerno();
         carregarCampus();

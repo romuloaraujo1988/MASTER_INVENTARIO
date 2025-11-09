@@ -1,6 +1,5 @@
 package com.inventario.view;
 
-import com.inventario.service.ServiceFactory;
 import com.inventario.service.UsuarioService;
 import com.inventario.util.PasswordUtil;
 import com.inventario.view.ui.ModernButtons;
@@ -39,7 +38,8 @@ public class AlterarSenhaDialog extends JDialog {
         super(parent, "Alterar Senha - " + nomeUsuario, true);
         this.idUsuario = idUsuario;
         this.nomeUsuario = nomeUsuario;
-        this.usuarioService = ServiceFactory.getInstance().getUsuarioService();
+        // Instantiate service directly (no Spring context in Swing app)
+        this.usuarioService = new UsuarioService();
         this.isAdmin = true;
         
         initComponents();
@@ -58,7 +58,8 @@ public class AlterarSenhaDialog extends JDialog {
         super(parent, "Alterar Minha Senha", true);
         this.idUsuario = idUsuario;
         this.nomeUsuario = nomeUsuario;
-        this.usuarioService = ServiceFactory.getInstance().getUsuarioService();
+        // Instantiate service directly (no Spring context in Swing app)
+        this.usuarioService = new UsuarioService();
         this.isAdmin = !requireSenhaAtual;
         
         initComponents();
