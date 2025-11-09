@@ -115,11 +115,11 @@ public class ColetaFrame_v2 extends JFrame {
 
     // Componentes para pesquisa de descrições únicas (não utilizados na nova interface)
     // Mantidos para compatibilidade, mas não são mais necessários
-    private JButton btnPesquisarDescricoes;
-    private JList<String> listaDescricoesSugestoes;
-    private DefaultListModel<String> modeloListaDescricoes;
-    private JPanel painelSugestoes;
-    private JLabel lblSugestoes;
+    //private JButton btnPesquisarDescricoes;
+    //private JList<String> listaDescricoesSugestoes;
+    //private DefaultListModel<String> modeloListaDescricoes;
+    //private JPanel painelSugestoes;
+    //private JLabel lblSugestoes;
 
     // Services (injetados via ServiceFactory)
     private SalaService salaService;

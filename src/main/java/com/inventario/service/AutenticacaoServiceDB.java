@@ -33,7 +33,13 @@ public class AutenticacaoServiceDB {
         }
         
         // Buscar usuário no banco
-        Usuario usuario = usuarioDAO.buscarUsuarioPorLogin(login.trim());
+        Usuario usuario;
+        try {
+            usuario = usuarioDAO.buscarPorLogin(login.trim());
+        } catch (Exception e) {
+            System.err.println("Erro ao buscar usuário: " + e.getMessage());
+            return null;
+        }
         
         if (usuario == null) {
             System.out.println("Usuário não encontrado: " + login);
@@ -88,7 +94,11 @@ public class AutenticacaoServiceDB {
                 System.out.println("Usuário bloqueado por excesso de tentativas: " + login);
             } else {
                 // Atualizar tentativas no banco
-                usuarioDAO.atualizarUsuario(usuario);
+                try {
+                    usuarioDAO.update(usuario);
+                } catch (Exception e) {
+                    System.err.println("Erro ao atualizar tentativas de login: " + e.getMessage());
+                }
                 System.out.println("Senha incorreta para usuário: " + login + 
                                  " (Tentativa " + tentativas + "/" + MAX_TENTATIVAS_LOGIN + ")");
             }
@@ -101,7 +111,11 @@ public class AutenticacaoServiceDB {
         usuario.setPrimeiroAcesso(false);
         
         // Atualizar dados no banco
-        usuarioDAO.atualizarUsuario(usuario);
+        try {
+            usuarioDAO.update(usuario);
+        } catch (Exception e) {
+            System.err.println("Erro ao atualizar dados do usuário: " + e.getMessage());
+        }
         
         System.out.println("Usuário autenticado com sucesso: " + login);
         return usuario;
@@ -156,7 +170,13 @@ public class AutenticacaoServiceDB {
      * @return true se alterada com sucesso
      */
     public boolean alterarSenha(int usuarioId, String senhaAtual, String novaSenha) {
-        Usuario usuario = usuarioDAO.buscarUsuarioPorId(usuarioId);
+        Usuario usuario;
+        try {
+            usuario = usuarioDAO.findById(usuarioId);
+        } catch (Exception e) {
+            System.err.println("Erro ao buscar usuário: " + e.getMessage());
+            return false;
+        }
         
         if (usuario == null) {
             return false;
@@ -219,7 +239,13 @@ public class AutenticacaoServiceDB {
      * Cria um usuário administrador padrão se não existir
      */
     public void criarUsuarioAdminPadrao() {
-        Usuario admin = usuarioDAO.buscarUsuarioPorLogin("admin");
+        Usuario admin;
+        try {
+            admin = usuarioDAO.buscarPorLogin("admin");
+        } catch (Exception e) {
+            System.err.println("Erro ao buscar usuário admin: " + e.getMessage());
+            return;
+        }
         
         if (admin == null) {
             admin = new Usuario();
@@ -233,10 +259,11 @@ public class AutenticacaoServiceDB {
             admin.setBloqueado(false);
             admin.setPrimeiroAcesso(true);
             
-            if (usuarioDAO.inserirUsuario(admin)) {
+            try {
+                usuarioDAO.insert(admin);
                 System.out.println("Usuário administrador padrão criado: admin / admin123");
-            } else {
-                System.err.println("Erro ao criar usuário administrador padrão");
+            } catch (Exception e) {
+                System.err.println("Erro ao criar usuário administrador padrão: " + e.getMessage());
             }
         }
     }

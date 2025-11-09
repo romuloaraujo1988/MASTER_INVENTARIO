@@ -2,7 +2,6 @@ package com.inventario.view;
 
 import com.inventario.service.UsuarioService;
 import com.inventario.service.SetorService;
-import com.inventario.service.ServiceFactory;
 import com.inventario.model.Usuario;
 import com.inventario.model.PerfilUsuario;
 import com.inventario.view.ui.ButtonStyleFactory;
@@ -40,8 +39,9 @@ public class UsuarioFrame extends JFrame {
     private final SetorService setorService;
 
     public UsuarioFrame() {
-        this.usuarioService = ServiceFactory.getInstance().getUsuarioService();
-        this.setorService = ServiceFactory.getInstance().getSetorService();
+        // Instantiate services directly (no Spring context in Swing app)
+        this.usuarioService = new UsuarioService();
+        this.setorService = new SetorService();
         initializeComponents();
         setupLayout();
         aplicarEstiloModerno();

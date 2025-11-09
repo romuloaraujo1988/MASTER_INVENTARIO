@@ -81,12 +81,17 @@ public class MobileServerManager {
      */
     public static boolean isServerRunning() {
         try {
-            Process process = Runtime.getRuntime().exec("netstat -ano");
+            ProcessBuilder pb = new ProcessBuilder("netstat", "-ano");
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+            
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             
             while ((line = reader.readLine()) != null) {
                 if (line.contains(":" + PORTA_MOBILE) && line.contains("LISTENING")) {
+                    reader.close();
+                    process.waitFor();
                     return true;
                 }
             }
@@ -106,7 +111,10 @@ public class MobileServerManager {
      */
     private static Integer getServerPID() {
         try {
-            Process process = Runtime.getRuntime().exec("netstat -ano");
+            ProcessBuilder pb = new ProcessBuilder("netstat", "-ano");
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+            
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             
@@ -116,6 +124,8 @@ public class MobileServerManager {
                     if (parts.length > 0) {
                         String pidStr = parts[parts.length - 1];
                         try {
+                            reader.close();
+                            process.waitFor();
                             return Integer.parseInt(pidStr);
                         } catch (NumberFormatException e) {
                             // Ignora
@@ -266,14 +276,16 @@ public class MobileServerManager {
                 if (pid != null) {
                     // Matar processo pela porta
                     String os = System.getProperty("os.name").toLowerCase();
-                    Process killProcess;
+                    ProcessBuilder killPb;
                     
                     if (os.contains("win")) {
-                        killProcess = Runtime.getRuntime().exec("taskkill /F /PID " + pid);
+                        killPb = new ProcessBuilder("taskkill", "/F", "/PID", String.valueOf(pid));
                     } else {
-                        killProcess = Runtime.getRuntime().exec("kill -9 " + pid);
+                        killPb = new ProcessBuilder("kill", "-9", String.valueOf(pid));
                     }
                     
+                    killPb.redirectErrorStream(true);
+                    Process killProcess = killPb.start();
                     killProcess.waitFor();
                 }
                 

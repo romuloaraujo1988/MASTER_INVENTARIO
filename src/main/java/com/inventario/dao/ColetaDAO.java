@@ -890,60 +890,7 @@ public class ColetaDAO {
         return coletas;
     }
     
-    /**
-     * Versão alternativa da busca abrangente sem usar unaccent (para compatibilidade)
-     */
-    private List<Coleta> buscarItensSemEtiquetaPorDescricaoAbrangenteSemUnaccent(String descricao) throws SQLException {
-        String descricaoNormalizada = normalizarTexto(descricao.trim());
-        String[] termos = descricaoNormalizada.split("\\s+");
-        
-        StringBuilder sqlBuilder = new StringBuilder();
-        sqlBuilder.append("SELECT c.*, u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO ");
-        sqlBuilder.append("FROM TABELA_COLETA c ");
-        sqlBuilder.append("LEFT JOIN TABELA_PARTICIPANTE_INVENTARIO pi ON c.ID_PARTICIPANTE_INVENTARIO = pi.id_participante ");
-        sqlBuilder.append("LEFT JOIN TABELA_USUARIO u ON pi.ID_USUARIO = u.ID ");
-        sqlBuilder.append("LEFT JOIN TABELA_INVENTARIO i ON c.ID_INVENTARIO = i.ID ");
-        sqlBuilder.append("WHERE c.SEM_ETIQUETA = true AND (");
-        
-        for (int i = 0; i < termos.length; i++) {
-            if (i > 0) sqlBuilder.append(" OR ");
-            sqlBuilder.append("(LOWER(c.DESCRICAO_ITEM_SEM_ETIQUETA) LIKE ? ");
-            sqlBuilder.append("OR LOWER(c.CATEGORIA_ITEM_SEM_ETIQUETA) LIKE ? ");
-            sqlBuilder.append("OR LOWER(c.LOCALIZACAO_ENCONTRADA) LIKE ?)");
-        }
-        
-        sqlBuilder.append(") ORDER BY ");
-        
-        // Ordenação por relevância manual
-        sqlBuilder.append("CASE ");
-        for (String termo : termos) {
-            sqlBuilder.append("WHEN LOWER(c.DESCRICAO_ITEM_SEM_ETIQUETA) LIKE '%" + termo + "%' THEN 1 ");
-        }
-        sqlBuilder.append("ELSE 2 END, c.DATA_COLETA DESC");
-        
-        List<Coleta> coletas = new ArrayList<>();
-        
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sqlBuilder.toString())) {
-            
-            int paramIndex = 1;
-            for (String termo : termos) {
-                String termoBusca = "%" + termo + "%";
-                stmt.setString(paramIndex++, termoBusca); // DESCRICAO_ITEM_SEM_ETIQUETA
-                stmt.setString(paramIndex++, termoBusca); // CATEGORIA_ITEM_SEM_ETIQUETA
-                stmt.setString(paramIndex++, termoBusca); // LOCALIZACAO_ENCONTRADA
-            }
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    coletas.add(criarColetaFromResultSet(rs));
-                }
-            }
-        }
-        
-        return coletas;
-    }
-    
+
     /**
      * Busca itens sem etiqueta por categoria e descrição
      */
