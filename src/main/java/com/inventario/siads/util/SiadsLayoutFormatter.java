@@ -91,7 +91,12 @@ public class SiadsLayoutFormatter {
         sb.append(DELIMITADOR_CAMPO);
         sb.append(formatarCampo(registro.getSala()));                     // Endereço/Localização
         sb.append(DELIMITADOR_CAMPO);
-        sb.append(formatarCampo(registro.getUnidadeGestora()));           // Código UOrg*
+        // Usa codigoUorg se disponível, senão usa unidadeGestora (compatibilidade)
+        String codigoUorg = registro.getCodigoUorg();
+        if (codigoUorg == null || codigoUorg.trim().isEmpty()) {
+            codigoUorg = registro.getUnidadeGestora();
+        }
+        sb.append(formatarCampo(codigoUorg));                             // Código UOrg*
         sb.append(DELIMITADOR_CAMPO);
         sb.append("1");                                                    // Tipo aquisição* (1=Compra)
         sb.append(DELIMITADOR_CAMPO);

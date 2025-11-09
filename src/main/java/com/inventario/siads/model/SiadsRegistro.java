@@ -32,6 +32,7 @@ public class SiadsRegistro {
     // Localização
     private String orgao;
     private String unidadeGestora;
+    private String codigoUorg; // Código da Unidade Organizacional no SIADS
     private String setor;
     private String sala;
     
@@ -168,6 +169,14 @@ public class SiadsRegistro {
     
     public void setUnidadeGestora(String unidadeGestora) {
         this.unidadeGestora = unidadeGestora;
+    }
+    
+    public String getCodigoUorg() {
+        return codigoUorg;
+    }
+    
+    public void setCodigoUorg(String codigoUorg) {
+        this.codigoUorg = codigoUorg;
     }
     
     public String getSetor() {

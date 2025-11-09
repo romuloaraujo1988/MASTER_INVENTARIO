@@ -39,12 +39,13 @@ public class SiadsConverterService {
         registro.setSala(patrimonio.getNomeSala());
         registro.setSetor(patrimonio.getNomeSetor());
         
-        // Código UOrg: usa código configurado ou ID da sala como fallback
+        // Código UOrg: usa código do campus configurado ou ID da sala como fallback
         String codigoUOrg = patrimonio.getCodigoUOrg();
         if (codigoUOrg == null || codigoUOrg.trim().isEmpty()) {
             codigoUOrg = String.format("%07d", patrimonio.getIdSala()); // Formata com 7 dígitos
         }
-        registro.setUnidadeGestora(codigoUOrg);
+        registro.setCodigoUorg(codigoUOrg);
+        registro.setUnidadeGestora(codigoUOrg); // Mantém compatibilidade
         
         // Responsável (usa campos transientes carregados pelo DAO)
         registro.setCpfResponsavel(patrimonio.getCpfResponsavel());
