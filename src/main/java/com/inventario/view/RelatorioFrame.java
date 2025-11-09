@@ -751,7 +751,7 @@ public class RelatorioFrame extends JFrame {
     }
 
     private ChartPanel criarGraficoPizzaVazio() {
-        DefaultPieDataset dataset = new DefaultPieDataset();
+        DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
         dataset.setValue("Aguardando dados...", 1);
         
         JFreeChart chart = ChartFactory.createPieChart(
@@ -1492,7 +1492,7 @@ public class RelatorioFrame extends JFrame {
     }
 
     private void atualizarGraficoPizzaStatus() {
-        DefaultPieDataset dataset = new DefaultPieDataset();
+        DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
         Map<String, Integer> contadores = new HashMap<>();
         
         // Contar status (assumindo que está na coluna 6)
@@ -1591,7 +1591,7 @@ public class RelatorioFrame extends JFrame {
     }
 
     private void atualizarGraficoPizzaConservacao() {
-        DefaultPieDataset dataset = new DefaultPieDataset();
+        DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
         Map<String, Integer> contadores = new HashMap<>();
         
         // Contar estado de conservação (pode estar em diferentes colunas dependendo do relatório)
