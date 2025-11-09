@@ -31,4 +31,5 @@ interface SincronizacaoRepository {
     // Operações de sincronização
     suspend fun processarFilaSincronizacao(): Result<Unit>
     suspend fun adicionarParaSincronizacao(entidade: String, entidadeId: Long, operacao: String)
+    suspend fun sincronizarTodosDados(): Result<Int>
 }

@@ -32,4 +32,10 @@ interface ColetaRepository {
     // Sincronização
     suspend fun sincronizarColetas(): Result<Unit>
     suspend fun enviarColetasParaServidor(): Result<Unit>
+    
+    // Novos métodos para Clean Architecture
+    suspend fun registrarColeta(coleta: Coleta): Result<Coleta>
+    suspend fun jaFoiColetado(idPatrimonio: Int): Boolean
+    suspend fun sincronizarColetasPendentes(): Int
+    suspend fun getColetasLocal(): List<Coleta>
 }

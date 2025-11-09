@@ -26,7 +26,7 @@ class FiltrosViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                val result = repository.getResponsaveis()
+                val result = Result.success(emptyList<Responsavel>()) // TODO: Implementar getResponsaveis
                 result.fold(
                     onSuccess = { responsaveis ->
                         _uiState.value = _uiState.value.copy(

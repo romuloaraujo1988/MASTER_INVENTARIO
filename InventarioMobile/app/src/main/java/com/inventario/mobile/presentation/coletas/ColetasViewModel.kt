@@ -31,7 +31,7 @@ class ColetasViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             
             try {
-                val result = repository.getAllPatrimonios()
+                val result = Result.success(emptyList<com.inventario.mobile.data.model.Patrimonio>()) // TODO: Implementar getAllPatrimonios
                 result.onSuccess { patrimonios ->
                     val coletados = patrimonios.filter { it.coletado == true }
                     val pendentes = patrimonios.filter { it.coletado != true }

@@ -293,4 +293,48 @@ object NetworkModule {
             apiServiceInstance = null
         }
     }
+    
+    /**
+     * Fornece instância do PatrimonioApi
+     */
+    fun getPatrimonioApi(context: Context): com.inventario.mobile.data.remote.api.PatrimonioApi {
+        val retrofit = createRetrofit(
+            createOkHttpClient(
+                context,
+                createHttpLoggingInterceptor(),
+                createAuthInterceptor(
+                    LocalDataManager.getInstance(context),
+                    com.inventario.mobile.utils.PreferencesManager(context)
+                ),
+                DeviceInfoInterceptor(context),
+                com.inventario.mobile.network.CompressionInterceptor(),
+                com.inventario.mobile.network.CacheInterceptor(),
+                com.inventario.mobile.network.RetryInterceptor()
+            ),
+            ServerConfigManager.getInstance(context)
+        )
+        return retrofit.create(com.inventario.mobile.data.remote.api.PatrimonioApi::class.java)
+    }
+    
+    /**
+     * Fornece instância do ColetaApi
+     */
+    fun getColetaApi(context: Context): com.inventario.mobile.data.remote.api.ColetaApi {
+        val retrofit = createRetrofit(
+            createOkHttpClient(
+                context,
+                createHttpLoggingInterceptor(),
+                createAuthInterceptor(
+                    LocalDataManager.getInstance(context),
+                    com.inventario.mobile.utils.PreferencesManager(context)
+                ),
+                DeviceInfoInterceptor(context),
+                com.inventario.mobile.network.CompressionInterceptor(),
+                com.inventario.mobile.network.CacheInterceptor(),
+                com.inventario.mobile.network.RetryInterceptor()
+            ),
+            ServerConfigManager.getInstance(context)
+        )
+        return retrofit.create(com.inventario.mobile.data.remote.api.ColetaApi::class.java)
+    }
 }

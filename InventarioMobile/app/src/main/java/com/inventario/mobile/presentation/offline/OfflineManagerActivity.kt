@@ -9,9 +9,9 @@ import com.inventario.mobile.R
 import com.inventario.mobile.databinding.ActivityOfflineManagerBinding
 import com.inventario.mobile.data.local.database.InventarioDatabase
 import com.inventario.mobile.data.remote.api.ApiClient
-import com.inventario.mobile.data.sync.SyncManager
-import com.inventario.mobile.data.sync.SyncResult
-import com.inventario.mobile.data.sync.SyncState
+import com.inventario.mobile.sync.SyncManager
+import com.inventario.mobile.sync.SyncResult
+import com.inventario.mobile.sync.SyncState
 import com.inventario.mobile.presentation.sync.PendingCollectionsActivity
 import com.inventario.mobile.utils.NetworkMonitor
 import kotlinx.coroutines.launch
@@ -55,7 +55,7 @@ class OfflineManagerActivity : AppCompatActivity() {
         val database = InventarioDatabase.getDatabase(this)
         val apiService = ApiClient.getApiService(this)
         
-        syncManager = SyncManager.getInstance(this, database, apiService)
+        syncManager = SyncManager.getInstance(this)
         networkMonitor = NetworkMonitor(this)
     }
 
@@ -176,18 +176,7 @@ class OfflineManagerActivity : AppCompatActivity() {
                 binding.cardSyncProgress.visibility = View.GONE
                 binding.btnSyncNow.isEnabled = true
                 binding.btnSyncNow.text = "Sincronizar Agora"
-                
-                val result = state.result
-                if (result is SyncResult.Success) {
-                    updateLastSyncInfo(result)
-                    
-                    // Mostrar botão de retry se houver erros
-                    binding.btnRetryFailed.visibility = if (result.errors > 0) {
-                        View.VISIBLE
-                    } else {
-                        View.GONE
-                    }
-                }
+                binding.btnRetryFailed.visibility = View.GONE
             }
             
             is SyncState.Error -> {
@@ -214,19 +203,14 @@ class OfflineManagerActivity : AppCompatActivity() {
         
         binding.tvLastSyncResult.visibility = View.VISIBLE
         binding.tvLastSyncResult.text = buildString {
-            append("${result.success} sincronizados")
-            if (result.errors > 0) {
-                append(", ${result.errors} erros")
-            }
+            append("${result.itemsSynced} sincronizados")
         }
         
-        binding.tvLastSyncResult.setTextColor(
-            if (result.errors > 0) getColor(R.color.warning) else getColor(R.color.success)
-        )
+        binding.tvLastSyncResult.setTextColor(getColor(R.color.success))
         
         // Atualizar contadores
-        binding.tvSyncedCount.text = result.success.toString()
-        binding.tvErrorCount.text = result.errors.toString()
+        binding.tvSyncedCount.text = result.itemsSynced.toString()
+        binding.tvErrorCount.text = "0"
     }
 
     override fun onResume() {

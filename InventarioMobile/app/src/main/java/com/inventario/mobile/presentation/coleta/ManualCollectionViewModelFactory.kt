@@ -5,13 +5,13 @@ import androidx.lifecycle.ViewModelProvider
 import com.inventario.mobile.data.repository.InventarioRepository
 
 class ManualCollectionViewModelFactory(
-    private val inventarioRepository: InventarioRepository
+    private val repository: InventarioRepository
 ) : ViewModelProvider.Factory {
-
+    
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ManualCollectionViewModel::class.java)) {
-            return ManualCollectionViewModel(inventarioRepository) as T
+            return ManualCollectionViewModel(repository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

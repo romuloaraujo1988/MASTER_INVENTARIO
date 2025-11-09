@@ -115,4 +115,45 @@ public class MobileDescricaoController {
                     .body(ApiResponse.error("Erro ao buscar descrições", "FETCH_ERROR"));
         }
     }
+    
+    /**
+     * Listar descrições únicas de patrimônios NÃO COLETADOS
+     * Facilita a coleta sem etiqueta mostrando apenas itens pendentes
+     * 
+     * @param idInventario ID do inventário ativo
+     * @return lista de descrições não coletadas
+     */
+    @GetMapping("/nao-coletadas")
+    public ResponseEntity<ApiResponse<List<String>>> listarDescricoesNaoColetadas(
+            @RequestParam(required = false) Integer idInventario) {
+        try {
+            logger.info("Buscando descrições de patrimônios não coletados");
+            
+            // Buscar todos os patrimônios
+            List<Patrimonio> patrimonios = patrimonioDAO.findAll();
+            
+            // Buscar patrimônios já coletados no inventário atual
+            List<Integer> idsColetados = patrimonioDAO.buscarPatrimoniosColetados(idInventario);
+            
+            // Filtrar apenas não coletados e extrair descrições únicas
+            List<String> descricoesNaoColetadas = patrimonios.stream()
+                    .filter(p -> !idsColetados.contains(p.getId()))
+                    .filter(p -> p.getDescricao() != null && !p.getDescricao().trim().isEmpty())
+                    .map(Patrimonio::getDescricao)
+                    .distinct()
+                    .sorted()
+                    .collect(Collectors.toList());
+            
+            logger.info("{} descrições não coletadas encontradas", descricoesNaoColetadas.size());
+            
+            return ResponseEntity.ok(
+                    ApiResponse.success(descricoesNaoColetadas, 
+                            String.format("%d descrição(ões) não coletada(s)", descricoesNaoColetadas.size())));
+            
+        } catch (Exception e) {
+            logger.error("Erro ao buscar descrições não coletadas", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao buscar descrições não coletadas", "FETCH_ERROR"));
+        }
+    }
 }

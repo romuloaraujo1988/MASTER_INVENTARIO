@@ -13,8 +13,8 @@ import androidx.work.WorkerParameters
 import com.inventario.mobile.R
 import com.inventario.mobile.data.local.database.InventarioDatabase
 import com.inventario.mobile.data.remote.api.ApiClient
-import com.inventario.mobile.data.sync.SyncManager
-import com.inventario.mobile.data.sync.SyncResult
+import com.inventario.mobile.sync.SyncManager
+import com.inventario.mobile.sync.SyncResult
 import com.inventario.mobile.presentation.offline.OfflineManagerActivity
 import com.inventario.mobile.utils.NetworkMonitor
 import kotlinx.coroutines.Dispatchers
@@ -57,29 +57,25 @@ class SyncWorker(
             // Executar sincronização
             val database = InventarioDatabase.getDatabase(context)
             val apiService = ApiClient.getApiService(context)
-            val syncManager = SyncManager.getInstance(context, database, apiService)
+            val syncManager = SyncManager.getInstance(context)
             
-            val result = syncManager.syncPendingData()
+            val result = syncManager.syncAll()
             
             // Processar resultado
             when (result) {
                 is SyncResult.Success -> {
-                    if (result.success > 0) {
-                        showSuccessNotification(result)
+                    if (result.itemsSynced > 0) {
+                        showSuccessNotification(result.itemsSynced)
                     }
                     Result.success()
                 }
                 
                 is SyncResult.Error -> {
-                    showErrorNotification(result.exception.message ?: "Erro desconhecido")
+                    showErrorNotification(result.message)
                     Result.retry()
                 }
                 
-                SyncResult.NoConnection -> {
-                    Result.retry()
-                }
-                
-                SyncResult.AlreadySyncing -> {
+                SyncResult.InProgress -> {
                     Result.success()
                 }
             }
@@ -110,7 +106,7 @@ class SyncWorker(
     /**
      * Mostra notificação de sucesso
      */
-    private fun showSuccessNotification(result: SyncResult.Success) {
+    private fun showSuccessNotification(itemsSynced: Int) {
         if (!getNotificationsEnabledPreference()) return
         
         createNotificationChannel()
@@ -123,12 +119,7 @@ class SyncWorker(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         
-        val message = buildString {
-            append("${result.success} itens sincronizados")
-            if (result.errors > 0) {
-                append(", ${result.errors} erros")
-            }
-        }
+        val message = "$itemsSynced itens sincronizados"
         
         val notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
             .setContentTitle("Sincronização concluída")

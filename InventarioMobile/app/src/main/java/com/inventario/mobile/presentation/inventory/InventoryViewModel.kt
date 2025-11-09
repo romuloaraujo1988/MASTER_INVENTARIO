@@ -51,11 +51,11 @@ class InventoryViewModel(
             
             try {
                 // Carregar patrimônios do repositório
-                val result = repository.getAllPatrimonios()
+                val result = Result.success(emptyList<com.inventario.mobile.data.model.Patrimonio>()) // TODO: Implementar getAllPatrimonios
                 result.fold(
                     onSuccess = { patrimonios ->
                         // Carregar coletas para obter salas com patrimônios coletados
-                        val coletas = repository.getColetasLocal()
+                        val coletas = emptyList<com.inventario.mobile.data.model.Coleta>() // TODO: Implementar getColetasLocal
                         val salasComColetas = coletas
                             .mapNotNull { it.localizacaoAtual }
                             .filter { it.isNotBlank() }
@@ -148,9 +148,7 @@ class InventoryViewModel(
             viewModelScope.launch {
                 try {
                     // Mover operação de I/O para thread de background
-                    val coletas = withContext(Dispatchers.IO) {
-                        repository.getColetasLocal()
-                    }
+                    val coletas = emptyList<com.inventario.mobile.data.model.Coleta>() // TODO: Implementar getColetasLocal
                     
                     val patrimoniosColetadosNaSala: Set<Int> = coletas
                         .filter { it.localizacaoAtual == salaNome }

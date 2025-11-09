@@ -143,6 +143,7 @@ id btnDeleteColeta
 id btnDescriptionCollection
 id btnDisableBiometric
 id btnDownloadData
+id btnEnableAll
 id btnIncreaseSyncCount
 id btnIncreaseSyncInterval
 id btnLimparFiltros
@@ -152,6 +153,10 @@ id btnQuickScan
 id btnRefresh
 id btnResetCollectionCount
 id btnRetryFailed
+id btnRollbackAll
+id btnRunDescricaoTest
+id btnRunEndpointTest
+id btnRunTests
 id btnSalvar
 id btnScanQr
 id btnSearch
@@ -168,6 +173,7 @@ id btnViewCollections
 id btnViewPending
 id btnViewPendingCollections
 id btnViewStatistics
+id btnViewStatus
 id btnVoiceSearch
 id buttonCancel
 id buttonClearFilters
@@ -296,8 +302,13 @@ id swipeRefreshLayout
 id switchAutoSync
 id switchAutoSyncByCount
 id switchBiometric
+id switchCleanArchitecture
+id switchColeta
+id switchDashboard
+id switchDescricao
 id switchNotifications
 id switchOfflineMode
+id switchSync
 id switchSyncOnWifiOnly
 id switchWifiOnly
 id tabLayout
@@ -391,8 +402,10 @@ id tvSalaInfo
 id tvSalasCount
 id tvScanInstruction
 id tvSearchTime
+id tvStatus
 id tvStatusMessage
 id tvSubtitle
+id tvSummary
 id tvSummaryColetados
 id tvSummaryDivergencias
 id tvSummaryPendentes
@@ -426,6 +439,7 @@ layout activity_coletas
 layout activity_collection_history
 layout activity_collection_view
 layout activity_descricao_selection
+layout activity_developer_settings
 layout activity_filtros
 layout activity_inventario
 layout activity_login
@@ -440,6 +454,7 @@ layout activity_sala_selection
 layout activity_scanner
 layout activity_settings
 layout activity_simple_sala_selection
+layout activity_smoke_test
 layout activity_splash
 layout activity_statistics
 layout activity_sync

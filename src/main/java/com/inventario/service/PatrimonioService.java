@@ -149,4 +149,130 @@ public class PatrimonioService {
             throw new RuntimeException("Erro ao excluir patrimônio", e);
         }
     }
+    
+    /**
+     * Filtra patrimônios que ainda não foram coletados em um inventário específico
+     * 
+     * @param patrimonios Lista de patrimônios a filtrar
+     * @param idInventario ID do inventário para verificar coletas
+     * @param coletaService Serviço de coleta para buscar coletas existentes
+     * @return Lista contendo apenas patrimônios pendentes (não coletados)
+     */
+    public List<Patrimonio> filtrarPatrimoniosPendentes(
+            List<Patrimonio> patrimonios, 
+            Integer idInventario,
+            ColetaService coletaService) {
+        
+        if (patrimonios == null || patrimonios.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        if (idInventario == null) {
+            logger.warn("ID do inventário é nulo, retornando todos os patrimônios");
+            return patrimonios;
+        }
+        
+        List<Patrimonio> pendentes = new ArrayList<>();
+        
+        try {
+            // Buscar todas as coletas do inventário
+            List<com.inventario.model.Coleta> coletasInventario = 
+                coletaService.buscarPorInventario(idInventario);
+            
+            // Criar set com IDs dos patrimônios já coletados para busca O(1)
+            java.util.Set<Integer> idsColetados = new java.util.HashSet<>();
+            for (com.inventario.model.Coleta coleta : coletasInventario) {
+                Integer idPatrimonio = coleta.getIdPatrimonio();
+                if (idPatrimonio != null && idPatrimonio != 0) {
+                    idsColetados.add(idPatrimonio);
+                }
+            }
+            
+            // Filtrar apenas os não coletados
+            for (Patrimonio p : patrimonios) {
+                if (!idsColetados.contains(p.getId())) {
+                    pendentes.add(p);
+                }
+            }
+            
+            logger.info("Filtrados {} patrimônios pendentes de {} total para inventário {}", 
+                pendentes.size(), patrimonios.size(), idInventario);
+            
+        } catch (Exception e) {
+            logger.error("Erro ao filtrar patrimônios pendentes para inventário {}: {}", 
+                idInventario, e.getMessage(), e);
+            // Em caso de erro, retorna todos para não bloquear o usuário
+            return patrimonios;
+        }
+        
+        return pendentes;
+    }
+    
+    /**
+     * Busca patrimônios por descrição e filtra apenas os pendentes de coleta
+     * 
+     * @param termoBusca Termo para buscar na descrição
+     * @param idInventario ID do inventário para verificar coletas
+     * @param coletaService Serviço de coleta
+     * @return Lista de patrimônios pendentes que correspondem à busca
+     */
+    public List<Patrimonio> buscarPendentesPorDescricao(
+            String termoBusca,
+            Integer idInventario,
+            ColetaService coletaService) {
+        
+        try {
+            // Buscar todos os patrimônios pela descrição
+            List<Patrimonio> todosPatrimonios = buscarPorDescricaoAbrangente(termoBusca);
+            
+            // Filtrar apenas os pendentes
+            return filtrarPatrimoniosPendentes(todosPatrimonios, idInventario, coletaService);
+            
+        } catch (Exception e) {
+            logger.error("Erro ao buscar patrimônios pendentes por descrição '{}': {}", 
+                termoBusca, e.getMessage(), e);
+            return new ArrayList<>();
+        }
+    }
+    
+    /**
+     * Obtém estatísticas de coleta para uma lista de patrimônios
+     * 
+     * @param patrimonios Lista de patrimônios
+     * @param idInventario ID do inventário
+     * @param coletaService Serviço de coleta
+     * @return Map com estatísticas (total, pendentes, coletados, percentual)
+     */
+    public java.util.Map<String, Object> obterEstatisticasColeta(
+            List<Patrimonio> patrimonios,
+            Integer idInventario,
+            ColetaService coletaService) {
+        
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        
+        if (patrimonios == null || patrimonios.isEmpty()) {
+            stats.put("total", 0);
+            stats.put("pendentes", 0);
+            stats.put("coletados", 0);
+            stats.put("percentualColetado", 0.0);
+            stats.put("percentualPendente", 0.0);
+            return stats;
+        }
+        
+        int total = patrimonios.size();
+        List<Patrimonio> pendentes = filtrarPatrimoniosPendentes(patrimonios, idInventario, coletaService);
+        int qtdPendentes = pendentes.size();
+        int qtdColetados = total - qtdPendentes;
+        
+        double percentualColetado = total > 0 ? (qtdColetados * 100.0 / total) : 0.0;
+        double percentualPendente = total > 0 ? (qtdPendentes * 100.0 / total) : 0.0;
+        
+        stats.put("total", total);
+        stats.put("pendentes", qtdPendentes);
+        stats.put("coletados", qtdColetados);
+        stats.put("percentualColetado", percentualColetado);
+        stats.put("percentualPendente", percentualPendente);
+        
+        return stats;
+    }
 }

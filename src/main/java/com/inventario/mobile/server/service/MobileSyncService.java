@@ -1,264 +1,267 @@
 package com.inventario.mobile.server.service;
 
-import com.inventario.mobile.server.dto.MobilePatrimonioDTO;
-import com.inventario.mobile.server.dto.MobileSyncRequest;
-import com.inventario.mobile.server.dto.MobileSyncResponse;
-import com.inventario.model.Patrimonio;
-import com.inventario.model.Usuario;
-import com.inventario.model.Coleta;
-import com.inventario.model.Inventario;
-import com.inventario.util.SoundNotification;
-import com.inventario.service.PatrimonioService;
-import com.inventario.service.UsuarioService;
-import com.inventario.dao.ColetaDAO;
-import com.inventario.dao.InventarioDAO;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.inventario.dao.*;
+import com.inventario.model.*;
+import com.inventario.service.ServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Serviço de sincronização para aplicação mobile
+ * Serviço para sincronização de dados offline
+ * Prepara pacotes de dados otimizados para o app mobile
  * 
  * @author Sistema de Inventário
- * @version 1.0.0
+ * @version 2.0.0
  */
 @Service
-@Transactional
 public class MobileSyncService {
     
     private static final Logger logger = LoggerFactory.getLogger(MobileSyncService.class);
     
-    @Autowired
-    private PatrimonioService patrimonioService;
+    private final PatrimonioDAORefactored patrimonioDAO;
+    private final com.inventario.service.InventarioService inventarioService;
+    private final com.inventario.service.SalaService salaService;
+    private final com.inventario.service.ResponsavelService responsavelService;
+    private final com.inventario.service.SetorService setorService;
     
-    @Autowired
-    private UsuarioService usuarioService;
-    
-    @Autowired
-    private ColetaDAO coletaDAO;
-    
-    @Autowired
-    private InventarioDAO inventarioDAO;
-    
-    /**
-     * Sincroniza dados entre mobile e servidor
-     * 
-     * @param syncRequest dados de sincronização
-     * @param username usuário autenticado
-     * @return resposta da sincronização
-     */
-    public MobileSyncResponse syncData(MobileSyncRequest syncRequest, String username) {
-        try {
-            logger.info("Iniciando sincronização mobile para usuário: {}", username);
-            
-            Usuario usuario = usuarioService.buscarPorUsername(username);
-            if (usuario == null) {
-                throw new RuntimeException("Usuário não encontrado: " + username);
-            }
-            
-            MobileSyncResponse response = new MobileSyncResponse();
-            List<String> erros = new ArrayList<>();
-            int totalProcessados = 0;
-            
-            // Processar patrimônios coletados pelo mobile
-            if (syncRequest.getPatrimoniosColetados() != null && !syncRequest.getPatrimoniosColetados().isEmpty()) {
-                totalProcessados = processarPatrimoniosColetados(syncRequest.getPatrimoniosColetados(), usuario, erros);
-            }
-            
-            // Buscar patrimônios atualizados no servidor
-            List<MobilePatrimonioDTO> patrimoniosAtualizados = buscarPatrimoniosAtualizados(
-                syncRequest.getLastSyncTime(), 
-                syncRequest.getSetorId(),
-                syncRequest.getSalaId()
-            );
-            
-            // Buscar novos patrimônios
-            List<MobilePatrimonioDTO> patrimoniosNovos = buscarPatrimoniosNovos(
-                syncRequest.getLastSyncTime(),
-                syncRequest.getSetorId(),
-                syncRequest.getSalaId()
-            );
-            
-            // Buscar patrimônios removidos
-            List<Long> patrimoniosRemovidos = buscarPatrimoniosRemovidos(syncRequest.getLastSyncTime());
-            
-            response.setPatrimoniosAtualizados(patrimoniosAtualizados);
-            response.setPatrimoniosNovos(patrimoniosNovos);
-            response.setPatrimoniosRemovidos(patrimoniosRemovidos);
-            response.setTotalProcessados(totalProcessados);
-            response.setTotalErros(erros.size());
-            response.setErros(erros);
-            
-            logger.info("Sincronização concluída - Processados: {}, Erros: {}, Atualizados: {}, Novos: {}", 
-                       totalProcessados, erros.size(), patrimoniosAtualizados.size(), patrimoniosNovos.size());
-            
-            return response;
-            
-        } catch (Exception e) {
-            logger.error("Erro durante sincronização mobile", e);
-            throw new RuntimeException("Erro na sincronização: " + e.getMessage(), e);
-        }
+    public MobileSyncService() {
+        this.patrimonioDAO = new PatrimonioDAORefactored();
+        
+        // Usar services ao invés de DAOs diretos
+        ServiceFactory factory = ServiceFactory.getInstance();
+        this.inventarioService = factory.getInventarioService();
+        this.salaService = factory.getSalaService();
+        this.responsavelService = factory.getResponsavelService();
+        this.setorService = factory.getSetorService();
     }
     
     /**
-     * Processa patrimônios coletados pelo mobile
+     * Sincronização completa de todos os dados necessários
      */
-    private int processarPatrimoniosColetados(List<MobilePatrimonioDTO> patrimoniosColetados, 
-                                            Usuario usuario, List<String> erros) {
-        int processados = 0;
+    public Map<String, Object> sincronizacaoCompleta(Integer idInventario) throws SQLException {
+        logger.info("Iniciando sincronização completa");
         
-        // Buscar inventário ativo
-        Inventario inventarioAtivo = inventarioDAO.buscarInventarioPorStatus("EM_ANDAMENTO");
-        if (inventarioAtivo == null) {
-            logger.error("Nenhum inventário ativo encontrado para sincronização mobile");
-            erros.add("Nenhum inventário ativo encontrado no sistema");
-            return 0;
-        }
+        long inicio = System.currentTimeMillis();
         
-        logger.info("Processando coletas para inventário: {} (ID: {})", 
-                   inventarioAtivo.getNome(), inventarioAtivo.getId());
-        
-        for (MobilePatrimonioDTO dto : patrimoniosColetados) {
-            try {
-                Patrimonio patrimonio = patrimonioService.buscarPorId(dto.getId());
-                if (patrimonio != null) {
-                    // Criar ou atualizar registro de coleta
-                    Coleta coleta = new Coleta();
-                    coleta.setIdInventario(inventarioAtivo.getId()); // CORREÇÃO: Definir o ID do inventário
-                    coleta.setIdPatrimonio(patrimonio.getId());
-                    coleta.setIdColetor(usuario.getId());
-                    coleta.setDataColeta(dto.getDataColeta() != null ? 
-                        Timestamp.valueOf(dto.getDataColeta()) : 
-                        new Timestamp(System.currentTimeMillis()));
-                    coleta.setStatusColeta(dto.getColetado() ? "COLETADO" : "NAO_ENCONTRADO");
-                    coleta.setObservacaoColeta(dto.getObservacoes());
-                    
-                    // Atualizar estado do patrimônio se informado
-                    if (dto.getEstado() != null) {
-                        patrimonio.setEstadoConservacao(dto.getEstado());
-                        patrimonioService.salvar(patrimonio);
-                    }
-                    
-                    // Inserir ou atualizar coleta
-                    coletaDAO.inserirColeta(coleta);
-                    
-                    // Reproduzir som de sucesso
-                    SoundNotification.playColetaSalvaSound();
-                    
-                    processados++;
-                    
-                    logger.debug("Patrimônio {} processado com dados da coleta mobile", dto.getCodigo());
-                } else {
-                    erros.add("Patrimônio não encontrado: " + dto.getCodigo());
-                }
-            } catch (Exception e) {
-                logger.error("Erro ao processar patrimônio {}", dto.getCodigo(), e);
-                erros.add("Erro ao processar patrimônio " + dto.getCodigo() + ": " + e.getMessage());
+        // Buscar inventário ativo se não informado
+        if (idInventario == null) {
+            Inventario inventarioAtivo = inventarioService.buscarPorStatus("EM_ANDAMENTO");
+            if (inventarioAtivo != null) {
+                idInventario = inventarioAtivo.getId();
             }
         }
         
-        return processados;
+        // Buscar todos os dados
+        List<Patrimonio> patrimonios = patrimonioDAO.findAll();
+        List<com.inventario.model.Sala> salas = salaService.listarTodas();
+        List<com.inventario.model.Responsavel> responsaveis = responsavelService.listarTodos();
+        List<com.inventario.model.Setor> setores = setorService.listarTodos();
+        Inventario inventario = idInventario != null ? inventarioService.buscarPorId(idInventario) : null;
+        
+        // Converter para formato otimizado
+        List<Map<String, Object>> patrimoniosSimplificados = simplificarPatrimonios(patrimonios);
+        List<Map<String, Object>> salasSimplificadas = simplificarSalas(salas);
+        List<Map<String, Object>> responsaveisSimplificados = simplificarResponsaveis(responsaveis);
+        List<Map<String, Object>> setoresSimplificados = simplificarSetores(setores);
+        
+        long duracao = System.currentTimeMillis() - inicio;
+        
+        Map<String, Object> resultado = new HashMap<>();
+        resultado.put("patrimonios", patrimoniosSimplificados);
+        resultado.put("salas", salasSimplificadas);
+        resultado.put("responsaveis", responsaveisSimplificados);
+        resultado.put("setores", setoresSimplificados);
+        resultado.put("inventario", inventario != null ? simplificarInventario(inventario) : null);
+        resultado.put("totalPatrimonios", patrimonios.size());
+        resultado.put("totalSalas", salas.size());
+        resultado.put("totalResponsaveis", responsaveis.size());
+        resultado.put("totalSetores", setores.size());
+        resultado.put("timestamp", System.currentTimeMillis());
+        resultado.put("duracaoMs", duracao);
+        resultado.put("versao", "2.0.0");
+        
+        logger.info("Sincronização completa finalizada em {}ms", duracao);
+        
+        return resultado;
     }
     
     /**
-     * Busca patrimônios atualizados no servidor
+     * Sincronizar apenas patrimônios (com filtro de data)
      */
-    private List<MobilePatrimonioDTO> buscarPatrimoniosAtualizados(LocalDateTime lastSync, 
-                                                                  Long setorId, Long salaId) {
-        try {
-            List<Patrimonio> patrimonios = patrimonioService.buscarAtualizadosApos(lastSync, setorId, salaId);
-            return patrimonios.stream()
-                    .map(this::converterParaDTO)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            logger.error("Erro ao buscar patrimônios atualizados", e);
-            return new ArrayList<>();
+    public Map<String, Object> sincronizarPatrimonios(Long ultimaAtualizacao) throws SQLException {
+        List<Patrimonio> patrimonios = patrimonioDAO.findAll();
+        
+        // Filtrar por data se fornecida
+        if (ultimaAtualizacao != null) {
+            patrimonios = patrimonios.stream()
+                .filter(p -> p.getDataCarga() != null && 
+                            p.getDataCarga().getTime() > ultimaAtualizacao)
+                .collect(Collectors.toList());
         }
+        
+        List<Map<String, Object>> simplificados = simplificarPatrimonios(patrimonios);
+        
+        Map<String, Object> resultado = new HashMap<>();
+        resultado.put("patrimonios", simplificados);
+        resultado.put("total", simplificados.size());
+        resultado.put("timestamp", System.currentTimeMillis());
+        
+        return resultado;
     }
     
     /**
-     * Busca novos patrimônios
+     * Sincronizar apenas salas
      */
-    private List<MobilePatrimonioDTO> buscarPatrimoniosNovos(LocalDateTime lastSync, 
-                                                           Long setorId, Long salaId) {
-        try {
-            List<Patrimonio> patrimonios = patrimonioService.buscarCriadosApos(lastSync, setorId, salaId);
-            return patrimonios.stream()
-                    .map(this::converterParaDTO)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            logger.error("Erro ao buscar novos patrimônios", e);
-            return new ArrayList<>();
-        }
+    public Map<String, Object> sincronizarSalas() throws SQLException {
+        List<com.inventario.model.Sala> salas = salaService.listarTodas();
+        List<Map<String, Object>> simplificadas = simplificarSalas(salas);
+        
+        Map<String, Object> resultado = new HashMap<>();
+        resultado.put("salas", simplificadas);
+        resultado.put("total", simplificadas.size());
+        resultado.put("timestamp", System.currentTimeMillis());
+        
+        return resultado;
     }
     
     /**
-     * Busca patrimônios removidos
+     * Sincronizar apenas responsáveis
      */
-    private List<Long> buscarPatrimoniosRemovidos(LocalDateTime lastSync) {
-        try {
-            // Implementar lógica para buscar patrimônios removidos/inativos
-            return new ArrayList<>();
-        } catch (Exception e) {
-            logger.error("Erro ao buscar patrimônios removidos", e);
-            return new ArrayList<>();
-        }
+    public Map<String, Object> sincronizarResponsaveis() throws SQLException {
+        List<com.inventario.model.Responsavel> responsaveis = responsavelService.listarTodos();
+        List<Map<String, Object>> simplificados = simplificarResponsaveis(responsaveis);
+        
+        Map<String, Object> resultado = new HashMap<>();
+        resultado.put("responsaveis", simplificados);
+        resultado.put("total", simplificados.size());
+        resultado.put("timestamp", System.currentTimeMillis());
+        
+        return resultado;
     }
     
     /**
-     * Converte um objeto Patrimonio para MobilePatrimonioDTO
+     * Verificar se há atualizações disponíveis
      */
-    private MobilePatrimonioDTO converterParaDTO(Patrimonio patrimonio) {
-        MobilePatrimonioDTO dto = new MobilePatrimonioDTO();
+    public Map<String, Object> verificarAtualizacoes(Long ultimaSincronizacao) throws SQLException {
+        int patrimoniosNovos = contarPatrimoniosAtualizados(ultimaSincronizacao);
         
-        dto.setId(Long.valueOf(patrimonio.getId()));
-        dto.setCodigo(patrimonio.getNumero());
-        dto.setDescricao(patrimonio.getDescricao());
-        dto.setMarca(patrimonio.getMarca());
-        dto.setModelo(patrimonio.getModelo());
-        dto.setNumeroSerie(patrimonio.getNumeroSerie());
-        dto.setEstado(patrimonio.getEstadoConservacao());
-        dto.setValor(patrimonio.getValorAquisicao() != null ? 
-            patrimonio.getValorAquisicao().doubleValue() : null);
-        dto.setSetorId(patrimonio.getIdSala() > 0 ? Long.valueOf(patrimonio.getIdSala()) : null);
-        dto.setSalaId(patrimonio.getIdSala() > 0 ? Long.valueOf(patrimonio.getIdSala()) : null);
-        dto.setResponsavelId(patrimonio.getIdResponsavel() > 0 ? Long.valueOf(patrimonio.getIdResponsavel()) : null);
-        dto.setResponsavelNome(patrimonio.getNomeResponsavel());
-        dto.setSalaNome(patrimonio.getNomeSala());
+        Map<String, Object> resultado = new HashMap<>();
+        resultado.put("temAtualizacoes", patrimoniosNovos > 0);
+        resultado.put("patrimoniosNovos", patrimoniosNovos);
+        resultado.put("timestamp", System.currentTimeMillis());
         
-        // QR Code pode ser gerado baseado no número do patrimônio
-        dto.setQrCode("QR_" + patrimonio.getNumero());
+        return resultado;
+    }
+    
+    /**
+     * Obter metadados da sincronização
+     */
+    public Map<String, Object> obterMetadados() throws SQLException {
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("totalPatrimonios", patrimonioDAO.findAll().size());
+        metadata.put("totalSalas", salaService.listarTodas().size());
+        metadata.put("totalResponsaveis", responsavelService.listarTodos().size());
+        metadata.put("versao", "2.0.0");
+        metadata.put("timestamp", System.currentTimeMillis());
         
-        // Verificar se existe coleta para este patrimônio
-        try {
-            List<Coleta> coletas = coletaDAO.buscarPorPatrimonio(patrimonio.getId());
-            if (coletas != null && !coletas.isEmpty()) {
-                // Pegar a coleta mais recente (primeira da lista, já ordenada por data)
-                Coleta coleta = coletas.get(0);
-                dto.setColetado("COLETADO".equals(coleta.getStatusColeta()));
-                dto.setDataColeta(coleta.getDataColeta() != null ? 
-                    coleta.getDataColeta().toLocalDateTime() : null);
-                dto.setObservacoes(coleta.getObservacaoColeta());
-            } else {
-                dto.setColetado(false);
-                dto.setDataColeta(null);
-                dto.setObservacoes(patrimonio.getObservacoes());
-            }
-        } catch (Exception e) {
-            logger.warn("Erro ao buscar coleta para patrimônio {}: {}", patrimonio.getId(), e.getMessage());
-            dto.setColetado(false);
-            dto.setDataColeta(null);
-            dto.setObservacoes(patrimonio.getObservacoes());
-        }
-        
-        return dto;
+        return metadata;
+    }
+    
+    // Métodos auxiliares de simplificação
+    
+    private List<Map<String, Object>> simplificarPatrimonios(List<Patrimonio> patrimonios) {
+        return patrimonios.stream()
+            .map(this::simplificarPatrimonio)
+            .collect(Collectors.toList());
+    }
+    
+    private Map<String, Object> simplificarPatrimonio(Patrimonio p) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", p.getId());
+        map.put("numero", p.getNumero());
+        map.put("descricao", p.getDescricao());
+        map.put("idSala", p.getIdSala());
+        map.put("nomeSala", p.getNomeSala());
+        map.put("idResponsavel", p.getIdResponsavel());
+        map.put("nomeResponsavel", p.getNomeResponsavel());
+        map.put("status", p.getStatus());
+        map.put("estadoConservacao", p.getEstadoConservacao());
+        map.put("marca", p.getMarca());
+        map.put("modelo", p.getModelo());
+        map.put("numeroSerie", p.getNumeroSerie());
+        return map;
+    }
+    
+    private List<Map<String, Object>> simplificarSalas(List<com.inventario.model.Sala> salas) {
+        return salas.stream()
+            .map(this::simplificarSala)
+            .collect(Collectors.toList());
+    }
+    
+    private Map<String, Object> simplificarSala(com.inventario.model.Sala s) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", s.getIdSala());
+        map.put("nome", s.getDescricao()); // Sala usa getDescricao()
+        map.put("numero", s.getNumeroSala());
+        map.put("andar", s.getAndar());
+        map.put("bloco", s.getBloco());
+        map.put("idSetor", s.getIdSetor());
+        map.put("nomeSetor", s.getNomeSetor());
+        return map;
+    }
+    
+    private List<Map<String, Object>> simplificarResponsaveis(List<com.inventario.model.Responsavel> responsaveis) {
+        return responsaveis.stream()
+            .map(this::simplificarResponsavel)
+            .collect(Collectors.toList());
+    }
+    
+    private Map<String, Object> simplificarResponsavel(com.inventario.model.Responsavel r) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", r.getId());
+        map.put("nome", r.getNome());
+        map.put("cpf", r.getCpf());
+        map.put("cargo", r.getCargo());
+        map.put("email", r.getEmail());
+        map.put("telefone", r.getTelefone());
+        map.put("idSetor", r.getIdSetor());
+        return map;
+    }
+    
+    private List<Map<String, Object>> simplificarSetores(List<com.inventario.model.Setor> setores) {
+        return setores.stream()
+            .map(this::simplificarSetor)
+            .collect(Collectors.toList());
+    }
+    
+    private Map<String, Object> simplificarSetor(com.inventario.model.Setor s) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", s.getId());
+        map.put("nome", s.getNome());
+        map.put("sigla", s.getNome()); // Usar nome como sigla se não houver campo específico
+        return map;
+    }
+    
+    private Map<String, Object> simplificarInventario(Inventario i) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", i.getId());
+        map.put("nome", i.getNome());
+        map.put("dataInicio", i.getDataInicio());
+        map.put("dataFim", i.getDataFim());
+        map.put("status", i.getStatusInventario());
+        return map;
+    }
+    
+    private int contarPatrimoniosAtualizados(Long ultimaSincronizacao) throws SQLException {
+        List<Patrimonio> todos = patrimonioDAO.findAll();
+        return (int) todos.stream()
+            .filter(p -> p.getDataCarga() != null && 
+                        p.getDataCarga().getTime() > ultimaSincronizacao)
+            .count();
     }
 }

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -11,12 +12,24 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.inventario.mobile.R
 import com.inventario.mobile.databinding.ActivityDescricaoSelectionBinding
 import com.inventario.mobile.presentation.coleta.ManualCollectionActivity
+import com.inventario.mobile.presentation.state.DescricaoState
+import com.inventario.mobile.utils.FeatureFlags
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+/**
+ * Activity para seleção de descrição (coleta sem etiqueta)
+ * Clean Architecture + MVVM + Hilt
+ */
+@AndroidEntryPoint
 class DescricaoSelectionActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDescricaoSelectionBinding
-    private lateinit var viewModel: DescricaoSelectionViewModel
+    
+    // ViewModel injetado via Hilt
+    private val viewModel: DescricaoSelectionViewModelClean by viewModels()
+    
     private lateinit var adapter: DescricaoAdapter
 
     private var salaId: Long = 0
@@ -38,21 +51,43 @@ class DescricaoSelectionActivity : AppCompatActivity() {
         salaNome = intent.getStringExtra(EXTRA_SALA_NOME) ?: ""
 
         Log.d(TAG, "Sala selecionada: ID=$salaId, Nome=$salaNome")
-
-        // Inicializar ViewModel
-        viewModel = ViewModelProvider(
-            this,
-            DescricaoSelectionViewModelFactory(application)
-        )[DescricaoSelectionViewModel::class.java]
-
+        
         setupToolbar()
         setupRecyclerView()
-        setupObservers()
         setupSearch()
-
+        setupObservers()
+        
         // Carregar descrições
-        viewModel.loadDescricoes()
+        loadDescricoes()
     }
+    
+    /**
+     * Observa mudanças de estado do ViewModel
+     */
+    private fun setupObservers() {
+        lifecycleScope.launch {
+            viewModel.state.collect { state ->
+                when (state) {
+                    is DescricaoState.Idle -> {
+                        hideLoading()
+                    }
+                    is DescricaoState.Loading -> {
+                        showLoading()
+                    }
+                    is DescricaoState.Success -> {
+                        hideLoading()
+                        updateDescricoes(state.descricoes)
+                    }
+                    is DescricaoState.Error -> {
+                        hideLoading()
+                        showError(state.message)
+                    }
+                }
+            }
+        }
+    }
+    
+
 
     private fun setupToolbar() {
         setSupportActionBar(binding.toolbar)
@@ -74,57 +109,81 @@ class DescricaoSelectionActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupObservers() {
-        lifecycleScope.launch {
-            viewModel.uiState.collect { state ->
-                updateUI(state)
-            }
-        }
-    }
-
     private fun setupSearch() {
         binding.searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                query?.let { viewModel.searchDescricoes(it) }
+                query?.let { searchDescricoes(it) }
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
                 if (newText.isNullOrEmpty()) {
-                    viewModel.loadDescricoes()
+                    loadDescricoes()
                 }
                 return true
             }
         })
     }
-
-    private fun updateUI(state: DescricaoSelectionUiState) {
-        // Atualizar lista
-        adapter.submitList(state.descricoes)
-
-        // Atualizar loading
-        binding.progressBar.visibility = if (state.isLoading) android.view.View.VISIBLE else android.view.View.GONE
-
-        // Atualizar mensagem vazia
-        binding.tvEmpty.visibility = if (state.descricoes.isEmpty() && !state.isLoading) android.view.View.VISIBLE else android.view.View.GONE
-
-        // Atualizar erro
-        if (state.errorMessage != null) {
-            Toast.makeText(this, state.errorMessage, Toast.LENGTH_SHORT).show()
-        }
+    
+    /**
+     * Busca descrições
+     */
+    private fun searchDescricoes(query: String) {
+        // TODO: Implementar busca no Use Case se necessário
+        viewModel.carregarDescricoes()
     }
 
-    private fun onDescricaoSelected(descricao: DescricaoItem) {
-        Log.d(TAG, "Descrição selecionada: ${descricao.descricao}")
+    /**
+     * Atualiza lista de descrições
+     */
+    private fun updateDescricoes(descricoes: List<String>) {
+        // Converter para formato do adapter (temporário)
+        // TODO: Atualizar adapter para usar List<String> diretamente
+        adapter.submitList(descricoes.map { it })
+        
+        // Atualizar mensagem vazia
+        binding.tvEmpty.visibility = if (descricoes.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
+    }
+
+    private fun onDescricaoSelected(descricao: String) {
+        Log.d(TAG, "Descrição selecionada: $descricao")
 
         // Navegar para coleta manual com a descrição pré-preenchida
         val intent = Intent(this, ManualCollectionActivity::class.java)
         intent.putExtra("SALA_ID", salaId)
         intent.putExtra("SALA_NOME", salaNome)
-        intent.putExtra("DESCRICAO", descricao.descricao)
+        intent.putExtra("DESCRICAO", descricao)
         intent.putExtra("SEM_PATRIMONIO", true)
         startActivity(intent)
         finish()
+    }
+
+    /**
+     * Carrega descrições não coletadas
+     */
+    private fun loadDescricoes() {
+        viewModel.carregarDescricoes()
+    }
+    
+    /**
+     * Mostra loading
+     */
+    private fun showLoading() {
+        binding.progressBar.visibility = android.view.View.VISIBLE
+    }
+    
+    /**
+     * Esconde loading
+     */
+    private fun hideLoading() {
+        binding.progressBar.visibility = android.view.View.GONE
+    }
+    
+    /**
+     * Mostra erro
+     */
+    private fun showError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     override fun onSupportNavigateUp(): Boolean {

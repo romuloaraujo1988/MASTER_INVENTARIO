@@ -12,11 +12,11 @@ import androidx.room.util.TableInfo;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.sqlite.db.SupportSQLiteOpenHelper;
 import com.inventario.mobile.data.local.dao.ColetaDao;
-import com.inventario.mobile.data.local.dao.ColetaDao_Impl;
+import com.inventario.mobile.data.local.dao.ColetaDao_InventarioDatabase_Impl;
 import com.inventario.mobile.data.local.dao.PatrimonioDao;
-import com.inventario.mobile.data.local.dao.PatrimonioDao_Impl;
+import com.inventario.mobile.data.local.dao.PatrimonioDao_InventarioDatabase_Impl;
 import com.inventario.mobile.data.local.dao.SalaDao;
-import com.inventario.mobile.data.local.dao.SalaDao_Impl;
+import com.inventario.mobile.data.local.dao.SalaDao_InventarioDatabase_Impl;
 import com.inventario.mobile.data.local.dao.SetorDao;
 import com.inventario.mobile.data.local.dao.SetorDao_Impl;
 import com.inventario.mobile.data.local.dao.UsuarioDao;
@@ -55,33 +55,21 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
       public void createAllTables(@NonNull final SupportSQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS `usuario` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nome` TEXT NOT NULL, `email` TEXT NOT NULL, `senha` TEXT, `ativo` INTEGER NOT NULL, `sincronizado` INTEGER NOT NULL, `dataCriacao` INTEGER NOT NULL, `dataAtualizacao` INTEGER NOT NULL, `servidorId` INTEGER)");
         db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_usuario_email` ON `usuario` (`email`)");
-        db.execSQL("CREATE TABLE IF NOT EXISTS `patrimonio` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `codigo` TEXT NOT NULL, `descricao` TEXT NOT NULL, `marca` TEXT, `modelo` TEXT, `numeroSerie` TEXT, `estado` TEXT, `valor` REAL, `salaId` INTEGER, `salaNome` TEXT, `qrCode` TEXT, `coletado` INTEGER NOT NULL, `sincronizado` INTEGER NOT NULL, `dataCriacao` INTEGER NOT NULL, `dataAtualizacao` INTEGER NOT NULL, `servidorId` INTEGER)");
-        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_patrimonio_codigo` ON `patrimonio` (`codigo`)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_patrimonio_salaId` ON `patrimonio` (`salaId`)");
-        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_patrimonio_qrCode` ON `patrimonio` (`qrCode`)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS `patrimonio` (`id` INTEGER NOT NULL, `numero` TEXT NOT NULL, `descricao` TEXT NOT NULL, `idSala` INTEGER, `nomeSala` TEXT, `idResponsavel` INTEGER, `nomeResponsavel` TEXT, `status` TEXT NOT NULL, `coletado` INTEGER NOT NULL, `dataUltimaAtualizacao` INTEGER NOT NULL, PRIMARY KEY(`id`))");
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_patrimonio_numero` ON `patrimonio` (`numero`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_patrimonio_descricao` ON `patrimonio` (`descricao`)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_patrimonio_idSala` ON `patrimonio` (`idSala`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_patrimonio_coletado` ON `patrimonio` (`coletado`)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_patrimonio_sincronizado` ON `patrimonio` (`sincronizado`)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_patrimonio_servidorId` ON `patrimonio` (`servidorId`)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_patrimonio_salaId_coletado` ON `patrimonio` (`salaId`, `coletado`)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_patrimonio_coletado_sincronizado` ON `patrimonio` (`coletado`, `sincronizado`)");
-        db.execSQL("CREATE TABLE IF NOT EXISTS `coleta` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `patrimonioId` INTEGER NOT NULL, `usuarioId` INTEGER NOT NULL, `dataColeta` INTEGER NOT NULL, `localizacaoAtual` TEXT, `observacoes` TEXT, `fotoPath` TEXT, `status` TEXT NOT NULL, `latitude` REAL, `longitude` REAL, `sincronizado` INTEGER NOT NULL, `sincronizada` INTEGER NOT NULL, `dataCriacao` INTEGER NOT NULL, `dataAtualizacao` INTEGER NOT NULL, `servidorId` INTEGER, `tentativasSincronizacao` INTEGER NOT NULL, `ultimaTentativaSincronizacao` INTEGER, `erroSincronizacao` TEXT)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_patrimonioId` ON `coleta` (`patrimonioId`)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_usuarioId` ON `coleta` (`usuarioId`)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_dataColeta` ON `coleta` (`dataColeta`)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS `coleta` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `idPatrimonio` INTEGER NOT NULL, `numeroPatrimonio` TEXT NOT NULL, `idSala` INTEGER, `nomeSala` TEXT, `idResponsavel` INTEGER, `nomeResponsavel` TEXT, `observacao` TEXT, `estadoPatrimonio` TEXT, `latitude` REAL, `longitude` REAL, `dataColeta` INTEGER NOT NULL, `idUsuario` INTEGER NOT NULL, `nomeUsuario` TEXT NOT NULL, `sincronizado` INTEGER NOT NULL, `tentativasSincronizacao` INTEGER NOT NULL, `erroSincronizacao` TEXT)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_idPatrimonio` ON `coleta` (`idPatrimonio`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_sincronizado` ON `coleta` (`sincronizado`)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_status` ON `coleta` (`status`)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_servidorId` ON `coleta` (`servidorId`)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_usuarioId_sincronizado` ON `coleta` (`usuarioId`, `sincronizado`)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_usuarioId_dataColeta` ON `coleta` (`usuarioId`, `dataColeta`)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_sincronizado_dataColeta` ON `coleta` (`sincronizado`, `dataColeta`)");
-        db.execSQL("CREATE TABLE IF NOT EXISTS `sala` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nome` TEXT NOT NULL, `descricao` TEXT, `setorId` INTEGER NOT NULL, `setorNome` TEXT, `sincronizado` INTEGER NOT NULL, `dataCriacao` INTEGER NOT NULL, `dataAtualizacao` INTEGER NOT NULL, `servidorId` INTEGER, FOREIGN KEY(`setorId`) REFERENCES `setor`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )");
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_dataColeta` ON `coleta` (`dataColeta`)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS `sala` (`id` INTEGER NOT NULL, `nome` TEXT NOT NULL, `idSetor` INTEGER, `nomeSetor` TEXT, `dataUltimaAtualizacao` INTEGER NOT NULL, PRIMARY KEY(`id`))");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_sala_nome` ON `sala` (`nome`)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_sala_setorId` ON `sala` (`setorId`)");
         db.execSQL("CREATE TABLE IF NOT EXISTS `setor` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nome` TEXT NOT NULL, `descricao` TEXT, `sincronizado` INTEGER NOT NULL, `dataCriacao` INTEGER NOT NULL, `dataAtualizacao` INTEGER NOT NULL, `servidorId` INTEGER)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_setor_nome` ON `setor` (`nome`)");
         db.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)");
-        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '72cda4b070414c4ede3d5346cbfde086')");
+        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4c7ad23e07b562dcd033012afbb453ba')");
       }
 
       @Override
@@ -112,7 +100,6 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
       @Override
       public void onOpen(@NonNull final SupportSQLiteDatabase db) {
         mDatabase = db;
-        db.execSQL("PRAGMA foreign_keys = ON");
         internalInitInvalidationTracker(db);
         final List<? extends RoomDatabase.Callback> _callbacks = mCallbacks;
         if (_callbacks != null) {
@@ -155,34 +142,23 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
                   + " Expected:\n" + _infoUsuario + "\n"
                   + " Found:\n" + _existingUsuario);
         }
-        final HashMap<String, TableInfo.Column> _columnsPatrimonio = new HashMap<String, TableInfo.Column>(16);
+        final HashMap<String, TableInfo.Column> _columnsPatrimonio = new HashMap<String, TableInfo.Column>(10);
         _columnsPatrimonio.put("id", new TableInfo.Column("id", "INTEGER", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsPatrimonio.put("codigo", new TableInfo.Column("codigo", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("numero", new TableInfo.Column("numero", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsPatrimonio.put("descricao", new TableInfo.Column("descricao", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsPatrimonio.put("marca", new TableInfo.Column("marca", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsPatrimonio.put("modelo", new TableInfo.Column("modelo", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsPatrimonio.put("numeroSerie", new TableInfo.Column("numeroSerie", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsPatrimonio.put("estado", new TableInfo.Column("estado", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsPatrimonio.put("valor", new TableInfo.Column("valor", "REAL", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsPatrimonio.put("salaId", new TableInfo.Column("salaId", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsPatrimonio.put("salaNome", new TableInfo.Column("salaNome", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsPatrimonio.put("qrCode", new TableInfo.Column("qrCode", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("idSala", new TableInfo.Column("idSala", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("nomeSala", new TableInfo.Column("nomeSala", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("idResponsavel", new TableInfo.Column("idResponsavel", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("nomeResponsavel", new TableInfo.Column("nomeResponsavel", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("status", new TableInfo.Column("status", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsPatrimonio.put("coletado", new TableInfo.Column("coletado", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsPatrimonio.put("sincronizado", new TableInfo.Column("sincronizado", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsPatrimonio.put("dataCriacao", new TableInfo.Column("dataCriacao", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsPatrimonio.put("dataAtualizacao", new TableInfo.Column("dataAtualizacao", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsPatrimonio.put("servidorId", new TableInfo.Column("servidorId", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("dataUltimaAtualizacao", new TableInfo.Column("dataUltimaAtualizacao", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         final HashSet<TableInfo.ForeignKey> _foreignKeysPatrimonio = new HashSet<TableInfo.ForeignKey>(0);
-        final HashSet<TableInfo.Index> _indicesPatrimonio = new HashSet<TableInfo.Index>(9);
-        _indicesPatrimonio.add(new TableInfo.Index("index_patrimonio_codigo", true, Arrays.asList("codigo"), Arrays.asList("ASC")));
-        _indicesPatrimonio.add(new TableInfo.Index("index_patrimonio_salaId", false, Arrays.asList("salaId"), Arrays.asList("ASC")));
-        _indicesPatrimonio.add(new TableInfo.Index("index_patrimonio_qrCode", true, Arrays.asList("qrCode"), Arrays.asList("ASC")));
+        final HashSet<TableInfo.Index> _indicesPatrimonio = new HashSet<TableInfo.Index>(4);
+        _indicesPatrimonio.add(new TableInfo.Index("index_patrimonio_numero", true, Arrays.asList("numero"), Arrays.asList("ASC")));
         _indicesPatrimonio.add(new TableInfo.Index("index_patrimonio_descricao", false, Arrays.asList("descricao"), Arrays.asList("ASC")));
+        _indicesPatrimonio.add(new TableInfo.Index("index_patrimonio_idSala", false, Arrays.asList("idSala"), Arrays.asList("ASC")));
         _indicesPatrimonio.add(new TableInfo.Index("index_patrimonio_coletado", false, Arrays.asList("coletado"), Arrays.asList("ASC")));
-        _indicesPatrimonio.add(new TableInfo.Index("index_patrimonio_sincronizado", false, Arrays.asList("sincronizado"), Arrays.asList("ASC")));
-        _indicesPatrimonio.add(new TableInfo.Index("index_patrimonio_servidorId", false, Arrays.asList("servidorId"), Arrays.asList("ASC")));
-        _indicesPatrimonio.add(new TableInfo.Index("index_patrimonio_salaId_coletado", false, Arrays.asList("salaId", "coletado"), Arrays.asList("ASC", "ASC")));
-        _indicesPatrimonio.add(new TableInfo.Index("index_patrimonio_coletado_sincronizado", false, Arrays.asList("coletado", "sincronizado"), Arrays.asList("ASC", "ASC")));
         final TableInfo _infoPatrimonio = new TableInfo("patrimonio", _columnsPatrimonio, _foreignKeysPatrimonio, _indicesPatrimonio);
         final TableInfo _existingPatrimonio = TableInfo.read(db, "patrimonio");
         if (!_infoPatrimonio.equals(_existingPatrimonio)) {
@@ -190,36 +166,29 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
                   + " Expected:\n" + _infoPatrimonio + "\n"
                   + " Found:\n" + _existingPatrimonio);
         }
-        final HashMap<String, TableInfo.Column> _columnsColeta = new HashMap<String, TableInfo.Column>(18);
+        final HashMap<String, TableInfo.Column> _columnsColeta = new HashMap<String, TableInfo.Column>(17);
         _columnsColeta.put("id", new TableInfo.Column("id", "INTEGER", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsColeta.put("patrimonioId", new TableInfo.Column("patrimonioId", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsColeta.put("usuarioId", new TableInfo.Column("usuarioId", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsColeta.put("dataColeta", new TableInfo.Column("dataColeta", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsColeta.put("localizacaoAtual", new TableInfo.Column("localizacaoAtual", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsColeta.put("observacoes", new TableInfo.Column("observacoes", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsColeta.put("fotoPath", new TableInfo.Column("fotoPath", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsColeta.put("status", new TableInfo.Column("status", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("idPatrimonio", new TableInfo.Column("idPatrimonio", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("numeroPatrimonio", new TableInfo.Column("numeroPatrimonio", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("idSala", new TableInfo.Column("idSala", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("nomeSala", new TableInfo.Column("nomeSala", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("idResponsavel", new TableInfo.Column("idResponsavel", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("nomeResponsavel", new TableInfo.Column("nomeResponsavel", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("observacao", new TableInfo.Column("observacao", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("estadoPatrimonio", new TableInfo.Column("estadoPatrimonio", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsColeta.put("latitude", new TableInfo.Column("latitude", "REAL", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsColeta.put("longitude", new TableInfo.Column("longitude", "REAL", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("dataColeta", new TableInfo.Column("dataColeta", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("idUsuario", new TableInfo.Column("idUsuario", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("nomeUsuario", new TableInfo.Column("nomeUsuario", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsColeta.put("sincronizado", new TableInfo.Column("sincronizado", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsColeta.put("sincronizada", new TableInfo.Column("sincronizada", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsColeta.put("dataCriacao", new TableInfo.Column("dataCriacao", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsColeta.put("dataAtualizacao", new TableInfo.Column("dataAtualizacao", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsColeta.put("servidorId", new TableInfo.Column("servidorId", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsColeta.put("tentativasSincronizacao", new TableInfo.Column("tentativasSincronizacao", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsColeta.put("ultimaTentativaSincronizacao", new TableInfo.Column("ultimaTentativaSincronizacao", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsColeta.put("erroSincronizacao", new TableInfo.Column("erroSincronizacao", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         final HashSet<TableInfo.ForeignKey> _foreignKeysColeta = new HashSet<TableInfo.ForeignKey>(0);
-        final HashSet<TableInfo.Index> _indicesColeta = new HashSet<TableInfo.Index>(9);
-        _indicesColeta.add(new TableInfo.Index("index_coleta_patrimonioId", false, Arrays.asList("patrimonioId"), Arrays.asList("ASC")));
-        _indicesColeta.add(new TableInfo.Index("index_coleta_usuarioId", false, Arrays.asList("usuarioId"), Arrays.asList("ASC")));
-        _indicesColeta.add(new TableInfo.Index("index_coleta_dataColeta", false, Arrays.asList("dataColeta"), Arrays.asList("ASC")));
+        final HashSet<TableInfo.Index> _indicesColeta = new HashSet<TableInfo.Index>(3);
+        _indicesColeta.add(new TableInfo.Index("index_coleta_idPatrimonio", false, Arrays.asList("idPatrimonio"), Arrays.asList("ASC")));
         _indicesColeta.add(new TableInfo.Index("index_coleta_sincronizado", false, Arrays.asList("sincronizado"), Arrays.asList("ASC")));
-        _indicesColeta.add(new TableInfo.Index("index_coleta_status", false, Arrays.asList("status"), Arrays.asList("ASC")));
-        _indicesColeta.add(new TableInfo.Index("index_coleta_servidorId", false, Arrays.asList("servidorId"), Arrays.asList("ASC")));
-        _indicesColeta.add(new TableInfo.Index("index_coleta_usuarioId_sincronizado", false, Arrays.asList("usuarioId", "sincronizado"), Arrays.asList("ASC", "ASC")));
-        _indicesColeta.add(new TableInfo.Index("index_coleta_usuarioId_dataColeta", false, Arrays.asList("usuarioId", "dataColeta"), Arrays.asList("ASC", "ASC")));
-        _indicesColeta.add(new TableInfo.Index("index_coleta_sincronizado_dataColeta", false, Arrays.asList("sincronizado", "dataColeta"), Arrays.asList("ASC", "ASC")));
+        _indicesColeta.add(new TableInfo.Index("index_coleta_dataColeta", false, Arrays.asList("dataColeta"), Arrays.asList("ASC")));
         final TableInfo _infoColeta = new TableInfo("coleta", _columnsColeta, _foreignKeysColeta, _indicesColeta);
         final TableInfo _existingColeta = TableInfo.read(db, "coleta");
         if (!_infoColeta.equals(_existingColeta)) {
@@ -227,21 +196,15 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
                   + " Expected:\n" + _infoColeta + "\n"
                   + " Found:\n" + _existingColeta);
         }
-        final HashMap<String, TableInfo.Column> _columnsSala = new HashMap<String, TableInfo.Column>(9);
+        final HashMap<String, TableInfo.Column> _columnsSala = new HashMap<String, TableInfo.Column>(5);
         _columnsSala.put("id", new TableInfo.Column("id", "INTEGER", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsSala.put("nome", new TableInfo.Column("nome", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsSala.put("descricao", new TableInfo.Column("descricao", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsSala.put("setorId", new TableInfo.Column("setorId", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsSala.put("setorNome", new TableInfo.Column("setorNome", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsSala.put("sincronizado", new TableInfo.Column("sincronizado", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsSala.put("dataCriacao", new TableInfo.Column("dataCriacao", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsSala.put("dataAtualizacao", new TableInfo.Column("dataAtualizacao", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsSala.put("servidorId", new TableInfo.Column("servidorId", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        final HashSet<TableInfo.ForeignKey> _foreignKeysSala = new HashSet<TableInfo.ForeignKey>(1);
-        _foreignKeysSala.add(new TableInfo.ForeignKey("setor", "CASCADE", "NO ACTION", Arrays.asList("setorId"), Arrays.asList("id")));
-        final HashSet<TableInfo.Index> _indicesSala = new HashSet<TableInfo.Index>(2);
+        _columnsSala.put("idSetor", new TableInfo.Column("idSetor", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsSala.put("nomeSetor", new TableInfo.Column("nomeSetor", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsSala.put("dataUltimaAtualizacao", new TableInfo.Column("dataUltimaAtualizacao", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        final HashSet<TableInfo.ForeignKey> _foreignKeysSala = new HashSet<TableInfo.ForeignKey>(0);
+        final HashSet<TableInfo.Index> _indicesSala = new HashSet<TableInfo.Index>(1);
         _indicesSala.add(new TableInfo.Index("index_sala_nome", false, Arrays.asList("nome"), Arrays.asList("ASC")));
-        _indicesSala.add(new TableInfo.Index("index_sala_setorId", false, Arrays.asList("setorId"), Arrays.asList("ASC")));
         final TableInfo _infoSala = new TableInfo("sala", _columnsSala, _foreignKeysSala, _indicesSala);
         final TableInfo _existingSala = TableInfo.read(db, "sala");
         if (!_infoSala.equals(_existingSala)) {
@@ -269,7 +232,7 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
         }
         return new RoomOpenHelper.ValidationResult(true, null);
       }
-    }, "72cda4b070414c4ede3d5346cbfde086", "84ab55da04240cabd37896b6f60ab339");
+    }, "4c7ad23e07b562dcd033012afbb453ba", "f74fcbc694b1073f7867f9d8fe75d042");
     final SupportSQLiteOpenHelper.Configuration _sqliteConfig = SupportSQLiteOpenHelper.Configuration.builder(config.context).name(config.name).callback(_openCallback).build();
     final SupportSQLiteOpenHelper _helper = config.sqliteOpenHelperFactory.create(_sqliteConfig);
     return _helper;
@@ -287,15 +250,8 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
   public void clearAllTables() {
     super.assertNotMainThread();
     final SupportSQLiteDatabase _db = super.getOpenHelper().getWritableDatabase();
-    final boolean _supportsDeferForeignKeys = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP;
     try {
-      if (!_supportsDeferForeignKeys) {
-        _db.execSQL("PRAGMA foreign_keys = FALSE");
-      }
       super.beginTransaction();
-      if (_supportsDeferForeignKeys) {
-        _db.execSQL("PRAGMA defer_foreign_keys = TRUE");
-      }
       _db.execSQL("DELETE FROM `usuario`");
       _db.execSQL("DELETE FROM `patrimonio`");
       _db.execSQL("DELETE FROM `coleta`");
@@ -304,9 +260,6 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
       super.setTransactionSuccessful();
     } finally {
       super.endTransaction();
-      if (!_supportsDeferForeignKeys) {
-        _db.execSQL("PRAGMA foreign_keys = TRUE");
-      }
       _db.query("PRAGMA wal_checkpoint(FULL)").close();
       if (!_db.inTransaction()) {
         _db.execSQL("VACUUM");
@@ -319,9 +272,9 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
   protected Map<Class<?>, List<Class<?>>> getRequiredTypeConverters() {
     final HashMap<Class<?>, List<Class<?>>> _typeConvertersMap = new HashMap<Class<?>, List<Class<?>>>();
     _typeConvertersMap.put(UsuarioDao.class, UsuarioDao_Impl.getRequiredConverters());
-    _typeConvertersMap.put(PatrimonioDao.class, PatrimonioDao_Impl.getRequiredConverters());
-    _typeConvertersMap.put(ColetaDao.class, ColetaDao_Impl.getRequiredConverters());
-    _typeConvertersMap.put(SalaDao.class, SalaDao_Impl.getRequiredConverters());
+    _typeConvertersMap.put(PatrimonioDao.class, PatrimonioDao_InventarioDatabase_Impl.getRequiredConverters());
+    _typeConvertersMap.put(ColetaDao.class, ColetaDao_InventarioDatabase_Impl.getRequiredConverters());
+    _typeConvertersMap.put(SalaDao.class, SalaDao_InventarioDatabase_Impl.getRequiredConverters());
     _typeConvertersMap.put(SetorDao.class, SetorDao_Impl.getRequiredConverters());
     return _typeConvertersMap;
   }
@@ -362,7 +315,7 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
     } else {
       synchronized(this) {
         if(_patrimonioDao == null) {
-          _patrimonioDao = new PatrimonioDao_Impl(this);
+          _patrimonioDao = new PatrimonioDao_InventarioDatabase_Impl(this);
         }
         return _patrimonioDao;
       }
@@ -376,7 +329,7 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
     } else {
       synchronized(this) {
         if(_coletaDao == null) {
-          _coletaDao = new ColetaDao_Impl(this);
+          _coletaDao = new ColetaDao_InventarioDatabase_Impl(this);
         }
         return _coletaDao;
       }
@@ -390,7 +343,7 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
     } else {
       synchronized(this) {
         if(_salaDao == null) {
-          _salaDao = new SalaDao_Impl(this);
+          _salaDao = new SalaDao_InventarioDatabase_Impl(this);
         }
         return _salaDao;
       }

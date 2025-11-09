@@ -41,6 +41,11 @@ public class MobileColetaService {
     private final InventarioDAO inventarioDAO;
     private final UsuarioDAORefactored usuarioDAO;
     private final ParticipanteInventarioDAO participanteInventarioDAO;
+    
+    // Serviços para funcionalidades avançadas
+    private final com.inventario.service.PatrimonioService patrimonioService;
+    private final com.inventario.service.ColetaService coletaService;
+    private final com.inventario.service.InventarioService inventarioService;
 
     public MobileColetaService() {
         this.coletaDAO = new ColetaDAO();
@@ -48,6 +53,12 @@ public class MobileColetaService {
         this.inventarioDAO = new InventarioDAO();
         this.usuarioDAO = new UsuarioDAORefactored();
         this.participanteInventarioDAO = new ParticipanteInventarioDAO();
+        
+        // Inicializar serviços
+        com.inventario.service.ServiceFactory factory = com.inventario.service.ServiceFactory.getInstance();
+        this.patrimonioService = factory.getPatrimonioService();
+        this.coletaService = factory.getColetaService();
+        this.inventarioService = factory.getInventarioService();
     }
 
     /**
@@ -398,5 +409,91 @@ public class MobileColetaService {
             return null;
         }
         return timestamp.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+    }
+    
+    /**
+     * Busca descrições de patrimônios pendentes de coleta
+     * Retorna apenas descrições que ainda não foram coletadas no inventário
+     * 
+     * @param termoBusca termo para buscar na descrição
+     * @param idInventario ID do inventário (se null, busca o ativo)
+     * @return Map com descrições pendentes e estatísticas
+     */
+    public Map<String, Object> buscarDescricoesPendentes(String termoBusca, Integer idInventario) {
+        logger.info("Buscando descrições pendentes para termo: '{}', inventário: {}", termoBusca, idInventario);
+        
+        if (termoBusca == null || termoBusca.trim().isEmpty()) {
+            throw new IllegalArgumentException("Termo de busca não pode ser vazio");
+        }
+        
+        try {
+            // Se não informou inventário, buscar o ativo
+            if (idInventario == null) {
+                com.inventario.model.Inventario inventarioAtivo = 
+                    inventarioService.buscarPorStatus("EM_ANDAMENTO");
+                if (inventarioAtivo != null) {
+                    idInventario = inventarioAtivo.getId();
+                } else {
+                    throw new IllegalArgumentException("Nenhum inventário ativo encontrado");
+                }
+            }
+            
+            // Buscar patrimônios pela descrição usando o serviço
+            List<com.inventario.model.Patrimonio> todosPatrimonios = 
+                patrimonioService.buscarPendentesPorDescricao(termoBusca, idInventario, coletaService);
+            
+            if (todosPatrimonios.isEmpty()) {
+                return Map.of(
+                    "descricoes", List.of(),
+                    "total", 0,
+                    "mensagem", "Nenhuma descrição pendente encontrada"
+                );
+            }
+            
+            // Agrupar por descrição e contar
+            Map<String, Integer> contagemPorDescricao = new java.util.HashMap<>();
+            for (com.inventario.model.Patrimonio p : todosPatrimonios) {
+                String desc = p.getDescricao();
+                if (desc != null && !desc.trim().isEmpty()) {
+                    contagemPorDescricao.put(desc, contagemPorDescricao.getOrDefault(desc, 0) + 1);
+                }
+            }
+            
+            // Criar lista de descrições com contagem
+            List<Map<String, Object>> descricoes = new java.util.ArrayList<>();
+            for (Map.Entry<String, Integer> entry : contagemPorDescricao.entrySet()) {
+                descricoes.add(Map.of(
+                    "descricao", entry.getKey(),
+                    "quantidadePendente", entry.getValue()
+                ));
+            }
+            
+            // Obter estatísticas gerais
+            Map<String, Object> stats = patrimonioService.obterEstatisticasColeta(
+                patrimonioService.buscarPorDescricaoAbrangente(termoBusca),
+                idInventario,
+                coletaService
+            );
+            
+            // Montar resposta
+            Map<String, Object> resultado = new java.util.HashMap<>();
+            resultado.put("descricoes", descricoes);
+            resultado.put("total", descricoes.size());
+            resultado.put("totalPatrimoniosPendentes", todosPatrimonios.size());
+            resultado.put("estatisticas", stats);
+            resultado.put("mensagem", String.format(
+                "Encontradas %d descrição(ões) com %d patrimônio(s) pendente(s)",
+                descricoes.size(), todosPatrimonios.size()
+            ));
+            
+            logger.info("Retornando {} descrições pendentes com {} patrimônios total", 
+                descricoes.size(), todosPatrimonios.size());
+            
+            return resultado;
+            
+        } catch (Exception e) {
+            logger.error("Erro ao buscar descrições pendentes: {}", e.getMessage(), e);
+            throw new RuntimeException("Erro ao buscar descrições pendentes: " + e.getMessage(), e);
+        }
     }
 }

@@ -1,13 +1,8 @@
 package com.inventario.mobile.server.controller;
 
 import com.inventario.mobile.server.dto.ApiResponse;
-import com.inventario.mobile.server.dto.MobilePatrimonioDTO;
-import com.inventario.mobile.server.dto.MobileSyncRequest;
-import com.inventario.mobile.server.dto.MobileSyncResponse;
 import com.inventario.mobile.server.service.MobileSyncService;
-import com.inventario.mobile.server.service.MobilePatrimonioService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,14 +10,14 @@ import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.validation.Valid;
-import java.util.List;
+import java.util.Map;
 
 /**
- * Controlador REST para sincronização mobile
+ * Controlador para sincronização de dados offline
+ * Fornece endpoints para download de dados para o app mobile
  * 
  * @author Sistema de Inventário
- * @version 1.0.0
+ * @version 2.0.0
  */
 @RestController
 @RequestMapping("/api/mobile/sync")
@@ -32,156 +27,139 @@ public class MobileSyncController {
     private static final Logger logger = LoggerFactory.getLogger(MobileSyncController.class);
     
     @Autowired
-    private MobileSyncService mobileSyncService;
+    private MobileSyncService syncService;
     
     /**
-     * Endpoint principal de sincronização
+     * Sincronizar todos os dados necessários para modo offline
+     * Retorna patrimônios, salas, responsáveis e inventário ativo
      * 
-     * @param syncRequest dados de sincronização
-     * @return resposta da sincronização
+     * @param idInventario ID do inventário (opcional, usa o ativo se não informado)
+     * @return Pacote completo de dados para sincronização
      */
-    @PostMapping("/data")
-    public ResponseEntity<ApiResponse<MobileSyncResponse>> syncData(@Valid @RequestBody MobileSyncRequest syncRequest) {
+    @GetMapping("/full")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> sincronizacaoCompleta(
+            @RequestParam(required = false) Integer idInventario) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
+            String username = authentication != null ? authentication.getName() : null;
             
-            logger.info("Iniciando sincronização para usuário: {}", username);
+            logger.info("Iniciando sincronização completa para usuário: {}, inventário: {}", 
+                username, idInventario);
             
-            MobileSyncResponse syncResponse = mobileSyncService.syncData(syncRequest, username);
+            Map<String, Object> dados = syncService.sincronizacaoCompleta(idInventario);
+            
+            logger.info("Sincronização completa: {} patrimônios, {} salas, {} responsáveis",
+                dados.get("totalPatrimonios"),
+                dados.get("totalSalas"),
+                dados.get("totalResponsaveis"));
             
             return ResponseEntity.ok(
-                ApiResponse.success(syncResponse, "Sincronização realizada com sucesso")
-            );
+                ApiResponse.success(dados, "Sincronização completa realizada com sucesso"));
             
         } catch (Exception e) {
-            logger.error("Erro durante sincronização", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Erro na sincronização: " + e.getMessage(), "SYNC_ERROR"));
+            logger.error("Erro na sincronização completa", e);
+            return ResponseEntity.status(500)
+                .body(ApiResponse.error("Erro na sincronização: " + e.getMessage(), "SYNC_ERROR"));
         }
     }
     
     /**
-     * Endpoint para buscar patrimônios por setor
-     * 
-     * @param setorId ID do setor
-     * @return lista de patrimônios
+     * Sincronizar apenas patrimônios
      */
-    @GetMapping("/patrimonios/setor/{setorId}")
-    public ResponseEntity<ApiResponse<List<MobilePatrimonioDTO>>> getPatrimoniosBySetor(@PathVariable Long setorId) {
+    @GetMapping("/patrimonios")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> sincronizarPatrimonios(
+            @RequestParam(required = false) Long ultimaAtualizacao) {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
+            logger.info("Sincronizando patrimônios desde: {}", ultimaAtualizacao);
             
-            logger.info("Buscando patrimônios do setor {} para usuário: {}", setorId, username);
+            Map<String, Object> dados = syncService.sincronizarPatrimonios(ultimaAtualizacao);
             
-            // Implementar busca por setor
-            // List<MobilePatrimonioDTO> patrimonios = mobileSyncService.buscarPorSetor(setorId);
-            
-            // Por enquanto retorna lista vazia
             return ResponseEntity.ok(
-                ApiResponse.success(List.of(), "Patrimônios do setor carregados")
-            );
+                ApiResponse.success(dados, "Patrimônios sincronizados"));
             
         } catch (Exception e) {
-            logger.error("Erro ao buscar patrimônios por setor", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Erro ao buscar patrimônios", "FETCH_ERROR"));
+            logger.error("Erro ao sincronizar patrimônios", e);
+            return ResponseEntity.status(500)
+                .body(ApiResponse.error("Erro ao sincronizar patrimônios", "SYNC_ERROR"));
         }
     }
     
     /**
-     * Endpoint para buscar patrimônios por sala
-     * 
-     * @param salaId ID da sala
-     * @return lista de patrimônios
+     * Sincronizar apenas salas
      */
-    @GetMapping("/patrimonios/sala/{salaId}")
-    public ResponseEntity<ApiResponse<List<MobilePatrimonioDTO>>> getPatrimoniosBySala(@PathVariable Long salaId) {
+    @GetMapping("/salas")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> sincronizarSalas() {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
+            logger.info("Sincronizando salas");
             
-            logger.info("Buscando patrimônios da sala {} para usuário: {}", salaId, username);
+            Map<String, Object> dados = syncService.sincronizarSalas();
             
-            // Implementar busca por sala
-            // List<MobilePatrimonioDTO> patrimonios = mobileSyncService.buscarPorSala(salaId);
-            
-            // Por enquanto retorna lista vazia
             return ResponseEntity.ok(
-                ApiResponse.success(List.of(), "Patrimônios da sala carregados")
-            );
+                ApiResponse.success(dados, "Salas sincronizadas"));
             
         } catch (Exception e) {
-            logger.error("Erro ao buscar patrimônios por sala", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Erro ao buscar patrimônios", "FETCH_ERROR"));
+            logger.error("Erro ao sincronizar salas", e);
+            return ResponseEntity.status(500)
+                .body(ApiResponse.error("Erro ao sincronizar salas", "SYNC_ERROR"));
         }
     }
     
     /**
-     * Endpoint para buscar patrimônio por código
-     * 
-     * @param codigo código do patrimônio
-     * @return dados do patrimônio
+     * Sincronizar apenas responsáveis
      */
-    @GetMapping("/patrimonio/{codigo}")
-    public ResponseEntity<ApiResponse<MobilePatrimonioDTO>> getPatrimonioByCodigo(@PathVariable String codigo) {
+    @GetMapping("/responsaveis")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> sincronizarResponsaveis() {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
+            logger.info("Sincronizando responsáveis");
             
-            logger.info("Buscando patrimônio {} para usuário: {}", codigo, username);
+            Map<String, Object> dados = syncService.sincronizarResponsaveis();
             
-            // Buscar patrimônio por código usando MobilePatrimonioService
-            MobilePatrimonioService patrimonioService = new MobilePatrimonioService();
-            MobilePatrimonioDTO patrimonio = patrimonioService.buscarPorNumero(codigo);
-            
-            if (patrimonio != null) {
-                return ResponseEntity.ok(
-                        ApiResponse.success(patrimonio, "Patrimônio encontrado"));
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(ApiResponse.error("Patrimônio não encontrado", "NOT_FOUND"));
-            }
+            return ResponseEntity.ok(
+                ApiResponse.success(dados, "Responsáveis sincronizados"));
             
         } catch (Exception e) {
-            logger.error("Erro ao buscar patrimônio por código", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Erro ao buscar patrimônio", "FETCH_ERROR"));
+            logger.error("Erro ao sincronizar responsáveis", e);
+            return ResponseEntity.status(500)
+                .body(ApiResponse.error("Erro ao sincronizar responsáveis", "SYNC_ERROR"));
         }
     }
     
     /**
-     * Endpoint para atualizar status de coleta
-     * 
-     * @param patrimonioId ID do patrimônio
-     * @param coletado status de coleta
-     * @param observacoes observações
-     * @return confirmação
+     * Verificar se há atualizações disponíveis
      */
-    @PutMapping("/patrimonio/{patrimonioId}/coleta")
-    public ResponseEntity<ApiResponse<String>> updateColetaStatus(
-            @PathVariable Long patrimonioId,
-            @RequestParam Boolean coletado,
-            @RequestParam(required = false) String observacoes) {
+    @GetMapping("/check-updates")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> verificarAtualizacoes(
+            @RequestParam Long ultimaSincronizacao) {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
+            logger.info("Verificando atualizações desde: {}", ultimaSincronizacao);
             
-            logger.info("Atualizando status de coleta do patrimônio {} para usuário: {}", patrimonioId, username);
-            
-            // Implementar atualização de status
-            // mobileSyncService.atualizarStatusColeta(patrimonioId, coletado, observacoes, username);
+            Map<String, Object> atualizacoes = syncService.verificarAtualizacoes(ultimaSincronizacao);
             
             return ResponseEntity.ok(
-                ApiResponse.success("Status atualizado com sucesso", "Status de coleta atualizado")
-            );
+                ApiResponse.success(atualizacoes, "Verificação de atualizações concluída"));
             
         } catch (Exception e) {
-            logger.error("Erro ao atualizar status de coleta", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Erro ao atualizar status", "UPDATE_ERROR"));
+            logger.error("Erro ao verificar atualizações", e);
+            return ResponseEntity.status(500)
+                .body(ApiResponse.error("Erro ao verificar atualizações", "CHECK_ERROR"));
+        }
+    }
+    
+    /**
+     * Obter metadados da sincronização (tamanhos, versões, etc)
+     */
+    @GetMapping("/metadata")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> obterMetadados() {
+        try {
+            Map<String, Object> metadata = syncService.obterMetadados();
+            
+            return ResponseEntity.ok(
+                ApiResponse.success(metadata, "Metadados obtidos"));
+            
+        } catch (Exception e) {
+            logger.error("Erro ao obter metadados", e);
+            return ResponseEntity.status(500)
+                .body(ApiResponse.error("Erro ao obter metadados", "METADATA_ERROR"));
         }
     }
 }

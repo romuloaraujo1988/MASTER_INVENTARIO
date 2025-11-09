@@ -4,6 +4,9 @@ import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 
+/**
+ * Factory para criar DashboardViewModel
+ */
 class DashboardViewModelFactory(
     private val application: Application
 ) : ViewModelProvider.Factory {

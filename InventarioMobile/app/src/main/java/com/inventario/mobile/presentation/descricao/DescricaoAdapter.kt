@@ -7,9 +7,12 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.inventario.mobile.databinding.ItemDescricaoBinding
 
+/**
+ * Adapter para lista de descrições (Clean Architecture)
+ */
 class DescricaoAdapter(
-    private val onItemClick: (DescricaoItem) -> Unit
-) : ListAdapter<DescricaoItem, DescricaoAdapter.DescricaoViewHolder>(DescricaoDiffCallback()) {
+    private val onItemClick: (String) -> Unit
+) : ListAdapter<String, DescricaoAdapter.DescricaoViewHolder>(DescricaoDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DescricaoViewHolder {
         val binding = ItemDescricaoBinding.inflate(
@@ -28,23 +31,23 @@ class DescricaoAdapter(
         private val binding: ItemDescricaoBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: DescricaoItem) {
-            binding.tvDescricao.text = item.descricao
-            binding.tvQuantidade.text = "${item.quantidade} item(s)"
+        fun bind(descricao: String) {
+            binding.tvDescricao.text = descricao
+            binding.tvQuantidade.text = "" // Não temos quantidade no modelo Clean
             
             binding.root.setOnClickListener {
-                onItemClick(item)
+                onItemClick(descricao)
             }
         }
     }
 }
 
-class DescricaoDiffCallback : DiffUtil.ItemCallback<DescricaoItem>() {
-    override fun areItemsTheSame(oldItem: DescricaoItem, newItem: DescricaoItem): Boolean {
-        return oldItem.descricao == newItem.descricao
+class DescricaoDiffCallback : DiffUtil.ItemCallback<String>() {
+    override fun areItemsTheSame(oldItem: String, newItem: String): Boolean {
+        return oldItem == newItem
     }
 
-    override fun areContentsTheSame(oldItem: DescricaoItem, newItem: DescricaoItem): Boolean {
+    override fun areContentsTheSame(oldItem: String, newItem: String): Boolean {
         return oldItem == newItem
     }
 }

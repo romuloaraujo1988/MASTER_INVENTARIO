@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.inventario.mobile.app-mergeDebugResources-64:/values-w360dp-port-v13/values-w360dp-port-v13.xml",
+            "outputFile": "com.inventario.mobile.app-mergeDebugResources-65:/values-w360dp-port-v13/values-w360dp-port-v13.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\Romulo\\.gradle\\caches\\transforms-3\\c5e627958bb67c0726bb922d259ef2c8\\transformed\\material-1.10.0\\res\\values-w360dp-port-v13\\values-w360dp-port-v13.xml",
+                    "source": "C:\\Users\\Romulo\\.gradle\\caches\\transforms-3\\e17e40cd43d86d439436bc05b87af86b\\transformed\\material-1.10.0\\res\\values-w360dp-port-v13\\values-w360dp-port-v13.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9",
                         "startColumns": "4,4,4,4,4,4,4,4",

@@ -36,7 +36,7 @@ class LoginActivity : AppCompatActivity() {
         networkLocationManager = NetworkLocationManager.getInstance(this)
         val apiService = com.inventario.mobile.data.remote.api.ApiClient.getApiService(this)
         val authRepository = AuthRepositoryImpl(apiService, serverConfigManager)
-        viewModel = ViewModelProvider(this, LoginViewModelFactory(this, preferencesManager, serverConfigManager, authRepository))[LoginViewModel::class.java]
+        viewModel = ViewModelProvider(this, LoginViewModelFactory(application, preferencesManager, serverConfigManager, authRepository))[LoginViewModel::class.java]
 
         // Inicializar helper de biometria
         biometricHelper = BiometricLoginHelper(this, this)

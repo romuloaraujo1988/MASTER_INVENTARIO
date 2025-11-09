@@ -236,10 +236,10 @@ class DashboardFragment : Fragment() {
             */
             
             // Atualizar mensagem de erro
-            if (state.errorMessage != null) {
-                binding.tvError.text = state.errorMessage
+            if (state.error != null) {
+                binding.tvError.text = state.error
                 binding.tvError.visibility = View.VISIBLE
-                Log.w(TAG, "Erro no dashboard: ${state.errorMessage}")
+                Log.w(TAG, "Erro no dashboard: ${state.error}")
             } else {
                 binding.tvError.visibility = View.GONE
             }

@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.inventario.mobile.app-mergeDebugResources-64:/values-hdpi-v4/values-hdpi-v4.xml",
+            "outputFile": "com.inventario.mobile.app-mergeDebugResources-65:/values-hdpi-v4/values-hdpi-v4.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\Romulo\\.gradle\\caches\\transforms-3\\8e6833717479ebcff9d82276162c5f90\\transformed\\appcompat-1.6.1\\res\\values-hdpi-v4\\values-hdpi-v4.xml",
+                    "source": "C:\\Users\\Romulo\\.gradle\\caches\\transforms-3\\cfb5def2ec785a541d74e87794f3ae69\\transformed\\appcompat-1.6.1\\res\\values-hdpi-v4\\values-hdpi-v4.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

@@ -423,4 +423,39 @@ public class PatrimonioDAORefactored extends BaseDAO<Patrimonio, Integer> {
             return false;
         }
     }
+    
+    /**
+     * Buscar IDs de patrimônios já coletados em um inventário
+     * 
+     * @param idInventario ID do inventário (null = inventário ativo)
+     * @return lista de IDs de patrimônios coletados
+     */
+    public List<Integer> buscarPatrimoniosColetados(Integer idInventario) {
+        List<Integer> idsColetados = new ArrayList<>();
+        String sql;
+        
+        if (idInventario != null) {
+            sql = "SELECT DISTINCT ID_PATRIMONIO FROM TABELA_COLETA WHERE ID_INVENTARIO = ?";
+        } else {
+            sql = "SELECT DISTINCT c.ID_PATRIMONIO FROM TABELA_COLETA c " +
+                  "INNER JOIN TABELA_INVENTARIO i ON c.ID_INVENTARIO = i.ID " +
+                  "WHERE i.STATUS = 'ATIVO'";
+        }
+        
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
+            if (idInventario != null) {
+                stmt.setInt(1, idInventario);
+            }
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    idsColetados.add(rs.getInt("ID_PATRIMONIO"));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar patrimônios coletados: " + e.getMessage());
+        }
+        
+        return idsColetados;
+    }
 }

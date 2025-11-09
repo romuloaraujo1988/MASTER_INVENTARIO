@@ -357,4 +357,42 @@ public class MobileColetaController {
                     .body(ApiResponse.error("Erro ao excluir coleta", "DELETE_ERROR"));
         }
     }
+    
+    /**
+     * Buscar descrições de patrimônios pendentes de coleta
+     * Retorna apenas descrições de itens que ainda não foram coletados no inventário ativo
+     * 
+     * @param termoBusca termo para buscar na descrição
+     * @param idInventario ID do inventário (opcional, usa o ativo se não informado)
+     * @return lista de descrições pendentes com estatísticas
+     */
+    @GetMapping("/descricoes-pendentes")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> buscarDescricoesPendentes(
+            @RequestParam String termoBusca,
+            @RequestParam(required = false) Integer idInventario) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication != null ? authentication.getName() : null;
+            
+            logger.info("Buscando descrições pendentes para termo '{}' no inventário {} por usuário: {}", 
+                    termoBusca, idInventario, username);
+            
+            Map<String, Object> resultado = mobileColetaService.buscarDescricoesPendentes(
+                    termoBusca, idInventario);
+            
+            return ResponseEntity.ok(
+                    ApiResponse.success(resultado, "Descrições pendentes carregadas"));
+            
+        } catch (IllegalArgumentException e) {
+            logger.warn("Parâmetros inválidos: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage(), "INVALID_PARAMS"));
+                    
+        } catch (Exception e) {
+            logger.error("Erro ao buscar descrições pendentes", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao buscar descrições pendentes: " + e.getMessage(), 
+                            "FETCH_ERROR"));
+        }
+    }
 }

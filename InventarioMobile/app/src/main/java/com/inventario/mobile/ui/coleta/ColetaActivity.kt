@@ -11,19 +11,29 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.inventario.mobile.R
 import com.inventario.mobile.databinding.ActivityColetaBinding
+import com.inventario.mobile.presentation.coleta.ColetaViewModelClean
 import com.inventario.mobile.presentation.scanner.ScannerActivity
-import com.inventario.mobile.presentation.viewmodel.ColetaViewModel
+import com.inventario.mobile.presentation.state.ColetaState
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
+/**
+ * Activity para registro de coleta de patrimônio
+ * Clean Architecture + MVVM + Hilt
+ */
+@AndroidEntryPoint
 class ColetaActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityColetaBinding
-    private val viewModel: ColetaViewModel by viewModels()
+    
+    // ViewModel injetado via Hilt
+    private val viewModel: ColetaViewModelClean by viewModels()
     
     private var salaId: Long = -1L
     private var salaNome: String = ""
     
     companion object {
+        private const val TAG = "ColetaActivity"
         const val EXTRA_SALA_ID = "extra_sala_id"
         const val EXTRA_SALA_NOME = "extra_sala_nome"
     }
@@ -56,24 +66,85 @@ class ColetaActivity : AppCompatActivity() {
         salaId = intent.getLongExtra(EXTRA_SALA_ID, -1L)
         salaNome = intent.getStringExtra(EXTRA_SALA_NOME) ?: ""
 
-        android.util.Log.d("ColetaActivity", "=== INICIANDO COLETA ACTIVITY ===")
-        android.util.Log.d("ColetaActivity", "Sala ID recebida: $salaId")
-        android.util.Log.d("ColetaActivity", "Sala Nome recebida: $salaNome")
-        android.util.Log.d("ColetaActivity", "EXTRA_SALA_ID = $EXTRA_SALA_ID")
-        android.util.Log.d("ColetaActivity", "EXTRA_SALA_NOME = $EXTRA_SALA_NOME")
-
+        android.util.Log.d(TAG, "=== INICIANDO COLETA ACTIVITY ===")
+        android.util.Log.d(TAG, "Sala ID recebida: $salaId")
+        android.util.Log.d(TAG, "Sala Nome recebida: $salaNome")
+        
         setupToolbar()
         setupUI()
-        observeViewModel()
+        setupObservers()
         
         // Configurar sala selecionada
         if (salaId != -1L && salaNome.isNotEmpty()) {
-            android.util.Log.d("ColetaActivity", "Configurando sala no ViewModel...")
-            viewModel.setSala(salaId, salaNome)
+            android.util.Log.d(TAG, "Configurando sala...")
+            configurarSala()
         } else {
-            android.util.Log.e("ColetaActivity", "ERRO: Sala não foi recebida corretamente!")
-            android.util.Log.e("ColetaActivity", "salaId: $salaId, salaNome: $salaNome")
+            android.util.Log.e(TAG, "ERRO: Sala não foi recebida corretamente!")
         }
+    }
+    
+    /**
+     * Observa mudanças de estado do ViewModel
+     */
+    private fun setupObservers() {
+        lifecycleScope.launch {
+            viewModel.state.collect { state ->
+                when (state) {
+                    is ColetaState.Idle -> {
+                        hideLoading()
+                    }
+                    is ColetaState.Loading -> {
+                        showLoading()
+                    }
+                    is ColetaState.Success -> {
+                        hideLoading()
+                        handleColetaSuccess(state.coleta)
+                    }
+                    is ColetaState.Error -> {
+                        hideLoading()
+                        showError(state.message)
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Configura sala
+     */
+    private fun configurarSala() {
+        binding.tvSalaInfo.text = "Sala: $salaNome"
+    }
+    
+    /**
+     * Mostra loading
+     */
+    private fun showLoading() {
+        binding.progressBar.visibility = android.view.View.VISIBLE
+        binding.btnSalvar.isEnabled = false
+    }
+    
+    /**
+     * Esconde loading
+     */
+    private fun hideLoading() {
+        binding.progressBar.visibility = android.view.View.GONE
+    }
+    
+    /**
+     * Mostra erro
+     */
+    private fun showError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
+    
+    /**
+     * Trata sucesso da coleta (Clean Architecture)
+     */
+    private fun handleColetaSuccess(coleta: com.inventario.mobile.domain.model.Coleta) {
+        Toast.makeText(this, "✅ Coleta registrada com sucesso!", Toast.LENGTH_SHORT).show()
+        setResult(Activity.RESULT_OK)
+        finish()
     }
 
     private fun setupToolbar() {
@@ -109,51 +180,6 @@ class ColetaActivity : AppCompatActivity() {
         binding.btnSalvar.isEnabled = false
     }
 
-    private fun observeViewModel() {
-        lifecycleScope.launch {
-            viewModel.uiState.collect { state ->
-                updateUI(state)
-            }
-        }
-    }
-
-    private fun updateUI(state: ColetaUiState) {
-        // Atualizar campos com dados do patrimônio
-        binding.etCodigo.setText(state.patrimonioCodigo)
-        binding.etDescricao.setText(state.patrimonioDescricao)
-        binding.etLocalizacao.setText(state.localizacao)
-        binding.etObservacoes.setText(state.observacoes)
-
-        // Atualizar estado de loading
-        binding.progressBar.visibility = if (state.isLoading) android.view.View.VISIBLE else android.view.View.GONE
-        
-        // Habilitar botão salvar apenas se tiver patrimônio escaneado e não estiver carregando
-        val hasPatrimonio = state.patrimonioCodigo.isNotEmpty()
-        binding.btnSalvar.isEnabled = !state.isLoading && hasPatrimonio
-        
-        // Atualizar visibilidade dos campos de patrimônio
-        if (hasPatrimonio) {
-            binding.layoutPatrimonioInfo.visibility = android.view.View.VISIBLE
-            binding.tvScanInstruction.visibility = android.view.View.GONE
-        } else {
-            binding.layoutPatrimonioInfo.visibility = android.view.View.GONE
-            binding.tvScanInstruction.visibility = android.view.View.VISIBLE
-        }
-
-        // Mostrar mensagens de erro
-        if (state.errorMessage != null) {
-            Toast.makeText(this, state.errorMessage, Toast.LENGTH_LONG).show()
-            viewModel.clearError()
-        }
-
-        // Verificar se salvou com sucesso
-        if (state.isSaved) {
-            Toast.makeText(this, "Coleta salva com sucesso!", Toast.LENGTH_SHORT).show()
-            setResult(Activity.RESULT_OK)
-            finish()
-        }
-    }
-
     private fun openScanner() {
         val intent = Intent(this, ScannerActivity::class.java).apply {
             putExtra(ScannerActivity.EXTRA_ALLOW_COLLECTION, true)
@@ -164,6 +190,12 @@ class ColetaActivity : AppCompatActivity() {
     private fun salvarColeta() {
         val localizacao = binding.etLocalizacao.text.toString().trim()
         val observacoes = binding.etObservacoes.text.toString().trim()
+        val numeroPatrimonio = binding.etCodigo.text.toString().trim()
+
+        if (numeroPatrimonio.isEmpty()) {
+            Toast.makeText(this, "Escaneie um patrimônio primeiro", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         if (localizacao.isEmpty()) {
             binding.tilLocalizacao.error = "Localização é obrigatória"
@@ -171,7 +203,18 @@ class ColetaActivity : AppCompatActivity() {
         }
 
         binding.tilLocalizacao.error = null
-        viewModel.salvarColeta(localizacao, observacoes)
+        
+        // TODO: Obter ID do usuário logado do PreferencesManager
+        val idUsuario = 1L // Placeholder
+        
+        viewModel.registrarColeta(
+            numeroPatrimonio = numeroPatrimonio,
+            localizacaoAtual = localizacao,
+            observacoes = observacoes,
+            latitude = null,
+            longitude = null,
+            idUsuario = idUsuario
+        )
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

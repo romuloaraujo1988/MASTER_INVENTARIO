@@ -37,4 +37,9 @@ interface PatrimonioRepository {
     // Sincronização
     suspend fun sincronizarPatrimonios(): Result<Unit>
     suspend fun enviarPatrimoniosParaServidor(): Result<Unit>
+    
+    // Novos métodos para Clean Architecture
+    suspend fun buscarPorNumero(numero: String): Patrimonio?
+    suspend fun buscarDescricoesNaoColetadas(): List<String>
+    suspend fun buscarPorDescricaoNaoColetados(descricao: String): List<Patrimonio>
 }

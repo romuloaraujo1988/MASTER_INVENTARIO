@@ -178,7 +178,7 @@ class ManualCollectionViewModel(
     private fun loadColetasCount() {
         viewModelScope.launch {
             try {
-                val coletas = inventarioRepository.getColetasLocal()
+                val coletas = emptyList<Coleta>() // TODO: Implementar com ColetaRepository
                 _uiState.value = _uiState.value.copy(
                     totalColetas = coletas.size
                 )

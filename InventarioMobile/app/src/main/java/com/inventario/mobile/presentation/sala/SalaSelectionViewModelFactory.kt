@@ -4,6 +4,10 @@ import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 
+/**
+ * Factory stub - Mantido para compatibilidade
+ * TODO: Remover após migração completa para Hilt
+ */
 class SalaSelectionViewModelFactory(
     private val application: Application
 ) : ViewModelProvider.Factory {

@@ -2132,6 +2132,10 @@ public class ColetaFrame_v2 extends JFrame {
     /**
      * Busca descrições únicas de patrimônios para uso em itens sem patrimônio
      */
+    /**
+     * Busca descrições de patrimônios, mostrando apenas os pendentes (não coletados)
+     * Facilita o trabalho do coletor ao exibir somente itens que ainda precisam ser coletados
+     */
     private void buscarPorDescricao() {
         String termoBusca = campoBuscaDescricao.getText().trim();
 
@@ -2159,26 +2163,60 @@ public class ColetaFrame_v2 extends JFrame {
                 return;
             }
 
-            // Agrupar por descrição única
+            // Buscar inventário ativo para filtrar pendentes
+            Inventario inventarioAtivo = inventarioService.buscarPorStatus("EM_ANDAMENTO");
+            Integer idInventario = inventarioAtivo != null ? inventarioAtivo.getId() : null;
+            
+            // Usar o serviço para filtrar apenas patrimônios pendentes
+            List<Patrimonio> patrimoniosPendentes = patrimonioService.filtrarPatrimoniosPendentes(
+                patrimonios, idInventario, coletaService);
+
+            if (patrimoniosPendentes.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "✅ Todos os patrimônios com essa descrição já foram coletados!\n\n" +
+                                "Não há itens pendentes para: \"" + termoBusca + "\"",
+                        "Coleta Completa",
+                        JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            // Agrupar por descrição única (apenas pendentes)
             java.util.Set<String> descricoesUnicas = new java.util.LinkedHashSet<>();
-            for (Patrimonio p : patrimonios) {
+            java.util.Map<String, Integer> contagemPorDescricao = new java.util.HashMap<>();
+            
+            for (Patrimonio p : patrimoniosPendentes) {
                 String desc = p.getDescricao();
                 if (desc != null && !desc.trim().isEmpty()) {
                     descricoesUnicas.add(desc);
+                    contagemPorDescricao.put(desc, contagemPorDescricao.getOrDefault(desc, 0) + 1);
                 }
             }
 
-            // Adicionar à tabela
+            // Adicionar à tabela com contagem de pendentes
             for (String descricao : descricoesUnicas) {
-                Object[] linha = { descricao };
+                int qtdPendente = contagemPorDescricao.get(descricao);
+                String descricaoComContagem = String.format("%s (%d pendente%s)", 
+                    descricao, qtdPendente, qtdPendente > 1 ? "s" : "");
+                Object[] linha = { descricaoComContagem };
                 modeloTabelaResultados.addRow(linha);
             }
 
+            // Obter estatísticas usando o serviço
+            java.util.Map<String, Object> stats = patrimonioService.obterEstatisticasColeta(
+                patrimonios, idInventario, coletaService);
+
             JOptionPane.showMessageDialog(this,
-                    String.format("✅ Encontradas %d descrição(ões) única(s)!\n\n" +
-                            "Clique em uma linha para usar a descrição no formulário.",
-                            descricoesUnicas.size()),
-                    "Busca Concluída",
+                    String.format("✅ Encontradas %d descrição(ões) com itens pendentes!\n\n" +
+                            "📊 Estatísticas:\n" +
+                            "   • Total de patrimônios: %d\n" +
+                            "   • Pendentes: %d (%.1f%%)\n" +
+                            "   • Já coletados: %d (%.1f%%)\n\n" +
+                            "💡 Clique em uma linha para usar a descrição no formulário.",
+                            descricoesUnicas.size(),
+                            stats.get("total"),
+                            stats.get("pendentes"), stats.get("percentualPendente"),
+                            stats.get("coletados"), stats.get("percentualColetado")),
+                    "Busca Concluída - Apenas Pendentes",
                     JOptionPane.INFORMATION_MESSAGE);
 
         } catch (Exception e) {
