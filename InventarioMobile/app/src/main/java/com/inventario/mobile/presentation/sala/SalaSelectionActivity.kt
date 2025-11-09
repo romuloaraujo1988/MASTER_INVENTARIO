@@ -102,6 +102,8 @@ class SalaSelectionActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
+        val layoutManager = LinearLayoutManager(this)
+        
         salaAdapter = SalaAdapter { sala ->
             // Quando uma sala for selecionada
             Log.d(TAG, "Sala selecionada: ${sala.nome} para coleta tipo: $coletaTipo")
@@ -140,8 +142,27 @@ class SalaSelectionActivity : AppCompatActivity() {
         }
         
         binding.recyclerViewSalas.apply {
-            layoutManager = LinearLayoutManager(this@SalaSelectionActivity)
+            this.layoutManager = layoutManager
             adapter = salaAdapter
+            
+            // Adicionar scroll listener para paginação infinita
+            addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+                    
+                    val visibleItemCount = layoutManager.childCount
+                    val totalItemCount = layoutManager.itemCount
+                    val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+                    
+                    // Carregar mais quando estiver a 5 itens do fim
+                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5
+                        && firstVisibleItemPosition >= 0
+                        && totalItemCount > 0) {
+                        Log.d(TAG, "onScrolled: Próximo do fim, carregando mais salas...")
+                        viewModel.loadNextPage()
+                    }
+                }
+            })
         }
     }
 

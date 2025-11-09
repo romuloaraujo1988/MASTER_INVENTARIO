@@ -61,8 +61,7 @@ public class MobilePatrimonioDTO {
     private Boolean coletado = false;
     
     @JsonProperty("dataColeta")
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime dataColeta;
+    private String dataColeta;
     
     @JsonProperty("observacoes")
     private String observacoes;
@@ -205,11 +204,11 @@ public class MobilePatrimonioDTO {
         this.coletado = coletado;
     }
     
-    public LocalDateTime getDataColeta() {
+    public String getDataColeta() {
         return dataColeta;
     }
     
-    public void setDataColeta(LocalDateTime dataColeta) {
+    public void setDataColeta(String dataColeta) {
         this.dataColeta = dataColeta;
     }
     

@@ -82,5 +82,7 @@ data class DashboardStats(
     val divergencias: Int = 0,
     val coletoresAtivos: Int = 0,
     val totalPatrimonios: Int = 0,
-    val percentualConcluido: Float = 0f
+    val percentualConcluido: Float = 0f,
+    val percentualConclusao: Float = 0f,
+    val valorTotal: Double = 0.0
 )

@@ -8,12 +8,22 @@ import retrofit2.Response
  */
 class MockApiService : ApiService {
 
-    override suspend fun login(loginRequest: LoginRequest): Response<LoginResponse> {
+    override suspend fun login(loginRequest: LoginRequest): Response<MobileLoginResponseDto> {
         throw NotImplementedError("Mock implementation - not available offline")
     }
 
-    override suspend fun refreshToken(refreshRequest: RefreshTokenRequest): Response<LoginResponse> {
+    override suspend fun refreshToken(refreshRequest: RefreshTokenRequest): Response<MobileLoginResponseDto> {
         throw NotImplementedError("Mock implementation - not available offline")
+    }
+
+    override suspend fun getDashboardStats(): Response<ApiResponse<DashboardStatsDto>> {
+        val stats = DashboardStatsDto()
+        val apiResponse = ApiResponse(
+            success = true,
+            message = "Mock data",
+            data = stats
+        )
+        return Response.success(apiResponse)
     }
 
     override suspend fun getPatrimonios(): Response<ApiResponse<List<MobilePatrimonioDto>>> {
@@ -108,6 +118,15 @@ class MockApiService : ApiService {
         )
         return Response.success(apiResponse)
     }
+    
+    override suspend fun getSalasPaginadas(page: Int, size: Int): Response<ApiResponse<List<SalaDto>>> {
+        val apiResponse = ApiResponse(
+            success = true,
+            message = "Mock data",
+            data = emptyList<SalaDto>()
+        )
+        return Response.success(apiResponse)
+    }
 
     override suspend fun getSalaById(id: Long): SalaDto {
         throw NotImplementedError("Mock implementation - not available offline")
@@ -178,10 +197,6 @@ class MockApiService : ApiService {
     }
 
     override suspend fun downloadData(lastSync: String?): SyncDataResponse {
-        throw NotImplementedError("Mock implementation - not available offline")
-    }
-
-    override suspend fun getDashboardStats(): Response<ApiResponse<DashboardStatsDto>> {
         throw NotImplementedError("Mock implementation - not available offline")
     }
     

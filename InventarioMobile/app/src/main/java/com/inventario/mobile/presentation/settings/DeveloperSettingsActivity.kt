@@ -44,51 +44,49 @@ class DeveloperSettingsActivity : AppCompatActivity() {
     }
     
     private fun setupListeners() {
-        // Switch mestre
-        binding.switchCleanArchitecture.setOnCheckedChangeListener { _, isChecked ->
-            FeatureFlags.useCleanArchitecture = isChecked
-            updateStatus()
-            showRestartDialog()
+        // NOTA: Todos os FeatureFlags são const val e não podem ser alterados em runtime
+        // Clean Architecture está sempre ativo
+        
+        // Switch mestre - Desabilitado (sempre true)
+        binding.switchCleanArchitecture.isEnabled = false
+        binding.switchCleanArchitecture.setOnCheckedChangeListener { _, _ ->
+            Toast.makeText(this, "Clean Architecture está sempre ativo", Toast.LENGTH_SHORT).show()
         }
         
-        // Switch Descrição
-        binding.switchDescricao.setOnCheckedChangeListener { _, isChecked ->
-            FeatureFlags.useCleanDescricao = isChecked
-            updateStatus()
-            showRestartDialog()
+        // Switch Descrição - Desabilitado (sempre true)
+        binding.switchDescricao.isEnabled = false
+        binding.switchDescricao.setOnCheckedChangeListener { _, _ ->
+            Toast.makeText(this, "Feature sempre ativa", Toast.LENGTH_SHORT).show()
         }
         
-        // Switch Coleta
-        binding.switchColeta.setOnCheckedChangeListener { _, isChecked ->
-            FeatureFlags.useCleanColeta = isChecked
-            updateStatus()
-            showRestartDialog()
+        // Switch Coleta - Desabilitado (sempre true)
+        binding.switchColeta.isEnabled = false
+        binding.switchColeta.setOnCheckedChangeListener { _, _ ->
+            Toast.makeText(this, "Feature sempre ativa", Toast.LENGTH_SHORT).show()
         }
         
-        // Switch Dashboard
-        binding.switchDashboard.setOnCheckedChangeListener { _, isChecked ->
-            FeatureFlags.useCleanDashboard = isChecked
-            updateStatus()
-            showRestartDialog()
+        // Switch Dashboard - Desabilitado (sempre true)
+        binding.switchDashboard.isEnabled = false
+        binding.switchDashboard.setOnCheckedChangeListener { _, _ ->
+            Toast.makeText(this, "Feature sempre ativa", Toast.LENGTH_SHORT).show()
         }
         
-        // Switch Sync
-        binding.switchSync.setOnCheckedChangeListener { _, isChecked ->
-            FeatureFlags.useCleanSync = isChecked
-            updateStatus()
-            showRestartDialog()
+        // Switch Sync - Desabilitado (sempre true)
+        binding.switchSync.isEnabled = false
+        binding.switchSync.setOnCheckedChangeListener { _, _ ->
+            Toast.makeText(this, "Feature sempre ativa", Toast.LENGTH_SHORT).show()
         }
         
-        // Botão Habilitar Todas
+        // Botão Habilitar Todas - Desabilitado (já estão todas ativas)
+        binding.btnEnableAll.isEnabled = false
         binding.btnEnableAll.setOnClickListener {
-            FeatureFlags.enableAll()
-            loadCurrentFlags()
-            showRestartDialog()
+            Toast.makeText(this, "Todas as features já estão ativas", Toast.LENGTH_SHORT).show()
         }
         
-        // Botão Rollback
+        // Botão Rollback - Desabilitado (não há mais rollback)
+        binding.btnRollbackAll.isEnabled = false
         binding.btnRollbackAll.setOnClickListener {
-            showRollbackConfirmation()
+            Toast.makeText(this, "Rollback não disponível - Clean Architecture é permanente", Toast.LENGTH_LONG).show()
         }
         
         // Botão Ver Status
@@ -99,11 +97,7 @@ class DeveloperSettingsActivity : AppCompatActivity() {
     }
     
     private fun updateStatus() {
-        val status = FeatureFlags.getStatus()
-        val enabledCount = status.count { it.value }
-        val totalCount = status.size
-        
-        binding.tvStatus.text = "Features habilitadas: $enabledCount/$totalCount"
+        binding.tvStatus.text = "Clean Architecture: 100% Ativo (Permanente)"
     }
     
     private fun showRestartDialog() {
@@ -118,17 +112,8 @@ class DeveloperSettingsActivity : AppCompatActivity() {
     }
     
     private fun showRollbackConfirmation() {
-        AlertDialog.Builder(this)
-            .setTitle("⚠️ Rollback Completo")
-            .setMessage("Isso desabilitará TODAS as features Clean Architecture e voltará para o código antigo. Confirma?")
-            .setPositiveButton("Sim, fazer rollback") { _, _ ->
-                FeatureFlags.rollbackAll()
-                loadCurrentFlags()
-                Toast.makeText(this, "🔄 Rollback completo realizado", Toast.LENGTH_LONG).show()
-                showRestartDialog()
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
+        // Rollback não disponível - Clean Architecture é permanente
+        Toast.makeText(this, "Rollback não disponível", Toast.LENGTH_SHORT).show()
     }
     
     private fun restartApp() {

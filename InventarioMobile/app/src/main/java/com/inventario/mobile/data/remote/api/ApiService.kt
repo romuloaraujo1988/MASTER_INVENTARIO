@@ -11,10 +11,10 @@ interface ApiService {
 
     // Autenticação
     @POST("api/mobile/auth/login")
-    suspend fun login(@Body loginRequest: LoginRequest): Response<LoginResponse>
+    suspend fun login(@Body loginRequest: LoginRequest): Response<MobileLoginResponseDto>
 
     @POST("api/mobile/auth/refresh")
-    suspend fun refreshToken(@Body refreshRequest: RefreshTokenRequest): Response<LoginResponse>
+    suspend fun refreshToken(@Body refreshRequest: RefreshTokenRequest): Response<MobileLoginResponseDto>
 
     // Patrimônios
     @GET("api/mobile/patrimonio")
@@ -68,6 +68,12 @@ interface ApiService {
 
     @GET("api/mobile/salas")
     suspend fun getSalasWithResponse(): Response<ApiResponse<List<SalaDto>>>
+    
+    @GET("api/mobile/salas")
+    suspend fun getSalasPaginadas(
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 10
+    ): Response<ApiResponse<List<SalaDto>>>
 
     @GET("api/mobile/salas/{id}")
     suspend fun getSalaById(@Path("id") id: Long): SalaDto
@@ -83,7 +89,7 @@ interface ApiService {
     suspend fun getUsuarioById(@Path("id") id: Long): UsuarioDto
 
     // Coletas
-    @GET("api/mobile/coletas")
+    @GET("api/mobile/coletas/all")
     suspend fun getColetas(): Response<ApiResponse<List<ColetaDto>>>
     
     @GET("api/mobile/coletas")
@@ -121,6 +127,9 @@ interface ApiService {
 
     @GET("api/mobile/descricoes/buscar")
     suspend fun searchDescricoes(@Query("termo") termo: String): Response<ApiResponse<List<Map<String, Any>>>>
+    
+    @GET("api/mobile/descricoes/nao-coletadas")
+    suspend fun getDescricoesNaoColetadas(@Query("idInventario") idInventario: Int? = null): Response<ApiResponse<List<String>>>
 
     // Inventários
     @GET("api/mobile/test/inventarios-ativos")
@@ -131,8 +140,4 @@ interface ApiService {
     suspend fun getDashboardStats(): Response<ApiResponse<DashboardStatsDto>>
     
     @GET("api/mobile/dashboard/stats/{inventarioId}")
-    suspend fun getDashboardStatsByInventario(@Path("inventarioId") inventarioId: Int): Response<ApiResponse<DashboardStatsDto>>
-    
-    @GET("api/mobile/dashboard/coletas-evolucao")
-    suspend fun getColetasEvolucao(@Query("dias") dias: Int = 7): Response<ApiResponse<List<ColetasPorDiaDto>>>
-}
+    suspend fun getDashboardStatsByInventario(@Path("inventarioId") inventarioId: Int): Response<ApiResponse<Dashboa

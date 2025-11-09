@@ -178,12 +178,24 @@ class ManualCollectionViewModel(
     private fun loadColetasCount() {
         viewModelScope.launch {
             try {
-                val coletas = emptyList<Coleta>() // TODO: Implementar com ColetaRepository
+                Log.d("ManualCollectionVM", "Carregando contagem de coletas para sala: $salaNome")
+                
+                // Buscar todas as coletas
+                val todasColetas = inventarioRepository.getColetas()
+                
+                // Filtrar apenas as coletas da sala atual
+                val coletasDaSala = todasColetas.filter { coleta ->
+                    coleta.localizacaoAtual == salaNome || coleta.nomeSala == salaNome
+                }
+                
+                Log.d("ManualCollectionVM", "Total de coletas na sala '$salaNome': ${coletasDaSala.size}")
+                
                 _uiState.value = _uiState.value.copy(
-                    totalColetas = coletas.size
+                    totalColetas = coletasDaSala.size
                 )
             } catch (e: Exception) {
-                // Silently fail for count
+                Log.e("ManualCollectionVM", "Erro ao carregar contagem de coletas", e)
+                // Silently fail for count - não bloqueia a funcionalidade principal
             }
         }
     }

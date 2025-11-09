@@ -28,21 +28,42 @@ public class MobileSalaController {
     private MobileSalaService salaService;
     
     /**
-     * Listar todas as salas ativas
+     * Listar todas as salas ativas com paginação
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<List<MobileSalaDTO>>> listarSalas() {
+    public ResponseEntity<ApiResponse<List<MobileSalaDTO>>> listarSalas(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
             
-            logger.info("Listando salas para usuário: {}", username);
+            logger.info("Listando salas para usuário: {} (page: {}, size: {})", username, page, size);
             
-            List<MobileSalaDTO> salas = salaService.listarSalas();
+            List<MobileSalaDTO> todasSalas = salaService.listarSalas();
+            
+            // Aplicar paginação manual
+            int totalElements = todasSalas.size();
+            int fromIndex = page * size;
+            int toIndex = Math.min(fromIndex + size, totalElements);
+            
+            // Validar página
+            if (fromIndex > totalElements) {
+                fromIndex = 0;
+                toIndex = Math.min(size, totalElements);
+            }
+            
+            List<MobileSalaDTO> salasPaginadas = fromIndex < totalElements 
+                ? todasSalas.subList(fromIndex, toIndex)
+                : List.of();
+            
+            logger.info("Retornando {} salas (página {}, total: {})", 
+                salasPaginadas.size(), page, totalElements);
             
             return ResponseEntity.ok(
-                    ApiResponse.success(salas, 
-                            String.format("%d sala(s) encontrada(s)", salas.size())));
+                    ApiResponse.success(salasPaginadas, 
+                            String.format("%d sala(s) encontrada(s) (página %d/%d)", 
+                                salasPaginadas.size(), page + 1, (int) Math.ceil((double) totalElements / size))));
             
         } catch (Exception e) {
             logger.error("Erro ao listar salas", e);

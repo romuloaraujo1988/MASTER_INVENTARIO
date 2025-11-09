@@ -39,43 +39,20 @@ class CollectionViewViewModel(
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState
 
+    private var currentPage = 0
+    private val pageSize = 50
+    private var isLoadingMore = false
+    private var hasMorePages = true
+    
     fun loadColetas() {
         viewModelScope.launch {
-            Log.d(TAG, "loadColetas: Iniciando carregamento de coletas")
+            Log.d(TAG, "loadColetas: Iniciando carregamento de coletas (página 0)")
+            currentPage = 0
+            hasMorePages = true
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            
             try {
-                // Busca coletas do servidor + locais
-                val coletas = repository.getColetas()
-                Log.d(TAG, "loadColetas: ${coletas.size} coletas carregadas do repositório")
-                
-                // Obter ID do usuário atual
-                val usuarioAtual = repository.getCurrentUser()
-                val usuarioId = usuarioAtual?.id?.toInt()
-                Log.d(TAG, "loadColetas: Usuário atual ID: $usuarioId")
-                
-                val sincronizadas = coletas.count { it.sincronizado }
-                val pendentes = coletas.size - sincronizadas
-                Log.d(TAG, "loadColetas: Sincronizadas: $sincronizadas, Pendentes: $pendentes")
-                
-                // Extrair salas únicas das coletas (usando localizacaoAtual)
-                val salasUnicas = coletas
-                    .mapNotNull { it.localizacaoAtual }
-                    .filter { it.isNotBlank() }
-                    .distinct()
-                    .sorted()
-                Log.d(TAG, "loadColetas: ${salasUnicas.size} salas únicas encontradas: $salasUnicas")
-
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    coletas = coletas,
-                    filteredColetas = coletas,
-                    salas = salasUnicas,
-                    usuarioAtualId = usuarioId,
-                    totalColetas = coletas.size,
-                    sincronizadas = sincronizadas,
-                    pendentes = pendentes
-                )
-                Log.d(TAG, "loadColetas: Estado atualizado com sucesso")
+                loadColetasPage(0)
             } catch (e: Exception) {
                 Log.e(TAG, "loadColetas: Erro ao carregar coletas", e)
                 _uiState.value = _uiState.value.copy(
@@ -84,6 +61,87 @@ class CollectionViewViewModel(
                 )
             }
         }
+    }
+    
+    fun loadNextPage() {
+        if (isLoadingMore || !hasMorePages) {
+            Log.d(TAG, "loadNextPage: Ignorando (isLoadingMore=$isLoadingMore, hasMorePages=$hasMorePages)")
+            return
+        }
+        
+        viewModelScope.launch {
+            Log.d(TAG, "loadNextPage: Carregando página ${currentPage + 1}")
+            isLoadingMore = true
+            
+            try {
+                loadColetasPage(currentPage + 1)
+            } catch (e: Exception) {
+                Log.e(TAG, "loadNextPage: Erro ao carregar próxima página", e)
+                isLoadingMore = false
+            }
+        }
+    }
+    
+    private suspend fun loadColetasPage(page: Int) {
+        Log.d(TAG, "loadColetasPage: Carregando página $page")
+        
+        val result = repository.getColetasPaginadas(page, pageSize)
+        
+        result.fold(
+            onSuccess = { pagedResult ->
+                Log.d(TAG, "loadColetasPage: ${pagedResult.coletas.size} coletas carregadas")
+                Log.d(TAG, "loadColetasPage: Página ${pagedResult.page + 1}/${pagedResult.totalPages}")
+                
+                // Obter ID do usuário atual
+                val usuarioAtual = repository.getCurrentUser()
+                val usuarioId = usuarioAtual?.id?.toInt()
+                
+                // Combinar com coletas existentes se for página > 0
+                val todasColetas = if (page == 0) {
+                    pagedResult.coletas
+                } else {
+                    _uiState.value.coletas + pagedResult.coletas
+                }
+                
+                val sincronizadas = todasColetas.count { it.sincronizado }
+                val pendentes = todasColetas.size - sincronizadas
+                
+                // Extrair salas únicas
+                val salasUnicas = todasColetas
+                    .mapNotNull { it.localizacaoAtual }
+                    .filter { it.isNotBlank() }
+                    .distinct()
+                    .sorted()
+                
+                Log.d(TAG, "loadColetasPage: Total acumulado: ${todasColetas.size} coletas")
+                Log.d(TAG, "loadColetasPage: ${salasUnicas.size} salas únicas")
+                
+                currentPage = pagedResult.page
+                hasMorePages = pagedResult.hasNext
+                isLoadingMore = false
+                
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    coletas = todasColetas,
+                    filteredColetas = todasColetas,
+                    salas = salasUnicas,
+                    usuarioAtualId = usuarioId,
+                    totalColetas = todasColetas.size,
+                    sincronizadas = sincronizadas,
+                    pendentes = pendentes
+                )
+                
+                Log.d(TAG, "loadColetasPage: Estado atualizado. HasMorePages: $hasMorePages")
+            },
+            onFailure = { exception ->
+                Log.e(TAG, "loadColetasPage: Erro", exception)
+                isLoadingMore = false
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = exception.message ?: "Erro ao carregar coletas"
+                )
+            }
+        )
     }
     
     fun filterByUsuario(filtro: FiltroUsuario) {

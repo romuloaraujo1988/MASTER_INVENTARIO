@@ -27,7 +27,7 @@ class ManualCollectionActivity : AppCompatActivity() {
     private lateinit var binding: ActivityManualCollectionBinding
     private lateinit var viewModel: ManualCollectionViewModel
     private lateinit var preferencesManager: PreferencesManager
-    private lateinit var voiceSearchManager: VoiceSearchManager
+    private var voiceSearchManager: VoiceSearchManager? = null
     
     private var salaId: Long = -1L
     private var salaNome: String = ""
@@ -241,7 +241,7 @@ class ManualCollectionActivity : AppCompatActivity() {
         Log.d("ManualCollection", "Iniciando busca por voz")
         
         // Verificar disponibilidade
-        if (!voiceSearchManager.isAvailable()) {
+        if (voiceSearchManager?.isAvailable() != true) {
             Toast.makeText(
                 this,
                 "Reconhecimento de voz não disponível neste dispositivo",
@@ -254,7 +254,7 @@ class ManualCollectionActivity : AppCompatActivity() {
         binding.etPatrimonioNumber.hint = "Escutando..."
         
         // Iniciar reconhecimento
-        voiceSearchManager.startListening(object : VoiceSearchManager.VoiceSearchListener {
+        voiceSearchManager?.startListening(object : VoiceSearchManager.VoiceSearchListener {
             override fun onResults(text: String) {
                 Log.d("ManualCollection", "Resultado final: $text")
                 processVoiceInput(text)
@@ -365,7 +365,7 @@ class ManualCollectionActivity : AppCompatActivity() {
     }
     
     override fun onDestroy() {
-        voiceSearchManager.destroy()
+        voiceSearchManager?.destroy()
         super.onDestroy()
     }
 }

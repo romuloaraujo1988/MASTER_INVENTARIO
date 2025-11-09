@@ -31,24 +31,17 @@ class ColetasViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             
             try {
-                val result = Result.success(emptyList<com.inventario.mobile.data.model.Patrimonio>()) // TODO: Implementar getAllPatrimonios
-                result.onSuccess { patrimonios ->
-                    val coletados = patrimonios.filter { it.coletado == true }
-                    val pendentes = patrimonios.filter { it.coletado != true }
-                    
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        patrimoniosColetados = coletados,
-                        patrimoniosPendentes = pendentes,
-                        totalColetados = coletados.size,
-                        totalPendentes = pendentes.size
-                    )
-                }.onFailure { exception ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = "Erro ao carregar coletas: ${exception.message}"
-                    )
-                }
+                val patrimonios = repository.getAllPatrimoniosList()
+                val coletados = patrimonios.filter { it.coletado == true }
+                val pendentes = patrimonios.filter { it.coletado != true }
+                
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    patrimoniosColetados = coletados,
+                    patrimoniosPendentes = pendentes,
+                    totalColetados = coletados.size,
+                    totalPendentes = pendentes.size
+                )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,

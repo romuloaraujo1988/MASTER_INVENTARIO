@@ -32,6 +32,9 @@ public class MobileDashboardController {
     private com.inventario.dao.ColetaDAO coletaDAO;
     
     @Autowired
+    private com.inventario.dao.InventarioDAO inventarioDAO;
+    
+    @Autowired
     private com.inventario.service.UsuarioService usuarioService;
     
     @Autowired
@@ -51,7 +54,22 @@ public class MobileDashboardController {
             logger.info("=== INICIANDO BUSCA DE ESTATÍSTICAS ===");
             logger.info("PatrimonioDAO injetado: {}", patrimonioDAO != null ? "SIM" : "NÃO");
             logger.info("ColetaDAO injetado: {}", coletaDAO != null ? "SIM" : "NÃO");
+            logger.info("InventarioDAO injetado: {}", inventarioDAO != null ? "SIM" : "NÃO");
             logger.info("UsuarioService injetado: {}", usuarioService != null ? "SIM" : "NÃO");
+            
+            // Buscar inventário ativo (EM_ANDAMENTO)
+            com.inventario.model.Inventario inventarioAtivo = null;
+            try {
+                inventarioAtivo = inventarioDAO.buscarInventarioPorStatus(com.inventario.model.Inventario.STATUS_EM_ANDAMENTO);
+                if (inventarioAtivo != null) {
+                    logger.info("Inventário ativo encontrado: ID={}, Nome={}", inventarioAtivo.getId(), inventarioAtivo.getNome());
+                } else {
+                    logger.warn("Nenhum inventário EM_ANDAMENTO encontrado");
+                }
+            } catch (Exception e) {
+                logger.error("Erro ao buscar inventário ativo: {}", e.getMessage(), e);
+            }
+            
             String username = null;
             com.inventario.model.Usuario usuario = null;
             int patrimoniosColetados = 0;
@@ -85,14 +103,26 @@ public class MobileDashboardController {
                 usuario = usuarioService.buscarPorUsername(username);
                 if (usuario != null) {
                     logger.info("Usuário encontrado: {} (ID: {})", usuario.getNomeCompleto(), usuario.getId());
-                    // Buscar coletas do usuário
-                    List<com.inventario.model.Coleta> coletasDoUsuario = coletaDAO.buscarPorColetor(usuario.getId());
-                    patrimoniosColetados = coletasDoUsuario.size();
                 } else {
                     logger.warn("Usuário '{}' não encontrado no banco", username);
                 }
             } else {
                 logger.info("Nenhum usuário autenticado, retornando estatísticas gerais");
+            }
+            
+            // Buscar coletas do inventário ativo
+            if (inventarioAtivo != null) {
+                try {
+                    List<com.inventario.model.Coleta> coletasInventario = coletaDAO.buscarPorInventario(inventarioAtivo.getId());
+                    patrimoniosColetados = coletasInventario != null ? coletasInventario.size() : 0;
+                    logger.info("Total de coletas do inventário ativo (ID={}): {}", inventarioAtivo.getId(), patrimoniosColetados);
+                } catch (Exception e) {
+                    logger.error("Erro ao buscar coletas do inventário: {}", e.getMessage(), e);
+                    patrimoniosColetados = 0;
+                }
+            } else {
+                logger.warn("Sem inventário ativo, patrimoniosColetados = 0");
+                patrimoniosColetados = 0;
             }
             
             // Total de patrimônios (pode ser todos ou apenas os atribuídos ao usuário)

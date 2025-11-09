@@ -93,30 +93,9 @@ object NetworkModule {
                 throw RuntimeException("Falha na criação do interceptor de informações do dispositivo: ${e.message}", e)
             }
             
-            val compressionInterceptor = try {
-                com.inventario.mobile.network.CompressionInterceptor()
-            } catch (e: Exception) {
-                android.util.Log.e("NetworkModule", "Erro ao criar compression interceptor", e)
-                throw RuntimeException("Falha na criação do interceptor de compressão: ${e.message}", e)
-            }
-            
-            val cacheInterceptor = try {
-                com.inventario.mobile.network.CacheInterceptor()
-            } catch (e: Exception) {
-                android.util.Log.e("NetworkModule", "Erro ao criar cache interceptor", e)
-                throw RuntimeException("Falha na criação do interceptor de cache: ${e.message}", e)
-            }
-            
-            val retryInterceptor = try {
-                com.inventario.mobile.network.RetryInterceptor()
-            } catch (e: Exception) {
-                android.util.Log.e("NetworkModule", "Erro ao criar retry interceptor", e)
-                throw RuntimeException("Falha na criação do interceptor de retry: ${e.message}", e)
-            }
-            
             android.util.Log.d("NetworkModule", "Criando OkHttpClient...")
             val okHttpClient = try {
-                createOkHttpClient(context, loggingInterceptor, authInterceptor, deviceInfoInterceptor, compressionInterceptor, cacheInterceptor, retryInterceptor)
+                createOkHttpClient(context, loggingInterceptor, authInterceptor, deviceInfoInterceptor)
             } catch (e: Exception) {
                 android.util.Log.e("NetworkModule", "Erro ao criar OkHttpClient", e)
                 throw RuntimeException("Falha na criação do cliente HTTP: ${e.message}", e)
@@ -223,10 +202,7 @@ object NetworkModule {
         context: Context,
         loggingInterceptor: HttpLoggingInterceptor,
         authInterceptor: Interceptor,
-        deviceInfoInterceptor: DeviceInfoInterceptor,
-        compressionInterceptor: com.inventario.mobile.network.CompressionInterceptor,
-        cacheInterceptor: com.inventario.mobile.network.CacheInterceptor,
-        retryInterceptor: com.inventario.mobile.network.RetryInterceptor
+        deviceInfoInterceptor: DeviceInfoInterceptor
     ): OkHttpClient {
         android.util.Log.d("NetworkModule", "Configurando OkHttpClient com interceptors")
         
@@ -234,13 +210,34 @@ object NetworkModule {
         val cacheSize = 10 * 1024 * 1024L // 10 MB
         val cache = okhttp3.Cache(context.cacheDir, cacheSize)
         
+        // Interceptor para logar resposta DEPOIS da descompressão
+        val rawResponseInterceptor = Interceptor { chain ->
+            val request = chain.request()
+            val response = chain.proceed(request)
+            
+            // Logar resposta descomprimida
+            val responseBody = response.body
+            val source = responseBody?.source()
+            source?.request(Long.MAX_VALUE) // Buffer the entire body
+            val buffer = source?.buffer
+            
+            val responseString = buffer?.clone()?.readString(Charsets.UTF_8) ?: ""
+            android.util.Log.d("NetworkModule", "═══ RESPONSE AFTER DECOMPRESSION ═══")
+            android.util.Log.d("NetworkModule", "URL: ${request.url}")
+            android.util.Log.d("NetworkModule", "Status: ${response.code}")
+            android.util.Log.d("NetworkModule", "Content-Encoding: ${response.header("Content-Encoding")}")
+            android.util.Log.d("NetworkModule", "Body length: ${responseString.length}")
+            android.util.Log.d("NetworkModule", "Body (first 1000 chars): ${responseString.take(1000)}")
+            android.util.Log.d("NetworkModule", "═══════════════════════════════════")
+            
+            response
+        }
+        
         return OkHttpClient.Builder()
             .cache(cache)  // Cache HTTP
-            .addInterceptor(retryInterceptor)  // Retry primeiro (para tentar novamente em caso de falha)
-            .addInterceptor(compressionInterceptor)  // Compressão
+            .addInterceptor(rawResponseInterceptor)  // Log da resposta
             .addInterceptor(deviceInfoInterceptor)  // Device info
             .addInterceptor(authInterceptor)  // Auth
-            .addNetworkInterceptor(cacheInterceptor)  // Cache (network interceptor para funcionar corretamente)
             .addInterceptor(loggingInterceptor)  // Log por último para ver todos os headers
             // Timeouts aumentados para dispositivos físicos Android 14
             .connectTimeout(45, TimeUnit.SECONDS)  // Aumentado de 30 para 45
@@ -278,10 +275,24 @@ object NetworkModule {
         
         android.util.Log.d("NetworkModule", "Base URL configurada: $finalBaseUrl")
         
+        // Configurar Gson com adaptador para datas
+        val gson = com.google.gson.GsonBuilder()
+            .setLenient()
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+            .registerTypeAdapter(java.util.Date::class.java, com.google.gson.JsonDeserializer { json, _, _ ->
+                try {
+                    val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault())
+                    dateFormat.parse(json.asString)
+                } catch (e: Exception) {
+                    null
+                }
+            })
+            .create()
+        
         return Retrofit.Builder()
             .baseUrl(finalBaseUrl)
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
 
@@ -306,10 +317,7 @@ object NetworkModule {
                     LocalDataManager.getInstance(context),
                     com.inventario.mobile.utils.PreferencesManager(context)
                 ),
-                DeviceInfoInterceptor(context),
-                com.inventario.mobile.network.CompressionInterceptor(),
-                com.inventario.mobile.network.CacheInterceptor(),
-                com.inventario.mobile.network.RetryInterceptor()
+                DeviceInfoInterceptor(context)
             ),
             ServerConfigManager.getInstance(context)
         )
@@ -328,10 +336,7 @@ object NetworkModule {
                     LocalDataManager.getInstance(context),
                     com.inventario.mobile.utils.PreferencesManager(context)
                 ),
-                DeviceInfoInterceptor(context),
-                com.inventario.mobile.network.CompressionInterceptor(),
-                com.inventario.mobile.network.CacheInterceptor(),
-                com.inventario.mobile.network.RetryInterceptor()
+                DeviceInfoInterceptor(context)
             ),
             ServerConfigManager.getInstance(context)
         )

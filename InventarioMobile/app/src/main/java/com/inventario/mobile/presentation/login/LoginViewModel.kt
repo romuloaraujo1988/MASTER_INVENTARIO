@@ -197,6 +197,12 @@ class LoginViewModel(
                     }
                 } else {
                     val exception = loginResult.exceptionOrNull() ?: Exception("Erro desconhecido no login")
+                    Log.e("LoginViewModel", "═══════════════════════════════════════════")
+                    Log.e("LoginViewModel", "LOGIN FALHOU - Result.failure")
+                    Log.e("LoginViewModel", "Exception: ${exception.javaClass.simpleName}")
+                    Log.e("LoginViewModel", "Mensagem: ${exception.message}")
+                    Log.e("LoginViewModel", "Stack trace:", exception)
+                    Log.e("LoginViewModel", "═══════════════════════════════════════════")
                     val errorMessage = ErrorMapper.mapErrorToMessage(context, exception)
                     _uiState.value = currentState.copy(
                         isLoading = false,
@@ -205,6 +211,12 @@ class LoginViewModel(
                 }
                 
             } catch (e: Exception) {
+                Log.e("LoginViewModel", "═══════════════════════════════════════════")
+                Log.e("LoginViewModel", "EXCEÇÃO CAPTURADA NO LOGIN")
+                Log.e("LoginViewModel", "Tipo: ${e.javaClass.simpleName}")
+                Log.e("LoginViewModel", "Mensagem: ${e.message}")
+                Log.e("LoginViewModel", "Stack trace:", e)
+                Log.e("LoginViewModel", "═══════════════════════════════════════════")
                 val errorMessage = ErrorMapper.mapErrorToMessage(context, e)
                 _uiState.value = currentState.copy(
                     isLoading = false,

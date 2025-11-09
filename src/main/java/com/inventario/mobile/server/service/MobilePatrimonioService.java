@@ -118,15 +118,10 @@ public class MobilePatrimonioService {
     public List<MobilePatrimonioDTO> listarPatrimonios(int page, int size) throws SQLException {
         logger.info("Listando patrimônios (page: {}, size: {})", page, size);
         
-        // Buscar todos os patrimônios (sem paginação no DAO)
-        List<Patrimonio> todosPatrimonios = new ArrayList<>();
+        // Buscar todos os patrimônios com joins
+        List<Patrimonio> todosPatrimonios = patrimonioDAO.listarTodosComJoins();
         
-        // Como não há método listarTodos, vamos buscar por salas
-        List<com.inventario.model.Sala> salas = salaDAO.listarSalas();
-        for (com.inventario.model.Sala sala : salas) {
-            List<Patrimonio> patrimonios = patrimonioDAO.buscarPorSala(sala.getIdSala());
-            todosPatrimonios.addAll(patrimonios);
-        }
+        logger.info("Total de patrimônios no banco: {}", todosPatrimonios.size());
         
         List<MobilePatrimonioDTO> dtos = new ArrayList<>();
         
@@ -138,7 +133,7 @@ public class MobilePatrimonioService {
             dtos.add(converterParaDTO(todosPatrimonios.get(i)));
         }
         
-        logger.info("Retornando {} patrimônios (página {})", dtos.size(), page);
+        logger.info("Retornando {} patrimônios (página {}, total: {})", dtos.size(), page, todosPatrimonios.size());
         
         return dtos;
     }

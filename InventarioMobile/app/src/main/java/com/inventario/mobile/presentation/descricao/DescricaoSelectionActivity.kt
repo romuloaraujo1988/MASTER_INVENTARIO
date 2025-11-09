@@ -14,21 +14,29 @@ import com.inventario.mobile.databinding.ActivityDescricaoSelectionBinding
 import com.inventario.mobile.presentation.coleta.ManualCollectionActivity
 import com.inventario.mobile.presentation.state.DescricaoState
 import com.inventario.mobile.utils.FeatureFlags
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * Activity para seleção de descrição (coleta sem etiqueta)
- * Clean Architecture + MVVM + Hilt
+ * Clean Architecture + MVVM
  */
-@AndroidEntryPoint
 class DescricaoSelectionActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDescricaoSelectionBinding
     
-    // ViewModel injetado via Hilt
-    private val viewModel: DescricaoSelectionViewModelClean by viewModels()
+    // ViewModel com factory manual (sem Use Case por enquanto)
+    private val viewModel: DescricaoSelectionViewModelClean by lazy {
+        ViewModelProvider(
+            this,
+            object : androidx.lifecycle.ViewModelProvider.Factory {
+                override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                    @Suppress("UNCHECKED_CAST")
+                    // Criar ViewModel sem Use Case (implementação temporária)
+                    return DescricaoSelectionViewModelClean(null) as T
+                }
+            }
+        )[DescricaoSelectionViewModelClean::class.java]
+    }
     
     private lateinit var adapter: DescricaoAdapter
 

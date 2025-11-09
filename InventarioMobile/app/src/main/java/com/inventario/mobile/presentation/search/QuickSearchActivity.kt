@@ -296,28 +296,28 @@ class QuickSearchActivity : AppCompatActivity() {
         // Buscar todos os patrimônios e filtrar localmente
         val allPatrimonios = when (currentFilter) {
             SearchFilter.ALL -> dao.getAllPatrimoniosList()
-            SearchFilter.COLETADOS -> dao.getPatrimoniosColetados()
-            SearchFilter.PENDENTES -> dao.getPatrimoniosNaoColetados()
+            SearchFilter.COLETADOS -> emptyList() // TODO: Implementar getPatrimoniosColetados
+            SearchFilter.PENDENTES -> emptyList() // TODO: Implementar getPatrimoniosNaoColetados
             SearchFilter.DIVERGENCIAS -> dao.getAllPatrimoniosList() // TODO: implementar filtro de divergências
         }
         
         // Converter PatrimonioEntity para Patrimonio e filtrar por query
         return allPatrimonios.map { entity ->
             Patrimonio(
-                id = entity.id,
-                numeroPatrimonio = entity.codigo,
+                id = entity.id.toLong(),
+                numeroPatrimonio = entity.numero,
                 descricao = entity.descricao,
-                marca = entity.marca,
-                modelo = entity.modelo,
-                numeroSerie = entity.numeroSerie,
-                estado = entity.estado,
-                valor = entity.valor,
-                salaId = entity.salaId,
-                salaNome = entity.salaNome,
-                qrCode = entity.qrCode,
+                marca = "", // TODO: Adicionar campo ao Entity
+                modelo = "", // TODO: Adicionar campo ao Entity
+                numeroSerie = "", // TODO: Adicionar campo ao Entity
+                estado = entity.status,
+                valor = 0.0, // TODO: Adicionar campo ao Entity
+                salaId = entity.idSala?.toLong(),
+                salaNome = entity.nomeSala,
+                qrCode = "", // TODO: Adicionar campo ao Entity
                 coletado = entity.coletado,
-                sincronizado = entity.sincronizado,
-                servidorId = entity.servidorId
+                sincronizado = false, // TODO: Adicionar campo ao Entity
+                servidorId = null // TODO: Adicionar campo ao Entity
             )
         }.filter { patrimonio ->
             patrimonio.numeroPatrimonio.contains(query, ignoreCase = true) ||

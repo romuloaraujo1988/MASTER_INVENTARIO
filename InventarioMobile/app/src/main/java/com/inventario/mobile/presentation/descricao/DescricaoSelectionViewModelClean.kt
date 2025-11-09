@@ -4,12 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inventario.mobile.domain.usecase.BuscarDescricoesNaoColetadasUseCase
 import com.inventario.mobile.presentation.state.DescricaoState
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel refatorado para seleção de descrição
@@ -17,11 +15,9 @@ import javax.inject.Inject
  * 
  * - Usa Use Cases (não acessa Repository diretamente)
  * - Gerencia estado da UI com StateFlow
- * - Injeção de dependência com Hilt
  */
-@HiltViewModel
-class DescricaoSelectionViewModelClean @Inject constructor(
-    private val buscarDescricoesNaoColetadasUseCase: BuscarDescricoesNaoColetadasUseCase
+class DescricaoSelectionViewModelClean(
+    private val buscarDescricoesNaoColetadasUseCase: BuscarDescricoesNaoColetadasUseCase?
 ) : ViewModel() {
     
     private val _state = MutableStateFlow<DescricaoState>(DescricaoState.Idle)
@@ -35,16 +31,21 @@ class DescricaoSelectionViewModelClean @Inject constructor(
         viewModelScope.launch {
             _state.value = DescricaoState.Loading
             
-            buscarDescricoesNaoColetadasUseCase().fold(
-                onSuccess = { descricoes ->
-                    _state.value = DescricaoState.Success(descricoes)
-                },
-                onFailure = { error ->
-                    _state.value = DescricaoState.Error(
-                        error.message ?: "Erro ao carregar descrições"
-                    )
-                }
-            )
+            if (buscarDescricoesNaoColetadasUseCase != null) {
+                buscarDescricoesNaoColetadasUseCase.invoke().fold(
+                    onSuccess = { descricoes ->
+                        _state.value = DescricaoState.Success(descricoes)
+                    },
+                    onFailure = { error ->
+                        _state.value = DescricaoState.Error(
+                            error.message ?: "Erro ao carregar descrições"
+                        )
+                    }
+                )
+            } else {
+                // Implementação temporária sem Use Case
+                _state.value = DescricaoState.Error("Funcionalidade em desenvolvimento")
+            }
         }
     }
     

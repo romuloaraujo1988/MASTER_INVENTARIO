@@ -3,6 +3,7 @@ package com.inventario.dao;
 import com.inventario.model.Patrimonio;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -442,18 +443,26 @@ public class PatrimonioDAORefactored extends BaseDAO<Patrimonio, Integer> {
                   "WHERE i.STATUS = 'ATIVO'";
         }
         
-        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
-            if (idInventario != null) {
-                stmt.setInt(1, idInventario);
-            }
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    idsColetados.add(rs.getInt("ID_PATRIMONIO"));
+        Connection conn = null;
+        try {
+            conn = com.inventario.util.ConnectionManager.getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                if (idInventario != null) {
+                    stmt.setInt(1, idInventario);
+                }
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        idsColetados.add(rs.getInt("ID_PATRIMONIO"));
+                    }
                 }
             }
         } catch (SQLException e) {
             System.err.println("Erro ao buscar patrimônios coletados: " + e.getMessage());
+        } finally {
+            if (conn != null) {
+                com.inventario.util.ConnectionManager.closeConnection(conn);
+            }
         }
         
         return idsColetados;

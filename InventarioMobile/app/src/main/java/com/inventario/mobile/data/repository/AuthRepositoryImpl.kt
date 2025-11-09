@@ -45,14 +45,14 @@ class AuthRepositoryImpl(
                 if (response.isSuccessful) {
                     response.body()?.let { dtoResponse ->
                         android.util.Log.d("AuthRepositoryImpl", "Processando resposta:")
-                        android.util.Log.d("AuthRepositoryImpl", "  Access Token: ${dtoResponse.accessToken?.take(20)}...")
-                        android.util.Log.d("AuthRepositoryImpl", "  Refresh Token: ${dtoResponse.refreshToken?.take(20)}...")
+                        android.util.Log.d("AuthRepositoryImpl", "  Access Token: ${dtoResponse.accessToken.take(20)}...")
+                        android.util.Log.d("AuthRepositoryImpl", "  Refresh Token: ${dtoResponse.refreshToken.take(20)}...")
                         android.util.Log.d("AuthRepositoryImpl", "  Expires In: ${dtoResponse.expiresIn}")
                         android.util.Log.d("AuthRepositoryImpl", "  User: ${dtoResponse.user}")
                         android.util.Log.d("AuthRepositoryImpl", "  User ID: ${dtoResponse.user.id}")
                         android.util.Log.d("AuthRepositoryImpl", "  User Nome: ${dtoResponse.user.nome}")
                         android.util.Log.d("AuthRepositoryImpl", "  User Login: ${dtoResponse.user.username}")
-                        // Converter LoginResponse do DTO para o modelo
+                        // Converter MobileLoginResponseDto para o modelo interno
                         val usuarioModel = UsuarioDto(
                             id = dtoResponse.user.id,
                             login = dtoResponse.user.username,
@@ -73,6 +73,7 @@ class AuthRepositoryImpl(
                             message = "Login realizado com sucesso",
                             data = loginData
                         )
+                        android.util.Log.d("AuthRepositoryImpl", "✓ Conversão concluída com sucesso")
                         Result.success(loginResponse)
                     } ?: Result.failure(Exception("Resposta vazia do servidor"))
                 } else {

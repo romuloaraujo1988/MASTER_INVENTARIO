@@ -65,13 +65,27 @@ public class ResponsavelService {
     }
     
     public List<Responsavel> listarAtivos() {
+        System.out.println("[DEBUG ResponsavelService] ========================================");
+        System.out.println("[DEBUG ResponsavelService] Iniciando listarAtivos()");
+        System.out.println("[DEBUG ResponsavelService] ResponsavelDAO: " + (responsavelDAO != null ? "OK" : "NULL"));
+        
         try {
             // Buscar todos e filtrar ativos localmente
-            return responsavelDAO.findAll().stream()
+            List<Responsavel> todos = responsavelDAO.findAll();
+            System.out.println("[DEBUG ResponsavelService] Total retornado do DAO: " + todos.size());
+            
+            List<Responsavel> ativos = todos.stream()
                 .filter(Responsavel::isAtivo)
                 .collect(Collectors.toList());
+            
+            System.out.println("[DEBUG ResponsavelService] Total após filtro isAtivo(): " + ativos.size());
+            System.out.println("[DEBUG ResponsavelService] ========================================");
+            
+            return ativos;
         } catch (SQLException e) {
+            System.err.println("[ERRO ResponsavelService] Erro ao listar responsáveis ativos: " + e.getMessage());
             logger.error("Erro ao listar responsáveis ativos", e);
+            e.printStackTrace();
             return new ArrayList<>();
         }
     }

@@ -169,4 +169,13 @@ class PatrimonioRepositoryImpl @Inject constructor(
             emptyList()
         }
     }
+    
+    suspend fun getAllPatrimoniosList(): List<Patrimonio> {
+        return try {
+            val entities = patrimonioDao.getAllPatrimoniosList()
+            mapper.toDomainList(entities)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 }

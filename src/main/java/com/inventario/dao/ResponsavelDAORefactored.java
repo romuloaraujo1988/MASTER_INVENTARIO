@@ -99,11 +99,51 @@ public class ResponsavelDAORefactored extends BaseDAO<Responsavel, Integer> {
      */
     @Override
     public List<Responsavel> findAll() throws SQLException {
+        System.out.println("[DEBUG ResponsavelDAO] ========================================");
+        System.out.println("[DEBUG ResponsavelDAO] Iniciando findAll()");
+        
         String sql = "SELECT r.*, s.NOME as NOME_SETOR FROM TABELA_RESPONSAVEL r " +
                     "LEFT JOIN TABELA_SETOR s ON r.ID_SETOR = s.ID " +
                     "WHERE r.ATIVO = TRUE ORDER BY r.NOME";
         
-        return executeQuery(sql);
+        System.out.println("[DEBUG ResponsavelDAO] SQL: " + sql);
+        
+        try {
+            List<Responsavel> resultado = executeQuery(sql);
+            System.out.println("[DEBUG ResponsavelDAO] Quantidade de responsáveis encontrados: " + resultado.size());
+            
+            if (resultado.isEmpty()) {
+                System.out.println("[DEBUG ResponsavelDAO] NENHUM responsável encontrado!");
+                System.out.println("[DEBUG ResponsavelDAO] Verificando se existem responsáveis na tabela...");
+                
+                // Query sem filtro ATIVO para debug
+                String sqlDebug = "SELECT COUNT(*) as total FROM TABELA_RESPONSAVEL";
+                System.out.println("[DEBUG ResponsavelDAO] SQL Debug: " + sqlDebug);
+                
+                try (java.sql.Connection conn = com.inventario.util.ConnectionManager.getConnection();
+                     java.sql.PreparedStatement stmt = conn.prepareStatement(sqlDebug);
+                     java.sql.ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        int total = rs.getInt("total");
+                        System.out.println("[DEBUG ResponsavelDAO] Total de responsáveis na tabela (sem filtro): " + total);
+                    }
+                } catch (Exception e) {
+                    System.err.println("[DEBUG ResponsavelDAO] Erro ao contar responsáveis: " + e.getMessage());
+                }
+            } else {
+                for (Responsavel r : resultado) {
+                    System.out.println("[DEBUG ResponsavelDAO] - ID: " + r.getId() + ", Nome: " + r.getNome() + ", Ativo: " + r.isAtivo());
+                }
+            }
+            
+            System.out.println("[DEBUG ResponsavelDAO] ========================================");
+            return resultado;
+            
+        } catch (SQLException e) {
+            System.err.println("[ERRO ResponsavelDAO] Erro ao executar findAll(): " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
     
     /**

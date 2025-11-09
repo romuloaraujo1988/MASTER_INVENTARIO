@@ -20,11 +20,7 @@ public class ApiResponse<T> {
     private String message;
     private String errorCode;
     
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime timestamp;
-    
     public ApiResponse() {
-        this.timestamp = LocalDateTime.now();
     }
     
     /**
@@ -100,13 +96,5 @@ public class ApiResponse<T> {
     
     public void setErrorCode(String errorCode) {
         this.errorCode = errorCode;
-    }
-    
-    public LocalDateTime getTimestamp() {
-        return timestamp;
-    }
-    
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
     }
 }

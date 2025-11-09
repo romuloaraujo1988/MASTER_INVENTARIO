@@ -58,13 +58,13 @@ class CollectionViewActivity : AppCompatActivity() {
                     val totalItemCount = layoutManager.itemCount
                     val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
                     
-                    // TODO: Implementar paginação quando necessário
-                    // Carregar mais quando estiver a 5 itens do fim
-                    // if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5
-                    //     && firstVisibleItemPosition >= 0) {
-                    //     Log.d(TAG, "onScrolled: Próximo do fim, carregando mais...")
-                    //     viewModel.loadNextPage()
-                    // }
+                    // Carregar mais quando estiver a 10 itens do fim
+                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 10
+                        && firstVisibleItemPosition >= 0
+                        && totalItemCount > 0) {
+                        Log.d(TAG, "onScrolled: Próximo do fim, carregando mais...")
+                        viewModel.loadNextPage()
+                    }
                 }
             })
         }

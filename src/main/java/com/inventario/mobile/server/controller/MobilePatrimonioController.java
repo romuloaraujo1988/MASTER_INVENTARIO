@@ -161,16 +161,42 @@ public class MobilePatrimonioController {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
             
-            logger.info("Listando patrimônios (page: {}, size: {}) para usuário: {}", page, size, username);
+            logger.info("═══════════════════════════════════════════");
+            logger.info("LISTANDO PATRIMÔNIOS");
+            logger.info("Usuário: {}", username);
+            logger.info("Page: {}, Size: {}", page, size);
+            logger.info("═══════════════════════════════════════════");
             
             List<MobilePatrimonioDTO> patrimonios = patrimonioService.listarPatrimonios(page, size);
             
-            return ResponseEntity.ok(
-                    ApiResponse.success(patrimonios, 
-                            String.format("%d patrimônio(s) carregado(s)", patrimonios.size())));
+            logger.info("Service retornou {} patrimônios", patrimonios.size());
+            logger.info("Tipo da lista: {}", patrimonios.getClass().getName());
+            
+            ApiResponse<List<MobilePatrimonioDTO>> response = ApiResponse.success(
+                patrimonios, 
+                String.format("%d patrimônio(s) carregado(s)", patrimonios.size())
+            );
+            
+            logger.info("ApiResponse criado - success: {}, data type: {}", 
+                response.isSuccess(), 
+                response.getData() != null ? response.getData().getClass().getName() : "null");
+            
+            if (response.getData() != null) {
+                logger.info("Data size: {}", response.getData().size());
+                if (!response.getData().isEmpty()) {
+                    logger.info("Primeiro item: {}", response.getData().get(0).getCodigo());
+                }
+            }
+            
+            return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            logger.error("Erro ao listar patrimônios", e);
+            logger.error("═══════════════════════════════════════════");
+            logger.error("ERRO AO LISTAR PATRIMÔNIOS");
+            logger.error("Tipo: {}", e.getClass().getName());
+            logger.error("Mensagem: {}", e.getMessage());
+            logger.error("Stack trace:", e);
+            logger.error("═══════════════════════════════════════════");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro ao listar patrimônios", "FETCH_ERROR"));
         }
