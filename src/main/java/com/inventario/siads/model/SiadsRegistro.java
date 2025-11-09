@@ -265,4 +265,4 @@ public class SiadsRegistro {
     public void setFabricante(String fabricante) {
         this.fabricante = fabricante;
     }
-}
+}
