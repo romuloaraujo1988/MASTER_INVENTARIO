@@ -1,23 +1,28 @@
 package com.inventario.service;
 
-import com.inventario.dao.PatrimonioDAORefactored;
 import com.inventario.model.Patrimonio;
+import com.inventario.repository.PatrimonioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Serviço para operações com Patrimônio
+ * REFATORADO: Usa Repository Pattern
  * 
  * @author Sistema de Inventário
- * @version 1.0.0
+ * @version 2.0.0
  */
 @Service
 @Transactional
@@ -25,42 +30,118 @@ public class PatrimonioService {
     
     private static final Logger logger = LoggerFactory.getLogger(PatrimonioService.class);
     
+    private final PatrimonioRepository patrimonioRepository;
+    
     @Autowired
-    private PatrimonioDAORefactored patrimonioDAO;
+    public PatrimonioService(PatrimonioRepository patrimonioRepository) {
+        this.patrimonioRepository = patrimonioRepository;
+    }
     
     /**
      * Busca patrimônio por ID
+     * @param id ID do patrimônio
+     * @return Optional contendo o patrimônio se encontrado
      */
+    public Optional<Patrimonio> buscarPorId(Integer id) {
+        logger.debug("Buscando patrimônio por ID: {}", id);
+        return patrimonioRepository.findById(id);
+    }
+    
+    /**
+     * Busca patrimônio por ID (compatibilidade com código antigo)
+     * @deprecated Use buscarPorId(Integer) que retorna Optional
+     */
+    @Deprecated
     public Patrimonio buscarPorId(Long id) {
-        try {
-            return patrimonioDAO.findById(id.intValue());
-        } catch (SQLException e) {
-            logger.error("Erro ao buscar patrimônio por ID: {}", id, e);
-            return null;
-        }
+        return buscarPorId(id.intValue()).orElse(null);
+    }
+    
+    /**
+     * Busca patrimônio por número
+     * @param numero Número do patrimônio
+     * @return Optional contendo o patrimônio se encontrado
+     */
+    public Optional<Patrimonio> buscarPorNumero(String numero) {
+        logger.debug("Buscando patrimônio por número: {}", numero);
+        return patrimonioRepository.findByNumero(numero);
     }
     
     /**
      * Salva ou atualiza um patrimônio
+     * @param patrimonio Patrimônio a ser salvo
+     * @return Patrimônio salvo
      */
-    public void salvar(Patrimonio patrimonio) throws SQLException {
-        if (patrimonio.getId() > 0) {
-            patrimonioDAO.update(patrimonio);
-        } else {
-            patrimonioDAO.insert(patrimonio);
+    public Patrimonio salvar(Patrimonio patrimonio) {
+        logger.info("Salvando patrimônio: {}", patrimonio.getNumero());
+        
+        // Validações básicas
+        if (patrimonio.getNumero() == null || patrimonio.getNumero().isEmpty()) {
+            throw new IllegalArgumentException("Número do patrimônio é obrigatório");
         }
+        
+        return patrimonioRepository.save(patrimonio);
     }
     
     /**
      * Lista todos os patrimônios
+     * @return Lista de patrimônios (nunca null)
      */
     public List<Patrimonio> listarTodos() {
-        try {
-            return patrimonioDAO.findAll();
-        } catch (SQLException e) {
-            logger.error("Erro ao listar patrimônios", e);
-            return new ArrayList<>();
+        logger.debug("Listando todos os patrimônios");
+        return patrimonioRepository.findAll();
+    }
+    
+    /**
+     * Lista patrimônios por sala
+     * @param idSala ID da sala
+     * @return Lista de patrimônios (nunca null)
+     */
+    public List<Patrimonio> listarPorSala(Integer idSala) {
+        logger.debug("Listando patrimônios da sala: {}", idSala);
+        return patrimonioRepository.findBySala(idSala);
+    }
+    
+    /**
+     * Busca patrimônios por descrição
+     * @param descricao Descrição para buscar
+     * @return Lista de patrimônios (nunca null)
+     */
+    public List<Patrimonio> buscarPorDescricao(String descricao) {
+        logger.debug("Buscando patrimônios por descrição: {}", descricao);
+        return patrimonioRepository.findByDescricao(descricao);
+    }
+    
+    /**
+     * Exclui um patrimônio
+     * @param id ID do patrimônio
+     */
+    public void excluir(Integer id) {
+        logger.info("Excluindo patrimônio: {}", id);
+        
+        // Verificar se existe
+        Optional<Patrimonio> patrimonio = buscarPorId(id);
+        if (patrimonio.isEmpty()) {
+            throw new IllegalArgumentException("Patrimônio não encontrado: " + id);
         }
+        
+        patrimonioRepository.delete(id);
+    }
+    
+    /**
+     * Conta total de patrimônios
+     * @return Quantidade de patrimônios
+     */
+    public long contarTotal() {
+        return patrimonioRepository.count();
+    }
+    
+    /**
+     * Verifica se existe patrimônio com o número informado
+     * @param numero Número do patrimônio
+     * @return true se existe
+     */
+    public boolean existePorNumero(String numero) {
+        return patrimonioRepository.existsByNumero(numero);
     }
     
     /**
@@ -68,23 +149,18 @@ public class PatrimonioService {
      * Para implementação futura com controle de timestamps
      */
     public List<Patrimonio> buscarAtualizadosApos(LocalDateTime lastSync, Long setorId, Long salaId) {
-        try {
-            // Por enquanto, retorna todos os patrimônios
-            // TODO: Implementar filtro por data de atualização quando campo for adicionado
-            List<Patrimonio> todos = patrimonioDAO.findAll();
-            
-            // Filtrar por sala se especificado
-            if (salaId != null) {
-                return todos.stream()
-                    .filter(p -> p.getIdSala() == salaId.intValue())
-                    .collect(java.util.stream.Collectors.toList());
-            }
-            
-            return todos;
-        } catch (SQLException e) {
-            logger.error("Erro ao buscar patrimônios atualizados", e);
-            return new ArrayList<>();
+        // Por enquanto, retorna todos os patrimônios
+        // TODO: Implementar filtro por data de atualização quando campo for adicionado
+        List<Patrimonio> todos = listarTodos();
+        
+        // Filtrar por sala se especificado
+        if (salaId != null) {
+            return todos.stream()
+                .filter(p -> p.getIdSala() == salaId.intValue())
+                .collect(java.util.stream.Collectors.toList());
         }
+        
+        return todos;
     }
     
     /**
@@ -92,62 +168,9 @@ public class PatrimonioService {
      * Para implementação futura com controle de timestamps
      */
     public List<Patrimonio> buscarCriadosApos(LocalDateTime lastSync, Long setorId, Long salaId) {
-        try {
-            // Por enquanto, retorna lista vazia
-            // TODO: Implementar filtro por data de criação quando campo for adicionado
-            return new ArrayList<>();
-        } catch (Exception e) {
-            logger.error("Erro ao buscar patrimônios criados", e);
-            return new ArrayList<>();
-        }
-    }
-    
-    /**
-     * Busca patrimônio por número
-     */
-    public Patrimonio buscarPorNumero(String numero) {
-        try {
-            return patrimonioDAO.buscarPorNumero(numero);
-        } catch (SQLException e) {
-            logger.error("Erro ao buscar patrimônio por número: {}", numero, e);
-            return null;
-        }
-    }
-    
-    /**
-     * Busca patrimônios por sala
-     */
-    public List<Patrimonio> buscarPorSala(int idSala) {
-        try {
-            return patrimonioDAO.buscarPorSala(idSala);
-        } catch (SQLException e) {
-            logger.error("Erro ao buscar patrimônios por sala: {}", idSala, e);
-            return new ArrayList<>();
-        }
-    }
-    
-    /**
-     * Busca patrimônios por descrição abrangente
-     */
-    public List<Patrimonio> buscarPorDescricaoAbrangente(String descricao) {
-        try {
-            return patrimonioDAO.buscarPorDescricaoAbrangente(descricao);
-        } catch (SQLException e) {
-            logger.error("Erro ao buscar patrimônios por descrição: {}", descricao, e);
-            return new ArrayList<>();
-        }
-    }
-    
-    /**
-     * Exclui patrimônio
-     */
-    public void excluir(int id) {
-        try {
-            patrimonioDAO.delete(id);
-        } catch (SQLException e) {
-            logger.error("Erro ao excluir patrimônio: {}", id, e);
-            throw new RuntimeException("Erro ao excluir patrimônio", e);
-        }
+        // Por enquanto, retorna lista vazia
+        // TODO: Implementar filtro por data de criação quando campo for adicionado
+        return new ArrayList<>();
     }
     
     /**
@@ -161,7 +184,7 @@ public class PatrimonioService {
     public List<Patrimonio> filtrarPatrimoniosPendentes(
             List<Patrimonio> patrimonios, 
             Integer idInventario,
-            ColetaService coletaService) {
+            com.inventario.service.ColetaService coletaService) {
         
         if (patrimonios == null || patrimonios.isEmpty()) {
             return new ArrayList<>();
@@ -180,7 +203,7 @@ public class PatrimonioService {
                 coletaService.buscarPorInventario(idInventario);
             
             // Criar set com IDs dos patrimônios já coletados para busca O(1)
-            java.util.Set<Integer> idsColetados = new java.util.HashSet<>();
+            Set<Integer> idsColetados = new HashSet<>();
             for (com.inventario.model.Coleta coleta : coletasInventario) {
                 Integer idPatrimonio = coleta.getIdPatrimonio();
                 if (idPatrimonio != null && idPatrimonio != 0) {
@@ -219,20 +242,13 @@ public class PatrimonioService {
     public List<Patrimonio> buscarPendentesPorDescricao(
             String termoBusca,
             Integer idInventario,
-            ColetaService coletaService) {
+            com.inventario.service.ColetaService coletaService) {
         
-        try {
-            // Buscar todos os patrimônios pela descrição
-            List<Patrimonio> todosPatrimonios = buscarPorDescricaoAbrangente(termoBusca);
-            
-            // Filtrar apenas os pendentes
-            return filtrarPatrimoniosPendentes(todosPatrimonios, idInventario, coletaService);
-            
-        } catch (Exception e) {
-            logger.error("Erro ao buscar patrimônios pendentes por descrição '{}': {}", 
-                termoBusca, e.getMessage(), e);
-            return new ArrayList<>();
-        }
+        // Buscar todos os patrimônios pela descrição
+        List<Patrimonio> todosPatrimonios = buscarPorDescricao(termoBusca);
+        
+        // Filtrar apenas os pendentes
+        return filtrarPatrimoniosPendentes(todosPatrimonios, idInventario, coletaService);
     }
     
     /**
@@ -243,12 +259,12 @@ public class PatrimonioService {
      * @param coletaService Serviço de coleta
      * @return Map com estatísticas (total, pendentes, coletados, percentual)
      */
-    public java.util.Map<String, Object> obterEstatisticasColeta(
+    public Map<String, Object> obterEstatisticasColeta(
             List<Patrimonio> patrimonios,
             Integer idInventario,
-            ColetaService coletaService) {
+            com.inventario.service.ColetaService coletaService) {
         
-        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        Map<String, Object> stats = new HashMap<>();
         
         if (patrimonios == null || patrimonios.isEmpty()) {
             stats.put("total", 0);

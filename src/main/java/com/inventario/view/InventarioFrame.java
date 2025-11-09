@@ -5,7 +5,6 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
-import com.inventario.service.ServiceFactory;
 import com.inventario.service.InventarioService;
 import com.inventario.service.ColetaService;
 import com.inventario.model.Inventario;
@@ -43,9 +42,9 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
     private Timer statusUpdateTimer;
     
     public InventarioFrame() {
-        ServiceFactory factory = ServiceFactory.getInstance();
-        this.inventarioService = factory.getInventarioService();
-        this.coletaService = factory.getColetaService();
+        // Instantiate services directly (no Spring context in Swing app)
+        this.inventarioService = new InventarioService();
+        this.coletaService = new ColetaService();
         
         // Inicializar componentes offline
         inicializarComponentesOffline();

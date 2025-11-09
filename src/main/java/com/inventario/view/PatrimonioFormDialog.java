@@ -317,7 +317,7 @@ public class PatrimonioFormDialog extends JDialog {
             comboSala.removeAllItems();
             comboSala.addItem(new SalaItem(null)); // Item padrão
             
-            SalaService salaService = ServiceFactory.getInstance().getSalaService();
+            SalaService salaService = ServiceFactory.getSalaService();
             List<Sala> salas = salaService.listarAtivas();
             
             for (Sala sala : salas) {
@@ -337,7 +337,7 @@ public class PatrimonioFormDialog extends JDialog {
             comboResponsavel.removeAllItems();
             comboResponsavel.addItem(new ResponsavelItem(null)); // Item padrão
             
-            ResponsavelService responsavelService = ServiceFactory.getInstance().getResponsavelService();
+            ResponsavelService responsavelService = ServiceFactory.getResponsavelService();
             List<Responsavel> responsaveis = responsavelService.listarAtivos();
             
             for (Responsavel responsavel : responsaveis) {
@@ -468,7 +468,7 @@ public class PatrimonioFormDialog extends JDialog {
             patrimonio.setDataAquisicao((Date) spinnerDataAquisicao.getValue());
             
             // Salvar no banco de dados
-            PatrimonioService patrimonioService = ServiceFactory.getInstance().getPatrimonioService();
+            PatrimonioService patrimonioService = ServiceFactory.getPatrimonioService();
             patrimonioService.salvar(patrimonio);
             
             if (patrimonio.getId() == 0) {

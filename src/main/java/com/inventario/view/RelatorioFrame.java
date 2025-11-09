@@ -98,13 +98,12 @@ public class RelatorioFrame extends JFrame {
         super("Relatórios do Sistema");
         
         // Inicializar services via ServiceFactory
-        ServiceFactory factory = ServiceFactory.getInstance();
-        this.relatorioService = factory.getRelatorioService();
-        this.inventarioService = factory.getInventarioService();
-        this.responsavelService = factory.getResponsavelService();
-        this.setorService = factory.getSetorService();
-        this.patrimonioService = factory.getPatrimonioService();
-        this.salaService = factory.getSalaService();
+        this.relatorioService = ServiceFactory.getRelatorioService();
+        this.inventarioService = ServiceFactory.getInventarioService();
+        this.responsavelService = ServiceFactory.getResponsavelService();
+        this.setorService = ServiceFactory.getSetorService();
+        this.patrimonioService = ServiceFactory.getPatrimonioService();
+        this.salaService = ServiceFactory.getSalaService();
         this.excelGenerator = new RelatorioExcelGenerator();
         initComponents();
         aplicarEstiloModerno();

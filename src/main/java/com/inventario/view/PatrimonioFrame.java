@@ -4,10 +4,12 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import com.inventario.service.PatrimonioService;
-import com.inventario.service.ServiceFactory;
 import com.inventario.model.Patrimonio;
+import com.inventario.repository.impl.PatrimonioRepositoryImpl;
+import com.inventario.dao.PatrimonioDAORefactored;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.awt.Insets;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
@@ -35,7 +37,11 @@ public class PatrimonioFrame extends JFrame {
     private boolean ultimaBuscaFoiCarregarTodos = false;
     
     public PatrimonioFrame() {
-        this.patrimonioService = ServiceFactory.getInstance().getPatrimonioService();
+        // Instantiate service directly (no Spring context in Swing app)
+        // Create the full dependency chain: DAO -> Repository -> Service
+        PatrimonioDAORefactored patrimonioDAO = new PatrimonioDAORefactored();
+        PatrimonioRepositoryImpl patrimonioRepository = new PatrimonioRepositoryImpl(patrimonioDAO);
+        this.patrimonioService = new PatrimonioService(patrimonioRepository);
         initComponents();
     }
     
@@ -232,9 +238,9 @@ public class PatrimonioFrame extends JFrame {
         if (linhaSelecionada >= 0) {
             try {
                 Integer id = (Integer) modeloTabela.getValueAt(linhaSelecionada, 0);
-                Patrimonio patrimonio = patrimonioService.buscarPorId(Long.valueOf(id));
-                if (patrimonio != null) {
-                    abrirFormularioPatrimonio(patrimonio);
+                Optional<Patrimonio> patrimonioOpt = patrimonioService.buscarPorId(id);
+                if (patrimonioOpt.isPresent()) {
+                    abrirFormularioPatrimonio(patrimonioOpt.get());
                 } else {
                     JOptionPane.showMessageDialog(this, "Patrimônio não encontrado.");
                 }
@@ -296,10 +302,10 @@ public class PatrimonioFrame extends JFrame {
             
             switch (tipoBusca) {
                 case "Número":
-                    Patrimonio patrimonioEncontrado = patrimonioService.buscarPorNumero(termo);
+                    Optional<Patrimonio> patrimonioEncontrado = patrimonioService.buscarPorNumero(termo);
                     resultados = new ArrayList<>();
-                    if (patrimonioEncontrado != null) {
-                        resultados.add(patrimonioEncontrado);
+                    if (patrimonioEncontrado.isPresent()) {
+                        resultados.add(patrimonioEncontrado.get());
                     }
                     break;
                 case "Descrição":
@@ -313,7 +319,15 @@ public class PatrimonioFrame extends JFrame {
                     break;
                 case "Todos os campos":
                 default:
-                    resultados = patrimonioService.buscarPorSala(Integer.parseInt(termo));
+                    // For "all fields" search, search across all fields
+                    resultados = patrimonioService.listarTodos().stream()
+                        .filter(p -> 
+                            (p.getNumero() != null && p.getNumero().toLowerCase().contains(termo.toLowerCase())) ||
+                            (p.getDescricao() != null && p.getDescricao().toLowerCase().contains(termo.toLowerCase())) ||
+                            (p.getMarca() != null && p.getMarca().toLowerCase().contains(termo.toLowerCase())) ||
+                            (p.getModelo() != null && p.getModelo().toLowerCase().contains(termo.toLowerCase()))
+                        )
+                        .collect(java.util.stream.Collectors.toList());
                     break;
             }
             
@@ -433,10 +447,10 @@ public class PatrimonioFrame extends JFrame {
             
             switch (ultimoTipoBusca) {
                 case "Número":
-                    Patrimonio patrimonioEncontrado = patrimonioService.buscarPorNumero(ultimoTermoBusca);
+                    Optional<Patrimonio> patrimonioEncontrado = patrimonioService.buscarPorNumero(ultimoTermoBusca);
                     resultados = new ArrayList<>();
-                    if (patrimonioEncontrado != null) {
-                        resultados.add(patrimonioEncontrado);
+                    if (patrimonioEncontrado.isPresent()) {
+                        resultados.add(patrimonioEncontrado.get());
                     }
                     break;
                 case "Descrição":
@@ -450,7 +464,15 @@ public class PatrimonioFrame extends JFrame {
                     break;
                 case "Todos os campos":
                 default:
-                    resultados = patrimonioService.buscarPorSala(Integer.parseInt(ultimoTermoBusca));
+                    // For "all fields" search, search across all fields
+                    resultados = patrimonioService.listarTodos().stream()
+                        .filter(p -> 
+                            (p.getNumero() != null && p.getNumero().toLowerCase().contains(ultimoTermoBusca.toLowerCase())) ||
+                            (p.getDescricao() != null && p.getDescricao().toLowerCase().contains(ultimoTermoBusca.toLowerCase())) ||
+                            (p.getMarca() != null && p.getMarca().toLowerCase().contains(ultimoTermoBusca.toLowerCase())) ||
+                            (p.getModelo() != null && p.getModelo().toLowerCase().contains(ultimoTermoBusca.toLowerCase()))
+                        )
+                        .collect(java.util.stream.Collectors.toList());
                     break;
             }
             

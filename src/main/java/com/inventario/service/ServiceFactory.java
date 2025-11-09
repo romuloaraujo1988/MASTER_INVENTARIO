@@ -1,145 +1,113 @@
 package com.inventario.service;
 
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
+
 /**
- * Factory para criar e gerenciar instâncias de Services
- * Implementa Singleton para garantir instância única
+ * Factory para obter instâncias de Services gerenciados pelo Spring
+ * Implementa ApplicationContextAware para acessar beans do Spring
  * 
  * Uso:
  * <pre>
- * SetorService setorService = ServiceFactory.getInstance().getSetorService();
+ * PatrimonioService service = ServiceFactory.getPatrimonioService();
  * </pre>
  * 
  * @author Sistema de Inventário
- * @version 1.0.0
+ * @version 2.0.0
  */
-public class ServiceFactory {
+@Component
+public class ServiceFactory implements ApplicationContextAware {
     
-    private static ServiceFactory instance;
+    private static ApplicationContext applicationContext;
     
-    // Services
-    private final SetorService setorService;
-    private final SalaService salaService;
-    private final ResponsavelService responsavelService;
-    private final PatrimonioService patrimonioService;
-    private final UsuarioService usuarioService;
-    private final InventarioService inventarioService;
-    private final ColetaService coletaService;
-    private final RelatorioService relatorioService;
-    private final DashboardService dashboardService;
-    private final SalaInventarioService salaInventarioService;
-    private final ParticipanteInventarioService participanteInventarioService;
-    private final CampusService campusService;
-    
-    /**
-     * Construtor privado (Singleton)
-     */
-    private ServiceFactory() {
-        // Inicializar services
-        this.setorService = new SetorService();
-        this.salaService = new SalaService();
-        this.responsavelService = new ResponsavelService();
-        this.patrimonioService = new PatrimonioService();
-        this.usuarioService = new UsuarioService();
-        this.inventarioService = new InventarioService();
-        this.coletaService = new ColetaService();
-        this.relatorioService = new RelatorioService();
-        this.dashboardService = new DashboardService();
-        this.salaInventarioService = new SalaInventarioService();
-        this.participanteInventarioService = new ParticipanteInventarioService();
-        this.campusService = new CampusService();
+    @Override
+    public void setApplicationContext(ApplicationContext context) throws BeansException {
+        ServiceFactory.applicationContext = context;
     }
     
     /**
-     * Obtém instância única do ServiceFactory
+     * Obtém instância do PatrimonioService gerenciada pelo Spring
      */
-    public static synchronized ServiceFactory getInstance() {
-        if (instance == null) {
-            instance = new ServiceFactory();
-        }
-        return instance;
+    public static PatrimonioService getPatrimonioService() {
+        return applicationContext.getBean(PatrimonioService.class);
     }
     
     /**
-     * Obtém instância do SetorService
+     * Obtém instância do SetorService gerenciada pelo Spring
      */
-    public SetorService getSetorService() {
-        return setorService;
+    public static SetorService getSetorService() {
+        return applicationContext.getBean(SetorService.class);
     }
     
     /**
-     * Obtém instância do PatrimonioService
+     * Obtém instância do SalaService gerenciada pelo Spring
      */
-    public PatrimonioService getPatrimonioService() {
-        return patrimonioService;
+    public static SalaService getSalaService() {
+        return applicationContext.getBean(SalaService.class);
     }
     
     /**
-     * Obtém instância do UsuarioService
+     * Obtém instância do ResponsavelService gerenciada pelo Spring
      */
-    public UsuarioService getUsuarioService() {
-        return usuarioService;
+    public static ResponsavelService getResponsavelService() {
+        return applicationContext.getBean(ResponsavelService.class);
     }
     
     /**
-     * Obtém instância do SalaService
+     * Obtém instância do UsuarioService gerenciada pelo Spring
      */
-    public SalaService getSalaService() {
-        return salaService;
+    public static UsuarioService getUsuarioService() {
+        return applicationContext.getBean(UsuarioService.class);
     }
     
     /**
-     * Obtém instância do ResponsavelService
+     * Obtém instância do InventarioService gerenciada pelo Spring
      */
-    public ResponsavelService getResponsavelService() {
-        return responsavelService;
+    public static InventarioService getInventarioService() {
+        return applicationContext.getBean(InventarioService.class);
     }
     
     /**
-     * Obtém instância do InventarioService
+     * Obtém instância do ColetaService gerenciada pelo Spring
      */
-    public InventarioService getInventarioService() {
-        return inventarioService;
+    public static ColetaService getColetaService() {
+        return applicationContext.getBean(ColetaService.class);
     }
     
     /**
-     * Obtém instância do ColetaService
+     * Obtém instância do RelatorioService gerenciada pelo Spring
      */
-    public ColetaService getColetaService() {
-        return coletaService;
+    public static RelatorioService getRelatorioService() {
+        return applicationContext.getBean(RelatorioService.class);
     }
     
     /**
-     * Obtém instância do RelatorioService
+     * Obtém instância do DashboardService gerenciada pelo Spring
      */
-    public RelatorioService getRelatorioService() {
-        return relatorioService;
+    public static DashboardService getDashboardService() {
+        return applicationContext.getBean(DashboardService.class);
     }
     
     /**
-     * Obtém instância do DashboardService
+     * Obtém instância do SalaInventarioService gerenciada pelo Spring
      */
-    public DashboardService getDashboardService() {
-        return dashboardService;
+    public static SalaInventarioService getSalaInventarioService() {
+        return applicationContext.getBean(SalaInventarioService.class);
     }
     
     /**
-     * Obtém instância do SalaInventarioService
+     * Obtém instância do ParticipanteInventarioService gerenciada pelo Spring
      */
-    public SalaInventarioService getSalaInventarioService() {
-        return salaInventarioService;
+    public static ParticipanteInventarioService getParticipanteInventarioService() {
+        return applicationContext.getBean(ParticipanteInventarioService.class);
     }
     
     /**
-     * Obtém instância do ParticipanteInventarioService
+     * Obtém instância do CampusService gerenciada pelo Spring
      */
-    public ParticipanteInventarioService getParticipanteInventarioService() {
-        return participanteInventarioService;
-    }
-    
-    /**
-     * Obtém instância do CampusService
-     */
-    public CampusService getCampusService() {
-        return campusService;
+    public static CampusService getCampusService() {
+        return applicationContext.getBean(CampusService.class);
     }
 }

@@ -16,6 +16,7 @@ import com.inventario.util.SoundNotification;
 import com.inventario.view.ui.ModernButtons;
 import com.inventario.view.ui.ModernComboBox;
 import java.util.List;
+import java.util.Optional;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
@@ -193,13 +194,12 @@ public class ColetaFrame_v2 extends JFrame {
     }
 
     private void initializeServices() {
-        ServiceFactory factory = ServiceFactory.getInstance();
-        this.salaService = factory.getSalaService();
-        this.patrimonioService = factory.getPatrimonioService();
-        this.coletaService = factory.getColetaService();
-        this.inventarioService = factory.getInventarioService();
-        this.salaInventarioService = factory.getSalaInventarioService();
-        this.participanteInventarioService = factory.getParticipanteInventarioService();
+        this.salaService = ServiceFactory.getSalaService();
+        this.patrimonioService = ServiceFactory.getPatrimonioService();
+        this.coletaService = ServiceFactory.getColetaService();
+        this.inventarioService = ServiceFactory.getInventarioService();
+        this.salaInventarioService = ServiceFactory.getSalaInventarioService();
+        this.participanteInventarioService = ServiceFactory.getParticipanteInventarioService();
     }
 
     private void initializeComponents() {
@@ -2068,10 +2068,10 @@ public class ColetaFrame_v2 extends JFrame {
         }
 
         try {
-            Patrimonio patrimonioEncontrado = patrimonioService.buscarPorNumero(termoBusca);
+            Optional<Patrimonio> patrimonioOpt = patrimonioService.buscarPorNumero(termoBusca);
             List<Patrimonio> patrimonios = new ArrayList<>();
-            if (patrimonioEncontrado != null) {
-                patrimonios.add(patrimonioEncontrado);
+            if (patrimonioOpt.isPresent()) {
+                patrimonios.add(patrimonioOpt.get());
             }
 
             if (!patrimonios.isEmpty()) {
@@ -2152,7 +2152,7 @@ public class ColetaFrame_v2 extends JFrame {
             modeloTabelaResultados.setRowCount(0);
 
             // Buscar patrimônios por descrição
-            List<Patrimonio> patrimonios = patrimonioService.buscarPorDescricaoAbrangente(termoBusca);
+            List<Patrimonio> patrimonios = patrimonioService.buscarPorDescricao(termoBusca);
 
             if (patrimonios == null || patrimonios.isEmpty()) {
                 JOptionPane.showMessageDialog(this,

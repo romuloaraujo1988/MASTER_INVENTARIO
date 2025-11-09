@@ -32,12 +32,11 @@ public class MobileSyncService {
     public MobileSyncService() {
         this.patrimonioDAO = new PatrimonioDAORefactored();
         
-        // Usar services ao invés de DAOs diretos
-        ServiceFactory factory = ServiceFactory.getInstance();
-        this.inventarioService = factory.getInventarioService();
-        this.salaService = factory.getSalaService();
-        this.responsavelService = factory.getResponsavelService();
-        this.setorService = factory.getSetorService();
+        // Obter services do ServiceFactory (agora com métodos estáticos)
+        this.inventarioService = ServiceFactory.getInventarioService();
+        this.salaService = ServiceFactory.getSalaService();
+        this.responsavelService = ServiceFactory.getResponsavelService();
+        this.setorService = ServiceFactory.getSetorService();
     }
     
     /**

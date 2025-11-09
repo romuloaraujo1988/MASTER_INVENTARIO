@@ -9,7 +9,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import com.inventario.service.ResponsavelService;
-import com.inventario.service.ServiceFactory;
 import com.inventario.service.BusinessException;
 import com.inventario.model.Responsavel;
 import com.inventario.view.ui.ButtonStyleFactory;
@@ -26,7 +25,8 @@ public class ResponsavelFrame extends JFrame {
     private JButton btnNovo, btnEditar, btnExcluir, btnBuscar;
 
     public ResponsavelFrame() {
-        this.responsavelService = ServiceFactory.getInstance().getResponsavelService();
+        // Instantiate service directly (no Spring context in Swing app)
+        this.responsavelService = new ResponsavelService();
         initComponents();
         aplicarEstiloModerno();
         carregarResponsaveis();

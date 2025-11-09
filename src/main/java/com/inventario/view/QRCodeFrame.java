@@ -1,7 +1,8 @@
 package com.inventario.view;
 
 import com.inventario.service.PatrimonioService;
-import com.inventario.service.ServiceFactory;
+import com.inventario.repository.impl.PatrimonioRepositoryImpl;
+import com.inventario.dao.PatrimonioDAORefactored;
 import com.inventario.model.Patrimonio;
 import com.inventario.model.QRCode;
 import com.inventario.service.QRCodeService;
@@ -14,6 +15,7 @@ import java.io.FileOutputStream;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Frame para gerenciamento de QR Codes
@@ -42,7 +44,10 @@ public class QRCodeFrame extends JFrame {
     
     public QRCodeFrame() {
         this.qrCodeService = new QRCodeService();
-        this.patrimonioService = ServiceFactory.getInstance().getPatrimonioService();
+        // Instantiate the full dependency chain: DAO -> Repository -> Service
+        PatrimonioDAORefactored patrimonioDAO = new PatrimonioDAORefactored();
+        PatrimonioRepositoryImpl patrimonioRepository = new PatrimonioRepositoryImpl(patrimonioDAO);
+        this.patrimonioService = new PatrimonioService(patrimonioRepository);
         initComponents();
         setupLayout();
         setupEventListeners();
@@ -186,11 +191,12 @@ public class QRCodeFrame extends JFrame {
         
         try {
             // Busca o patrimônio
-            Patrimonio patrimonio = patrimonioService.buscarPorNumero(numeroPatrimonio);
-            if (patrimonio == null) {
+            Optional<Patrimonio> patrimonioOpt = patrimonioService.buscarPorNumero(numeroPatrimonio);
+            if (patrimonioOpt.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Patrimônio não encontrado.", "Erro", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+            Patrimonio patrimonio = patrimonioOpt.get();
             
             // Verifica se já tem QR Code ativo
             if (qrCodeService.patrimonioTemQRCodeAtivo(patrimonio.getId())) {
@@ -230,11 +236,12 @@ public class QRCodeFrame extends JFrame {
         
         try {
             // Busca o patrimônio
-            Patrimonio patrimonio = patrimonioService.buscarPorId(Long.valueOf(qrCodeSelecionado.getIdPatrimonio()));
-            if (patrimonio == null) {
+            Optional<Patrimonio> patrimonioOpt = patrimonioService.buscarPorId(qrCodeSelecionado.getIdPatrimonio());
+            if (patrimonioOpt.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Patrimônio não encontrado.", "Erro", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+            Patrimonio patrimonio = patrimonioOpt.get();
             
             regenerarQRCodePatrimonio(patrimonio);
             

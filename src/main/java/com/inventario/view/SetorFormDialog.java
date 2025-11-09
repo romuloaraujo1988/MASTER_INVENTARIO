@@ -6,7 +6,6 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import com.inventario.model.Setor;
-import com.inventario.service.ServiceFactory;
 import com.inventario.service.SetorService;
 import com.inventario.service.BusinessException;
 import com.inventario.view.ui.ModernButtons;
@@ -209,7 +208,7 @@ public class SetorFormDialog extends JDialog {
             setor.setResponsavelSetor(campoResponsavel.getText().trim());
             
             // Salvar no banco de dados
-            SetorService setorService = ServiceFactory.getInstance().getSetorService();
+            SetorService setorService = new SetorService();
             
             try {
                 setorService.salvar(setor);

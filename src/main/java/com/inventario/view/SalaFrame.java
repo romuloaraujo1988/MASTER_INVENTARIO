@@ -1,7 +1,6 @@
 package com.inventario.view;
 
 import com.inventario.service.SalaService;
-import com.inventario.service.ServiceFactory;
 import com.inventario.service.BusinessException;
 import com.inventario.model.Sala;
 import com.inventario.view.ui.ButtonStyleFactory;
@@ -25,7 +24,8 @@ public class SalaFrame extends JFrame {
     private JButton btnNovo, btnEditar, btnExcluir, btnAtualizar;
     
     public SalaFrame() {
-        this.salaService = ServiceFactory.getInstance().getSalaService();
+        // Instantiate service directly (no Spring context in Swing app)
+        this.salaService = new SalaService();
         initializeComponents();
     }
     

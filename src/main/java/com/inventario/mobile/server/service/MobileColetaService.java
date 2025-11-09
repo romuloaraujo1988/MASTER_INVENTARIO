@@ -54,11 +54,10 @@ public class MobileColetaService {
         this.usuarioDAO = new UsuarioDAORefactored();
         this.participanteInventarioDAO = new ParticipanteInventarioDAO();
         
-        // Inicializar serviços
-        com.inventario.service.ServiceFactory factory = com.inventario.service.ServiceFactory.getInstance();
-        this.patrimonioService = factory.getPatrimonioService();
-        this.coletaService = factory.getColetaService();
-        this.inventarioService = factory.getInventarioService();
+        // Obter serviços do ServiceFactory (agora com métodos estáticos)
+        this.patrimonioService = com.inventario.service.ServiceFactory.getPatrimonioService();
+        this.coletaService = com.inventario.service.ServiceFactory.getColetaService();
+        this.inventarioService = com.inventario.service.ServiceFactory.getInventarioService();
     }
 
     /**
@@ -187,7 +186,7 @@ public class MobileColetaService {
     public List<MobileColetaResponse> buscarTodasColetas(String username) throws SQLException {
         logger.info("Buscando todas as coletas para usuário: {}", username);
 
-        Usuario usuario = usuarioDAO.buscarUsuarioPorLogin(username);
+        Usuario usuario = usuarioDAO.buscarPorLogin(username);
         if (usuario == null) {
             throw new IllegalArgumentException("Usuário não encontrado");
         }
@@ -210,7 +209,7 @@ public class MobileColetaService {
     public List<MobileColetaResponse> buscarColetasPendentes(String username) throws SQLException {
         logger.info("Buscando coletas pendentes para usuário: {}", username);
 
-        Usuario usuario = usuarioDAO.buscarUsuarioPorLogin(username);
+        Usuario usuario = usuarioDAO.buscarPorLogin(username);
         if (usuario == null) {
             throw new IllegalArgumentException("Usuário não encontrado");
         }
@@ -234,7 +233,7 @@ public class MobileColetaService {
     public List<MobileColetaResponse> buscarHistoricoColetas(String username, int limit) throws SQLException {
         logger.info("Buscando histórico de coletas para usuário: {} (limit: {})", username, limit);
 
-        Usuario usuario = usuarioDAO.buscarUsuarioPorLogin(username);
+        Usuario usuario = usuarioDAO.buscarPorLogin(username);
         if (usuario == null) {
             throw new IllegalArgumentException("Usuário não encontrado");
         }
@@ -261,7 +260,7 @@ public class MobileColetaService {
     public MobileColetaResponse buscarColetaPorId(Long id, String username) throws SQLException {
         logger.info("Buscando coleta {} para usuário: {}", id, username);
 
-        Usuario usuario = usuarioDAO.buscarUsuarioPorLogin(username);
+        Usuario usuario = usuarioDAO.buscarPorLogin(username);
         if (usuario == null) {
             throw new IllegalArgumentException("Usuário não encontrado");
         }
@@ -288,7 +287,7 @@ public class MobileColetaService {
             throws SQLException {
         logger.info("Atualizando coleta {} por usuário: {}", id, username);
 
-        Usuario usuario = usuarioDAO.buscarUsuarioPorLogin(username);
+        Usuario usuario = usuarioDAO.buscarPorLogin(username);
         if (usuario == null) {
             throw new IllegalArgumentException("Usuário não encontrado");
         }
@@ -326,7 +325,7 @@ public class MobileColetaService {
     public boolean excluirColeta(Long id, String username) throws SQLException {
         logger.info("Excluindo coleta {} por usuário: {}", id, username);
 
-        Usuario usuario = usuarioDAO.buscarUsuarioPorLogin(username);
+        Usuario usuario = usuarioDAO.buscarPorLogin(username);
         if (usuario == null) {
             throw new IllegalArgumentException("Usuário não encontrado");
         }
@@ -470,7 +469,7 @@ public class MobileColetaService {
             
             // Obter estatísticas gerais
             Map<String, Object> stats = patrimonioService.obterEstatisticasColeta(
-                patrimonioService.buscarPorDescricaoAbrangente(termoBusca),
+                patrimonioService.buscarPorDescricao(termoBusca),
                 idInventario,
                 coletaService
             );

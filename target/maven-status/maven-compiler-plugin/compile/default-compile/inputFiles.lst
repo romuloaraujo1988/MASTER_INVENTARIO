@@ -22,6 +22,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\PerfilUsuario.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\SalaFormDialogRefactored.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\SalaInventarioDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\DatabaseConnection.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileDispositivoController.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileSyncResponse.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\print\EtiquetaGenerator.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\QRCode.java
@@ -46,12 +47,14 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\print\EtiquetaData.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\InventarioDAORefactored.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\DatabaseConfiguration.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\ModernConfirmDialog.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\DispositivoMobileDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\SalaService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\ApiResponse.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\components\PaginationPanel.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\SingleInstanceLock.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\offline\ConnectivityListener.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\DAOConfiguration.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\DispositivoMobileService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileHealthController.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\service\MobilePatrimonioService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\InventarioSetor.java
@@ -114,6 +117,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\Sala.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\QRCodeFrame.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileSalaController.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\SalaInventario.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\DispositivoMobile.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\DataSyncScheduler.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\IconManager.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileSyncRequest.java
@@ -149,6 +153,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\DatabaseConfigManager.j
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\ServiceFactory.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\InventarioDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\MainFrame.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\DispositivoRegistroDTO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\IconPreview.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\DataSyncService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileTestController.java
@@ -162,6 +167,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\service\SiadsConverterSe
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\Coletor.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\MobileDataSourceConfig.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\ResponsavelDTO.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\StatusDispositivo.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\DatabaseConfig.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\ImpressaoEtiquetasDialog.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\config\WebMvcConfig.java

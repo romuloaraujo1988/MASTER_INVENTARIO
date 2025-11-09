@@ -362,7 +362,7 @@ public class InventarioFormDialog extends JDialog {
             System.out.println("[DEBUG] Iniciando carregamento de responsáveis...");
             comboResponsavel.addItem("Selecione um responsável...");
             
-            ResponsavelService responsavelService = ServiceFactory.getInstance().getResponsavelService();
+            ResponsavelService responsavelService = ServiceFactory.getResponsavelService();
             System.out.println("[DEBUG] ResponsavelService obtido com sucesso");
             
             List<Responsavel> responsaveis = responsavelService.listarAtivos();
@@ -428,7 +428,7 @@ public class InventarioFormDialog extends JDialog {
     
     private void carregarSetores() {
         try {
-            SetorService setorService = ServiceFactory.getInstance().getSetorService();
+            SetorService setorService = ServiceFactory.getSetorService();
             todosSetores = setorService.listarTodos();
             
             modeloListaSetores.clear();
@@ -466,7 +466,7 @@ public class InventarioFormDialog extends JDialog {
         try {
             System.out.println("[DEBUG] Iniciando carregamento de usuários...");
             
-            UsuarioService usuarioService = ServiceFactory.getInstance().getUsuarioService();
+            UsuarioService usuarioService = ServiceFactory.getUsuarioService();
             todosUsuarios = usuarioService.listarTodos();
             
             System.out.println("[DEBUG] Quantidade de usuários encontrados: " + todosUsuarios.size());
@@ -709,7 +709,7 @@ public class InventarioFormDialog extends JDialog {
             }
             
             // Salvar no banco de dados
-            InventarioService inventarioService = ServiceFactory.getInstance().getInventarioService();
+            InventarioService inventarioService = ServiceFactory.getInventarioService();
             boolean sucesso;
             String mensagemSucesso;
             
@@ -787,7 +787,7 @@ public class InventarioFormDialog extends JDialog {
             }
             
             // Salvar configuração
-            InventarioService inventarioService = ServiceFactory.getInstance().getInventarioService();
+            InventarioService inventarioService = ServiceFactory.getInventarioService();
             boolean sucesso = inventarioService.salvarConfiguracaoSetores(
                 inventario.getId(), incluirTodos, idsSetoresSelecionados);
             
@@ -815,7 +815,7 @@ public class InventarioFormDialog extends JDialog {
         }
         
         try {
-            InventarioService inventarioService = ServiceFactory.getInstance().getInventarioService();
+            InventarioService inventarioService = ServiceFactory.getInventarioService();
             
             // Buscar participantes do inventário
             List<ParticipanteInventario> participantes = inventarioService.buscarParticipantes(inventario.getId());
@@ -886,7 +886,7 @@ public class InventarioFormDialog extends JDialog {
             }
             
             // Salvar configuração usando o serviço
-            InventarioService inventarioService = ServiceFactory.getInstance().getInventarioService();
+            InventarioService inventarioService = ServiceFactory.getInventarioService();
             boolean sucesso = inventarioService.salvarConfiguracaoParticipantes(
                 inventario.getId(), incluirTodos, idsUsuariosSelecionados);
             

@@ -9,7 +9,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import com.inventario.service.SetorService;
-import com.inventario.service.ServiceFactory;
 import com.inventario.service.BusinessException;
 import com.inventario.model.Setor;
 import com.inventario.view.ui.ButtonStyleFactory;
@@ -28,7 +27,8 @@ public class SetorFrame extends JFrame {
     private JButton btnNovo, btnEditar, btnExcluir, btnBuscar;
     
     public SetorFrame() {
-        this.setorService = ServiceFactory.getInstance().getSetorService();
+        // Instantiate service directly (no Spring context in Swing app)
+        this.setorService = new SetorService();
         initComponents();
         aplicarEstiloModerno();
     }

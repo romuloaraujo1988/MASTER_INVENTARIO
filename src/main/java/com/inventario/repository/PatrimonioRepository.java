@@ -1,140 +1,76 @@
 package com.inventario.repository;
 
 import com.inventario.model.Patrimonio;
-import com.inventario.dao.PatrimonioDAORefactored;
-import org.springframework.stereotype.Repository;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Repository para Patrimonio
- * Implementa o padrão Repository sobre o DAO existente
+ * Interface Repository para Patrimônio
+ * Abstrai a camada de persistência
  * 
  * @author Sistema de Inventário
  * @version 1.0.0
  */
-@Repository
-public class PatrimonioRepository implements com.inventario.repository.Repository<Patrimonio, Integer> {
+public interface PatrimonioRepository {
     
-    private final PatrimonioDAORefactored dao;
+    /**
+     * Busca patrimônio por ID
+     * @param id ID do patrimônio
+     * @return Optional contendo o patrimônio se encontrado
+     */
+    Optional<Patrimonio> findById(Integer id);
     
-    public PatrimonioRepository() {
-        this.dao = new PatrimonioDAORefactored();
-    }
+    /**
+     * Busca patrimônio por número
+     * @param numero Número do patrimônio
+     * @return Optional contendo o patrimônio se encontrado
+     */
+    Optional<Patrimonio> findByNumero(String numero);
     
-    public PatrimonioRepository(PatrimonioDAORefactored dao) {
-        this.dao = dao;
-    }
+    /**
+     * Lista todos os patrimônios
+     * @return Lista de patrimônios (nunca null)
+     */
+    List<Patrimonio> findAll();
     
-    @Override
-    public Patrimonio save(Patrimonio entity) {
-        try {
-            if (entity.getId() > 0) {
-                dao.update(entity);
-            } else {
-                dao.insert(entity);
-            }
-            return entity;
-        } catch (SQLException e) {
-            throw new RepositoryException("Erro ao salvar patrimônio", e);
-        }
-    }
+    /**
+     * Lista patrimônios por sala
+     * @param idSala ID da sala
+     * @return Lista de patrimônios (nunca null)
+     */
+    List<Patrimonio> findBySala(Integer idSala);
     
-    @Override
-    public Optional<Patrimonio> findById(Integer id) {
-        try {
-            Patrimonio patrimonio = dao.findById(id);
-            return Optional.ofNullable(patrimonio);
-        } catch (SQLException e) {
-            throw new RepositoryException("Erro ao buscar patrimônio por ID", e);
-        }
-    }
+    /**
+     * Lista patrimônios por descrição (busca parcial)
+     * @param descricao Descrição para buscar
+     * @return Lista de patrimônios (nunca null)
+     */
+    List<Patrimonio> findByDescricao(String descricao);
     
-    @Override
-    public List<Patrimonio> findAll() {
-        try {
-            return dao.findAll();
-        } catch (SQLException e) {
-            throw new RepositoryException("Erro ao listar patrimônios", e);
-        }
-    }
+    /**
+     * Salva um patrimônio (insert ou update)
+     * @param patrimonio Patrimônio a ser salvo
+     * @return Patrimônio salvo com ID atualizado
+     */
+    Patrimonio save(Patrimonio patrimonio);
     
-    @Override
-    public boolean existsById(Integer id) {
-        return findById(id).isPresent();
-    }
+    /**
+     * Exclui um patrimônio
+     * @param id ID do patrimônio a ser excluído
+     */
+    void delete(Integer id);
     
-    @Override
-    public long count() {
-        try {
-            return dao.count();
-        } catch (SQLException e) {
-            throw new RepositoryException("Erro ao contar patrimônios", e);
-        }
-    }
+    /**
+     * Conta total de patrimônios
+     * @return Quantidade de patrimônios
+     */
+    long count();
     
-    @Override
-    public void deleteById(Integer id) {
-        try {
-            dao.delete(id);
-        } catch (SQLException e) {
-            throw new RepositoryException("Erro ao deletar patrimônio", e);
-        }
-    }
-    
-    @Override
-    public void delete(Patrimonio entity) {
-        deleteById(entity.getId());
-    }
-    
-    @Override
-    public void deleteAll() {
-        throw new UnsupportedOperationException("Operação não suportada");
-    }
-    
-    // Métodos específicos de Patrimonio
-    
-    public Optional<Patrimonio> findByNumero(String numero) {
-        try {
-            Patrimonio patrimonio = dao.buscarPorNumero(numero);
-            return Optional.ofNullable(patrimonio);
-        } catch (SQLException e) {
-            throw new RepositoryException("Erro ao buscar patrimônio por número", e);
-        }
-    }
-    
-    public List<Patrimonio> findByDescricaoContaining(String descricao) {
-        try {
-            return dao.buscarPorDescricao(descricao);
-        } catch (SQLException e) {
-            throw new RepositoryException("Erro ao buscar patrimônios por descrição", e);
-        }
-    }
-    
-    public List<Patrimonio> findBySalaId(Integer idSala) {
-        try {
-            return dao.buscarPorSala(idSala);
-        } catch (SQLException e) {
-            throw new RepositoryException("Erro ao buscar patrimônios por sala", e);
-        }
-    }
-    
-    public List<Patrimonio> findByResponsavelId(Integer idResponsavel) {
-        try {
-            // Busca por ID usando paginação com valores grandes para pegar todos
-            return dao.buscarPorResponsavelComPaginacao(idResponsavel, 0, Integer.MAX_VALUE);
-        } catch (SQLException e) {
-            throw new RepositoryException("Erro ao buscar patrimônios por responsável", e);
-        }
-    }
-    
-    public List<Patrimonio> findByResponsavelNome(String nomeResponsavel) {
-        try {
-            return dao.buscarPorResponsavel(nomeResponsavel);
-        } catch (SQLException e) {
-            throw new RepositoryException("Erro ao buscar patrimônios por nome do responsável", e);
-        }
-    }
+    /**
+     * Verifica se existe patrimônio com o número informado
+     * @param numero Número do patrimônio
+     * @return true se existe
+     */
+    boolean existsByNumero(String numero);
 }
