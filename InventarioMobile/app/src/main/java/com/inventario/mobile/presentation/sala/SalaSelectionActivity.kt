@@ -102,6 +102,12 @@ class SalaSelectionActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
+        // Configurar SwipeRefreshLayout
+        binding.swipeRefreshLayout.setOnRefreshListener {
+            Log.d(TAG, "SwipeRefresh: Recarregando salas")
+            viewModel.refreshSalas()
+        }
+        
         val layoutManager = LinearLayoutManager(this)
         
         salaAdapter = SalaAdapter { sala ->
@@ -150,15 +156,19 @@ class SalaSelectionActivity : AppCompatActivity() {
                 override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(recyclerView, dx, dy)
                     
+                    // Só carregar mais se estiver rolando para baixo
+                    if (dy <= 0) return
+                    
                     val visibleItemCount = layoutManager.childCount
                     val totalItemCount = layoutManager.itemCount
                     val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
                     
-                    // Carregar mais quando estiver a 5 itens do fim
-                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5
+                    // Carregar mais quando estiver a 3 itens do fim
+                    val threshold = 3
+                    if ((visibleItemCount + firstVisibleItemPosition + threshold) >= totalItemCount
                         && firstVisibleItemPosition >= 0
                         && totalItemCount > 0) {
-                        Log.d(TAG, "onScrolled: Próximo do fim, carregando mais salas...")
+                        Log.d(TAG, "onScrolled: Próximo do fim (${totalItemCount - (visibleItemCount + firstVisibleItemPosition)} itens restantes), carregando mais...")
                         viewModel.loadNextPage()
                     }
                 }
@@ -184,10 +194,10 @@ class SalaSelectionActivity : AppCompatActivity() {
 
     private fun updateUI(state: SalaSelectionUiState) {
         // Atualizar lista de salas
-        salaAdapter.submitList(state.salas)
+        salaAdapter.submitList(state.salas.toList()) // Criar nova lista para forçar atualização
         
-        // Atualizar estado de loading
-        binding.swipeRefreshLayout.isRefreshing = state.isLoading
+        // Atualizar estado de loading (apenas para pull-to-refresh)
+        binding.swipeRefreshLayout.isRefreshing = state.isLoading && state.salas.isEmpty()
         
         // Mostrar/ocultar mensagem de lista vazia
         if (state.salas.isEmpty() && !state.isLoading) {
@@ -197,6 +207,9 @@ class SalaSelectionActivity : AppCompatActivity() {
             binding.textViewEmpty.visibility = android.view.View.GONE
             binding.recyclerViewSalas.visibility = android.view.View.VISIBLE
         }
+        
+        // Log para debug
+        Log.d(TAG, "updateUI: ${state.salas.size} salas, loading=${state.isLoading}, loadingMore=${state.isLoadingMore}")
         
         // Mostrar mensagem de erro
         state.errorMessage?.let { message ->

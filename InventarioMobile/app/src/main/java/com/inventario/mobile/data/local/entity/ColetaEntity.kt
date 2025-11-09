@@ -34,5 +34,6 @@ data class ColetaEntity(
     val nomeUsuario: String,
     val sincronizado: Boolean = false,
     val tentativasSincronizacao: Int = 0,
-    val erroSincronizacao: String? = null
+    val erroSincronizacao: String? = null,
+    val servidorId: Long? = null  // ID da coleta no servidor após sincronização
 )

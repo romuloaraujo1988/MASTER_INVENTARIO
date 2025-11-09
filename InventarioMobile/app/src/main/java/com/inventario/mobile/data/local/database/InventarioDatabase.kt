@@ -17,7 +17,7 @@ import com.inventario.mobile.data.local.converters.Converters
         SalaEntity::class,
         SetorEntity::class
     ],
-    version = 2, // Incrementado para adicionar índices otimizados
+    version = 3, // Incrementado para adicionar servidorId em ColetaEntity
     exportSchema = false
 )
 @TypeConverters(Converters::class)

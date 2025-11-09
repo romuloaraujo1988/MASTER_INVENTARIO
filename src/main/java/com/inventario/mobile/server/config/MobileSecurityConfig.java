@@ -87,6 +87,7 @@ public class MobileSecurityConfig {
                         .requestMatchers("/api/mobile/salas/**").permitAll()
                         .requestMatchers("/api/mobile/setores/**").permitAll()
                         .requestMatchers("/api/mobile/descricoes/**").permitAll()
+                        .requestMatchers("/api/mobile/v1/connection/**").permitAll() // Monitor de conexões
 
                         // Endpoints protegidos
                         .requestMatchers("/api/mobile/sync/**").authenticated()

@@ -225,6 +225,15 @@ class MockApiService : ApiService {
         )
         return Response.success(apiResponse)
     }
+    
+    override suspend fun getDescricoesNaoColetadas(idInventario: Int?): Response<ApiResponse<List<String>>> {
+        val apiResponse = ApiResponse(
+            success = true,
+            message = "Mock data",
+            data = emptyList<String>()
+        )
+        return Response.success(apiResponse)
+    }
 
     override suspend fun obterInventarioAtivo(): Response<ApiResponse<Map<String, Any>>> {
         val mockData: Map<String, Any> = mapOf(

@@ -24,15 +24,17 @@ class DescricaoSelectionActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDescricaoSelectionBinding
     
-    // ViewModel com factory manual (sem Use Case por enquanto)
+    // ViewModel com repository
     private val viewModel: DescricaoSelectionViewModelClean by lazy {
+        val apiService = com.inventario.mobile.di.NetworkModule.getApiService(this)
+        val repository = com.inventario.mobile.data.repository.InventarioRepository.getInstance(this, apiService)
+        
         ViewModelProvider(
             this,
             object : androidx.lifecycle.ViewModelProvider.Factory {
                 override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
                     @Suppress("UNCHECKED_CAST")
-                    // Criar ViewModel sem Use Case (implementação temporária)
-                    return DescricaoSelectionViewModelClean(null) as T
+                    return DescricaoSelectionViewModelClean(repository) as T
                 }
             }
         )[DescricaoSelectionViewModelClean::class.java]

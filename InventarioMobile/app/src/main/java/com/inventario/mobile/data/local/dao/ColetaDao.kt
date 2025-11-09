@@ -45,4 +45,17 @@ interface ColetaDao {
     
     @Query("DELETE FROM coleta WHERE sincronizado = 1 AND dataColeta < :timestamp")
     suspend fun deleteOldSyncedColetas(timestamp: Long): Int
+    
+    // Métodos para sincronização
+    @Query("SELECT * FROM coleta WHERE sincronizado = 0 ORDER BY dataColeta ASC")
+    suspend fun getPendentes(): List<ColetaEntity>
+    
+    @Query("SELECT COUNT(*) FROM coleta WHERE sincronizado = 0")
+    suspend fun countPendentes(): Int
+    
+    @Query("UPDATE coleta SET sincronizado = 1, servidorId = :servidorId WHERE id = :id")
+    suspend fun marcarSincronizada(id: Long, servidorId: Long?)
+    
+    @Query("UPDATE coleta SET tentativasSincronizacao = tentativasSincronizacao + 1, erroSincronizacao = :erro WHERE id = :id")
+    suspend fun incrementarTentativas(id: Long, erro: String?)
 }

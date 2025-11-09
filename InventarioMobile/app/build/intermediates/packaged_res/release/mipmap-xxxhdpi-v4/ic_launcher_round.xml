@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="192dp"
+    android:height="192dp"
+    android:viewportWidth="192"
+    android:viewportHeight="192">
+    
+    <!-- Background Circle -->
+    <path
+        android:fillColor="#1976D2"
+        android:pathData="M96,96m-88,0a88,88 0,1 1,176 0a88,88 0,1 1,-176 0"/>
+    
+    <!-- Main Clipboard/Inventory Icon -->
+    <group android:translateX="96" android:translateY="96">
+        <!-- Clipboard Background -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M-28,-40 L28,-40 C30.9,-40 33,-37.9 33,-35 L33,35 C33,37.9 30.9,40 28,40 L-28,40 C-30.9,40 -33,37.9 -33,35 L-33,-35 C-33,-37.9 -30.9,-40 -28,-40 Z"/>
+        
+        <!-- Clipboard Clip -->
+        <path
+            android:fillColor="#FFC107"
+            android:pathData="M-14,-46 L14,-46 C17.3,-46 20,-43.3 20,-40 L20,-30 C20,-26.7 17.3,-24 14,-24 L-14,-24 C-17.3,-24 -20,-26.7 -20,-30 L-20,-40 C-20,-43.3 -17.3,-46 -14,-46 Z"/>
+        
+        <!-- Inventory Lines -->
+        <path
+            android:fillColor="#1976D2"
+            android:pathData="M-24,-20 L24,-20 L24,-14 L-24,-14 Z"/>
+        <path
+            android:fillColor="#1976D2"
+            android:pathData="M-24,-4 L24,-4 L24,2 L-24,2 Z"/>
+        <path
+            android:fillColor="#1976D2"
+            android:pathData="M-24,12 L24,12 L24,18 L-24,18 Z"/>
+        <path
+            android:fillColor="#1976D2"
+            android:pathData="M-24,28 L8,28 L8,34 L-24,34 Z"/>
+        
+        <!-- Checkmarks -->
+        <path
+            android:fillColor="#4CAF50"
+            android:pathData="M-30,-17 L-27,-14 L-22,-19 L-19,-16 L-27,-8 L-33,-14 Z"/>
+        <path
+            android:fillColor="#4CAF50"
+            android:pathData="M-30,-1 L-27,2 L-22,-3 L-19,0 L-27,8 L-33,2 Z"/>
+        <path
+            android:fillColor="#4CAF50"
+            android:pathData="M-30,15 L-27,18 L-22,13 L-19,16 L-27,24 L-33,18 Z"/>
+    </group>
+    
+</vector>

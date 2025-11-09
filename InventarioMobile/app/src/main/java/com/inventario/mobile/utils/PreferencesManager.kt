@@ -94,6 +94,12 @@ class PreferencesManager(context: Context) {
     fun isTokenValid(): Boolean = getBoolean("token_valid", false)
     fun getDeviceId(): String? = getString("device_id", "").takeIf { it.isNotEmpty() }
     fun saveDeviceId(deviceId: String) = putString("device_id", deviceId)
+    
+    // Métodos de dispositivo
+    fun getDispositivoId(): Int = getInt("dispositivo_id", 0)
+    fun saveDispositivoId(dispositivoId: Int) = putInt("dispositivo_id", dispositivoId)
+    fun getDispositivoStatus(): String = getString("dispositivo_status", "PENDENTE")
+    fun saveDispositivoStatus(status: String) = putString("dispositivo_status", status)
     fun saveTokens(accessToken: String, refreshToken: String, expiresIn: Long) {
         putString("access_token", accessToken)
         putString("refresh_token", refreshToken)

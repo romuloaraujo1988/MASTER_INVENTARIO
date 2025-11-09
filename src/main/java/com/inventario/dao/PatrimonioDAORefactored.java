@@ -467,6 +467,4 @@ public class PatrimonioDAORefactored extends BaseDAO<Patrimonio, Integer> {
         
         return idsColetados;
     }
-        return idsColetados;
-    }
 }

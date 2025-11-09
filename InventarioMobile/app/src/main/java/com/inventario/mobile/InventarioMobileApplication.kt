@@ -40,6 +40,16 @@ class InventarioMobileApplication : Application() {
         android.util.Log.d("InventarioApp", "Application inicializada com sucesso")
     }
     
+    /**
+     * Limpa todos os caches da aplicação
+     * Deve ser chamado ao fazer logout
+     */
+    fun clearAllCaches() {
+        android.util.Log.d(TAG, "clearAllCaches: Limpando todos os caches")
+        com.inventario.mobile.data.cache.SalaCache.clear()
+        // Adicionar outros caches aqui conforme necessário
+    }
+    
     companion object {
         const val TAG = "InventarioMobileApp"
         const val DATABASE_NAME = "inventario_mobile_db"
