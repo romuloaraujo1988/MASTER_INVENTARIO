@@ -9,9 +9,13 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PiePlot;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.renderer.category.BarRenderer;
-import org.jfree.chart.renderer.category.StandardBarPainter;
+import org.jfree.chart.renderer.category.GradientBarPainter;
+import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
+import org.jfree.chart.labels.StandardCategoryItemLabelGenerator;
+import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
+import java.text.DecimalFormat;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -43,13 +47,19 @@ public class DashboardColetaFrame extends JFrame {
     private JLabel labelPercentualConcluido;
     private JProgressBar barraProgresso;
     
+    // Aba Gráficos - Novos gráficos de pizza
+    private ChartPanel painelGraficoProgressoResponsaveis;
+    private ChartPanel painelGraficoProgressoSetores;
+    
     // Aba Análise por Responsável
     private ChartPanel painelGraficoResponsaveis;
     private ChartPanel painelGraficoResponsaveisDetalhado;
+    private JComboBox<String> comboResponsaveis;
     
     // Aba Análise por Setor
     private ChartPanel painelGraficoSetores;
     private ChartPanel painelGraficoSetoresDetalhado;
+    private JComboBox<String> comboSetores;
     
     // Aba Análise de Usuários
     private ChartPanel painelGraficoUsuarios;
@@ -122,8 +132,8 @@ public class DashboardColetaFrame extends JFrame {
         titulo.setBorder(new EmptyBorder(0, 0, 15, 0));
         aba.add(titulo, BorderLayout.NORTH);
         
-        // Painel central com gráficos principais
-        JPanel painelGraficos = new JPanel(new GridLayout(1, 2, 15, 15));
+        // Painel central com gráficos principais em grid 2x2
+        JPanel painelGraficos = new JPanel(new GridLayout(2, 2, 15, 15));
         painelGraficos.setBackground(new Color(248, 249, 250));
         
         // Gráfico de status da coleta
@@ -136,8 +146,20 @@ public class DashboardColetaFrame extends JFrame {
         painelGraficoEtiquetas.setBorder(criarBordaModerna("🏷️ Situação das Etiquetas"));
         painelGraficoEtiquetas.setPreferredSize(new Dimension(500, 400));
         
+        // Gráfico de progresso por responsável
+        painelGraficoProgressoResponsaveis = new ChartPanel(criarGraficoPizzaProgressoResponsaveis());
+        painelGraficoProgressoResponsaveis.setBorder(criarBordaModerna("👥 Progresso por Responsável"));
+        painelGraficoProgressoResponsaveis.setPreferredSize(new Dimension(500, 400));
+        
+        // Gráfico de progresso por setor
+        painelGraficoProgressoSetores = new ChartPanel(criarGraficoPizzaProgressoSetores());
+        painelGraficoProgressoSetores.setBorder(criarBordaModerna("🏢 Progresso por Setor"));
+        painelGraficoProgressoSetores.setPreferredSize(new Dimension(500, 400));
+        
         painelGraficos.add(painelGraficoStatus);
         painelGraficos.add(painelGraficoEtiquetas);
+        painelGraficos.add(painelGraficoProgressoResponsaveis);
+        painelGraficos.add(painelGraficoProgressoSetores);
         
         aba.add(painelGraficos, BorderLayout.CENTER);
         
@@ -149,12 +171,44 @@ public class DashboardColetaFrame extends JFrame {
         aba.setBorder(new EmptyBorder(15, 15, 15, 15));
         aba.setBackground(new Color(248, 249, 250));
         
-        // Título da aba
+        // Painel superior com título e controles
+        JPanel painelSuperior = new JPanel(new BorderLayout());
+        painelSuperior.setBackground(new Color(248, 249, 250));
+        
         JLabel titulo = new JLabel("👥 Análise Detalhada por Responsável");
         titulo.setFont(new Font("Segoe UI", Font.BOLD, 18));
         titulo.setForeground(new Color(52, 73, 94));
         titulo.setBorder(new EmptyBorder(0, 0, 15, 0));
-        aba.add(titulo, BorderLayout.NORTH);
+        
+        // Painel de controles
+        JPanel painelControles = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        painelControles.setBackground(new Color(248, 249, 250));
+        
+        JLabel labelResponsavel = new JLabel("Selecionar Responsável:");
+        labelResponsavel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        labelResponsavel.setForeground(new Color(52, 73, 94));
+        
+        comboResponsaveis = new JComboBox<>();
+        comboResponsaveis.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        comboResponsaveis.setPreferredSize(new Dimension(250, 25));
+        comboResponsaveis.addActionListener(e -> atualizarGraficosResponsaveisFiltrado());
+        
+        JButton btnTodosResponsaveis = ButtonStyleFactory.createPrimaryButton("Todos");
+        btnTodosResponsaveis.addActionListener(e -> {
+            comboResponsaveis.setSelectedIndex(0);
+            atualizarGraficosResponsaveisFiltrado();
+        });
+        
+        painelControles.add(labelResponsavel);
+        painelControles.add(Box.createHorizontalStrut(10));
+        painelControles.add(comboResponsaveis);
+        painelControles.add(Box.createHorizontalStrut(15));
+        painelControles.add(btnTodosResponsaveis);
+        
+        painelSuperior.add(titulo, BorderLayout.NORTH);
+        painelSuperior.add(painelControles, BorderLayout.SOUTH);
+        
+        aba.add(painelSuperior, BorderLayout.NORTH);
         
         // Painel com gráficos de responsáveis
         JPanel painelGraficos = new JPanel(new GridLayout(2, 1, 10, 10));
@@ -183,12 +237,44 @@ public class DashboardColetaFrame extends JFrame {
         aba.setBorder(new EmptyBorder(15, 15, 15, 15));
         aba.setBackground(new Color(248, 249, 250));
         
-        // Título da aba
+        // Painel superior com título e controles
+        JPanel painelSuperior = new JPanel(new BorderLayout());
+        painelSuperior.setBackground(new Color(248, 249, 250));
+        
         JLabel titulo = new JLabel("🏢 Análise Detalhada por Setor");
         titulo.setFont(new Font("Segoe UI", Font.BOLD, 18));
         titulo.setForeground(new Color(52, 73, 94));
         titulo.setBorder(new EmptyBorder(0, 0, 15, 0));
-        aba.add(titulo, BorderLayout.NORTH);
+        
+        // Painel de controles
+        JPanel painelControles = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        painelControles.setBackground(new Color(248, 249, 250));
+        
+        JLabel labelSetor = new JLabel("Selecionar Setor:");
+        labelSetor.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        labelSetor.setForeground(new Color(52, 73, 94));
+        
+        comboSetores = new JComboBox<>();
+        comboSetores.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        comboSetores.setPreferredSize(new Dimension(250, 25));
+        comboSetores.addActionListener(e -> atualizarGraficosSetoresFiltrado());
+        
+        JButton btnTodosSetores = ButtonStyleFactory.createPrimaryButton("Todos");
+        btnTodosSetores.addActionListener(e -> {
+            comboSetores.setSelectedIndex(0);
+            atualizarGraficosSetoresFiltrado();
+        });
+        
+        painelControles.add(labelSetor);
+        painelControles.add(Box.createHorizontalStrut(10));
+        painelControles.add(comboSetores);
+        painelControles.add(Box.createHorizontalStrut(15));
+        painelControles.add(btnTodosSetores);
+        
+        painelSuperior.add(titulo, BorderLayout.NORTH);
+        painelSuperior.add(painelControles, BorderLayout.SOUTH);
+        
+        aba.add(painelSuperior, BorderLayout.NORTH);
         
         // Painel com gráficos de setores
         JPanel painelGraficos = new JPanel(new GridLayout(2, 1, 10, 10));
@@ -239,7 +325,7 @@ public class DashboardColetaFrame extends JFrame {
         comboUsuarios.setPreferredSize(new Dimension(200, 25));
         comboUsuarios.addActionListener(e -> atualizarGraficosUsuarios());
         
-        JButton btnTodosUsuarios = ButtonStyleFactory.createPrimaryButton("📊 Todos os Usuários");
+        JButton btnTodosUsuarios = ButtonStyleFactory.createPrimaryButton("Todos");
         btnTodosUsuarios.addActionListener(e -> {
             comboUsuarios.setSelectedIndex(0);
             atualizarGraficosUsuarios();
@@ -384,16 +470,16 @@ public class DashboardColetaFrame extends JFrame {
         painel.setBorder(new EmptyBorder(10, 10, 10, 10));
         
         // Botões modernos
-        JButton btnAtualizar = ButtonStyleFactory.createPrimaryButton("🔄 Atualizar Agora");
+        JButton btnAtualizar = ButtonStyleFactory.createPrimaryButton("Atualizar");
         btnAtualizar.addActionListener(e -> atualizarDados());
         
-        JButton btnFechar = ButtonStyleFactory.createDangerButton("❌ Fechar Dashboard");
+        JButton btnFechar = ButtonStyleFactory.createDangerButton("Fechar");
         btnFechar.addActionListener(e -> {
             pararAtualizacaoAutomatica();
             dispose();
         });
         
-        JLabel labelAtualizacao = new JLabel("⏱️ Atualização automática a cada 30 segundos");
+        JLabel labelAtualizacao = new JLabel("Atualização automática a cada 30 segundos");
         labelAtualizacao.setForeground(Color.WHITE);
         labelAtualizacao.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         
@@ -425,16 +511,48 @@ public class DashboardColetaFrame extends JFrame {
         // Estilização moderna
         chart.setBackgroundPaint(Color.WHITE);
         chart.setBorderVisible(false);
+        chart.setPadding(new RectangleInsets(10, 10, 10, 10));
+        chart.setAntiAlias(true);
         
         PiePlot<String> plot = (PiePlot<String>) chart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
         plot.setOutlineVisible(false);
-        plot.setSectionPaint("Coletados", new Color(46, 204, 113));
-        plot.setSectionPaint("Não Inventariados", new Color(231, 76, 60));
-        plot.setSectionPaint("Não Encontrados", new Color(149, 165, 166));
-        plot.setLabelFont(new Font("Segoe UI", Font.PLAIN, 11));
         plot.setCircular(true);
+        plot.setStartAngle(290);
+        
+        // Gradientes de cores modernos
+        plot.setSectionPaint("Coletados", criarGradiente(new Color(46, 204, 113), new Color(39, 174, 96)));
+        plot.setSectionPaint("Não Inventariados", criarGradiente(new Color(231, 76, 60), new Color(192, 57, 43)));
+        plot.setSectionPaint("Não Encontrados", criarGradiente(new Color(149, 165, 166), new Color(127, 140, 141)));
+        
+        // Labels personalizados com percentual e valores
+        plot.setLabelFont(new Font("Segoe UI", Font.BOLD, 12));
+        plot.setLabelGenerator(new StandardPieSectionLabelGenerator(
+            "{0}\n{1} ({2})", 
+            new DecimalFormat("#,##0"), 
+            new DecimalFormat("0.0%")
+        ));
+        plot.setLabelBackgroundPaint(new Color(255, 255, 255, 220));
+        plot.setLabelOutlinePaint(new Color(200, 200, 200));
+        plot.setLabelShadowPaint(new Color(0, 0, 0, 80));
+        plot.setLabelPaint(new Color(52, 73, 94));
         plot.setLabelGap(0.02);
+        
+        // Sombra suave nas fatias
+        plot.setShadowPaint(new Color(0, 0, 0, 60));
+        plot.setShadowXOffset(5);
+        plot.setShadowYOffset(5);
+        
+        // Bordas arredondadas nas seções
+        plot.setSimpleLabels(false);
+        plot.setInteriorGap(0.02);
+        
+        // Legenda elegante
+        if (chart.getLegend() != null) {
+            chart.getLegend().setBackgroundPaint(new Color(248, 249, 250));
+            chart.getLegend().setFrame(new org.jfree.chart.block.BlockBorder(new Color(220, 221, 225)));
+            chart.getLegend().setPadding(new RectangleInsets(10, 10, 10, 10));
+        }
         
         return chart;
     }
@@ -454,15 +572,249 @@ public class DashboardColetaFrame extends JFrame {
         
         chart.setBackgroundPaint(Color.WHITE);
         chart.setBorderVisible(false);
+        chart.setPadding(new RectangleInsets(10, 10, 10, 10));
+        chart.setAntiAlias(true);
         
         PiePlot<String> plot = (PiePlot<String>) chart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
         plot.setOutlineVisible(false);
-        plot.setSectionPaint("Com Etiqueta", new Color(46, 204, 113));
-        plot.setSectionPaint("Sem Etiqueta", new Color(241, 196, 15));
-        plot.setLabelFont(new Font("Segoe UI", Font.PLAIN, 11));
         plot.setCircular(true);
+        plot.setStartAngle(290);
+        
+        // Gradientes vibrantes
+        plot.setSectionPaint("Com Etiqueta", criarGradiente(new Color(46, 204, 113), new Color(39, 174, 96)));
+        plot.setSectionPaint("Sem Etiqueta", criarGradiente(new Color(241, 196, 15), new Color(243, 156, 18)));
+        
+        // Labels personalizados
+        plot.setLabelFont(new Font("Segoe UI", Font.BOLD, 12));
+        plot.setLabelGenerator(new StandardPieSectionLabelGenerator(
+            "{0}\n{1} ({2})", 
+            new DecimalFormat("#,##0"), 
+            new DecimalFormat("0.0%")
+        ));
+        plot.setLabelBackgroundPaint(new Color(255, 255, 255, 220));
+        plot.setLabelOutlinePaint(new Color(200, 200, 200));
+        plot.setLabelShadowPaint(new Color(0, 0, 0, 80));
+        plot.setLabelPaint(new Color(52, 73, 94));
         plot.setLabelGap(0.02);
+        
+        // Sombra suave
+        plot.setShadowPaint(new Color(0, 0, 0, 60));
+        plot.setShadowXOffset(5);
+        plot.setShadowYOffset(5);
+        
+        // Bordas arredondadas
+        plot.setSimpleLabels(false);
+        plot.setInteriorGap(0.02);
+        
+        // Legenda elegante
+        if (chart.getLegend() != null) {
+            chart.getLegend().setBackgroundPaint(new Color(248, 249, 250));
+            chart.getLegend().setFrame(new org.jfree.chart.block.BlockBorder(new Color(220, 221, 225)));
+            chart.getLegend().setPadding(new RectangleInsets(10, 10, 10, 10));
+        }
+        
+        return chart;
+    }
+    
+    private JFreeChart criarGraficoPizzaProgressoResponsaveis() {
+        DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
+        
+        try {
+            if (idInventarioAtivo != -1) {
+                java.util.List<Map<String, Object>> listaResponsaveis = dashboardService.obterEstatisticasPorResponsavel(idInventarioAtivo);
+                
+                if (listaResponsaveis != null && !listaResponsaveis.isEmpty()) {
+                    for (Map<String, Object> item : listaResponsaveis) {
+                        String responsavel = (String) item.get("responsavel");
+                        if (responsavel == null || responsavel.isEmpty()) {
+                            responsavel = "Sem Responsável";
+                        }
+                        
+                        int coletados = ((Number) item.getOrDefault("itens_coletados", 0)).intValue();
+                        if (coletados > 0) {
+                            dataset.setValue(responsavel, coletados);
+                        }
+                    }
+                } else {
+                    dataset.setValue("Nenhum dado disponível", 1);
+                }
+            } else {
+                dataset.setValue("Nenhum inventário ativo", 1);
+            }
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar dados dos responsáveis: " + e.getMessage());
+            e.printStackTrace();
+            dataset.setValue("Erro ao carregar dados", 1);
+        }
+        
+        JFreeChart chart = ChartFactory.createPieChart(
+            null,
+            dataset,
+            true,
+            true,
+            false
+        );
+        
+        chart.setBackgroundPaint(Color.WHITE);
+        chart.setBorderVisible(false);
+        chart.setPadding(new RectangleInsets(10, 10, 10, 10));
+        chart.setAntiAlias(true);
+        
+        PiePlot<String> plot = (PiePlot<String>) chart.getPlot();
+        plot.setBackgroundPaint(Color.WHITE);
+        plot.setOutlineVisible(false);
+        plot.setCircular(true);
+        plot.setStartAngle(290);
+        
+        // Labels personalizados com percentual
+        plot.setLabelFont(new Font("Segoe UI", Font.BOLD, 11));
+        plot.setLabelGenerator(new StandardPieSectionLabelGenerator(
+            "{0}\n{1} ({2})", 
+            new DecimalFormat("#,##0"), 
+            new DecimalFormat("0.0%")
+        ));
+        plot.setLabelBackgroundPaint(new Color(255, 255, 255, 220));
+        plot.setLabelOutlinePaint(new Color(200, 200, 200));
+        plot.setLabelShadowPaint(new Color(0, 0, 0, 80));
+        plot.setLabelPaint(new Color(52, 73, 94));
+        plot.setLabelGap(0.02);
+        
+        // Sombra suave
+        plot.setShadowPaint(new Color(0, 0, 0, 60));
+        plot.setShadowXOffset(5);
+        plot.setShadowYOffset(5);
+        
+        // Bordas arredondadas
+        plot.setSimpleLabels(false);
+        plot.setInteriorGap(0.02);
+        
+        // Cores com gradientes variados
+        Color[][] coresGradiente = {
+            {new Color(52, 152, 219), new Color(41, 128, 185)},   // Azul
+            {new Color(46, 204, 113), new Color(39, 174, 96)},    // Verde
+            {new Color(155, 89, 182), new Color(142, 68, 173)},   // Roxo
+            {new Color(241, 196, 15), new Color(243, 156, 18)},   // Amarelo
+            {new Color(231, 76, 60), new Color(192, 57, 43)},     // Vermelho
+            {new Color(26, 188, 156), new Color(22, 160, 133)},   // Turquesa
+            {new Color(230, 126, 34), new Color(211, 84, 0)},     // Laranja
+            {new Color(149, 165, 166), new Color(127, 140, 141)}  // Cinza
+        };
+        
+        int i = 0;
+        for (Object key : dataset.getKeys()) {
+            Color[] gradiente = coresGradiente[i % coresGradiente.length];
+            plot.setSectionPaint((String) key, criarGradiente(gradiente[0], gradiente[1]));
+            i++;
+        }
+        
+        // Legenda elegante
+        if (chart.getLegend() != null) {
+            chart.getLegend().setBackgroundPaint(new Color(248, 249, 250));
+            chart.getLegend().setFrame(new org.jfree.chart.block.BlockBorder(new Color(220, 221, 225)));
+            chart.getLegend().setPadding(new RectangleInsets(10, 10, 10, 10));
+        }
+        
+        return chart;
+    }
+    
+    private JFreeChart criarGraficoPizzaProgressoSetores() {
+        DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
+        
+        try {
+            if (idInventarioAtivo != -1) {
+                java.util.List<Map<String, Object>> listaSetores = dashboardService.obterProgressoPorSetor(idInventarioAtivo);
+                
+                if (listaSetores != null && !listaSetores.isEmpty()) {
+                    for (Map<String, Object> item : listaSetores) {
+                        String setor = (String) item.get("setor");
+                        if (setor == null || setor.isEmpty()) {
+                            setor = "Sem Setor";
+                        }
+                        
+                        int coletados = ((Number) item.getOrDefault("itens_coletados", 0)).intValue();
+                        if (coletados > 0) {
+                            dataset.setValue(setor, coletados);
+                        }
+                    }
+                } else {
+                    dataset.setValue("Nenhum dado disponível", 1);
+                }
+            } else {
+                dataset.setValue("Nenhum inventário ativo", 1);
+            }
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar dados dos setores: " + e.getMessage());
+            e.printStackTrace();
+            dataset.setValue("Erro ao carregar dados", 1);
+        }
+        
+        JFreeChart chart = ChartFactory.createPieChart(
+            null,
+            dataset,
+            true,
+            true,
+            false
+        );
+        
+        chart.setBackgroundPaint(Color.WHITE);
+        chart.setBorderVisible(false);
+        chart.setPadding(new RectangleInsets(10, 10, 10, 10));
+        chart.setAntiAlias(true);
+        
+        PiePlot<String> plot = (PiePlot<String>) chart.getPlot();
+        plot.setBackgroundPaint(Color.WHITE);
+        plot.setOutlineVisible(false);
+        plot.setCircular(true);
+        plot.setStartAngle(290);
+        
+        // Labels personalizados com percentual
+        plot.setLabelFont(new Font("Segoe UI", Font.BOLD, 11));
+        plot.setLabelGenerator(new StandardPieSectionLabelGenerator(
+            "{0}\n{1} ({2})", 
+            new DecimalFormat("#,##0"), 
+            new DecimalFormat("0.0%")
+        ));
+        plot.setLabelBackgroundPaint(new Color(255, 255, 255, 220));
+        plot.setLabelOutlinePaint(new Color(200, 200, 200));
+        plot.setLabelShadowPaint(new Color(0, 0, 0, 80));
+        plot.setLabelPaint(new Color(52, 73, 94));
+        plot.setLabelGap(0.02);
+        
+        // Sombra suave
+        plot.setShadowPaint(new Color(0, 0, 0, 60));
+        plot.setShadowXOffset(5);
+        plot.setShadowYOffset(5);
+        
+        // Bordas arredondadas
+        plot.setSimpleLabels(false);
+        plot.setInteriorGap(0.02);
+        
+        // Cores com gradientes variados
+        Color[][] coresGradiente = {
+            {new Color(231, 76, 60), new Color(192, 57, 43)},     // Vermelho
+            {new Color(52, 152, 219), new Color(41, 128, 185)},   // Azul
+            {new Color(46, 204, 113), new Color(39, 174, 96)},    // Verde
+            {new Color(241, 196, 15), new Color(243, 156, 18)},   // Amarelo
+            {new Color(155, 89, 182), new Color(142, 68, 173)},   // Roxo
+            {new Color(230, 126, 34), new Color(211, 84, 0)},     // Laranja
+            {new Color(26, 188, 156), new Color(22, 160, 133)},   // Turquesa
+            {new Color(149, 165, 166), new Color(127, 140, 141)}  // Cinza
+        };
+        
+        int i = 0;
+        for (Object key : dataset.getKeys()) {
+            Color[] gradiente = coresGradiente[i % coresGradiente.length];
+            plot.setSectionPaint((String) key, criarGradiente(gradiente[0], gradiente[1]));
+            i++;
+        }
+        
+        // Legenda elegante
+        if (chart.getLegend() != null) {
+            chart.getLegend().setBackgroundPaint(new Color(248, 249, 250));
+            chart.getLegend().setFrame(new org.jfree.chart.block.BlockBorder(new Color(220, 221, 225)));
+            chart.getLegend().setPadding(new RectangleInsets(10, 10, 10, 10));
+        }
         
         return chart;
     }
@@ -550,17 +902,25 @@ public class DashboardColetaFrame extends JFrame {
         
         try {
             if (idInventarioAtivo != -1) {
-                // TODO: Implementar obterEstatisticasColetores no DashboardService
-                Map<String, Integer> estatisticasUsuarios = new java.util.HashMap<>();
+                Map<String, Integer> estatisticasUsuarios = dashboardService.obterEstatisticasColetores(idInventarioAtivo);
                 
-                for (Map.Entry<String, Integer> entry : estatisticasUsuarios.entrySet()) {
-                    dataset.addValue(entry.getValue(), "Itens Coletados", entry.getKey());
+                if (estatisticasUsuarios != null && !estatisticasUsuarios.isEmpty()) {
+                    for (Map.Entry<String, Integer> entry : estatisticasUsuarios.entrySet()) {
+                        if (entry.getKey() != null && !entry.getKey().trim().isEmpty()) {
+                            dataset.addValue(entry.getValue(), "Itens Coletados", entry.getKey());
+                        }
+                    }
+                } else {
+                    dataset.addValue(0, "Itens Coletados", "Nenhum dado disponível");
                 }
+            } else {
+                dataset.addValue(0, "Itens Coletados", "Nenhum inventário ativo");
             }
         } catch (Exception e) {
             System.err.println("Erro ao carregar dados dos usuários: " + e.getMessage());
+            e.printStackTrace();
             // Dados de fallback
-            dataset.addValue(0, "Itens Coletados", "Sem dados");
+            dataset.addValue(0, "Itens Coletados", "Erro ao carregar dados");
         }
         
         JFreeChart chart = ChartFactory.createBarChart(
@@ -586,24 +946,32 @@ public class DashboardColetaFrame extends JFrame {
         
         try {
             if (idInventarioAtivo != -1) {
-                // TODO: Implementar obterDesempenhoColetoresPorPeriodo no DashboardService
-                Map<String, Map<String, Integer>> desempenhoDetalhado = new java.util.HashMap<>();
+                Map<String, Map<String, Integer>> desempenhoDetalhado = dashboardService.obterDesempenhoColetoresPorPeriodo(idInventarioAtivo);
                 
-                for (Map.Entry<String, Map<String, Integer>> usuarioEntry : desempenhoDetalhado.entrySet()) {
-                    String usuario = usuarioEntry.getKey();
-                    Map<String, Integer> dadosPorData = usuarioEntry.getValue();
-                    
-                    for (Map.Entry<String, Integer> dataEntry : dadosPorData.entrySet()) {
-                        String data = dataEntry.getKey();
-                        Integer quantidade = dataEntry.getValue();
-                        dataset.addValue(quantidade, usuario, data);
+                if (desempenhoDetalhado != null && !desempenhoDetalhado.isEmpty()) {
+                    for (Map.Entry<String, Map<String, Integer>> usuarioEntry : desempenhoDetalhado.entrySet()) {
+                        String usuario = usuarioEntry.getKey();
+                        Map<String, Integer> dadosPorData = usuarioEntry.getValue();
+                        
+                        if (dadosPorData != null && !dadosPorData.isEmpty()) {
+                            for (Map.Entry<String, Integer> dataEntry : dadosPorData.entrySet()) {
+                                String data = dataEntry.getKey();
+                                Integer quantidade = dataEntry.getValue();
+                                dataset.addValue(quantidade, usuario, data);
+                            }
+                        }
                     }
+                } else {
+                    dataset.addValue(0, "Nenhum dado", "Hoje");
                 }
+            } else {
+                dataset.addValue(0, "Nenhum inventário", "Hoje");
             }
         } catch (Exception e) {
             System.err.println("Erro ao carregar desempenho dos usuários: " + e.getMessage());
+            e.printStackTrace();
             // Dados de fallback
-            dataset.addValue(0, "Sem dados", "Hoje");
+            dataset.addValue(0, "Erro ao carregar", "Hoje");
         }
         
         JFreeChart chart = ChartFactory.createBarChart(
@@ -637,6 +1005,8 @@ public class DashboardColetaFrame extends JFrame {
     private void estilizarGraficoBarras(JFreeChart chart) {
         chart.setBackgroundPaint(Color.WHITE);
         chart.setBorderVisible(false);
+        chart.setPadding(new RectangleInsets(10, 10, 10, 10));
+        chart.setAntiAlias(true);
         
         CategoryPlot plot = chart.getCategoryPlot();
         plot.setBackgroundPaint(Color.WHITE);
@@ -644,17 +1014,41 @@ public class DashboardColetaFrame extends JFrame {
         plot.setRangeGridlinesVisible(true);
         plot.setRangeGridlinePaint(new Color(220, 221, 225));
         plot.setOutlineVisible(false);
+        plot.setRangePannable(false);
         
         BarRenderer renderer = (BarRenderer) plot.getRenderer();
-        renderer.setBarPainter(new StandardBarPainter());
+        // Usar GradientBarPainter para efeito de gradiente nas barras
+        renderer.setBarPainter(new GradientBarPainter(0.1, 0.2, 0.3));
         renderer.setDrawBarOutline(false);
-        renderer.setItemMargin(0.1);
+        renderer.setItemMargin(0.15);
+        renderer.setShadowVisible(true);
+        renderer.setShadowPaint(new Color(0, 0, 0, 50));
+        renderer.setShadowXOffset(3);
+        renderer.setShadowYOffset(3);
         
-        // Fontes modernas
-        plot.getDomainAxis().setLabelFont(new Font("Segoe UI", Font.PLAIN, 12));
-        plot.getRangeAxis().setLabelFont(new Font("Segoe UI", Font.PLAIN, 12));
-        plot.getDomainAxis().setTickLabelFont(new Font("Segoe UI", Font.PLAIN, 10));
-        plot.getRangeAxis().setTickLabelFont(new Font("Segoe UI", Font.PLAIN, 10));
+        // Labels nos valores das barras
+        renderer.setDefaultItemLabelsVisible(true);
+        renderer.setDefaultItemLabelGenerator(new StandardCategoryItemLabelGenerator(
+            "{2}", new DecimalFormat("0.0")
+        ));
+        renderer.setDefaultItemLabelFont(new Font("Segoe UI", Font.BOLD, 10));
+        renderer.setDefaultItemLabelPaint(new Color(52, 73, 94));
+        
+        // Fontes modernas e elegantes
+        plot.getDomainAxis().setLabelFont(new Font("Segoe UI", Font.BOLD, 13));
+        plot.getRangeAxis().setLabelFont(new Font("Segoe UI", Font.BOLD, 13));
+        plot.getDomainAxis().setTickLabelFont(new Font("Segoe UI", Font.PLAIN, 11));
+        plot.getRangeAxis().setTickLabelFont(new Font("Segoe UI", Font.PLAIN, 11));
+        plot.getDomainAxis().setLabelPaint(new Color(52, 73, 94));
+        plot.getRangeAxis().setLabelPaint(new Color(52, 73, 94));
+        
+        // Legenda elegante
+        if (chart.getLegend() != null) {
+            chart.getLegend().setBackgroundPaint(new Color(248, 249, 250));
+            chart.getLegend().setFrame(new org.jfree.chart.block.BlockBorder(new Color(220, 221, 225)));
+            chart.getLegend().setPadding(new RectangleInsets(10, 10, 10, 10));
+            chart.getLegend().setItemFont(new Font("Segoe UI", Font.PLAIN, 11));
+        }
     }
     
     // Métodos de atualização de dados
@@ -685,15 +1079,21 @@ public class DashboardColetaFrame extends JFrame {
     
     private void atualizarUsuarios() {
         try {
+            if (idInventarioAtivo == -1) {
+                return;
+            }
+            
             // Atualizar lista de usuários no combobox
-            // TODO: Implementar obterEstatisticasColetores no DashboardService
-            Map<String, Integer> usuarios = new java.util.HashMap<>();
+            Map<String, Integer> usuarios = dashboardService.obterEstatisticasColetores(idInventarioAtivo);
             
             comboUsuarios.removeAllItems();
             comboUsuarios.addItem("Todos os Usuários");
             
+            // Adicionar usuários que fizeram coletas
             for (String usuario : usuarios.keySet()) {
-                comboUsuarios.addItem(usuario);
+                if (usuario != null && !usuario.trim().isEmpty()) {
+                    comboUsuarios.addItem(usuario + " (" + usuarios.get(usuario) + " itens)");
+                }
             }
             
             atualizarGraficosUsuarios();
@@ -705,21 +1105,33 @@ public class DashboardColetaFrame extends JFrame {
     
     private void atualizarGraficosUsuarios() {
         try {
+            if (idInventarioAtivo == -1) {
+                return;
+            }
+            
             String usuarioSelecionado = (String) comboUsuarios.getSelectedItem();
+            
+            // Obter estatísticas dos coletores
+            Map<String, Integer> estatisticasUsuarios = dashboardService.obterEstatisticasColetores(idInventarioAtivo);
             
             // Atualizar gráfico de barras dos usuários
             DefaultCategoryDataset datasetUsuarios = new DefaultCategoryDataset();
-            // TODO: Implementar obterEstatisticasColetores no DashboardService
-            Map<String, Integer> estatisticasUsuarios = new java.util.HashMap<>();
             
             if ("Todos os Usuários".equals(usuarioSelecionado)) {
                 // Mostrar todos os usuários
                 for (Map.Entry<String, Integer> entry : estatisticasUsuarios.entrySet()) {
-                    datasetUsuarios.addValue(entry.getValue(), "Coletados", entry.getKey());
+                    if (entry.getKey() != null && !entry.getKey().trim().isEmpty()) {
+                        datasetUsuarios.addValue(entry.getValue(), "Coletados", entry.getKey());
+                    }
                 }
-            } else if (usuarioSelecionado != null && estatisticasUsuarios.containsKey(usuarioSelecionado)) {
-                // Mostrar apenas o usuário selecionado
-                datasetUsuarios.addValue(estatisticasUsuarios.get(usuarioSelecionado), "Coletados", usuarioSelecionado);
+            } else if (usuarioSelecionado != null) {
+                // Extrair nome do usuário (remover contagem entre parênteses)
+                String nomeUsuario = usuarioSelecionado.replaceAll("\\s*\\(.*\\)\\s*$", "").trim();
+                
+                if (estatisticasUsuarios.containsKey(nomeUsuario)) {
+                    // Mostrar apenas o usuário selecionado
+                    datasetUsuarios.addValue(estatisticasUsuarios.get(nomeUsuario), "Coletados", nomeUsuario);
+                }
             }
             
             JFreeChart novoGraficoUsuarios = ChartFactory.createBarChart(
@@ -738,8 +1150,7 @@ public class DashboardColetaFrame extends JFrame {
             
             // Atualizar gráfico de desempenho detalhado
             DefaultCategoryDataset datasetDesempenho = new DefaultCategoryDataset();
-            // TODO: Implementar obterDesempenhoColetoresPorPeriodo no DashboardService
-            Map<String, Map<String, Integer>> desempenhoDetalhado = new java.util.HashMap<>();
+            Map<String, Map<String, Integer>> desempenhoDetalhado = dashboardService.obterDesempenhoColetoresPorPeriodo(idInventarioAtivo);
             
             if ("Todos os Usuários".equals(usuarioSelecionado)) {
                 // Agregar dados de todos os usuários por período
@@ -752,11 +1163,16 @@ public class DashboardColetaFrame extends JFrame {
                 for (Map.Entry<String, Integer> entry : totalPorPeriodo.entrySet()) {
                     datasetDesempenho.addValue(entry.getValue(), "Total", entry.getKey());
                 }
-            } else if (usuarioSelecionado != null && desempenhoDetalhado.containsKey(usuarioSelecionado)) {
-                // Mostrar dados do usuário selecionado
-                Map<String, Integer> dadosUsuario = desempenhoDetalhado.get(usuarioSelecionado);
-                for (Map.Entry<String, Integer> entry : dadosUsuario.entrySet()) {
-                    datasetDesempenho.addValue(entry.getValue(), usuarioSelecionado, entry.getKey());
+            } else if (usuarioSelecionado != null) {
+                // Extrair nome do usuário (remover contagem entre parênteses)
+                String nomeUsuario = usuarioSelecionado.replaceAll("\\s*\\(.*\\)\\s*$", "").trim();
+                
+                if (desempenhoDetalhado.containsKey(nomeUsuario)) {
+                    // Mostrar dados do usuário selecionado
+                    Map<String, Integer> dadosUsuario = desempenhoDetalhado.get(nomeUsuario);
+                    for (Map.Entry<String, Integer> entry : dadosUsuario.entrySet()) {
+                        datasetDesempenho.addValue(entry.getValue(), nomeUsuario, entry.getKey());
+                    }
                 }
             }
             
@@ -776,6 +1192,7 @@ public class DashboardColetaFrame extends JFrame {
             
         } catch (Exception e) {
             System.err.println("Erro ao atualizar gráficos dos usuários: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -829,6 +1246,10 @@ public class DashboardColetaFrame extends JFrame {
         // Atualizar gráfico de etiquetas
         atualizarGraficoEtiquetas(estatisticas);
         
+        // Atualizar novos gráficos de pizza
+        atualizarGraficoPizzaProgressoResponsaveis();
+        atualizarGraficoPizzaProgressoSetores();
+        
         // Atualizar gráficos de responsáveis e setores
         atualizarGraficosResponsaveis();
         atualizarGraficosSetores();
@@ -845,52 +1266,276 @@ public class DashboardColetaFrame extends JFrame {
         ((PiePlot<String>) chart.getPlot()).setDataset(datasetEtiquetas);
     }
     
-    private void atualizarGraficosResponsaveis() {
-        // Converter List<Map> para Map<String, Map>
-        java.util.List<Map<String, Object>> listaResponsaveis = dashboardService.obterEstatisticasPorResponsavel(idInventarioAtivo);
-        Map<String, Map<String, Integer>> dadosResponsaveis = converterListaParaMapaResponsaveis(listaResponsaveis);
-        
-        // Gráfico principal
-        DefaultCategoryDataset dataset1 = new DefaultCategoryDataset();
-        DefaultCategoryDataset dataset2 = new DefaultCategoryDataset();
-        
-        for (Map.Entry<String, Map<String, Integer>> entry : dadosResponsaveis.entrySet()) {
-            String responsavel = entry.getKey();
-            Map<String, Integer> dados = entry.getValue();
+    private void atualizarGraficoPizzaProgressoResponsaveis() {
+        try {
+            if (idInventarioAtivo == -1) {
+                return;
+            }
             
-            dataset1.addValue(dados.get("total_patrimonios"), "Total", responsavel);
-            dataset1.addValue(dados.get("itens_coletados"), "Coletados", responsavel);
+            DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
+            java.util.List<Map<String, Object>> listaResponsaveis = dashboardService.obterEstatisticasPorResponsavel(idInventarioAtivo);
             
-            int total = dados.get("total_patrimonios");
-            int coletados = dados.get("itens_coletados");
-            int percentual = total > 0 ? (coletados * 100 / total) : 0;
-            dataset2.addValue(percentual, "% Concluído", responsavel);
+            if (listaResponsaveis != null && !listaResponsaveis.isEmpty()) {
+                for (Map<String, Object> item : listaResponsaveis) {
+                    String responsavel = (String) item.get("responsavel");
+                    if (responsavel == null || responsavel.isEmpty()) {
+                        responsavel = "Sem Responsável";
+                    }
+                    
+                    int coletados = ((Number) item.getOrDefault("itens_coletados", 0)).intValue();
+                    if (coletados > 0) {
+                        dataset.setValue(responsavel, coletados);
+                    }
+                }
+            }
+            
+            JFreeChart chart = painelGraficoProgressoResponsaveis.getChart();
+            PiePlot<String> plot = (PiePlot<String>) chart.getPlot();
+            plot.setDataset(dataset);
+            
+            // Aplicar cores
+            Color[] cores = {
+                new Color(52, 152, 219),   // Azul
+                new Color(46, 204, 113),   // Verde
+                new Color(155, 89, 182),   // Roxo
+                new Color(241, 196, 15),   // Amarelo
+                new Color(231, 76, 60),    // Vermelho
+                new Color(26, 188, 156),   // Turquesa
+                new Color(230, 126, 34),   // Laranja
+                new Color(149, 165, 166)   // Cinza
+            };
+            
+            int i = 0;
+            for (Object key : dataset.getKeys()) {
+                plot.setSectionPaint((String) key, cores[i % cores.length]);
+                i++;
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao atualizar gráfico de pizza de responsáveis: " + e.getMessage());
+            e.printStackTrace();
         }
-        
-        painelGraficoResponsaveis.getChart().getCategoryPlot().setDataset(dataset1);
-        painelGraficoResponsaveisDetalhado.getChart().getCategoryPlot().setDataset(dataset2);
+    }
+    
+    private void atualizarGraficoPizzaProgressoSetores() {
+        try {
+            if (idInventarioAtivo == -1) {
+                return;
+            }
+            
+            DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
+            java.util.List<Map<String, Object>> listaSetores = dashboardService.obterProgressoPorSetor(idInventarioAtivo);
+            
+            if (listaSetores != null && !listaSetores.isEmpty()) {
+                for (Map<String, Object> item : listaSetores) {
+                    String setor = (String) item.get("setor");
+                    if (setor == null || setor.isEmpty()) {
+                        setor = "Sem Setor";
+                    }
+                    
+                    int coletados = ((Number) item.getOrDefault("itens_coletados", 0)).intValue();
+                    if (coletados > 0) {
+                        dataset.setValue(setor, coletados);
+                    }
+                }
+            }
+            
+            JFreeChart chart = painelGraficoProgressoSetores.getChart();
+            PiePlot<String> plot = (PiePlot<String>) chart.getPlot();
+            plot.setDataset(dataset);
+            
+            // Aplicar cores
+            Color[] cores = {
+                new Color(231, 76, 60),    // Vermelho
+                new Color(52, 152, 219),   // Azul
+                new Color(46, 204, 113),   // Verde
+                new Color(241, 196, 15),   // Amarelo
+                new Color(155, 89, 182),   // Roxo
+                new Color(230, 126, 34),   // Laranja
+                new Color(26, 188, 156),   // Turquesa
+                new Color(149, 165, 166)   // Cinza
+            };
+            
+            int i = 0;
+            for (Object key : dataset.getKeys()) {
+                plot.setSectionPaint((String) key, cores[i % cores.length]);
+                i++;
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao atualizar gráfico de pizza de setores: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    private void atualizarGraficosResponsaveis() {
+        try {
+            if (idInventarioAtivo == -1) {
+                return;
+            }
+            
+            // Converter List<Map> para Map<String, Map>
+            java.util.List<Map<String, Object>> listaResponsaveis = dashboardService.obterEstatisticasPorResponsavel(idInventarioAtivo);
+            Map<String, Map<String, Integer>> dadosResponsaveis = converterListaParaMapaResponsaveis(listaResponsaveis);
+            
+            // Atualizar combobox de responsáveis
+            comboResponsaveis.removeAllItems();
+            comboResponsaveis.addItem("Todos os Responsáveis");
+            
+            for (String responsavel : dadosResponsaveis.keySet()) {
+                if (responsavel != null && !responsavel.trim().isEmpty() && !"Sem Responsável".equals(responsavel)) {
+                    Map<String, Integer> dados = dadosResponsaveis.get(responsavel);
+                    int coletados = dados.get("itens_coletados");
+                    comboResponsaveis.addItem(responsavel + " (" + coletados + " itens)");
+                }
+            }
+            
+            // Atualizar gráficos
+            atualizarGraficosResponsaveisFiltrado();
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao atualizar gráficos de responsáveis: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    private void atualizarGraficosResponsaveisFiltrado() {
+        try {
+            if (idInventarioAtivo == -1) {
+                return;
+            }
+            
+            String responsavelSelecionado = (String) comboResponsaveis.getSelectedItem();
+            
+            // Obter dados dos responsáveis
+            java.util.List<Map<String, Object>> listaResponsaveis = dashboardService.obterEstatisticasPorResponsavel(idInventarioAtivo);
+            Map<String, Map<String, Integer>> dadosResponsaveis = converterListaParaMapaResponsaveis(listaResponsaveis);
+            
+            // Gráfico principal
+            DefaultCategoryDataset dataset1 = new DefaultCategoryDataset();
+            DefaultCategoryDataset dataset2 = new DefaultCategoryDataset();
+            
+            if ("Todos os Responsáveis".equals(responsavelSelecionado)) {
+                // Mostrar todos os responsáveis
+                for (Map.Entry<String, Map<String, Integer>> entry : dadosResponsaveis.entrySet()) {
+                    String responsavel = entry.getKey();
+                    Map<String, Integer> dados = entry.getValue();
+                    
+                    dataset1.addValue(dados.get("total_patrimonios"), "Total", responsavel);
+                    dataset1.addValue(dados.get("itens_coletados"), "Coletados", responsavel);
+                    
+                    int total = dados.get("total_patrimonios");
+                    int coletados = dados.get("itens_coletados");
+                    int percentual = total > 0 ? (coletados * 100 / total) : 0;
+                    dataset2.addValue(percentual, "% Concluído", responsavel);
+                }
+            } else if (responsavelSelecionado != null) {
+                // Extrair nome do responsável (remover contagem entre parênteses)
+                String nomeResponsavel = responsavelSelecionado.replaceAll("\\s*\\(.*\\)\\s*$", "").trim();
+                
+                if (dadosResponsaveis.containsKey(nomeResponsavel)) {
+                    // Mostrar apenas o responsável selecionado
+                    Map<String, Integer> dados = dadosResponsaveis.get(nomeResponsavel);
+                    
+                    dataset1.addValue(dados.get("total_patrimonios"), "Total", nomeResponsavel);
+                    dataset1.addValue(dados.get("itens_coletados"), "Coletados", nomeResponsavel);
+                    
+                    int total = dados.get("total_patrimonios");
+                    int coletados = dados.get("itens_coletados");
+                    int percentual = total > 0 ? (coletados * 100 / total) : 0;
+                    dataset2.addValue(percentual, "% Concluído", nomeResponsavel);
+                }
+            }
+            
+            painelGraficoResponsaveis.getChart().getCategoryPlot().setDataset(dataset1);
+            painelGraficoResponsaveisDetalhado.getChart().getCategoryPlot().setDataset(dataset2);
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao atualizar gráficos filtrados de responsáveis: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     private void atualizarGraficosSetores() {
-        // Converter List<Map> para Map<String, Map>
-        java.util.List<Map<String, Object>> listaSetores = dashboardService.obterProgressoPorSetor(idInventarioAtivo);
-        Map<String, Map<String, Integer>> dadosSetores = converterListaParaMapaSetores(listaSetores);
-        
-        DefaultCategoryDataset dataset1 = new DefaultCategoryDataset();
-        DefaultCategoryDataset dataset2 = new DefaultCategoryDataset();
-        
-        for (Map.Entry<String, Map<String, Integer>> entry : dadosSetores.entrySet()) {
-            String setor = entry.getKey();
-            Map<String, Integer> dados = entry.getValue();
+        try {
+            if (idInventarioAtivo == -1) {
+                return;
+            }
             
-            dataset1.addValue(dados.get("percentual"), "% Concluído", setor);
+            // Converter List<Map> para Map<String, Map>
+            java.util.List<Map<String, Object>> listaSetores = dashboardService.obterProgressoPorSetor(idInventarioAtivo);
+            Map<String, Map<String, Integer>> dadosSetores = converterListaParaMapaSetores(listaSetores);
             
-            dataset2.addValue(dados.get("total_patrimonios"), "Total", setor);
-            dataset2.addValue(dados.get("itens_coletados"), "Coletados", setor);
+            // Atualizar combobox de setores
+            comboSetores.removeAllItems();
+            comboSetores.addItem("Todos os Setores");
+            
+            for (String setor : dadosSetores.keySet()) {
+                if (setor != null && !setor.trim().isEmpty() && !"Sem Setor".equals(setor)) {
+                    Map<String, Integer> dados = dadosSetores.get(setor);
+                    int coletados = dados.get("itens_coletados");
+                    comboSetores.addItem(setor + " (" + coletados + " itens)");
+                }
+            }
+            
+            // Atualizar gráficos
+            atualizarGraficosSetoresFiltrado();
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao atualizar gráficos de setores: " + e.getMessage());
+            e.printStackTrace();
         }
-        
-        painelGraficoSetores.getChart().getCategoryPlot().setDataset(dataset1);
-        painelGraficoSetoresDetalhado.getChart().getCategoryPlot().setDataset(dataset2);
+    }
+    
+    private void atualizarGraficosSetoresFiltrado() {
+        try {
+            if (idInventarioAtivo == -1) {
+                return;
+            }
+            
+            String setorSelecionado = (String) comboSetores.getSelectedItem();
+            
+            // Obter dados dos setores
+            java.util.List<Map<String, Object>> listaSetores = dashboardService.obterProgressoPorSetor(idInventarioAtivo);
+            Map<String, Map<String, Integer>> dadosSetores = converterListaParaMapaSetores(listaSetores);
+            
+            // Gráfico principal
+            DefaultCategoryDataset dataset1 = new DefaultCategoryDataset();
+            DefaultCategoryDataset dataset2 = new DefaultCategoryDataset();
+            
+            if ("Todos os Setores".equals(setorSelecionado)) {
+                // Mostrar todos os setores
+                for (Map.Entry<String, Map<String, Integer>> entry : dadosSetores.entrySet()) {
+                    String setor = entry.getKey();
+                    Map<String, Integer> dados = entry.getValue();
+                    
+                    dataset1.addValue(dados.get("percentual"), "% Concluído", setor);
+                    
+                    dataset2.addValue(dados.get("total_patrimonios"), "Total", setor);
+                    dataset2.addValue(dados.get("itens_coletados"), "Coletados", setor);
+                }
+            } else if (setorSelecionado != null) {
+                // Extrair nome do setor (remover contagem entre parênteses)
+                String nomeSetor = setorSelecionado.replaceAll("\\s*\\(.*\\)\\s*$", "").trim();
+                
+                if (dadosSetores.containsKey(nomeSetor)) {
+                    // Mostrar apenas o setor selecionado
+                    Map<String, Integer> dados = dadosSetores.get(nomeSetor);
+                    
+                    dataset1.addValue(dados.get("percentual"), "% Concluído", nomeSetor);
+                    
+                    dataset2.addValue(dados.get("total_patrimonios"), "Total", nomeSetor);
+                    dataset2.addValue(dados.get("itens_coletados"), "Coletados", nomeSetor);
+                }
+            }
+            
+            painelGraficoSetores.getChart().getCategoryPlot().setDataset(dataset1);
+            painelGraficoSetoresDetalhado.getChart().getCategoryPlot().setDataset(dataset2);
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao atualizar gráficos filtrados de setores: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     // Métodos auxiliares
@@ -996,6 +1641,13 @@ public class DashboardColetaFrame extends JFrame {
         }
         
         return resultado;
+    }
+    
+    /**
+     * Cria um gradiente de cores para os gráficos
+     */
+    private GradientPaint criarGradiente(Color cor1, Color cor2) {
+        return new GradientPaint(0, 0, cor1, 0, 300, cor2);
     }
     
     @Override

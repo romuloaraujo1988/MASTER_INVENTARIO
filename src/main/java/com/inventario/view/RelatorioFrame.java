@@ -16,13 +16,6 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
-import com.inventario.service.ServiceFactory;
-import com.inventario.service.RelatorioService;
-import com.inventario.service.InventarioService;
-import com.inventario.service.ResponsavelService;
-import com.inventario.service.SetorService;
-import com.inventario.service.PatrimonioService;
-import com.inventario.service.SalaService;
 import com.inventario.model.Responsavel;
 import com.inventario.model.Setor;
 import com.inventario.model.Inventario;
@@ -33,6 +26,12 @@ import com.inventario.util.SoundNotification;
 import com.inventario.view.ui.ButtonStyleFactory;
 import java.text.NumberFormat;
 import java.util.Locale;
+
+// === MVVM IMPORTS ===
+import com.inventario.presentation.viewmodel.RelatorioViewModel;
+import com.inventario.presentation.state.RelatorioState;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 // === IMPORTS JFREECHART - FASE 2 ===
 import org.jfree.chart.ChartFactory;
@@ -77,13 +76,11 @@ public class RelatorioFrame extends JFrame {
     private ChartPanel painelGraficoBarras;
     private JComboBox<String> comboTipoGrafico;
 
-    // Services
-    private final RelatorioService relatorioService;
-    private final InventarioService inventarioService;
-    private final ResponsavelService responsavelService;
-    private final SetorService setorService;
-    private final PatrimonioService patrimonioService;
-    private final SalaService salaService;
+    // === MVVM - ViewModel (substitui acesso direto aos DAOs) ===
+    private final RelatorioViewModel viewModel = new RelatorioViewModel();
+    
+    // Utilitários
+    private com.inventario.dao.PatrimonioDAO patrimonioDAO; // Usado apenas para dados de exemplo
     private RelatorioExcelGenerator excelGenerator;
 
     private JTable tabelaPreview;
@@ -97,16 +94,128 @@ public class RelatorioFrame extends JFrame {
     public RelatorioFrame() {
         super("Relatórios do Sistema");
         
-        // Inicializar services via ServiceFactory
-        this.relatorioService = ServiceFactory.getRelatorioService();
-        this.inventarioService = ServiceFactory.getInventarioService();
-        this.responsavelService = ServiceFactory.getResponsavelService();
-        this.setorService = ServiceFactory.getSetorService();
-        this.patrimonioService = ServiceFactory.getPatrimonioService();
-        this.salaService = ServiceFactory.getSalaService();
-        this.excelGenerator = new RelatorioExcelGenerator();
-        initComponents();
-        aplicarEstiloModerno();
+        try {
+            // === MVVM: ViewModel já inicializado na declaração ===
+            
+            // Utilitários (não são parte do MVVM)
+            this.patrimonioDAO = new com.inventario.dao.PatrimonioDAO(); // Apenas para dados de exemplo
+            this.excelGenerator = new RelatorioExcelGenerator();
+            
+            // Inicializar componentes da interface
+            initComponents();
+            aplicarEstiloModerno();
+            
+            // === MVVM: Observar mudanças no ViewModel ===
+            observarViewModel();
+            
+            // Carregar dados iniciais via ViewModel
+            viewModel.carregarInventarios();
+            viewModel.carregarSetores();
+            viewModel.carregarResponsaveis();
+            viewModel.carregarSalas();
+            
+            System.out.println("✅ RelatorioFrame inicializado com sucesso (MVVM)");
+            
+        } catch (Exception e) {
+            System.err.println("❌ Erro ao inicializar RelatorioFrame: " + e.getMessage());
+            e.printStackTrace();
+            
+            JOptionPane.showMessageDialog(null,
+                    "⚠️ ERRO AO INICIALIZAR RELATÓRIOS\n\n" +
+                    "Erro: " + e.getMessage() + "\n\n" +
+                    "Por favor, use as seguintes alternativas:\n" +
+                    "• Dashboard de Coleta (disponível no menu principal)\n" +
+                    "• Exportação de dados via Excel nas telas de listagem",
+                    "Erro - Relatórios",
+                    JOptionPane.ERROR_MESSAGE);
+            
+            dispose();
+        }
+    }
+    
+    /**
+     * === MVVM: Observer Pattern ===
+     * Observa mudanças no ViewModel e atualiza a UI
+     */
+    private void observarViewModel() {
+        viewModel.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if ("state".equals(evt.getPropertyName())) {
+                    RelatorioState newState = (RelatorioState) evt.getNewValue();
+                    
+                    // Atualizar UI na thread do Swing
+                    SwingUtilities.invokeLater(() -> {
+                        atualizarUI(newState);
+                    });
+                }
+            }
+        });
+    }
+    
+    /**
+     * === MVVM: Atualização Centralizada da UI ===
+     * Método único que atualiza a UI baseado no estado do ViewModel
+     */
+    private void atualizarUI(RelatorioState state) {
+        if (state instanceof RelatorioState.Idle) {
+            progressBar.setVisible(false);
+            labelStatus.setText("✅ Pronto para gerar relatório");
+            btnGerar.setEnabled(true);
+            
+        } else if (state instanceof RelatorioState.Loading) {
+            progressBar.setVisible(true);
+            progressBar.setIndeterminate(true);
+            labelStatus.setText("⏳ Gerando relatório...");
+            btnGerar.setEnabled(false);
+            
+        } else if (state instanceof RelatorioState.Success) {
+            RelatorioState.Success success = (RelatorioState.Success) state;
+            progressBar.setVisible(false);
+            labelStatus.setText("✅ Relatório gerado com sucesso! (" + success.getDados().size() + " itens)");
+            btnGerar.setEnabled(true);
+            btnExportar.setEnabled(true);
+            btnImprimir.setEnabled(true);
+            
+            List<Map<String, Object>> dados = success.getDados();
+            if (dados.isEmpty()) {
+                JOptionPane.showMessageDialog(this, 
+                    "Nenhum dado encontrado para os filtros selecionados.", 
+                    "Aviso", 
+                    JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                preencherTabelaComDados(dados);
+                gerarResumoEstatistico(dados);
+                atualizarGraficos();
+                SoundNotification.playSound(SoundNotification.SoundType.SUCCESS);
+            }
+            
+        } else if (state instanceof RelatorioState.Error) {
+            RelatorioState.Error error = (RelatorioState.Error) state;
+            progressBar.setVisible(false);
+            labelStatus.setText("❌ Erro ao gerar relatório");
+            btnGerar.setEnabled(true);
+            JOptionPane.showMessageDialog(this, 
+                error.getMessage(), 
+                "Erro", 
+                JOptionPane.ERROR_MESSAGE);
+                
+        } else if (state instanceof RelatorioState.InventariosCarregados) {
+            RelatorioState.InventariosCarregados inventariosState = (RelatorioState.InventariosCarregados) state;
+            preencherComboInventarios(inventariosState.getInventarios());
+            
+        } else if (state instanceof RelatorioState.SetoresCarregados) {
+            RelatorioState.SetoresCarregados setoresState = (RelatorioState.SetoresCarregados) state;
+            preencherComboSetores(setoresState.getSetores());
+            
+        } else if (state instanceof RelatorioState.ResponsaveisCarregados) {
+            RelatorioState.ResponsaveisCarregados responsaveisState = (RelatorioState.ResponsaveisCarregados) state;
+            preencherComboResponsaveis(responsaveisState.getResponsaveis());
+            
+        } else if (state instanceof RelatorioState.SalasCarregadas) {
+            RelatorioState.SalasCarregadas salasState = (RelatorioState.SalasCarregadas) state;
+            preencherComboSalas(salasState.getSalas());
+        }
     }
 
     private void initComponents() {
@@ -423,71 +532,13 @@ public class RelatorioFrame extends JFrame {
     // Lista para armazenar os inventários carregados
     private List<Inventario> inventariosCarregados = new ArrayList<>();
 
+    /**
+     * @deprecated Substituído por viewModel.carregarInventarios() + preencherComboInventarios()
+     * === MVVM: Delegar para ViewModel ===
+     */
+    @Deprecated
     private void carregarInventarios() {
-        try {
-            comboInventario.removeAllItems();
-            
-            // Carregar todos os inventários do banco de dados
-            inventariosCarregados = inventarioService.listarInventarios();
-
-            // Filtrar inventários ativos primeiro
-            List<Inventario> inventariosAtivos = inventariosCarregados.stream()
-                .filter(inv -> "ATIVO".equals(inv.getStatusInventario()))
-                .collect(Collectors.toList());
-
-            // Se não houver inventários ativos, usar todos
-            List<Inventario> inventariosParaExibir = inventariosAtivos.isEmpty() ? 
-                inventariosCarregados : inventariosAtivos;
-
-            if (inventariosParaExibir.isEmpty()) {
-                comboInventario.addItem("Nenhum inventário disponível");
-                return;
-            }
-
-            // Se houver apenas um inventário, selecioná-lo automaticamente
-            if (inventariosParaExibir.size() == 1) {
-                Inventario inventario = inventariosParaExibir.get(0);
-                String itemText = String.format("%s (%s) - %s",
-                        inventario.getNome(),
-                        inventario.getAno() != null ? inventario.getAno().toString() : "S/A",
-                        inventario.getStatusInventario());
-                comboInventario.addItem(itemText);
-                comboInventario.setSelectedIndex(0);
-                
-                // Atualizar a lista para corresponder ao item selecionado
-                inventariosCarregados.clear();
-                inventariosCarregados.add(inventario);
-            } else {
-                // Múltiplos inventários - adicionar opção de seleção
-                comboInventario.addItem("Selecione um inventário...");
-                
-                for (Inventario inventario : inventariosParaExibir) {
-                    String itemText = String.format("%s (%s) - %s",
-                            inventario.getNome(),
-                            inventario.getAno() != null ? inventario.getAno().toString() : "S/A",
-                            inventario.getStatusInventario());
-                    comboInventario.addItem(itemText);
-                }
-                
-                // Atualizar a lista para corresponder aos itens exibidos
-                inventariosCarregados = inventariosParaExibir;
-                
-                // Selecionar o primeiro inventário ativo por padrão
-                if (comboInventario.getItemCount() > 1) {
-                    comboInventario.setSelectedIndex(1);
-                }
-            }
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this,
-                    "Erro ao carregar inventários: " + e.getMessage(),
-                    "Erro", JOptionPane.ERROR_MESSAGE);
-
-            // Em caso de erro, adicionar opção padrão
-            comboInventario.removeAllItems();
-            comboInventario.addItem("Inventário 2024 - ATIVO (Padrão)");
-            inventariosCarregados.clear();
-        }
+        viewModel.carregarInventarios();
     }
 
     /**
@@ -529,95 +580,53 @@ public class RelatorioFrame extends JFrame {
         return -1;
     }
 
+    /**
+     * @deprecated Substituído por viewModel.carregarSetores() + preencherComboSetores()
+     * === MVVM: Delegar para ViewModel ===
+     */
+    @Deprecated
     private void carregarSetores() {
-        try {
-            comboSetor.removeAllItems();
-            comboSetor.addItem("Todos");
-
-            List<Setor> setores = setorService.listarSetores();
-            for (Setor setor : setores) {
-                comboSetor.addItem(setor.getNome());
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this,
-                    "Erro ao carregar setores: " + e.getMessage(),
-                    "Erro", JOptionPane.ERROR_MESSAGE);
-            // Adicionar opções padrão em caso de erro
-            comboSetor.addItem("Todos");
-            comboSetor.addItem("Administração");
-            comboSetor.addItem("TI");
-            comboSetor.addItem("RH");
-        }
+        viewModel.carregarSetores();
     }
-
+    
+    /**
+     * @deprecated Substituído por viewModel.carregarResponsaveis() + preencherComboResponsaveis()
+     * === MVVM: Delegar para ViewModel ===
+     */
+    @Deprecated
     private void carregarResponsaveis() {
-        try {
-            comboResponsavel.removeAllItems();
-            comboResponsavel.addItem("Todos");
-
-            List<Responsavel> responsaveis = responsavelService.listarResponsaveis();
-            for (Responsavel responsavel : responsaveis) {
-                comboResponsavel.addItem(responsavel.getNome());
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this,
-                    "Erro ao carregar responsáveis: " + e.getMessage(),
-                    "Erro", JOptionPane.ERROR_MESSAGE);
-            // Adicionar opções padrão em caso de erro
-            comboResponsavel.addItem("Todos");
-            comboResponsavel.addItem("João Silva");
-            comboResponsavel.addItem("Maria Santos");
-        }
+        viewModel.carregarResponsaveis();
     }
-
-    private void atualizarResponsaveisPorSetor(String nomeSetor) {
-        try {
-            comboResponsavel.removeAllItems();
-            comboResponsavel.addItem("Todos");
-
-            // Buscar ID do setor pelo nome
-            List<Setor> setores = setorService.listarSetores();
-            int idSetor = -1;
-            for (Setor setor : setores) {
-                if (setor.getNome().equals(nomeSetor)) {
-                    idSetor = setor.getId();
-                    break;
-                }
-            }
-
-            if (idSetor != -1) {
-                List<Responsavel> responsaveis = responsavelService.listarResponsaveisPorSetor(idSetor);
-                for (Responsavel responsavel : responsaveis) {
-                    comboResponsavel.addItem(responsavel.getNome());
-                }
-            }
-        } catch (Exception e) {
-            // Em caso de erro, carregar todos os responsáveis
-            carregarResponsaveis();
-        }
-    }
-
+    
+    /**
+     * @deprecated Substituído por viewModel.carregarSalas() + preencherComboSalas()
+     * === MVVM: Delegar para ViewModel ===
+     */
+    @Deprecated
     private void carregarSalas() {
-        try {
-            comboSala.removeAllItems();
-            comboSala.addItem("Todas as Salas");
-            
-            List<Sala> salas = salaService.listarSalas();
-            for (Sala sala : salas) {
-                String displayText = sala.getNumeroSala();
-                if (sala.getDescricao() != null && !sala.getDescricao().trim().isEmpty()) {
-                    displayText += " - " + sala.getDescricao();
+        viewModel.carregarSalas();
+    }
+
+    /**
+     * === MVVM: Atualiza responsáveis por setor ===
+     * Delega para ViewModel
+     */
+    private void atualizarResponsaveisPorSetor(String nomeSetor) {
+        if (nomeSetor != null && !"Todos".equals(nomeSetor)) {
+            // Buscar ID do setor pelo nome
+            RelatorioState state = viewModel.getState();
+            if (state instanceof RelatorioState.SetoresCarregados) {
+                List<Setor> setores = ((RelatorioState.SetoresCarregados) state).getSetores();
+                for (Setor setor : setores) {
+                    if (setor.getNome().equals(nomeSetor)) {
+                        viewModel.carregarResponsaveisPorSetor(setor.getId());
+                        return;
+                    }
                 }
-                comboSala.addItem(displayText);
             }
-        } catch (Exception e) {
-            System.err.println("Erro ao carregar salas: " + e.getMessage());
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, 
-                "Erro ao carregar salas: " + e.getMessage(), 
-                "Erro", 
-                JOptionPane.ERROR_MESSAGE);
         }
+        // Se não encontrou setor ou é "Todos", carregar todos
+        viewModel.carregarResponsaveis();
     }
 
     private JPanel criarAbaPreview() {
@@ -920,6 +929,7 @@ public class RelatorioFrame extends JFrame {
     }
 
     private void configurarEventos() {
+        // === MVVM: Delegar ações para ViewModel ===
         btnGerar.addActionListener(e -> gerarRelatorio());
         btnExportar.addActionListener(e -> exportarPDF());
         btnImprimir.addActionListener(e -> imprimirRelatorio());
@@ -1026,289 +1036,40 @@ public class RelatorioFrame extends JFrame {
         });
     }
 
+    /**
+     * === MVVM: Método refatorado ===
+     * View apenas coleta dados e delega para ViewModel
+     * Reduzido de ~300 linhas para ~20 linhas!
+     */
     private void gerarRelatorio() {
-        btnGerar.setEnabled(false);
-        progressBar.setVisible(true);
-        progressBar.setValue(0);
-        labelStatus.setText("Gerando relatório...");
-
+        // Coletar dados da UI
         String tipoRelatorio = (String) comboTipoRelatorio.getSelectedItem();
         Date dataInicio = (Date) spinnerDataInicio.getValue();
         Date dataFim = (Date) spinnerDataFim.getValue();
         String setor = (String) comboSetor.getSelectedItem();
         String responsavel = (String) comboResponsavel.getSelectedItem();
-        // Validar filtros obrigatórios para relatórios avançados
+        
+        // Validar filtros obrigatórios (validação de UI apenas)
         if (!validarFiltrosRelatoriosAvancados(tipoRelatorio, setor, responsavel, dataInicio, dataFim)) {
-            btnGerar.setEnabled(true);
-            progressBar.setVisible(false);
             return;
         }
-
-        // IMPORTANTE: Todos os relatórios são filtrados pelo inventário ativo do
-        // sistema
-        // O ID do inventário ativo deve ser obtido do contexto da aplicação
-
-        SwingWorker<List<Map<String, Object>>, Integer> worker = new SwingWorker<List<Map<String, Object>>, Integer>() {
+        
+        // Obter ID do inventário
+        int idInventario = obterIdInventarioSelecionado();
+        
+        // === MVVM: Delegar para ViewModel em background ===
+        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
             @Override
-            protected List<Map<String, Object>> doInBackground() throws Exception {
-                List<Map<String, Object>> dados = new ArrayList<>();
-
-                try {
-                    // Atualizar progresso inicial
-                    publish(10);
-
-                    // Verificar se foi cancelado
-                    if (isCancelled())
-                        return dados;
-
-                    publish(20);
-
-                    // Obter ID do inventário selecionado
-                    int idInventario = obterIdInventarioSelecionado();
-                    
-                    // Verificar se o relatório precisa de inventário
-                    boolean precisaInventario = !tipoRelatorio.equals("Relatório Geral de Patrimônio") &&
-                                               !tipoRelatorio.equals("Relatório por Responsável");
-                    
-                    if (precisaInventario && idInventario == -1) {
-                        String mensagem = "Para gerar o relatório '" + tipoRelatorio + "' é necessário selecionar um inventário.\n\n";
-                        
-                        if (comboInventario.getItemCount() == 0 || 
-                            (comboInventario.getItemCount() == 1 && 
-                             comboInventario.getItemAt(0).contains("Nenhum inventário disponível"))) {
-                            mensagem += "Não há inventários disponíveis no sistema.\n" +
-                                       "Crie um inventário primeiro na tela de Inventários.";
-                        } else {
-                            mensagem += "Selecione um inventário na lista acima e tente novamente.";
-                        }
-                        
-                        throw new IllegalStateException(mensagem);
-                    }
-
-                    System.out.println("Iniciando geração do relatório: " + tipoRelatorio + " para inventário ID: "
-                            + idInventario);
-
-                    switch (tipoRelatorio) {
-                        case "Itens Encontrados":
-                            publish(40);
-                            System.out.println("Consultando itens encontrados...");
-                            dados = relatorioService.gerarRelatorioItensEncontrados(idInventario);
-                            System.out.println(
-                                    "Consulta concluída. Itens encontrados: " + (dados != null ? dados.size() : 0));
-                            break;
-                        case "Itens Não Encontrados":
-                            publish(40);
-                            System.out.println("Consultando itens não encontrados...");
-                            dados = relatorioService.gerarRelatorioItensNaoEncontrados(idInventario);
-                            System.out.println(
-                                    "Consulta concluída. Itens encontrados: " + (dados != null ? dados.size() : 0));
-                            break;
-                        case "Itens Sem Plaqueta de Patrimônio":
-                            publish(40);
-                            System.out.println("Consultando itens sem etiqueta...");
-                            dados = relatorioService.gerarRelatorioItensSemEtiqueta(idInventario);
-                            System.out.println(
-                                    "Consulta concluída. Itens encontrados: " + (dados != null ? dados.size() : 0));
-                            break;
-                        case "Relatório por Responsável":
-                            publish(40);
-                            System.out.println("Consultando relatório por responsável...");
-                            if (!"Todos".equals(responsavel)) {
-                                // Buscar relatório específico por responsável
-                                dados = relatorioService.gerarRelatorioDetalhadoPorResponsavel(idInventario, responsavel);
-                            } else {
-                                // Se "Todos" estiver selecionado, mostrar todos os itens
-                                dados = relatorioService.gerarRelatorioItensEncontrados(idInventario);
-                            }
-                            System.out.println(
-                                    "Consulta concluída. Itens encontrados: " + (dados != null ? dados.size() : 0));
-                            break;
-                        case "Itens Não Coletados":
-                            publish(40);
-                            System.out.println("Consultando itens não coletados...");
-                            dados = relatorioService.gerarRelatorioItensNaoColetados(idInventario);
-                            System.out.println(
-                                    "Consulta concluída. Itens encontrados: " + (dados != null ? dados.size() : 0));
-                            break;
-                        case "Relatório de Divergências":
-                            publish(40);
-                            System.out.println("Consultando divergências...");
-                            dados = relatorioService.gerarRelatorioDivergencias(idInventario);
-                            System.out.println(
-                                    "Consulta concluída. Itens encontrados: " + (dados != null ? dados.size() : 0));
-                            break;
-                        case "Estatísticas do Inventário":
-                            publish(40);
-                            System.out.println("Consultando estatísticas...");
-                            dados = relatorioService.gerarEstatisticasGerais(idInventario);
-                            System.out.println(
-                                    "Consulta concluída. Itens encontrados: " + (dados != null ? dados.size() : 0));
-                            break;
-                        // ========== RELATÓRIOS AVANÇADOS ==========
-                        case "Relatório Avançado por Setor":
-                            publish(40);
-                            System.out.println("Consultando relatório avançado por setor...");
-                            String setorSelecionado = "Todos".equals(setor) ? "" : setor;
-                            dados = relatorioService.gerarRelatorioAvancadoPorSetor(idInventario, setorSelecionado,
-                                    dataInicio, dataFim);
-                            System.out.println(
-                                    "Consulta concluída. Itens encontrados: " + (dados != null ? dados.size() : 0));
-                            break;
-                        case "Relatório Avançado por Responsável":
-                            publish(40);
-                            System.out.println("Consultando relatório avançado por responsável...");
-                            String responsavelSelecionado = "Todos".equals(responsavel) ? "" : responsavel;
-                            dados = relatorioService.gerarRelatorioAvancadoPorResponsavel(idInventario,
-                                    responsavelSelecionado, dataInicio, dataFim);
-                            System.out.println(
-                                    "Consulta concluída. Itens encontrados: " + (dados != null ? dados.size() : 0));
-                            break;
-                        case "Relatório Avançado por Período":
-                            publish(40);
-                            System.out.println("Consultando relatório avançado por período...");
-                            dados = relatorioService.gerarRelatorioAvancadoPorPeriodo(idInventario, dataInicio, dataFim);
-                            System.out.println(
-                                    "Consulta concluída. Itens encontrados: " + (dados != null ? dados.size() : 0));
-                            break;
-                        case "Estatísticas Avançadas por Setor":
-                            publish(40);
-                            System.out.println("Consultando estatísticas avançadas por setor...");
-                            dados = relatorioService.gerarEstatisticasAvancadasPorSetor(idInventario, dataInicio, dataFim);
-                            System.out.println(
-                                    "Consulta concluída. Itens encontrados: " + (dados != null ? dados.size() : 0));
-                            break;
-                        case "Relatório Consolidado Executivo":
-                            publish(40);
-                            System.out.println("Consultando relatório consolidado executivo...");
-                            dados = relatorioService.gerarRelatorioConsolidado(idInventario, dataInicio, dataFim);
-                            System.out.println(
-                                    "Consulta concluída. Itens encontrados: " + (dados != null ? dados.size() : 0));
-                            break;
-                        case "--- RELATÓRIOS AVANÇADOS ---":
-                            // Item separador - não fazer nada
-                            JOptionPane.showMessageDialog(RelatorioFrame.this,
-                                    "Por favor, selecione um tipo de relatório válido.",
-                                    "Seleção Inválida", JOptionPane.WARNING_MESSAGE);
-                            return new ArrayList<>();
-                        default:
-                            // Relatório geral completo - mostrar todos os patrimônios
-                            publish(40);
-                            System.out.println("Consultando relatório geral completo...");
-                            dados = relatorioService.gerarRelatorioGeralCompleto(idInventario);
-                            System.out.println(
-                                    "Consulta concluída. Itens encontrados: " + (dados != null ? dados.size() : 0));
-                    }
-
-                    // Verificar se foi cancelado após a consulta
-                    if (isCancelled()) {
-                        System.out.println("Operação cancelada pelo usuário.");
-                        return dados;
-                    }
-
-                    System.out.println("Atualizando progresso para 80%...");
-                    publish(80);
-
-                    // Pequena pausa para mostrar progresso
-                    System.out.println("Aguardando 200ms antes de finalizar...");
-                    Thread.sleep(200);
-
-                    System.out.println("Finalizando relatório - 100%");
-                    publish(100);
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    System.err.println("Erro ao gerar relatório: " + e.getMessage());
-
-                    // Em caso de erro, usar dados de exemplo
-                    publish(60);
-                    try {
-                        dados = gerarDadosExemplo();
-                        publish(90);
-                    } catch (Exception ex) {
-                        System.err.println("Erro ao gerar dados de exemplo: " + ex.getMessage());
-                        // Se até os dados de exemplo falharem, retornar lista vazia
-                        dados = new ArrayList<>();
-                    }
-                }
-
-                return dados;
+            protected Void doInBackground() throws Exception {
+                // === MVVM: ViewModel faz todo o trabalho ===
+                viewModel.gerarRelatorio(tipoRelatorio, idInventario, setor, responsavel, dataInicio, dataFim);
+                return null;
             }
-
-            @Override
-            protected void process(List<Integer> chunks) {
-                int progresso = chunks.get(chunks.size() - 1);
-                progressBar.setValue(progresso);
-                progressBar.setString(progresso + "%");
-            }
-
+            
             @Override
             protected void done() {
-                try {
-                    if (isCancelled()) {
-                        labelStatus.setText("Geração de relatório cancelada");
-                        return;
-                    }
-
-                    List<Map<String, Object>> dados = get();
-
-                    if (dados != null && !dados.isEmpty()) {
-                        // === APLICAR FILTROS AVANÇADOS - FASE 2 ===
-                        List<Map<String, Object>> dadosFiltrados = aplicarFiltrosAvancados(dados);
-                        
-                        preencherTabelaComDados(dadosFiltrados);
-                        gerarResumoEstatistico(dadosFiltrados);
-
-                        btnExportar.setEnabled(true);
-                        btnImprimir.setEnabled(true);
-                        
-                        // Atualizar status com informações dos filtros
-                        String statusMsg = "Relatório gerado com sucesso! (" + dadosFiltrados.size() + " itens";
-                        if (checkFiltrosAvancados.isSelected() && dadosFiltrados.size() != dados.size()) {
-                            statusMsg += " de " + dados.size() + " filtrados";
-                        }
-                        statusMsg += ")";
-                        labelStatus.setText(statusMsg);
-                        
-                        // Tocar som de sucesso para relatório geral
-                        SoundNotification.playSound(SoundNotification.SoundType.SUCCESS);
-                    } else {
-                        // Se não há dados, usar dados de exemplo
-                        preencherDadosExemplo();
-                        gerarResumoEstatistico();
-                        atualizarGraficos();
-
-                        btnExportar.setEnabled(true);
-                        btnImprimir.setEnabled(true);
-                        labelStatus.setText("Relatório gerado com dados de exemplo");
-                    }
-
-                } catch (java.util.concurrent.CancellationException e) {
-                    labelStatus.setText("Geração de relatório cancelada");
-                } catch (java.util.concurrent.ExecutionException e) {
-                    Throwable cause = e.getCause();
-                    String mensagem = cause != null ? cause.getMessage() : e.getMessage();
-
-                    JOptionPane.showMessageDialog(RelatorioFrame.this,
-                            "Erro ao gerar relatório: " + mensagem + "\n\nUsando dados de exemplo.",
-                            "Erro", JOptionPane.WARNING_MESSAGE);
-
-                    // Em caso de erro, usar dados de exemplo
-                    preencherDadosExemplo();
-                    gerarResumoEstatistico();
-                    atualizarGraficos();
-
-                    btnExportar.setEnabled(true);
-                    btnImprimir.setEnabled(true);
-                    labelStatus.setText("Erro na consulta - usando dados de exemplo");
-                } catch (Exception e) {
-                    JOptionPane.showMessageDialog(RelatorioFrame.this,
-                            "Erro inesperado: " + e.getMessage(),
-                            "Erro", JOptionPane.ERROR_MESSAGE);
-                    labelStatus.setText("Erro inesperado ao gerar relatório");
-                }
-
-                progressBar.setVisible(false);
-                btnGerar.setEnabled(true);
+                // Nada a fazer aqui - atualizarUI() será chamado automaticamente
+                // via PropertyChangeListener quando o ViewModel mudar o estado
             }
         };
         worker.execute();
@@ -1753,11 +1514,38 @@ public class RelatorioFrame extends JFrame {
 
         try {
             // Buscar dados reais do banco de dados
-            List<Patrimonio> patrimonios = patrimonioService.listarTodos();
+            List<Patrimonio> patrimonios = patrimonioDAO.listarTodos();
 
-            // Carregar todos os responsáveis e setores uma única vez para otimizar
-            List<Responsavel> todosResponsaveis = responsavelService.listarResponsaveis();
-            List<Setor> todosSetores = setorService.listarSetores();
+            // === MVVM: Obter dados do ViewModel ao invés de DAOs ===
+            List<Responsavel> todosResponsaveis = new ArrayList<>();
+            List<Setor> todosSetores = new ArrayList<>();
+            
+            RelatorioState state = viewModel.getState();
+            if (state instanceof RelatorioState.ResponsaveisCarregados) {
+                todosResponsaveis = ((RelatorioState.ResponsaveisCarregados) state).getResponsaveis();
+            }
+            if (state instanceof RelatorioState.SetoresCarregados) {
+                todosSetores = ((RelatorioState.SetoresCarregados) state).getSetores();
+            }
+            
+            // Se não estiverem carregados, carregar agora
+            if (todosResponsaveis.isEmpty()) {
+                viewModel.carregarResponsaveis();
+                // Aguardar um pouco para carregar
+                Thread.sleep(100);
+                state = viewModel.getState();
+                if (state instanceof RelatorioState.ResponsaveisCarregados) {
+                    todosResponsaveis = ((RelatorioState.ResponsaveisCarregados) state).getResponsaveis();
+                }
+            }
+            if (todosSetores.isEmpty()) {
+                viewModel.carregarSetores();
+                Thread.sleep(100);
+                state = viewModel.getState();
+                if (state instanceof RelatorioState.SetoresCarregados) {
+                    todosSetores = ((RelatorioState.SetoresCarregados) state).getSetores();
+                }
+            }
 
             // Criar mapas para busca rápida
             Map<String, Responsavel> mapaResponsaveis = new HashMap<>();
@@ -1881,17 +1669,23 @@ public class RelatorioFrame extends JFrame {
 
             // Buscar dados reais do banco de dados
             System.out.println("Buscando patrimônios...");
-            List<Patrimonio> patrimonios = patrimonioService.listarTodos();
+            List<Patrimonio> patrimonios = patrimonioDAO.listarTodos();
             System.out.println("Patrimônios encontrados: " + (patrimonios != null ? patrimonios.size() : 0));
 
-            // Carregar todos os responsáveis e setores uma única vez para otimizar
+            // === MVVM: Obter dados do ViewModel ao invés de DAOs ===
             System.out.println("Buscando responsáveis...");
-            List<Responsavel> todosResponsaveis = responsavelService.listarResponsaveis();
-            System.out
-                    .println("Responsáveis encontrados: " + (todosResponsaveis != null ? todosResponsaveis.size() : 0));
-
-            System.out.println("Buscando setores...");
-            List<Setor> todosSetores = setorService.listarSetores();
+            List<Responsavel> todosResponsaveis = new ArrayList<>();
+            List<Setor> todosSetores = new ArrayList<>();
+            
+            RelatorioState state = viewModel.getState();
+            if (state instanceof RelatorioState.ResponsaveisCarregados) {
+                todosResponsaveis = ((RelatorioState.ResponsaveisCarregados) state).getResponsaveis();
+            }
+            if (state instanceof RelatorioState.SetoresCarregados) {
+                todosSetores = ((RelatorioState.SetoresCarregados) state).getSetores();
+            }
+            
+            System.out.println("Responsáveis encontrados: " + (todosResponsaveis != null ? todosResponsaveis.size() : 0));
             System.out.println("Setores encontrados: " + (todosSetores != null ? todosSetores.size() : 0));
 
             // Criar mapas para busca rápida
@@ -2295,6 +2089,86 @@ public class RelatorioFrame extends JFrame {
         btnExportar.setEnabled(false);
         btnImprimir.setEnabled(false);
         labelStatus.setText("Relatório limpo");
+        
+        // === MVVM: Limpar estado do ViewModel ===
+        viewModel.limpar();
+    }
+    
+    // ========== MÉTODOS AUXILIARES MVVM ==========
+    
+    /**
+     * === MVVM: Preenche combo de inventários ===
+     * Chamado quando ViewModel notifica InventariosCarregados
+     */
+    private void preencherComboInventarios(List<Inventario> inventarios) {
+        comboInventario.removeAllItems();
+        inventariosCarregados.clear();
+        
+        if (inventarios.isEmpty()) {
+            comboInventario.addItem("Nenhum inventário disponível");
+            return;
+        }
+        
+        if (inventarios.size() == 1) {
+            Inventario inv = inventarios.get(0);
+            comboInventario.addItem(String.format("%s (%s) - %s", 
+                inv.getNome(), 
+                inv.getAno() != null ? inv.getAno().toString() : "S/A", 
+                inv.getStatusInventario()));
+            inventariosCarregados.add(inv);
+        } else {
+            comboInventario.addItem("Selecione um inventário...");
+            for (Inventario inv : inventarios) {
+                comboInventario.addItem(String.format("%s (%s) - %s", 
+                    inv.getNome(), 
+                    inv.getAno() != null ? inv.getAno().toString() : "S/A", 
+                    inv.getStatusInventario()));
+                inventariosCarregados.add(inv);
+            }
+            if (comboInventario.getItemCount() > 1) {
+                comboInventario.setSelectedIndex(1);
+            }
+        }
+    }
+    
+    /**
+     * === MVVM: Preenche combo de setores ===
+     * Chamado quando ViewModel notifica SetoresCarregados
+     */
+    private void preencherComboSetores(List<Setor> setores) {
+        comboSetor.removeAllItems();
+        comboSetor.addItem("Todos");
+        for (Setor setor : setores) {
+            comboSetor.addItem(setor.getNome());
+        }
+    }
+    
+    /**
+     * === MVVM: Preenche combo de responsáveis ===
+     * Chamado quando ViewModel notifica ResponsaveisCarregados
+     */
+    private void preencherComboResponsaveis(List<Responsavel> responsaveis) {
+        comboResponsavel.removeAllItems();
+        comboResponsavel.addItem("Todos");
+        for (Responsavel resp : responsaveis) {
+            comboResponsavel.addItem(resp.getNome());
+        }
+    }
+    
+    /**
+     * === MVVM: Preenche combo de salas ===
+     * Chamado quando ViewModel notifica SalasCarregadas
+     */
+    private void preencherComboSalas(List<Sala> salas) {
+        comboSala.removeAllItems();
+        comboSala.addItem("Todas as Salas");
+        for (Sala sala : salas) {
+            String displayText = sala.getNumeroSala();
+            if (sala.getDescricao() != null && !sala.getDescricao().trim().isEmpty()) {
+                displayText += " - " + sala.getDescricao();
+            }
+            comboSala.addItem(displayText);
+        }
     }
 
     private void atualizarFiltros() {
@@ -2431,26 +2305,7 @@ public class RelatorioFrame extends JFrame {
         }
     }
 
-    private Icon createIcon(String emoji) {
-        // Criar um ícone simples com emoji
-        return new Icon() {
-            @Override
-            public void paintIcon(Component c, Graphics g, int x, int y) {
-                g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
-                g.drawString(emoji, x, y + 12);
-            }
 
-            @Override
-            public int getIconWidth() {
-                return 16;
-            }
-
-            @Override
-            public int getIconHeight() {
-                return 16;
-            }
-        };
-    }
 
     /**
      * Exporta o relatório atualmente exibido para Excel - VERSÃO SIMPLIFICADA SEM THREADS
@@ -2641,41 +2496,7 @@ public class RelatorioFrame extends JFrame {
         }
     }
     
-    /**
-     * Verifica Apache POI de forma segura sem causar ExceptionInInitializerError
-     */
-    private boolean verificarApachePoiSeguro() {
-        try {
-            // Verificar se as classes básicas estão disponíveis
-            Class.forName("org.apache.poi.xssf.usermodel.XSSFWorkbook");
-            Class.forName("org.apache.poi.ss.usermodel.Workbook");
-            
-            // Verificar XMLBeans (causa comum de problemas)
-            try {
-                Class.forName("org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbook");
-                System.out.println("✅ Classes Apache POI disponíveis");
-                return true;
-            } catch (ClassNotFoundException e) {
-                System.out.println("⚠️ XMLBeans não disponível: " + e.getMessage());
-                return false;
-            }
-            
-        } catch (ExceptionInInitializerError e) {
-            // Capturar especificamente ExceptionInInitializerError
-            System.out.println("⚠️ ExceptionInInitializerError ao verificar Apache POI - dependências com problema");
-            return false;
-        } catch (NoClassDefFoundError e) {
-            System.out.println("⚠️ NoClassDefFoundError: " + e.getMessage());
-            return false;
-        } catch (ClassNotFoundException e) {
-            System.out.println("⚠️ Apache POI não disponível: " + e.getMessage());
-            return false;
-        } catch (Throwable e) {
-            // Capturar qualquer outro erro
-            System.out.println("⚠️ Erro ao verificar Apache POI: " + e.getClass().getSimpleName() + " - " + e.getMessage());
-            return false;
-        }
-    }
+
     
     /**
      * Exporta usando Apache POI - VERSÃO PROFISSIONAL COM DESIGN ATRATIVO

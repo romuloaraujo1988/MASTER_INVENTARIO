@@ -6,8 +6,8 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 /**
- * Factory para obter instâncias de Services gerenciados pelo Spring
- * Implementa ApplicationContextAware para acessar beans do Spring
+ * Factory para obter instâncias de Services
+ * Suporta tanto Spring (quando disponível) quanto instanciação direta (Swing)
  * 
  * Uso:
  * <pre>
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  * </pre>
  * 
  * @author Sistema de Inventário
- * @version 2.0.0
+ * @version 2.1.0
  */
 @Component
 public class ServiceFactory implements ApplicationContextAware {
@@ -27,87 +27,268 @@ public class ServiceFactory implements ApplicationContextAware {
         ServiceFactory.applicationContext = context;
     }
     
+    // Cache de instâncias para aplicação Swing (sem Spring)
+    private static PatrimonioService patrimonioServiceInstance;
+    private static SetorService setorServiceInstance;
+    private static SalaService salaServiceInstance;
+    private static ResponsavelService responsavelServiceInstance;
+    private static UsuarioService usuarioServiceInstance;
+    private static InventarioService inventarioServiceInstance;
+    private static ColetaService coletaServiceInstance;
+    private static RelatorioService relatorioServiceInstance;
+    private static DashboardService dashboardServiceInstance;
+    private static SalaInventarioService salaInventarioServiceInstance;
+    private static ParticipanteInventarioService participanteInventarioServiceInstance;
+    private static CampusService campusServiceInstance;
+    
     /**
-     * Obtém instância do PatrimonioService gerenciada pelo Spring
+     * Verifica se o Spring está disponível
+     */
+    private static boolean isSpringAvailable() {
+        return applicationContext != null;
+    }
+    
+    /**
+     * Obtém instância do PatrimonioService
      */
     public static PatrimonioService getPatrimonioService() {
-        return applicationContext.getBean(PatrimonioService.class);
+        if (isSpringAvailable()) {
+            return applicationContext.getBean(PatrimonioService.class);
+        }
+        if (patrimonioServiceInstance == null) {
+            patrimonioServiceInstance = createPatrimonioService();
+        }
+        return patrimonioServiceInstance;
     }
     
     /**
-     * Obtém instância do SetorService gerenciada pelo Spring
+     * Obtém instância do SetorService
      */
     public static SetorService getSetorService() {
-        return applicationContext.getBean(SetorService.class);
+        if (isSpringAvailable()) {
+            return applicationContext.getBean(SetorService.class);
+        }
+        if (setorServiceInstance == null) {
+            setorServiceInstance = createSetorService();
+        }
+        return setorServiceInstance;
     }
     
     /**
-     * Obtém instância do SalaService gerenciada pelo Spring
+     * Obtém instância do SalaService
      */
     public static SalaService getSalaService() {
-        return applicationContext.getBean(SalaService.class);
+        if (isSpringAvailable()) {
+            return applicationContext.getBean(SalaService.class);
+        }
+        if (salaServiceInstance == null) {
+            salaServiceInstance = createSalaService();
+        }
+        return salaServiceInstance;
     }
     
     /**
-     * Obtém instância do ResponsavelService gerenciada pelo Spring
+     * Obtém instância do ResponsavelService
      */
     public static ResponsavelService getResponsavelService() {
-        return applicationContext.getBean(ResponsavelService.class);
+        if (isSpringAvailable()) {
+            return applicationContext.getBean(ResponsavelService.class);
+        }
+        if (responsavelServiceInstance == null) {
+            responsavelServiceInstance = createResponsavelService();
+        }
+        return responsavelServiceInstance;
     }
     
     /**
-     * Obtém instância do UsuarioService gerenciada pelo Spring
+     * Obtém instância do UsuarioService
      */
     public static UsuarioService getUsuarioService() {
-        return applicationContext.getBean(UsuarioService.class);
+        if (isSpringAvailable()) {
+            return applicationContext.getBean(UsuarioService.class);
+        }
+        if (usuarioServiceInstance == null) {
+            usuarioServiceInstance = createUsuarioService();
+        }
+        return usuarioServiceInstance;
     }
     
     /**
-     * Obtém instância do InventarioService gerenciada pelo Spring
+     * Obtém instância do InventarioService
      */
     public static InventarioService getInventarioService() {
-        return applicationContext.getBean(InventarioService.class);
+        if (isSpringAvailable()) {
+            return applicationContext.getBean(InventarioService.class);
+        }
+        if (inventarioServiceInstance == null) {
+            inventarioServiceInstance = createInventarioService();
+        }
+        return inventarioServiceInstance;
     }
     
     /**
-     * Obtém instância do ColetaService gerenciada pelo Spring
+     * Obtém instância do ColetaService
      */
     public static ColetaService getColetaService() {
-        return applicationContext.getBean(ColetaService.class);
+        if (isSpringAvailable()) {
+            return applicationContext.getBean(ColetaService.class);
+        }
+        if (coletaServiceInstance == null) {
+            coletaServiceInstance = createColetaService();
+        }
+        return coletaServiceInstance;
     }
     
     /**
-     * Obtém instância do RelatorioService gerenciada pelo Spring
+     * Obtém instância do RelatorioService
      */
     public static RelatorioService getRelatorioService() {
-        return applicationContext.getBean(RelatorioService.class);
+        if (isSpringAvailable()) {
+            return applicationContext.getBean(RelatorioService.class);
+        }
+        if (relatorioServiceInstance == null) {
+            relatorioServiceInstance = createRelatorioService();
+        }
+        return relatorioServiceInstance;
     }
     
     /**
-     * Obtém instância do DashboardService gerenciada pelo Spring
+     * Obtém instância do DashboardService
      */
     public static DashboardService getDashboardService() {
-        return applicationContext.getBean(DashboardService.class);
+        if (isSpringAvailable()) {
+            return applicationContext.getBean(DashboardService.class);
+        }
+        if (dashboardServiceInstance == null) {
+            dashboardServiceInstance = createDashboardService();
+        }
+        return dashboardServiceInstance;
     }
     
     /**
-     * Obtém instância do SalaInventarioService gerenciada pelo Spring
+     * Obtém instância do SalaInventarioService
      */
     public static SalaInventarioService getSalaInventarioService() {
-        return applicationContext.getBean(SalaInventarioService.class);
+        if (isSpringAvailable()) {
+            return applicationContext.getBean(SalaInventarioService.class);
+        }
+        if (salaInventarioServiceInstance == null) {
+            salaInventarioServiceInstance = createSalaInventarioService();
+        }
+        return salaInventarioServiceInstance;
     }
     
     /**
-     * Obtém instância do ParticipanteInventarioService gerenciada pelo Spring
+     * Obtém instância do ParticipanteInventarioService
      */
     public static ParticipanteInventarioService getParticipanteInventarioService() {
-        return applicationContext.getBean(ParticipanteInventarioService.class);
+        if (isSpringAvailable()) {
+            return applicationContext.getBean(ParticipanteInventarioService.class);
+        }
+        if (participanteInventarioServiceInstance == null) {
+            participanteInventarioServiceInstance = createParticipanteInventarioService();
+        }
+        return participanteInventarioServiceInstance;
     }
     
     /**
-     * Obtém instância do CampusService gerenciada pelo Spring
+     * Obtém instância do CampusService
      */
     public static CampusService getCampusService() {
-        return applicationContext.getBean(CampusService.class);
+        if (isSpringAvailable()) {
+            return applicationContext.getBean(CampusService.class);
+        }
+        if (campusServiceInstance == null) {
+            campusServiceInstance = createCampusService();
+        }
+        return campusServiceInstance;
+    }
+    
+    // Métodos privados para criar instâncias sem Spring
+    // NOTA: Os Services usam Spring Data JPA Repository e não podem ser instanciados sem Spring
+    // Para aplicações Swing, use os DAOs diretamente
+    
+    private static PatrimonioService createPatrimonioService() {
+        throw new UnsupportedOperationException(
+            "PatrimonioService requer Spring Framework. " +
+            "Para aplicações Swing, use PatrimonioDAO diretamente."
+        );
+    }
+    
+    private static SetorService createSetorService() {
+        throw new UnsupportedOperationException(
+            "SetorService requer Spring Framework. " +
+            "Para aplicações Swing, use SetorDAO diretamente."
+        );
+    }
+    
+    private static SalaService createSalaService() {
+        throw new UnsupportedOperationException(
+            "SalaService requer Spring Framework. " +
+            "Para aplicações Swing, use SalaDAO diretamente."
+        );
+    }
+    
+    private static ResponsavelService createResponsavelService() {
+        throw new UnsupportedOperationException(
+            "ResponsavelService requer Spring Framework. " +
+            "Para aplicações Swing, use ResponsavelDAO diretamente."
+        );
+    }
+    
+    private static UsuarioService createUsuarioService() {
+        throw new UnsupportedOperationException(
+            "UsuarioService requer Spring Framework. " +
+            "Para aplicações Swing, use UsuarioDAO diretamente."
+        );
+    }
+    
+    private static InventarioService createInventarioService() {
+        throw new UnsupportedOperationException(
+            "InventarioService requer Spring Framework. " +
+            "Para aplicações Swing, use InventarioDAO diretamente."
+        );
+    }
+    
+    private static ColetaService createColetaService() {
+        throw new UnsupportedOperationException(
+            "ColetaService requer Spring Framework. " +
+            "Para aplicações Swing, use ColetaDAO diretamente."
+        );
+    }
+    
+    private static RelatorioService createRelatorioService() {
+        throw new UnsupportedOperationException(
+            "RelatorioService requer Spring Framework. " +
+            "Para aplicações Swing, use RelatorioService com DAOs diretamente."
+        );
+    }
+    
+    private static DashboardService createDashboardService() {
+        throw new UnsupportedOperationException(
+            "DashboardService requer Spring Framework. " +
+            "Para aplicações Swing, use DashboardService com DAOs diretamente."
+        );
+    }
+    
+    private static SalaInventarioService createSalaInventarioService() {
+        throw new UnsupportedOperationException(
+            "SalaInventarioService requer Spring Framework. " +
+            "Para aplicações Swing, use SalaInventarioDAO diretamente."
+        );
+    }
+    
+    private static ParticipanteInventarioService createParticipanteInventarioService() {
+        throw new UnsupportedOperationException(
+            "ParticipanteInventarioService requer Spring Framework. " +
+            "Para aplicações Swing, use ParticipanteInventarioDAO diretamente."
+        );
+    }
+    
+    private static CampusService createCampusService() {
+        throw new UnsupportedOperationException(
+            "CampusService requer Spring Framework. " +
+            "Para aplicações Swing, use CampusDAO diretamente."
+        );
     }
 }
