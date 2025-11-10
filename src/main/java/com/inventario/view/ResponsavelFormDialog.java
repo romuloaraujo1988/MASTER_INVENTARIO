@@ -212,10 +212,12 @@ public class ResponsavelFormDialog extends JDialog {
                   // Salvar no banco de dados
                   ResponsavelDAO responsavelDAO = new ResponsavelDAO();
                   if (responsavel.getId() == 0) {
-                      responsavelDAO.inserirResponsavel(responsavel);
+                      // Usar método não-deprecated
+                      responsavelDAO.insert(responsavel);
                       JOptionPane.showMessageDialog(this, "Responsável cadastrado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
                   } else {
-                      responsavelDAO.atualizarResponsavel(responsavel);
+                      // Usar método não-deprecated
+                      responsavelDAO.update(responsavel);
                       JOptionPane.showMessageDialog(this, "Responsável atualizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
                   }
                   

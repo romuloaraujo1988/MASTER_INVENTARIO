@@ -1419,8 +1419,14 @@ public class RelatorioFrame extends JFrame {
         try {
             // Garantir que a tabela tenha um TableRowSorter
             javax.swing.table.TableRowSorter<DefaultTableModel> sorter;
-            if (tabelaPreview.getRowSorter() instanceof javax.swing.table.TableRowSorter) {
-                sorter = (javax.swing.table.TableRowSorter<DefaultTableModel>) tabelaPreview.getRowSorter();
+            javax.swing.RowSorter<? extends javax.swing.table.TableModel> existingSorter = tabelaPreview.getRowSorter();
+            
+            if (existingSorter instanceof javax.swing.table.TableRowSorter<?>) {
+                // Verificar se o modelo é compatível antes de fazer o cast
+                @SuppressWarnings("unchecked")
+                javax.swing.table.TableRowSorter<DefaultTableModel> typedSorter = 
+                    (javax.swing.table.TableRowSorter<DefaultTableModel>) existingSorter;
+                sorter = typedSorter;
             } else {
                 sorter = new javax.swing.table.TableRowSorter<>(modeloTabela);
                 tabelaPreview.setRowSorter(sorter);
@@ -2948,7 +2954,9 @@ public class RelatorioFrame extends JFrame {
     
     /**
      * Exporta diretamente como CSV quando Apache POI não está disponível
+     * Método reservado para uso futuro em verificação prévia de disponibilidade do Apache POI
      */
+    @SuppressWarnings("unused")
     private boolean exportarComCSVDireto(List<Map<String, Object>> dados, String[] colunas, String[] chaves,
                                          String titulo, String caminhoOriginal) {
         try {
