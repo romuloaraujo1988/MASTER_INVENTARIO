@@ -1,8 +1,7 @@
 package com.inventario.view;
 
-import com.inventario.service.SalaService;
-import com.inventario.service.SetorService;
-import com.inventario.service.BusinessException;
+import com.inventario.dao.SalaDAORefactored;
+import com.inventario.dao.SetorDAORefactored;
 import com.inventario.model.Sala;
 import com.inventario.model.Setor;
 import com.inventario.view.ui.ModernButtons;
@@ -17,8 +16,8 @@ import java.util.List;
 public class SalaFormDialog extends JDialog {
     
     private Sala sala;
-    private final SalaService salaService;
-    private final SetorService setorService;
+    private final SalaDAORefactored salaDAO;
+    private final SetorDAORefactored setorDAO;
     private boolean salvo = false;
     
     // Componentes do formulário
@@ -36,9 +35,9 @@ public class SalaFormDialog extends JDialog {
         super(parent, sala == null ? "Nova Sala" : "Editar Sala", true);
         this.sala = sala;
         
-        // Criar serviços diretamente
-        this.salaService = new com.inventario.service.SalaService();
-        this.setorService = new com.inventario.service.SetorService();
+        // === SWING: Usar DAOs diretamente (sem Spring) ===
+        this.salaDAO = new SalaDAORefactored();
+        this.setorDAO = new SetorDAORefactored();
         
         initializeComponents();
         carregarSetores();
@@ -204,7 +203,7 @@ public class SalaFormDialog extends JDialog {
     
     private void carregarSetores() {
         try {
-            List<Setor> setores = setorService.listarTodos();
+            List<Setor> setores = setorDAO.findAll();
             cmbSetor.removeAllItems();
             
             // Adicionar item vazio
@@ -341,8 +340,12 @@ public class SalaFormDialog extends JDialog {
                 sala.setIdSetor(0);
             }
             
-            // Salvar no banco usando o service
-            salaService.salvar(sala);
+            // Salvar no banco usando o DAO
+            if (sala.getIdSala() == 0) {
+                salaDAO.insert(sala);
+            } else {
+                salaDAO.update(sala);
+            }
             salvo = true;
             JOptionPane.showMessageDialog(this, 
                 "Sala salva com sucesso!", 
@@ -350,12 +353,6 @@ public class SalaFormDialog extends JDialog {
                 JOptionPane.INFORMATION_MESSAGE);
             dispose();
             
-        } catch (BusinessException e) {
-            JOptionPane.showMessageDialog(this, 
-                e.getMessage(), 
-                "Erro de Validação", 
-                JOptionPane.ERROR_MESSAGE);
-            txtNumeroSala.requestFocus();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, 
                 "Erro ao processar formulário: " + e.getMessage(), 

@@ -1,4 +1,5 @@
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\DashboardService.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\ResponsavelDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\ExcelExporter.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\notification\NotificationUtils.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\dao\SiadsPatrimonioDAO.java
@@ -42,12 +43,12 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\ImportacaoCSVFrameRefacto
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\security\CustomUserDetailsService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\repository\InventarioRepository.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\print\EtiquetaData.java
-D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\InventarioDAORefactored.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\DatabaseConfiguration.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\ModernConfirmDialog.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\DispositivoMobileDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\SalaService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\ApiResponse.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\presentation\viewmodel\RelatorioViewModel.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\components\PaginationPanel.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\SingleInstanceLock.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\offline\ConnectivityListener.java
@@ -88,6 +89,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\repository\RepositoryException
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\VersionInfo.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\RelatorioExcelGenerator.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\ColetaFrame_v2.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\PatrimonioDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\SoundNotification.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\notification\NotificationManager.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\ImportacaoExcel.java
@@ -126,6 +128,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\SingleInstanceManager.jav
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\config\MobileServerConfig.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\security\JwtAuthenticationFilter.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\ResponsavelService.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\presentation\state\RelatorioState.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\InventarioService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\service\MobileSyncService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\ParticipanteInventarioDAO.java
@@ -146,6 +149,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\test\SiadsLayoutFormatte
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\ColetaService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\DatabaseConfigManager.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\ServiceFactory.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\InventarioDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\MainFrame.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\DispositivoRegistroDTO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\IconPreview.java
@@ -196,7 +200,6 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\PortManager.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\service\SiadsIntegrationService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\AutenticacaoServiceAPI.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\InventarioSetorDAO.java
-D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\ResponsavelDAORefactored.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\service\SiadsExportService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\ConfiguracaoBancoDialog.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\JLogin.java
@@ -204,7 +207,6 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\Mobil
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\MobileMonitorFrame.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\service\MobileColetaService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\notification\ErrorReportingService.java
-D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\PatrimonioDAORefactored.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\Patrimonio.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\Setor.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\CampusManagementFrame.java

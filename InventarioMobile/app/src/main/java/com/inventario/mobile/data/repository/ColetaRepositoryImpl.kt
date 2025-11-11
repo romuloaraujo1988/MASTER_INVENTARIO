@@ -14,6 +14,7 @@ import javax.inject.Inject
  * Implementação do repositório de Coleta
  * Estratégia: Offline-first com sincronização automática
  */
+@javax.inject.Singleton
 class ColetaRepositoryImpl @Inject constructor(
     private val coletaDao: ColetaDao,
     private val patrimonioDao: PatrimonioDao,

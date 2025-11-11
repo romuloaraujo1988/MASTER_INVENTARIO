@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.inventario.mobile.data.observer.ConnectivityObserver
 import com.inventario.mobile.data.repository.PatrimonioRepositoryImpl
 import com.inventario.mobile.data.strategy.DataSourceType
-import com.inventario.mobile.model.Patrimonio
+import com.inventario.mobile.data.model.Patrimonio
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

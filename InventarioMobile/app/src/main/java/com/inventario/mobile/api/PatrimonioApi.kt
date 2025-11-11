@@ -1,7 +1,7 @@
 package com.inventario.mobile.api
 
-import com.inventario.mobile.model.ApiResponse
-import com.inventario.mobile.model.Patrimonio
+import com.inventario.mobile.data.remote.dto.ApiResponse
+import com.inventario.mobile.data.model.Patrimonio
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path

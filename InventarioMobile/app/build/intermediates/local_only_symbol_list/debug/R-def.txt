@@ -131,7 +131,6 @@ id btnCancelVoice
 id btnCancelar
 id btnClear
 id btnClearData
-id btnClearPendingCollections
 id btnClearSearch
 id btnClose
 id btnCollect
@@ -161,7 +160,6 @@ id btnSalvar
 id btnScanQr
 id btnSearch
 id btnShowRecommendations
-id btnSync
 id btnSyncAll
 id btnSyncNow
 id btnSyncPendingColetas
@@ -171,7 +169,6 @@ id btnTestServer
 id btnTestSync
 id btnViewCollections
 id btnViewPending
-id btnViewPendingCollections
 id btnViewStatistics
 id btnViewStatus
 id btnVoiceSearch
@@ -188,6 +185,7 @@ id cardGraficoEvolucao
 id cardHeader
 id cardInput
 id cardInventory
+id cardLastSync
 id cardPatrimonioInfo
 id cardRequirements
 id cardSalaFilter
@@ -280,7 +278,6 @@ id progressBar
 id progressBarGrafico
 id progressBarInventario
 id progressBarSync
-id progressCard
 id progressConclusao
 id progressOverlay
 id radioGroupEstado
@@ -374,7 +371,11 @@ id tvKpiPendentes
 id tvKpiPercentual
 id tvKpiValorTotal
 id tvLastSync
+id tvLastSyncDate
+id tvLastSyncDetails
 id tvLastSyncResult
+id tvLastSyncStatus
+id tvNetworkStatus
 id tvNoResultsMessage
 id tvObservacoes
 id tvOfflineStatus
@@ -411,7 +412,6 @@ id tvSummaryDivergencias
 id tvSummaryPendentes
 id tvSyncCount
 id tvSyncInterval
-id tvSyncMessage
 id tvSyncProgress
 id tvSyncedCount
 id tvTitle

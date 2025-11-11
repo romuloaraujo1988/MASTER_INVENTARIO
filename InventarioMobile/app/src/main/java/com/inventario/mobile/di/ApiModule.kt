@@ -32,4 +32,20 @@ object ApiModule {
     ): ColetaApi {
         return NetworkModule.getColetaApi(context)
     }
+    
+    @Provides
+    @Singleton
+    fun providePatrimonioApiLegacy(
+        @ApplicationContext context: Context
+    ): com.inventario.mobile.api.PatrimonioApi {
+        return NetworkModule.getPatrimonioApiLegacy(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideSalaApi(
+        @ApplicationContext context: Context
+    ): com.inventario.mobile.api.SalaApi {
+        return NetworkModule.getSalaApi(context)
+    }
 }

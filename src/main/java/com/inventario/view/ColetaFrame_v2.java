@@ -1,12 +1,12 @@
 package com.inventario.view;
 
-import com.inventario.service.ServiceFactory;
-import com.inventario.service.ColetaService;
-import com.inventario.service.InventarioService;
-import com.inventario.service.PatrimonioService;
-import com.inventario.service.SalaService;
-import com.inventario.service.SalaInventarioService;
-import com.inventario.service.ParticipanteInventarioService;
+// === SWING: Usar DAOs diretamente (sem Spring) ===
+import com.inventario.dao.SalaDAORefactored;
+import com.inventario.dao.PatrimonioDAO;
+import com.inventario.dao.ColetaDAO;
+import com.inventario.dao.InventarioDAO;
+import com.inventario.dao.SalaInventarioDAO;
+import com.inventario.dao.ParticipanteInventarioDAO;
 import com.inventario.model.Coleta;
 import com.inventario.model.Inventario;
 import com.inventario.model.Patrimonio;
@@ -121,13 +121,13 @@ public class ColetaFrame_v2 extends JFrame {
     //private JPanel painelSugestoes;
     //private JLabel lblSugestoes;
 
-    // Services (injetados via ServiceFactory)
-    private SalaService salaService;
-    private PatrimonioService patrimonioService;
-    private ColetaService coletaService;
-    private InventarioService inventarioService;
-    private SalaInventarioService salaInventarioService;
-    private ParticipanteInventarioService participanteInventarioService;
+    // === SWING: DAOs (sem Spring) ===
+    private SalaDAORefactored salaDAO;
+    private PatrimonioDAO patrimonioDAO;
+    private ColetaDAO coletaDAO;
+    private InventarioDAO inventarioDAO;
+    private SalaInventarioDAO salaInventarioDAO;
+    private ParticipanteInventarioDAO participanteInventarioDAO;
 
     private Patrimonio patrimonioSelecionado;
     private long ultimaDigitacao = 0;
@@ -194,12 +194,13 @@ public class ColetaFrame_v2 extends JFrame {
     }
 
     private void initializeServices() {
-        this.salaService = ServiceFactory.getSalaService();
-        this.patrimonioService = ServiceFactory.getPatrimonioService();
-        this.coletaService = ServiceFactory.getColetaService();
-        this.inventarioService = ServiceFactory.getInventarioService();
-        this.salaInventarioService = ServiceFactory.getSalaInventarioService();
-        this.participanteInventarioService = ServiceFactory.getParticipanteInventarioService();
+        // === SWING: Inicializar DAOs diretamente ===
+        this.salaDAO = new SalaDAORefactored();
+        this.patrimonioDAO = new PatrimonioDAO();
+        this.coletaDAO = new ColetaDAO();
+        this.inventarioDAO = new InventarioDAO();
+        this.salaInventarioDAO = new SalaInventarioDAO();
+        this.participanteInventarioDAO = new ParticipanteInventarioDAO();
     }
 
     private void initializeComponents() {
@@ -1416,7 +1417,7 @@ public class ColetaFrame_v2 extends JFrame {
 
         try {
             // Buscar itens sem etiqueta da sala
-            List<Coleta> itensSemPatrimonio = coletaService.buscarColetasSemEtiquetaPorSala(
+            List<Coleta> itensSemPatrimonio = coletaDAO.buscarColetasSemEtiquetaPorSala(
                     salaSelecionada.getIdSala(),
                     salaSelecionada.getIdentificacaoCompleta());
 
@@ -1474,7 +1475,7 @@ public class ColetaFrame_v2 extends JFrame {
 
         try {
             // Buscar inventário ativo
-            Inventario inventarioAtivo = inventarioService.buscarPorStatus("EM_ANDAMENTO");
+            Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
             if (inventarioAtivo == null) {
                 JOptionPane.showMessageDialog(this,
                         "Nenhum inventário ativo encontrado.",
@@ -1508,7 +1509,7 @@ public class ColetaFrame_v2 extends JFrame {
             if (autorizacao == -1) {
                 // Admin: tentar buscar participante existente, senão usar ID 0 para compatibilidade
                 try {
-                    idParticipante = participanteInventarioService.buscarIdParticipantePorUsuario(
+                    idParticipante = participanteInventarioDAO.buscarIdParticipantePorUsuario(
                             inventarioAtivo.getId(), usuarioLogado.getId());
                     if (idParticipante == null) {
                         idParticipante = 0; // Valor especial para admin sem participação formal
@@ -1536,7 +1537,7 @@ public class ColetaFrame_v2 extends JFrame {
             coleta.setCategoriaItemSemEtiqueta("OUTROS"); // Categoria padrão
 
             // Inserir no banco
-            coletaService.inserirColeta(coleta);
+            coletaDAO.inserirColeta(coleta);
 
             // Reproduzir som de sucesso
             SoundNotification.playColetaSalvaSound();
@@ -1606,7 +1607,7 @@ public class ColetaFrame_v2 extends JFrame {
             String localizacao = (String) modeloTabelaSemPatrimonio.getValueAt(linhaSelecionada, 3);
 
             // Buscar e excluir a coleta
-            List<Coleta> itensSemPatrimonio = coletaService.buscarColetasSemEtiquetaPorSala(
+            List<Coleta> itensSemPatrimonio = coletaDAO.buscarColetasSemEtiquetaPorSala(
                     salaSelecionada.getIdSala(),
                     salaSelecionada.getIdentificacaoCompleta());
 
@@ -1617,7 +1618,7 @@ public class ColetaFrame_v2 extends JFrame {
                 if (sdf.format(coleta.getDataColeta()).equals(dataHora)
                         && coleta.getDescricaoItemSemEtiqueta().equals(descricao)
                         && coleta.getLocalizacaoEncontrada().equals(localizacao)) {
-                    coletaService.excluirColeta(coleta.getId());
+                    coletaDAO.excluirColeta(coleta.getId());
                     encontrado = true;
                     break;
                 }
@@ -1706,7 +1707,7 @@ public class ColetaFrame_v2 extends JFrame {
 
     private void carregarInventarioAtual() {
         try {
-            Inventario inventarioAtivo = inventarioService.buscarPorStatus("EM_ANDAMENTO");
+            Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
             if (inventarioAtivo != null) {
                 lblInventarioAtual.setText("Inventário: " + inventarioAtivo.getNome());
             } else {
@@ -1720,7 +1721,7 @@ public class ColetaFrame_v2 extends JFrame {
     // Métodos auxiliares (copiados da classe original)
     private void carregarSalas() {
         try {
-            todasSalas = salaService.listarTodas();
+            todasSalas = salaDAO.listarSalas();
         } catch (Exception e) {
             todasSalas = new ArrayList<>();
             JOptionPane.showMessageDialog(this, "Erro ao carregar salas: " + e.getMessage());
@@ -1967,11 +1968,11 @@ public class ColetaFrame_v2 extends JFrame {
             }
 
             // Verificar se a coleta já foi finalizada
-            Inventario inventarioAtivo = inventarioService.buscarPorStatus("EM_ANDAMENTO");
+            Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
             boolean coletaFinalizada = false;
 
             if (inventarioAtivo != null) {
-                coletaFinalizada = salaInventarioService.isColetaFinalizada(salaSelecionada.getIdSala(),
+                coletaFinalizada = salaInventarioDAO.isColetaFinalizada(salaSelecionada.getIdSala(),
                         inventarioAtivo.getId());
             }
 
@@ -1996,7 +1997,7 @@ public class ColetaFrame_v2 extends JFrame {
                         if (autorizacao == -1) {
                             // Admin: tentar buscar participante existente, senão usar ID 0 para compatibilidade
                             try {
-                                idParticipante = participanteInventarioService.buscarIdParticipantePorUsuario(
+                                idParticipante = participanteInventarioDAO.buscarIdParticipantePorUsuario(
                                         inventarioAtivo.getId(), usuarioLogado.getId());
                                 if (idParticipante == null) {
                                     idParticipante = 0; // Valor especial para admin sem participação formal
@@ -2006,7 +2007,7 @@ public class ColetaFrame_v2 extends JFrame {
                             }
                         }
 
-                        salaInventarioService.iniciarColeta(salaSelecionada.getIdSala(), inventarioAtivo.getId(),
+                        salaInventarioDAO.iniciarColeta(salaSelecionada.getIdSala(), inventarioAtivo.getId(),
                                 idParticipante);
                     } else {
                         JOptionPane.showMessageDialog(this,
@@ -2034,7 +2035,7 @@ public class ColetaFrame_v2 extends JFrame {
 
         try {
             // Buscar APENAS itens COM etiqueta coletados na localização especificada
-            List<Coleta> coletasNaLocalizacao = coletaService.buscarColetasComEtiquetaPorLocalizacaoEncontrada(localizacaoEncontrada);
+            List<Coleta> coletasNaLocalizacao = coletaDAO.buscarColetasComEtiquetaPorLocalizacaoEncontrada(localizacaoEncontrada);
 
             for (Coleta coleta : coletasNaLocalizacao) {
                 Object[] linha = {
@@ -2068,7 +2069,8 @@ public class ColetaFrame_v2 extends JFrame {
         }
 
         try {
-            Optional<Patrimonio> patrimonioOpt = patrimonioService.buscarPorNumero(termoBusca);
+            Patrimonio patrimonioEncontrado = patrimonioDAO.buscarPorNumero(termoBusca);
+            Optional<Patrimonio> patrimonioOpt = Optional.ofNullable(patrimonioEncontrado);
             List<Patrimonio> patrimonios = new ArrayList<>();
             if (patrimonioOpt.isPresent()) {
                 patrimonios.add(patrimonioOpt.get());
@@ -2152,7 +2154,7 @@ public class ColetaFrame_v2 extends JFrame {
             modeloTabelaResultados.setRowCount(0);
 
             // Buscar patrimônios por descrição
-            List<Patrimonio> patrimonios = patrimonioService.buscarPorDescricao(termoBusca);
+            List<Patrimonio> patrimonios = patrimonioDAO.buscarPorDescricao(termoBusca);
 
             if (patrimonios == null || patrimonios.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
@@ -2164,12 +2166,22 @@ public class ColetaFrame_v2 extends JFrame {
             }
 
             // Buscar inventário ativo para filtrar pendentes
-            Inventario inventarioAtivo = inventarioService.buscarPorStatus("EM_ANDAMENTO");
+            Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
             Integer idInventario = inventarioAtivo != null ? inventarioAtivo.getId() : null;
             
-            // Usar o serviço para filtrar apenas patrimônios pendentes
-            List<Patrimonio> patrimoniosPendentes = patrimonioService.filtrarPatrimoniosPendentes(
-                patrimonios, idInventario, coletaService);
+            // Filtrar apenas patrimônios pendentes (não coletados)
+            List<Patrimonio> patrimoniosPendentes = new ArrayList<>();
+            for (Patrimonio p : patrimonios) {
+                try {
+                    boolean jaColetado = coletaDAO.coletaExiste(idInventario, p.getId());
+                    if (!jaColetado) {
+                        patrimoniosPendentes.add(p);
+                    }
+                } catch (Exception e) {
+                    // Em caso de erro, incluir o patrimônio
+                    patrimoniosPendentes.add(p);
+                }
+            }
 
             if (patrimoniosPendentes.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
@@ -2201,9 +2213,13 @@ public class ColetaFrame_v2 extends JFrame {
                 modeloTabelaResultados.addRow(linha);
             }
 
-            // Obter estatísticas usando o serviço
-            java.util.Map<String, Object> stats = patrimonioService.obterEstatisticasColeta(
-                patrimonios, idInventario, coletaService);
+            // Calcular estatísticas diretamente
+            int totalEncontrados = patrimonios.size();
+            int totalPendentes = patrimoniosPendentes.size();
+            int totalColetados = totalEncontrados - totalPendentes;
+            
+            double percentualPendente = totalEncontrados > 0 ? (totalPendentes * 100.0 / totalEncontrados) : 0;
+            double percentualColetado = totalEncontrados > 0 ? (totalColetados * 100.0 / totalEncontrados) : 0;
 
             JOptionPane.showMessageDialog(this,
                     String.format("✅ Encontradas %d descrição(ões) com itens pendentes!\n\n" +
@@ -2213,9 +2229,9 @@ public class ColetaFrame_v2 extends JFrame {
                             "   • Já coletados: %d (%.1f%%)\n\n" +
                             "💡 Clique em uma linha para usar a descrição no formulário.",
                             descricoesUnicas.size(),
-                            stats.get("total"),
-                            stats.get("pendentes"), stats.get("percentualPendente"),
-                            stats.get("coletados"), stats.get("percentualColetado")),
+                            totalEncontrados,
+                            totalPendentes, percentualPendente,
+                            totalColetados, percentualColetado),
                     "Busca Concluída - Apenas Pendentes",
                     JOptionPane.INFORMATION_MESSAGE);
 
@@ -2269,7 +2285,7 @@ public class ColetaFrame_v2 extends JFrame {
 
         // Buscar inventário ativo para verificar permissão
         try {
-            Inventario inventarioAtivo = inventarioService.buscarPorStatus("EM_ANDAMENTO");
+            Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
             if (inventarioAtivo == null) {
                 JOptionPane.showMessageDialog(this, "Nenhum inventário ativo encontrado.",
                         "Erro", JOptionPane.ERROR_MESSAGE);
@@ -2293,7 +2309,7 @@ public class ColetaFrame_v2 extends JFrame {
             if (autorizacao == -1) {
                 // Admin: tentar buscar participante existente, senão usar ID 0 para compatibilidade
                 try {
-                    idParticipante = participanteInventarioService.buscarIdParticipantePorUsuario(
+                    idParticipante = participanteInventarioDAO.buscarIdParticipantePorUsuario(
                             inventarioAtivo.getId(), usuarioLogado.getId());
                     if (idParticipante == null) {
                         idParticipante = 0; // Valor especial para admin sem participação formal
@@ -2342,7 +2358,7 @@ public class ColetaFrame_v2 extends JFrame {
             Coleta coleta = new Coleta();
 
             // Buscar inventário ativo
-            Inventario inventarioAtivo = inventarioService.buscarPorStatus("EM_ANDAMENTO");
+            Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
             if (inventarioAtivo == null) {
                 JOptionPane.showMessageDialog(this, "Nenhum inventário ativo encontrado.",
                         "Erro", JOptionPane.ERROR_MESSAGE);
@@ -2364,7 +2380,7 @@ public class ColetaFrame_v2 extends JFrame {
                 if (autorizacao == -1) {
                     // Admin: tentar buscar participante existente, senão usar ID do usuário
                     try {
-                        idParticipante = participanteInventarioService.buscarIdParticipantePorUsuario(
+                        idParticipante = participanteInventarioDAO.buscarIdParticipantePorUsuario(
                                 inventarioAtivo.getId(), usuarioLogado.getId());
                         if (idParticipante == null) {
                             idParticipante = usuarioLogado.getId(); // Usar ID do usuário admin
@@ -2416,7 +2432,7 @@ public class ColetaFrame_v2 extends JFrame {
                 coleta.setLocalizacaoAtual(patrimonioSelecionado.getNomeSala());
 
                 // Verificar se o patrimônio já foi coletado neste inventário
-                if (coletaService.coletaExiste(inventarioAtivo.getId(), patrimonioSelecionado.getId())) {
+                if (coletaDAO.coletaExiste(inventarioAtivo.getId(), patrimonioSelecionado.getId())) {
                     JOptionPane.showMessageDialog(this,
                             "Este patrimônio já foi coletado neste inventário.\n" +
                                     "Número: " + patrimonioSelecionado.getNumero() + "\n" +
@@ -2433,7 +2449,7 @@ public class ColetaFrame_v2 extends JFrame {
             }
 
             // Registrar no banco
-            coletaService.inserirColeta(coleta);
+            coletaDAO.inserirColeta(coleta);
 
             // Reproduzir som de sucesso
             SoundNotification.playColetaSalvaSound();
@@ -2442,12 +2458,12 @@ public class ColetaFrame_v2 extends JFrame {
             try {
                 if (inventarioAtivo != null) {
                     // Contar total de itens coletados na sala
-                    List<Coleta> coletasNaSala = coletaService.buscarColetasPorSala(salaAtual.getIdSala());
+                    List<Coleta> coletasNaSala = coletaDAO.buscarColetasPorSala(salaAtual.getIdSala());
                     int totalItens = coletasNaSala.size();
                     int itensSemEtiqueta = (int) coletasNaSala.stream().filter(Coleta::isSemEtiqueta).count();
 
                     // Atualizar estatísticas
-                    salaInventarioService.atualizarEstatisticas(salaAtual.getIdSala(), inventarioAtivo.getId(), totalItens,
+                    salaInventarioDAO.atualizarEstatisticas(salaAtual.getIdSala(), inventarioAtivo.getId(), totalItens,
                             itensSemEtiqueta);
                 }
             } catch (Exception e) {
@@ -2533,7 +2549,7 @@ public class ColetaFrame_v2 extends JFrame {
             modeloTabelaItensAgrupados.setRowCount(0);
 
             // Buscar itens agrupados
-            List<Object[]> itensAgrupados = coletaService.agruparItensSemEtiquetaPorDescricao();
+            List<Object[]> itensAgrupados = coletaDAO.agruparItensSemEtiquetaPorDescricao();
 
             for (Object[] item : itensAgrupados) {
                 // item[0] = DESCRICAO_NORMALIZADA
@@ -2671,7 +2687,7 @@ public class ColetaFrame_v2 extends JFrame {
             String estado = (String) modeloTabelaHistorico.getValueAt(linhaSelecionada, 3);
 
             // Excluir coleta (sem observações)
-            boolean sucesso = coletaService.excluirColeta(salaAtual.getIdSala(), numeroPatrimonio, dataHora, estado, "");
+            boolean sucesso = coletaDAO.excluirColeta(salaAtual.getIdSala(), numeroPatrimonio, dataHora, estado, "");
 
             if (sucesso) {
                 JOptionPane.showMessageDialog(this, "Coleta excluída com sucesso!",
@@ -2679,15 +2695,15 @@ public class ColetaFrame_v2 extends JFrame {
 
                 // Atualizar estatísticas na tabela SALA_INVENTARIO
                 try {
-                    Inventario inventarioAtivo = inventarioService.buscarPorStatus("EM_ANDAMENTO");
+                    Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
                     if (inventarioAtivo != null) {
                         // Contar total de itens coletados na sala após exclusão
-                        List<Coleta> coletasNaSala = coletaService.buscarColetasPorSala(salaAtual.getIdSala());
+                        List<Coleta> coletasNaSala = coletaDAO.buscarColetasPorSala(salaAtual.getIdSala());
                         int totalItens = coletasNaSala.size();
                         int itensSemEtiqueta = (int) coletasNaSala.stream().filter(Coleta::isSemEtiqueta).count();
 
                         // Atualizar estatísticas
-                        salaInventarioService.atualizarEstatisticas(salaAtual.getIdSala(), inventarioAtivo.getId(),
+                        salaInventarioDAO.atualizarEstatisticas(salaAtual.getIdSala(), inventarioAtivo.getId(),
                                 totalItens, itensSemEtiqueta);
                     }
                 } catch (Exception e) {
@@ -2746,7 +2762,7 @@ public class ColetaFrame_v2 extends JFrame {
 
         try {
             // Buscar a coleta mais recente deste patrimônio na sala atual
-            List<Coleta> coletasDoItem = coletaService.buscarPorPatrimonio(patrimonioSelecionado.getId());
+            List<Coleta> coletasDoItem = coletaDAO.buscarPorPatrimonio(patrimonioSelecionado.getId());
             Coleta coletaParaRemover = null;
 
             // Para verificar se a coleta é da sala atual, precisamos comparar com o
@@ -2766,7 +2782,7 @@ public class ColetaFrame_v2 extends JFrame {
             }
 
             // Remover a coleta
-            boolean sucesso = coletaService.excluirColeta(
+            boolean sucesso = coletaDAO.excluirColeta(
                     salaAtual.getIdSala(),
                     patrimonioSelecionado.getNumero(),
                     coletaParaRemover.getDataColetaFormatada(),
@@ -2779,15 +2795,15 @@ public class ColetaFrame_v2 extends JFrame {
 
                 // Atualizar estatísticas na tabela SALA_INVENTARIO
                 try {
-                    Inventario inventarioAtivo = inventarioService.buscarPorStatus("EM_ANDAMENTO");
+                    Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
                     if (inventarioAtivo != null) {
                         // Contar total de itens coletados na sala após remoção
-                        List<Coleta> coletasNaSala = coletaService.buscarColetasPorSala(salaAtual.getIdSala());
+                        List<Coleta> coletasNaSala = coletaDAO.buscarColetasPorSala(salaAtual.getIdSala());
                         int totalItens = coletasNaSala.size();
                         int itensSemEtiqueta = (int) coletasNaSala.stream().filter(Coleta::isSemEtiqueta).count();
 
                         // Atualizar estatísticas
-                        salaInventarioService.atualizarEstatisticas(salaAtual.getIdSala(), inventarioAtivo.getId(),
+                        salaInventarioDAO.atualizarEstatisticas(salaAtual.getIdSala(), inventarioAtivo.getId(),
                                 totalItens, itensSemEtiqueta);
                     }
                 } catch (Exception e) {
@@ -2828,7 +2844,7 @@ public class ColetaFrame_v2 extends JFrame {
 
         try {
             // Buscar inventário ativo
-            Inventario inventarioAtivo = inventarioService.buscarPorStatus("EM_ANDAMENTO");
+            Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
             if (inventarioAtivo == null) {
                 JOptionPane.showMessageDialog(this, "Nenhum inventário ativo encontrado.",
                         "Erro", JOptionPane.ERROR_MESSAGE);
@@ -2836,7 +2852,7 @@ public class ColetaFrame_v2 extends JFrame {
             }
 
             // Verificar se a coleta já foi finalizada para este inventário
-            if (salaInventarioService.isColetaFinalizada(salaAtual.getIdSala(), inventarioAtivo.getId())) {
+            if (salaInventarioDAO.isColetaFinalizada(salaAtual.getIdSala(), inventarioAtivo.getId())) {
                 int opcao = JOptionPane.showConfirmDialog(this,
                         "A coleta desta sala já foi finalizada para o inventário atual.\n" +
                                 "Deseja reabrir a coleta?",
@@ -2846,7 +2862,7 @@ public class ColetaFrame_v2 extends JFrame {
 
                 if (opcao == JOptionPane.YES_OPTION) {
                     // Reabrir coleta
-                    salaInventarioService.reabrirColeta(salaAtual.getIdSala(), inventarioAtivo.getId());
+                    salaInventarioDAO.reabrirColeta(salaAtual.getIdSala(), inventarioAtivo.getId());
                     JOptionPane.showMessageDialog(this, "Coleta da sala reaberta com sucesso!",
                             "Sucesso", JOptionPane.INFORMATION_MESSAGE);
 
@@ -2895,7 +2911,7 @@ public class ColetaFrame_v2 extends JFrame {
                 if (autorizacao == -1) {
                     // Admin: tentar buscar participante existente, senão usar ID do usuário
                     try {
-                        idParticipante = participanteInventarioService.buscarIdParticipantePorUsuario(
+                        idParticipante = participanteInventarioDAO.buscarIdParticipantePorUsuario(
                                 inventarioAtivo.getId(), usuarioLogado.getId());
                         if (idParticipante == null) {
                             idParticipante = usuarioLogado.getId(); // Usar ID do usuário admin
@@ -2910,7 +2926,7 @@ public class ColetaFrame_v2 extends JFrame {
                         "Erro", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            salaInventarioService.finalizarColeta(salaAtual.getIdSala(), inventarioAtivo.getId(), idParticipante,
+            salaInventarioDAO.finalizarColeta(salaAtual.getIdSala(), inventarioAtivo.getId(), idParticipante,
                     observacoes);
 
             JOptionPane.showMessageDialog(this,
@@ -3039,7 +3055,7 @@ public class ColetaFrame_v2 extends JFrame {
 
         // Para outros usuários, verificar se são participantes ativos
         try {
-            Integer idParticipante = participanteInventarioService.buscarIdParticipantePorUsuario(
+            Integer idParticipante = participanteInventarioDAO.buscarIdParticipantePorUsuario(
                     inventarioAtivo.getId(), usuarioLogado.getId());
             
             System.out.println("DEBUG: Verificação de participante - ID: " + idParticipante);

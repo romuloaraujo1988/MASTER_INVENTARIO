@@ -3,8 +3,6 @@ package com.inventario.view;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import com.inventario.model.Setor;
 import com.inventario.service.SetorService;
 import com.inventario.service.BusinessException;
@@ -128,30 +126,7 @@ public class SetorFormDialog extends JDialog {
         adicionarEfeitoFocus(campoResponsavel);
     }
     
-    private void estilizarBotao(JButton botao, Color corFundo, Color corTexto) {
-        botao.setBackground(corFundo);
-        botao.setForeground(corTexto);
-        botao.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
-        botao.setBorder(new EmptyBorder(10, 20, 10, 20));
-        botao.setFocusPainted(false);
-        botao.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        botao.setPreferredSize(new Dimension(120, 40));
-    }
-    
-    private void adicionarEfeitoHover(JButton botao, Color corNormal, Color corHover) {
-        botao.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                botao.setBackground(corHover);
-            }
-            
-            @Override
-            public void mouseExited(MouseEvent e) {
-                botao.setBackground(corNormal);
-            }
-        });
-    }
-    
+
     private void adicionarEfeitoFocus(JTextField campo) {
         Color corNormal = new Color(206, 212, 218);
         Color corFocus = new Color(0, 123, 255);
@@ -182,9 +157,9 @@ public class SetorFormDialog extends JDialog {
     
     private void preencherCampos() {
         if (setor != null) {
-            campoNome.setText(setor.getNome());
-            campoDescricao.setText(setor.getDescricao());
-            campoResponsavel.setText(setor.getResponsavelSetor());
+            campoNome.setText(setor.getNome() != null ? setor.getNome() : "");
+            campoDescricao.setText(setor.getDescricao() != null ? setor.getDescricao() : "");
+            campoResponsavel.setText(setor.getResponsavelSetor() != null ? setor.getResponsavelSetor() : "");
         }
     }
     

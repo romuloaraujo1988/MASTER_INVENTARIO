@@ -4,16 +4,16 @@ package com.inventario.mobile.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
-import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.inventario.mobile.R;
 import java.lang.NullPointerException;
 import java.lang.Override;
@@ -24,52 +24,75 @@ public final class ActivitySyncBinding implements ViewBinding {
   private final CoordinatorLayout rootView;
 
   @NonNull
-  public final MaterialButton btnClearPendingCollections;
+  public final MaterialButton btnClearData;
 
   @NonNull
   public final MaterialButton btnRefresh;
 
   @NonNull
-  public final MaterialButton btnSync;
+  public final MaterialButton btnSyncNow;
 
   @NonNull
-  public final MaterialButton btnViewPendingCollections;
+  public final MaterialCardView cardLastSync;
 
   @NonNull
-  public final LinearProgressIndicator progressBar;
+  public final ProgressBar progressBar;
 
   @NonNull
-  public final MaterialCardView progressCard;
+  public final Toolbar toolbar;
 
   @NonNull
-  public final MaterialToolbar toolbar;
+  public final TextView tvColetadosCount;
 
   @NonNull
-  public final TextView tvLastSync;
+  public final TextView tvLastSyncDate;
 
   @NonNull
-  public final TextView tvPendingCount;
+  public final TextView tvLastSyncDetails;
 
   @NonNull
-  public final TextView tvSyncMessage;
+  public final TextView tvLastSyncStatus;
+
+  @NonNull
+  public final TextView tvNetworkStatus;
+
+  @NonNull
+  public final TextView tvPatrimoniosCount;
+
+  @NonNull
+  public final TextView tvPendentesCount;
+
+  @NonNull
+  public final TextView tvSalasCount;
+
+  @NonNull
+  public final TextView tvSyncProgress;
 
   private ActivitySyncBinding(@NonNull CoordinatorLayout rootView,
-      @NonNull MaterialButton btnClearPendingCollections, @NonNull MaterialButton btnRefresh,
-      @NonNull MaterialButton btnSync, @NonNull MaterialButton btnViewPendingCollections,
-      @NonNull LinearProgressIndicator progressBar, @NonNull MaterialCardView progressCard,
-      @NonNull MaterialToolbar toolbar, @NonNull TextView tvLastSync,
-      @NonNull TextView tvPendingCount, @NonNull TextView tvSyncMessage) {
+      @NonNull MaterialButton btnClearData, @NonNull MaterialButton btnRefresh,
+      @NonNull MaterialButton btnSyncNow, @NonNull MaterialCardView cardLastSync,
+      @NonNull ProgressBar progressBar, @NonNull Toolbar toolbar,
+      @NonNull TextView tvColetadosCount, @NonNull TextView tvLastSyncDate,
+      @NonNull TextView tvLastSyncDetails, @NonNull TextView tvLastSyncStatus,
+      @NonNull TextView tvNetworkStatus, @NonNull TextView tvPatrimoniosCount,
+      @NonNull TextView tvPendentesCount, @NonNull TextView tvSalasCount,
+      @NonNull TextView tvSyncProgress) {
     this.rootView = rootView;
-    this.btnClearPendingCollections = btnClearPendingCollections;
+    this.btnClearData = btnClearData;
     this.btnRefresh = btnRefresh;
-    this.btnSync = btnSync;
-    this.btnViewPendingCollections = btnViewPendingCollections;
+    this.btnSyncNow = btnSyncNow;
+    this.cardLastSync = cardLastSync;
     this.progressBar = progressBar;
-    this.progressCard = progressCard;
     this.toolbar = toolbar;
-    this.tvLastSync = tvLastSync;
-    this.tvPendingCount = tvPendingCount;
-    this.tvSyncMessage = tvSyncMessage;
+    this.tvColetadosCount = tvColetadosCount;
+    this.tvLastSyncDate = tvLastSyncDate;
+    this.tvLastSyncDetails = tvLastSyncDetails;
+    this.tvLastSyncStatus = tvLastSyncStatus;
+    this.tvNetworkStatus = tvNetworkStatus;
+    this.tvPatrimoniosCount = tvPatrimoniosCount;
+    this.tvPendentesCount = tvPendentesCount;
+    this.tvSalasCount = tvSalasCount;
+    this.tvSyncProgress = tvSyncProgress;
   }
 
   @Override
@@ -99,9 +122,9 @@ public final class ActivitySyncBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
-      id = R.id.btnClearPendingCollections;
-      MaterialButton btnClearPendingCollections = ViewBindings.findChildViewById(rootView, id);
-      if (btnClearPendingCollections == null) {
+      id = R.id.btnClearData;
+      MaterialButton btnClearData = ViewBindings.findChildViewById(rootView, id);
+      if (btnClearData == null) {
         break missingId;
       }
 
@@ -111,57 +134,88 @@ public final class ActivitySyncBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.btnSync;
-      MaterialButton btnSync = ViewBindings.findChildViewById(rootView, id);
-      if (btnSync == null) {
+      id = R.id.btnSyncNow;
+      MaterialButton btnSyncNow = ViewBindings.findChildViewById(rootView, id);
+      if (btnSyncNow == null) {
         break missingId;
       }
 
-      id = R.id.btnViewPendingCollections;
-      MaterialButton btnViewPendingCollections = ViewBindings.findChildViewById(rootView, id);
-      if (btnViewPendingCollections == null) {
+      id = R.id.cardLastSync;
+      MaterialCardView cardLastSync = ViewBindings.findChildViewById(rootView, id);
+      if (cardLastSync == null) {
         break missingId;
       }
 
       id = R.id.progressBar;
-      LinearProgressIndicator progressBar = ViewBindings.findChildViewById(rootView, id);
+      ProgressBar progressBar = ViewBindings.findChildViewById(rootView, id);
       if (progressBar == null) {
         break missingId;
       }
 
-      id = R.id.progressCard;
-      MaterialCardView progressCard = ViewBindings.findChildViewById(rootView, id);
-      if (progressCard == null) {
-        break missingId;
-      }
-
       id = R.id.toolbar;
-      MaterialToolbar toolbar = ViewBindings.findChildViewById(rootView, id);
+      Toolbar toolbar = ViewBindings.findChildViewById(rootView, id);
       if (toolbar == null) {
         break missingId;
       }
 
-      id = R.id.tvLastSync;
-      TextView tvLastSync = ViewBindings.findChildViewById(rootView, id);
-      if (tvLastSync == null) {
+      id = R.id.tvColetadosCount;
+      TextView tvColetadosCount = ViewBindings.findChildViewById(rootView, id);
+      if (tvColetadosCount == null) {
         break missingId;
       }
 
-      id = R.id.tvPendingCount;
-      TextView tvPendingCount = ViewBindings.findChildViewById(rootView, id);
-      if (tvPendingCount == null) {
+      id = R.id.tvLastSyncDate;
+      TextView tvLastSyncDate = ViewBindings.findChildViewById(rootView, id);
+      if (tvLastSyncDate == null) {
         break missingId;
       }
 
-      id = R.id.tvSyncMessage;
-      TextView tvSyncMessage = ViewBindings.findChildViewById(rootView, id);
-      if (tvSyncMessage == null) {
+      id = R.id.tvLastSyncDetails;
+      TextView tvLastSyncDetails = ViewBindings.findChildViewById(rootView, id);
+      if (tvLastSyncDetails == null) {
         break missingId;
       }
 
-      return new ActivitySyncBinding((CoordinatorLayout) rootView, btnClearPendingCollections,
-          btnRefresh, btnSync, btnViewPendingCollections, progressBar, progressCard, toolbar,
-          tvLastSync, tvPendingCount, tvSyncMessage);
+      id = R.id.tvLastSyncStatus;
+      TextView tvLastSyncStatus = ViewBindings.findChildViewById(rootView, id);
+      if (tvLastSyncStatus == null) {
+        break missingId;
+      }
+
+      id = R.id.tvNetworkStatus;
+      TextView tvNetworkStatus = ViewBindings.findChildViewById(rootView, id);
+      if (tvNetworkStatus == null) {
+        break missingId;
+      }
+
+      id = R.id.tvPatrimoniosCount;
+      TextView tvPatrimoniosCount = ViewBindings.findChildViewById(rootView, id);
+      if (tvPatrimoniosCount == null) {
+        break missingId;
+      }
+
+      id = R.id.tvPendentesCount;
+      TextView tvPendentesCount = ViewBindings.findChildViewById(rootView, id);
+      if (tvPendentesCount == null) {
+        break missingId;
+      }
+
+      id = R.id.tvSalasCount;
+      TextView tvSalasCount = ViewBindings.findChildViewById(rootView, id);
+      if (tvSalasCount == null) {
+        break missingId;
+      }
+
+      id = R.id.tvSyncProgress;
+      TextView tvSyncProgress = ViewBindings.findChildViewById(rootView, id);
+      if (tvSyncProgress == null) {
+        break missingId;
+      }
+
+      return new ActivitySyncBinding((CoordinatorLayout) rootView, btnClearData, btnRefresh,
+          btnSyncNow, cardLastSync, progressBar, toolbar, tvColetadosCount, tvLastSyncDate,
+          tvLastSyncDetails, tvLastSyncStatus, tvNetworkStatus, tvPatrimoniosCount,
+          tvPendentesCount, tvSalasCount, tvSyncProgress);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

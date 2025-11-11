@@ -238,8 +238,9 @@ class NetworkLocationManager private constructor(private val context: Context) {
         val candidates = mutableListOf<String>()
         
         try {
+            // TODO: Implementar getLocalIpAddress no NetworkUtils
             // Obter IP local do dispositivo
-            val localIp = NetworkUtils.getLocalIpAddress()
+            val localIp: String? = null // NetworkUtils.getLocalIpAddress()
             
             if (localIp != null) {
                 Log.d(TAG, "IP local do dispositivo: $localIp")

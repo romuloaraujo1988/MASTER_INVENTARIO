@@ -8,10 +8,9 @@ import java.util.List;
 import com.inventario.model.Patrimonio;
 import com.inventario.model.Sala;
 import com.inventario.model.Responsavel;
-import com.inventario.service.ServiceFactory;
-import com.inventario.service.SalaService;
-import com.inventario.service.ResponsavelService;
-import com.inventario.service.PatrimonioService;
+import com.inventario.dao.PatrimonioDAO;
+import com.inventario.dao.SalaDAORefactored;
+import com.inventario.dao.ResponsavelDAO;
 
 /**
  * Formulário para adicionar/editar patrimônios
@@ -317,8 +316,9 @@ public class PatrimonioFormDialog extends JDialog {
             comboSala.removeAllItems();
             comboSala.addItem(new SalaItem(null)); // Item padrão
             
-            SalaService salaService = ServiceFactory.getSalaService();
-            List<Sala> salas = salaService.listarAtivas();
+            // === SWING: Usar DAO diretamente (sem Spring) ===
+            SalaDAORefactored salaDAO = new SalaDAORefactored();
+            List<Sala> salas = salaDAO.listarSalas();
             
             for (Sala sala : salas) {
                 comboSala.addItem(new SalaItem(sala));
@@ -337,8 +337,9 @@ public class PatrimonioFormDialog extends JDialog {
             comboResponsavel.removeAllItems();
             comboResponsavel.addItem(new ResponsavelItem(null)); // Item padrão
             
-            ResponsavelService responsavelService = ServiceFactory.getResponsavelService();
-            List<Responsavel> responsaveis = responsavelService.listarAtivos();
+            // === SWING: Usar DAO diretamente (sem Spring) ===
+            ResponsavelDAO responsavelDAO = new ResponsavelDAO();
+            List<Responsavel> responsaveis = responsavelDAO.findAll();
             
             for (Responsavel responsavel : responsaveis) {
                 comboResponsavel.addItem(new ResponsavelItem(responsavel));
@@ -467,13 +468,14 @@ public class PatrimonioFormDialog extends JDialog {
             // Data de aquisição
             patrimonio.setDataAquisicao((Date) spinnerDataAquisicao.getValue());
             
-            // Salvar no banco de dados
-            PatrimonioService patrimonioService = ServiceFactory.getPatrimonioService();
-            patrimonioService.salvar(patrimonio);
+            // Salvar no banco de dados usando DAO diretamente (Swing não usa Spring)
+            PatrimonioDAO patrimonioDAO = new PatrimonioDAO();
             
             if (patrimonio.getId() == 0) {
+                patrimonioDAO.insert(patrimonio);
                 JOptionPane.showMessageDialog(this, "Patrimônio criado com sucesso!");
             } else {
+                patrimonioDAO.update(patrimonio);
                 JOptionPane.showMessageDialog(this, "Patrimônio atualizado com sucesso!");
             }
             

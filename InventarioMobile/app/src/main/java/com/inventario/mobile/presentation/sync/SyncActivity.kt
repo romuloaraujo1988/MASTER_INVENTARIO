@@ -11,6 +11,7 @@ import com.inventario.mobile.data.repository.SyncRepository
 import com.inventario.mobile.utils.NetworkUtils
 import com.inventario.mobile.utils.PreferencesManager
 import com.google.android.material.snackbar.Snackbar
+import android.widget.Toast
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -49,12 +50,15 @@ class SyncActivity : AppCompatActivity() {
         preferencesManager = PreferencesManager(this)
         
         val database = AppDatabase.getInstance(this)
-        val apiService = com.inventario.mobile.data.remote.api.ApiClient.getApiService(this)
+        // TODO: Implementar criação correta das APIs
+        // val apiService = com.inventario.mobile.data.remote.api.ApiClient.getApiService(this)
         
         // Criar instâncias das APIs
-        val patrimonioApi = apiService.create(com.inventario.mobile.api.PatrimonioApi::class.java)
-        val salaApi = apiService.create(com.inventario.mobile.api.SalaApi::class.java)
+        // val patrimonioApi = apiService.create(com.inventario.mobile.api.PatrimonioApi::class.java)
+        // val salaApi = apiService.create(com.inventario.mobile.api.SalaApi::class.java)
         
+        // TODO: Descomentar quando APIs estiverem disponíveis
+        /*
         syncRepository = SyncRepository(
             context = this,
             patrimonioApi = patrimonioApi,
@@ -64,15 +68,20 @@ class SyncActivity : AppCompatActivity() {
             sincronizacaoDao = database.sincronizacaoDao(),
             preferencesManager = preferencesManager
         )
+        */
     }
     
     private fun setupListeners() {
         binding.btnSyncNow.setOnClickListener {
-            forceSyncFromServer()
+            // TODO: Implementar quando syncRepository estiver disponível
+            // forceSyncFromServer()
+            Toast.makeText(this, "Sincronização temporariamente desabilitada", Toast.LENGTH_SHORT).show()
         }
         
         binding.btnClearData.setOnClickListener {
-            showClearDataConfirmation()
+            // TODO: Implementar quando syncRepository estiver disponível
+            // showClearDataConfirmation()
+            Toast.makeText(this, "Limpeza temporariamente desabilitada", Toast.LENGTH_SHORT).show()
         }
         
         binding.btnRefresh.setOnClickListener {
@@ -96,6 +105,8 @@ class SyncActivity : AppCompatActivity() {
                     getColor(if (isOnline) R.color.success else R.color.error)
                 )
                 
+                // TODO: Implementar quando syncRepository estiver disponível
+                /*
                 // Estatísticas locais
                 val stats = syncRepository.getLocalStats()
                 binding.tvPatrimoniosCount.text = stats["patrimonios"]?.toString() ?: "0"
@@ -107,13 +118,13 @@ class SyncActivity : AppCompatActivity() {
                 val lastSync = syncRepository.getLastSync()
                 if (lastSync != null) {
                     binding.tvLastSyncDate.text = dateFormat.format(lastSync.dataHora)
-                    binding.tvLastSyncStatus.text = if (lastSync.sucesso) {
+                    binding.tvLastSyncStatus.text = if (lastSync.sincronizado) {
                         "✓ Sucesso"
                     } else {
                         "✗ Falha"
                     }
                     binding.tvLastSyncStatus.setTextColor(
-                        getColor(if (lastSync.sucesso) R.color.success else R.color.error)
+                        getColor(if (lastSync.sincronizado) R.color.success else R.color.error)
                     )
                     binding.tvLastSyncDetails.text = lastSync.mensagem
                     
@@ -121,6 +132,7 @@ class SyncActivity : AppCompatActivity() {
                 } else {
                     binding.cardLastSync.visibility = View.GONE
                 }
+                */
                 
                 // Habilitar/desabilitar botão de sincronização
                 binding.btnSyncNow.isEnabled = isOnline

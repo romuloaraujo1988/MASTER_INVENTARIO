@@ -53,7 +53,7 @@ public class ResponsavelFormDialog extends JDialog {
         
         // CPF
         gbc.gridx = 0; gbc.gridy = 1;
-        painelCampos.add(new JLabel("CPF:"), gbc);
+        painelCampos.add(new JLabel("CPF (opcional):"), gbc);
         gbc.gridx = 1;
         campoCpf = new JTextField(35);
         painelCampos.add(campoCpf, gbc);
@@ -170,15 +170,10 @@ public class ResponsavelFormDialog extends JDialog {
                 return;
             }
             
-            if (campoCpf.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "O CPF é obrigatório.");
-                return;
-            }
-            
-            // Validar formato do CPF (básico)
+            // Validar formato do CPF (se preenchido)
             String cpf = campoCpf.getText().replaceAll("[^0-9]", "");
-            if (cpf.length() != 11) {
-                JOptionPane.showMessageDialog(this, "CPF deve ter 11 dígitos.");
+            if (!cpf.isEmpty() && cpf.length() != 11) {
+                JOptionPane.showMessageDialog(this, "CPF deve ter 11 dígitos ou deixe em branco.");
                 return;
             }
             
@@ -195,8 +190,8 @@ public class ResponsavelFormDialog extends JDialog {
             }
             
             responsavel.setNome(campoNome.getText().trim());
-            responsavel.setCpf(cpf);
-            responsavel.setEmail(email);
+            responsavel.setCpf(cpf.isEmpty() ? null : cpf);
+            responsavel.setEmail(email.isEmpty() ? null : email);
             responsavel.setTelefone(campoTelefone.getText().trim());
             responsavel.setCargo(campoCargo.getText().trim());
             responsavel.setObservacoes(areaObservacoes.getText().trim());

@@ -185,8 +185,8 @@ class LoginViewModel(
                         Log.d("LoginViewModel", "Usuário: ${loginResponse.data.usuario.nome}")
                         Log.d("LoginViewModel", "Verificando isLoggedIn: ${preferencesManager.isLoggedIn()}")
                         
-                        // Registrar dispositivo automaticamente
-                        registrarDispositivoAutomaticamente(loginResponse.data.usuario.id)
+                        // TODO: Registrar dispositivo automaticamente
+                        // registrarDispositivoAutomaticamente(loginResponse.data.usuario.id)
                         
                         _uiState.value = currentState.copy(
                             isLoading = false,
@@ -233,48 +233,19 @@ class LoginViewModel(
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
     
-    /**
-     * Registra o dispositivo automaticamente após login bem-sucedido
-     */
+    // TODO: Implementar registro automático de dispositivo
+    /*
     private fun registrarDispositivoAutomaticamente(idUsuario: Int) {
         viewModelScope.launch {
             try {
                 Log.d("LoginViewModel", "Registrando dispositivo automaticamente...")
-                
-                val dispositivoApi = com.inventario.mobile.data.remote.api.ApiClient.getApiService(context)
-                    .create(com.inventario.mobile.api.DispositivoApi::class.java)
-                
-                val dispositivoRepository = com.inventario.mobile.repository.DispositivoRepository(
-                    dispositivoApi,
-                    context
-                )
-                
-                val result = dispositivoRepository.registrarDispositivoAtual(idUsuario)
-                
-                if (result.isSuccess) {
-                    val dispositivo = result.getOrNull()
-                    Log.d("LoginViewModel", "✓ Dispositivo registrado: ${dispositivo?.modelo}")
-                    Log.d("LoginViewModel", "  Status: ${dispositivo?.status}")
-                    
-                    // Salvar ID do dispositivo
-                    dispositivo?.let {
-                        preferencesManager.saveDispositivoId(it.id)
-                    }
-                    
-                    // Verificar se precisa de aprovação
-                    if (dispositivo?.isPendente() == true) {
-                        Log.d("LoginViewModel", "⚠ Dispositivo pendente de aprovação pelo administrador")
-                    }
-                } else {
-                    Log.w("LoginViewModel", "Falha ao registrar dispositivo: ${result.exceptionOrNull()?.message}")
-                }
-                
+                // Implementação pendente
             } catch (e: Exception) {
                 Log.e("LoginViewModel", "Erro ao registrar dispositivo: ${e.message}", e)
-                // Não bloquear o login por falha no registro do dispositivo
             }
         }
     }
+    */
     
     /**
      * Valida a configuração do servidor

@@ -5,41 +5,28 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.List;
-import com.inventario.service.SetorService;
-import com.inventario.service.BusinessException;
+import com.inventario.dao.SetorDAORefactored;
 import com.inventario.model.Setor;
 import com.inventario.view.ui.ButtonStyleFactory;
 
 /**
  * Tela principal para gerenciamento de setores
  * Permite visualizar, adicionar, editar e excluir setores
- * 
- * REFATORADO: Usa SetorService ao invés de DAO diretamente
  */
 public class SetorFrame extends JFrame {
     private JTable tabelaSetor;
     private DefaultTableModel modeloTabela;
-    private final SetorService setorService;
+    private final SetorDAORefactored setorDAO;
     private JTextField campoBusca;
     private JButton btnNovo, btnEditar, btnExcluir, btnBuscar;
     
     public SetorFrame() {
-        // Instantiate service directly (no Spring context in Swing app)
-        this.setorService = new SetorService();
+        // === SWING: Usar DAO diretamente (sem Spring) ===
+        this.setorDAO = new SetorDAORefactored();
         initComponents();
         aplicarEstiloModerno();
-    }
-    
-    /**
-     * Construtor para testes (injeção de dependência)
-     */
-    public SetorFrame(SetorService setorService) {
-        this.setorService = setorService;
-        initComponents();
-        aplicarEstiloModerno();
+        carregarSetores();
     }
     
     private void initComponents() {
@@ -180,14 +167,21 @@ public class SetorFrame extends JFrame {
     
     private void carregarSetores() {
         modeloTabela.setRowCount(0);
-        List<Setor> setores = setorService.listarTodos();
-        for (Setor s : setores) {
-            modeloTabela.addRow(new Object[]{
-                s.getId(),
-                s.getNome(),
-                s.getDescricao(),
-                s.getResponsavelSetor()
-            });
+        try {
+            List<Setor> setores = setorDAO.findAll();
+            for (Setor s : setores) {
+                modeloTabela.addRow(new Object[]{
+                    s.getId(),
+                    s.getNome(),
+                    s.getDescricao(),
+                    s.getResponsavelSetor()
+                });
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, 
+                "Erro ao carregar setores: " + e.getMessage(), 
+                "Erro", 
+                JOptionPane.ERROR_MESSAGE);
         }
     }
     
@@ -202,12 +196,19 @@ public class SetorFrame extends JFrame {
     private void editarSetor() {
         int linhaSelecionada = tabelaSetor.getSelectedRow();
         if (linhaSelecionada >= 0) {
-            Integer id = (Integer) modeloTabela.getValueAt(linhaSelecionada, 0);
-            Setor setor = setorService.buscarPorId(id);
-            if (setor != null) {
-                abrirFormularioSetor(setor);
-            } else {
-                JOptionPane.showMessageDialog(this, "Setor não encontrado.");
+            try {
+                Integer id = (Integer) modeloTabela.getValueAt(linhaSelecionada, 0);
+                Setor setor = setorDAO.findById(id);
+                if (setor != null) {
+                    abrirFormularioSetor(setor);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Setor não encontrado.");
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, 
+                    "Erro ao buscar setor: " + e.getMessage(), 
+                    "Erro", 
+                    JOptionPane.ERROR_MESSAGE);
             }
         } else {
             JOptionPane.showMessageDialog(this, "Selecione um setor para editar.");
@@ -220,26 +221,61 @@ public class SetorFrame extends JFrame {
             Integer id = (Integer) modeloTabela.getValueAt(linhaSelecionada, 0);
             String nomeSetor = (String) modeloTabela.getValueAt(linhaSelecionada, 1);
             
-            int confirmacao = JOptionPane.showConfirmDialog(this, 
-                "Tem certeza que deseja excluir o setor '" + nomeSetor + "'?", 
-                "Confirmar Exclusão", 
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE);
-            
-            if (confirmacao == JOptionPane.YES_OPTION) {
-                try {
-                    setorService.excluir(id);
+            try {
+                // Verificar se há responsáveis vinculados
+                System.out.println("[DEBUG SetorFrame] Verificando vínculos para setor ID: " + id + " (" + nomeSetor + ")");
+                int qtdResponsaveis = setorDAO.contarResponsaveisVinculados(id);
+                int qtdSalas = setorDAO.contarSalasVinculadas(id);
+                
+                System.out.println("[DEBUG SetorFrame] Quantidade de responsáveis: " + qtdResponsaveis);
+                System.out.println("[DEBUG SetorFrame] Quantidade de salas: " + qtdSalas);
+                
+                if (qtdResponsaveis > 0 || qtdSalas > 0) {
+                    StringBuilder mensagem = new StringBuilder();
+                    mensagem.append("Não é possível excluir o setor '").append(nomeSetor).append("'.\n\n");
+                    mensagem.append("Existem registros vinculados:\n");
+                    
+                    if (qtdResponsaveis > 0) {
+                        mensagem.append("• ").append(qtdResponsaveis)
+                               .append(" responsável(is)\n");
+                    }
+                    
+                    if (qtdSalas > 0) {
+                        mensagem.append("• ").append(qtdSalas)
+                               .append(" sala(s)\n");
+                    }
+                    
+                    mensagem.append("\nRemova ou transfira esses registros antes de excluir o setor.");
+                    mensagem.append("\n\nVerifique o console para mais detalhes sobre os registros vinculados.");
+                    
+                    JOptionPane.showMessageDialog(this, 
+                        mensagem.toString(), 
+                        "Não é Possível Excluir", 
+                        JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                
+                // Se não há vínculos, confirmar exclusão
+                int confirmacao = JOptionPane.showConfirmDialog(this, 
+                    "Tem certeza que deseja excluir o setor '" + nomeSetor + "'?", 
+                    "Confirmar Exclusão", 
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+                
+                if (confirmacao == JOptionPane.YES_OPTION) {
+                    setorDAO.delete(id);
                     JOptionPane.showMessageDialog(this, 
                         "Setor excluído com sucesso!", 
                         "Sucesso", 
                         JOptionPane.INFORMATION_MESSAGE);
                     carregarSetores();
-                } catch (BusinessException e) {
-                    JOptionPane.showMessageDialog(this, 
-                        e.getMessage(), 
-                        "Não é Possível Excluir", 
-                        JOptionPane.WARNING_MESSAGE);
                 }
+                
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, 
+                    "Erro ao excluir setor: " + e.getMessage(), 
+                    "Erro", 
+                    JOptionPane.ERROR_MESSAGE);
             }
         } else {
             JOptionPane.showMessageDialog(this, "Selecione um setor para excluir.");
@@ -250,20 +286,27 @@ public class SetorFrame extends JFrame {
         String termo = campoBusca.getText().trim();
         modeloTabela.setRowCount(0);
         
-        List<Setor> setores;
-        if (!termo.isEmpty()) {
-            setores = setorService.buscarPorTermo(termo);
-        } else {
-            setores = setorService.listarTodos();
-        }
+        try {
+            List<Setor> setores;
+            if (!termo.isEmpty()) {
+                setores = setorDAO.buscarPorTermo(termo);
+            } else {
+                setores = setorDAO.findAll();
+            }
         
-        for (Setor s : setores) {
-             modeloTabela.addRow(new Object[]{
-                 s.getId(),
-                 s.getNome(),
-                 s.getDescricao(),
-                 s.getResponsavelSetor()
-             });
-         }
+            for (Setor s : setores) {
+                modeloTabela.addRow(new Object[]{
+                    s.getId(),
+                    s.getNome(),
+                    s.getDescricao(),
+                    s.getResponsavelSetor()
+                });
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, 
+                "Erro ao buscar setores: " + e.getMessage(), 
+                "Erro", 
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 }

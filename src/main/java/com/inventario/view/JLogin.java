@@ -12,7 +12,7 @@ import com.inventario.model.Usuario;
  */
 public class JLogin extends JFrame {
 
-    // Cores modernas
+    // Cores modernas   
     private static final Color PRIMARY_COLOR = new Color(52, 152, 219);
     private static final Color SECONDARY_COLOR = new Color(46, 204, 113);
     private static final Color DANGER_COLOR = new Color(231, 76, 60);

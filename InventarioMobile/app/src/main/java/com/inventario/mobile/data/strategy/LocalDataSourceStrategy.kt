@@ -3,8 +3,8 @@ package com.inventario.mobile.data.strategy
 import android.util.Log
 import com.inventario.mobile.data.local.dao.PatrimonioDao
 import com.inventario.mobile.data.local.dao.SalaDao
-import com.inventario.mobile.model.Patrimonio
-import com.inventario.mobile.model.Sala
+import com.inventario.mobile.data.model.Patrimonio
+import com.inventario.mobile.data.model.Sala
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -23,8 +23,8 @@ class LocalDataSourceStrategy(
     override suspend fun isAvailable(): Boolean = withContext(Dispatchers.IO) {
         try {
             // Verifica se há dados no banco local
-            val patrimoniosCount = patrimonioDao.count()
-            val salasCount = salaDao.count()
+            val patrimoniosCount = patrimonioDao.contarTodos()
+            val salasCount = salaDao.contar()
             
             val available = patrimoniosCount > 0 || salasCount > 0
             
@@ -45,17 +45,32 @@ class LocalDataSourceStrategy(
         try {
             Log.d(TAG, "Buscando patrimônios do banco local...")
             
-            val entities = patrimonioDao.getAll()
+            val entities = patrimonioDao.getAllPatrimoniosList()
             val patrimonios = entities.map { entity ->
                 Patrimonio(
-                    id = entity.id,
-                    numero = entity.numero,
+                    id = entity.id.toLong(),
+                    numeroPatrimonio = entity.numero,
                     descricao = entity.descricao,
-                    idSala = entity.idSala,
-                    nomeSala = entity.nomeSala,
-                    estado = entity.estado,
-                    valor = entity.valor,
-                    dataAquisicao = entity.dataAquisicao
+                    marca = null,
+                    modelo = null,
+                    numeroSerie = null,
+                    estado = entity.status,
+                    valor = null,
+                    setorId = null,
+                    setorNome = null,
+                    salaId = entity.idSala?.toLong(),
+                    salaNome = entity.nomeSala,
+                    responsavelId = entity.idResponsavel?.toLong(),
+                    responsavelNome = entity.nomeResponsavel,
+                    qrCode = entity.numero,
+                    observacoes = null,
+                    coletado = entity.coletado,
+                    dataColeta = null,
+                    coletadoPor = null,
+                    dataColetaFormatada = null,
+                    observacoesColeta = null,
+                    sincronizado = true,
+                    servidorId = null
                 )
             }
             
@@ -71,18 +86,33 @@ class LocalDataSourceStrategy(
         try {
             Log.d(TAG, "Buscando patrimônio $numero do banco local...")
             
-            val entity = patrimonioDao.getByNumero(numero)
+            val entity = patrimonioDao.buscarPorNumero(numero)
             
             if (entity != null) {
                 val patrimonio = Patrimonio(
-                    id = entity.id,
-                    numero = entity.numero,
+                    id = entity.id.toLong(),
+                    numeroPatrimonio = entity.numero,
                     descricao = entity.descricao,
-                    idSala = entity.idSala,
-                    nomeSala = entity.nomeSala,
-                    estado = entity.estado,
-                    valor = entity.valor,
-                    dataAquisicao = entity.dataAquisicao
+                    marca = null,
+                    modelo = null,
+                    numeroSerie = null,
+                    estado = entity.status,
+                    valor = null,
+                    setorId = null,
+                    setorNome = null,
+                    salaId = entity.idSala?.toLong(),
+                    salaNome = entity.nomeSala,
+                    responsavelId = entity.idResponsavel?.toLong(),
+                    responsavelNome = entity.nomeResponsavel,
+                    qrCode = entity.numero,
+                    observacoes = null,
+                    coletado = entity.coletado,
+                    dataColeta = null,
+                    coletadoPor = null,
+                    dataColetaFormatada = null,
+                    observacoesColeta = null,
+                    sincronizado = true,
+                    servidorId = null
                 )
                 
                 Log.d(TAG, "✓ Patrimônio encontrado no banco local")
@@ -101,16 +131,15 @@ class LocalDataSourceStrategy(
         try {
             Log.d(TAG, "Buscando salas do banco local...")
             
-            val entities = salaDao.getAll()
+            val entities = salaDao.buscarTodas()
             val salas = entities.map { entity ->
                 Sala(
                     id = entity.id,
                     nome = entity.nome,
-                    descricao = entity.descricao,
-                    andar = entity.andar,
-                    bloco = entity.bloco,
-                    capacidade = entity.capacidade,
-                    ativa = entity.ativa
+                    descricao = null,
+                    andar = null,
+                    bloco = null,
+                    ativa = true
                 )
             }
             
@@ -126,17 +155,16 @@ class LocalDataSourceStrategy(
         try {
             Log.d(TAG, "Buscando sala $id do banco local...")
             
-            val entity = salaDao.getById(id)
+            val entity = salaDao.buscarPorId(id)
             
             if (entity != null) {
                 val sala = Sala(
                     id = entity.id,
                     nome = entity.nome,
-                    descricao = entity.descricao,
-                    andar = entity.andar,
-                    bloco = entity.bloco,
-                    capacidade = entity.capacidade,
-                    ativa = entity.ativa
+                    descricao = null,
+                    andar = null,
+                    bloco = null,
+                    ativa = true
                 )
                 
                 Log.d(TAG, "✓ Sala encontrada no banco local")

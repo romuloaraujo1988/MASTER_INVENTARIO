@@ -4,8 +4,8 @@ import android.content.Context
 import android.util.Log
 import com.inventario.mobile.api.PatrimonioApi
 import com.inventario.mobile.api.SalaApi
-import com.inventario.mobile.model.Patrimonio
-import com.inventario.mobile.model.Sala
+import com.inventario.mobile.data.model.Patrimonio
+import com.inventario.mobile.data.model.Sala
 import com.inventario.mobile.utils.NetworkUtils
 
 /**
@@ -105,7 +105,7 @@ class RemoteDataSourceStrategy(
                     Result.failure(Exception("Sala não encontrada"))
                 }
             } else {
-                result
+                Result.failure(result.exceptionOrNull() ?: Exception("Erro ao buscar sala"))
             }
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao buscar sala do servidor", e)

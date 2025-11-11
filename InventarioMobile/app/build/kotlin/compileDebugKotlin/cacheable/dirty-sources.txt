@@ -1,0 +1,7 @@
+D:\MASTER_INVENTARIO\InventarioMobile\app\src\main\java\com\inventario\mobile\di\RepositoryModule.kt
+D:\MASTER_INVENTARIO\InventarioMobile\app\src\main\java\com\inventario\mobile\di\ApiModule.kt
+D:\MASTER_INVENTARIO\InventarioMobile\app\src\main\java\com\inventario\mobile\data\strategy\LocalDataSourceStrategy.kt
+D:\MASTER_INVENTARIO\InventarioMobile\app\src\main\java\com\inventario\mobile\data\strategy\DataSourceStrategyFactory.kt
+D:\MASTER_INVENTARIO\InventarioMobile\app\src\main\java\com\inventario\mobile\di\NetworkModule.kt
+D:\MASTER_INVENTARIO\InventarioMobile\app\src\main\java\com\inventario\mobile\data\repository\ColetaRepositoryImpl.kt
+D:\MASTER_INVENTARIO\InventarioMobile\app\src\main\java\com\inventario\mobile\data\repository\PatrimonioRepositoryImpl.kt

@@ -342,4 +342,42 @@ object NetworkModule {
         )
         return retrofit.create(com.inventario.mobile.data.remote.api.ColetaApi::class.java)
     }
+    
+    /**
+     * Fornece instância do PatrimonioApi (legacy)
+     */
+    fun getPatrimonioApiLegacy(context: Context): com.inventario.mobile.api.PatrimonioApi {
+        val retrofit = createRetrofit(
+            createOkHttpClient(
+                context,
+                createHttpLoggingInterceptor(),
+                createAuthInterceptor(
+                    LocalDataManager.getInstance(context),
+                    com.inventario.mobile.utils.PreferencesManager(context)
+                ),
+                DeviceInfoInterceptor(context)
+            ),
+            ServerConfigManager.getInstance(context)
+        )
+        return retrofit.create(com.inventario.mobile.api.PatrimonioApi::class.java)
+    }
+    
+    /**
+     * Fornece instância do SalaApi
+     */
+    fun getSalaApi(context: Context): com.inventario.mobile.api.SalaApi {
+        val retrofit = createRetrofit(
+            createOkHttpClient(
+                context,
+                createHttpLoggingInterceptor(),
+                createAuthInterceptor(
+                    LocalDataManager.getInstance(context),
+                    com.inventario.mobile.utils.PreferencesManager(context)
+                ),
+                DeviceInfoInterceptor(context)
+            ),
+            ServerConfigManager.getInstance(context)
+        )
+        return retrofit.create(com.inventario.mobile.api.SalaApi::class.java)
+    }
 }

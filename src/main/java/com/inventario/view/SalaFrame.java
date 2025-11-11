@@ -1,7 +1,6 @@
 package com.inventario.view;
 
-import com.inventario.service.SalaService;
-import com.inventario.service.BusinessException;
+import com.inventario.dao.SalaDAORefactored;
 import com.inventario.model.Sala;
 import com.inventario.view.ui.ButtonStyleFactory;
 import javax.swing.*;
@@ -17,20 +16,15 @@ import java.util.List;
  */
 public class SalaFrame extends JFrame {
     
-    private final SalaService salaService;
+    private final SalaDAORefactored salaDAO;
     private JTable tableSalas;
     private DefaultTableModel tableModel;
     private JTextField txtFiltro;
     private JButton btnNovo, btnEditar, btnExcluir, btnAtualizar;
     
     public SalaFrame() {
-        // Instantiate service directly (no Spring context in Swing app)
-        this.salaService = new SalaService();
-        initializeComponents();
-    }
-    
-    public SalaFrame(SalaService salaService) {
-        this.salaService = salaService;
+        // === SWING: Usar DAO diretamente (sem Spring) ===
+        this.salaDAO = new SalaDAORefactored();
         initializeComponents();
     }
     
@@ -162,7 +156,7 @@ public class SalaFrame extends JFrame {
     
     private void carregarSalas() {
         try {
-            List<Sala> salas = salaService.listarTodas();
+            List<Sala> salas = salaDAO.listarSalas();
             atualizarTabela(salas);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, 
@@ -175,7 +169,7 @@ public class SalaFrame extends JFrame {
     private void filtrarSalas() {
         String filtro = txtFiltro.getText().trim().toLowerCase();
         try {
-            List<Sala> salas = salaService.listarTodas();
+            List<Sala> salas = salaDAO.listarSalas();
             
             if (!filtro.isEmpty()) {
                 // Filtrar localmente por número, descrição, bloco ou tipo
@@ -238,7 +232,7 @@ public class SalaFrame extends JFrame {
         
         int idSala = (Integer) tableModel.getValueAt(selectedRow, 0);
         try {
-            Sala sala = salaService.buscarPorId(idSala);
+            Sala sala = salaDAO.buscarSalaPorId(idSala);
             
             if (sala != null) {
                 abrirFormularioSala(sala);
@@ -279,17 +273,12 @@ public class SalaFrame extends JFrame {
         
         if (confirmacao == JOptionPane.YES_OPTION) {
             try {
-                salaService.excluir(idSala);
+                salaDAO.excluirSala(idSala);
                 JOptionPane.showMessageDialog(this, 
                     "Sala excluída com sucesso!", 
                     "Sucesso", 
                     JOptionPane.INFORMATION_MESSAGE);
                 carregarSalas();
-            } catch (BusinessException e) {
-                JOptionPane.showMessageDialog(this, 
-                    e.getMessage(), 
-                    "Erro de Negócio", 
-                    JOptionPane.WARNING_MESSAGE);
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, 
                     "Erro ao excluir sala: " + e.getMessage(), 

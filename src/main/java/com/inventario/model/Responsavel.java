@@ -18,6 +18,7 @@ public class Responsavel {
     private int idSetor;
     private Boolean ativo;
     private Timestamp dataCadastro;
+    private String observacoes;
     
     // Campo transiente para exibição
     private String nomeSetor;
@@ -281,12 +282,10 @@ public class Responsavel {
     }
 
     public String getObservacoes() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getObservacoes'");
+        return observacoes;
     }
 
-    public void setObservacoes(String trim) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setObservacoes'");
+    public void setObservacoes(String observacoes) {
+        this.observacoes = observacoes;
     }
 }

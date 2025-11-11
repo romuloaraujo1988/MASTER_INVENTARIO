@@ -1,6 +1,6 @@
 package com.inventario.mobile.api
 
-import com.inventario.mobile.model.ApiResponse
+import com.inventario.mobile.data.remote.dto.ApiResponse
 import com.inventario.mobile.model.DispositivoMobile
 import com.inventario.mobile.model.DispositivoRegistroRequest
 import retrofit2.Response

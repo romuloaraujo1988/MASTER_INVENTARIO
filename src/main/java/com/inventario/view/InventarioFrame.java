@@ -31,7 +31,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
     private final ColetaService coletaService;
     private JTextField campoBusca;
     private JButton btnNovo, btnEditar, btnVisualizar, btnFinalizar, btnRelatorio, btnBuscar;
-    private JButton btnAbrir, btnCancelar, btnEncerrar, btnExcluir;
+    private JButton btnAbrir, btnCancelar, btnExcluir;
     
     // Componentes do modo offline
     private JLabel lblOfflineStatus;
@@ -72,7 +72,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
         
         // Painel de busca com indicador offline
         JPanel painelBusca = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        painelBusca.add(new JLabel("🔍 Buscar:"));
+        painelBusca.add(new JLabel("Buscar:"));
         campoBusca = new JTextField(25);
         campoBusca.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
         painelBusca.add(campoBusca);
@@ -81,14 +81,14 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
         
         // Adicionar indicador de status offline
         painelBusca.add(Box.createHorizontalStrut(20));
-        lblOfflineStatus = new JLabel("🔄 Verificando...");
+        lblOfflineStatus = new JLabel("Verificando...");
         lblOfflineStatus.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
         lblOfflineStatus.setToolTipText("Status da conexão offline");
         painelBusca.add(lblOfflineStatus);
         
         // Botão de sincronização rápida
-        btnSyncNow = ButtonStyleFactory.createWarningButton("⚡");
-        btnSyncNow.setPreferredSize(new Dimension(35, 25));
+        btnSyncNow = ButtonStyleFactory.createWarningButton("Sync");
+        btnSyncNow.setPreferredSize(new Dimension(60, 25));
         btnSyncNow.setToolTipText("Sincronização rápida");
         painelBusca.add(btnSyncNow);
         
@@ -98,17 +98,17 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
         gbc.insets = new Insets(5, 4, 5, 4);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         
-        // Botões principais com cores e ícones
-        btnNovo = ButtonStyleFactory.createSuccessButton("➕ Novo");
+        // Botões principais com cores
+        btnNovo = ButtonStyleFactory.createSuccessButton("Novo");
         btnNovo.setPreferredSize(new Dimension(100, 35));
         
-        btnEditar = ButtonStyleFactory.createPrimaryButton("✏️ Editar");
+        btnEditar = ButtonStyleFactory.createPrimaryButton("Editar");
         btnEditar.setPreferredSize(new Dimension(100, 35));
         
-        btnVisualizar = ButtonStyleFactory.createInfoButton("👁️ Ver");
+        btnVisualizar = ButtonStyleFactory.createInfoButton("Visualizar");
         btnVisualizar.setPreferredSize(new Dimension(100, 35));
         
-        btnExcluir = ButtonStyleFactory.createDangerButton("🗑️ Excluir");
+        btnExcluir = ButtonStyleFactory.createDangerButton("Excluir");
         btnExcluir.setPreferredSize(new Dimension(100, 35));
         
         // Separador visual
@@ -116,24 +116,21 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
         separador1.setPreferredSize(new Dimension(2, 30));
         
         // Botões de controle de status
-        btnAbrir = ButtonStyleFactory.createSuccessButton("🔓 Abrir");
+        btnAbrir = ButtonStyleFactory.createSuccessButton("Abrir");
         btnAbrir.setPreferredSize(new Dimension(100, 35));
         
-        btnCancelar = ButtonStyleFactory.createWarningButton("❌ Cancelar");
+        btnCancelar = ButtonStyleFactory.createWarningButton("Cancelar");
         btnCancelar.setPreferredSize(new Dimension(100, 35));
-        
-        btnEncerrar = ButtonStyleFactory.createSecondaryButton("🔒 Encerrar");
-        btnEncerrar.setPreferredSize(new Dimension(100, 35));
         
         // Separador visual
         JSeparator separador2 = new JSeparator(SwingConstants.VERTICAL);
         separador2.setPreferredSize(new Dimension(2, 30));
         
         // Botões de relatório e finalização
-        btnFinalizar = ButtonStyleFactory.createPrimaryButton("✅ Finalizar");
+        btnFinalizar = ButtonStyleFactory.createPrimaryButton("Finalizar");
         btnFinalizar.setPreferredSize(new Dimension(100, 35));
         
-        btnRelatorio = ButtonStyleFactory.createInfoButton("📊 Relatório");
+        btnRelatorio = ButtonStyleFactory.createInfoButton("Relatório");
         btnRelatorio.setPreferredSize(new Dimension(100, 35));
         
         // Adicionar botões ao painel de ações usando GridBagLayout
@@ -158,12 +155,9 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
         
         // Segunda linha de botões
         gbc.gridx = 0; gbc.gridy = 1;
-        painelAcoes.add(btnEncerrar, gbc);
-        
-        gbc.gridx = 1; gbc.gridy = 1;
         painelAcoes.add(btnFinalizar, gbc);
         
-        gbc.gridx = 2; gbc.gridy = 1;
+        gbc.gridx = 1; gbc.gridy = 1;
         painelAcoes.add(btnRelatorio, gbc);
         
         // Organizar painéis
@@ -429,7 +423,6 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
         // Eventos dos botões de controle de status
         btnAbrir.addActionListener(e -> abrirInventario());
         btnCancelar.addActionListener(e -> cancelarInventario());
-        btnEncerrar.addActionListener(e -> encerrarInventario());
         btnExcluir.addActionListener(e -> excluirInventario());
         
         // Eventos dos componentes offline
@@ -891,41 +884,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
         }
     }
     
-    private void encerrarInventario() {
-        int linhaSelecionada = tabelaInventario.getSelectedRow();
-        if (linhaSelecionada >= 0) {
-            try {
-                Integer id = (Integer) modeloTabela.getValueAt(linhaSelecionada, 0);
-                String statusAtual = (String) modeloTabela.getValueAt(linhaSelecionada, 4);
-                
-                // Verificar se pode encerrar
-                if (!Inventario.STATUS_EM_ANDAMENTO.equals(statusAtual)) {
-                    JOptionPane.showMessageDialog(this, "Apenas inventários ABERTOS podem ser encerrados.", "Aviso", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-                
-                int confirmacao = JOptionPane.showConfirmDialog(this, 
-                    "Tem certeza que deseja encerrar este inventário?\n" +
-                    "Após o encerramento, não será possível realizar mais coletas.", 
-                    "Confirmar Encerramento", 
-                    JOptionPane.YES_NO_OPTION);
-                
-                if (confirmacao == JOptionPane.YES_OPTION) {
-                    if (alterarStatusInventario(id, Inventario.STATUS_CONCLUIDO)) {
-                        carregarInventarios();
-                        JOptionPane.showMessageDialog(this, "Inventário encerrado com sucesso!");
-                    } else {
-                        JOptionPane.showMessageDialog(this, "Erro ao encerrar inventário.", "Erro", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Erro ao encerrar inventário: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
-            }
-        } else {
-            JOptionPane.showMessageDialog(this, "Selecione um inventário para encerrar.", "Aviso", JOptionPane.WARNING_MESSAGE);
-        }
-    }
+
     
     private boolean alterarStatusInventario(Integer id, String novoStatus) {
         try {
@@ -985,7 +944,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                     "Tem certeza que deseja excluir o inventário:\n\n" +
                     "Nome: " + nome + "\n" +
                     "Status: " + statusAtual + "\n\n" +
-                    "⚠️ ATENÇÃO: Esta ação não pode ser desfeita!", 
+                    "ATENÇÃO: Esta ação não pode ser desfeita!", 
                     "Confirmar Exclusão", 
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.WARNING_MESSAGE);
@@ -1114,27 +1073,27 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
             SwingUtilities.invokeLater(() -> {
                 switch (state) {
                     case ONLINE:
-                        lblOfflineStatus.setText("● Online");
+                        lblOfflineStatus.setText("[Online]");
                         lblOfflineStatus.setForeground(Color.GREEN);
                         btnSyncNow.setEnabled(true);
                         break;
                     case OFFLINE:
-                        lblOfflineStatus.setText("● Offline");
+                        lblOfflineStatus.setText("[Offline]");
                         lblOfflineStatus.setForeground(Color.RED);
                         btnSyncNow.setEnabled(false);
                         break;
                     case SYNCING:
-                        lblOfflineStatus.setText("● Sincronizando...");
+                        lblOfflineStatus.setText("[Sincronizando...]");
                         lblOfflineStatus.setForeground(Color.ORANGE);
                         btnSyncNow.setEnabled(false);
                         break;
                     case ERROR:
-                        lblOfflineStatus.setText("● Erro");
+                        lblOfflineStatus.setText("[Erro]");
                         lblOfflineStatus.setForeground(Color.MAGENTA);
                         btnSyncNow.setEnabled(isOnline);
                         break;
                     default:
-                        lblOfflineStatus.setText("● Inicializando...");
+                        lblOfflineStatus.setText("[Inicializando...]");
                         lblOfflineStatus.setForeground(Color.GRAY);
                         btnSyncNow.setEnabled(false);
                 }

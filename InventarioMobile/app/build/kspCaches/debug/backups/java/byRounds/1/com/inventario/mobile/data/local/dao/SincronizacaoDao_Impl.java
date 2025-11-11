@@ -12,6 +12,7 @@ import androidx.room.RoomSQLiteQuery;
 import androidx.room.SharedSQLiteStatement;
 import androidx.room.util.CursorUtil;
 import androidx.room.util.DBUtil;
+import androidx.room.util.StringUtil;
 import androidx.sqlite.db.SupportSQLiteStatement;
 import com.inventario.mobile.data.local.entity.SincronizacaoEntity;
 import java.lang.Class;
@@ -21,6 +22,7 @@ import java.lang.Long;
 import java.lang.Object;
 import java.lang.Override;
 import java.lang.String;
+import java.lang.StringBuilder;
 import java.lang.SuppressWarnings;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,6 +31,7 @@ import java.util.concurrent.Callable;
 import javax.annotation.processing.Generated;
 import kotlin.Unit;
 import kotlin.coroutines.Continuation;
+import kotlinx.coroutines.flow.Flow;
 
 @Generated("androidx.room.RoomProcessor")
 @SuppressWarnings({"unchecked", "deprecation"})
@@ -37,17 +40,15 @@ public final class SincronizacaoDao_Impl implements SincronizacaoDao {
 
   private final EntityInsertionAdapter<SincronizacaoEntity> __insertionAdapterOfSincronizacaoEntity;
 
-  private final EntityDeletionOrUpdateAdapter<SincronizacaoEntity> __deletionAdapterOfSincronizacaoEntity;
-
   private final EntityDeletionOrUpdateAdapter<SincronizacaoEntity> __updateAdapterOfSincronizacaoEntity;
 
   private final SharedSQLiteStatement __preparedStmtOfMarcarComoSincronizado;
 
-  private final SharedSQLiteStatement __preparedStmtOfMarcarComoErro;
+  private final SharedSQLiteStatement __preparedStmtOfRegistrarErro;
 
-  private final SharedSQLiteStatement __preparedStmtOfDeleteSincronizacaoByEntidade;
+  private final SharedSQLiteStatement __preparedStmtOfLimparSincronizados;
 
-  private final SharedSQLiteStatement __preparedStmtOfLimparSincronizadas;
+  private final SharedSQLiteStatement __preparedStmtOfLimparTodas;
 
   public SincronizacaoDao_Impl(@NonNull final RoomDatabase __db) {
     this.__db = __db;
@@ -73,19 +74,6 @@ public final class SincronizacaoDao_Impl implements SincronizacaoDao {
         } else {
           statement.bindString(7, entity.getErro());
         }
-      }
-    };
-    this.__deletionAdapterOfSincronizacaoEntity = new EntityDeletionOrUpdateAdapter<SincronizacaoEntity>(__db) {
-      @Override
-      @NonNull
-      protected String createQuery() {
-        return "DELETE FROM `sincronizacao` WHERE `id` = ?";
-      }
-
-      @Override
-      protected void bind(@NonNull final SupportSQLiteStatement statement,
-          @NonNull final SincronizacaoEntity entity) {
-        statement.bindLong(1, entity.getId());
       }
     };
     this.__updateAdapterOfSincronizacaoEntity = new EntityDeletionOrUpdateAdapter<SincronizacaoEntity>(__db) {
@@ -117,11 +105,11 @@ public final class SincronizacaoDao_Impl implements SincronizacaoDao {
       @Override
       @NonNull
       public String createQuery() {
-        final String _query = "UPDATE sincronizacao SET sincronizado = 1, erro = NULL WHERE id = ?";
+        final String _query = "UPDATE sincronizacao SET sincronizado = 1 WHERE id = ?";
         return _query;
       }
     };
-    this.__preparedStmtOfMarcarComoErro = new SharedSQLiteStatement(__db) {
+    this.__preparedStmtOfRegistrarErro = new SharedSQLiteStatement(__db) {
       @Override
       @NonNull
       public String createQuery() {
@@ -129,26 +117,26 @@ public final class SincronizacaoDao_Impl implements SincronizacaoDao {
         return _query;
       }
     };
-    this.__preparedStmtOfDeleteSincronizacaoByEntidade = new SharedSQLiteStatement(__db) {
+    this.__preparedStmtOfLimparSincronizados = new SharedSQLiteStatement(__db) {
       @Override
       @NonNull
       public String createQuery() {
-        final String _query = "DELETE FROM sincronizacao WHERE entidade = ? AND entidadeId = ?";
+        final String _query = "DELETE FROM sincronizacao WHERE sincronizado = 1 AND dataHora < ?";
         return _query;
       }
     };
-    this.__preparedStmtOfLimparSincronizadas = new SharedSQLiteStatement(__db) {
+    this.__preparedStmtOfLimparTodas = new SharedSQLiteStatement(__db) {
       @Override
       @NonNull
       public String createQuery() {
-        final String _query = "DELETE FROM sincronizacao WHERE sincronizado = 1";
+        final String _query = "DELETE FROM sincronizacao";
         return _query;
       }
     };
   }
 
   @Override
-  public Object insert(final SincronizacaoEntity sincronizacao,
+  public Object inserir(final SincronizacaoEntity sincronizacao,
       final Continuation<? super Long> $completion) {
     return CoroutinesRoom.execute(__db, true, new Callable<Long>() {
       @Override
@@ -167,7 +155,7 @@ public final class SincronizacaoDao_Impl implements SincronizacaoDao {
   }
 
   @Override
-  public Object delete(final SincronizacaoEntity sincronizacao,
+  public Object inserirTodas(final List<SincronizacaoEntity> sincronizacoes,
       final Continuation<? super Unit> $completion) {
     return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
       @Override
@@ -175,7 +163,7 @@ public final class SincronizacaoDao_Impl implements SincronizacaoDao {
       public Unit call() throws Exception {
         __db.beginTransaction();
         try {
-          __deletionAdapterOfSincronizacaoEntity.handle(sincronizacao);
+          __insertionAdapterOfSincronizacaoEntity.insert(sincronizacoes);
           __db.setTransactionSuccessful();
           return Unit.INSTANCE;
         } finally {
@@ -186,7 +174,7 @@ public final class SincronizacaoDao_Impl implements SincronizacaoDao {
   }
 
   @Override
-  public Object update(final SincronizacaoEntity sincronizacao,
+  public Object atualizar(final SincronizacaoEntity sincronizacao,
       final Continuation<? super Unit> $completion) {
     return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
       @Override
@@ -231,13 +219,13 @@ public final class SincronizacaoDao_Impl implements SincronizacaoDao {
   }
 
   @Override
-  public Object marcarComoErro(final long id, final String erro,
+  public Object registrarErro(final long id, final String erro,
       final Continuation<? super Unit> $completion) {
     return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
       @Override
       @NonNull
       public Unit call() throws Exception {
-        final SupportSQLiteStatement _stmt = __preparedStmtOfMarcarComoErro.acquire();
+        final SupportSQLiteStatement _stmt = __preparedStmtOfRegistrarErro.acquire();
         int _argIndex = 1;
         _stmt.bindString(_argIndex, erro);
         _argIndex = 2;
@@ -252,24 +240,22 @@ public final class SincronizacaoDao_Impl implements SincronizacaoDao {
             __db.endTransaction();
           }
         } finally {
-          __preparedStmtOfMarcarComoErro.release(_stmt);
+          __preparedStmtOfRegistrarErro.release(_stmt);
         }
       }
     }, $completion);
   }
 
   @Override
-  public Object deleteSincronizacaoByEntidade(final String entidade, final long entidadeId,
+  public Object limparSincronizados(final long timestamp,
       final Continuation<? super Unit> $completion) {
     return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
       @Override
       @NonNull
       public Unit call() throws Exception {
-        final SupportSQLiteStatement _stmt = __preparedStmtOfDeleteSincronizacaoByEntidade.acquire();
+        final SupportSQLiteStatement _stmt = __preparedStmtOfLimparSincronizados.acquire();
         int _argIndex = 1;
-        _stmt.bindString(_argIndex, entidade);
-        _argIndex = 2;
-        _stmt.bindLong(_argIndex, entidadeId);
+        _stmt.bindLong(_argIndex, timestamp);
         try {
           __db.beginTransaction();
           try {
@@ -280,19 +266,19 @@ public final class SincronizacaoDao_Impl implements SincronizacaoDao {
             __db.endTransaction();
           }
         } finally {
-          __preparedStmtOfDeleteSincronizacaoByEntidade.release(_stmt);
+          __preparedStmtOfLimparSincronizados.release(_stmt);
         }
       }
     }, $completion);
   }
 
   @Override
-  public Object limparSincronizadas(final Continuation<? super Unit> $completion) {
+  public Object limparTodas(final Continuation<? super Unit> $completion) {
     return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
       @Override
       @NonNull
       public Unit call() throws Exception {
-        final SupportSQLiteStatement _stmt = __preparedStmtOfLimparSincronizadas.acquire();
+        final SupportSQLiteStatement _stmt = __preparedStmtOfLimparTodas.acquire();
         try {
           __db.beginTransaction();
           try {
@@ -303,15 +289,14 @@ public final class SincronizacaoDao_Impl implements SincronizacaoDao {
             __db.endTransaction();
           }
         } finally {
-          __preparedStmtOfLimparSincronizadas.release(_stmt);
+          __preparedStmtOfLimparTodas.release(_stmt);
         }
       }
     }, $completion);
   }
 
   @Override
-  public Object getSincronizacoesPendentes(
-      final Continuation<? super List<SincronizacaoEntity>> $completion) {
+  public Object buscarPendentes(final Continuation<? super List<SincronizacaoEntity>> $completion) {
     final String _sql = "SELECT * FROM sincronizacao WHERE sincronizado = 0 ORDER BY dataHora ASC";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
     final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
@@ -364,12 +349,10 @@ public final class SincronizacaoDao_Impl implements SincronizacaoDao {
   }
 
   @Override
-  public Object getSincronizacoesComErro(
-      final Continuation<? super List<SincronizacaoEntity>> $completion) {
-    final String _sql = "SELECT * FROM sincronizacao WHERE erro IS NOT NULL ORDER BY dataHora DESC";
+  public Flow<List<SincronizacaoEntity>> observarPendentes() {
+    final String _sql = "SELECT * FROM sincronizacao WHERE sincronizado = 0 ORDER BY dataHora ASC";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
-    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
-    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<SincronizacaoEntity>>() {
+    return CoroutinesRoom.createFlow(__db, false, new String[] {"sincronizacao"}, new Callable<List<SincronizacaoEntity>>() {
       @Override
       @NonNull
       public List<SincronizacaoEntity> call() throws Exception {
@@ -411,21 +394,21 @@ public final class SincronizacaoDao_Impl implements SincronizacaoDao {
           return _result;
         } finally {
           _cursor.close();
-          _statement.release();
         }
       }
-    }, $completion);
+
+      @Override
+      protected void finalize() {
+        _statement.release();
+      }
+    });
   }
 
   @Override
-  public Object getSincronizacaoByEntidade(final String entidade, final long entidadeId,
+  public Object getUltimaSincronizacao(
       final Continuation<? super SincronizacaoEntity> $completion) {
-    final String _sql = "SELECT * FROM sincronizacao WHERE entidade = ? AND entidadeId = ? LIMIT 1";
-    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 2);
-    int _argIndex = 1;
-    _statement.bindString(_argIndex, entidade);
-    _argIndex = 2;
-    _statement.bindLong(_argIndex, entidadeId);
+    final String _sql = "SELECT * FROM sincronizacao ORDER BY dataHora DESC LIMIT 1";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
     final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
     return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<SincronizacaoEntity>() {
       @Override
@@ -476,7 +459,7 @@ public final class SincronizacaoDao_Impl implements SincronizacaoDao {
   }
 
   @Override
-  public Object countSincronizacoesPendentes(final Continuation<? super Integer> $completion) {
+  public Object contarPendentes(final Continuation<? super Integer> $completion) {
     final String _sql = "SELECT COUNT(*) FROM sincronizacao WHERE sincronizado = 0";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
     final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
@@ -498,6 +481,37 @@ public final class SincronizacaoDao_Impl implements SincronizacaoDao {
         } finally {
           _cursor.close();
           _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object marcarComoSincronizados(final List<Long> ids,
+      final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        final StringBuilder _stringBuilder = StringUtil.newStringBuilder();
+        _stringBuilder.append("UPDATE sincronizacao SET sincronizado = 1, erro = NULL WHERE id IN (");
+        final int _inputSize = ids.size();
+        StringUtil.appendPlaceholders(_stringBuilder, _inputSize);
+        _stringBuilder.append(")");
+        final String _sql = _stringBuilder.toString();
+        final SupportSQLiteStatement _stmt = __db.compileStatement(_sql);
+        int _argIndex = 1;
+        for (long _item : ids) {
+          _stmt.bindLong(_argIndex, _item);
+          _argIndex++;
+        }
+        __db.beginTransaction();
+        try {
+          _stmt.executeUpdateDelete();
+          __db.setTransactionSuccessful();
+          return Unit.INSTANCE;
+        } finally {
+          __db.endTransaction();
         }
       }
     }, $completion);

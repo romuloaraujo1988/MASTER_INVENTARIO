@@ -77,22 +77,19 @@ class SyncRepository(
                     val salas = salasResponse.body()?.data ?: emptyList()
                     
                     // Limpar salas antigas
-                    salaDao.deleteAll()
+                    salaDao.limparTodas()
                     
-                    // Inserir novas salas
+                    // Converter Sala (data.model) para SalaEntity
                     val salasEntities = salas.map { sala ->
                         SalaEntity(
                             id = sala.id,
                             nome = sala.nome,
-                            descricao = sala.descricao,
-                            andar = sala.andar,
-                            bloco = sala.bloco,
-                            capacidade = sala.capacidade,
-                            ativa = sala.ativa
+                            idSetor = null, // Sala não tem setorId
+                            nomeSetor = null
                         )
                     }
                     
-                    salaDao.insertAll(salasEntities)
+                    salaDao.inserirTodas(salasEntities)
                     salasSincronizadas = salasEntities.size
                     
                     Log.d(TAG, "✓ ${salasSincronizadas} salas sincronizadas")
@@ -113,25 +110,24 @@ class SyncRepository(
                     val patrimonios = patrimoniosResponse.body()?.data ?: emptyList()
                     
                     // Limpar patrimônios antigos
-                    patrimonioDao.deleteAll()
+                    patrimonioDao.limparTodos()
                     
-                    // Inserir novos patrimônios
+                    // Converter Patrimonio (data.model) para PatrimonioEntity
                     val patrimoniosEntities = patrimonios.map { patrimonio ->
                         PatrimonioEntity(
-                            id = patrimonio.id,
-                            numero = patrimonio.numero,
+                            id = patrimonio.id.toInt(),
+                            numero = patrimonio.numeroPatrimonio,
                             descricao = patrimonio.descricao,
-                            idSala = patrimonio.idSala,
-                            nomeSala = patrimonio.nomeSala,
-                            estado = patrimonio.estado,
-                            valor = patrimonio.valor,
-                            dataAquisicao = patrimonio.dataAquisicao,
-                            coletado = false,
-                            dataColeta = null
+                            idSala = patrimonio.salaId?.toInt(),
+                            nomeSala = patrimonio.salaNome,
+                            idResponsavel = patrimonio.responsavelId?.toInt(),
+                            nomeResponsavel = patrimonio.responsavelNome,
+                            status = patrimonio.estado ?: "ATIVO",
+                            coletado = patrimonio.coletado
                         )
                     }
                     
-                    patrimonioDao.insertAll(patrimoniosEntities)
+                    patrimonioDao.inserirTodos(patrimoniosEntities)
                     patrimoniosSincronizados = patrimoniosEntities.size
                     
                     Log.d(TAG, "✓ ${patrimoniosSincronizados} patrimônios sincronizados")
@@ -146,16 +142,16 @@ class SyncRepository(
             // 3. Registrar sincronização
             val tempoDecorrido = System.currentTimeMillis() - startTime
             val sincronizacao = SincronizacaoEntity(
-                tipo = SYNC_TYPE_FULL,
-                dataHora = Date(),
-                patrimoniosSincronizados = patrimoniosSincronizados,
-                salasSincronizadas = salasSincronizadas,
-                sucesso = true,
-                mensagem = "Sincronização completa realizada com sucesso",
-                tempoDecorrido = tempoDecorrido
+                id = 0,
+                entidade = "SYNC_FULL",
+                entidadeId = 0,
+                operacao = "DOWNLOAD",
+                sincronizado = true,
+                dataHora = System.currentTimeMillis(),
+                erro = null
             )
             
-            sincronizacaoDao.insert(sincronizacao)
+            sincronizacaoDao.inserir(sincronizacao)
             preferencesManager.saveLastSyncTime(System.currentTimeMillis())
             
             Log.d(TAG, "═══════════════════════════════════════")
@@ -184,17 +180,17 @@ class SyncRepository(
             // Registrar falha
             val tempoDecorrido = System.currentTimeMillis() - startTime
             val sincronizacao = SincronizacaoEntity(
-                tipo = SYNC_TYPE_FULL,
-                dataHora = Date(),
-                patrimoniosSincronizados = 0,
-                salasSincronizadas = 0,
-                sucesso = false,
-                mensagem = "Erro: ${e.message}",
-                tempoDecorrido = tempoDecorrido
+                id = 0,
+                entidade = "SYNC_FULL",
+                entidadeId = 0,
+                operacao = "DOWNLOAD",
+                sincronizado = false,
+                dataHora = System.currentTimeMillis(),
+                erro = e.message
             )
             
             try {
-                sincronizacaoDao.insert(sincronizacao)
+                sincronizacaoDao.inserir(sincronizacao)
             } catch (dbError: Exception) {
                 Log.e(TAG, "Erro ao registrar falha de sincronização", dbError)
             }
@@ -215,8 +211,8 @@ class SyncRepository(
      */
     suspend fun hasLocalData(): Boolean = withContext(Dispatchers.IO) {
         try {
-            val patrimoniosCount = patrimonioDao.count()
-            val salasCount = salaDao.count()
+            val patrimoniosCount = patrimonioDao.contarTodos()
+            val salasCount = salaDao.contar()
             
             patrimoniosCount > 0 || salasCount > 0
         } catch (e: Exception) {
@@ -231,10 +227,10 @@ class SyncRepository(
     suspend fun getLocalStats(): Map<String, Int> = withContext(Dispatchers.IO) {
         try {
             mapOf(
-                "patrimonios" to patrimonioDao.count(),
-                "salas" to salaDao.count(),
-                "coletados" to patrimonioDao.countColetados(),
-                "pendentes" to patrimonioDao.countNaoColetados()
+                "patrimonios" to patrimonioDao.contarTodos(),
+                "salas" to salaDao.contar(),
+                "coletados" to patrimonioDao.contarColetados(),
+                "pendentes" to patrimonioDao.contarNaoColetados()
             )
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao obter estatísticas locais", e)
@@ -261,8 +257,8 @@ class SyncRepository(
         try {
             Log.d(TAG, "Limpando dados locais...")
             
-            patrimonioDao.deleteAll()
-            salaDao.deleteAll()
+            patrimonioDao.limparTodos()
+            salaDao.limparTodas()
             
             Log.d(TAG, "✓ Dados locais limpos")
             Result.success(Unit)

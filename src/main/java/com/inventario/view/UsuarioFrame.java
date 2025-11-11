@@ -1,7 +1,7 @@
 package com.inventario.view;
 
-import com.inventario.service.UsuarioService;
-import com.inventario.service.SetorService;
+import com.inventario.dao.UsuarioDAORefactored;
+import com.inventario.dao.SetorDAORefactored;
 import com.inventario.model.Usuario;
 import com.inventario.model.PerfilUsuario;
 import com.inventario.view.ui.ButtonStyleFactory;
@@ -34,14 +34,14 @@ public class UsuarioFrame extends JFrame {
     private JButton btnBloquear, btnDesbloquear, btnAlterarSenha;
     private JLabel lblStatus;
 
-    // Services
-    private final UsuarioService usuarioService;
-    private final SetorService setorService;
+    // === SWING: DAOs (sem Spring) ===
+    private final com.inventario.dao.UsuarioDAORefactored usuarioDAO;
+    private final com.inventario.dao.SetorDAORefactored setorDAO;
 
     public UsuarioFrame() {
-        // Instantiate services directly (no Spring context in Swing app)
-        this.usuarioService = new UsuarioService();
-        this.setorService = new SetorService();
+        // === SWING: Usar DAOs diretamente (sem Spring) ===
+        this.usuarioDAO = new com.inventario.dao.UsuarioDAORefactored();
+        this.setorDAO = new com.inventario.dao.SetorDAORefactored();
         initializeComponents();
         setupLayout();
         aplicarEstiloModerno();
@@ -232,7 +232,7 @@ public class UsuarioFrame extends JFrame {
             try {
                 lblStatus.setText("Carregando usuários...");
 
-                List<Usuario> usuarios = usuarioService.listarTodos();
+                List<Usuario> usuarios = usuarioDAO.findAll();
                 atualizarTabelaUsuarios(usuarios);
 
                 lblStatus.setText("Total de usuários ativos: " + usuarios.size());
@@ -289,7 +289,7 @@ public class UsuarioFrame extends JFrame {
                 case "Nome":
                 case "Login":
                 case "Email":
-                    usuariosFiltrados = usuarioService.listarTodos().stream()
+                    usuariosFiltrados = usuarioDAO.findAll().stream()
                         .filter(u -> u.getNomeCompleto().toLowerCase().contains(filtro.toLowerCase()) ||
                                      u.getLogin().toLowerCase().contains(filtro.toLowerCase()) ||
                                      u.getEmail().toLowerCase().contains(filtro.toLowerCase()))
@@ -298,7 +298,7 @@ public class UsuarioFrame extends JFrame {
                 case "Perfil":
                     try {
                         PerfilUsuario perfil = PerfilUsuario.valueOf(filtro.toUpperCase());
-                        usuariosFiltrados = usuarioService.listarTodos().stream()
+                        usuariosFiltrados = usuarioDAO.findAll().stream()
                             .filter(u -> u.getPerfil() == perfil)
                             .collect(java.util.stream.Collectors.toList());
                     } catch (IllegalArgumentException e) {
@@ -309,7 +309,7 @@ public class UsuarioFrame extends JFrame {
                     }
                     break;
                 default:
-                    usuariosFiltrados = usuarioService.listarTodos().stream()
+                    usuariosFiltrados = usuarioDAO.findAll().stream()
                         .filter(u -> u.getNomeCompleto().toLowerCase().contains(filtro.toLowerCase()) ||
                                      u.getLogin().toLowerCase().contains(filtro.toLowerCase()))
                         .collect(java.util.stream.Collectors.toList());
@@ -357,9 +357,7 @@ public class UsuarioFrame extends JFrame {
 
 
     private void novoUsuario() {
-        UsuarioFormDialog dialog = new UsuarioFormDialog(this, null, 
-            new com.inventario.dao.UsuarioDAORefactored(),
-            new com.inventario.dao.SetorDAORefactored());
+        UsuarioFormDialog dialog = new UsuarioFormDialog(this, null, usuarioDAO, setorDAO);
         dialog.setVisible(true);
 
         if (dialog.isUsuarioSalvo()) {
@@ -382,12 +380,10 @@ public class UsuarioFrame extends JFrame {
             int modelRow = tabelaUsuarios.convertRowIndexToModel(linhaSelecionada);
             Integer idUsuario = (Integer) modeloTabela.getValueAt(modelRow, 0);
 
-            Usuario usuario = usuarioService.buscarPorId(Long.valueOf(idUsuario));
+            Usuario usuario = usuarioDAO.findById(idUsuario);
 
             if (usuario != null) {
-                UsuarioFormDialog dialog = new UsuarioFormDialog(this, usuario,
-                    new com.inventario.dao.UsuarioDAORefactored(),
-                    new com.inventario.dao.SetorDAORefactored());
+                UsuarioFormDialog dialog = new UsuarioFormDialog(this, usuario, usuarioDAO, setorDAO);
                 dialog.setVisible(true);
 
                 if (dialog.isUsuarioSalvo()) {
@@ -428,7 +424,7 @@ public class UsuarioFrame extends JFrame {
 
             if (opcao == JOptionPane.YES_OPTION) {
                 try {
-                    usuarioService.excluir(idUsuario);
+                    usuarioDAO.delete(idUsuario);
                     JOptionPane.showMessageDialog(this,
                             "Usuário excluído com sucesso!",
                             "Sucesso", JOptionPane.INFORMATION_MESSAGE);
@@ -468,10 +464,10 @@ public class UsuarioFrame extends JFrame {
 
             if (opcao == JOptionPane.YES_OPTION) {
                 try {
-                    Usuario u = usuarioService.buscarPorId(Long.valueOf(idUsuario));
+                    Usuario u = usuarioDAO.findById(idUsuario);
                     if (u != null) {
                         u.setBloqueado(true);
-                        usuarioService.salvar(u);
+                        usuarioDAO.update(u);
                         JOptionPane.showMessageDialog(this,
                                 "Usuário bloqueado com sucesso!",
                                 "Sucesso", JOptionPane.INFORMATION_MESSAGE);
@@ -516,10 +512,10 @@ public class UsuarioFrame extends JFrame {
 
             if (opcao == JOptionPane.YES_OPTION) {
                 try {
-                    Usuario u = usuarioService.buscarPorId(Long.valueOf(idUsuario));
+                    Usuario u = usuarioDAO.findById(idUsuario);
                     if (u != null) {
                         u.setBloqueado(false);
-                        usuarioService.salvar(u);
+                        usuarioDAO.update(u);
                         JOptionPane.showMessageDialog(this,
                                 "Usuário desbloqueado com sucesso!",
                                 "Sucesso", JOptionPane.INFORMATION_MESSAGE);

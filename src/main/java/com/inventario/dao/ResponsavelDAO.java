@@ -77,9 +77,15 @@ public class ResponsavelDAO extends BaseDAO<Responsavel, Integer> {
         responsavel.setAtivo(rs.getBoolean("ATIVO"));
         responsavel.setDataCadastro(rs.getTimestamp("DATA_CADASTRO"));
         
-        // Nome do setor (se disponível no JOIN)
+        // Campos opcionais (podem não existir em todas as queries)
         try {
             responsavel.setNomeSetor(rs.getString("NOME_SETOR"));
+        } catch (SQLException e) {
+            // Coluna pode não existir em algumas consultas
+        }
+        
+        try {
+            responsavel.setObservacoes(rs.getString("OBSERVACOES"));
         } catch (SQLException e) {
             // Coluna pode não existir em algumas consultas
         }
@@ -213,7 +219,7 @@ public class ResponsavelDAO extends BaseDAO<Responsavel, Integer> {
      * Verifica se um responsável já existe com o mesmo CPF
      */
     public boolean responsavelExiste(String cpf, int idResponsavelExcluir) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM TABELA_RESPONSAVEL WHERE CPF = ? AND ATIVO = TRUE";
+        String sql = "SELECT COUNT(*)::INTEGER FROM TABELA_RESPONSAVEL WHERE CPF = ? AND ATIVO = TRUE";
         
         if (idResponsavelExcluir > 0) {
             sql += " AND ID != ?";
@@ -229,7 +235,7 @@ public class ResponsavelDAO extends BaseDAO<Responsavel, Integer> {
      * Verifica se um email já está em uso
      */
     public boolean emailExiste(String email, int idResponsavelExcluir) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM TABELA_RESPONSAVEL WHERE UPPER(EMAIL) = UPPER(?) AND ATIVO = TRUE";
+        String sql = "SELECT COUNT(*)::INTEGER FROM TABELA_RESPONSAVEL WHERE UPPER(EMAIL) = UPPER(?) AND ATIVO = TRUE";
         
         if (idResponsavelExcluir > 0) {
             sql += " AND ID != ?";
@@ -245,7 +251,7 @@ public class ResponsavelDAO extends BaseDAO<Responsavel, Integer> {
      * Conta quantos patrimônios estão vinculados ao responsável
      */
     public int contarPatrimoniosDoResponsavel(int idResponsavel) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM TABELA_PATRIMONIO WHERE ID_RESPONSAVEL = ?";
+        String sql = "SELECT COUNT(*)::INTEGER FROM TABELA_PATRIMONIO WHERE ID_RESPONSAVEL = ?";
         Integer count = executeScalar(sql, Integer.class, idResponsavel);
         return count != null ? count : 0;
     }
@@ -254,7 +260,7 @@ public class ResponsavelDAO extends BaseDAO<Responsavel, Integer> {
      * Conta responsáveis por setor
      */
     public int contarPorSetor(int idSetor) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM TABELA_RESPONSAVEL WHERE ID_SETOR = ? AND ATIVO = TRUE";
+        String sql = "SELECT COUNT(*)::INTEGER FROM TABELA_RESPONSAVEL WHERE ID_SETOR = ? AND ATIVO = TRUE";
         Integer count = executeScalar(sql, Integer.class, idSetor);
         return count != null ? count : 0;
     }

@@ -306,7 +306,7 @@ public class RelatorioColetaDAO {
                 p.MODELO as "modelo",
                 r.NOME as "Responsável",
                 s.NOME as "Setor",
-                COALESCE(sa.NOME, 'Não informado') as "Sala",
+                COALESCE(sa.NUMERO_SALA, 'Não informado') as "Sala",
                 p.STATUS as "situacao",
                 p.VALOR_AQUISICAO as "Valor"
             FROM TABELA_PATRIMONIO p
@@ -476,7 +476,7 @@ public class RelatorioColetaDAO {
                 c.OBSERVACAO_COLETA as "Observações",
                 p.STATUS as "Situação",
                 p.VALOR_AQUISICAO as "Valor",
-                COALESCE(sa.NOME, 'Não informado') as "Sala"
+                COALESCE(sa.NUMERO_SALA, 'Não informado') as "Sala"
             FROM TABELA_SETOR s
             INNER JOIN TABELA_RESPONSAVEL r ON s.ID = r.ID_SETOR
             INNER JOIN TABELA_PATRIMONIO p ON r.ID = p.ID_RESPONSAVEL
@@ -546,7 +546,7 @@ public class RelatorioColetaDAO {
                 c.OBSERVACAO_COLETA as "Observações",
                 p.STATUS as "Situação",
                 p.VALOR_AQUISICAO as "Valor",
-                COALESCE(sa.NOME, 'Não informado') as "Sala"
+                COALESCE(sa.NUMERO_SALA, 'Não informado') as "Sala"
             FROM TABELA_RESPONSAVEL r
             INNER JOIN TABELA_SETOR s ON r.ID_SETOR = s.ID
             INNER JOIN TABELA_PATRIMONIO p ON r.ID = p.ID_RESPONSAVEL
@@ -613,7 +613,7 @@ public class RelatorioColetaDAO {
                 c.OBSERVACAO_COLETA as "Observações",
                 p.STATUS as "Situação",
                 p.VALOR_AQUISICAO as "Valor",
-                COALESCE(sa.NOME, 'Não informado') as "Sala"
+                COALESCE(sa.NUMERO_SALA, 'Não informado') as "Sala"
             FROM TABELA_COLETA c
             INNER JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID
             INNER JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID
@@ -744,7 +744,7 @@ public class RelatorioColetaDAO {
                 p.MODELO as "Modelo",
                 r.NOME as "Responsável",
                 s.NOME as "Setor",
-                COALESCE(sa.NOME, 'Não informado') as "Sala",
+                COALESCE(sa.NUMERO_SALA, 'Não informado') as "Sala",
                 CASE 
                     WHEN c.STATUS_COLETA = 'COLETADO' THEN 'Encontrado'
                     WHEN c.STATUS_COLETA = 'NAO_ENCONTRADO' THEN 'Não Encontrado'
@@ -763,7 +763,7 @@ public class RelatorioColetaDAO {
                 c.OBSERVACAO_COLETA as "Observações",
                 p.STATUS as "Situação Patrimônio",
                 COALESCE(p.VALOR_AQUISICAO, 0) as "Valor Aquisição",
-                p.DATA_AQUISICAO as "Data Aquisição",
+                p.DATA_ENTRADA as "Data Aquisição",
                 CASE 
                     WHEN c.DIVERGENCIA = TRUE THEN 'Sim'
                     WHEN c.DIVERGENCIA = FALSE THEN 'Não'

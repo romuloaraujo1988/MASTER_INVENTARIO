@@ -6,19 +6,24 @@ import com.inventario.mobile.data.observer.ConnectivityObserver
 import com.inventario.mobile.data.observer.NetworkConnectivityObserver
 import com.inventario.mobile.data.strategy.DataSourceStrategyFactory
 import com.inventario.mobile.data.strategy.DataSourceType
-import com.inventario.mobile.model.Patrimonio
+import com.inventario.mobile.data.model.Patrimonio
+import com.inventario.mobile.domain.repository.PatrimonioRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Repository Pattern com Strategy Pattern
  * Gerencia acesso a patrimônios com fallback automático entre fontes de dados
  */
-class PatrimonioRepositoryImpl(
-    private val context: Context,
+@Singleton
+class PatrimonioRepositoryImpl @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val strategyFactory: DataSourceStrategyFactory
-) {
+) : PatrimonioRepository {
     
     companion object {
         private const val TAG = "PatrimonioRepository"

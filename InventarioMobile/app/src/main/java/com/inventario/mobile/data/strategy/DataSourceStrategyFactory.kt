@@ -6,12 +6,16 @@ import com.inventario.mobile.api.PatrimonioApi
 import com.inventario.mobile.api.SalaApi
 import com.inventario.mobile.data.local.dao.PatrimonioDao
 import com.inventario.mobile.data.local.dao.SalaDao
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Factory Pattern - Cria a estratégia apropriada baseada na conectividade
  */
-class DataSourceStrategyFactory(
-    private val context: Context,
+@Singleton
+class DataSourceStrategyFactory @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val patrimonioApi: PatrimonioApi,
     private val salaApi: SalaApi,
     private val patrimonioDao: PatrimonioDao,

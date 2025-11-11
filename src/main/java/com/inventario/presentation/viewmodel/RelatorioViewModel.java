@@ -80,7 +80,7 @@ public class RelatorioViewModel {
      */
     public void carregarInventarios() {
         try {
-            setState(RelatorioState.Loading.INSTANCE);
+            // Não mostrar loading para carregamento de combos (operação rápida)
             List<Inventario> inventarios = inventarioDAO.listarInventarios();
             setState(new RelatorioState.InventariosCarregados(inventarios));
         } catch (Exception e) {

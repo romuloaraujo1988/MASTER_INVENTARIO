@@ -1,7 +1,7 @@
 package com.inventario.mobile.data.strategy
 
-import com.inventario.mobile.model.Patrimonio
-import com.inventario.mobile.model.Sala
+import com.inventario.mobile.data.model.Patrimonio
+import com.inventario.mobile.data.model.Sala
 
 /**
  * Strategy Pattern - Interface para diferentes fontes de dados
