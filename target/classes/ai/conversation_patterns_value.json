@@ -1,0 +1,167 @@
+{
+  "conversation_patterns": {
+    "valuable_items_queries": {
+      "description": "Padrões de conversação para consultas sobre itens valiosos",
+      "patterns": [
+        {
+          "user_input": "Quais são os itens mais caros do inventário?",
+          "intent": "VALUABLE_ITEMS_QUERY",
+          "entities": {"tipo_consulta": "ranking", "criterio": "valor"},
+          "response_template": "Aqui estão os {quantidade} itens mais valiosos do inventário:",
+          "follow_up_suggestions": [
+            "Gostaria de ver detalhes de algum item específico?",
+            "Quer saber sobre itens de um setor específico?",
+            "Deseja comparar com outros períodos?"
+          ]
+        },
+        {
+          "user_input": "Qual é o patrimônio mais valioso?",
+          "intent": "MOST_EXPENSIVE_ITEM",
+          "entities": {"tipo_consulta": "individual", "criterio": "valor_maximo"},
+          "response_template": "O patrimônio mais valioso é:",
+          "follow_up_suggestions": [
+            "Quer ver outros itens valiosos?",
+            "Gostaria de saber quem é o responsável?",
+            "Deseja ver itens do mesmo setor?"
+          ]
+        },
+        {
+          "user_input": "Mostre itens com valor acima de 50 mil reais",
+          "intent": "VALUE_FILTER_QUERY",
+          "entities": {"valor_minimo": "50000", "tipo_filtro": "acima"},
+          "response_template": "Encontrei {quantidade} itens com valor acima de R$ {valor_minimo}:",
+          "follow_up_suggestions": [
+            "Quer ajustar o valor do filtro?",
+            "Gostaria de filtrar por setor também?",
+            "Deseja ver estatísticas destes itens?"
+          ]
+        },
+        {
+          "user_input": "Top 10 equipamentos mais caros",
+          "intent": "VALUABLE_ITEMS_QUERY",
+          "entities": {"quantidade": "10", "categoria": "equipamentos", "criterio": "valor"},
+          "response_template": "Os 10 equipamentos mais caros são:",
+          "follow_up_suggestions": [
+            "Quer ver mais equipamentos?",
+            "Gostaria de comparar com outros tipos de patrimônio?",
+            "Deseja ver a evolução dos valores?"
+          ]
+        }
+      ]
+    },
+    "value_analysis_patterns": {
+      "description": "Padrões para análise de valores",
+      "patterns": [
+        {
+          "user_input": "Qual o valor total dos patrimônios?",
+          "intent": "ESTATISTICA_CONSULTA",
+          "entities": {"tipo_calculo": "soma", "campo": "valor_aquisicao"},
+          "response_template": "O valor total dos patrimônios é R$ {valor_total}",
+          "follow_up_suggestions": [
+            "Quer ver a distribuição por setor?",
+            "Gostaria de ver a evolução temporal?",
+            "Deseja comparar com anos anteriores?"
+          ]
+        },
+        {
+          "user_input": "Média de valor dos equipamentos",
+          "intent": "ESTATISTICA_CONSULTA",
+          "entities": {"tipo_calculo": "media", "categoria": "equipamentos"},
+          "response_template": "A média de valor dos equipamentos é R$ {valor_medio}",
+          "follow_up_suggestions": [
+            "Quer ver a mediana também?",
+            "Gostaria de comparar por setor?",
+            "Deseja ver os outliers?"
+          ]
+        }
+      ]
+    },
+    "comparative_value_patterns": {
+      "description": "Padrões para comparações de valor",
+      "patterns": [
+        {
+          "user_input": "Compare o valor dos patrimônios entre setores",
+          "intent": "COMPARISON_REQUEST",
+          "entities": {"tipo_comparacao": "setores", "criterio": "valor"},
+          "response_template": "Comparação de valores por setor:",
+          "follow_up_suggestions": [
+            "Quer ver detalhes de um setor específico?",
+            "Gostaria de comparar por tipo de patrimônio?",
+            "Deseja ver a evolução temporal?"
+          ]
+        },
+        {
+          "user_input": "Diferença de valor entre campus",
+          "intent": "COMPARISON_REQUEST",
+          "entities": {"tipo_comparacao": "campus", "criterio": "valor"},
+          "response_template": "Comparação de valores por campus:",
+          "follow_up_suggestions": [
+            "Quer ver detalhes de um campus específico?",
+            "Gostaria de ver por categoria?",
+            "Deseja analisar a distribuição?"
+          ]
+        }
+      ]
+    }
+  },
+  "response_formatting": {
+    "currency_format": {
+      "symbol": "R$",
+      "decimal_places": 2,
+      "thousands_separator": ".",
+      "decimal_separator": ","
+    },
+    "ranking_format": {
+      "show_position": true,
+      "show_percentage": true,
+      "max_items_default": 10
+    },
+    "statistical_format": {
+      "show_confidence_interval": true,
+      "precision": 2,
+      "include_metadata": true
+    }
+  },
+  "contextual_hints": {
+    "value_keywords": [
+      "caro", "barato", "valioso", "custoso", "oneroso", "econômico",
+      "investimento", "aquisição", "patrimônio", "ativo", "bem", "equipamento",
+      "mais caro", "mais barato", "alto valor", "baixo valor", "valiosos",
+      "caros", "baratos", "custosos", "onerosos", "econômicos"
+    ],
+    "ranking_keywords": [
+      "top", "ranking", "lista", "maior", "menor", "melhor", "pior",
+      "primeiro", "último", "mais", "menos", "superior", "inferior"
+    ],
+    "comparison_keywords": [
+      "comparar", "diferença", "versus", "vs", "contrastar", "entre",
+      "maior que", "menor que", "igual a", "superior a", "inferior a"
+    ]
+  },
+  "error_handling": {
+    "no_results_found": {
+      "message": "Não foram encontrados itens que atendam aos critérios especificados.",
+      "suggestions": [
+        "Tente ajustar os filtros de valor",
+        "Verifique se os critérios estão corretos",
+        "Considere expandir a busca"
+      ]
+    },
+    "invalid_value_format": {
+      "message": "O formato do valor não foi reconhecido.",
+      "suggestions": [
+        "Use o formato: R$ 1.000,00",
+        "Ou simplesmente: 1000",
+        "Valores em milhares: 50 mil"
+      ]
+    },
+    "ambiguous_query": {
+      "message": "Sua consulta pode ter múltiplas interpretações.",
+      "suggestions": [
+        "Especifique se quer o mais caro ou uma lista",
+        "Defina um valor mínimo ou máximo",
+        "Indique se quer por setor ou geral"
+      ]
+    }
+  }
+}
