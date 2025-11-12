@@ -11,9 +11,11 @@ import java.awt.event.MouseEvent;
 
 /**
  * Fábrica de ComboBoxes modernos replicando o estilo usado no sistema.
- * Uso:
- *   JComboBox<String> combo = ModernComboBox.primary(items);
- *   JComboBox<String> combo = ModernComboBox.secondary(items);
+ * <p>Uso:</p>
+ * <pre>
+ *   JComboBox&lt;String&gt; combo = ModernComboBox.primary(items);
+ *   JComboBox&lt;String&gt; combo = ModernComboBox.secondary(items);
+ * </pre>
  */
 public final class ModernComboBox {
     private ModernComboBox() {}

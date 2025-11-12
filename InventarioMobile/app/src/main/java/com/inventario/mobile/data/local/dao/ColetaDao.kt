@@ -58,4 +58,47 @@ interface ColetaDao {
     
     @Query("UPDATE coleta SET tentativasSincronizacao = tentativasSincronizacao + 1, erroSincronizacao = :erro WHERE id = :id")
     suspend fun incrementarTentativas(id: Long, erro: String?)
+    
+    // ========================================
+    // Queries para Gráficos
+    // ========================================
+    
+    /**
+     * Conta coletas por inventário
+     */
+    @Query("SELECT COUNT(DISTINCT idPatrimonio) FROM coleta WHERE idInventario = :idInventario")
+    suspend fun countByInventario(idInventario: Int): Int
+    
+    /**
+     * Busca evolução diária das coletas (últimos 30 dias)
+     * Retorna data formatada e quantidade acumulada
+     */
+    @Query("""
+        SELECT 
+            strftime('%d/%m', dataColeta / 1000, 'unixepoch') as data,
+            COUNT(*) as quantidade
+        FROM coleta
+        WHERE idInventario = :idInventario
+        GROUP BY date(dataColeta / 1000, 'unixepoch')
+        ORDER BY date(dataColeta / 1000, 'unixepoch') ASC
+        LIMIT 30
+    """)
+    suspend fun getEvolutionData(idInventario: Int): List<EvolutionData>
+    
+    /**
+     * Busca top 10 descrições mais coletadas
+     */
+    @Query("""
+        SELECT 
+            p.descricao as descricao,
+            COUNT(c.id) as quantidade
+        FROM coleta c
+        INNER JOIN patrimonio p ON c.idPatrimonio = p.id
+        WHERE c.idInventario = :idInventario
+        GROUP BY p.descricao
+        ORDER BY quantidade DESC
+        LIMIT 10
+    """)
+    suspend fun getTopItems(idInventario: Int): List<TopItemData>
+    
 }

@@ -1,7 +1,0 @@
-{
-  "host": "localhost",
-  "porta": "5432",
-  "database": "sispatrimonio",
-  "usuario": "inventario",
-  "senha": "sua_senha_aqui"
-}

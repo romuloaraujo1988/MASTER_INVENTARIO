@@ -19,6 +19,7 @@ color error
 color error_dark
 color error_light
 color info
+color info_color
 color info_dark
 color info_light
 color material_blue_600
@@ -36,6 +37,7 @@ color primary_color
 color primary_color_light
 color primary_dark
 color primary_light
+color primary_text
 color purple_200
 color purple_500
 color purple_700
@@ -43,10 +45,12 @@ color scanner_overlay
 color secondary
 color secondary_dark
 color secondary_light
+color secondary_text
 color status_error
 color status_pending
 color status_synced
 color success
+color success_color
 color success_dark
 color success_light
 color surface
@@ -58,6 +62,7 @@ color text_primary
 color text_secondary
 color transparent
 color warning
+color warning_color
 color warning_dark
 color warning_light
 color white
@@ -194,6 +199,10 @@ id cardStatisticsSummary
 id cardStats
 id cardSync
 id cardSyncProgress
+id chartEvolucao
+id chartProgresso
+id chartStatus
+id chartTopItens
 id chipAll
 id chipAllUsers
 id chipColetados
@@ -390,6 +399,7 @@ id tvPendentesCount
 id tvPendingCollections
 id tvPendingCount
 id tvPendingSync
+id tvPercentual
 id tvPercentualConclusao
 id tvPercentualPendente
 id tvPlaceholder
@@ -460,6 +470,7 @@ layout activity_statistics
 layout activity_sync
 layout dialog_estado_patrimonio
 layout fragment_biometric_settings
+layout fragment_charts
 layout fragment_dashboard
 layout fragment_dashboard_backup
 layout fragment_inventory

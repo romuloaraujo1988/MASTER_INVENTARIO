@@ -36,7 +36,7 @@ class RegistrarColetaUseCase @Inject constructor(
             // 4. Criar coleta
             val coleta = Coleta(
                 id = 0,
-                patrimonioId = patrimonio.id,
+                patrimonioId = patrimonio.id, // já é Long
                 usuarioId = idUsuario,
                 dataColeta = System.currentTimeMillis(),
                 localizacaoAtual = localizacaoAtual,

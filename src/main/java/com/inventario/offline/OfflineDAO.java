@@ -1,8 +1,6 @@
 package com.inventario.offline;
 
 import java.sql.*;
-// Formatação de datas centralizada em DateFormatUtils
-import com.inventario.util.DateFormatUtils;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.logging.Level;

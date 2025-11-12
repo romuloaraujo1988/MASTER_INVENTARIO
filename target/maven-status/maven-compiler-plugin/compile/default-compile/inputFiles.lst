@@ -39,7 +39,6 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\offline\DataSynchronizer.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\ui\ConfiguracaoBancoController.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileDashboardController.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\RelatorioFrame.java
-D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\ImportacaoCSVFrameRefactored.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\security\CustomUserDetailsService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\repository\InventarioRepository.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\print\EtiquetaData.java
@@ -75,10 +74,12 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\print\EtiquetaPrinter.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\components\PaginationPanelTest.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\DatabaseTestQuery.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\test\TesteAutorizacaoColeta.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\chart\InventarioChartFactory.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\Inventario.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\SetorDAORefactored.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileSetorController.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\config\DeviceTrackingInterceptor.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\chart\InventarioChartService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\repository\Repository.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\offline\OfflineDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\SecurityConfig.java
@@ -151,6 +152,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\DatabaseConfigManager.j
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\ServiceFactory.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\InventarioDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\MainFrame.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\ChartDataDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\DispositivoRegistroDTO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\IconPreview.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\DataSyncService.java
@@ -172,6 +174,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\DatabaseExecuteUpdate.jav
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\SetorService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\notification\NotificationType.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\offline\OfflineManager.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\DashboardFrame.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\SistemaInventarioApplication.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\UsuarioDAORefactored.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\CampusDAO.java

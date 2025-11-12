@@ -55,7 +55,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR REPLACE INTO `coleta` (`id`,`idPatrimonio`,`numeroPatrimonio`,`idSala`,`nomeSala`,`idResponsavel`,`nomeResponsavel`,`observacao`,`estadoPatrimonio`,`latitude`,`longitude`,`dataColeta`,`idUsuario`,`nomeUsuario`,`sincronizado`,`tentativasSincronizacao`,`erroSincronizacao`,`servidorId`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        return "INSERT OR REPLACE INTO `coleta` (`id`,`idPatrimonio`,`numeroPatrimonio`,`idInventario`,`idSala`,`nomeSala`,`idResponsavel`,`nomeResponsavel`,`observacao`,`estadoPatrimonio`,`latitude`,`longitude`,`dataColeta`,`idUsuario`,`nomeUsuario`,`sincronizado`,`tentativasSincronizacao`,`erroSincronizacao`,`servidorId`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override
@@ -64,61 +64,62 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
         statement.bindLong(1, entity.getId());
         statement.bindLong(2, entity.getIdPatrimonio());
         statement.bindString(3, entity.getNumeroPatrimonio());
+        statement.bindLong(4, entity.getIdInventario());
         if (entity.getIdSala() == null) {
-          statement.bindNull(4);
-        } else {
-          statement.bindLong(4, entity.getIdSala());
-        }
-        if (entity.getNomeSala() == null) {
           statement.bindNull(5);
         } else {
-          statement.bindString(5, entity.getNomeSala());
+          statement.bindLong(5, entity.getIdSala());
         }
-        if (entity.getIdResponsavel() == null) {
+        if (entity.getNomeSala() == null) {
           statement.bindNull(6);
         } else {
-          statement.bindLong(6, entity.getIdResponsavel());
+          statement.bindString(6, entity.getNomeSala());
         }
-        if (entity.getNomeResponsavel() == null) {
+        if (entity.getIdResponsavel() == null) {
           statement.bindNull(7);
         } else {
-          statement.bindString(7, entity.getNomeResponsavel());
+          statement.bindLong(7, entity.getIdResponsavel());
         }
-        if (entity.getObservacao() == null) {
+        if (entity.getNomeResponsavel() == null) {
           statement.bindNull(8);
         } else {
-          statement.bindString(8, entity.getObservacao());
+          statement.bindString(8, entity.getNomeResponsavel());
         }
-        if (entity.getEstadoPatrimonio() == null) {
+        if (entity.getObservacao() == null) {
           statement.bindNull(9);
         } else {
-          statement.bindString(9, entity.getEstadoPatrimonio());
+          statement.bindString(9, entity.getObservacao());
         }
-        if (entity.getLatitude() == null) {
+        if (entity.getEstadoPatrimonio() == null) {
           statement.bindNull(10);
         } else {
-          statement.bindDouble(10, entity.getLatitude());
+          statement.bindString(10, entity.getEstadoPatrimonio());
         }
-        if (entity.getLongitude() == null) {
+        if (entity.getLatitude() == null) {
           statement.bindNull(11);
         } else {
-          statement.bindDouble(11, entity.getLongitude());
+          statement.bindDouble(11, entity.getLatitude());
         }
-        statement.bindLong(12, entity.getDataColeta());
-        statement.bindLong(13, entity.getIdUsuario());
-        statement.bindString(14, entity.getNomeUsuario());
-        final int _tmp = entity.getSincronizado() ? 1 : 0;
-        statement.bindLong(15, _tmp);
-        statement.bindLong(16, entity.getTentativasSincronizacao());
-        if (entity.getErroSincronizacao() == null) {
-          statement.bindNull(17);
+        if (entity.getLongitude() == null) {
+          statement.bindNull(12);
         } else {
-          statement.bindString(17, entity.getErroSincronizacao());
+          statement.bindDouble(12, entity.getLongitude());
         }
-        if (entity.getServidorId() == null) {
+        statement.bindLong(13, entity.getDataColeta());
+        statement.bindLong(14, entity.getIdUsuario());
+        statement.bindString(15, entity.getNomeUsuario());
+        final int _tmp = entity.getSincronizado() ? 1 : 0;
+        statement.bindLong(16, _tmp);
+        statement.bindLong(17, entity.getTentativasSincronizacao());
+        if (entity.getErroSincronizacao() == null) {
           statement.bindNull(18);
         } else {
-          statement.bindLong(18, entity.getServidorId());
+          statement.bindString(18, entity.getErroSincronizacao());
+        }
+        if (entity.getServidorId() == null) {
+          statement.bindNull(19);
+        } else {
+          statement.bindLong(19, entity.getServidorId());
         }
       }
     };
@@ -395,6 +396,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
           final int _cursorIndexOfIdPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "idPatrimonio");
           final int _cursorIndexOfNumeroPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "numeroPatrimonio");
+          final int _cursorIndexOfIdInventario = CursorUtil.getColumnIndexOrThrow(_cursor, "idInventario");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
@@ -419,6 +421,8 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             _tmpIdPatrimonio = _cursor.getInt(_cursorIndexOfIdPatrimonio);
             final String _tmpNumeroPatrimonio;
             _tmpNumeroPatrimonio = _cursor.getString(_cursorIndexOfNumeroPatrimonio);
+            final int _tmpIdInventario;
+            _tmpIdInventario = _cursor.getInt(_cursorIndexOfIdInventario);
             final Integer _tmpIdSala;
             if (_cursor.isNull(_cursorIndexOfIdSala)) {
               _tmpIdSala = null;
@@ -491,7 +495,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             } else {
               _tmpServidorId = _cursor.getLong(_cursorIndexOfServidorId);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId);
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId);
             _result.add(_item);
           }
           return _result;
@@ -516,6 +520,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
           final int _cursorIndexOfIdPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "idPatrimonio");
           final int _cursorIndexOfNumeroPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "numeroPatrimonio");
+          final int _cursorIndexOfIdInventario = CursorUtil.getColumnIndexOrThrow(_cursor, "idInventario");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
@@ -540,6 +545,8 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             _tmpIdPatrimonio = _cursor.getInt(_cursorIndexOfIdPatrimonio);
             final String _tmpNumeroPatrimonio;
             _tmpNumeroPatrimonio = _cursor.getString(_cursorIndexOfNumeroPatrimonio);
+            final int _tmpIdInventario;
+            _tmpIdInventario = _cursor.getInt(_cursorIndexOfIdInventario);
             final Integer _tmpIdSala;
             if (_cursor.isNull(_cursorIndexOfIdSala)) {
               _tmpIdSala = null;
@@ -612,7 +619,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             } else {
               _tmpServidorId = _cursor.getLong(_cursorIndexOfServidorId);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId);
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId);
             _result.add(_item);
           }
           return _result;
@@ -676,6 +683,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
           final int _cursorIndexOfIdPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "idPatrimonio");
           final int _cursorIndexOfNumeroPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "numeroPatrimonio");
+          final int _cursorIndexOfIdInventario = CursorUtil.getColumnIndexOrThrow(_cursor, "idInventario");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
@@ -700,6 +708,8 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             _tmpIdPatrimonio = _cursor.getInt(_cursorIndexOfIdPatrimonio);
             final String _tmpNumeroPatrimonio;
             _tmpNumeroPatrimonio = _cursor.getString(_cursorIndexOfNumeroPatrimonio);
+            final int _tmpIdInventario;
+            _tmpIdInventario = _cursor.getInt(_cursorIndexOfIdInventario);
             final Integer _tmpIdSala;
             if (_cursor.isNull(_cursorIndexOfIdSala)) {
               _tmpIdSala = null;
@@ -772,7 +782,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             } else {
               _tmpServidorId = _cursor.getLong(_cursorIndexOfServidorId);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId);
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId);
             _result.add(_item);
           }
           return _result;
@@ -826,6 +836,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
           final int _cursorIndexOfIdPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "idPatrimonio");
           final int _cursorIndexOfNumeroPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "numeroPatrimonio");
+          final int _cursorIndexOfIdInventario = CursorUtil.getColumnIndexOrThrow(_cursor, "idInventario");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
@@ -850,6 +861,8 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             _tmpIdPatrimonio = _cursor.getInt(_cursorIndexOfIdPatrimonio);
             final String _tmpNumeroPatrimonio;
             _tmpNumeroPatrimonio = _cursor.getString(_cursorIndexOfNumeroPatrimonio);
+            final int _tmpIdInventario;
+            _tmpIdInventario = _cursor.getInt(_cursorIndexOfIdInventario);
             final Integer _tmpIdSala;
             if (_cursor.isNull(_cursorIndexOfIdSala)) {
               _tmpIdSala = null;
@@ -922,7 +935,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             } else {
               _tmpServidorId = _cursor.getLong(_cursorIndexOfServidorId);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId);
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId);
             _result.add(_item);
           }
           return _result;
@@ -948,6 +961,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
           final int _cursorIndexOfIdPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "idPatrimonio");
           final int _cursorIndexOfNumeroPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "numeroPatrimonio");
+          final int _cursorIndexOfIdInventario = CursorUtil.getColumnIndexOrThrow(_cursor, "idInventario");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
@@ -972,6 +986,8 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             _tmpIdPatrimonio = _cursor.getInt(_cursorIndexOfIdPatrimonio);
             final String _tmpNumeroPatrimonio;
             _tmpNumeroPatrimonio = _cursor.getString(_cursorIndexOfNumeroPatrimonio);
+            final int _tmpIdInventario;
+            _tmpIdInventario = _cursor.getInt(_cursorIndexOfIdInventario);
             final Integer _tmpIdSala;
             if (_cursor.isNull(_cursorIndexOfIdSala)) {
               _tmpIdSala = null;
@@ -1044,7 +1060,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             } else {
               _tmpServidorId = _cursor.getLong(_cursorIndexOfServidorId);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId);
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId);
             _result.add(_item);
           }
           return _result;
@@ -1074,6 +1090,126 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             _result = _tmp;
           } else {
             _result = 0;
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object countByInventario(final int idInventario,
+      final Continuation<? super Integer> $completion) {
+    final String _sql = "SELECT COUNT(DISTINCT idPatrimonio) FROM coleta WHERE idInventario = ?";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
+    int _argIndex = 1;
+    _statement.bindLong(_argIndex, idInventario);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<Integer>() {
+      @Override
+      @NonNull
+      public Integer call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final Integer _result;
+          if (_cursor.moveToFirst()) {
+            final int _tmp;
+            _tmp = _cursor.getInt(0);
+            _result = _tmp;
+          } else {
+            _result = 0;
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object getEvolutionData(final int idInventario,
+      final Continuation<? super List<EvolutionData>> $completion) {
+    final String _sql = "\n"
+            + "        SELECT \n"
+            + "            strftime('%d/%m', dataColeta / 1000, 'unixepoch') as data,\n"
+            + "            COUNT(*) as quantidade\n"
+            + "        FROM coleta\n"
+            + "        WHERE idInventario = ?\n"
+            + "        GROUP BY date(dataColeta / 1000, 'unixepoch')\n"
+            + "        ORDER BY date(dataColeta / 1000, 'unixepoch') ASC\n"
+            + "        LIMIT 30\n"
+            + "    ";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
+    int _argIndex = 1;
+    _statement.bindLong(_argIndex, idInventario);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<EvolutionData>>() {
+      @Override
+      @NonNull
+      public List<EvolutionData> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfData = 0;
+          final int _cursorIndexOfQuantidade = 1;
+          final List<EvolutionData> _result = new ArrayList<EvolutionData>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final EvolutionData _item;
+            final String _tmpData;
+            _tmpData = _cursor.getString(_cursorIndexOfData);
+            final int _tmpQuantidade;
+            _tmpQuantidade = _cursor.getInt(_cursorIndexOfQuantidade);
+            _item = new EvolutionData(_tmpData,_tmpQuantidade);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object getTopItems(final int idInventario,
+      final Continuation<? super List<TopItemData>> $completion) {
+    final String _sql = "\n"
+            + "        SELECT \n"
+            + "            p.descricao as descricao,\n"
+            + "            COUNT(c.id) as quantidade\n"
+            + "        FROM coleta c\n"
+            + "        INNER JOIN patrimonio p ON c.idPatrimonio = p.id\n"
+            + "        WHERE c.idInventario = ?\n"
+            + "        GROUP BY p.descricao\n"
+            + "        ORDER BY quantidade DESC\n"
+            + "        LIMIT 10\n"
+            + "    ";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
+    int _argIndex = 1;
+    _statement.bindLong(_argIndex, idInventario);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<TopItemData>>() {
+      @Override
+      @NonNull
+      public List<TopItemData> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfDescricao = 0;
+          final int _cursorIndexOfQuantidade = 1;
+          final List<TopItemData> _result = new ArrayList<TopItemData>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final TopItemData _item;
+            final String _tmpDescricao;
+            _tmpDescricao = _cursor.getString(_cursorIndexOfDescricao);
+            final int _tmpQuantidade;
+            _tmpQuantidade = _cursor.getInt(_cursorIndexOfQuantidade);
+            _item = new TopItemData(_tmpDescricao,_tmpQuantidade);
+            _result.add(_item);
           }
           return _result;
         } finally {

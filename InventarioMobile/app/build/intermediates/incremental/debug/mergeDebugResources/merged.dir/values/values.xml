@@ -771,6 +771,7 @@
     <color name="highlighted_text_material_dark">#6680cbc4</color>
     <color name="highlighted_text_material_light">#66009688</color>
     <color name="info">#2196F3</color>
+    <color name="info_color">#2196F3</color>
     <color name="info_dark">#1565C0</color>
     <color name="info_light">#E3F2FD</color>
     <color name="m3_ref_palette_black">#ff000000</color>
@@ -1027,6 +1028,7 @@
     <color name="primary_light">#BBDEFB</color>
     <color name="primary_material_dark">@color/material_grey_900</color>
     <color name="primary_material_light">@color/material_grey_100</color>
+    <color name="primary_text">#212121</color>
     <color name="primary_text_default_material_dark">#ffffffff</color>
     <color name="primary_text_default_material_light">#de000000</color>
     <color name="primary_text_disabled_material_dark">#4Dffffff</color>
@@ -1040,6 +1042,7 @@
     <color name="secondary">#FFC107</color>
     <color name="secondary_dark">#FFA000</color>
     <color name="secondary_light">#FFF8E1</color>
+    <color name="secondary_text">#757575</color>
     <color name="secondary_text_default_material_dark">#b3ffffff</color>
     <color name="secondary_text_default_material_light">#8a000000</color>
     <color name="secondary_text_disabled_material_dark">#36ffffff</color>
@@ -1048,6 +1051,7 @@
     <color name="status_pending">#FF9800</color>
     <color name="status_synced">#4CAF50</color>
     <color name="success">#4CAF50</color>
+    <color name="success_color">#4CAF50</color>
     <color name="success_dark">#2E7D32</color>
     <color name="success_light">#E8F5E8</color>
     <color name="surface">#FFFFFF</color>
@@ -1065,6 +1069,7 @@
     <color name="tooltip_background_light">#e6FFFFFF</color>
     <color name="transparent">#00000000</color>
     <color name="warning">#FF9800</color>
+    <color name="warning_color">#FF9800</color>
     <color name="warning_dark">#E65100</color>
     <color name="warning_light">#FFF3E0</color>
     <color name="white">#FFFFFF</color>

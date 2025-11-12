@@ -171,7 +171,7 @@ public class MobilePatrimonioService {
         // Obter inventário ativo para verificar coletas
         Inventario inventarioAtivo = null;
         try {
-            inventarioAtivo = inventarioDAO.buscarInventarioPorStatus("EM_ANDAMENTO");
+            inventarioAtivo = inventarioDAO.buscarInventarioAtivo();
         } catch (Exception e) {
             logger.warn("Não foi possível obter inventário ativo: {}", e.getMessage());
         }
@@ -241,7 +241,7 @@ public class MobilePatrimonioService {
         String dataColetaFormatada = null;
         
         try {
-            Inventario inventarioAtivo = inventarioDAO.buscarInventarioPorStatus("EM_ANDAMENTO");
+            Inventario inventarioAtivo = inventarioDAO.buscarInventarioAtivo();
             if (inventarioAtivo != null) {
                 // Verificar se existe coleta
                 coletado = coletaDAO.coletaExiste(inventarioAtivo.getId(), patrimonio.getId());

@@ -43,8 +43,8 @@ public class MobileDashboardService {
         logger.info("Buscando estatísticas do dashboard");
         
         try {
-            // Buscar inventário ativo
-            Inventario inventarioAtivo = inventarioDAO.buscarInventarioPorStatus("EM_ANDAMENTO");
+            // Buscar inventário ativo (método não-deprecated)
+            Inventario inventarioAtivo = inventarioDAO.buscarInventarioAtivo();
             
             if (inventarioAtivo == null) {
                 logger.warn("Nenhum inventário ativo encontrado");

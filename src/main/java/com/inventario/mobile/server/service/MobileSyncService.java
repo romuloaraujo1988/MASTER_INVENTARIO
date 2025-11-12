@@ -29,14 +29,17 @@ public class MobileSyncService {
     private final com.inventario.service.ResponsavelService responsavelService;
     private final com.inventario.service.SetorService setorService;
     
-    public MobileSyncService() {
+    // Usar injeção de dependência do Spring ao invés de ServiceFactory
+    public MobileSyncService(
+            com.inventario.service.InventarioService inventarioService,
+            com.inventario.service.SalaService salaService,
+            com.inventario.service.ResponsavelService responsavelService,
+            com.inventario.service.SetorService setorService) {
         this.patrimonioDAO = new PatrimonioDAO();
-        
-        // Obter services do ServiceFactory (agora com métodos estáticos)
-        this.inventarioService = ServiceFactory.getInventarioService();
-        this.salaService = ServiceFactory.getSalaService();
-        this.responsavelService = ServiceFactory.getResponsavelService();
-        this.setorService = ServiceFactory.getSetorService();
+        this.inventarioService = inventarioService;
+        this.salaService = salaService;
+        this.responsavelService = responsavelService;
+        this.setorService = setorService;
     }
     
     /**

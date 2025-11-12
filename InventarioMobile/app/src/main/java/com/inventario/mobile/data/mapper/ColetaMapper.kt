@@ -23,11 +23,12 @@ object ColetaMapper {
         )
     }
     
-    fun toEntity(domain: Coleta): ColetaEntity {
+    fun toEntity(domain: Coleta, idInventario: Int = 0): ColetaEntity {
         return ColetaEntity(
             id = domain.id,
             idPatrimonio = domain.patrimonioId.toInt(),
             numeroPatrimonio = "", // Será preenchido pelo repositório
+            idInventario = idInventario, // ID do inventário ativo
             idSala = null, // Será preenchido se necessário
             nomeSala = domain.localizacaoAtual,
             idResponsavel = null,

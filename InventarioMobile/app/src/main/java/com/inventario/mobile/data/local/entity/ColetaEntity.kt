@@ -12,6 +12,7 @@ import androidx.room.Index
     tableName = "coleta",
     indices = [
         Index(value = ["idPatrimonio"]),
+        Index(value = ["idInventario"]),
         Index(value = ["sincronizado"]),
         Index(value = ["dataColeta"])
     ]
@@ -21,6 +22,7 @@ data class ColetaEntity(
     val id: Long = 0,
     val idPatrimonio: Int,
     val numeroPatrimonio: String,
+    val idInventario: Int,  // ID do inventário ativo (já existia no banco)
     val idSala: Int?,
     val nomeSala: String?,
     val idResponsavel: Int?,

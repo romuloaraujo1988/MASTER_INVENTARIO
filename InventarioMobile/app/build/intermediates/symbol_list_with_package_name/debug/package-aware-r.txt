@@ -1503,6 +1503,7 @@ color foreground_material_light
 color highlighted_text_material_dark
 color highlighted_text_material_light
 color info
+color info_color
 color info_dark
 color info_light
 color m3_appbar_overlay_color
@@ -2146,6 +2147,7 @@ color primary_dark_material_light
 color primary_light
 color primary_material_dark
 color primary_material_light
+color primary_text
 color primary_text_default_material_dark
 color primary_text_default_material_light
 color primary_text_disabled_material_dark
@@ -2159,6 +2161,7 @@ color scanner_overlay
 color secondary
 color secondary_dark
 color secondary_light
+color secondary_text
 color secondary_text_default_material_dark
 color secondary_text_default_material_light
 color secondary_text_disabled_material_dark
@@ -2167,6 +2170,7 @@ color status_error
 color status_pending
 color status_synced
 color success
+color success_color
 color success_dark
 color success_light
 color surface
@@ -2186,6 +2190,7 @@ color tooltip_background_dark
 color tooltip_background_light
 color transparent
 color warning
+color warning_color
 color warning_dark
 color warning_light
 color white
@@ -3431,6 +3436,10 @@ id center_vertical
 id chain
 id chain2
 id chains
+id chartEvolucao
+id chartProgresso
+id chartStatus
+id chartTopItens
 id checkbox
 id checked
 id chipAll
@@ -4004,6 +4013,7 @@ id tvPendentesCount
 id tvPendingCollections
 id tvPendingCount
 id tvPendingSync
+id tvPercentual
 id tvPercentualConclusao
 id tvPercentualPendente
 id tvPlaceholder
@@ -4242,6 +4252,7 @@ layout design_text_input_start_icon
 layout dialog_estado_patrimonio
 layout fingerprint_dialog_layout
 layout fragment_biometric_settings
+layout fragment_charts
 layout fragment_dashboard
 layout fragment_dashboard_backup
 layout fragment_inventory

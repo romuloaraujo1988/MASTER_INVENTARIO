@@ -1,8 +1,6 @@
 package com.inventario.mobile.server.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.time.LocalDateTime;
 
 /**
  * DTO para patrimônio mobile

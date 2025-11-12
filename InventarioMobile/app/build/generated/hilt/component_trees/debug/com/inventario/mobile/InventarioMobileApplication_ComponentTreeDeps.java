@@ -23,6 +23,9 @@ import hilt_aggregated_deps._com_inventario_mobile_di_ApiModule;
 import hilt_aggregated_deps._com_inventario_mobile_di_DatabaseModule;
 import hilt_aggregated_deps._com_inventario_mobile_di_MapperModule;
 import hilt_aggregated_deps._com_inventario_mobile_di_RepositoryModule;
+import hilt_aggregated_deps._com_inventario_mobile_presentation_charts_ChartsFragment_GeneratedInjector;
+import hilt_aggregated_deps._com_inventario_mobile_presentation_charts_ChartsViewModel_HiltModules_BindsModule;
+import hilt_aggregated_deps._com_inventario_mobile_presentation_charts_ChartsViewModel_HiltModules_KeyModule;
 import hilt_aggregated_deps._com_inventario_mobile_presentation_coleta_ColetaViewModelClean_HiltModules_BindsModule;
 import hilt_aggregated_deps._com_inventario_mobile_presentation_coleta_ColetaViewModelClean_HiltModules_KeyModule;
 import hilt_aggregated_deps._com_inventario_mobile_ui_coleta_ColetaActivity_GeneratedInjector;
@@ -72,6 +75,9 @@ import hilt_aggregated_deps._dagger_hilt_android_internal_modules_HiltWrapper_Ac
         _com_inventario_mobile_di_DatabaseModule.class,
         _com_inventario_mobile_di_MapperModule.class,
         _com_inventario_mobile_di_RepositoryModule.class,
+        _com_inventario_mobile_presentation_charts_ChartsFragment_GeneratedInjector.class,
+        _com_inventario_mobile_presentation_charts_ChartsViewModel_HiltModules_BindsModule.class,
+        _com_inventario_mobile_presentation_charts_ChartsViewModel_HiltModules_KeyModule.class,
         _com_inventario_mobile_presentation_coleta_ColetaViewModelClean_HiltModules_BindsModule.class,
         _com_inventario_mobile_presentation_coleta_ColetaViewModelClean_HiltModules_KeyModule.class,
         _com_inventario_mobile_ui_coleta_ColetaActivity_GeneratedInjector.class,

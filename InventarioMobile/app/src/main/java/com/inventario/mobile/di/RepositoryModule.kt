@@ -1,9 +1,7 @@
 package com.inventario.mobile.di
 
 import com.inventario.mobile.data.repository.ColetaRepositoryImpl
-import com.inventario.mobile.data.repository.PatrimonioRepositoryImpl
 import com.inventario.mobile.domain.repository.ColetaRepository
-import com.inventario.mobile.domain.repository.PatrimonioRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -21,8 +19,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindPatrimonioRepository(
-        impl: PatrimonioRepositoryImpl
-    ): PatrimonioRepository
+        adapter: com.inventario.mobile.data.repository.PatrimonioRepositoryAdapter
+    ): com.inventario.mobile.domain.repository.PatrimonioRepository
     
     @Binds
     @Singleton

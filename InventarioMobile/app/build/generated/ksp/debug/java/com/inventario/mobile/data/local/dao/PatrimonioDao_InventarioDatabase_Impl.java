@@ -908,6 +908,185 @@ public final class PatrimonioDao_InventarioDatabase_Impl implements PatrimonioDa
     }, $completion);
   }
 
+  @Override
+  public Object countByStatus(final String status,
+      final Continuation<? super Integer> $completion) {
+    final String _sql = "SELECT COUNT(*) FROM patrimonio WHERE UPPER(status) = UPPER(?)";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
+    int _argIndex = 1;
+    _statement.bindString(_argIndex, status);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<Integer>() {
+      @Override
+      @NonNull
+      public Integer call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final Integer _result;
+          if (_cursor.moveToFirst()) {
+            final int _tmp;
+            _tmp = _cursor.getInt(0);
+            _result = _tmp;
+          } else {
+            _result = 0;
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object getStatusDistribution(final Continuation<? super List<StatusData>> $completion) {
+    final String _sql = "\n"
+            + "        SELECT \n"
+            + "            COALESCE(status, 'SEM STATUS') as status,\n"
+            + "            COUNT(*) as quantidade\n"
+            + "        FROM patrimonio\n"
+            + "        GROUP BY status\n"
+            + "        ORDER BY quantidade DESC\n"
+            + "    ";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<StatusData>>() {
+      @Override
+      @NonNull
+      public List<StatusData> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfStatus = 0;
+          final int _cursorIndexOfQuantidade = 1;
+          final List<StatusData> _result = new ArrayList<StatusData>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final StatusData _item;
+            final String _tmpStatus;
+            _tmpStatus = _cursor.getString(_cursorIndexOfStatus);
+            final int _tmpQuantidade;
+            _tmpQuantidade = _cursor.getInt(_cursorIndexOfQuantidade);
+            _item = new StatusData(_tmpStatus,_tmpQuantidade);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object getPatrimoniosPorSetor(final Continuation<? super List<SetorData>> $completion) {
+    final String _sql = "\n"
+            + "        SELECT \n"
+            + "            COALESCE(sa.nomeSetor, 'Sem Setor') as setor,\n"
+            + "            COUNT(p.id) as quantidade\n"
+            + "        FROM patrimonio p\n"
+            + "        LEFT JOIN sala sa ON p.idSala = sa.id\n"
+            + "        GROUP BY sa.nomeSetor\n"
+            + "        ORDER BY quantidade DESC\n"
+            + "        LIMIT 10\n"
+            + "    ";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<SetorData>>() {
+      @Override
+      @NonNull
+      public List<SetorData> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfSetor = 0;
+          final int _cursorIndexOfQuantidade = 1;
+          final List<SetorData> _result = new ArrayList<SetorData>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final SetorData _item;
+            final String _tmpSetor;
+            _tmpSetor = _cursor.getString(_cursorIndexOfSetor);
+            final int _tmpQuantidade;
+            _tmpQuantidade = _cursor.getInt(_cursorIndexOfQuantidade);
+            _item = new SetorData(_tmpSetor,_tmpQuantidade);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object countAll(final Continuation<? super Integer> $completion) {
+    final String _sql = "SELECT COUNT(*) FROM patrimonio";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<Integer>() {
+      @Override
+      @NonNull
+      public Integer call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final Integer _result;
+          if (_cursor.moveToFirst()) {
+            final int _tmp;
+            _tmp = _cursor.getInt(0);
+            _result = _tmp;
+          } else {
+            _result = 0;
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object getDescricoesFrequentes(final Continuation<? super List<TopItemData>> $completion) {
+    final String _sql = "\n"
+            + "        SELECT \n"
+            + "            descricao,\n"
+            + "            COUNT(*) as quantidade\n"
+            + "        FROM patrimonio\n"
+            + "        GROUP BY descricao\n"
+            + "        ORDER BY quantidade DESC\n"
+            + "        LIMIT 10\n"
+            + "    ";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<TopItemData>>() {
+      @Override
+      @NonNull
+      public List<TopItemData> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfDescricao = 0;
+          final int _cursorIndexOfQuantidade = 1;
+          final List<TopItemData> _result = new ArrayList<TopItemData>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final TopItemData _item;
+            final String _tmpDescricao;
+            _tmpDescricao = _cursor.getString(_cursorIndexOfDescricao);
+            final int _tmpQuantidade;
+            _tmpQuantidade = _cursor.getInt(_cursorIndexOfQuantidade);
+            _item = new TopItemData(_tmpDescricao,_tmpQuantidade);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
   @NonNull
   public static List<Class<?>> getRequiredConverters() {
     return Collections.emptyList();

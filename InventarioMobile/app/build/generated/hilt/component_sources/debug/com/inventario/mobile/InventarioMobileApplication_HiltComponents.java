@@ -5,6 +5,8 @@ import com.inventario.mobile.di.ApiModule;
 import com.inventario.mobile.di.DatabaseModule;
 import com.inventario.mobile.di.MapperModule;
 import com.inventario.mobile.di.RepositoryModule;
+import com.inventario.mobile.presentation.charts.ChartsFragment_GeneratedInjector;
+import com.inventario.mobile.presentation.charts.ChartsViewModel_HiltModules;
 import com.inventario.mobile.presentation.coleta.ColetaViewModelClean_HiltModules;
 import com.inventario.mobile.ui.coleta.ColetaActivity_GeneratedInjector;
 import com.inventario.mobile.worker.ColetaSyncWorker_HiltModule;
@@ -154,6 +156,7 @@ public final class InventarioMobileApplication_HiltComponents {
 
   @Subcomponent(
       modules = {
+          ChartsViewModel_HiltModules.KeyModule.class,
           ColetaViewModelClean_HiltModules.KeyModule.class,
           HiltWrapper_ActivityRetainedComponentManager_LifecycleModule.class,
           ActivityCBuilderModule.class,
@@ -193,6 +196,7 @@ public final class InventarioMobileApplication_HiltComponents {
 
   @Subcomponent(
       modules = {
+          ChartsViewModel_HiltModules.BindsModule.class,
           ColetaViewModelClean_HiltModules.BindsModule.class,
           HiltWrapper_HiltViewModelFactory_ViewModelModule.class
       }
@@ -219,7 +223,8 @@ public final class InventarioMobileApplication_HiltComponents {
       modules = ViewWithFragmentCBuilderModule.class
   )
   @FragmentScoped
-  public abstract static class FragmentC implements FragmentComponent,
+  public abstract static class FragmentC implements ChartsFragment_GeneratedInjector,
+      FragmentComponent,
       DefaultViewModelFactories.FragmentEntryPoint,
       ViewComponentManager.ViewWithFragmentComponentBuilderEntryPoint,
       GeneratedComponent {

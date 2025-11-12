@@ -1,8 +1,6 @@
 package com.inventario.mobile.server.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.time.LocalDateTime;
 
 /**
  * Classe padrão para respostas da API Mobile

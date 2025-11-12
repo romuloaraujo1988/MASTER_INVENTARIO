@@ -81,7 +81,7 @@ public class RelatorioViewModel {
     public void carregarInventarios() {
         try {
             // Não mostrar loading para carregamento de combos (operação rápida)
-            List<Inventario> inventarios = inventarioDAO.listarInventarios();
+            List<Inventario> inventarios = inventarioDAO.findAll();
             setState(new RelatorioState.InventariosCarregados(inventarios));
         } catch (Exception e) {
             setState(new RelatorioState.Error("Erro ao carregar inventários: " + e.getMessage()));
@@ -93,7 +93,7 @@ public class RelatorioViewModel {
      */
     public void carregarSetores() {
         try {
-            List<Setor> setores = setorDAO.listarSetores();
+            List<Setor> setores = setorDAO.findAll();
             setState(new RelatorioState.SetoresCarregados(setores));
         } catch (Exception e) {
             setState(new RelatorioState.Error("Erro ao carregar setores: " + e.getMessage()));

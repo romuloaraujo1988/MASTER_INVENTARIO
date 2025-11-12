@@ -124,6 +124,10 @@
         "source": "com.inventario.mobile.app-main-69:/layout/activity_statistics.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_charts.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_charts.xml"
+    },
+    {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_sala.xml",
         "source": "com.inventario.mobile.app-main-69:/layout/item_sala.xml"
     },

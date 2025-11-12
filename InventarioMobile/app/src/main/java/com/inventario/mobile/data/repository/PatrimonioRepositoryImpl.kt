@@ -7,7 +7,6 @@ import com.inventario.mobile.data.observer.NetworkConnectivityObserver
 import com.inventario.mobile.data.strategy.DataSourceStrategyFactory
 import com.inventario.mobile.data.strategy.DataSourceType
 import com.inventario.mobile.data.model.Patrimonio
-import com.inventario.mobile.domain.repository.PatrimonioRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +22,7 @@ import javax.inject.Singleton
 class PatrimonioRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val strategyFactory: DataSourceStrategyFactory
-) : PatrimonioRepository {
+) {
     
     companion object {
         private const val TAG = "PatrimonioRepository"

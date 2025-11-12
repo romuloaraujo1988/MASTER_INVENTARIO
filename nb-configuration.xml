@@ -16,16 +16,12 @@
         <org-netbeans-modules-maven-j2ee.netbeans_2e_hint_2e_j2eeVersion>1.8-web</org-netbeans-modules-maven-j2ee.netbeans_2e_hint_2e_j2eeVersion>
         <org-netbeans-modules-maven-j2ee.netbeans_2e_hint_2e_deploy_2e_server>Tomcat</org-netbeans-modules-maven-j2ee.netbeans_2e_hint_2e_deploy_2e_server>
         <org-netbeans-modules-maven-jaxws.rest_2e_config_2e_type>ide</org-netbeans-modules-maven-jaxws.rest_2e_config_2e_type>
-        
         <!-- Configurações específicas para Spring Boot -->
         <org-netbeans-modules-spring-boot.spring_2e_boot_2e_version>3.2.0</org-netbeans-modules-spring-boot.spring_2e_boot_2e_version>
         <org-netbeans-modules-spring-boot.main_2e_class>com.inventario.MobileApiApplication</org-netbeans-modules-spring-boot.main_2e_class>
         <org-netbeans-modules-spring-boot.spring_2e_profiles>mobile</org-netbeans-modules-spring-boot.spring_2e_profiles>
-        
         <!-- Configurações de execução -->
-        <netbeans.hint.jdkPlatform>JDK_21</netbeans.hint.jdkPlatform>
         <org-netbeans-modules-maven-j2ee.netbeans_2e_compile_2e_on_2e_save>none</org-netbeans-modules-maven-j2ee.netbeans_2e_compile_2e_on_2e_save>
-        
         <!-- Configurações de encoding -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>

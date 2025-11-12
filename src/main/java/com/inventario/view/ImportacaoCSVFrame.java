@@ -1,8 +1,7 @@
 package com.inventario.view;
 
-import com.inventario.util.ImportacaoCSV;
+import com.inventario.util.*;
 import com.inventario.util.ImportacaoCSV.RelatorioImportacao;
-import com.inventario.util.ImportacaoExcel;
 import com.inventario.view.ui.ButtonStyleFactory;
 
 import javax.swing.*;
@@ -11,15 +10,13 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
-import javax.swing.SwingWorker;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.ResultSet;
-import com.inventario.util.DatabaseConnection;
 
 /**
- * Interface para importação de arquivos CSV do SUAP
- * Permite selecionar arquivo, configurar opções e acompanhar o progresso da importação
+ * Versão refatorada do ImportacaoCSVFrame usando classes utilitárias
+ * Demonstra eliminação de código duplicado e melhor tratamento de erros
  */
 public class ImportacaoCSVFrame extends JFrame {
     private JTextField campoArquivo;
@@ -53,7 +50,7 @@ public class ImportacaoCSVFrame extends JFrame {
         setTitle("Importação de Dados do SUAP (CSV/Excel)");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(900, 750);
-        setLocationRelativeTo(null);
+        DialogUtils.centerOnScreen(this); // ✅ Usando utilitário
     }
     
     private void initializeComponents() {
@@ -61,7 +58,7 @@ public class ImportacaoCSVFrame extends JFrame {
         campoArquivo = new JTextField(40);
         campoArquivo.setEditable(false);
         btnSelecionarArquivo = ButtonStyleFactory.createPrimaryButton("Selecionar");
-        btnSelecionarArquivo.setPreferredSize(new Dimension(180, 40)); // Alargado para caber o texto
+        btnSelecionarArquivo.setPreferredSize(new Dimension(180, 40));
         
         // Botões de ação
         btnImportar = ButtonStyleFactory.createSuccessButton("Iniciar");
@@ -93,7 +90,6 @@ public class ImportacaoCSVFrame extends JFrame {
         chkAtualizarExistentes = new JCheckBox("Atualizar patrimônios existentes", true);
         chkIgnorarErros = new JCheckBox("Continuar processamento mesmo com erros", true);
         
-        // Configurar tooltips
         configurarTooltips();
     }
     
@@ -156,7 +152,7 @@ public class ImportacaoCSVFrame extends JFrame {
         panelOpcoes.add(chkCriarSalas);
         panelOpcoes.add(chkAtualizarExistentes);
         panelOpcoes.add(chkIgnorarErros);
-        panelOpcoes.add(new JLabel()); // Espaço vazio
+        panelOpcoes.add(new JLabel());
         
         // Panel superior completo
         JPanel panelSuperior = new JPanel(new BorderLayout(0, 10));
@@ -230,46 +226,47 @@ public class ImportacaoCSVFrame extends JFrame {
     }
     
     private void cancelarImportacao() {
-        int confirmacao = JOptionPane.showConfirmDialog(this,
+        // ✅ Usando DialogUtils para confirmação
+        if (DialogUtils.showConfirmation(this,
             "Deseja realmente cancelar a importação?\n\n" +
             "IMPORTANTE:\n" +
             "• Os patrimônios já importados serão mantidos no banco\n" +
             "• O processo será interrompido imediatamente\n" +
             "• Um relatório parcial será gerado\n\n" +
-            "Confirma o cancelamento?",
-            "Confirmar Cancelamento",
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.WARNING_MESSAGE);
-        
-        if (confirmacao == JOptionPane.YES_OPTION && workerAtual != null) {
-            adicionarLog("\n⚠️ CANCELAMENTO SOLICITADO PELO USUÁRIO");
-            adicionarLog("Aguarde... Finalizando operações em andamento...");
-            workerAtual.cancel(true);
-            btnCancelar.setEnabled(false);
-            btnCancelar.setText("Cancelando...");
+            "Confirma o cancelamento?")) {
+            
+            if (workerAtual != null) {
+                adicionarLog("\n⚠️ CANCELAMENTO SOLICITADO PELO USUÁRIO");
+                adicionarLog("Aguarde... Finalizando operações em andamento...");
+                workerAtual.cancel(true);
+                btnCancelar.setEnabled(false);
+                btnCancelar.setText("Cancelando...");
+            }
         }
     }
     
     private void selecionarArquivo() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new FileNameExtensionFilter(
-            "Arquivos CSV/Excel (*.csv, *.xlsx, *.xls)", "csv", "xlsx", "xls"));
-        fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
-        fileChooser.setDialogTitle("Selecionar Arquivo para Importação");
-        
-        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            arquivoSelecionado = fileChooser.getSelectedFile();
-            campoArquivo.setText(arquivoSelecionado.getAbsolutePath());
-            btnImportar.setEnabled(true);
+        // ✅ Usando ExceptionHandler para tratamento de erros
+        ExceptionHandler.executeWithErrorHandling(this, "selecionar arquivo", () -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileFilter(new FileNameExtensionFilter(
+                "Arquivos CSV/Excel (*.csv, *.xlsx, *.xls)", "csv", "xlsx", "xls"));
+            fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+            fileChooser.setDialogTitle("Selecionar Arquivo para Importação");
             
-            // Verificar se o arquivo existe e é legível
-            if (!arquivoSelecionado.exists()) {
-                adicionarLog("❌ ERRO: Arquivo não encontrado: " + arquivoSelecionado.getAbsolutePath());
-                btnImportar.setEnabled(false);
-            } else if (!arquivoSelecionado.canRead()) {
-                adicionarLog("❌ ERRO: Não é possível ler o arquivo: " + arquivoSelecionado.getAbsolutePath());
-                btnImportar.setEnabled(false);
-            } else {
+            if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                arquivoSelecionado = fileChooser.getSelectedFile();
+                campoArquivo.setText(arquivoSelecionado.getAbsolutePath());
+                btnImportar.setEnabled(true);
+                
+                // Validar arquivo
+                ValidationUtils.ValidationResult validacao = validarArquivo(arquivoSelecionado);
+                if (!validacao.isValid()) {
+                    ExceptionHandler.handleValidation(this, validacao.getErrorMessage());
+                    btnImportar.setEnabled(false);
+                    return;
+                }
+                
                 String nome = arquivoSelecionado.getName().toLowerCase();
                 String tipo = nome.endsWith(".csv") ? "CSV" : 
                              nome.endsWith(".xlsx") ? "Excel (XLSX)" : 
@@ -285,30 +282,45 @@ public class ImportacaoCSVFrame extends JFrame {
                 
                 lblStatus.setText("Arquivo " + tipo + " pronto para importação");
             }
+        });
+    }
+    
+    // ✅ Validação centralizada usando ValidationUtils
+    private ValidationUtils.ValidationResult validarArquivo(File arquivo) {
+        if (!arquivo.exists()) {
+            return ValidationUtils.ValidationResult.error("Arquivo não encontrado: " + arquivo.getAbsolutePath());
         }
+        
+        if (!arquivo.canRead()) {
+            return ValidationUtils.ValidationResult.error("Não é possível ler o arquivo: " + arquivo.getAbsolutePath());
+        }
+        
+        String nome = arquivo.getName().toLowerCase();
+        if (!nome.endsWith(".csv") && !nome.endsWith(".xlsx") && !nome.endsWith(".xls")) {
+            return ValidationUtils.ValidationResult.error("Formato de arquivo não suportado. Use CSV, XLS ou XLSX");
+        }
+        
+        return ValidationUtils.ValidationResult.success();
     }
     
     private void iniciarImportacao() {
         if (arquivoSelecionado == null) {
-            JOptionPane.showMessageDialog(this, "Selecione um arquivo CSV primeiro.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            // ✅ Usando DialogUtils para avisos
+            DialogUtils.showWarning(this, "Selecione um arquivo CSV primeiro.");
             return;
         }
         
         String tipoArquivo = arquivoSelecionado.getName().toLowerCase().endsWith(".csv") ? "CSV" : "Excel";
         
-        int confirmacao = JOptionPane.showConfirmDialog(this,
+        // ✅ Usando DialogUtils para confirmação
+        if (!DialogUtils.showConfirmation(this,
             "Deseja iniciar a importação do arquivo " + tipoArquivo + " selecionado?\n\n" +
             "IMPORTANTE:\n" +
             "• Patrimônios serão importados mesmo sem responsável, sala ou estado\n" +
             "• Um relatório detalhado será gerado ao final\n" +
             "• Você poderá ajustar os dados posteriormente\n" +
             "• Esta operação pode demorar alguns minutos\n\n" +
-            "Deseja continuar?",
-            "Confirmar Importação",
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.QUESTION_MESSAGE);
-        
-        if (confirmacao != JOptionPane.YES_OPTION) {
+            "Deseja continuar?")) {
             return;
         }
         
@@ -345,7 +357,6 @@ public class ImportacaoCSVFrame extends JFrame {
                 ImportacaoCSV.ProgressCallback callback = new ImportacaoCSV.ProgressCallback() {
                     @Override
                     public void onProgress(int linhasProcessadas, String mensagem) {
-                        // Verificar se foi cancelado
                         if (isCancelled()) {
                             publish("[AVISO] Cancelamento detectado na linha " + linhasProcessadas);
                             return;
@@ -382,10 +393,9 @@ public class ImportacaoCSVFrame extends JFrame {
                     throw new IllegalArgumentException("Formato de arquivo não suportado");
                 }
                 
-                // Verificar se foi cancelado antes de retornar
                 if (isCancelled()) {
                     publish("[AVISO] Importação cancelada pelo usuário");
-                    return relatorio; // Retorna o que foi processado até agora
+                    return relatorio;
                 }
                 
                 long fim = System.currentTimeMillis();
@@ -418,7 +428,6 @@ public class ImportacaoCSVFrame extends JFrame {
                         adicionarLog("═══════════════════════════════════════════");
                         adicionarLog("");
                         
-                        // Tentar obter relatório parcial
                         try {
                             RelatorioImportacao relatorioParcial = get();
                             if (relatorioParcial != null) {
@@ -462,7 +471,7 @@ public class ImportacaoCSVFrame extends JFrame {
                             relatorio.getErros()
                         ));
                         
-                        // Mostrar resumo em dialog
+                        // ✅ Usando DialogUtils para sucesso
                         mostrarResumoImportacao(relatorio);
                     }
                     
@@ -472,14 +481,12 @@ public class ImportacaoCSVFrame extends JFrame {
                     progressBar.setString("Cancelado");
                     
                 } catch (Exception e) {
+                    // ✅ Usando ExceptionHandler para erros
+                    ExceptionHandler.handle(ImportacaoCSVFrame.this, e, "importar dados");
                     adicionarLog("ERRO: " + e.getMessage());
                     lblStatus.setText("Erro durante a importação");
                     progressBar.setString("Erro");
                     
-                    JOptionPane.showMessageDialog(ImportacaoCSVFrame.this,
-                        "Erro durante a importação: " + e.getMessage(),
-                        "Erro",
-                        JOptionPane.ERROR_MESSAGE);
                 } finally {
                     habilitarControles(true);
                     workerAtual = null;
@@ -491,6 +498,8 @@ public class ImportacaoCSVFrame extends JFrame {
     }
     
     private void mostrarResumoImportacaoCancelada(RelatorioImportacao relatorio) {
+        String relatorioAjustes = gerarRelatorioAjustes();
+        
         String mensagem = String.format(
             "⚠️ Importação cancelada pelo usuário!\n\n" +
             "Dados parcialmente importados:\n" +
@@ -509,59 +518,49 @@ public class ImportacaoCSVFrame extends JFrame {
             relatorio.getErros()
         );
         
-        int opcao = JOptionPane.showConfirmDialog(this,
-            mensagem,
-            "Importação Cancelada",
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.WARNING_MESSAGE);
-        
-        if (opcao == JOptionPane.YES_OPTION) {
-            // Gerar relatório de ajustes
-            String relatorioAjustes = gerarRelatorioAjustes();
+        // ✅ Usando DialogUtils para confirmação
+        if (DialogUtils.showConfirmation(this, mensagem)) {
             mostrarRelatorioDetalhado(relatorio, relatorioAjustes);
         }
     }
     
     private void mostrarResumoImportacao(RelatorioImportacao relatorio) {
-        // Gerar relatório de ajustes necessários
-        String relatorioAjustes = gerarRelatorioAjustes();
-        
-        String mensagem = String.format(
-            "Importação concluída com sucesso!\n\n" +
-            "Resumo:\n" +
-            "• Linhas processadas: %d\n" +
-            "• Itens inseridos: %d\n" +
-            "• Itens atualizados: %d\n" +
-            "• Erros encontrados: %d\n" +
-            "• Tempo de execução: %.1f segundos\n\n" +
-            "%s" +
-            "Deseja visualizar o relatório completo?",
-            relatorio.getLinhasProcessadas(),
-            relatorio.getItensInseridos(),
-            relatorio.getItensAtualizados(),
-            relatorio.getErros(),
-            relatorio.getTempoExecucao(),
-            relatorioAjustes.isEmpty() ? "" : "⚠️ Existem patrimônios que precisam de ajustes!\n\n"
-        );
-        
-        int opcao = JOptionPane.showConfirmDialog(this,
-            mensagem,
-            "Importação Concluída",
-            JOptionPane.YES_NO_OPTION,
-            relatorioAjustes.isEmpty() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE);
-        
-        if (opcao == JOptionPane.YES_OPTION) {
-            // Mostrar relatório detalhado em nova janela
-            mostrarRelatorioDetalhado(relatorio, relatorioAjustes);
-        }
+        // ✅ Usando ExceptionHandler para tratamento de erros
+        ExceptionHandler.executeWithErrorHandling(this, "gerar relatório", () -> {
+            String relatorioAjustes = gerarRelatorioAjustes();
+            
+            String mensagem = String.format(
+                "Importação concluída com sucesso!\n\n" +
+                "Resumo:\n" +
+                "• Linhas processadas: %d\n" +
+                "• Itens inseridos: %d\n" +
+                "• Itens atualizados: %d\n" +
+                "• Erros encontrados: %d\n" +
+                "• Tempo de execução: %.1f segundos\n\n" +
+                "%s" +
+                "Deseja visualizar o relatório completo?",
+                relatorio.getLinhasProcessadas(),
+                relatorio.getItensInseridos(),
+                relatorio.getItensAtualizados(),
+                relatorio.getErros(),
+                relatorio.getTempoExecucao(),
+                relatorioAjustes.isEmpty() ? "" : "⚠️ Existem patrimônios que precisam de ajustes!\n\n"
+            );
+            
+            // ✅ Usando DialogUtils para confirmação
+            if (DialogUtils.showConfirmation(this, mensagem)) {
+                mostrarRelatorioDetalhado(relatorio, relatorioAjustes);
+            }
+        });
     }
     
     private String gerarRelatorioAjustes() {
         StringBuilder relatorio = new StringBuilder();
         
+        // ✅ Usando ConnectionManager para conexão
+        Connection conn = null;
         try {
-            // Buscar patrimônios sem responsável
-            Connection conn = DatabaseConnection.getConnection();
+            conn = ConnectionManager.getConnection();
             
             // Patrimônios sem responsável
             String sqlSemResponsavel = 
@@ -595,7 +594,6 @@ public class ImportacaoCSVFrame extends JFrame {
             rs.close();
             
             stmt.close();
-            conn.close();
             
             if (semResponsavel > 0 || semSala > 0 || semEstado > 0) {
                 relatorio.append("Patrimônios que precisam de ajustes:\n");
@@ -611,7 +609,11 @@ public class ImportacaoCSVFrame extends JFrame {
             }
             
         } catch (Exception e) {
+            // ✅ Usando ExceptionHandler para log de erro
             System.err.println("Erro ao gerar relatório de ajustes: " + e.getMessage());
+        } finally {
+            // ✅ Usando ConnectionManager para fechar conexão
+            ConnectionManager.closeConnection(conn);
         }
         
         return relatorio.toString();
@@ -620,7 +622,7 @@ public class ImportacaoCSVFrame extends JFrame {
     private void mostrarRelatorioDetalhado(RelatorioImportacao relatorio, String relatorioAjustes) {
         JDialog dialog = new JDialog(this, "Relatório Detalhado de Importação", true);
         dialog.setSize(800, 600);
-        dialog.setLocationRelativeTo(this);
+        DialogUtils.centerOnScreen(dialog); // ✅ Usando utilitário
         
         JTextArea areaRelatorio = new JTextArea();
         areaRelatorio.setEditable(false);
@@ -648,8 +650,6 @@ public class ImportacaoCSVFrame extends JFrame {
             textoCompleto.append("───────────────────────────────────────────────────────────\n");
             textoCompleto.append(relatorioAjustes);
             textoCompleto.append("\n");
-            
-            // Adicionar lista detalhada de patrimônios que precisam ajuste
             textoCompleto.append(gerarListaPatrimoniosParaAjuste());
         }
         
@@ -697,9 +697,10 @@ public class ImportacaoCSVFrame extends JFrame {
     
     private String gerarListaPatrimoniosParaAjuste() {
         StringBuilder lista = new StringBuilder();
+        Connection conn = null;
         
         try {
-            Connection conn = DatabaseConnection.getConnection();
+            conn = ConnectionManager.getConnection(); // ✅ Usando ConnectionManager
             
             // Listar patrimônios sem responsável (primeiros 20)
             lista.append("\nPATRIMÔNIOS SEM RESPONSÁVEL (primeiros 20):\n");
@@ -751,38 +752,33 @@ public class ImportacaoCSVFrame extends JFrame {
             rs.close();
             
             stmt.close();
-            conn.close();
             
         } catch (Exception e) {
             lista.append("\nErro ao gerar lista detalhada: " + e.getMessage() + "\n");
+        } finally {
+            ConnectionManager.closeConnection(conn); // ✅ Usando ConnectionManager
         }
         
         return lista.toString();
     }
     
     private void exportarRelatorio(String conteudo) {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Salvar Relatório");
-        fileChooser.setSelectedFile(new File("relatorio_importacao_" + 
-            new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date()) + ".txt"));
-        
-        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            try {
+        // ✅ Usando ExceptionHandler para tratamento de erros
+        ExceptionHandler.executeWithErrorHandling(this, "exportar relatório", () -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Salvar Relatório");
+            fileChooser.setSelectedFile(new File("relatorio_importacao_" + 
+                new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date()) + ".txt"));
+            
+            if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
                 java.nio.file.Files.write(
                     fileChooser.getSelectedFile().toPath(), 
                     conteudo.getBytes(java.nio.charset.StandardCharsets.UTF_8)
                 );
-                JOptionPane.showMessageDialog(this,
-                    "Relatório exportado com sucesso!",
-                    "Sucesso",
-                    JOptionPane.INFORMATION_MESSAGE);
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this,
-                    "Erro ao exportar relatório: " + e.getMessage(),
-                    "Erro",
-                    JOptionPane.ERROR_MESSAGE);
+                // ✅ Usando DialogUtils para sucesso
+                DialogUtils.showSuccess(this, "Relatório exportado com sucesso!");
             }
-        }
+        });
     }
     
     private void limparLog() {
@@ -821,10 +817,8 @@ public class ImportacaoCSVFrame extends JFrame {
     }
     
     private void aplicarEstiloModerno() {
-        // Configurar cores do frame
         getContentPane().setBackground(new Color(245, 245, 245));
         
-        // Estilizar campo de arquivo
         campoArquivo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         campoArquivo.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(200, 200, 200)),
@@ -832,14 +826,12 @@ public class ImportacaoCSVFrame extends JFrame {
         ));
         campoArquivo.setBackground(Color.WHITE);
         
-        // Estilizar checkboxes
         estilizarCheckBox(chkCriarResponsaveis);
         estilizarCheckBox(chkCriarSetores);
         estilizarCheckBox(chkCriarSalas);
         estilizarCheckBox(chkAtualizarExistentes);
         estilizarCheckBox(chkIgnorarErros);
         
-        // Estilizar área de log
         areaLog.setFont(new Font("Consolas", Font.PLAIN, 11));
         areaLog.setBackground(new Color(40, 44, 52));
         areaLog.setForeground(new Color(171, 178, 191));
@@ -847,13 +839,11 @@ public class ImportacaoCSVFrame extends JFrame {
         areaLog.setSelectionColor(new Color(61, 96, 139));
         areaLog.setSelectedTextColor(Color.WHITE);
         
-        // Estilizar barra de progresso
         progressBar.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         progressBar.setForeground(new Color(52, 152, 219));
         progressBar.setBackground(new Color(236, 240, 241));
         progressBar.setBorder(BorderFactory.createLineBorder(new Color(189, 195, 199)));
         
-        // Estilizar labels de status
         lblStatus.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblStatus.setForeground(new Color(60, 60, 60));
         lblEstatisticas.setFont(new Font("Segoe UI", Font.BOLD, 11));
@@ -866,5 +856,18 @@ public class ImportacaoCSVFrame extends JFrame {
         checkBox.setBackground(Color.WHITE);
         checkBox.setFocusPainted(false);
         checkBox.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+    
+    // Método main para teste
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                // Usar look and feel padrão
+            }
+            
+            new ImportacaoCSVFrame().setVisible(true);
+        });
     }
 }
