@@ -221,4 +221,41 @@ class PreferencesManager(context: Context) {
     // Métodos de servidor
     fun setServerUrl(url: String) = putString("server_url", url)
     fun getServerUrl(): String? = getString("server_url", "").takeIf { it.isNotEmpty() }
+    
+    // ===== NOVAS CONFIGURAÇÕES DE SINCRONIZAÇÃO =====
+    
+    /**
+     * Verifica se sincronização apenas via Wi-Fi está habilitada
+     */
+    fun isWifiOnlyEnabled(): Boolean = getBoolean("wifi_only_sync", true)
+    
+    /**
+     * Define se sincronização deve ser apenas via Wi-Fi
+     */
+    fun setWifiOnlyEnabled(enabled: Boolean) = putBoolean("wifi_only_sync", enabled)
+    
+    /**
+     * Verifica se modo economia de bateria está habilitado
+     */
+    fun isBatterySaverEnabled(): Boolean = getBoolean("battery_saver_enabled", false)
+    
+    /**
+     * Define se modo economia de bateria está habilitado
+     */
+    fun setBatterySaverEnabled(enabled: Boolean) = putBoolean("battery_saver_enabled", enabled)
+    
+    /**
+     * Obtém timestamp da última sincronização bem-sucedida
+     */
+    fun getLastSyncTimestamp(): Long = getLong("last_sync_timestamp", 0L)
+    
+    /**
+     * Salva timestamp da última sincronização bem-sucedida
+     */
+    fun setLastSyncTimestamp(timestamp: Long) = putLong("last_sync_timestamp", timestamp)
+    
+    /**
+     * Define contador de coletas
+     */
+    fun setCollectionCount(count: Int) = putInt("collection_count", count)
 }

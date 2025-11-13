@@ -489,6 +489,7 @@ layout nav_header_main
 layout view_connection_status_bar
 menu bottom_navigation
 menu main_menu
+menu menu_coletas
 menu menu_inventario
 menu navigation_drawer_menu
 mipmap ic_launcher

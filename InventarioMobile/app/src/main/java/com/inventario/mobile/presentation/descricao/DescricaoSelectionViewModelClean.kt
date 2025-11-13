@@ -2,19 +2,26 @@ package com.inventario.mobile.presentation.descricao
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.inventario.mobile.data.repository.InventarioRepository
+import com.inventario.mobile.domain.usecase.BuscarDescricoesNaoColetadasUseCase
 import com.inventario.mobile.presentation.state.DescricaoState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * ViewModel refatorado para seleção de descrição
- * Implementação direta com Repository
+ * Clean Architecture + MVVM + Hilt
+ * 
+ * - Usa Use Case para lógica de negócio
+ * - Gerencia estado da UI
+ * - Injetado via Hilt
  */
-class DescricaoSelectionViewModelClean(
-    private val repository: InventarioRepository
+@HiltViewModel
+class DescricaoSelectionViewModelClean @Inject constructor(
+    private val buscarDescricoesNaoColetadasUseCase: BuscarDescricoesNaoColetadasUseCase
 ) : ViewModel() {
     
     private val _state = MutableStateFlow<DescricaoState>(DescricaoState.Idle)
@@ -28,14 +35,16 @@ class DescricaoSelectionViewModelClean(
         viewModelScope.launch {
             _state.value = DescricaoState.Loading
             
-            try {
-                val descricoes = repository.buscarDescricoesNaoColetadas()
-                _state.value = DescricaoState.Success(descricoes)
-            } catch (e: Exception) {
-                _state.value = DescricaoState.Error(
-                    e.message ?: "Erro ao carregar descrições"
-                )
-            }
+            buscarDescricoesNaoColetadasUseCase().fold(
+                onSuccess = { descricoes ->
+                    _state.value = DescricaoState.Success(descricoes)
+                },
+                onFailure = { error ->
+                    _state.value = DescricaoState.Error(
+                        error.message ?: "Erro ao carregar descrições"
+                    )
+                }
+            )
         }
     }
     

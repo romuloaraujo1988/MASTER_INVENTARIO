@@ -6,6 +6,7 @@ import com.inventario.view.ui.ButtonStyleFactory;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.PiePlot;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.renderer.category.BarRenderer;
@@ -102,7 +103,6 @@ public class DashboardColetaFrame extends JFrame {
     private void aplicarTemaModerno() {
         // Cores modernas
         Color corFundo = new Color(248, 249, 250);
-        Color corPrimaria = new Color(52, 152, 219);
         
         getContentPane().setBackground(corFundo);
         tabbedPane.setBackground(corFundo);
@@ -514,6 +514,7 @@ public class DashboardColetaFrame extends JFrame {
         chart.setPadding(new RectangleInsets(10, 10, 10, 10));
         chart.setAntiAlias(true);
         
+        @SuppressWarnings("unchecked")
         PiePlot<String> plot = (PiePlot<String>) chart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
         plot.setOutlineVisible(false);
@@ -575,6 +576,7 @@ public class DashboardColetaFrame extends JFrame {
         chart.setPadding(new RectangleInsets(10, 10, 10, 10));
         chart.setAntiAlias(true);
         
+        @SuppressWarnings("unchecked")
         PiePlot<String> plot = (PiePlot<String>) chart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
         plot.setOutlineVisible(false);
@@ -661,6 +663,7 @@ public class DashboardColetaFrame extends JFrame {
         chart.setPadding(new RectangleInsets(10, 10, 10, 10));
         chart.setAntiAlias(true);
         
+        @SuppressWarnings("unchecked")
         PiePlot<String> plot = (PiePlot<String>) chart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
         plot.setOutlineVisible(false);
@@ -762,6 +765,7 @@ public class DashboardColetaFrame extends JFrame {
         chart.setPadding(new RectangleInsets(10, 10, 10, 10));
         chart.setAntiAlias(true);
         
+        @SuppressWarnings("unchecked")
         PiePlot<String> plot = (PiePlot<String>) chart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
         plot.setOutlineVisible(false);
@@ -1241,7 +1245,12 @@ public class DashboardColetaFrame extends JFrame {
         datasetStatus.setValue("Não Encontrados", estatisticas.get("itens_nao_coletados"));
         
         JFreeChart chartStatus = painelGraficoStatus.getChart();
-        ((PiePlot<String>) chartStatus.getPlot()).setDataset(datasetStatus);
+        Plot plotStatus = chartStatus.getPlot();
+        if (plotStatus instanceof PiePlot) {
+            @SuppressWarnings("unchecked")
+            PiePlot<String> piePlotStatus = (PiePlot<String>) plotStatus;
+            piePlotStatus.setDataset(datasetStatus);
+        }
         
         // Atualizar gráfico de etiquetas
         atualizarGraficoEtiquetas(estatisticas);
@@ -1263,7 +1272,12 @@ public class DashboardColetaFrame extends JFrame {
         datasetEtiquetas.setValue("Sem Patrimônio", semPatrimonio);
         
         JFreeChart chart = painelGraficoEtiquetas.getChart();
-        ((PiePlot<String>) chart.getPlot()).setDataset(datasetEtiquetas);
+        Plot plot = chart.getPlot();
+        if (plot instanceof PiePlot) {
+            @SuppressWarnings("unchecked")
+            PiePlot<String> piePlot = (PiePlot<String>) plot;
+            piePlot.setDataset(datasetEtiquetas);
+        }
     }
     
     private void atualizarGraficoPizzaProgressoResponsaveis() {
@@ -1290,25 +1304,29 @@ public class DashboardColetaFrame extends JFrame {
             }
             
             JFreeChart chart = painelGraficoProgressoResponsaveis.getChart();
-            PiePlot<String> plot = (PiePlot<String>) chart.getPlot();
-            plot.setDataset(dataset);
+            Plot plot = chart.getPlot();
+            if (plot instanceof PiePlot) {
+                @SuppressWarnings("unchecked")
+                PiePlot<String> piePlot = (PiePlot<String>) plot;
+                piePlot.setDataset(dataset);
             
-            // Aplicar cores
-            Color[] cores = {
-                new Color(52, 152, 219),   // Azul
-                new Color(46, 204, 113),   // Verde
-                new Color(155, 89, 182),   // Roxo
-                new Color(241, 196, 15),   // Amarelo
-                new Color(231, 76, 60),    // Vermelho
-                new Color(26, 188, 156),   // Turquesa
-                new Color(230, 126, 34),   // Laranja
-                new Color(149, 165, 166)   // Cinza
-            };
-            
-            int i = 0;
-            for (Object key : dataset.getKeys()) {
-                plot.setSectionPaint((String) key, cores[i % cores.length]);
-                i++;
+                // Aplicar cores
+                Color[] cores = {
+                    new Color(52, 152, 219),   // Azul
+                    new Color(46, 204, 113),   // Verde
+                    new Color(155, 89, 182),   // Roxo
+                    new Color(241, 196, 15),   // Amarelo
+                    new Color(231, 76, 60),    // Vermelho
+                    new Color(26, 188, 156),   // Turquesa
+                    new Color(230, 126, 34),   // Laranja
+                    new Color(149, 165, 166)   // Cinza
+                };
+                
+                int i = 0;
+                for (Object key : dataset.getKeys()) {
+                    piePlot.setSectionPaint((String) key, cores[i % cores.length]);
+                    i++;
+                }
             }
             
         } catch (Exception e) {
@@ -1341,25 +1359,29 @@ public class DashboardColetaFrame extends JFrame {
             }
             
             JFreeChart chart = painelGraficoProgressoSetores.getChart();
-            PiePlot<String> plot = (PiePlot<String>) chart.getPlot();
-            plot.setDataset(dataset);
+            Plot plot = chart.getPlot();
+            if (plot instanceof PiePlot) {
+                @SuppressWarnings("unchecked")
+                PiePlot<String> piePlot = (PiePlot<String>) plot;
+                piePlot.setDataset(dataset);
             
-            // Aplicar cores
-            Color[] cores = {
-                new Color(231, 76, 60),    // Vermelho
-                new Color(52, 152, 219),   // Azul
-                new Color(46, 204, 113),   // Verde
-                new Color(241, 196, 15),   // Amarelo
-                new Color(155, 89, 182),   // Roxo
-                new Color(230, 126, 34),   // Laranja
-                new Color(26, 188, 156),   // Turquesa
-                new Color(149, 165, 166)   // Cinza
-            };
-            
-            int i = 0;
-            for (Object key : dataset.getKeys()) {
-                plot.setSectionPaint((String) key, cores[i % cores.length]);
-                i++;
+                // Aplicar cores
+                Color[] cores = {
+                    new Color(231, 76, 60),    // Vermelho
+                    new Color(52, 152, 219),   // Azul
+                    new Color(46, 204, 113),   // Verde
+                    new Color(241, 196, 15),   // Amarelo
+                    new Color(155, 89, 182),   // Roxo
+                    new Color(230, 126, 34),   // Laranja
+                    new Color(26, 188, 156),   // Turquesa
+                    new Color(149, 165, 166)   // Cinza
+                };
+                
+                int i = 0;
+                for (Object key : dataset.getKeys()) {
+                    piePlot.setSectionPaint((String) key, cores[i % cores.length]);
+                    i++;
+                }
             }
             
         } catch (Exception e) {

@@ -24,6 +24,8 @@ import com.inventario.mobile.di.ApiModule;
 import com.inventario.mobile.di.ApiModule_ProvideColetaApiFactory;
 import com.inventario.mobile.di.ApiModule_ProvidePatrimonioApiLegacyFactory;
 import com.inventario.mobile.di.ApiModule_ProvideSalaApiFactory;
+import com.inventario.mobile.di.AppModule;
+import com.inventario.mobile.di.AppModule_ProvidePreferencesManagerFactory;
 import com.inventario.mobile.di.DatabaseModule;
 import com.inventario.mobile.di.DatabaseModule_ProvideAppDatabaseFactory;
 import com.inventario.mobile.di.DatabaseModule_ProvideColetaDaoFactory;
@@ -31,6 +33,7 @@ import com.inventario.mobile.di.DatabaseModule_ProvidePatrimonioDaoFactory;
 import com.inventario.mobile.di.DatabaseModule_ProvideSalaDaoFactory;
 import com.inventario.mobile.di.MapperModule;
 import com.inventario.mobile.di.MapperModule_ProvideColetaMapperFactory;
+import com.inventario.mobile.domain.usecase.BuscarDescricoesNaoColetadasUseCase;
 import com.inventario.mobile.domain.usecase.BuscarPatrimonioUseCase;
 import com.inventario.mobile.domain.usecase.RegistrarColetaUseCase;
 import com.inventario.mobile.presentation.charts.ChartDataProvider;
@@ -39,7 +42,12 @@ import com.inventario.mobile.presentation.charts.ChartsViewModel;
 import com.inventario.mobile.presentation.charts.ChartsViewModel_HiltModules_KeyModule_ProvideFactory;
 import com.inventario.mobile.presentation.coleta.ColetaViewModelClean;
 import com.inventario.mobile.presentation.coleta.ColetaViewModelClean_HiltModules_KeyModule_ProvideFactory;
+import com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity;
+import com.inventario.mobile.presentation.descricao.DescricaoSelectionViewModelClean;
+import com.inventario.mobile.presentation.descricao.DescricaoSelectionViewModelClean_HiltModules_KeyModule_ProvideFactory;
+import com.inventario.mobile.sync.SyncScheduler;
 import com.inventario.mobile.ui.coleta.ColetaActivity;
+import com.inventario.mobile.utils.PreferencesManager;
 import dagger.hilt.android.ActivityRetainedLifecycle;
 import dagger.hilt.android.ViewModelLifecycle;
 import dagger.hilt.android.flags.HiltWrapper_FragmentGetContextFix_FragmentGetContextFixModule;
@@ -92,6 +100,15 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
     @Deprecated
     public Builder apiModule(ApiModule apiModule) {
       Preconditions.checkNotNull(apiModule);
+      return this;
+    }
+
+    /**
+     * @deprecated This module is declared, but an instance is not used in the component. This method is a no-op. For more, see https://dagger.dev/unused-modules.
+     */
+    @Deprecated
+    public Builder appModule(AppModule appModule) {
+      Preconditions.checkNotNull(appModule);
       return this;
     }
 
@@ -423,6 +440,11 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
     }
 
     @Override
+    public void injectDescricaoSelectionActivity(
+        DescricaoSelectionActivity descricaoSelectionActivity) {
+    }
+
+    @Override
     public void injectColetaActivity(ColetaActivity coletaActivity) {
     }
 
@@ -433,7 +455,7 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
 
     @Override
     public Set<String> getViewModelKeys() {
-      return SetBuilder.<String>newSetBuilder(2).add(ChartsViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(ColetaViewModelClean_HiltModules_KeyModule_ProvideFactory.provide()).build();
+      return SetBuilder.<String>newSetBuilder(3).add(ChartsViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(ColetaViewModelClean_HiltModules_KeyModule_ProvideFactory.provide()).add(DescricaoSelectionViewModelClean_HiltModules_KeyModule_ProvideFactory.provide()).build();
     }
 
     @Override
@@ -463,6 +485,8 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
 
     private Provider<ColetaViewModelClean> coletaViewModelCleanProvider;
 
+    private Provider<DescricaoSelectionViewModelClean> descricaoSelectionViewModelCleanProvider;
+
     private ViewModelCImpl(SingletonCImpl singletonCImpl,
         ActivityRetainedCImpl activityRetainedCImpl, SavedStateHandle savedStateHandleParam,
         ViewModelLifecycle viewModelLifecycleParam) {
@@ -481,16 +505,21 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
       return new RegistrarColetaUseCase(singletonCImpl.coletaRepositoryImplProvider.get(), singletonCImpl.patrimonioRepositoryAdapterProvider.get());
     }
 
+    private BuscarDescricoesNaoColetadasUseCase buscarDescricoesNaoColetadasUseCase() {
+      return new BuscarDescricoesNaoColetadasUseCase(singletonCImpl.patrimonioRepositoryAdapterProvider.get());
+    }
+
     @SuppressWarnings("unchecked")
     private void initialize(final SavedStateHandle savedStateHandleParam,
         final ViewModelLifecycle viewModelLifecycleParam) {
       this.chartsViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 0);
       this.coletaViewModelCleanProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 1);
+      this.descricaoSelectionViewModelCleanProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 2);
     }
 
     @Override
     public Map<String, Provider<ViewModel>> getHiltViewModelMap() {
-      return MapBuilder.<String, Provider<ViewModel>>newMapBuilder(2).put("com.inventario.mobile.presentation.charts.ChartsViewModel", ((Provider) chartsViewModelProvider)).put("com.inventario.mobile.presentation.coleta.ColetaViewModelClean", ((Provider) coletaViewModelCleanProvider)).build();
+      return MapBuilder.<String, Provider<ViewModel>>newMapBuilder(3).put("com.inventario.mobile.presentation.charts.ChartsViewModel", ((Provider) chartsViewModelProvider)).put("com.inventario.mobile.presentation.coleta.ColetaViewModelClean", ((Provider) coletaViewModelCleanProvider)).put("com.inventario.mobile.presentation.descricao.DescricaoSelectionViewModelClean", ((Provider) descricaoSelectionViewModelCleanProvider)).build();
     }
 
     private static final class SwitchingProvider<T> implements Provider<T> {
@@ -518,7 +547,10 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
           return (T) new ChartsViewModel(singletonCImpl.chartDataProvider.get());
 
           case 1: // com.inventario.mobile.presentation.coleta.ColetaViewModelClean 
-          return (T) new ColetaViewModelClean(viewModelCImpl.buscarPatrimonioUseCase(), viewModelCImpl.registrarColetaUseCase());
+          return (T) new ColetaViewModelClean(viewModelCImpl.buscarPatrimonioUseCase(), viewModelCImpl.registrarColetaUseCase(), singletonCImpl.syncSchedulerProvider.get());
+
+          case 2: // com.inventario.mobile.presentation.descricao.DescricaoSelectionViewModelClean 
+          return (T) new DescricaoSelectionViewModelClean(viewModelCImpl.buscarDescricoesNaoColetadasUseCase());
 
           default: throw new AssertionError(id);
         }
@@ -619,6 +651,10 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
 
     private Provider<ColetaRepositoryImpl> coletaRepositoryImplProvider;
 
+    private Provider<PreferencesManager> providePreferencesManagerProvider;
+
+    private Provider<SyncScheduler> syncSchedulerProvider;
+
     private SingletonCImpl(ApplicationContextModule applicationContextModuleParam) {
       this.applicationContextModule = applicationContextModuleParam;
       initialize(applicationContextModuleParam);
@@ -649,6 +685,8 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
       this.provideColetaApiProvider = DoubleCheck.provider(new SwitchingProvider<ColetaApi>(singletonCImpl, 8));
       this.provideColetaMapperProvider = DoubleCheck.provider(new SwitchingProvider<ColetaMapper>(singletonCImpl, 9));
       this.coletaRepositoryImplProvider = DoubleCheck.provider(new SwitchingProvider<ColetaRepositoryImpl>(singletonCImpl, 7));
+      this.providePreferencesManagerProvider = DoubleCheck.provider(new SwitchingProvider<PreferencesManager>(singletonCImpl, 11));
+      this.syncSchedulerProvider = DoubleCheck.provider(new SwitchingProvider<SyncScheduler>(singletonCImpl, 10));
     }
 
     @Override
@@ -714,6 +752,12 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
 
           case 9: // com.inventario.mobile.data.mapper.ColetaMapper 
           return (T) MapperModule_ProvideColetaMapperFactory.provideColetaMapper();
+
+          case 10: // com.inventario.mobile.sync.SyncScheduler 
+          return (T) new SyncScheduler(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule), singletonCImpl.providePreferencesManagerProvider.get());
+
+          case 11: // com.inventario.mobile.utils.PreferencesManager 
+          return (T) AppModule_ProvidePreferencesManagerFactory.providePreferencesManager(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
 
           default: throw new AssertionError(id);
         }

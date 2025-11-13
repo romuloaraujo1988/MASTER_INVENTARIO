@@ -54,6 +54,32 @@ class ColetasActivity : AppCompatActivity() {
         binding.toolbar.setNavigationOnClickListener {
             finish()
         }
+        
+        // Adicionar menu de filtro
+        binding.toolbar.inflateMenu(com.inventario.mobile.R.menu.menu_coletas)
+        binding.toolbar.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                com.inventario.mobile.R.id.action_filter -> {
+                    toggleFiltro()
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+    
+    private var filtrandoPorUsuario = true
+    
+    private fun toggleFiltro() {
+        filtrandoPorUsuario = !filtrandoPorUsuario
+        viewModel.loadColetas(filtrandoPorUsuario)
+        
+        val mensagem = if (filtrandoPorUsuario) {
+            "Mostrando minhas coletas"
+        } else {
+            "Mostrando todas as coletas"
+        }
+        Toast.makeText(this, mensagem, Toast.LENGTH_SHORT).show()
     }
 
     private fun setupViewPager() {

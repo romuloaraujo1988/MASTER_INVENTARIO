@@ -13,6 +13,12 @@ interface ColetaDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun inserir(coleta: ColetaEntity): Long
     
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(coleta: ColetaEntity): Long
+    
+    @Query("UPDATE coleta SET sincronizado = :sincronizado, servidorId = :servidorId WHERE id = :id")
+    suspend fun updateSincronizado(id: Long, sincronizado: Boolean, servidorId: Int)
+    
     @Query("SELECT * FROM coleta WHERE sincronizado = 0 ORDER BY dataColeta ASC")
     suspend fun buscarPendentes(): List<ColetaEntity>
     

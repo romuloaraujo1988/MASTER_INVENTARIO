@@ -174,12 +174,21 @@ class PatrimonioRepositoryAdapter @Inject constructor(
     }
     
     override suspend fun buscarDescricoesNaoColetadas(): List<String> {
-        // Não implementado
-        return emptyList()
+        val result = impl.buscarDescricoesNaoColetadas()
+        return if (result.isSuccess) {
+            result.getOrNull() ?: emptyList()
+        } else {
+            emptyList()
+        }
     }
     
     override suspend fun buscarPorDescricaoNaoColetados(descricao: String): List<DomainPatrimonio> {
-        // Não implementado
-        return emptyList()
+        val result = impl.buscarPorDescricaoNaoColetados(descricao)
+        return if (result.isSuccess) {
+            val dataList = result.getOrNull() ?: emptyList()
+            dataList.map { it.toDomain() }
+        } else {
+            emptyList()
+        }
     }
 }

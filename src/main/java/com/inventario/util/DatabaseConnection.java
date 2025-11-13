@@ -22,11 +22,6 @@ public class DatabaseConnection {
     private static DatabaseConfigManager configManager;
     private static DatabaseConfig currentConfig;
     
-    // Configurações de fallback (caso não haja configuração salva)
-    private static final String FALLBACK_URL = "jdbc:postgresql://localhost:5432/sispatrimonio";
-    private static final String FALLBACK_USER = "postgres";
-    private static final String FALLBACK_PASSWORD = "Romulo@2020";
-    
     static {
         try {
             // Carrega o driver PostgreSQL
@@ -59,9 +54,19 @@ public class DatabaseConnection {
                 return createConnectionFromConfig(currentConfig);
             }
             
-            // Fallback para configuração padrão
-            System.out.println("Usando configuração de fallback para conexão.");
-            return DriverManager.getConnection(FALLBACK_URL, FALLBACK_USER, FALLBACK_PASSWORD);
+            // Sem configuração válida - não usar fallback com senha hardcoded
+            System.err.println("╔════════════════════════════════════════════════════════════════╗");
+            System.err.println("║  ⚠️  ERRO: Nenhuma configuração de banco encontrada           ║");
+            System.err.println("╠════════════════════════════════════════════════════════════════╣");
+            System.err.println("║  Configure o banco de dados via:                              ║");
+            System.err.println("║  1. Tela de Login → Botão '⚙ Configurar Banco'               ║");
+            System.err.println("║  2. Ou use ConfigurationMigration.migrateConfiguration()      ║");
+            System.err.println("╚════════════════════════════════════════════════════════════════╝");
+            
+            throw new SQLException(
+                "Nenhuma configuração de banco de dados encontrada. " +
+                "Configure via interface ou arquivo ~/.inventario/database-config.properties"
+            );
             
         } catch (SQLException e) {
             System.err.println("Erro ao obter conexão com banco de dados: " + e.getMessage());

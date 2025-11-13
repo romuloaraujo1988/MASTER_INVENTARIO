@@ -27,6 +27,11 @@ interface PatrimonioApi {
     
     @GET("descricoes/nao-coletadas")
     suspend fun buscarDescricoesNaoColetadas(
-        @Query("idInventario") idInventario: Int?
+        @Query("idInventario") idInventario: Int? = null
     ): Response<ApiResponse<List<String>>>
+    
+    @GET("patrimonios/descricao/{descricao}/nao-coletados")
+    suspend fun buscarPorDescricaoNaoColetados(
+        @Path("descricao") descricao: String
+    ): Response<ApiResponse<List<Patrimonio>>>
 }

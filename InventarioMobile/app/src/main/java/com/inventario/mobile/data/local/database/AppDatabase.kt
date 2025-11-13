@@ -17,9 +17,10 @@ import com.inventario.mobile.data.local.entity.*
         SalaEntity::class,
         ResponsavelEntity::class,
         ColetaEntity::class,
-        SincronizacaoEntity::class
+        SincronizacaoEntity::class,
+        SyncLogEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -29,6 +30,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun responsavelDao(): ResponsavelDao
     abstract fun coletaDao(): ColetaDao
     abstract fun sincronizacaoDao(): SincronizacaoDao
+    abstract fun syncLogDao(): SyncLogDao
     
     companion object {
         @Volatile

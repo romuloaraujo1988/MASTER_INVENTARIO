@@ -5,8 +5,6 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
 import java.util.logging.Level;
-import com.inventario.offline.ConnectivityManager;
-import com.inventario.util.DatabaseConnection;
 
 /**
  * Gerenciador central do modo offline

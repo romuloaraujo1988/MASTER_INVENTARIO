@@ -14,13 +14,15 @@ import com.inventario.mobile.data.remote.api.ApiClient
  */
 class InventarioRepository(
     private val apiService: ApiService,
-    private val localDataManager: LocalDataManager
+    private val localDataManager: LocalDataManager,
+    private val context: Context
 ) {
     
     // Construtor alternativo para aceitar Application
     constructor(application: Application) : this(
         ApiClient.getApiService(application.applicationContext),
-        LocalDataManager.getInstance(application.applicationContext)
+        LocalDataManager.getInstance(application.applicationContext),
+        application.applicationContext
     )
     
     companion object {
@@ -30,7 +32,7 @@ class InventarioRepository(
         fun getInstance(context: Context, apiService: ApiService): InventarioRepository {
             return INSTANCE ?: synchronized(this) {
                 val localDataManager = LocalDataManager.getInstance(context)
-                INSTANCE ?: InventarioRepository(apiService, localDataManager).also { INSTANCE = it }
+                INSTANCE ?: InventarioRepository(apiService, localDataManager, context).also { INSTANCE = it }
             }
         }
     }
@@ -204,7 +206,7 @@ class InventarioRepository(
     ): Result<Coleta> {
         return try {
             android.util.Log.d("InventarioRepository", "═══════════════════════════════════════════")
-            android.util.Log.d("InventarioRepository", "REGISTRANDO COLETA")
+            android.util.Log.d("InventarioRepository", "REGISTRANDO COLETA (OFFLINE-FIRST)")
             android.util.Log.d("InventarioRepository", "Patrimônio: ${patrimonio.numeroPatrimonio}")
             android.util.Log.d("InventarioRepository", "Sala: $salaNome")
             android.util.Log.d("InventarioRepository", "Estado: $estadoEncontrado")
@@ -228,63 +230,129 @@ class InventarioRepository(
             android.util.Log.d("InventarioRepository", "Usuário ID: ${usuario.id}")
             android.util.Log.d("InventarioRepository", "Inventário ID: $idInventario")
             
-            // Criar request de coleta
-            val coletaRequest = com.inventario.mobile.data.remote.dto.MobileColetaRequest(
+            // PASSO 1: SALVAR LOCALMENTE PRIMEIRO (Offline-First)
+            val coletaLocal = Coleta(
+                id = null, // Será gerado pelo Room
+                patrimonioId = patrimonio.id.toInt(),
                 numeroPatrimonio = patrimonio.numeroPatrimonio,
-                idInventario = idInventario,
+                descricaoPatrimonio = patrimonio.descricao,
                 usuarioId = usuario.id.toInt(),
-                localizacaoEncontrada = salaNome,
+                nomeColetor = usuario.nome,
+                dataColeta = System.currentTimeMillis().toString(),
+                localizacaoAtual = salaNome,
                 estadoEncontrado = estadoEncontrado,
-                observacaoColeta = observacoes,
+                observacoes = observacoes,
                 latitude = latitude,
-                longitude = longitude
+                longitude = longitude,
+                fotoPath = null,
+                sincronizado = false, // Marca como não sincronizado
+                nomeSala = salaNome
             )
             
-            val response = apiService.createColeta(coletaRequest)
+            // Salvar no Room Database
+            val coletaEntity = com.inventario.mobile.data.local.entity.ColetaEntity(
+                id = 0, // Auto-increment
+                idPatrimonio = patrimonio.id.toInt(),
+                numeroPatrimonio = patrimonio.numeroPatrimonio,
+                idInventario = idInventario,
+                idSala = null,
+                nomeSala = salaNome,
+                idResponsavel = null,
+                nomeResponsavel = null,
+                observacao = observacoes,
+                estadoPatrimonio = estadoEncontrado,
+                latitude = latitude,
+                longitude = longitude,
+                dataColeta = System.currentTimeMillis(),
+                idUsuario = usuario.id.toInt(),
+                nomeUsuario = usuario.nome,
+                sincronizado = false,
+                tentativasSincronizacao = 0,
+                erroSincronizacao = null,
+                servidorId = null
+            )
             
-            android.util.Log.d("InventarioRepository", "Response code: ${response.code()}")
-            android.util.Log.d("InventarioRepository", "Response successful: ${response.isSuccessful}")
+            val database = com.inventario.mobile.data.local.database.AppDatabase.getInstance(context)
+            val coletaDao = database.coletaDao()
+            val localId = coletaDao.insert(coletaEntity)
             
-            if (response.isSuccessful && response.body() != null) {
-                val apiResponse = response.body()!!
-                android.util.Log.d("InventarioRepository", "API Response success: ${apiResponse.success}")
+            android.util.Log.d("InventarioRepository", "✓ Coleta salva localmente com ID: $localId")
+            
+            // PASSO 2: TENTAR SINCRONIZAR COM SERVIDOR (não bloqueia se falhar)
+            var sincronizado = false
+            var coletaServerId: Int? = null
+            
+            try {
+                // Criar request de coleta
+                val coletaRequest = com.inventario.mobile.data.remote.dto.MobileColetaRequest(
+                    numeroPatrimonio = patrimonio.numeroPatrimonio,
+                    idInventario = idInventario,
+                    usuarioId = usuario.id.toInt(),
+                    localizacaoEncontrada = salaNome,
+                    estadoEncontrado = estadoEncontrado,
+                    observacaoColeta = observacoes,
+                    latitude = latitude,
+                    longitude = longitude
+                )
                 
-                if (apiResponse.success && apiResponse.data != null) {
-                    val dto = apiResponse.data
-                    val coleta = Coleta(
-                        id = dto.id ?: 0,
-                        patrimonioId = dto.patrimonioId ?: patrimonio.id.toInt(),
-                        numeroPatrimonio = dto.numeroPatrimonio ?: patrimonio.numeroPatrimonio,
-                        descricaoPatrimonio = dto.descricaoPatrimonio ?: patrimonio.descricao,
-                        usuarioId = dto.usuarioId ?: 0,
-                        nomeColetor = dto.nomeColetor ?: "",
-                        dataColeta = dto.dataColeta ?: "",
-                        localizacaoAtual = dto.localizacaoEncontrada ?: salaNome,
-                        estadoEncontrado = dto.estadoEncontrado ?: estadoEncontrado,
-                        observacoes = dto.observacaoColeta ?: observacoes,
-                        latitude = dto.latitude ?: latitude,
-                        longitude = dto.longitude ?: longitude,
-                        fotoPath = dto.fotoPath,
-                        sincronizado = true,
-                        nomeSala = dto.nomeSala ?: salaNome
-                    )
+                val response = apiService.createColeta(coletaRequest)
+                
+                android.util.Log.d("InventarioRepository", "Tentando sincronizar com servidor...")
+                android.util.Log.d("InventarioRepository", "Response code: ${response.code()}")
+                android.util.Log.d("InventarioRepository", "Response successful: ${response.isSuccessful}")
+                
+                if (response.isSuccessful && response.body() != null) {
+                    val apiResponse = response.body()!!
+                    android.util.Log.d("InventarioRepository", "API Response success: ${apiResponse.success}")
                     
-                    android.util.Log.d("InventarioRepository", "✓ Coleta registrada com sucesso!")
-                    android.util.Log.d("InventarioRepository", "  ID: ${coleta.id}")
-                    android.util.Log.d("InventarioRepository", "  Patrimônio: ${coleta.numeroPatrimonio}")
-                    android.util.Log.d("InventarioRepository", "  Sala: ${coleta.localizacaoAtual}")
-                    
-                    Result.success(coleta)
-                } else {
-                    val errorMsg = apiResponse.message ?: "Erro desconhecido ao registrar coleta"
-                    android.util.Log.e("InventarioRepository", "✗ Erro: $errorMsg")
-                    Result.failure(Exception(errorMsg))
+                    if (apiResponse.success && apiResponse.data != null) {
+                        val dto = apiResponse.data
+                        coletaServerId = dto.id
+                        sincronizado = true
+                        
+                        // Atualizar coleta local como sincronizada
+                        coletaDao.updateSincronizado(localId, true, coletaServerId ?: 0)
+                        
+                        android.util.Log.d("InventarioRepository", "✓ Coleta sincronizada com servidor!")
+                        android.util.Log.d("InventarioRepository", "  ID Local: $localId")
+                        android.util.Log.d("InventarioRepository", "  ID Servidor: $coletaServerId")
+                    }
                 }
-            } else {
-                val errorBody = response.errorBody()?.string()
-                android.util.Log.e("InventarioRepository", "✗ Erro HTTP ${response.code()}: $errorBody")
-                Result.failure(Exception("Erro HTTP: ${response.code()} - ${response.message()}"))
+            } catch (e: Exception) {
+                android.util.Log.w("InventarioRepository", "⚠ Falha na sincronização (coleta salva localmente): ${e.message}")
+                // Não propaga o erro - coleta foi salva localmente
             }
+            
+            // PASSO 3: RETORNAR COLETA (sincronizada ou pendente)
+            val coletaFinal = Coleta(
+                id = localId.toInt(),
+                patrimonioId = patrimonio.id.toInt(),
+                numeroPatrimonio = patrimonio.numeroPatrimonio,
+                descricaoPatrimonio = patrimonio.descricao,
+                usuarioId = usuario.id.toInt(),
+                nomeColetor = usuario.nome,
+                dataColeta = System.currentTimeMillis().toString(),
+                localizacaoAtual = salaNome,
+                estadoEncontrado = estadoEncontrado,
+                observacoes = observacoes,
+                latitude = latitude,
+                longitude = longitude,
+                fotoPath = null,
+                sincronizado = sincronizado,
+                nomeSala = salaNome
+            )
+            
+            if (sincronizado) {
+                android.util.Log.d("InventarioRepository", "✓ Coleta registrada e sincronizada!")
+            } else {
+                android.util.Log.d("InventarioRepository", "✓ Coleta registrada localmente (pendente sincronização)")
+            }
+            android.util.Log.d("InventarioRepository", "  Patrimônio: ${coletaFinal.numeroPatrimonio}")
+            android.util.Log.d("InventarioRepository", "  Sala: ${coletaFinal.localizacaoAtual}")
+            android.util.Log.d("InventarioRepository", "═══════════════════════════════════════════")
+            
+            Result.success(coletaFinal)
+            
         } catch (e: Exception) {
             android.util.Log.e("InventarioRepository", "═══════════════════════════════════════════")
             android.util.Log.e("InventarioRepository", "EXCEÇÃO AO REGISTRAR COLETA")
@@ -313,12 +381,14 @@ class InventarioRepository(
                 
                 if (apiResponse.success && apiResponse.data != null) {
                     val coletas = apiResponse.data.map { dto ->
+                        android.util.Log.d("InventarioRepository", "Convertendo coleta ID=${dto.id}: usuarioIdCamel=${dto.usuarioIdCamel}, usuarioId=${dto.usuarioId}")
+                        
                         Coleta(
                             id = dto.id,
-                            patrimonioId = dto.patrimonioId ?: 0,
+                            patrimonioId = dto.patrimonioIdCamel ?: dto.patrimonioId ?: 0,
                             numeroPatrimonio = dto.numeroPatrimonio,
                             descricaoPatrimonio = dto.descricaoPatrimonio,
-                            usuarioId = dto.usuarioId ?: 0,
+                            usuarioId = dto.usuarioIdCamel ?: dto.usuarioId ?: 0,
                             nomeColetor = dto.nomeColetor,
                             dataColeta = dto.dataColeta ?: "",
                             localizacaoAtual = dto.localizacaoEncontrada,
@@ -377,12 +447,14 @@ class InventarioRepository(
                 if (apiResponse.success && apiResponse.data != null) {
                     val pagedData = apiResponse.data
                     val coletas = pagedData.content.map { dto ->
+                        android.util.Log.d("InventarioRepository", "Convertendo coleta ID=${dto.id}: usuarioIdCamel=${dto.usuarioIdCamel}, usuarioId=${dto.usuarioId}")
+                        
                         Coleta(
                             id = dto.id ?: 0,
-                            patrimonioId = dto.patrimonioId ?: 0,
+                            patrimonioId = dto.patrimonioIdCamel ?: dto.patrimonioId ?: 0,
                             numeroPatrimonio = dto.numeroPatrimonio ?: "",
                             descricaoPatrimonio = dto.descricaoPatrimonio,
-                            usuarioId = dto.usuarioId ?: 0,
+                            usuarioId = dto.usuarioIdCamel ?: dto.usuarioId ?: 0,
                             nomeColetor = dto.nomeColetor,
                             dataColeta = dto.dataColeta ?: "",
                             localizacaoAtual = dto.localizacaoEncontrada,

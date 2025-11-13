@@ -25,6 +25,7 @@ class CollectionViewViewModel(
         val salas: List<String> = emptyList(),
         val salaSelecionada: String? = null,
         val filtroUsuario: FiltroUsuario = FiltroUsuario.TODAS,
+        val filtroStatus: FiltroStatus = FiltroStatus.TODOS,
         val usuarioAtualId: Int? = null,
         val totalColetas: Int = 0,
         val sincronizadas: Int = 0,
@@ -34,6 +35,12 @@ class CollectionViewViewModel(
     enum class FiltroUsuario {
         TODAS,
         MINHAS
+    }
+    
+    enum class FiltroStatus {
+        TODOS,
+        SINCRONIZADOS,
+        PENDENTES
     }
 
     private val _uiState = MutableStateFlow(UiState())
@@ -96,6 +103,14 @@ class CollectionViewViewModel(
                 val usuarioAtual = repository.getCurrentUser()
                 val usuarioId = usuarioAtual?.id?.toInt()
                 
+                Log.d(TAG, "═══════════════════════════════════════════")
+                Log.d(TAG, "OBTENDO USUÁRIO ATUAL")
+                Log.d(TAG, "Usuário atual: ${usuarioAtual?.nome}")
+                Log.d(TAG, "Usuário ID (Long): ${usuarioAtual?.id}")
+                Log.d(TAG, "Usuário ID (Int): $usuarioId")
+                Log.d(TAG, "Usuário Login: ${usuarioAtual?.username}")
+                Log.d(TAG, "═══════════════════════════════════════════")
+                
                 // Combinar com coletas existentes se for página > 0
                 val todasColetas = if (page == 0) {
                     pagedResult.coletas
@@ -132,6 +147,12 @@ class CollectionViewViewModel(
                 )
                 
                 Log.d(TAG, "loadColetasPage: Estado atualizado. HasMorePages: $hasMorePages")
+                
+                // Aplicar filtro inicial se estiver na primeira página
+                if (page == 0) {
+                    Log.d(TAG, "loadColetasPage: Aplicando filtro inicial: ${_uiState.value.filtroUsuario}")
+                    applyFilters(_uiState.value.filtroUsuario, _uiState.value.filtroStatus, _uiState.value.salaSelecionada)
+                }
             },
             onFailure = { exception ->
                 Log.e(TAG, "loadColetasPage: Erro", exception)
@@ -148,6 +169,7 @@ class CollectionViewViewModel(
         val current = _uiState.value
         applyFilters(
             filtroUsuario = filtro,
+            filtroStatus = current.filtroStatus,
             salaSelecionada = current.salaSelecionada
         )
     }
@@ -155,37 +177,105 @@ class CollectionViewViewModel(
     fun filterBySala(sala: String?) {
         applyFilters(
             filtroUsuario = _uiState.value.filtroUsuario,
+            filtroStatus = _uiState.value.filtroStatus,
             salaSelecionada = sala
         )
     }
     
-    private fun applyFilters(filtroUsuario: FiltroUsuario, salaSelecionada: String?) {
+    fun filterByStatus(filtro: FiltroStatus) {
         val current = _uiState.value
+        applyFilters(
+            filtroUsuario = current.filtroUsuario,
+            filtroStatus = filtro,
+            salaSelecionada = current.salaSelecionada
+        )
+    }
+    
+    private fun applyFilters(filtroUsuario: FiltroUsuario, filtroStatus: FiltroStatus, salaSelecionada: String?) {
+        val current = _uiState.value
+        
+        Log.d(TAG, "═══════════════════════════════════════")
+        Log.d(TAG, "APLICANDO FILTROS")
+        Log.d(TAG, "Filtro Usuário: $filtroUsuario")
+        Log.d(TAG, "Sala Selecionada: $salaSelecionada")
+        Log.d(TAG, "Total de coletas: ${current.coletas.size}")
+        Log.d(TAG, "Usuário Atual ID: ${current.usuarioAtualId}")
         
         // Aplicar filtro de usuário
         var filtered = when (filtroUsuario) {
-            FiltroUsuario.TODAS -> current.coletas
+            FiltroUsuario.TODAS -> {
+                Log.d(TAG, "Filtro TODAS: mostrando todas as ${current.coletas.size} coletas")
+                current.coletas
+            }
             FiltroUsuario.MINHAS -> {
-                current.usuarioAtualId?.let { userId ->
-                    current.coletas.filter { it.usuarioId == userId }
-                } ?: current.coletas
+                if (current.usuarioAtualId != null) {
+                    val minhasColetas = current.coletas.filter { coleta ->
+                        val match = coleta.usuarioId == current.usuarioAtualId
+                        if (!match) {
+                            Log.d(TAG, "Coleta ${coleta.id} - usuarioId=${coleta.usuarioId} != ${current.usuarioAtualId}")
+                        }
+                        match
+                    }
+                    Log.d(TAG, "Filtro MINHAS: ${minhasColetas.size} coletas do usuário ${current.usuarioAtualId}")
+                    
+                    // Debug: mostrar algumas coletas para verificar
+                    current.coletas.take(5).forEach { coleta ->
+                        Log.d(TAG, "  Coleta ID=${coleta.id}, usuarioId=${coleta.usuarioId}, nomeColetor=${coleta.nomeColetor}")
+                    }
+                    
+                    minhasColetas
+                } else {
+                    Log.w(TAG, "Filtro MINHAS: usuarioAtualId é null, mostrando todas")
+                    current.coletas
+                }
             }
         }
         
+        Log.d(TAG, "Após filtro de usuário: ${filtered.size} coletas")
+        
+        // Aplicar filtro de status
+        filtered = when (filtroStatus) {
+            FiltroStatus.TODOS -> {
+                Log.d(TAG, "Filtro TODOS: mostrando todas as ${filtered.size} coletas")
+                filtered
+            }
+            FiltroStatus.SINCRONIZADOS -> {
+                val sincronizadas = filtered.filter { it.sincronizado }
+                Log.d(TAG, "Filtro SINCRONIZADOS: ${sincronizadas.size} coletas")
+                sincronizadas
+            }
+            FiltroStatus.PENDENTES -> {
+                val pendentes = filtered.filter { !it.sincronizado }
+                Log.d(TAG, "Filtro PENDENTES: ${pendentes.size} coletas")
+                pendentes
+            }
+        }
+        
+        Log.d(TAG, "Após filtro de status: ${filtered.size} coletas")
+        
         // Aplicar filtro de sala
         filtered = if (salaSelecionada == null) {
+            Log.d(TAG, "Sem filtro de sala")
             filtered
         } else {
-            filtered.filter { it.localizacaoAtual == salaSelecionada }
+            val filteredBySala = filtered.filter { it.localizacaoAtual == salaSelecionada }
+            Log.d(TAG, "Filtro de sala '$salaSelecionada': ${filteredBySala.size} coletas")
+            filteredBySala
         }
         
         val sincronizadas = filtered.count { it.sincronizado }
         val pendentes = filtered.size - sincronizadas
         
+        Log.d(TAG, "Resultado final: ${filtered.size} coletas")
+        Log.d(TAG, "  Sincronizadas: $sincronizadas")
+        Log.d(TAG, "  Pendentes: $pendentes")
+        Log.d(TAG, "═══════════════════════════════════════")
+        
         _uiState.value = current.copy(
             filteredColetas = filtered,
             salaSelecionada = salaSelecionada,
             filtroUsuario = filtroUsuario,
+            filtroStatus = filtroStatus,
             totalColetas = filtered.size,
             sincronizadas = sincronizadas,
             pendentes = pendentes

@@ -14,7 +14,7 @@ public class MobileColetaRequest {
     @NotBlank(message = "Número do patrimônio é obrigatório")
     private String numeroPatrimonio;
     
-    @NotNull(message = "ID do inventário é obrigatório")
+    // ID do inventário é opcional - se não informado, usa o inventário ativo
     private Integer idInventario;
     
     @NotNull(message = "ID do usuário é obrigatório")

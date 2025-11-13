@@ -20,6 +20,7 @@ import dagger.hilt.processor.internal.definecomponent.codegen._dagger_hilt_compo
 import hilt_aggregated_deps._androidx_hilt_work_HiltWrapper_WorkerFactoryModule;
 import hilt_aggregated_deps._com_inventario_mobile_InventarioMobileApplication_GeneratedInjector;
 import hilt_aggregated_deps._com_inventario_mobile_di_ApiModule;
+import hilt_aggregated_deps._com_inventario_mobile_di_AppModule;
 import hilt_aggregated_deps._com_inventario_mobile_di_DatabaseModule;
 import hilt_aggregated_deps._com_inventario_mobile_di_MapperModule;
 import hilt_aggregated_deps._com_inventario_mobile_di_RepositoryModule;
@@ -28,6 +29,9 @@ import hilt_aggregated_deps._com_inventario_mobile_presentation_charts_ChartsVie
 import hilt_aggregated_deps._com_inventario_mobile_presentation_charts_ChartsViewModel_HiltModules_KeyModule;
 import hilt_aggregated_deps._com_inventario_mobile_presentation_coleta_ColetaViewModelClean_HiltModules_BindsModule;
 import hilt_aggregated_deps._com_inventario_mobile_presentation_coleta_ColetaViewModelClean_HiltModules_KeyModule;
+import hilt_aggregated_deps._com_inventario_mobile_presentation_descricao_DescricaoSelectionActivity_GeneratedInjector;
+import hilt_aggregated_deps._com_inventario_mobile_presentation_descricao_DescricaoSelectionViewModelClean_HiltModules_BindsModule;
+import hilt_aggregated_deps._com_inventario_mobile_presentation_descricao_DescricaoSelectionViewModelClean_HiltModules_KeyModule;
 import hilt_aggregated_deps._com_inventario_mobile_ui_coleta_ColetaActivity_GeneratedInjector;
 import hilt_aggregated_deps._com_inventario_mobile_worker_ColetaSyncWorker_HiltModule;
 import hilt_aggregated_deps._dagger_hilt_android_flags_FragmentGetContextFix_FragmentGetContextFixEntryPoint;
@@ -72,6 +76,7 @@ import hilt_aggregated_deps._dagger_hilt_android_internal_modules_HiltWrapper_Ac
         _androidx_hilt_work_HiltWrapper_WorkerFactoryModule.class,
         _com_inventario_mobile_InventarioMobileApplication_GeneratedInjector.class,
         _com_inventario_mobile_di_ApiModule.class,
+        _com_inventario_mobile_di_AppModule.class,
         _com_inventario_mobile_di_DatabaseModule.class,
         _com_inventario_mobile_di_MapperModule.class,
         _com_inventario_mobile_di_RepositoryModule.class,
@@ -80,6 +85,9 @@ import hilt_aggregated_deps._dagger_hilt_android_internal_modules_HiltWrapper_Ac
         _com_inventario_mobile_presentation_charts_ChartsViewModel_HiltModules_KeyModule.class,
         _com_inventario_mobile_presentation_coleta_ColetaViewModelClean_HiltModules_BindsModule.class,
         _com_inventario_mobile_presentation_coleta_ColetaViewModelClean_HiltModules_KeyModule.class,
+        _com_inventario_mobile_presentation_descricao_DescricaoSelectionActivity_GeneratedInjector.class,
+        _com_inventario_mobile_presentation_descricao_DescricaoSelectionViewModelClean_HiltModules_BindsModule.class,
+        _com_inventario_mobile_presentation_descricao_DescricaoSelectionViewModelClean_HiltModules_KeyModule.class,
         _com_inventario_mobile_ui_coleta_ColetaActivity_GeneratedInjector.class,
         _com_inventario_mobile_worker_ColetaSyncWorker_HiltModule.class,
         _dagger_hilt_android_flags_FragmentGetContextFix_FragmentGetContextFixEntryPoint.class,

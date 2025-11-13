@@ -30,16 +30,10 @@ public class InventarioRepository implements com.inventario.repository.Repositor
     public Inventario save(Inventario entity) {
         try {
             if (entity.getId() > 0) {
-                boolean atualizado = dao.atualizar(entity);
-                if (!atualizado) {
-                    throw new RepositoryException("Falha ao atualizar inventário");
-                }
+                dao.update(entity);
             } else {
-                Integer id = dao.inserir(entity);
-                if (id == null) {
-                    throw new RepositoryException("Falha ao inserir inventário");
-                }
-                entity.setId(id);
+                dao.insert(entity);
+                // ID é setado automaticamente pelo BaseDAO
             }
             return entity;
         } catch (Exception e) {
@@ -50,7 +44,7 @@ public class InventarioRepository implements com.inventario.repository.Repositor
     @Override
     public Optional<Inventario> findById(Integer id) {
         try {
-            Inventario inventario = dao.buscarInventarioPorId(id);
+            Inventario inventario = dao.findById(id);
             return Optional.ofNullable(inventario);
         } catch (Exception e) {
             throw new RepositoryException("Erro ao buscar inventário por ID", e);
@@ -60,7 +54,7 @@ public class InventarioRepository implements com.inventario.repository.Repositor
     @Override
     public List<Inventario> findAll() {
         try {
-            return dao.listarInventarios();
+            return dao.findAll();
         } catch (Exception e) {
             throw new RepositoryException("Erro ao listar inventários", e);
         }
@@ -79,10 +73,7 @@ public class InventarioRepository implements com.inventario.repository.Repositor
     @Override
     public void deleteById(Integer id) {
         try {
-            boolean excluido = dao.excluir(id);
-            if (!excluido) {
-                throw new RepositoryException("Falha ao excluir inventário");
-            }
+            dao.delete(id);
         } catch (Exception e) {
             throw new RepositoryException("Erro ao deletar inventário", e);
         }
@@ -102,7 +93,7 @@ public class InventarioRepository implements com.inventario.repository.Repositor
     
     public Optional<Inventario> findByStatus(String status) {
         try {
-            Inventario inventario = dao.buscarInventarioPorStatus(status);
+            Inventario inventario = dao.buscarPorStatus(status);
             return Optional.ofNullable(inventario);
         } catch (Exception e) {
             throw new RepositoryException("Erro ao buscar inventário por status", e);
@@ -111,7 +102,7 @@ public class InventarioRepository implements com.inventario.repository.Repositor
     
     public List<Inventario> findByNomeContaining(String nome) {
         try {
-            return dao.buscarInventariosPorFiltro(nome);
+            return dao.buscarPorFiltro(nome);
         } catch (Exception e) {
             throw new RepositoryException("Erro ao buscar inventários por nome", e);
         }

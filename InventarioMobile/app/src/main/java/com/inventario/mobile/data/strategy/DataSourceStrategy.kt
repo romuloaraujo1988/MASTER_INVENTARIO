@@ -34,6 +34,16 @@ interface DataSourceStrategy {
     suspend fun getSalaPorId(id: Int): Result<Sala>
     
     /**
+     * Busca descrições de patrimônios não coletados
+     */
+    suspend fun buscarDescricoesNaoColetadas(): Result<List<String>>
+    
+    /**
+     * Busca patrimônios por descrição (não coletados)
+     */
+    suspend fun buscarPorDescricaoNaoColetados(descricao: String): Result<List<Patrimonio>>
+    
+    /**
      * Retorna o tipo de fonte de dados
      */
     fun getSourceType(): DataSourceType

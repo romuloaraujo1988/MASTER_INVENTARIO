@@ -154,16 +154,17 @@ public class MobileColetaController {
                 }
             }
             
-            // TEMPORÁRIO: Se não temos username, usar um usuário padrão para permitir acesso público
-            if (username == null) {
-                username = "admin"; // Usuário padrão para acesso público temporário
-                logger.info("Usando usuário padrão para acesso público: {}", username);
+            logger.info("Buscando coletas (page={}, size={})", page, size);
+            
+            // Buscar coletas - se tiver username, busca do usuário, senão busca todas do sistema
+            List<MobileColetaResponse> todasColetas;
+            if (username != null) {
+                logger.info("Buscando coletas do usuário: {}", username);
+                todasColetas = mobileColetaService.buscarTodasColetas(username);
+            } else {
+                logger.info("Buscando todas as coletas do sistema");
+                todasColetas = mobileColetaService.buscarTodasColetasDoSistema();
             }
-            
-            logger.info("Buscando coletas para usuário: {} (page={}, size={})", username, page, size);
-            
-            // Buscar coletas paginadas
-            List<MobileColetaResponse> todasColetas = mobileColetaService.buscarTodasColetas(username);
             
             // Calcular paginação
             int totalElements = todasColetas.size();
@@ -220,13 +221,17 @@ public class MobileColetaController {
                 username = authentication.getName();
             }
             
-            if (username == null) {
-                username = "admin"; // Usuário padrão
+            logger.info("Buscando todas as coletas");
+            
+            // Buscar todas as coletas do sistema
+            List<MobileColetaResponse> coletas;
+            if (username != null) {
+                logger.info("Buscando coletas do usuário: {}", username);
+                coletas = mobileColetaService.buscarTodasColetas(username);
+            } else {
+                logger.info("Buscando todas as coletas do sistema");
+                coletas = mobileColetaService.buscarTodasColetasDoSistema();
             }
-            
-            logger.info("Buscando todas as coletas para usuário: {}", username);
-            
-            List<MobileColetaResponse> coletas = mobileColetaService.buscarTodasColetas(username);
             
             logger.info("Retornando {} coletas", coletas.size());
             

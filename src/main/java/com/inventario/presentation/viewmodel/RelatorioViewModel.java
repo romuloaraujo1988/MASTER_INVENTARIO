@@ -105,7 +105,7 @@ public class RelatorioViewModel {
      */
     public void carregarResponsaveis() {
         try {
-            List<Responsavel> responsaveis = responsavelDAO.listarResponsaveis();
+            List<Responsavel> responsaveis = responsavelDAO.findAll();
             setState(new RelatorioState.ResponsaveisCarregados(responsaveis));
         } catch (Exception e) {
             setState(new RelatorioState.Error("Erro ao carregar responsáveis: " + e.getMessage()));
@@ -117,7 +117,7 @@ public class RelatorioViewModel {
      */
     public void carregarResponsaveisPorSetor(int idSetor) {
         try {
-            List<Responsavel> responsaveis = responsavelDAO.listarResponsaveisPorSetor(idSetor);
+            List<Responsavel> responsaveis = responsavelDAO.buscarPorSetor(idSetor);
             setState(new RelatorioState.ResponsaveisCarregados(responsaveis));
         } catch (Exception e) {
             setState(new RelatorioState.Error("Erro ao carregar responsáveis do setor: " + e.getMessage()));

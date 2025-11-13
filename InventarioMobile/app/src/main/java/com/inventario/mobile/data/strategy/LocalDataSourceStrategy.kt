@@ -179,5 +179,60 @@ class LocalDataSourceStrategy(
         }
     }
     
+    override suspend fun buscarDescricoesNaoColetadas(): Result<List<String>> = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "Buscando descrições não coletadas do banco local...")
+            
+            val descricoes = patrimonioDao.buscarDescricoesNaoColetadas()
+            
+            Log.d(TAG, "✓ ${descricoes.size} descrições encontradas no banco local")
+            Result.success(descricoes)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao buscar descrições do banco local", e)
+            Result.failure(e)
+        }
+    }
+    
+    override suspend fun buscarPorDescricaoNaoColetados(descricao: String): Result<List<Patrimonio>> = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "Buscando patrimônios por descrição '$descricao' do banco local...")
+            
+            val entities = patrimonioDao.buscarPorDescricaoNaoColetados(descricao)
+            val patrimonios = entities.map { entity ->
+                Patrimonio(
+                    id = entity.id.toLong(),
+                    numeroPatrimonio = entity.numero,
+                    descricao = entity.descricao,
+                    marca = null,
+                    modelo = null,
+                    numeroSerie = null,
+                    estado = entity.status,
+                    valor = null,
+                    setorId = null,
+                    setorNome = null,
+                    salaId = entity.idSala?.toLong(),
+                    salaNome = entity.nomeSala,
+                    responsavelId = entity.idResponsavel?.toLong(),
+                    responsavelNome = entity.nomeResponsavel,
+                    qrCode = entity.numero,
+                    observacoes = null,
+                    coletado = entity.coletado,
+                    dataColeta = null,
+                    coletadoPor = null,
+                    dataColetaFormatada = null,
+                    observacoesColeta = null,
+                    sincronizado = true,
+                    servidorId = null
+                )
+            }
+            
+            Log.d(TAG, "✓ ${patrimonios.size} patrimônios encontrados no banco local")
+            Result.success(patrimonios)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao buscar patrimônios por descrição do banco local", e)
+            Result.failure(e)
+        }
+    }
+    
     override fun getSourceType(): DataSourceType = DataSourceType.LOCAL
 }

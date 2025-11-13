@@ -2,12 +2,15 @@ package com.inventario.mobile;
 
 import androidx.hilt.work.HiltWrapper_WorkerFactoryModule;
 import com.inventario.mobile.di.ApiModule;
+import com.inventario.mobile.di.AppModule;
 import com.inventario.mobile.di.DatabaseModule;
 import com.inventario.mobile.di.MapperModule;
 import com.inventario.mobile.di.RepositoryModule;
 import com.inventario.mobile.presentation.charts.ChartsFragment_GeneratedInjector;
 import com.inventario.mobile.presentation.charts.ChartsViewModel_HiltModules;
 import com.inventario.mobile.presentation.coleta.ColetaViewModelClean_HiltModules;
+import com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity_GeneratedInjector;
+import com.inventario.mobile.presentation.descricao.DescricaoSelectionViewModelClean_HiltModules;
 import com.inventario.mobile.ui.coleta.ColetaActivity_GeneratedInjector;
 import com.inventario.mobile.worker.ColetaSyncWorker_HiltModule;
 import dagger.Binds;
@@ -125,6 +128,7 @@ public final class InventarioMobileApplication_HiltComponents {
   @Component(
       modules = {
           ApiModule.class,
+          AppModule.class,
           ApplicationContextModule.class,
           ColetaSyncWorker_HiltModule.class,
           DatabaseModule.class,
@@ -158,6 +162,7 @@ public final class InventarioMobileApplication_HiltComponents {
       modules = {
           ChartsViewModel_HiltModules.KeyModule.class,
           ColetaViewModelClean_HiltModules.KeyModule.class,
+          DescricaoSelectionViewModelClean_HiltModules.KeyModule.class,
           HiltWrapper_ActivityRetainedComponentManager_LifecycleModule.class,
           ActivityCBuilderModule.class,
           ViewModelCBuilderModule.class
@@ -182,7 +187,8 @@ public final class InventarioMobileApplication_HiltComponents {
       }
   )
   @ActivityScoped
-  public abstract static class ActivityC implements ColetaActivity_GeneratedInjector,
+  public abstract static class ActivityC implements DescricaoSelectionActivity_GeneratedInjector,
+      ColetaActivity_GeneratedInjector,
       ActivityComponent,
       DefaultViewModelFactories.ActivityEntryPoint,
       HiltWrapper_HiltViewModelFactory_ActivityCreatorEntryPoint,
@@ -198,6 +204,7 @@ public final class InventarioMobileApplication_HiltComponents {
       modules = {
           ChartsViewModel_HiltModules.BindsModule.class,
           ColetaViewModelClean_HiltModules.BindsModule.class,
+          DescricaoSelectionViewModelClean_HiltModules.BindsModule.class,
           HiltWrapper_HiltViewModelFactory_ViewModelModule.class
       }
   )

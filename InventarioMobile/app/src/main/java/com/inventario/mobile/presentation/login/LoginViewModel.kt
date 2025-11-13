@@ -157,6 +157,14 @@ class LoginViewModel(
                         
                         // Salvar usuário com tokens no LocalDataManager para o NetworkModule usar
                         val localDataManager = com.inventario.mobile.data.local.LocalDataManager.getInstance(context)
+                        
+                        Log.d("LoginViewModel", "═══════════════════════════════════════════")
+                        Log.d("LoginViewModel", "DADOS DO USUÁRIO DO BACKEND")
+                        Log.d("LoginViewModel", "ID: ${loginResponse.data.usuario.id}")
+                        Log.d("LoginViewModel", "Login: ${loginResponse.data.usuario.login}")
+                        Log.d("LoginViewModel", "Nome: ${loginResponse.data.usuario.nome}")
+                        Log.d("LoginViewModel", "═══════════════════════════════════════════")
+                        
                         val usuarioRemoteDto = com.inventario.mobile.data.remote.dto.UsuarioDto(
                             id = loginResponse.data.usuario.id,
                             username = loginResponse.data.usuario.login,
@@ -173,8 +181,15 @@ class LoginViewModel(
                             loginResponse.data.refreshToken,
                             loginResponse.data.expiresIn
                         )
+                        
+                        Log.d("LoginViewModel", "Usuário criado - ID: ${usuario.id}, Nome: ${usuario.nome}")
+                        
                         localDataManager.saveCurrentUserSuspend(usuario)
                         Log.d("LoginViewModel", "✓ Usuário salvo no LocalDataManager com token")
+                        
+                        // Verificar se foi salvo corretamente
+                        val usuarioRecuperado = localDataManager.getCurrentUser()
+                        Log.d("LoginViewModel", "Usuário recuperado - ID: ${usuarioRecuperado?.id}, Nome: ${usuarioRecuperado?.nome}")
                         
                         // CRÍTICO: Forçar recriação do ApiService ANTES de navegar
                         com.inventario.mobile.data.remote.api.ApiClient.recreateApiService(context)

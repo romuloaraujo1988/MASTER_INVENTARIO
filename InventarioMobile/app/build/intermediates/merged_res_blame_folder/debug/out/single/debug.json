@@ -100,12 +100,12 @@
         "source": "com.inventario.mobile.app-main-69:/drawable/ic_list.xml"
     },
     {
-        "merged": "com.inventario.mobile.app-merged_res-67:/layout_fragment_inventory.xml.flat",
-        "source": "com.inventario.mobile.app-main-69:/layout/fragment_inventory.xml"
-    },
-    {
         "merged": "com.inventario.mobile.app-merged_res-67:/layout_fragment_statistics_overview.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/layout/fragment_statistics_overview.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-merged_res-67:/layout_fragment_inventory.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_inventory.xml"
     },
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/menu_main_menu.xml.flat",
@@ -318,6 +318,10 @@
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/drawable_ic_location.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/drawable/ic_location.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-merged_res-67:/menu_menu_coletas.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/menu/menu_coletas.xml"
     },
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/layout_item_timeline_coleta.xml.flat",

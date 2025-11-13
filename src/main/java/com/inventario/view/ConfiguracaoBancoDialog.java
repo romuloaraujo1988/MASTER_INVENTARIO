@@ -1,12 +1,18 @@
 package com.inventario.view;
 
 import com.inventario.view.ui.ModernButtons;
+import com.inventario.config.DatabaseConfig;
+import com.inventario.config.DatabaseConfigManager;
+import com.inventario.util.DatabaseConnection;
+import com.inventario.util.ConnectionManager;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 
 /**
  * Dialog para configuração da conexão com o banco de dados
@@ -27,8 +33,12 @@ public class ConfiguracaoBancoDialog extends JDialog {
     private JButton btnTestar, btnSalvar, btnCancelar;
     private JLabel labelStatus;
     
+    // Gerenciador de configurações
+    private DatabaseConfigManager configManager;
+    
     public ConfiguracaoBancoDialog(Frame parent) {
         super(parent, "Configuração do Banco de Dados", true);
+        this.configManager = new DatabaseConfigManager();
         initComponents();
         carregarConfiguracoes();
     }
@@ -111,7 +121,8 @@ public class ConfiguracaoBancoDialog extends JDialog {
         
         // Checkbox salvar senha
         gbc.gridx = 1; gbc.gridy = 6;
-        checkSalvarSenha = new JCheckBox("Salvar senha (não recomendado)");
+        checkSalvarSenha = new JCheckBox("Salvar senha (criptografada)");
+        checkSalvarSenha.setToolTipText("A senha será salva criptografada usando AES-256");
         painelPrincipal.add(checkSalvarSenha, gbc);
         
         // Status da conexão
@@ -131,11 +142,16 @@ public class ConfiguracaoBancoDialog extends JDialog {
         btnTestar = ModernButtons.secondary("Testar Conexão");
         btnSalvar = ModernButtons.primary("Salvar");
         btnCancelar = ModernButtons.muted("Cancelar");
+        JButton btnLimpar = ModernButtons.danger("Limpar Config");
         
         painelBotoes.add(btnTestar);
         painelBotoes.add(btnSalvar);
+        painelBotoes.add(btnLimpar);
         painelBotoes.add(btnCancelar);
         add(painelBotoes, BorderLayout.SOUTH);
+        
+        // Evento para limpar configurações
+        btnLimpar.addActionListener(e -> limparConfiguracoes());
         
         // Configurar eventos
         configurarEventos();
@@ -259,50 +275,151 @@ public class ConfiguracaoBancoDialog extends JDialog {
                 return;
             }
             
-            // TODO: Salvar configurações em arquivo de propriedades
-            // Properties props = new Properties();
-            // props.setProperty("sgbd", (String) comboSGBD.getSelectedItem());
-            // props.setProperty("servidor", campoServidor.getText());
-            // props.setProperty("porta", campoPorta.getText());
-            // props.setProperty("banco", campoBanco.getText());
-            // props.setProperty("usuario", campoUsuario.getText());
-            // if (checkSalvarSenha.isSelected()) {
-            //     props.setProperty("senha", new String(campoSenha.getPassword()));
-            // }
+            // Validar porta
+            int porta;
+            try {
+                porta = Integer.parseInt(campoPorta.getText().trim());
+                if (porta <= 0 || porta > 65535) {
+                    throw new NumberFormatException();
+                }
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, 
+                    "Porta inválida. Digite um número entre 1 e 65535.",
+                    "Validação", 
+                    JOptionPane.WARNING_MESSAGE);
+                return;
+            }
             
-            confirmado = true;
-            dispose();
+            // Criar configuração do banco
+            DatabaseConfig config = new DatabaseConfig(
+                campoServidor.getText().trim(),
+                porta,
+                campoBanco.getText().trim(),
+                campoUsuario.getText().trim(),
+                new String(campoSenha.getPassword())
+            );
             
-            JOptionPane.showMessageDialog(getParent(), 
-                "Configurações salvas com sucesso!\nReinicie a aplicação para aplicar as mudanças.",
-                "Sucesso", 
-                JOptionPane.INFORMATION_MESSAGE);
+            // Salvar configuração do banco (PostgreSQL)
+            boolean salvouBanco = configManager.saveConfiguration(config);
+            
+            // Salvar configuração do SGBD
+            boolean salvouSGBD = salvarConfiguracaoSGBD();
+            
+            if (salvouBanco && salvouSGBD) {
+                confirmado = true;
+                
+                // Atualizar DatabaseConnection
+                DatabaseConnection.updateConfig(config);
+                
+                // Reinicializar ConnectionManager se necessário
+                if (ConnectionManager.isInitialized()) {
+                    ConnectionManager.shutdown();
+                }
+                
+                String jdbcUrl = construirURL();
+                ConnectionManager.initialize(jdbcUrl, config.getUsername(), config.getPassword());
+                
+                dispose();
+                
+                JOptionPane.showMessageDialog(getParent(), 
+                    "Configurações salvas com sucesso!\n" +
+                    "A conexão foi atualizada e está pronta para uso.",
+                    "Sucesso", 
+                    JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, 
+                    "Erro ao salvar algumas configurações.",
+                    "Erro", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
             
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, 
                 "Erro ao salvar configurações: " + e.getMessage(),
                 "Erro", 
                 JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Salva configurações específicas do SGBD
+     */
+    private boolean salvarConfiguracaoSGBD() {
+        try {
+            // Criar diretório se não existir
+            com.inventario.config.ConfigurationPaths.createConfigDirectoryIfNotExists();
+            
+            String sgbdConfigPath = com.inventario.config.ConfigurationPaths.getSGBDConfigPath();
+            
+            Properties props = new Properties();
+            props.setProperty("sgbd", (String) comboSGBD.getSelectedItem());
+            props.setProperty("salvar_senha", String.valueOf(checkSalvarSenha.isSelected()));
+            
+            try (FileOutputStream fos = new FileOutputStream(sgbdConfigPath)) {
+                props.store(fos, "SGBD Configuration");
+            }
+            
+            return true;
+        } catch (IOException e) {
+            System.err.println("Erro ao salvar configuração do SGBD: " + e.getMessage());
+            return false;
         }
     }
     
     private void carregarConfiguracoes() {
-        // TODO: Carregar configurações salvas
-        // Properties props = new Properties();
-        // try (InputStream input = new FileInputStream("config.properties")) {
-        //     props.load(input);
-        //     comboSGBD.setSelectedItem(props.getProperty("sgbd", "MySQL"));
-        //     campoServidor.setText(props.getProperty("servidor", "localhost"));
-        //     campoPorta.setText(props.getProperty("porta", "3306"));
-        //     campoBanco.setText(props.getProperty("banco", "inventario"));
-        //     campoUsuario.setText(props.getProperty("usuario", "root"));
-        //     if (props.containsKey("senha")) {
-        //         campoSenha.setText(props.getProperty("senha"));
-        //         checkSalvarSenha.setSelected(true);
-        //     }
-        // } catch (IOException e) {
-        //     // Arquivo não existe, usar valores padrão
-        // }
+        try {
+            // Carregar configuração do banco (PostgreSQL por padrão)
+            DatabaseConfig config = configManager.getCurrentConfig();
+            
+            if (config != null && config.isValid()) {
+                campoServidor.setText(config.getHost());
+                campoPorta.setText(String.valueOf(config.getPort()));
+                campoBanco.setText(config.getDatabase());
+                campoUsuario.setText(config.getUsername());
+                
+                // Carregar senha se foi salva
+                if (config.getPassword() != null && !config.getPassword().isEmpty()) {
+                    campoSenha.setText(config.getPassword());
+                }
+            }
+            
+            // Carregar configuração do SGBD
+            carregarConfiguracaoSGBD();
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao carregar configurações: " + e.getMessage());
+            // Usar valores padrão já definidos nos campos
+        }
+    }
+    
+    /**
+     * Carrega configurações específicas do SGBD
+     */
+    private void carregarConfiguracaoSGBD() {
+        String sgbdConfigPath = com.inventario.config.ConfigurationPaths.getSGBDConfigPath();
+        File configFile = new File(sgbdConfigPath);
+        
+        if (configFile.exists()) {
+            try (FileInputStream fis = new FileInputStream(configFile)) {
+                Properties props = new Properties();
+                props.load(fis);
+                
+                String sgbd = props.getProperty("sgbd", "PostgreSQL");
+                comboSGBD.setSelectedItem(sgbd);
+                
+                boolean salvarSenha = Boolean.parseBoolean(props.getProperty("salvar_senha", "false"));
+                checkSalvarSenha.setSelected(salvarSenha);
+                
+            } catch (IOException e) {
+                System.err.println("Erro ao carregar configuração do SGBD: " + e.getMessage());
+                // Usar PostgreSQL como padrão
+                comboSGBD.setSelectedItem("PostgreSQL");
+            }
+        } else {
+            // Usar PostgreSQL como padrão
+            comboSGBD.setSelectedItem("PostgreSQL");
+        }
     }
     
     public boolean isConfirmado() {
@@ -336,5 +453,77 @@ public class ConfiguracaoBancoDialog extends JDialog {
     
     public boolean isSalvarSenha() {
         return checkSalvarSenha.isSelected();
+    }
+    
+    /**
+     * Limpa as configurações salvas
+     */
+    private void limparConfiguracoes() {
+        int resposta = JOptionPane.showConfirmDialog(this,
+            "Tem certeza que deseja limpar todas as configurações salvas?\n" +
+            "Esta ação não pode ser desfeita.",
+            "Confirmar Limpeza",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE);
+        
+        if (resposta == JOptionPane.YES_OPTION) {
+            try {
+                // Remover configuração do banco
+                boolean removeuBanco = configManager.removeConfiguration();
+                
+                // Remover configuração do SGBD
+                String sgbdConfigPath = com.inventario.config.ConfigurationPaths.getSGBDConfigPath();
+                File sgbdConfig = new File(sgbdConfigPath);
+                boolean removeuSGBD = true;
+                if (sgbdConfig.exists()) {
+                    removeuSGBD = sgbdConfig.delete();
+                }
+                
+                if (removeuBanco && removeuSGBD) {
+                    // Limpar campos
+                    campoServidor.setText("localhost");
+                    campoPorta.setText("5432");
+                    campoBanco.setText("");
+                    campoUsuario.setText("");
+                    campoSenha.setText("");
+                    comboSGBD.setSelectedItem("PostgreSQL");
+                    checkSalvarSenha.setSelected(false);
+                    labelStatus.setText("Status: Configurações limpas");
+                    labelStatus.setBackground(Color.LIGHT_GRAY);
+                    
+                    JOptionPane.showMessageDialog(this,
+                        "Configurações limpas com sucesso!",
+                        "Sucesso",
+                        JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                        "Erro ao limpar algumas configurações.",
+                        "Erro",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+                
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this,
+                    "Erro ao limpar configurações: " + e.getMessage(),
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    /**
+     * Obtém informações sobre a configuração atual
+     */
+    public String getConfigInfo() {
+        if (configManager.hasConfiguration()) {
+            DatabaseConfig config = configManager.getCurrentConfig();
+            return String.format("Conectado: %s:%d/%s (Usuário: %s)",
+                config.getHost(),
+                config.getPort(),
+                config.getDatabase(),
+                config.getUsername());
+        }
+        return "Nenhuma configuração salva";
     }
 }

@@ -83,6 +83,23 @@ class CollectionViewActivity : AppCompatActivity() {
                 }
             }
         }
+        
+        // Filtro de Status
+        binding.chipGroupFilters.setOnCheckedStateChangeListener { _, checkedIds ->
+            if (checkedIds.isNotEmpty()) {
+                when (checkedIds[0]) {
+                    binding.chipAll.id -> {
+                        viewModel.filterByStatus(CollectionViewViewModel.FiltroStatus.TODOS)
+                    }
+                    binding.chipSynced.id -> {
+                        viewModel.filterByStatus(CollectionViewViewModel.FiltroStatus.SINCRONIZADOS)
+                    }
+                    binding.chipPending.id -> {
+                        viewModel.filterByStatus(CollectionViewViewModel.FiltroStatus.PENDENTES)
+                    }
+                }
+            }
+        }
     }
     
     private fun setupSalaSpinner(salas: List<String>) {

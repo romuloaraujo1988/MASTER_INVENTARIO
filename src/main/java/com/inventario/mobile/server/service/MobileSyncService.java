@@ -2,7 +2,6 @@ package com.inventario.mobile.server.service;
 
 import com.inventario.dao.*;
 import com.inventario.model.*;
-import com.inventario.service.ServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

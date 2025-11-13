@@ -74,10 +74,47 @@ public class MobileColetaService {
             throw new IllegalArgumentException("É obrigatório informar o usuário (username ou usuarioId)");
         }
 
-        // Buscar inventário
-        Inventario inventario = inventarioDAO.findById(request.getIdInventario());
+        // Buscar inventário - se não informado ou inválido, busca o ativo
+        Inventario inventario = null;
+        
+        if (request.getIdInventario() != null && request.getIdInventario() > 0) {
+            try {
+                inventario = inventarioDAO.findById(request.getIdInventario());
+            } catch (SQLException e) {
+                logger.warn("Erro ao buscar inventário por ID {}: {}", request.getIdInventario(), e.getMessage());
+            }
+        }
+        
+        // Se não encontrou ou não foi informado, busca o inventário ativo
         if (inventario == null) {
-            throw new IllegalArgumentException("Inventário não encontrado: " + request.getIdInventario());
+            logger.info("Buscando inventário ativo automaticamente...");
+            try {
+                inventario = inventarioDAO.buscarInventarioAtivo();
+                if (inventario != null) {
+                    logger.info("Inventário ativo encontrado: ID={}, Nome={}, Status={}", 
+                            inventario.getId(), inventario.getNome(), inventario.getStatusInventario());
+                } else {
+                    logger.warn("Nenhum inventário com status 'EM_ANDAMENTO' foi encontrado no banco de dados");
+                    
+                    // Tentar listar todos os inventários para debug
+                    try {
+                        List<Inventario> todosInventarios = inventarioDAO.findAll();
+                        logger.info("Total de inventários no banco: {}", todosInventarios.size());
+                        for (Inventario inv : todosInventarios) {
+                            logger.info("  - ID={}, Nome={}, Status={}", 
+                                    inv.getId(), inv.getNome(), inv.getStatusInventario());
+                        }
+                    } catch (SQLException ex) {
+                        logger.error("Erro ao listar inventários: {}", ex.getMessage());
+                    }
+                }
+            } catch (SQLException e) {
+                logger.error("Erro ao buscar inventário ativo: {}", e.getMessage(), e);
+            }
+        }
+        
+        if (inventario == null) {
+            throw new IllegalArgumentException("Nenhum inventário ativo encontrado. Por favor, inicie um inventário no sistema com status 'EM_ANDAMENTO'.");
         }
 
         // Buscar ID do participante
@@ -186,10 +223,45 @@ public class MobileColetaService {
 
         for (Coleta coleta : coletas) {
             Inventario inventario = inventarioDAO.findById(coleta.getIdInventario());
-            responses.add(converterParaResponse(coleta, usuario, inventario));
+            // Buscar o usuário que fez a coleta, não o usuário logado
+            Usuario coletor = usuarioDAO.findById(coleta.getIdColetor());
+            if (coletor == null) {
+                logger.warn("Coletor não encontrado para coleta ID {}, usando usuário logado", coleta.getId());
+                coletor = usuario;
+            }
+            responses.add(converterParaResponse(coleta, coletor, inventario));
         }
 
         logger.info("Encontradas {} coletas para o usuário {}", responses.size(), username);
+        return responses;
+    }
+    
+    /**
+     * Busca TODAS as coletas do sistema (não apenas do usuário)
+     * Usado para visualização geral de coletas
+     */
+    public List<MobileColetaResponse> buscarTodasColetasDoSistema() throws SQLException {
+        logger.info("Buscando todas as coletas do sistema");
+
+        List<Coleta> coletas = coletaDAO.buscarTodas();
+        List<MobileColetaResponse> responses = new ArrayList<>();
+
+        for (Coleta coleta : coletas) {
+            try {
+                Inventario inventario = inventarioDAO.findById(coleta.getIdInventario());
+                // Buscar o usuário que fez a coleta
+                Usuario coletor = usuarioDAO.findById(coleta.getIdColetor());
+                if (coletor != null) {
+                    responses.add(converterParaResponse(coleta, coletor, inventario));
+                } else {
+                    logger.warn("Coletor não encontrado para coleta ID {}, pulando", coleta.getId());
+                }
+            } catch (Exception e) {
+                logger.error("Erro ao processar coleta ID {}: {}", coleta.getId(), e.getMessage());
+            }
+        }
+
+        logger.info("Encontradas {} coletas no sistema", responses.size());
         return responses;
     }
     
@@ -344,6 +416,7 @@ public class MobileColetaService {
         response.setLocalizacaoEncontrada(coleta.getLocalizacaoEncontrada());
         response.setEstadoEncontrado(coleta.getEstadoEncontrado());
         response.setNomeColetor(usuario.getNomeCompleto());
+        response.setUsuarioId(coleta.getIdColetor());  // Usar ID do coletor da coleta, não do usuário passado
         response.setSemEtiqueta(coleta.isSemEtiqueta());
         response.setSincronizado(true);
 
@@ -357,6 +430,7 @@ public class MobileColetaService {
                 if (patrimonio != null) {
                     logger.debug("Patrimônio encontrado: ID={}, Numero={}, Descricao={}", 
                             patrimonio.getId(), patrimonio.getNumero(), patrimonio.getDescricao());
+                    response.setPatrimonioId(patrimonio.getId());  // Adicionar ID do patrimônio
                     response.setNumeroPatrimonio(patrimonio.getNumero());
                     response.setDescricaoPatrimonio(patrimonio.getDescricao());
                     response.setIdSala(patrimonio.getIdSala());

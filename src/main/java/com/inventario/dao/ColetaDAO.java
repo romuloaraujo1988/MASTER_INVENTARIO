@@ -315,6 +315,35 @@ public class ColetaDAO {
         return coletas;
     }
     
+    /**
+     * Busca TODAS as coletas do sistema
+     * @return Lista com todas as coletas
+     * @throws SQLException
+     */
+    public List<Coleta> buscarTodas() throws SQLException {
+        String sql = "SELECT c.*, c.ID_COLETOR, p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
+                    "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO " +
+                    "FROM TABELA_COLETA c " +
+                    "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
+                    "LEFT JOIN TABELA_USUARIO u ON c.ID_COLETOR = u.ID " +
+                    "LEFT JOIN TABELA_INVENTARIO i ON c.ID_INVENTARIO = i.ID " +
+                    "ORDER BY c.DATA_COLETA DESC";
+        
+        List<Coleta> coletas = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    coletas.add(criarColetaFromResultSet(rs));
+                }
+            }
+        }
+        
+        return coletas;
+    }
+    
     public List<Coleta> buscarPorPatrimonio(int idPatrimonio) throws SQLException {
         String sql = "SELECT c.*, p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
                     "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO " +
@@ -751,21 +780,24 @@ public class ColetaDAO {
             // Coluna não existe ainda, ignorar
         }
         
+        // Tentar ler ID_COLETOR primeiro (campo atual)
+        int idColetor = 0;
         try {
-            // Manter compatibilidade com ID_USUARIO/ID_COLETOR
-            int idUsuario = rs.getInt("ID_USUARIO");
-            if (!rs.wasNull()) {
-                coleta.setIdColetor(idUsuario);
+            idColetor = rs.getInt("ID_COLETOR");
+            if (!rs.wasNull() && idColetor > 0) {
+                coleta.setIdColetor(idColetor);
+                System.out.println("[DEBUG ColetaDAO] ID_COLETOR lido: " + idColetor + " para coleta ID: " + coleta.getId());
             }
         } catch (SQLException e) {
-            // Tentar ID_COLETOR se ID_USUARIO não existir
+            // Se ID_COLETOR não existir, tentar ID_USUARIO (compatibilidade)
             try {
-                int idColetor = rs.getInt("ID_COLETOR");
-                if (!rs.wasNull()) {
-                    coleta.setIdColetor(idColetor);
+                int idUsuario = rs.getInt("ID_USUARIO");
+                if (!rs.wasNull() && idUsuario > 0) {
+                    coleta.setIdColetor(idUsuario);
+                    System.out.println("[DEBUG ColetaDAO] ID_USUARIO lido: " + idUsuario + " para coleta ID: " + coleta.getId());
                 }
             } catch (SQLException e2) {
-                // Nenhum dos campos existe, ignorar
+                System.out.println("[DEBUG ColetaDAO] AVISO: Nenhum ID de coletor encontrado para coleta ID: " + coleta.getId());
             }
         }
         coleta.setDataColeta(rs.getTimestamp("DATA_COLETA"));

@@ -91,6 +91,7 @@ com\inventario\view\ModernConfirmDialog.class
 com\inventario\view\PatrimonioFrame$1.class
 com\inventario\mobile\server\controller\MobileResponsavelController.class
 com\inventario\dto\mobile\RefreshTokenRequest.class
+com\inventario\mobile\server\controller\MobileInventarioController.class
 com\inventario\model\PerfilUsuario.class
 com\inventario\mobile\server\controller\MobileConnectionController.class
 com\inventario\view\MainFrame.class

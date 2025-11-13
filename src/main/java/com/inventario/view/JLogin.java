@@ -202,16 +202,52 @@ public class JLogin extends JFrame {
     }
 
     private JPanel createFooterPanel() {
-        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JPanel footerPanel = new JPanel(new BorderLayout());
         footerPanel.setOpaque(false);
         footerPanel.setBorder(new EmptyBorder(10, 20, 20, 20));
 
+        // Label de copyright
         JLabel footerLabel = new JLabel("© 2025 IFMT - Instituto Federal de Mato Grosso");
         footerLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         footerLabel.setForeground(Color.WHITE);
+        footerLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-        footerPanel.add(footerLabel);
+        // Botão de configuração
+        JButton btnConfig = new JButton("⚙ Configurar Banco");
+        btnConfig.setFont(new Font("Arial", Font.PLAIN, 11));
+        btnConfig.setForeground(Color.WHITE);
+        btnConfig.setBackground(new Color(52, 73, 94));
+        btnConfig.setBorderPainted(false);
+        btnConfig.setFocusPainted(false);
+        btnConfig.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnConfig.setToolTipText("Configurar conexão com banco de dados");
+        
+        btnConfig.addActionListener(e -> abrirConfiguracaoBanco());
+        
+        // Adicionar hover effect
+        btnConfig.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                btnConfig.setBackground(new Color(44, 62, 80));
+            }
+            
+            @Override
+            public void mouseExited(MouseEvent e) {
+                btnConfig.setBackground(new Color(52, 73, 94));
+            }
+        });
+
+        footerPanel.add(footerLabel, BorderLayout.CENTER);
+        footerPanel.add(btnConfig, BorderLayout.EAST);
+        
         return footerPanel;
+    }
+    
+    /**
+     * Abre o dialog de configuração do banco de dados
+     */
+    private void abrirConfiguracaoBanco() {
+        com.inventario.util.ConfiguracaoBancoUtil.abrirDialogConfiguracao(this);
     }
 
     private void styleTextField(JTextField field) {

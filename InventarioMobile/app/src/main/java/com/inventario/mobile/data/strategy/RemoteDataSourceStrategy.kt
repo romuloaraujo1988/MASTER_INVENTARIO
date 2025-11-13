@@ -113,5 +113,47 @@ class RemoteDataSourceStrategy(
         }
     }
     
+    override suspend fun buscarDescricoesNaoColetadas(): Result<List<String>> {
+        return try {
+            Log.d(TAG, "Buscando descrições não coletadas do servidor...")
+            
+            val response = patrimonioApi.buscarDescricoesNaoColetadas()
+            
+            if (response.isSuccessful && response.body()?.success == true) {
+                val descricoes = response.body()?.data ?: emptyList()
+                Log.d(TAG, "✓ ${descricoes.size} descrições obtidas do servidor")
+                Result.success(descricoes)
+            } else {
+                val error = "Erro na API: ${response.message()}"
+                Log.e(TAG, error)
+                Result.failure(Exception(error))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao buscar descrições do servidor", e)
+            Result.failure(e)
+        }
+    }
+    
+    override suspend fun buscarPorDescricaoNaoColetados(descricao: String): Result<List<Patrimonio>> {
+        return try {
+            Log.d(TAG, "Buscando patrimônios por descrição '$descricao' do servidor...")
+            
+            val response = patrimonioApi.buscarPorDescricaoNaoColetados(descricao)
+            
+            if (response.isSuccessful && response.body()?.success == true) {
+                val patrimonios = response.body()?.data ?: emptyList()
+                Log.d(TAG, "✓ ${patrimonios.size} patrimônios obtidos do servidor")
+                Result.success(patrimonios)
+            } else {
+                val error = "Erro na API: ${response.message()}"
+                Log.e(TAG, error)
+                Result.failure(Exception(error))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao buscar patrimônios por descrição do servidor", e)
+            Result.failure(e)
+        }
+    }
+    
     override fun getSourceType(): DataSourceType = DataSourceType.REMOTE
 }

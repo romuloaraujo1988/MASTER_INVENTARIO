@@ -7,13 +7,14 @@ import com.inventario.mobile.utils.PreferencesManager
 
 class SettingsViewModelFactory(
     private val preferencesManager: PreferencesManager,
-    private val repository: InventarioRepository
+    private val repository: InventarioRepository,
+    private val syncScheduler: com.inventario.mobile.sync.SyncScheduler
 ) : ViewModelProvider.Factory {
     
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
-            return SettingsViewModel(preferencesManager, repository) as T
+            return SettingsViewModel(preferencesManager, repository, syncScheduler) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

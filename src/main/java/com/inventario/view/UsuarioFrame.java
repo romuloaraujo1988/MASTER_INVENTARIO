@@ -1,7 +1,5 @@
 package com.inventario.view;
 
-import com.inventario.dao.UsuarioDAORefactored;
-import com.inventario.dao.SetorDAORefactored;
 import com.inventario.model.Usuario;
 import com.inventario.model.PerfilUsuario;
 import com.inventario.view.ui.ButtonStyleFactory;

@@ -4336,6 +4336,7 @@ layout zxing_barcode_scanner
 layout zxing_capture
 menu bottom_navigation
 menu main_menu
+menu menu_coletas
 menu menu_inventario
 menu navigation_drawer_menu
 mipmap ic_launcher

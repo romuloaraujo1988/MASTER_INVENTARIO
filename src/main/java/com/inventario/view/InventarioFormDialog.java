@@ -15,7 +15,6 @@ import com.inventario.service.ResponsavelService;
 import com.inventario.service.SetorService;
 import com.inventario.service.InventarioService;
 import com.inventario.service.UsuarioService;
-import com.inventario.service.BusinessException;
 
 /**
  * Formulário para criar novos inventários
@@ -42,8 +41,6 @@ public class InventarioFormDialog extends JDialog {
     
     // Componentes para seleção de participantes
     private JCheckBox checkIncluirTodosUsuarios;
-    private JList<Usuario> listaUsuarios;
-    private DefaultListModel<Usuario> modeloListaUsuarios;
     private List<Usuario> todosUsuarios;
     
     // Componentes para busca e gerenciamento de participantes

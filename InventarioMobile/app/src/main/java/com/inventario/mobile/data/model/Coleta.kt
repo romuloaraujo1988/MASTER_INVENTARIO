@@ -39,10 +39,13 @@ data class Coleta(
          * Converte DTO para modelo local
          */
         fun fromDto(dto: com.inventario.mobile.data.remote.dto.ColetaDto): Coleta {
+            val usuarioId = dto.usuarioIdCamel ?: dto.usuarioId ?: 0
+            android.util.Log.d("Coleta.fromDto", "Convertendo DTO - ID: ${dto.id}, usuarioIdCamel: ${dto.usuarioIdCamel}, usuarioId: ${dto.usuarioId}, resultado: $usuarioId")
+            
             return Coleta(
                 id = dto.id,
-                patrimonioId = dto.patrimonioId ?: 0,
-                usuarioId = dto.usuarioId ?: 0,
+                patrimonioId = dto.patrimonioIdCamel ?: dto.patrimonioId ?: 0,
+                usuarioId = usuarioId,
                 dataColeta = dto.dataColeta ?: System.currentTimeMillis().toString(),
                 localizacaoAtual = dto.localizacaoEncontrada,
                 observacoes = dto.observacaoColeta,

@@ -150,4 +150,62 @@ class PatrimonioRepositoryImpl @Inject constructor(
     suspend fun getAvailableDataSource(): DataSourceType {
         return strategyFactory.getAvailableSourceType()
     }
+    
+    /**
+     * Busca descrições de patrimônios não coletados
+     * Usa estratégia apropriada automaticamente
+     */
+    suspend fun buscarDescricoesNaoColetadas(): Result<List<String>> {
+        return try {
+            Log.d(TAG, "Buscando descrições não coletadas")
+            
+            val strategy = strategyFactory.getStrategy()
+            _currentDataSource.value = strategy.getSourceType()
+            
+            Log.d(TAG, "Fonte de dados: ${strategy.getSourceType()}")
+            
+            val result = strategy.buscarDescricoesNaoColetadas()
+            
+            if (result.isSuccess) {
+                val descricoes = result.getOrNull() ?: emptyList()
+                Log.d(TAG, "✓ ${descricoes.size} descrições encontradas")
+            } else {
+                Log.e(TAG, "✗ Erro ao buscar descrições: ${result.exceptionOrNull()?.message}")
+            }
+            
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro inesperado ao buscar descrições", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Busca patrimônios por descrição (não coletados)
+     * Usa estratégia apropriada automaticamente
+     */
+    suspend fun buscarPorDescricaoNaoColetados(descricao: String): Result<List<Patrimonio>> {
+        return try {
+            Log.d(TAG, "Buscando patrimônios por descrição: $descricao")
+            
+            val strategy = strategyFactory.getStrategy()
+            _currentDataSource.value = strategy.getSourceType()
+            
+            Log.d(TAG, "Fonte de dados: ${strategy.getSourceType()}")
+            
+            val result = strategy.buscarPorDescricaoNaoColetados(descricao)
+            
+            if (result.isSuccess) {
+                val patrimonios = result.getOrNull() ?: emptyList()
+                Log.d(TAG, "✓ ${patrimonios.size} patrimônios encontrados")
+            } else {
+                Log.e(TAG, "✗ Erro ao buscar patrimônios: ${result.exceptionOrNull()?.message}")
+            }
+            
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro inesperado ao buscar patrimônios por descrição", e)
+            Result.failure(e)
+        }
+    }
 }

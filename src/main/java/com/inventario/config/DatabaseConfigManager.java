@@ -1,5 +1,7 @@
 package com.inventario.config;
 
+import com.inventario.util.PasswordEncryption;
+
 import java.io.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -17,12 +19,12 @@ import java.util.Properties;
  */
 public class DatabaseConfigManager {
     
-    private static final String CONFIG_FILE = "database-config.properties";
-    private static final String CONFIG_DIR = System.getProperty("user.home") + File.separator + ".inventario";
-    private static final String CONFIG_PATH = CONFIG_DIR + File.separator + CONFIG_FILE;
     private DatabaseConfig currentConfig;
     
     public DatabaseConfigManager() {
+        // Tentar migrar configuração antiga (se existir)
+        ConfigurationPaths.migrateOldConfiguration();
+        
         createConfigDirectoryIfNotExists();
         loadConfiguration();
     }
@@ -31,15 +33,7 @@ public class DatabaseConfigManager {
      * Cria o diretório de configuração se não existir
      */
     private void createConfigDirectoryIfNotExists() {
-        File configDir = new File(CONFIG_DIR);
-        if (!configDir.exists()) {
-            boolean created = configDir.mkdirs();
-            if (created) {
-                System.out.println("Diretório de configuração criado: " + CONFIG_DIR);
-            } else {
-                System.err.println("Falha ao criar diretório de configuração: " + CONFIG_DIR);
-            }
-        }
+        ConfigurationPaths.createConfigDirectoryIfNotExists();
     }
     
     /**
@@ -55,7 +49,8 @@ public class DatabaseConfigManager {
      * Carrega a configuração do arquivo
      */
     private void loadConfiguration() {
-        File configFile = new File(CONFIG_PATH);
+        String configPath = ConfigurationPaths.getDatabaseConfigPath();
+        File configFile = new File(configPath);
         
         if (configFile.exists()) {
             try {
@@ -63,12 +58,29 @@ public class DatabaseConfigManager {
                 try (FileInputStream fis = new FileInputStream(configFile)) {
                     props.load(fis);
                 }
+                
+                // Carregar senha (descriptografar se necessário)
+                String encryptedPassword = props.getProperty("password", "");
+                String password = "";
+                
+                if (!encryptedPassword.isEmpty()) {
+                    try {
+                        // Tentar descriptografar
+                        password = PasswordEncryption.decrypt(encryptedPassword);
+                        System.out.println("Senha descriptografada com sucesso.");
+                    } catch (Exception e) {
+                        // Se falhar, pode ser senha em texto plano (compatibilidade)
+                        System.out.println("Senha não está criptografada, usando texto plano.");
+                        password = encryptedPassword;
+                    }
+                }
+                
                 currentConfig = new DatabaseConfig(
                     props.getProperty("host", "localhost"),
                     Integer.parseInt(props.getProperty("port", "5432")),
                     props.getProperty("database", ""),
                     props.getProperty("username", ""),
-                    props.getProperty("password", "")
+                    password
                 );
                 System.out.println("Configuração de banco carregada com sucesso.");
             } catch (IOException | NumberFormatException e) {
@@ -76,7 +88,7 @@ public class DatabaseConfigManager {
                 currentConfig = null;
             }
         } else {
-            System.out.println("Arquivo de configuração não encontrado: " + CONFIG_PATH);
+            System.out.println("Arquivo de configuração não encontrado: " + configPath);
             currentConfig = null;
         }
     }
@@ -88,15 +100,31 @@ public class DatabaseConfigManager {
      * @return true se salvou com sucesso, false caso contrário
      */
     public boolean saveConfiguration(DatabaseConfig config) {
-        try (FileOutputStream fos = new FileOutputStream(CONFIG_PATH)) {
+        String configPath = ConfigurationPaths.getDatabaseConfigPath();
+        try (FileOutputStream fos = new FileOutputStream(configPath)) {
             Properties props = new Properties();
             props.setProperty("host", config.getHost());
             props.setProperty("port", String.valueOf(config.getPort()));
             props.setProperty("database", config.getDatabase());
             props.setProperty("username", config.getUsername());
-            props.setProperty("password", config.getPassword());
             
-            props.store(fos, "Database Configuration");
+            // Criptografar senha antes de salvar
+            String password = config.getPassword();
+            if (password != null && !password.isEmpty()) {
+                try {
+                    String encryptedPassword = PasswordEncryption.encrypt(password);
+                    props.setProperty("password", encryptedPassword);
+                    System.out.println("Senha criptografada com sucesso.");
+                } catch (Exception e) {
+                    System.err.println("Erro ao criptografar senha: " + e.getMessage());
+                    // Fallback: salvar em texto plano (não recomendado)
+                    props.setProperty("password", password);
+                }
+            } else {
+                props.setProperty("password", "");
+            }
+            
+            props.store(fos, "Database Configuration - Password is encrypted");
             this.currentConfig = config;
             System.out.println("Configuração de banco salva com sucesso.");
             return true;
@@ -177,7 +205,8 @@ public class DatabaseConfigManager {
      * @return true se removeu com sucesso, false caso contrário
      */
     public boolean removeConfiguration() {
-        File configFile = new File(CONFIG_PATH);
+        String configPath = ConfigurationPaths.getDatabaseConfigPath();
+        File configFile = new File(configPath);
         
         if (configFile.exists()) {
             boolean deleted = configFile.delete();

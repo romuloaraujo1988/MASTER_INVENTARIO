@@ -68,18 +68,14 @@ public class SistemaInventarioApplication {
      * Inicia a aplicação verificando se há configuração de banco
      */
     public void start() {
-        if (configManager.hasConfiguration()) {
-            // Se já tem configuração, tenta conectar e abre tela principal
-            if (DatabaseConnection.testConnection()) {
-                showMainScreen();
-            } else {
-                // Se falha na conexão, abre tela de configuração
-                showConfigScreen();
-            }
-        } else {
-            // Se não tem configuração, abre tela de configuração
-            showConfigScreen();
+        // Verificar e migrar configuração se necessário
+        if (!configManager.hasConfiguration()) {
+            System.out.println("⚠ Nenhuma configuração de banco encontrada");
+            System.out.println("  Configure via tela de login ou arquivo de configuração");
         }
+        
+        // Sempre mostrar tela de login (que tem botão de configuração)
+        showLoginScreen();
     }
     
     /**
@@ -91,6 +87,13 @@ public class SistemaInventarioApplication {
             configController.setMainApp(this);
         }
         configController.showWindow();
+    }
+    
+    /**
+     * Exibe a tela de login do sistema
+     */
+    public void showLoginScreen() {
+        showMainScreen(); // Alias para compatibilidade
     }
     
     /**
@@ -111,11 +114,24 @@ public class SistemaInventarioApplication {
                 
             } catch (Exception e) {
                 System.err.println("Erro ao abrir tela de login: " + e.getMessage());
-                JOptionPane.showMessageDialog(null, 
-                    "Erro ao abrir tela de login. Verifique a configuração do banco de dados.\n" +
-                    "Erro: " + e.getMessage(), 
-                    "Erro", 
-                    JOptionPane.ERROR_MESSAGE);
+                
+                // Verificar se é erro de configuração
+                if (e.getMessage() != null && e.getMessage().contains("configuração")) {
+                    JOptionPane.showMessageDialog(null, 
+                        "Erro: Nenhuma configuração de banco encontrada.\n\n" +
+                        "Configure o banco de dados via:\n" +
+                        "1. Botão '⚙ Configurar Banco' na tela de login\n" +
+                        "2. Ou arquivo ~/.inventario/database-config.properties", 
+                        "Configuração Necessária", 
+                        JOptionPane.WARNING_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(null, 
+                        "Erro ao abrir tela de login.\n" +
+                        "Erro: " + e.getMessage(), 
+                        "Erro", 
+                        JOptionPane.ERROR_MESSAGE);
+                }
+                
                 // Se falha, volta para configuração
                 showConfigScreen();
             }

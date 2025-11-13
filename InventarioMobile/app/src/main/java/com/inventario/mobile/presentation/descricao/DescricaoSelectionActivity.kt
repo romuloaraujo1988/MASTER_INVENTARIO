@@ -6,39 +6,26 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.inventario.mobile.R
 import com.inventario.mobile.databinding.ActivityDescricaoSelectionBinding
 import com.inventario.mobile.presentation.coleta.ManualCollectionActivity
 import com.inventario.mobile.presentation.state.DescricaoState
-import com.inventario.mobile.utils.FeatureFlags
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 /**
  * Activity para seleção de descrição (coleta sem etiqueta)
- * Clean Architecture + MVVM
+ * Clean Architecture + MVVM + Hilt
  */
+@AndroidEntryPoint
 class DescricaoSelectionActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDescricaoSelectionBinding
     
-    // ViewModel com repository
-    private val viewModel: DescricaoSelectionViewModelClean by lazy {
-        val apiService = com.inventario.mobile.di.NetworkModule.getApiService(this)
-        val repository = com.inventario.mobile.data.repository.InventarioRepository.getInstance(this, apiService)
-        
-        ViewModelProvider(
-            this,
-            object : androidx.lifecycle.ViewModelProvider.Factory {
-                override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                    @Suppress("UNCHECKED_CAST")
-                    return DescricaoSelectionViewModelClean(repository) as T
-                }
-            }
-        )[DescricaoSelectionViewModelClean::class.java]
-    }
+    // ViewModel injetado via Hilt
+    private val viewModel: DescricaoSelectionViewModelClean by viewModels()
     
     private lateinit var adapter: DescricaoAdapter
 

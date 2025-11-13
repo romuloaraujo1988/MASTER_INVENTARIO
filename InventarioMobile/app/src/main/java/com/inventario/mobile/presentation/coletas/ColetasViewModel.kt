@@ -26,14 +26,38 @@ class ColetasViewModel(
     private val _uiState = MutableStateFlow(ColetasUiState())
     val uiState: StateFlow<ColetasUiState> = _uiState.asStateFlow()
 
-    fun loadColetas() {
+    fun loadColetas(filtrarPorUsuario: Boolean = true) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             
             try {
+                android.util.Log.d("ColetasViewModel", "═══════════════════════════════════════")
+                android.util.Log.d("ColetasViewModel", "CARREGANDO COLETAS")
+                android.util.Log.d("ColetasViewModel", "Filtrar por usuário: $filtrarPorUsuario")
+                
                 val patrimonios = repository.getAllPatrimoniosList()
-                val coletados = patrimonios.filter { it.coletado == true }
+                android.util.Log.d("ColetasViewModel", "Total de patrimônios: ${patrimonios.size}")
+                
+                // Obter usuário atual
+                val usuarioAtual = repository.getCurrentUser()
+                android.util.Log.d("ColetasViewModel", "Usuário atual: ${usuarioAtual?.nome}")
+                
+                val coletados = if (filtrarPorUsuario && usuarioAtual != null) {
+                    // Filtrar apenas coletas do usuário logado
+                    val minhasColetas = patrimonios.filter { 
+                        it.coletado == true && it.coletadoPor == usuarioAtual.nome 
+                    }
+                    android.util.Log.d("ColetasViewModel", "Minhas coletas: ${minhasColetas.size}")
+                    minhasColetas
+                } else {
+                    // Mostrar todas as coletas
+                    val todasColetas = patrimonios.filter { it.coletado == true }
+                    android.util.Log.d("ColetasViewModel", "Todas as coletas: ${todasColetas.size}")
+                    todasColetas
+                }
+                
                 val pendentes = patrimonios.filter { it.coletado != true }
+                android.util.Log.d("ColetasViewModel", "Pendentes: ${pendentes.size}")
                 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -42,12 +66,27 @@ class ColetasViewModel(
                     totalColetados = coletados.size,
                     totalPendentes = pendentes.size
                 )
+                
+                android.util.Log.d("ColetasViewModel", "✓ Coletas carregadas com sucesso!")
+                android.util.Log.d("ColetasViewModel", "═══════════════════════════════════════")
             } catch (e: Exception) {
+                android.util.Log.e("ColetasViewModel", "✗ Erro ao carregar coletas", e)
+                android.util.Log.d("ColetasViewModel", "═══════════════════════════════════════")
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     errorMessage = "Erro ao carregar coletas: ${e.message}"
                 )
             }
+        }
+    }
+    
+    fun toggleFiltroUsuario() {
+        viewModelScope.launch {
+            val usuarioAtual = repository.getCurrentUser()
+            val filtrarPorUsuario = !(_uiState.value.patrimoniosColetados.firstOrNull()?.let { 
+                usuarioAtual?.nome == it.coletadoPor 
+            } ?: true)
+            loadColetas(filtrarPorUsuario)
         }
     }
 

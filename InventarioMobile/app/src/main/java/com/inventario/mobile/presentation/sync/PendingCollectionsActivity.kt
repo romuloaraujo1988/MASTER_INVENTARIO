@@ -22,7 +22,7 @@ class PendingCollectionsActivity : AppCompatActivity() {
     private lateinit var binding: ActivityPendingCollectionsBinding
     private val viewModel: PendingCollectionsViewModel by viewModels {
         PendingCollectionsViewModelFactory(
-            InventarioRepository(MockApiService(), LocalDataManager(this))
+            InventarioRepository(MockApiService(), LocalDataManager(this), this)
         )
     }
     private lateinit var adapter: PendingCollectionsAdapter

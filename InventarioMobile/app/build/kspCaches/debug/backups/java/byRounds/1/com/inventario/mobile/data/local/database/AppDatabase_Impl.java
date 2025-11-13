@@ -12,15 +12,17 @@ import androidx.room.util.TableInfo;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.sqlite.db.SupportSQLiteOpenHelper;
 import com.inventario.mobile.data.local.dao.ColetaDao;
-import com.inventario.mobile.data.local.dao.ColetaDao_AppDatabase_Impl;
+import com.inventario.mobile.data.local.dao.ColetaDao_Impl;
 import com.inventario.mobile.data.local.dao.PatrimonioDao;
-import com.inventario.mobile.data.local.dao.PatrimonioDao_AppDatabase_Impl;
+import com.inventario.mobile.data.local.dao.PatrimonioDao_Impl;
 import com.inventario.mobile.data.local.dao.ResponsavelDao;
 import com.inventario.mobile.data.local.dao.ResponsavelDao_Impl;
 import com.inventario.mobile.data.local.dao.SalaDao;
-import com.inventario.mobile.data.local.dao.SalaDao_AppDatabase_Impl;
+import com.inventario.mobile.data.local.dao.SalaDao_Impl;
 import com.inventario.mobile.data.local.dao.SincronizacaoDao;
 import com.inventario.mobile.data.local.dao.SincronizacaoDao_Impl;
+import com.inventario.mobile.data.local.dao.SyncLogDao;
+import com.inventario.mobile.data.local.dao.SyncLogDao_Impl;
 import java.lang.Class;
 import java.lang.Override;
 import java.lang.String;
@@ -47,10 +49,12 @@ public final class AppDatabase_Impl extends AppDatabase {
 
   private volatile SincronizacaoDao _sincronizacaoDao;
 
+  private volatile SyncLogDao _syncLogDao;
+
   @Override
   @NonNull
   protected SupportSQLiteOpenHelper createOpenHelper(@NonNull final DatabaseConfiguration config) {
-    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(2) {
+    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(3) {
       @Override
       public void createAllTables(@NonNull final SupportSQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS `patrimonio` (`id` INTEGER NOT NULL, `numero` TEXT NOT NULL, `descricao` TEXT NOT NULL, `idSala` INTEGER, `nomeSala` TEXT, `idResponsavel` INTEGER, `nomeResponsavel` TEXT, `status` TEXT NOT NULL, `coletado` INTEGER NOT NULL, `dataUltimaAtualizacao` INTEGER NOT NULL, PRIMARY KEY(`id`))");
@@ -68,8 +72,9 @@ public final class AppDatabase_Impl extends AppDatabase {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_sincronizado` ON `coleta` (`sincronizado`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_dataColeta` ON `coleta` (`dataColeta`)");
         db.execSQL("CREATE TABLE IF NOT EXISTS `sincronizacao` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `entidade` TEXT NOT NULL, `entidadeId` INTEGER NOT NULL, `operacao` TEXT NOT NULL, `sincronizado` INTEGER NOT NULL, `dataHora` INTEGER NOT NULL, `erro` TEXT)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS `sync_log` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `tipo` TEXT NOT NULL, `dataHora` INTEGER NOT NULL, `status` TEXT NOT NULL, `mensagem` TEXT NOT NULL, `coletasSincronizadas` INTEGER NOT NULL, `coletasFalhadas` INTEGER NOT NULL, `stackTrace` TEXT, `duracao` INTEGER NOT NULL)");
         db.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)");
-        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '022bcda39a91883811e11704de9103af')");
+        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8ce333907d7e0ce52ba2f9ac5aeed079')");
       }
 
       @Override
@@ -79,6 +84,7 @@ public final class AppDatabase_Impl extends AppDatabase {
         db.execSQL("DROP TABLE IF EXISTS `responsavel`");
         db.execSQL("DROP TABLE IF EXISTS `coleta`");
         db.execSQL("DROP TABLE IF EXISTS `sincronizacao`");
+        db.execSQL("DROP TABLE IF EXISTS `sync_log`");
         final List<? extends RoomDatabase.Callback> _callbacks = mCallbacks;
         if (_callbacks != null) {
           for (RoomDatabase.Callback _callback : _callbacks) {
@@ -228,9 +234,28 @@ public final class AppDatabase_Impl extends AppDatabase {
                   + " Expected:\n" + _infoSincronizacao + "\n"
                   + " Found:\n" + _existingSincronizacao);
         }
+        final HashMap<String, TableInfo.Column> _columnsSyncLog = new HashMap<String, TableInfo.Column>(9);
+        _columnsSyncLog.put("id", new TableInfo.Column("id", "INTEGER", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsSyncLog.put("tipo", new TableInfo.Column("tipo", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsSyncLog.put("dataHora", new TableInfo.Column("dataHora", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsSyncLog.put("status", new TableInfo.Column("status", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsSyncLog.put("mensagem", new TableInfo.Column("mensagem", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsSyncLog.put("coletasSincronizadas", new TableInfo.Column("coletasSincronizadas", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsSyncLog.put("coletasFalhadas", new TableInfo.Column("coletasFalhadas", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsSyncLog.put("stackTrace", new TableInfo.Column("stackTrace", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsSyncLog.put("duracao", new TableInfo.Column("duracao", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        final HashSet<TableInfo.ForeignKey> _foreignKeysSyncLog = new HashSet<TableInfo.ForeignKey>(0);
+        final HashSet<TableInfo.Index> _indicesSyncLog = new HashSet<TableInfo.Index>(0);
+        final TableInfo _infoSyncLog = new TableInfo("sync_log", _columnsSyncLog, _foreignKeysSyncLog, _indicesSyncLog);
+        final TableInfo _existingSyncLog = TableInfo.read(db, "sync_log");
+        if (!_infoSyncLog.equals(_existingSyncLog)) {
+          return new RoomOpenHelper.ValidationResult(false, "sync_log(com.inventario.mobile.data.local.entity.SyncLogEntity).\n"
+                  + " Expected:\n" + _infoSyncLog + "\n"
+                  + " Found:\n" + _existingSyncLog);
+        }
         return new RoomOpenHelper.ValidationResult(true, null);
       }
-    }, "022bcda39a91883811e11704de9103af", "3821c80816e48a99102ec0ac45e1c9eb");
+    }, "8ce333907d7e0ce52ba2f9ac5aeed079", "b4c27db6379206145d45be4104b83261");
     final SupportSQLiteOpenHelper.Configuration _sqliteConfig = SupportSQLiteOpenHelper.Configuration.builder(config.context).name(config.name).callback(_openCallback).build();
     final SupportSQLiteOpenHelper _helper = config.sqliteOpenHelperFactory.create(_sqliteConfig);
     return _helper;
@@ -241,7 +266,7 @@ public final class AppDatabase_Impl extends AppDatabase {
   protected InvalidationTracker createInvalidationTracker() {
     final HashMap<String, String> _shadowTablesMap = new HashMap<String, String>(0);
     final HashMap<String, Set<String>> _viewTables = new HashMap<String, Set<String>>(0);
-    return new InvalidationTracker(this, _shadowTablesMap, _viewTables, "patrimonio","sala","responsavel","coleta","sincronizacao");
+    return new InvalidationTracker(this, _shadowTablesMap, _viewTables, "patrimonio","sala","responsavel","coleta","sincronizacao","sync_log");
   }
 
   @Override
@@ -255,6 +280,7 @@ public final class AppDatabase_Impl extends AppDatabase {
       _db.execSQL("DELETE FROM `responsavel`");
       _db.execSQL("DELETE FROM `coleta`");
       _db.execSQL("DELETE FROM `sincronizacao`");
+      _db.execSQL("DELETE FROM `sync_log`");
       super.setTransactionSuccessful();
     } finally {
       super.endTransaction();
@@ -269,11 +295,12 @@ public final class AppDatabase_Impl extends AppDatabase {
   @NonNull
   protected Map<Class<?>, List<Class<?>>> getRequiredTypeConverters() {
     final HashMap<Class<?>, List<Class<?>>> _typeConvertersMap = new HashMap<Class<?>, List<Class<?>>>();
-    _typeConvertersMap.put(PatrimonioDao.class, PatrimonioDao_AppDatabase_Impl.getRequiredConverters());
-    _typeConvertersMap.put(SalaDao.class, SalaDao_AppDatabase_Impl.getRequiredConverters());
+    _typeConvertersMap.put(PatrimonioDao.class, PatrimonioDao_Impl.getRequiredConverters());
+    _typeConvertersMap.put(SalaDao.class, SalaDao_Impl.getRequiredConverters());
     _typeConvertersMap.put(ResponsavelDao.class, ResponsavelDao_Impl.getRequiredConverters());
-    _typeConvertersMap.put(ColetaDao.class, ColetaDao_AppDatabase_Impl.getRequiredConverters());
+    _typeConvertersMap.put(ColetaDao.class, ColetaDao_Impl.getRequiredConverters());
     _typeConvertersMap.put(SincronizacaoDao.class, SincronizacaoDao_Impl.getRequiredConverters());
+    _typeConvertersMap.put(SyncLogDao.class, SyncLogDao_Impl.getRequiredConverters());
     return _typeConvertersMap;
   }
 
@@ -299,7 +326,7 @@ public final class AppDatabase_Impl extends AppDatabase {
     } else {
       synchronized(this) {
         if(_patrimonioDao == null) {
-          _patrimonioDao = new PatrimonioDao_AppDatabase_Impl(this);
+          _patrimonioDao = new PatrimonioDao_Impl(this);
         }
         return _patrimonioDao;
       }
@@ -313,7 +340,7 @@ public final class AppDatabase_Impl extends AppDatabase {
     } else {
       synchronized(this) {
         if(_salaDao == null) {
-          _salaDao = new SalaDao_AppDatabase_Impl(this);
+          _salaDao = new SalaDao_Impl(this);
         }
         return _salaDao;
       }
@@ -341,7 +368,7 @@ public final class AppDatabase_Impl extends AppDatabase {
     } else {
       synchronized(this) {
         if(_coletaDao == null) {
-          _coletaDao = new ColetaDao_AppDatabase_Impl(this);
+          _coletaDao = new ColetaDao_Impl(this);
         }
         return _coletaDao;
       }
@@ -358,6 +385,20 @@ public final class AppDatabase_Impl extends AppDatabase {
           _sincronizacaoDao = new SincronizacaoDao_Impl(this);
         }
         return _sincronizacaoDao;
+      }
+    }
+  }
+
+  @Override
+  public SyncLogDao syncLogDao() {
+    if (_syncLogDao != null) {
+      return _syncLogDao;
+    } else {
+      synchronized(this) {
+        if(_syncLogDao == null) {
+          _syncLogDao = new SyncLogDao_Impl(this);
+        }
+        return _syncLogDao;
       }
     }
   }

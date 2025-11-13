@@ -4335,8 +4335,9 @@ int layout zxing_barcode_scanner 0x7f0c0097
 int layout zxing_capture 0x7f0c0098
 int menu bottom_navigation 0x7f0e0000
 int menu main_menu 0x7f0e0001
-int menu menu_inventario 0x7f0e0002
-int menu navigation_drawer_menu 0x7f0e0003
+int menu menu_coletas 0x7f0e0002
+int menu menu_inventario 0x7f0e0003
+int menu navigation_drawer_menu 0x7f0e0004
 int mipmap ic_launcher 0x7f0f0000
 int mipmap ic_launcher_round 0x7f0f0001
 int plurals mtrl_badge_content_description 0x7f100000

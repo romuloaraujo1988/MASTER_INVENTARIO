@@ -23,6 +23,8 @@ public class MobileColetaResponse {
     private LocalDateTime dataColeta;
     private String statusColeta;
     private String nomeColetor;
+    private Integer usuarioId;  // ID do usuário coletor
+    private Integer patrimonioId;  // ID do patrimônio coletado
     private Boolean semEtiqueta;
     private String descricaoItemSemEtiqueta;
     private String categoriaItemSemEtiqueta;
@@ -136,6 +138,22 @@ public class MobileColetaResponse {
     
     public void setNomeColetor(String nomeColetor) {
         this.nomeColetor = nomeColetor;
+    }
+    
+    public Integer getUsuarioId() {
+        return usuarioId;
+    }
+    
+    public void setUsuarioId(Integer usuarioId) {
+        this.usuarioId = usuarioId;
+    }
+    
+    public Integer getPatrimonioId() {
+        return patrimonioId;
+    }
+    
+    public void setPatrimonioId(Integer patrimonioId) {
+        this.patrimonioId = patrimonioId;
     }
     
     public Boolean getSemEtiqueta() {

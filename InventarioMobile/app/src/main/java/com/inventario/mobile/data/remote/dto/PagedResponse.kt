@@ -1,32 +1,16 @@
 package com.inventario.mobile.data.remote.dto
 
-import com.google.gson.annotations.SerializedName
-
 /**
  * DTO genérico para respostas paginadas da API
+ * 
+ * @param T Tipo dos dados retornados
  */
 data class PagedResponse<T>(
-    @SerializedName("content")
-    val content: List<T>,
-    
-    @SerializedName("page")
+    val success: Boolean,
+    val data: List<T>,
     val page: Int,
-    
-    @SerializedName("size")
-    val size: Int,
-    
-    @SerializedName("totalElements")
-    val totalElements: Int,
-    
-    @SerializedName("totalPages")
+    val pageSize: Int,
     val totalPages: Int,
-    
-    @SerializedName("first")
-    val first: Boolean,
-    
-    @SerializedName("last")
-    val last: Boolean
-) {
-    fun hasNext(): Boolean = !last
-    fun hasPrevious(): Boolean = !first
-}
+    val totalItems: Int,
+    val message: String? = null
+)

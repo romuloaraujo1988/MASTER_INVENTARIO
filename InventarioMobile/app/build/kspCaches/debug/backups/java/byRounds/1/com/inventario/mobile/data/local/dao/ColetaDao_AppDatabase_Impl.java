@@ -37,6 +37,8 @@ public final class ColetaDao_AppDatabase_Impl implements ColetaDao {
 
   private final EntityInsertionAdapter<ColetaEntity> __insertionAdapterOfColetaEntity;
 
+  private final SharedSQLiteStatement __preparedStmtOfUpdateSincronizado;
+
   private final SharedSQLiteStatement __preparedStmtOfMarcarSincronizada;
 
   private final SharedSQLiteStatement __preparedStmtOfMarcarSincronizada_1;
@@ -123,6 +125,14 @@ public final class ColetaDao_AppDatabase_Impl implements ColetaDao {
         }
       }
     };
+    this.__preparedStmtOfUpdateSincronizado = new SharedSQLiteStatement(__db) {
+      @Override
+      @NonNull
+      public String createQuery() {
+        final String _query = "UPDATE coleta SET sincronizado = ?, servidorId = ? WHERE id = ?";
+        return _query;
+      }
+    };
     this.__preparedStmtOfMarcarSincronizada = new SharedSQLiteStatement(__db) {
       @Override
       @NonNull
@@ -186,6 +196,55 @@ public final class ColetaDao_AppDatabase_Impl implements ColetaDao {
           return _result;
         } finally {
           __db.endTransaction();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object insert(final ColetaEntity coleta, final Continuation<? super Long> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Long>() {
+      @Override
+      @NonNull
+      public Long call() throws Exception {
+        __db.beginTransaction();
+        try {
+          final Long _result = __insertionAdapterOfColetaEntity.insertAndReturnId(coleta);
+          __db.setTransactionSuccessful();
+          return _result;
+        } finally {
+          __db.endTransaction();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object updateSincronizado(final long id, final boolean sincronizado, final int servidorId,
+      final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        final SupportSQLiteStatement _stmt = __preparedStmtOfUpdateSincronizado.acquire();
+        int _argIndex = 1;
+        final int _tmp = sincronizado ? 1 : 0;
+        _stmt.bindLong(_argIndex, _tmp);
+        _argIndex = 2;
+        _stmt.bindLong(_argIndex, servidorId);
+        _argIndex = 3;
+        _stmt.bindLong(_argIndex, id);
+        try {
+          __db.beginTransaction();
+          try {
+            _stmt.executeUpdateDelete();
+            __db.setTransactionSuccessful();
+            return Unit.INSTANCE;
+          } finally {
+            __db.endTransaction();
+          }
+        } finally {
+          __preparedStmtOfUpdateSincronizado.release(_stmt);
         }
       }
     }, $completion);

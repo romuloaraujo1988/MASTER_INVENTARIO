@@ -23,7 +23,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ColetaViewModelClean @Inject constructor(
     private val buscarPatrimonioUseCase: BuscarPatrimonioUseCase,
-    private val registrarColetaUseCase: RegistrarColetaUseCase
+    private val registrarColetaUseCase: RegistrarColetaUseCase,
+    private val syncScheduler: com.inventario.mobile.sync.SyncScheduler
 ) : ViewModel() {
     
     private val _state = MutableStateFlow<ColetaState>(ColetaState.Idle)
@@ -60,6 +61,9 @@ class ColetaViewModelClean @Inject constructor(
             ).fold(
                 onSuccess = { coleta ->
                     _state.value = ColetaState.Success(coleta)
+                    
+                    // Incrementar contador de coletas para sincronização automática
+                    syncScheduler.incrementCollectionCount()
                 },
                 onFailure = { error ->
                     _state.value = ColetaState.Error(

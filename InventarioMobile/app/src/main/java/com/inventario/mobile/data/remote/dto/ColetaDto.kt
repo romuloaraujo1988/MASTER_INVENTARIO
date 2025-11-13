@@ -46,6 +46,12 @@ data class ColetaDto(
     @SerializedName("nomeColetor")
     val nomeColetor: String?,
     
+    @SerializedName("usuarioId")
+    val usuarioIdCamel: Int? = null,  // Versão camelCase do backend
+    
+    @SerializedName("patrimonioId")
+    val patrimonioIdCamel: Int? = null,  // Versão camelCase do backend
+    
     @SerializedName("semEtiqueta")
     val semEtiqueta: Boolean?,
     

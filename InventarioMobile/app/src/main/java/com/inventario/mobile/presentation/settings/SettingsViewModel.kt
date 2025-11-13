@@ -10,7 +10,8 @@ import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     private val preferencesManager: PreferencesManager,
-    private val inventarioRepository: InventarioRepository
+    private val inventarioRepository: InventarioRepository,
+    private val syncScheduler: com.inventario.mobile.sync.SyncScheduler
 ) : ViewModel() {
 
     private val _syncResult = MutableLiveData<String>()
@@ -24,12 +25,24 @@ class SettingsViewModel(
     
     fun setAutoSyncEnabled(enabled: Boolean) {
         preferencesManager.setAutoSyncEnabled(enabled)
+        
+        // Agendar ou cancelar sincronização periódica
+        if (enabled) {
+            syncScheduler.schedulePeriodicSync()
+        } else {
+            syncScheduler.cancelPeriodicSync()
+        }
     }
     
     fun getSyncInterval(): Int = preferencesManager.getSyncInterval()
     
     fun setSyncInterval(intervalMinutes: Int) {
         preferencesManager.setSyncInterval(intervalMinutes)
+        
+        // Reagendar sincronização com novo intervalo
+        if (isAutoSyncEnabled()) {
+            syncScheduler.reschedulePeriodicSync()
+        }
     }
     
     // Auto sync by count
@@ -56,6 +69,11 @@ class SettingsViewModel(
     
     fun setWifiOnlyEnabled(enabled: Boolean) {
         preferencesManager.setWifiOnlySyncEnabled(enabled)
+        
+        // Reagendar sincronização com nova constraint
+        if (isAutoSyncEnabled()) {
+            syncScheduler.reschedulePeriodicSync()
+        }
     }
     
     // Test sync
@@ -65,16 +83,12 @@ class SettingsViewModel(
                 _isLoading.value = true
                 _syncResult.value = "Iniciando sincronização..."
                 
-                val result = inventarioRepository.syncData()
+                // Executar sincronização imediata via WorkManager
+                syncScheduler.syncNow(byCount = false)
                 
-                if (result.isSuccess) {
-                    _syncResult.value = "Sincronização realizada com sucesso!"
-                } else {
-                    val exception = result.exceptionOrNull()
-                    _syncResult.value = "Erro na sincronização: ${exception?.message ?: "Erro desconhecido"}"
-                }
+                _syncResult.value = "Sincronização agendada! Verifique as notificações."
             } catch (e: Exception) {
-                _syncResult.value = "Erro na sincronização: ${e.message}"
+                _syncResult.value = "Erro ao agendar sincronização: ${e.message}"
             } finally {
                 _isLoading.value = false
             }

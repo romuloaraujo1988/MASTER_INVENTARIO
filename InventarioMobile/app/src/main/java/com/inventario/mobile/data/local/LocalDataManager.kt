@@ -60,28 +60,49 @@ class LocalDataManager(context: Context) {
     suspend fun getCurrentUser(): com.inventario.mobile.data.model.Usuario? {
         return try {
             val userJson = sharedPreferences.getString(KEY_USER_JSON, null)
+            android.util.Log.d("LocalDataManager", "═══════════════════════════════════════════")
+            android.util.Log.d("LocalDataManager", "RECUPERANDO USUÁRIO")
+            android.util.Log.d("LocalDataManager", "JSON armazenado: $userJson")
+            
             if (userJson != null) {
-                gson.fromJson(userJson, com.inventario.mobile.data.model.Usuario::class.java)
+                val usuario = gson.fromJson(userJson, com.inventario.mobile.data.model.Usuario::class.java)
+                android.util.Log.d("LocalDataManager", "Usuário deserializado - ID: ${usuario.id}, Nome: ${usuario.nome}")
+                android.util.Log.d("LocalDataManager", "═══════════════════════════════════════════")
+                usuario
             } else {
+                android.util.Log.w("LocalDataManager", "Nenhum JSON de usuário encontrado")
+                android.util.Log.d("LocalDataManager", "═══════════════════════════════════════════")
                 null
             }
         } catch (e: Exception) {
             android.util.Log.e("LocalDataManager", "Erro ao deserializar usuário", e)
+            android.util.Log.d("LocalDataManager", "═══════════════════════════════════════════")
             null
         }
     }
     
     fun saveCurrentUser(usuario: com.inventario.mobile.data.model.Usuario) {
         try {
+            android.util.Log.d("LocalDataManager", "═══════════════════════════════════════════")
+            android.util.Log.d("LocalDataManager", "SALVANDO USUÁRIO")
+            android.util.Log.d("LocalDataManager", "ID recebido: ${usuario.id} (tipo: ${usuario.id.javaClass.simpleName})")
+            android.util.Log.d("LocalDataManager", "Nome: ${usuario.nome}")
+            
             val userJson = gson.toJson(usuario)
+            android.util.Log.d("LocalDataManager", "JSON gerado: $userJson")
+            
+            val idInt = usuario.id.toInt()
+            android.util.Log.d("LocalDataManager", "ID convertido para Int: $idInt")
+            
             sharedPreferences.edit()
                 .putString(KEY_USER_JSON, userJson)
                 .putString(KEY_TOKEN, usuario.accessToken)
-                .putInt(KEY_USER_ID, usuario.id.toInt())
+                .putInt(KEY_USER_ID, idInt)
                 .putString(KEY_USER_NAME, usuario.nome)
                 .apply()
             
             android.util.Log.d("LocalDataManager", "✓ Usuário salvo: ${usuario.nome} (ID: ${usuario.id})")
+            android.util.Log.d("LocalDataManager", "═══════════════════════════════════════════")
         } catch (e: Exception) {
             android.util.Log.e("LocalDataManager", "Erro ao salvar usuário", e)
         }

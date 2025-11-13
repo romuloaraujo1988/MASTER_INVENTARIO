@@ -30,6 +30,7 @@ class CollectionViewViewModelPaginated(
         val salas: List<String> = emptyList(),
         val salaSelecionada: String? = null,
         val filtroUsuario: FiltroUsuario = FiltroUsuario.TODAS,
+        val filtroStatus: FiltroStatus = FiltroStatus.TODOS,
         val usuarioAtualId: Int? = null,
         val totalColetas: Int = 0,
         val sincronizadas: Int = 0,
@@ -44,6 +45,12 @@ class CollectionViewViewModelPaginated(
     enum class FiltroUsuario {
         TODAS,
         MINHAS
+    }
+    
+    enum class FiltroStatus {
+        TODOS,
+        SINCRONIZADOS,
+        PENDENTES
     }
 
     private val _uiState = MutableStateFlow(UiState())
@@ -157,6 +164,7 @@ class CollectionViewViewModelPaginated(
         val current = _uiState.value
         applyFilters(
             filtroUsuario = filtro,
+            filtroStatus = current.filtroStatus,
             salaSelecionada = current.salaSelecionada
         )
     }
@@ -164,11 +172,20 @@ class CollectionViewViewModelPaginated(
     fun filterBySala(sala: String?) {
         applyFilters(
             filtroUsuario = _uiState.value.filtroUsuario,
+            filtroStatus = _uiState.value.filtroStatus,
             salaSelecionada = sala
         )
     }
     
-    private fun applyFilters(filtroUsuario: FiltroUsuario, salaSelecionada: String?) {
+    fun filterByStatus(filtro: FiltroStatus) {
+        applyFilters(
+            filtroUsuario = _uiState.value.filtroUsuario,
+            filtroStatus = filtro,
+            salaSelecionada = _uiState.value.salaSelecionada
+        )
+    }
+    
+    private fun applyFilters(filtroUsuario: FiltroUsuario, filtroStatus: FiltroStatus, salaSelecionada: String?) {
         val current = _uiState.value
         
         // Aplicar filtro de usuário
@@ -179,6 +196,13 @@ class CollectionViewViewModelPaginated(
                     current.coletas.filter { it.usuarioId == userId }
                 } ?: current.coletas
             }
+        }
+        
+        // Aplicar filtro de status
+        filtered = when (filtroStatus) {
+            FiltroStatus.TODOS -> filtered
+            FiltroStatus.SINCRONIZADOS -> filtered.filter { it.sincronizado }
+            FiltroStatus.PENDENTES -> filtered.filter { !it.sincronizado }
         }
         
         // Aplicar filtro de sala
@@ -195,6 +219,7 @@ class CollectionViewViewModelPaginated(
             filteredColetas = filtered,
             salaSelecionada = salaSelecionada,
             filtroUsuario = filtroUsuario,
+            filtroStatus = filtroStatus,
             sincronizadas = sincronizadas,
             pendentes = pendentes
         )

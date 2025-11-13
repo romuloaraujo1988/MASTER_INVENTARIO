@@ -26,8 +26,11 @@ class SettingsActivity : AppCompatActivity() {
         val apiService = com.inventario.mobile.data.remote.api.ApiClient.getApiService(this)
         val inventarioRepository = InventarioRepository.getInstance(this, apiService)
         
+        // Inicializar SyncScheduler
+        val syncScheduler = com.inventario.mobile.sync.SyncScheduler(this, preferencesManager)
+        
         // Inicializar ViewModel com factory
-        val factory = SettingsViewModelFactory(preferencesManager, inventarioRepository)
+        val factory = SettingsViewModelFactory(preferencesManager, inventarioRepository, syncScheduler)
         viewModel = ViewModelProvider(this, factory)[SettingsViewModel::class.java]
         
         setupToolbar()
