@@ -36,7 +36,7 @@ class DatabaseCleanupWorker(
             val thirtyDaysAgo = System.currentTimeMillis() - RETENTION_PERIOD_MS
             
             // Deletar coletas sincronizadas antigas
-            val deletedColetas = database.coletaDao().deleteOldSyncedColetas(thirtyDaysAgo)
+            val deletedColetas = database.coletaDao().limparSincronizadasAntigas(thirtyDaysAgo)
             Log.d(TAG, "Deletadas $deletedColetas coletas antigas")
             
             // Limpar cache de arquivos

@@ -16,10 +16,11 @@ class RegistrarColetaUseCase @Inject constructor(
     suspend operator fun invoke(
         numeroPatrimonio: String,
         localizacaoAtual: String?,
-        observacoes: String?,
-        latitude: Double?,
-        longitude: Double?,
-        idUsuario: Long
+        estadoEncontrado: String? = null,
+        observacoes: String? = null,
+        latitude: Double? = null,
+        longitude: Double? = null,
+        idUsuario: Long? = null
     ): Result<Coleta> {
         return try {
             // 1. Validar entrada
@@ -36,12 +37,12 @@ class RegistrarColetaUseCase @Inject constructor(
             // 4. Criar coleta
             val coleta = Coleta(
                 id = 0,
-                patrimonioId = patrimonio.id, // já é Long
-                usuarioId = idUsuario,
+                patrimonioId = patrimonio.id,
+                usuarioId = idUsuario ?: 0L, // TODO: Obter do contexto de autenticação
                 dataColeta = System.currentTimeMillis(),
                 localizacaoAtual = localizacaoAtual,
                 observacoes = observacoes,
-                status = "COLETADO",
+                status = estadoEncontrado ?: "COLETADO",
                 latitude = latitude,
                 longitude = longitude,
                 sincronizado = false

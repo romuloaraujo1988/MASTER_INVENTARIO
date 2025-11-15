@@ -2,8 +2,8 @@ package com.inventario.util;
 
 import com.inventario.dao.PatrimonioDAO;
 import com.inventario.dao.ResponsavelDAO;
-import com.inventario.dao.SalaDAORefactored;
-import com.inventario.dao.SetorDAORefactored;
+import com.inventario.dao.SalaDAO;
+import com.inventario.dao.SetorDAO;
 import com.inventario.model.Patrimonio;
 import com.inventario.model.Responsavel;
 import com.inventario.model.Sala;
@@ -30,8 +30,8 @@ public class ImportacaoExcel {
     // DAOs para acesso aos dados
     private final PatrimonioDAO patrimonioDAO;
     private final ResponsavelDAO responsavelDAO;
-    private final SalaDAORefactored salaDAO;
-    private final SetorDAORefactored setorDAO;
+    private final SalaDAO salaDAO;
+    private final SetorDAO setorDAO;
 
     // Cache para otimização
     private final Map<String, Responsavel> cacheResponsaveis = new HashMap<>();
@@ -51,8 +51,8 @@ public class ImportacaoExcel {
     public ImportacaoExcel() {
         this.patrimonioDAO = new PatrimonioDAO();
         this.responsavelDAO = new ResponsavelDAO();
-        this.salaDAO = new SalaDAORefactored();
-        this.setorDAO = new SetorDAORefactored();
+        this.salaDAO = new SalaDAO();
+        this.setorDAO = new SetorDAO();
     }
 
     /**

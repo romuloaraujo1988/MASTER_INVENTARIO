@@ -1,6 +1,6 @@
 package com.inventario.service;
 
-import com.inventario.dao.SalaDAORefactored;
+import com.inventario.dao.SalaDAO;
 import com.inventario.model.Sala;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,13 +25,13 @@ public class SalaService {
     private static final Logger logger = LoggerFactory.getLogger(SalaService.class);
     
     @Autowired
-    private SalaDAORefactored salaDAO;
+    private SalaDAO salaDAO;
     
     public SalaService() {
-        this.salaDAO = new SalaDAORefactored();
+        this.salaDAO = new SalaDAO();
     }
     
-    public SalaService(SalaDAORefactored salaDAO) {
+    public SalaService(SalaDAO salaDAO) {
         this.salaDAO = salaDAO;
     }
     

@@ -13,11 +13,8 @@ interface ColetaDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun inserir(coleta: ColetaEntity): Long
     
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(coleta: ColetaEntity): Long
-    
     @Query("UPDATE coleta SET sincronizado = :sincronizado, servidorId = :servidorId WHERE id = :id")
-    suspend fun updateSincronizado(id: Long, sincronizado: Boolean, servidorId: Int)
+    suspend fun atualizarSincronizado(id: Long, sincronizado: Boolean, servidorId: Int)
     
     @Query("SELECT * FROM coleta WHERE sincronizado = 0 ORDER BY dataColeta ASC")
     suspend fun buscarPendentes(): List<ColetaEntity>
@@ -25,14 +22,20 @@ interface ColetaDao {
     @Query("SELECT * FROM coleta WHERE sincronizado = 0")
     fun observarPendentes(): Flow<List<ColetaEntity>>
     
+    @Query("SELECT * FROM coleta ORDER BY dataColeta DESC")
+    suspend fun buscarTodas(): List<ColetaEntity>
+    
     @Query("SELECT COUNT(*) FROM coleta WHERE sincronizado = 0")
     fun observarQuantidadePendentes(): Flow<Int>
     
-    @Query("UPDATE coleta SET sincronizado = 1 WHERE id = :id")
-    suspend fun marcarSincronizada(id: Long)
+    @Query("SELECT COUNT(*) FROM coleta WHERE sincronizado = 0")
+    suspend fun contarPendentes(): Int
+    
+    @Query("UPDATE coleta SET sincronizado = 1, servidorId = :servidorId WHERE id = :id")
+    suspend fun marcarSincronizada(id: Long, servidorId: Long? = null)
     
     @Query("UPDATE coleta SET tentativasSincronizacao = tentativasSincronizacao + 1, erroSincronizacao = :erro WHERE id = :id")
-    suspend fun registrarErroSincronizacao(id: Long, erro: String)
+    suspend fun registrarErroSincronizacao(id: Long, erro: String?)
     
     @Query("DELETE FROM coleta WHERE id = :id")
     suspend fun deletar(id: Long)
@@ -40,30 +43,14 @@ interface ColetaDao {
     @Query("DELETE FROM coleta WHERE sincronizado = 1")
     suspend fun limparSincronizadas()
     
+    @Query("DELETE FROM coleta WHERE sincronizado = 1 AND dataColeta < :timestamp")
+    suspend fun limparSincronizadasAntigas(timestamp: Long): Int
+    
     @Query("SELECT * FROM coleta ORDER BY dataColeta DESC LIMIT :limit")
     suspend fun buscarRecentes(limit: Int): List<ColetaEntity>
     
     @Query("SELECT COUNT(*) FROM coleta")
     suspend fun contarTodas(): Int
-    
-    @Query("SELECT * FROM coleta WHERE sincronizado = 0")
-    suspend fun getColetasPendentes(): List<ColetaEntity>
-    
-    @Query("DELETE FROM coleta WHERE sincronizado = 1 AND dataColeta < :timestamp")
-    suspend fun deleteOldSyncedColetas(timestamp: Long): Int
-    
-    // Métodos para sincronização
-    @Query("SELECT * FROM coleta WHERE sincronizado = 0 ORDER BY dataColeta ASC")
-    suspend fun getPendentes(): List<ColetaEntity>
-    
-    @Query("SELECT COUNT(*) FROM coleta WHERE sincronizado = 0")
-    suspend fun countPendentes(): Int
-    
-    @Query("UPDATE coleta SET sincronizado = 1, servidorId = :servidorId WHERE id = :id")
-    suspend fun marcarSincronizada(id: Long, servidorId: Long?)
-    
-    @Query("UPDATE coleta SET tentativasSincronizacao = tentativasSincronizacao + 1, erroSincronizacao = :erro WHERE id = :id")
-    suspend fun incrementarTentativas(id: Long, erro: String?)
     
     // ========================================
     // Queries para Gráficos

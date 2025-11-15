@@ -1,0 +1,74 @@
+package com.inventario.mobile.domain.usecase
+
+import android.util.Log
+import com.inventario.mobile.data.model.Coleta
+import com.inventario.mobile.data.remote.api.ApiService
+import javax.inject.Inject
+
+/**
+ * Use Case: Buscar coletas do servidor
+ * 
+ * Responsabilidade: Buscar coletas do servidor com todos os campos preenchidos
+ * 
+ * MUDANÇA: Agora busca do servidor ao invés do banco local para garantir dados corretos
+ */
+class BuscarColetasUseCase @Inject constructor(
+    private val apiService: ApiService
+) {
+    companion object {
+        private const val TAG = "BuscarColetasUseCase"
+    }
+    
+    /**
+     * Busca todas as coletas do servidor com dados completos
+     * 
+     * @return Result com lista de coletas (data.model) ou erro
+     */
+    suspend operator fun invoke(): Result<List<Coleta>> {
+        return try {
+            Log.d(TAG, "Buscando coletas do servidor...")
+            
+            val response = apiService.buscarTodasColetasSemPaginacao()
+            
+            if (response.isSuccessful && response.body() != null) {
+                val apiResponse = response.body()!!
+                
+                if (apiResponse.success && apiResponse.data != null) {
+                    val coletas = apiResponse.data.map { dto ->
+                        // Log para debug
+                        Log.d(TAG, "Mapeando coleta ${dto.id}: localizacaoEncontrada='${dto.localizacaoEncontrada}', nomeSala='${dto.nomeSala}'")
+                        
+                        Coleta(
+                            id = dto.id?.toInt(),
+                            patrimonioId = dto.patrimonioId,
+                            numeroPatrimonio = dto.numeroPatrimonio,
+                            descricaoPatrimonio = dto.descricaoPatrimonio,
+                            usuarioId = dto.usuarioId,
+                            nomeColetor = dto.nomeColetor,
+                            dataColeta = dto.dataColeta ?: "",
+                            nomeSala = dto.nomeSala,
+                            // CORREÇÃO: usar localizacaoEncontrada do DTO (campo correto do servidor)
+                            localizacaoAtual = dto.localizacaoEncontrada ?: dto.nomeSala,
+                            observacoes = dto.observacoes,
+                            sincronizado = true, // Dados do servidor são sempre sincronizados
+                            estadoEncontrado = dto.estadoEncontrado,
+                            status = dto.statusColeta
+                        )
+                    }
+                    
+                    Log.d(TAG, "✓ ${coletas.size} coletas carregadas do servidor")
+                    Result.success(coletas)
+                } else {
+                    Log.w(TAG, "API retornou success=false ou data=null")
+                    Result.failure(Exception("Erro ao buscar coletas do servidor"))
+                }
+            } else {
+                Log.e(TAG, "Erro HTTP ${response.code()}")
+                Result.failure(Exception("Erro HTTP: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao buscar coletas", e)
+            Result.failure(e)
+        }
+    }
+}

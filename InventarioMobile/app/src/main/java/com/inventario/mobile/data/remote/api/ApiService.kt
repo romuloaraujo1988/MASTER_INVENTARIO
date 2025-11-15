@@ -10,32 +10,32 @@ import retrofit2.http.*
 interface ApiService {
 
     // Autenticação
-    @POST("api/mobile/auth/login")
+    @POST("auth/login")
     suspend fun login(@Body loginRequest: LoginRequest): Response<MobileLoginResponseDto>
 
-    @POST("api/mobile/auth/refresh")
+    @POST("auth/refresh")
     suspend fun refreshToken(@Body refreshRequest: RefreshTokenRequest): Response<MobileLoginResponseDto>
 
     // Patrimônios
-    @GET("api/mobile/patrimonio")
+    @GET("patrimonio")
     suspend fun getPatrimonios(): Response<ApiResponse<List<MobilePatrimonioDto>>>
 
-    @GET("api/mobile/patrimonio")
+    @GET("patrimonio")
     suspend fun getAllPatrimonios(
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 100
     ): Response<ApiResponse<List<MobilePatrimonioDto>>>
 
-    @GET("api/mobile/patrimonio/{id}")
+    @GET("patrimonio/{id}")
     suspend fun getPatrimonioById(@Path("id") id: Long): Response<ApiResponse<MobilePatrimonioDto>>
 
-    @GET("api/mobile/patrimonio/numero/{numero}")
+    @GET("patrimonio/numero/{numero}")
     suspend fun getPatrimonioByNumero(@Path("numero") numero: String): Response<ApiResponse<MobilePatrimonioDto>>
 
-    @GET("api/mobile/patrimonio/qr/{qrCode}")
+    @GET("patrimonio/qr/{qrCode}")
     suspend fun getPatrimonioByQrCode(@Path("qrCode") qrCode: String): Response<ApiResponse<MobilePatrimonioDto>>
 
-    @GET("api/mobile/patrimonio/responsavel/{responsavelId}")
+    @GET("patrimonio/responsavel/{responsavelId}")
     suspend fun getPatrimoniosByResponsavel(
         @Path("responsavelId") responsavelId: Int,
         @Query("page") page: Int = 0,
@@ -43,105 +43,108 @@ interface ApiService {
         @Query("coletado") coletado: Boolean? = null
     ): Response<ApiResponse<List<MobilePatrimonioDto>>>
 
-    @GET("api/mobile/patrimonio/responsavel/{responsavelId}/count")
+    @GET("patrimonio/responsavel/{responsavelId}/count")
     suspend fun countPatrimoniosByResponsavel(@Path("responsavelId") responsavelId: Int): Response<ApiResponse<Int>>
 
-    @POST("api/mobile/patrimonio")
+    @POST("patrimonio")
     suspend fun createPatrimonio(@Body patrimonio: PatrimonioDto): PatrimonioDto
 
-    @PUT("api/mobile/patrimonio/{id}")
+    @PUT("patrimonio/{id}")
     suspend fun updatePatrimonio(@Path("id") id: Long, @Body patrimonio: PatrimonioDto): PatrimonioDto
 
-    @DELETE("api/mobile/patrimonio/{id}")
+    @DELETE("patrimonio/{id}")
     suspend fun deletePatrimonio(@Path("id") id: Long): Response<Unit>
 
     // Setores
-    @GET("api/mobile/setores")
+    @GET("setores")
     suspend fun getSetores(): List<SetorDto>
 
-    @GET("api/mobile/setores/{id}")
+    @GET("setores/{id}")
     suspend fun getSetorById(@Path("id") id: Long): SetorDto
 
     // Salas
-    @GET("api/mobile/salas")
+    @GET("salas")
     suspend fun getSalas(): List<SalaDto>
 
-    @GET("api/mobile/salas")
+    @GET("salas")
     suspend fun getSalasWithResponse(): Response<ApiResponse<List<SalaDto>>>
     
-    @GET("api/mobile/salas")
+    @GET("salas")
     suspend fun getSalasPaginadas(
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
     ): Response<ApiResponse<List<SalaDto>>>
 
-    @GET("api/mobile/salas/{id}")
+    @GET("salas/{id}")
     suspend fun getSalaById(@Path("id") id: Long): SalaDto
 
-    @GET("api/mobile/salas/setor/{setorId}")
+    @GET("salas/setor/{setorId}")
     suspend fun getSalasBySetor(@Path("setorId") setorId: Long): List<SalaDto>
 
     // Usuários
-    @GET("api/mobile/usuarios")
+    @GET("usuarios")
     suspend fun getUsuarios(): List<UsuarioDto>
 
-    @GET("api/mobile/usuarios/{id}")
+    @GET("usuarios/{id}")
     suspend fun getUsuarioById(@Path("id") id: Long): UsuarioDto
 
     // Coletas
-    @GET("api/mobile/coletas/all")
+    @GET("coletas/all")
     suspend fun getColetas(): Response<ApiResponse<List<ColetaDto>>>
     
-    @GET("api/mobile/coletas")
+    @GET("coletas/all")
+    suspend fun buscarTodasColetasSemPaginacao(): Response<ApiResponse<List<MobileColetaResponseDto>>>
+    
+    @GET("coletas")
     suspend fun getColetasPaginadas(
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 20
     ): Response<ApiResponse<PagedResponse<ColetaDto>>>
 
-    @POST("api/mobile/coletas")
+    @POST("coletas")
     suspend fun createColeta(@Body coleta: MobileColetaRequest): Response<ApiResponse<ColetaDto>>
 
-    @PUT("api/mobile/coletas/{id}")
+    @PUT("coletas/{id}")
     suspend fun updateColeta(@Path("id") id: Long, @Body coleta: MobileColetaRequest): Response<ApiResponse<ColetaDto>>
 
     // Responsáveis
-    @GET("api/mobile/responsaveis")
+    @GET("responsaveis")
     suspend fun getResponsaveis(): Response<ApiResponse<List<ResponsavelDto>>>
 
-    @GET("api/mobile/responsaveis/{id}")
+    @GET("responsaveis/{id}")
     suspend fun getResponsavelById(@Path("id") id: Int): Response<ApiResponse<ResponsavelDto>>
 
     // Sincronização
-    @GET("api/mobile/sync/status")
+    @GET("sync/status")
     suspend fun getSyncStatus(): SyncStatusResponse
 
-    @POST("api/mobile/sync/upload")
+    @POST("sync/upload")
     suspend fun uploadData(@Body syncData: SyncDataRequest): Response<SyncDataResponse>
 
-    @GET("api/mobile/sync/download")
+    @GET("sync/download")
     suspend fun downloadData(@Query("lastSync") lastSync: String?): SyncDataResponse
 
     // Descrições
-    @GET("api/mobile/descricoes")
+    @GET("descricoes")
     suspend fun getDescricoes(): Response<ApiResponse<List<Map<String, Any>>>>
 
-    @GET("api/mobile/descricoes/buscar")
+    @GET("descricoes/buscar")
     suspend fun searchDescricoes(@Query("termo") termo: String): Response<ApiResponse<List<Map<String, Any>>>>
     
-    @GET("api/mobile/descricoes/nao-coletadas")
+    @GET("descricoes/nao-coletadas")
     suspend fun getDescricoesNaoColetadas(@Query("idInventario") idInventario: Int? = null): Response<ApiResponse<List<String>>>
 
     // Inventários
-    @GET("api/mobile/test/inventarios-ativos")
+    @GET("test/inventarios-ativos")
     suspend fun obterInventarioAtivo(): Response<ApiResponse<Map<String, Any>>>
     
     // Dashboard
-    @GET("api/mobile/dashboard/stats")
+    @GET("dashboard/stats")
     suspend fun getDashboardStats(): Response<ApiResponse<DashboardStatsDto>>
     
-    @GET("api/mobile/dashboard/stats/{inventarioId}")
+    @GET("dashboard/stats/{inventarioId}")
     suspend fun getDashboardStatsByInventario(@Path("inventarioId") inventarioId: Int): Response<ApiResponse<DashboardStatsDto>>
     
-    @GET("api/mobile/dashboard/coletas-evolucao")
+    @GET("dashboard/coletas-evolucao")
     suspend fun getColetasEvolucao(@Query("dias") dias: Int = 7): Response<ApiResponse<List<ColetasPorDiaDto>>>
 }

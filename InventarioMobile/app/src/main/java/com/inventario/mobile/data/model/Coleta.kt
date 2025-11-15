@@ -41,6 +41,8 @@ data class Coleta(
         fun fromDto(dto: com.inventario.mobile.data.remote.dto.ColetaDto): Coleta {
             val usuarioId = dto.usuarioIdCamel ?: dto.usuarioId ?: 0
             android.util.Log.d("Coleta.fromDto", "Convertendo DTO - ID: ${dto.id}, usuarioIdCamel: ${dto.usuarioIdCamel}, usuarioId: ${dto.usuarioId}, resultado: $usuarioId")
+            android.util.Log.d("Coleta.fromDto", "  localizacaoEncontrada: '${dto.localizacaoEncontrada}'")
+            android.util.Log.d("Coleta.fromDto", "  nomeSala: '${dto.nomeSala}'")
             
             return Coleta(
                 id = dto.id,

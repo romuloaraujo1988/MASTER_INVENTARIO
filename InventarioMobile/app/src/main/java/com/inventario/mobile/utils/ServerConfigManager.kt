@@ -350,7 +350,7 @@ class ServerConfigManager private constructor(private val context: Context) {
 
     // Métodos privados
     private fun buildBaseUrl(protocol: String, ip: String, port: Int): String {
-        return "$protocol://$ip:$port$DEFAULT_CONTEXT_PATH"
+        return "$protocol://$ip:$port$DEFAULT_CONTEXT_PATH$DEFAULT_API_PATH"
     }
 
     private fun saveServerConfig(ip: String, port: Int, useHttps: Boolean) {

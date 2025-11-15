@@ -1,7 +1,7 @@
 package com.inventario.view;
 
-import com.inventario.dao.SalaDAORefactored;
-import com.inventario.dao.SetorDAORefactored;
+import com.inventario.dao.SalaDAO;
+import com.inventario.dao.SetorDAO;
 import com.inventario.model.Sala;
 import com.inventario.model.Setor;
 import com.inventario.util.*;
@@ -17,8 +17,8 @@ import java.util.List;
 public class SalaFormDialogRefactored extends JDialog {
     
     private Sala sala;
-    private SalaDAORefactored salaDAO;
-    private SetorDAORefactored setorDAO;
+    private SalaDAO salaDAO;
+    private SetorDAO setorDAO;
     private boolean salvo = false;
     
     // Componentes do formulário
@@ -32,7 +32,7 @@ public class SalaFormDialogRefactored extends JDialog {
     private JComboBox<String> cmbTipoSala;
     private JTextArea txtObservacoes;
     
-    public SalaFormDialogRefactored(Frame parent, Sala sala, SalaDAORefactored salaDAO, SetorDAORefactored setorDAO) {
+    public SalaFormDialogRefactored(Frame parent, Sala sala, SalaDAO salaDAO, SetorDAO setorDAO) {
         super(parent, sala == null ? "Nova Sala" : "Editar Sala", true);
         this.sala = sala;
         this.salaDAO = salaDAO;

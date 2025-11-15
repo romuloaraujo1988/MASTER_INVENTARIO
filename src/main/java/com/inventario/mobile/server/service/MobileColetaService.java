@@ -3,7 +3,7 @@ package com.inventario.mobile.server.service;
 import com.inventario.dao.ColetaDAO;
 import com.inventario.dao.InventarioDAO;
 import com.inventario.dao.PatrimonioDAO;
-import com.inventario.dao.UsuarioDAORefactored;
+import com.inventario.dao.UsuarioDAO;
 import com.inventario.dao.ParticipanteInventarioDAO;
 import com.inventario.model.Coleta;
 import com.inventario.model.Inventario;
@@ -39,14 +39,14 @@ public class MobileColetaService {
     private final ColetaDAO coletaDAO;
     private final PatrimonioDAO patrimonioDAO;
     private final InventarioDAO inventarioDAO;
-    private final UsuarioDAORefactored usuarioDAO;
+    private final UsuarioDAO usuarioDAO;
     private final ParticipanteInventarioDAO participanteInventarioDAO;
 
     public MobileColetaService() {
         this.coletaDAO = new ColetaDAO();
         this.patrimonioDAO = new PatrimonioDAO();
         this.inventarioDAO = new InventarioDAO();
-        this.usuarioDAO = new UsuarioDAORefactored();
+        this.usuarioDAO = new UsuarioDAO();
         this.participanteInventarioDAO = new ParticipanteInventarioDAO();
     }
 

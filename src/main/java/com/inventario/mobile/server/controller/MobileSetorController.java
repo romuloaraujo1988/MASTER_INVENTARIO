@@ -2,7 +2,7 @@ package com.inventario.mobile.server.controller;
 
 import com.inventario.mobile.server.dto.ApiResponse;
 import com.inventario.model.Setor;
-import com.inventario.dao.SetorDAORefactored;
+import com.inventario.dao.SetorDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +28,7 @@ public class MobileSetorController {
     private static final Logger logger = LoggerFactory.getLogger(MobileSetorController.class);
     
     @Autowired
-    private SetorDAORefactored setorDAO;
+    private SetorDAO setorDAO;
     
     /**
      * Listar todos os setores ativos

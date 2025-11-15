@@ -25,10 +25,31 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
             _uiState.value = _uiState.value.copy(isLoading = true)
             
             try {
-                val stats = repository.getDashboardStats()
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    dashboardStats = stats
+                val result = repository.getDashboardStats()
+                result.fold(
+                    onSuccess = { repoStats ->
+                        // Converter DashboardStats do repository para DashboardStats da UI
+                        val stats = DashboardStats(
+                            patrimoniosColetados = repoStats.coletados,
+                            patrimoniosPendentes = repoStats.naoColetados,
+                            totalPatrimonios = repoStats.totalPatrimonios,
+                            percentualConcluido = repoStats.percentualColetado.toFloat(),
+                            percentualConclusao = repoStats.percentualColetado.toFloat(),
+                            coletoresAtivos = repoStats.coletoresAtivos,
+                            divergencias = repoStats.divergencias,
+                            valorTotal = repoStats.valorTotal
+                        )
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            dashboardStats = stats
+                        )
+                    },
+                    onFailure = { e ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            error = e.message
+                        )
+                    }
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(

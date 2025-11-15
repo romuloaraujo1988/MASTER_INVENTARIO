@@ -4,8 +4,6 @@ package com.inventario.mobile.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,38 +20,16 @@ public final class ItemSalaBinding implements ViewBinding {
   private final MaterialCardView rootView;
 
   @NonNull
-  public final ImageView imageViewArrow;
+  public final TextView tvSalaDescricao;
 
   @NonNull
-  public final ImageView imageViewSalaIcon;
+  public final TextView tvSalaNome;
 
-  @NonNull
-  public final LinearLayout layoutInfoAdicional;
-
-  @NonNull
-  public final TextView textViewSalaAndar;
-
-  @NonNull
-  public final TextView textViewSalaBloco;
-
-  @NonNull
-  public final TextView textViewSalaDescricao;
-
-  @NonNull
-  public final TextView textViewSalaNome;
-
-  private ItemSalaBinding(@NonNull MaterialCardView rootView, @NonNull ImageView imageViewArrow,
-      @NonNull ImageView imageViewSalaIcon, @NonNull LinearLayout layoutInfoAdicional,
-      @NonNull TextView textViewSalaAndar, @NonNull TextView textViewSalaBloco,
-      @NonNull TextView textViewSalaDescricao, @NonNull TextView textViewSalaNome) {
+  private ItemSalaBinding(@NonNull MaterialCardView rootView, @NonNull TextView tvSalaDescricao,
+      @NonNull TextView tvSalaNome) {
     this.rootView = rootView;
-    this.imageViewArrow = imageViewArrow;
-    this.imageViewSalaIcon = imageViewSalaIcon;
-    this.layoutInfoAdicional = layoutInfoAdicional;
-    this.textViewSalaAndar = textViewSalaAndar;
-    this.textViewSalaBloco = textViewSalaBloco;
-    this.textViewSalaDescricao = textViewSalaDescricao;
-    this.textViewSalaNome = textViewSalaNome;
+    this.tvSalaDescricao = tvSalaDescricao;
+    this.tvSalaNome = tvSalaNome;
   }
 
   @Override
@@ -83,51 +59,19 @@ public final class ItemSalaBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
-      id = R.id.imageViewArrow;
-      ImageView imageViewArrow = ViewBindings.findChildViewById(rootView, id);
-      if (imageViewArrow == null) {
+      id = R.id.tvSalaDescricao;
+      TextView tvSalaDescricao = ViewBindings.findChildViewById(rootView, id);
+      if (tvSalaDescricao == null) {
         break missingId;
       }
 
-      id = R.id.imageViewSalaIcon;
-      ImageView imageViewSalaIcon = ViewBindings.findChildViewById(rootView, id);
-      if (imageViewSalaIcon == null) {
+      id = R.id.tvSalaNome;
+      TextView tvSalaNome = ViewBindings.findChildViewById(rootView, id);
+      if (tvSalaNome == null) {
         break missingId;
       }
 
-      id = R.id.layoutInfoAdicional;
-      LinearLayout layoutInfoAdicional = ViewBindings.findChildViewById(rootView, id);
-      if (layoutInfoAdicional == null) {
-        break missingId;
-      }
-
-      id = R.id.textViewSalaAndar;
-      TextView textViewSalaAndar = ViewBindings.findChildViewById(rootView, id);
-      if (textViewSalaAndar == null) {
-        break missingId;
-      }
-
-      id = R.id.textViewSalaBloco;
-      TextView textViewSalaBloco = ViewBindings.findChildViewById(rootView, id);
-      if (textViewSalaBloco == null) {
-        break missingId;
-      }
-
-      id = R.id.textViewSalaDescricao;
-      TextView textViewSalaDescricao = ViewBindings.findChildViewById(rootView, id);
-      if (textViewSalaDescricao == null) {
-        break missingId;
-      }
-
-      id = R.id.textViewSalaNome;
-      TextView textViewSalaNome = ViewBindings.findChildViewById(rootView, id);
-      if (textViewSalaNome == null) {
-        break missingId;
-      }
-
-      return new ItemSalaBinding((MaterialCardView) rootView, imageViewArrow, imageViewSalaIcon,
-          layoutInfoAdicional, textViewSalaAndar, textViewSalaBloco, textViewSalaDescricao,
-          textViewSalaNome);
+      return new ItemSalaBinding((MaterialCardView) rootView, tvSalaDescricao, tvSalaNome);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

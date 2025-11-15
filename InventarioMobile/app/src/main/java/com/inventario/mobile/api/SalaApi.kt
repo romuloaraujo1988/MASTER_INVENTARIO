@@ -15,7 +15,7 @@ interface SalaApi {
     /**
      * Lista todas as salas (endpoint antigo, mantido para compatibilidade)
      */
-    @GET("salas")
+    @GET("api/mobile/salas")
     suspend fun listarSalas(): Response<ApiResponse<List<Sala>>>
     
     /**
@@ -25,7 +25,7 @@ interface SalaApi {
      * @param size Quantidade de itens por página
      * @return Resposta paginada com lista de salas
      */
-    @GET("salas/paginado")
+    @GET("api/mobile/salas")
     suspend fun listarSalasPaginado(
         @Query("page") page: Int,
         @Query("size") size: Int
@@ -39,7 +39,7 @@ interface SalaApi {
      * @param size Quantidade de itens por página
      * @return Resposta paginada com salas filtradas
      */
-    @GET("salas/buscar")
+    @GET("api/mobile/salas/buscar")
     suspend fun buscarSalasPorNome(
         @Query("query") query: String,
         @Query("page") page: Int,

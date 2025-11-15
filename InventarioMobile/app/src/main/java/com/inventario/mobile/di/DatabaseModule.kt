@@ -1,6 +1,7 @@
 package com.inventario.mobile.di
 
 import android.content.Context
+import com.inventario.mobile.data.local.LocalDataManager
 import com.inventario.mobile.data.local.dao.*
 import com.inventario.mobile.data.local.database.AppDatabase
 import dagger.Module
@@ -23,6 +24,14 @@ object DatabaseModule {
         @ApplicationContext context: Context
     ): AppDatabase {
         return AppDatabase.getInstance(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideLocalDataManager(
+        @ApplicationContext context: Context
+    ): LocalDataManager {
+        return LocalDataManager.getInstance(context)
     }
     
     @Provides

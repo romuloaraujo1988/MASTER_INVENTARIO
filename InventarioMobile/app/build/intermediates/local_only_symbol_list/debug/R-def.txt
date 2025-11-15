@@ -156,6 +156,7 @@ id btnManualCollection
 id btnQuickScan
 id btnRefresh
 id btnResetCollectionCount
+id btnRetry
 id btnRetryFailed
 id btnRollbackAll
 id btnRunDescricaoTest
@@ -177,8 +178,13 @@ id btnViewPending
 id btnViewStatistics
 id btnViewStatus
 id btnVoiceSearch
+id btn_download
+id btn_migrate
+id btn_sync_complete
+id btn_upload
 id buttonCancel
 id buttonClearFilters
+id buttonClearSearch
 id buttonColetar
 id buttonRetry
 id cameraPreview
@@ -241,8 +247,6 @@ id fabScanQr
 id fabSearch
 id fabVoiceSearch
 id fragment_container
-id imageViewArrow
-id imageViewSalaIcon
 id ivBiometricStatus
 id ivConnectionStatus
 id ivLogo
@@ -253,7 +257,6 @@ id ivUserAvatar
 id layoutEmptyState
 id layoutEstado
 id layoutFilters
-id layoutInfoAdicional
 id layoutLocalizacao
 id layoutLocation
 id layoutMarcaModelo
@@ -289,6 +292,7 @@ id progressBarInventario
 id progressBarSync
 id progressConclusao
 id progressOverlay
+id progress_bar
 id radioGroupEstado
 id recyclerView
 id recyclerViewColetas
@@ -299,6 +303,7 @@ id responsavelInputLayout
 id rvSearchResults
 id rvTimeline
 id scrollView
+id searchCard
 id searchView
 id spinnerResponsavel
 id spinnerSalas
@@ -335,10 +340,6 @@ id textViewNumero
 id textViewPendentesCount
 id textViewResponsavel
 id textViewSala
-id textViewSalaAndar
-id textViewSalaBloco
-id textViewSalaDescricao
-id textViewSalaNome
 id textViewSetor
 id textViewStatus
 id textViewTitle
@@ -368,6 +369,7 @@ id tvDataColeta
 id tvDescricao
 id tvDivergencias
 id tvEmpty
+id tvEndOfList
 id tvError
 id tvErrorCount
 id tvEstado
@@ -409,7 +411,9 @@ id tvRequirements
 id tvResponsaveisCount
 id tvResultCount
 id tvSala
+id tvSalaDescricao
 id tvSalaInfo
+id tvSalaNome
 id tvSalasCount
 id tvScanInstruction
 id tvSearchTime
@@ -440,6 +444,7 @@ id tvVersion
 id tvVoiceStatus
 id tvVoiceSuggestions
 id tvVoiceText
+id tv_status
 id viewPager
 id viewStatusIndicator
 id voiceListeningOverlay
@@ -461,6 +466,7 @@ layout activity_offline_sync
 layout activity_pending_collections
 layout activity_quick_search
 layout activity_sala_selection
+layout activity_sala_selection_paging
 layout activity_scanner
 layout activity_settings
 layout activity_simple_sala_selection
@@ -468,6 +474,7 @@ layout activity_smoke_test
 layout activity_splash
 layout activity_statistics
 layout activity_sync
+layout activity_sync_manual
 layout dialog_estado_patrimonio
 layout fragment_biometric_settings
 layout fragment_charts
@@ -480,6 +487,7 @@ layout fragment_statistics_overview
 layout fragment_statistics_rankings
 layout item_coleta
 layout item_descricao
+layout item_load_state
 layout item_loading
 layout item_patrimonio
 layout item_pending_coleta

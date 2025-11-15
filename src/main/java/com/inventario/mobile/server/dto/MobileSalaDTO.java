@@ -7,6 +7,7 @@ public class MobileSalaDTO {
     
     private Integer id;
     private String nome;
+    private String numeroSala; // Número da sala (campo principal)
     private String descricao;
     private String andar;
     private String bloco;
@@ -31,6 +32,14 @@ public class MobileSalaDTO {
     
     public void setNome(String nome) {
         this.nome = nome;
+    }
+    
+    public String getNumeroSala() {
+        return numeroSala;
+    }
+    
+    public void setNumeroSala(String numeroSala) {
+        this.numeroSala = numeroSala;
     }
     
     public String getDescricao() {

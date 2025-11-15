@@ -102,7 +102,7 @@ class SyncManager private constructor(private val context: Context) {
      * Verifica se há dados pendentes de sincronização
      */
     suspend fun hasPendingSync(): Boolean = withContext(Dispatchers.IO) {
-        val coletasPendentes = database.coletaDao().countPendentes()
+        val coletasPendentes = database.coletaDao().contarPendentes()
         Log.d(TAG, "Dados pendentes: $coletasPendentes coletas")
         return@withContext coletasPendentes > 0
     }
@@ -111,7 +111,7 @@ class SyncManager private constructor(private val context: Context) {
      * Obtém contagem de itens pendentes
      */
     suspend fun getPendingCount(): Int = withContext(Dispatchers.IO) {
-        return@withContext database.coletaDao().countPendentes()
+        return@withContext database.coletaDao().contarPendentes()
     }
     
     /**
@@ -130,7 +130,7 @@ class SyncManager private constructor(private val context: Context) {
             val coletaDao = database.coletaDao()
             
             // Buscar coletas pendentes
-            val coletasPendentes = coletaDao.getPendentes()
+            val coletasPendentes = coletaDao.buscarPendentes()
             Log.d(TAG, "Encontradas ${coletasPendentes.size} coletas pendentes")
             
             var sucessos = 0
@@ -161,12 +161,12 @@ class SyncManager private constructor(private val context: Context) {
                         sucessos++
                         Log.d(TAG, "Coleta ${coleta.id} sincronizada com sucesso (servidor ID: $servidorId)")
                     } else {
-                        coletaDao.incrementarTentativas(coleta.id, response.message())
+                        coletaDao.registrarErroSincronizacao(coleta.id, response.message())
                         falhas++
                         Log.w(TAG, "Falha ao sincronizar coleta ${coleta.id}: ${response.message()}")
                     }
                 } catch (e: Exception) {
-                    coletaDao.incrementarTentativas(coleta.id, e.message)
+                    coletaDao.registrarErroSincronizacao(coleta.id, e.message)
                     falhas++
                     Log.e(TAG, "Erro ao sincronizar coleta ${coleta.id}", e)
                 }

@@ -1,0 +1,419 @@
+package com.inventario.mobile.presentation.coleta
+
+import android.util.Log
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.inventario.mobile.data.model.Coleta
+import com.inventario.mobile.domain.usecase.BuscarColetasUseCase
+import com.inventario.mobile.domain.usecase.ObterUsuarioAtualUseCase
+import com.inventario.mobile.domain.usecase.RemoverColetaUseCase
+import com.inventario.mobile.presentation.state.CollectionViewState
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+/**
+ * ViewModel Clean Architecture para visualização de coletas
+ * 
+ * Responsabilidades:
+ * - Gerenciar estado da UI
+ * - Coordenar Use Cases
+ * - Aplicar filtros de usuário, status e sala
+ * - Notificar View sobre mudanças
+ */
+@HiltViewModel
+class CollectionViewViewModelClean @Inject constructor(
+    private val buscarColetasUseCase: BuscarColetasUseCase,
+    private val buscarColetasComFallbackUseCase: com.inventario.mobile.domain.usecase.BuscarColetasComFallbackUseCase,
+    private val obterUsuarioAtualUseCase: ObterUsuarioAtualUseCase,
+    private val removerColetaUseCase: RemoverColetaUseCase,
+    private val sincronizarColetasUseCase: com.inventario.mobile.domain.usecase.SincronizarColetasDoServidorUseCase,
+    private val coletaMigration: com.inventario.mobile.data.migration.ColetaMigration
+) : ViewModel() {
+
+    companion object {
+        private const val TAG = "CollectionViewVMClean"
+    }
+
+    enum class FiltroUsuario {
+        TODAS,
+        MINHAS
+    }
+    
+    enum class FiltroStatus {
+        TODOS,
+        SINCRONIZADOS,
+        PENDENTES
+    }
+
+    private val _state = MutableStateFlow<CollectionViewState>(CollectionViewState.Idle)
+    val state: StateFlow<CollectionViewState> = _state.asStateFlow()
+
+    // Filtros atuais
+    private var filtroUsuario: FiltroUsuario = FiltroUsuario.TODAS
+    private var filtroStatus: FiltroStatus = FiltroStatus.TODOS
+    private var salaSelecionada: String? = null
+    private var queryBusca: String = ""
+    
+    // Cache de coletas
+    private var todasColetas: List<Coleta> = emptyList()
+    private var usuarioAtualId: Int? = null
+    
+    /**
+     * Carrega todas as coletas
+     */
+    fun carregarColetas() {
+        viewModelScope.launch {
+            Log.d(TAG, "carregarColetas: Iniciando carregamento")
+            _state.value = CollectionViewState.Loading
+            
+            try {
+                // Verificar se precisa migração de coletas antigas
+                if (coletaMigration.precisaMigracao()) {
+                    Log.d(TAG, "⚠ Coletas antigas precisam de migração, executando...")
+                    coletaMigration.migrarColetasAntigas().fold(
+                        onSuccess = { result ->
+                            Log.d(TAG, "✓ Migração concluída: ${result.atualizadas} coletas atualizadas")
+                        },
+                        onFailure = { error ->
+                            Log.w(TAG, "Erro na migração de coletas antigas", error)
+                        }
+                    )
+                }
+                
+                // Obter usuário atual
+                val usuario = obterUsuarioAtualUseCase()
+                usuarioAtualId = usuario?.id?.toInt()
+                
+                Log.d(TAG, "═══════════════════════════════════════════")
+                Log.d(TAG, "USUÁRIO ATUAL")
+                Log.d(TAG, "Nome: ${usuario?.nome}")
+                Log.d(TAG, "ID: $usuarioAtualId")
+                Log.d(TAG, "═══════════════════════════════════════════")
+                
+                // Buscar coletas
+                buscarColetasUseCase().fold(
+                    onSuccess = { coletas ->
+                        Log.d(TAG, "═══════════════════════════════════════════")
+                        Log.d(TAG, "COLETAS CARREGADAS DO BANCO")
+                        Log.d(TAG, "Total de coletas: ${coletas.size}")
+                        coletas.take(5).forEach { coleta ->
+                            Log.d(TAG, "  Coleta ID=${coleta.id}, patrimonioId=${coleta.patrimonioId}, " +
+                                    "usuarioId=${coleta.usuarioId}, sincronizado=${coleta.sincronizado}")
+                        }
+                        Log.d(TAG, "═══════════════════════════════════════════")
+                        
+                        todasColetas = coletas
+                        
+                        // Calcular estatísticas
+                        val sincronizadas = coletas.count { it.sincronizado }
+                        val pendentes = coletas.size - sincronizadas
+                        
+                        // Extrair salas únicas
+                        // Prioridade: localizacaoAtual (vem de localizacaoEncontrada do servidor) > nomeSala
+                        val salasUnicas = coletas
+                            .mapNotNull { it.localizacaoAtual ?: it.nomeSala }
+                            .filter { it.isNotBlank() }
+                            .distinct()
+                            .sorted()
+                        
+                        Log.d(TAG, "Salas extraídas: $salasUnicas")
+                        
+                        Log.d(TAG, "Estatísticas:")
+                        Log.d(TAG, "  Total: ${coletas.size}")
+                        Log.d(TAG, "  Sincronizadas: $sincronizadas")
+                        Log.d(TAG, "  Pendentes: $pendentes")
+                        Log.d(TAG, "  Salas: ${salasUnicas.size}")
+                        
+                        // Aplicar filtros iniciais
+                        val filtradas = aplicarFiltros(coletas)
+                        
+                        _state.value = CollectionViewState.Success(
+                            coletas = coletas,
+                            filteredColetas = filtradas,
+                            salas = salasUnicas,
+                            totalColetas = filtradas.size,
+                            sincronizadas = filtradas.count { it.sincronizado },
+                            pendentes = filtradas.count { !it.sincronizado }
+                        )
+                    },
+                    onFailure = { error ->
+                        Log.e(TAG, "Erro ao carregar coletas", error)
+                        _state.value = CollectionViewState.Error(
+                            error.message ?: "Erro ao carregar coletas"
+                        )
+                    }
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro inesperado", e)
+                _state.value = CollectionViewState.Error(
+                    e.message ?: "Erro inesperado"
+                )
+            }
+        }
+    }
+    
+    /**
+     * Filtra coletas por usuário
+     */
+    fun filtrarPorUsuario(filtro: FiltroUsuario) {
+        Log.d(TAG, "filtrarPorUsuario: $filtro")
+        filtroUsuario = filtro
+        atualizarFiltros()
+    }
+    
+    /**
+     * Filtra coletas por status de sincronização
+     */
+    fun filtrarPorStatus(filtro: FiltroStatus) {
+        Log.d(TAG, "filtrarPorStatus: $filtro")
+        filtroStatus = filtro
+        atualizarFiltros()
+    }
+    
+    /**
+     * Filtra coletas por sala
+     */
+    fun filtrarPorSala(sala: String?) {
+        Log.d(TAG, "filtrarPorSala: $sala")
+        salaSelecionada = sala
+        atualizarFiltros()
+    }
+    
+    /**
+     * Atualiza os filtros aplicados
+     */
+    private fun atualizarFiltros() {
+        val currentState = _state.value
+        if (currentState !is CollectionViewState.Success) {
+            Log.w(TAG, "atualizarFiltros: Estado não é Success, ignorando")
+            return
+        }
+        
+        val filtradas = aplicarFiltros(todasColetas)
+        
+        _state.value = currentState.copy(
+            filteredColetas = filtradas,
+            totalColetas = filtradas.size,
+            sincronizadas = filtradas.count { it.sincronizado },
+            pendentes = filtradas.count { !it.sincronizado }
+        )
+    }
+    
+    /**
+     * Aplica todos os filtros ativos
+     */
+    private fun aplicarFiltros(coletas: List<Coleta>): List<Coleta> {
+        Log.d(TAG, "═══════════════════════════════════════")
+        Log.d(TAG, "APLICANDO FILTROS")
+        Log.d(TAG, "Filtro Usuário: $filtroUsuario")
+        Log.d(TAG, "Filtro Status: $filtroStatus")
+        Log.d(TAG, "Sala Selecionada: $salaSelecionada")
+        Log.d(TAG, "Query Busca: '$queryBusca'")
+        Log.d(TAG, "Total de coletas: ${coletas.size}")
+        Log.d(TAG, "Usuário Atual ID: $usuarioAtualId")
+        
+        var filtradas = coletas
+        
+        // Filtro de busca por texto
+        if (queryBusca.isNotBlank()) {
+            filtradas = filtradas.filter { coleta ->
+                val patrimonioIdMatch = coleta.patrimonioId.toString().contains(queryBusca, ignoreCase = true)
+                val observacoesMatch = (coleta.observacoes ?: "").contains(queryBusca, ignoreCase = true)
+                val salaMatch = (coleta.localizacaoAtual ?: "").contains(queryBusca, ignoreCase = true)
+                patrimonioIdMatch || observacoesMatch || salaMatch
+            }
+            Log.d(TAG, "Após filtro de busca: ${filtradas.size} coletas")
+        }
+        
+        // Filtro de usuário
+        filtradas = when (filtroUsuario) {
+            FiltroUsuario.TODAS -> {
+                Log.d(TAG, "Filtro TODAS: ${filtradas.size} coletas")
+                filtradas
+            }
+            FiltroUsuario.MINHAS -> {
+                if (usuarioAtualId != null) {
+                    Log.d(TAG, "Aplicando filtro MINHAS para usuário $usuarioAtualId")
+                    Log.d(TAG, "IDs de usuário nas coletas:")
+                    filtradas.take(10).forEach { coleta ->
+                        Log.d(TAG, "  Coleta ${coleta.id}: usuarioId=${coleta.usuarioId}")
+                    }
+                    
+                    // CORREÇÃO: Comparar como Int
+                    val minhas = filtradas.filter { coleta ->
+                        val match = coleta.usuarioId == usuarioAtualId
+                        if (!match) {
+                            Log.d(TAG, "  Coleta ${coleta.id}: ${coleta.usuarioId} != $usuarioAtualId")
+                        }
+                        match
+                    }
+                    
+                    Log.d(TAG, "Filtro MINHAS: ${minhas.size} coletas do usuário $usuarioAtualId")
+                    
+                    if (minhas.isEmpty()) {
+                        Log.w(TAG, "⚠️ NENHUMA coleta encontrada para o usuário $usuarioAtualId!")
+                        Log.w(TAG, "Mostrando TODAS as coletas como fallback")
+                        // FALLBACK: Se não encontrar nenhuma, mostrar todas
+                        filtradas
+                    } else {
+                        minhas
+                    }
+                } else {
+                    Log.w(TAG, "Filtro MINHAS: usuarioAtualId é null, mostrando todas")
+                    filtradas
+                }
+            }
+        }
+        
+        Log.d(TAG, "Após filtro de usuário: ${filtradas.size} coletas")
+        
+        // Filtro de status
+        filtradas = when (filtroStatus) {
+            FiltroStatus.TODOS -> filtradas
+            FiltroStatus.SINCRONIZADOS -> filtradas.filter { it.sincronizado }
+            FiltroStatus.PENDENTES -> filtradas.filter { !it.sincronizado }
+        }
+        
+        Log.d(TAG, "Após filtro de status: ${filtradas.size} coletas")
+        
+        // Filtro de sala
+        // Prioridade: localizacaoAtual (vem de localizacaoEncontrada do servidor) > nomeSala
+        filtradas = if (salaSelecionada == null) {
+            filtradas
+        } else {
+            filtradas.filter { 
+                (it.localizacaoAtual ?: it.nomeSala) == salaSelecionada 
+            }
+        }
+        
+        Log.d(TAG, "Resultado final: ${filtradas.size} coletas")
+        Log.d(TAG, "═══════════════════════════════════════")
+        
+        return filtradas
+    }
+    
+    /**
+     * Busca por texto (patrimônio, observações, sala)
+     */
+    fun buscar(query: String) {
+        Log.d(TAG, "buscar: query='$query'")
+        queryBusca = query
+        atualizarFiltros()
+    }
+    
+    /**
+     * Remove uma coleta
+     */
+    fun removerColeta(id: Int) {
+        viewModelScope.launch {
+            Log.d(TAG, "removerColeta: id=$id")
+            
+            removerColetaUseCase(id).fold(
+                onSuccess = {
+                    Log.d(TAG, "✓ Coleta removida com sucesso")
+                    // Recarregar coletas após remoção
+                    carregarColetas()
+                },
+                onFailure = { error ->
+                    Log.e(TAG, "Erro ao remover coleta", error)
+                    _state.value = CollectionViewState.Error(
+                        error.message ?: "Erro ao remover coleta"
+                    )
+                }
+            )
+        }
+    }
+    
+    /**
+     * Carrega coletas com fallback automático (Offline-First)
+     * Tenta servidor primeiro, fallback para local se falhar
+     */
+    fun carregarColetasComFallback() {
+        viewModelScope.launch {
+            Log.d(TAG, "carregarColetasComFallback: Iniciando carregamento com fallback")
+            _state.value = CollectionViewState.Loading
+            
+            try {
+                // Verificar se precisa migração de coletas antigas
+                if (coletaMigration.precisaMigracao()) {
+                    Log.d(TAG, "⚠ Coletas antigas precisam de migração, executando...")
+                    coletaMigration.migrarColetasAntigas()
+                }
+                
+                // Obter usuário atual
+                val usuario = obterUsuarioAtualUseCase()
+                usuarioAtualId = usuario?.id?.toInt()
+                
+                Log.d(TAG, "═══════════════════════════════════════════")
+                Log.d(TAG, "USUÁRIO ATUAL")
+                Log.d(TAG, "Nome: ${usuario?.nome}")
+                Log.d(TAG, "ID: $usuarioAtualId")
+                Log.d(TAG, "═══════════════════════════════════════════")
+                
+                // Buscar coletas com fallback
+                buscarColetasComFallbackUseCase().fold(
+                    onSuccess = { result ->
+                        Log.d(TAG, "✓ ${result.coletas.size} coletas carregadas")
+                        Log.d(TAG, "Fonte: ${result.fonte}")
+                        
+                        todasColetas = result.coletas
+                        
+                        // Calcular estatísticas
+                        val sincronizadas = result.coletas.count { it.sincronizado }
+                        val pendentes = result.coletas.size - sincronizadas
+                        
+                        // Extrair salas únicas
+                        // Prioridade: localizacaoAtual (vem de localizacaoEncontrada do servidor) > nomeSala
+                        val salasUnicas = result.coletas
+                            .mapNotNull { it.localizacaoAtual ?: it.nomeSala }
+                            .filter { it.isNotBlank() }
+                            .distinct()
+                            .sorted()
+                        
+                        Log.d(TAG, "Salas extraídas: $salasUnicas")
+                        
+                        Log.d(TAG, "Estatísticas:")
+                        Log.d(TAG, "  Total: ${result.coletas.size}")
+                        Log.d(TAG, "  Sincronizadas: $sincronizadas")
+                        Log.d(TAG, "  Pendentes: $pendentes")
+                        Log.d(TAG, "  Salas: ${salasUnicas.size}")
+                        
+                        // Aplicar filtros iniciais
+                        val filtradas = aplicarFiltros(result.coletas)
+                        
+                        _state.value = CollectionViewState.Success(
+                            coletas = result.coletas,
+                            filteredColetas = filtradas,
+                            salas = salasUnicas,
+                            totalColetas = filtradas.size,
+                            sincronizadas = filtradas.count { it.sincronizado },
+                            pendentes = filtradas.count { !it.sincronizado }
+                        )
+                    },
+                    onFailure = { error ->
+                        Log.e(TAG, "Erro ao carregar coletas", error)
+                        _state.value = CollectionViewState.Error(
+                            error.message ?: "Erro ao carregar coletas"
+                        )
+                    }
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro inesperado", e)
+                _state.value = CollectionViewState.Error(
+                    e.message ?: "Erro inesperado"
+                )
+            }
+        }
+    }
+    
+    /**
+     * Limpa o estado
+     */
+    fun limparEstado() {
+        _state.value = CollectionViewState.Idle
+    }
+}

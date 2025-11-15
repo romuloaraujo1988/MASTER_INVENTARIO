@@ -1,6 +1,6 @@
 package com.inventario.service;
 
-import com.inventario.dao.SetorDAORefactored;
+import com.inventario.dao.SetorDAO;
 import com.inventario.model.Setor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,19 +26,19 @@ public class SetorService {
     private static final Logger logger = LoggerFactory.getLogger(SetorService.class);
     
     @Autowired
-    private SetorDAORefactored setorDAO;
+    private SetorDAO setorDAO;
     
     /**
      * Construtor para uso sem Spring (Desktop)
      */
     public SetorService() {
-        this.setorDAO = new SetorDAORefactored();
+        this.setorDAO = new SetorDAO();
     }
     
     /**
      * Construtor com injeção de dependência (para testes e Spring)
      */
-    public SetorService(SetorDAORefactored setorDAO) {
+    public SetorService(SetorDAO setorDAO) {
         this.setorDAO = setorDAO;
     }
     

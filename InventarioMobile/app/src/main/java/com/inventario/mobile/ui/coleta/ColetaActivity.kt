@@ -188,7 +188,6 @@ class ColetaActivity : AppCompatActivity() {
     }
 
     private fun salvarColeta() {
-        val localizacao = binding.etLocalizacao.text.toString().trim()
         val observacoes = binding.etObservacoes.text.toString().trim()
         val numeroPatrimonio = binding.etCodigo.text.toString().trim()
 
@@ -197,19 +196,19 @@ class ColetaActivity : AppCompatActivity() {
             return
         }
 
-        if (localizacao.isEmpty()) {
-            binding.tilLocalizacao.error = "Localização é obrigatória"
+        // Validar se sala foi selecionada
+        if (salaNome.isEmpty()) {
+            Toast.makeText(this, "Erro: Sala não selecionada", Toast.LENGTH_SHORT).show()
             return
         }
-
-        binding.tilLocalizacao.error = null
         
         // TODO: Obter ID do usuário logado do PreferencesManager
         val idUsuario = 1L // Placeholder
         
+        // CORREÇÃO: Usar salaNome ao invés de campo editável
         viewModel.registrarColeta(
             numeroPatrimonio = numeroPatrimonio,
-            localizacaoAtual = localizacao,
+            localizacaoAtual = salaNome, // ← Usar nome da sala selecionada
             observacoes = observacoes,
             latitude = null,
             longitude = null,

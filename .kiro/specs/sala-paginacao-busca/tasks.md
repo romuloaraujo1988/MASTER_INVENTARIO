@@ -15,16 +15,22 @@
 
 - [ ] 2. Atualizar SalaDao com queries otimizadas
   - Adicionar índice em coluna `nome` para busca rápida
+
+
   - Adicionar query `buscarPorNome(query)` com LIKE
   - Adicionar query `contar()` para estatísticas
   - _Requirements: 3.1, 3.2, 3.3_
 
-- [ ] 3. Criar SalaPagingSource
+- [x] 3. Criar SalaPagingSource
+
   - Implementar `load(params: LoadParams)` com paginação
+
   - Implementar `getRefreshKey(state: PagingState)`
   - Tratar erros e retornar `LoadResult.Error`
   - Suportar busca por query
+
   - _Requirements: 4.1, 4.2_
+
 
 - [ ] 4. Criar BuscarSalasUseCase
   - Receber query como parâmetro
@@ -32,14 +38,20 @@
   - Configurar `PagingConfig` (pageSize=20, prefetchDistance=5)
   - _Requirements: 4.3, 4.4, 4.5_
 
+
+
 - [ ] 5. Atualizar SalaViewModel
   - Adicionar `StateFlow<String>` para searchQuery
   - Implementar debounce de 300ms na busca
   - Usar `flatMapLatest` para cancelar buscas anteriores
+
   - Usar `cachedIn(viewModelScope)` para cache
+
   - Adicionar método `setSearchQuery(query)`
   - Adicionar método `clearSearch()`
   - _Requirements: 2.2, 2.3, 2.4, 4.6, 7.1, 7.2_
+
+
 
 - [ ] 6. Criar SalaPagingAdapter
   - Estender `PagingDataAdapter<Sala, ViewHolder>`
@@ -51,8 +63,13 @@
 - [ ] 7. Criar SalaLoadStateAdapter
   - Estender `LoadStateAdapter<ViewHolder>`
   - Exibir ProgressBar quando `LoadState.Loading`
+
+
   - Exibir erro e botão retry quando `LoadState.Error`
+
   - Exibir mensagem "Fim da lista" quando `LoadState.NotLoading` e `endOfPaginationReached`
+
+
   - _Requirements: 1.3, 1.4, 1.5, 9.2, 9.3, 9.4_
 
 - [ ] 8. Atualizar SalaSelectionActivity
@@ -131,4 +148,4 @@
 - ✅ Busca < 500ms após debounce
 - ✅ Scroll suave 60 FPS
 - ✅ Memória < 50MB para 1000 salas
-- ✅ Cobertura de testes > 8
+- ✅ Cobertura de testes > 80%

@@ -1,5 +1,6 @@
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\DashboardService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\ResponsavelDAO.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\SalaDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\ExcelExporter.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\notification\NotificationUtils.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\dao\SiadsPatrimonioDAO.java
@@ -29,6 +30,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\print\EtiquetaGenerator.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\QRCode.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\ExcelExporterAlternativo.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\ConnectionManager.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\ConfiguracaoBancoUtil.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\UsuarioFormDialog.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\print\ImpressoraTermicaService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\ModernDialog.java
@@ -63,6 +65,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileColeta
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\NotificationConfig.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\ColetasPorDiaDTO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\Responsavel.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\UsuarioDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\config\SiadsConfig.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dto\mobile\RefreshTokenRequest.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\SalaFrame.java
@@ -77,7 +80,6 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\DatabaseTestQuery.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\test\TesteAutorizacaoColeta.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\chart\InventarioChartFactory.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\Inventario.java
-D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\SetorDAORefactored.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileSetorController.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\config\DeviceTrackingInterceptor.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\chart\InventarioChartService.java
@@ -124,6 +126,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileSyncRe
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileColetaRequest.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\offline\SyncFrame.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\BusinessException.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\ConfigurationMigration.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\AutenticacaoService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\repository\ColetaRepository.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\SingleInstanceManager.java
@@ -161,7 +164,6 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\ImportacaoCSV.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\CampusFormDialog.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\DashboardStatsDTO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\test\SiadsExportTest.java
-D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\SalaDAORefactored.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\service\SiadsConverterService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\Coletor.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\MobileDataSourceConfig.java
@@ -177,7 +179,6 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\notification\Notification
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\offline\OfflineManager.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\DashboardFrame.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\SistemaInventarioApplication.java
-D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\UsuarioDAORefactored.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\CampusDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\SetorFrame.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\util\SiadsLayoutFormatter.java
@@ -185,10 +186,12 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\ParticipanteInventario.j
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\RelatorioColetaDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\exception\RepositoryException.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\security\MobileJwtAuthenticationFilter.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\ConfigurationPaths.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\view\SiadsExportDialog.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\MobileConnectionService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileDescricaoController.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileLoginRequest.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\SetorDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\Campus.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\service\MobileResponsavelService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\security\JwtAuthenticationEntryPoint.java
@@ -199,6 +202,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\BaseDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\ImportacaoCSVFrame.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\ColetaDAO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileColetaController.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\PasswordEncryption.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\repository\impl\ColetaRepositoryImpl.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\PortManager.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\service\SiadsIntegrationService.java

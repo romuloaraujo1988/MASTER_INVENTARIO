@@ -21,7 +21,7 @@ class SalaSelectionViewModel(
     val uiState: StateFlow<SalaSelectionUiState> = _uiState.asStateFlow()
 
     private var currentPage = 0
-    private val pageSize = 20 // 20 itens por página
+    private val pageSize = 50 // 50 itens por página (melhor para busca local)
     private var isLoadingMore = false
     private var hasMorePages = true
     private var allSalasLoaded = false
@@ -152,7 +152,8 @@ class SalaSelectionViewModel(
                     id = dto.id.toLong(),
                     nome = dto.nome,
                     codigo = dto.codigo,
-                    descricao = dto.descricao ?: "",
+                    // Evitar duplicação: se descricao for igual ao nome, deixar vazio
+                    descricao = dto.descricao?.takeIf { it != dto.nome } ?: "",
                     setorId = dto.setorIdFinal.toLong(),
                     ativo = dto.ativa ?: dto.ativo,
                     sincronizado = true,

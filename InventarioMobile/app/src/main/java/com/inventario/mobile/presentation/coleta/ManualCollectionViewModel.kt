@@ -2,17 +2,25 @@ package com.inventario.mobile.presentation.coleta
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.inventario.mobile.data.repository.InventarioRepository
-import com.inventario.mobile.data.model.Patrimonio
+import com.inventario.mobile.domain.usecase.BuscarPatrimonioUseCase
+import com.inventario.mobile.domain.usecase.RegistrarColetaUseCase
+import com.inventario.mobile.domain.model.Patrimonio as DomainPatrimonio
+import com.inventario.mobile.data.model.Patrimonio as DataPatrimonio
 import com.inventario.mobile.data.model.Coleta
+import com.inventario.mobile.data.repository.InventarioRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import android.util.Log
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class ManualCollectionViewModel(
-    private val inventarioRepository: InventarioRepository
+@HiltViewModel
+class ManualCollectionViewModel @Inject constructor(
+    private val buscarPatrimonioUseCase: BuscarPatrimonioUseCase,
+    private val registrarColetaUseCase: RegistrarColetaUseCase,
+    private val inventarioRepository: InventarioRepository // Temporário para compatibilidade
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ManualCollectionUiState())
@@ -52,40 +60,34 @@ class ManualCollectionViewModel(
                     patrimonio = null
                 )
 
-                val result = inventarioRepository.findPatrimonioByNumero(numeroPatrimonio)
+                // Usar Use Case Clean Architecture
+                val result = buscarPatrimonioUseCase(numeroPatrimonio)
                 
                 Log.d("ManualCollectionVM", "Resultado da busca recebido: ${if (result.isSuccess) "sucesso" else "falha"}")
                 
                 result.fold(
-                    onSuccess = { patrimonio ->
-                        Log.d("ManualCollectionVM", "Busca bem-sucedida. Patrimônio encontrado: ${patrimonio != null}")
+                    onSuccess = { domainPatrimonio ->
+                        Log.d("ManualCollectionVM", "Patrimônio encontrado - ID: ${domainPatrimonio.id}, Número: ${domainPatrimonio.numeroPatrimonio}, Descrição: ${domainPatrimonio.descricao}")
                         
-                        if (patrimonio != null) {
-                            Log.d("ManualCollectionVM", "Patrimônio encontrado - ID: ${patrimonio.id}, Número: ${patrimonio.numeroPatrimonio}, Descrição: ${patrimonio.descricao}")
-                            
-                            // Verificar se já foi coletado
-                            val jaColetado = inventarioRepository.isPatrimonioColetado(patrimonio.id)
-                            Log.d("ManualCollectionVM", "Patrimônio já coletado: $jaColetado")
-                            
-                            _uiState.value = _uiState.value.copy(
-                                isLoading = false,
-                                patrimonio = patrimonio,
-                                jaColetado = jaColetado,
-                                errorMessage = if (jaColetado) "Patrimônio já foi coletado" else null
-                            )
-                        } else {
-                            Log.w("ManualCollectionVM", "Patrimônio não encontrado para número: $numeroPatrimonio")
-                            _uiState.value = _uiState.value.copy(
-                                isLoading = false,
-                                errorMessage = "Patrimônio não encontrado"
-                            )
-                        }
+                        // Converter domain para data model (temporário)
+                        val dataPatrimonio = domainPatrimonio.toDataModel()
+                        
+                        // Verificar se já foi coletado
+                        val jaColetado = domainPatrimonio.coletado
+                        Log.d("ManualCollectionVM", "Patrimônio já coletado: $jaColetado")
+                        
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            patrimonio = dataPatrimonio,
+                            jaColetado = jaColetado,
+                            errorMessage = if (jaColetado) "Patrimônio já foi coletado" else null
+                        )
                     },
                     onFailure = { exception ->
                         Log.e("ManualCollectionVM", "Erro na busca do patrimônio", exception)
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
-                            errorMessage = "Erro ao buscar patrimônio: ${exception.message}"
+                            errorMessage = exception.message ?: "Patrimônio não encontrado"
                         )
                     }
                 )
@@ -97,6 +99,35 @@ class ManualCollectionViewModel(
                 )
             }
         }
+    }
+    
+    // Converter domain model para data model (temporário até migração completa)
+    private fun DomainPatrimonio.toDataModel(): DataPatrimonio {
+        return DataPatrimonio(
+            id = this.id,
+            numeroPatrimonio = this.numeroPatrimonio,
+            descricao = this.descricao,
+            marca = this.marca,
+            modelo = this.modelo,
+            numeroSerie = this.numeroSerie,
+            estado = this.estado,
+            valor = this.valor,
+            setorId = this.setorId,
+            setorNome = null,
+            salaId = this.salaId,
+            salaNome = null,
+            responsavelId = this.coletorId,
+            responsavelNome = null,
+            qrCode = this.qrCode,
+            observacoes = this.observacoes,
+            coletado = this.coletado,
+            dataColeta = this.dataColeta,
+            coletadoPor = null,
+            dataColetaFormatada = null,
+            observacoesColeta = null,
+            sincronizado = this.sincronizado,
+            servidorId = this.servidorId
+        )
     }
 
     fun coletarPatrimonio(estadoEncontrado: String, observacoes: String? = null) {
@@ -141,9 +172,10 @@ class ManualCollectionViewModel(
                     errorMessage = null
                 )
 
-                val result = inventarioRepository.coletarPatrimonioComSala(
-                    patrimonio = patrimonio,
-                    salaNome = salaNome,
+                // Usar RegistrarColetaUseCase (Clean Architecture)
+                val result = registrarColetaUseCase(
+                    numeroPatrimonio = patrimonio.numeroPatrimonio,
+                    localizacaoAtual = salaNome,
                     estadoEncontrado = estadoEncontrado,
                     observacoes = observacoes
                 )
@@ -222,7 +254,7 @@ data class ManualCollectionUiState(
     val isLoading: Boolean = false,
     val salaId: Long = -1L,
     val salaNome: String = "",
-    val patrimonio: Patrimonio? = null,
+    val patrimonio: DataPatrimonio? = null,
     val jaColetado: Boolean = false,
     val coletaRealizada: Boolean = false,
     val totalColetas: Int = 0,

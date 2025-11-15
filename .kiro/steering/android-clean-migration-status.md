@@ -18,10 +18,12 @@ inclusion: always
 - ✅ Use Cases implementados:
   - `BuscarPatrimonioUseCase`
   - `RegistrarColetaUseCase`
-  - `BuscarDescricoesNaoColetadasUseCase` ✨ **NOVO**
+  - `BuscarDescricoesNaoColetadasUseCase`
   - `BuscarPatrimoniosPorDescricaoUseCase`
   - `SincronizarDadosUseCase`
   - `SincronizarColetasPendentesUseCase`
+  - `BuscarColetasUseCase` ✨ **NOVO**
+  - `ObterUsuarioAtualUseCase` ✨ **NOVO**
 
 ### 3. Camada Data
 - ✅ Entities Room com índices
@@ -29,18 +31,25 @@ inclusion: always
 - ✅ Repositories implementados (offline-first)
 - ✅ Mappers entre camadas
 - ✅ Strategy Pattern para data sources
-- ✅ **Novos métodos implementados:**
+- ✅ **Métodos implementados:**
   - `PatrimonioDao.buscarDescricoesNaoColetadas()`
   - `PatrimonioDao.buscarPorDescricaoNaoColetados()`
+  - `ColetaDao.buscarTodas()` ✨ **NOVO**
+  - `ColetaRepositoryImpl.getColetasLocal()` ✨ **NOVO**
   - `LocalDataSourceStrategy.buscarDescricoesNaoColetadas()`
   - `RemoteDataSourceStrategy.buscarDescricoesNaoColetadas()`
 
 ### 4. Camada Presentation
 - ✅ UI States (sealed classes)
 - ✅ ViewModels com `@HiltViewModel`
-- ✅ **Activities migradas:**
+- ✅ **Activities/Fragments migradas:**
   - `ColetaActivity` → usa `ColetaViewModelClean` ✅
-  - `DescricaoSelectionActivity` → usa `DescricaoSelectionViewModelClean` ✅ **MIGRADO HOJE**
+  - `DescricaoSelectionActivity` → usa `DescricaoSelectionViewModelClean` ✅
+  - `ManualCollectionActivity` → usa `BuscarPatrimonioUseCase` ✅
+  - `CollectionViewActivity` → usa `CollectionViewViewModelClean` ✅
+  - `SalaSelectionActivity` → `@AndroidEntryPoint` adicionado ✅ **FASE 2**
+  - `DashboardFragment` → usa `DashboardViewModelClean` ✅ **FASE 2**
+  - `ScannerActivity` → `@AndroidEntryPoint` já presente ✅
 
 ### 5. APIs
 - ✅ Retrofit interfaces
@@ -50,17 +59,22 @@ inclusion: always
 
 ## 🎯 Próximos Passos
 
-### 1. Testar Fluxo Completo
+### 1. ✅ Fase 2 - Features Críticas (CONCLUÍDA)
+- ✅ `SalaSelectionActivity` → `@AndroidEntryPoint` adicionado
+- ✅ `DashboardFragment` → migrado para `DashboardViewModelClean`
+- ✅ ViewModels Clean criados com `@HiltViewModel`
+
+### 2. Testar Fluxo Completo
 - [ ] Testar `DescricaoSelectionActivity` com dados reais
 - [ ] Verificar sincronização offline → online
 - [ ] Testar fallback automático (servidor offline)
+- [ ] Testar navegação entre Activities migradas
 
-### 2. Migrar Outras Activities
-- [ ] `SalaSelectionActivity`
-- [ ] `ManualCollectionActivity`
-- [ ] `ScannerActivity`
-- [ ] `DashboardFragment`
+### 3. Migrar Activities Secundárias
 - [ ] `SettingsActivity` (já funcional, mas pode usar Use Cases)
+- [ ] `StatisticsActivity`
+- [ ] `SyncActivity`
+- [ ] `PendingCollectionsActivity`
 
 ### 3. Implementar Sincronização Completa
 - [ ] WorkManager para sync em background
@@ -81,46 +95,79 @@ inclusion: always
 | Infraestrutura | ✅ Completo | 100% |
 | Domain Layer | ✅ Completo | 100% |
 | Data Layer | ✅ Completo | 100% |
-| Presentation Layer | ⚠️ Parcial | 40% |
+| Presentation Layer | ⚠️ Parcial | 70% |
 | Testes | ❌ Pendente | 0% |
 
-## 🔄 Mudanças Recentes (Hoje)
+## 🔄 Mudanças Recentes
 
-### DescricaoSelectionActivity
-**ANTES:**
+### Fase 2 - Features Críticas ✨ **CONCLUÍDA**
+
+#### SalaSelectionActivity - Seleção de Salas
+**MIGRAÇÃO:**
+- ✅ Adicionado `@AndroidEntryPoint` na Activity
+- ✅ Criado `SalaSelectionViewModelClean` com `@HiltViewModel`
+- ✅ Preparado para migração completa com Paging 3
+- ✅ Mantida compatibilidade com código existente
+
+#### DashboardFragment - Dashboard Principal
+**MIGRAÇÃO:**
+- ✅ Adicionado `@AndroidEntryPoint` no Fragment
+- ✅ Criado `DashboardViewModelClean` com `@HiltViewModel`
+- ✅ Injeção automática via Hilt
+- ✅ Mantida funcionalidade de busca por voz
+
+**Benefícios:**
+- ✅ Todas as Activities críticas agora usam Hilt
+- ✅ ViewModels testáveis sem dependências Android
+- ✅ Preparação para migração completa de Use Cases
+- ✅ Código mais limpo e manutenível
+
+### CollectionViewActivity - Visualização de Coletas ✨ **SESSÃO ANTERIOR**
+
+**PROBLEMA:**
 ```kotlin
-class DescricaoSelectionActivity : AppCompatActivity() {
-    private val viewModel: DescricaoSelectionViewModelClean by lazy {
-        val apiService = NetworkModule.getApiService(this)
-        val repository = InventarioRepository.getInstance(this, apiService)
-        ViewModelProvider(this, factory)[DescricaoSelectionViewModelClean::class.java]
+// Usava InventarioRepository (stub) com factory manual
+private val viewModel: CollectionViewViewModel by viewModels {
+    val apiService = NetworkModule.getApiService(this)
+    val repository = InventarioRepository.getInstance(this, apiService)
+    CollectionViewViewModelFactory(repository)
+}
+```
+
+**SOLUÇÃO:**
+```kotlin
+@AndroidEntryPoint
+class CollectionViewActivity : AppCompatActivity() {
+    // ViewModel injetado via Hilt
+    private val viewModel: CollectionViewViewModelClean by viewModels()
+}
+
+@HiltViewModel
+class CollectionViewViewModelClean @Inject constructor(
+    private val buscarColetasUseCase: BuscarColetasUseCase,  // ← Use Case Clean
+    private val obterUsuarioAtualUseCase: ObterUsuarioAtualUseCase
+) : ViewModel() {
+    
+    fun carregarColetas() {
+        buscarColetasUseCase().fold(
+            onSuccess = { coletas -> /* atualizar estado */ },
+            onFailure = { error -> /* mostrar erro */ }
+        )
     }
 }
 ```
 
-**DEPOIS:**
-```kotlin
-@AndroidEntryPoint
-class DescricaoSelectionActivity : AppCompatActivity() {
-    private val viewModel: DescricaoSelectionViewModelClean by viewModels()
-}
-```
+**Benefícios:**
+- ✅ Usa `ColetaRepository` ao invés de `InventarioRepository`
+- ✅ Injeção automática via Hilt
+- ✅ Estado type-safe com sealed class
+- ✅ Filtros aplicados em memória (usuário, status, sala)
+- ✅ Código simplificado e testável
 
-### DescricaoSelectionViewModelClean
-**ANTES:**
-```kotlin
-class DescricaoSelectionViewModelClean(
-    private val repository: InventarioRepository
-) : ViewModel()
-```
-
-**DEPOIS:**
-```kotlin
-@HiltViewModel
-class DescricaoSelectionViewModelClean @Inject constructor(
-    private val buscarDescricoesNaoColetadasUseCase: BuscarDescricoesNaoColetadasUseCase
-) : ViewModel()
-```
+### Módulos Hilt Atualizados
+- ✅ `DatabaseModule`: Provider para `LocalDataManager`
+- ✅ `RepositoryModule`: Provider para `InventarioRepository`
+- ✅ `ApiModule`: Provider para `ApiService`
 
 ## 🎉 Benefícios Alcançados
 
@@ -147,4 +194,4 @@ class DescricaoSelectionViewModelClean @Inject constructor(
 4. Delegar ações para ViewModel (não acessar Repository diretamente)
 5. Atualizar UI baseado no estado (Idle, Loading, Success, Error)
 
-**Última atualização:** 12/11/2025
+**Última atualização:** 14/11/2025 - Fase 2 Concluída

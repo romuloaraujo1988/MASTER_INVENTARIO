@@ -9,7 +9,7 @@ import com.inventario.model.Patrimonio;
 import com.inventario.model.Sala;
 import com.inventario.model.Responsavel;
 import com.inventario.dao.PatrimonioDAO;
-import com.inventario.dao.SalaDAORefactored;
+import com.inventario.dao.SalaDAO;
 import com.inventario.dao.ResponsavelDAO;
 
 /**
@@ -317,7 +317,7 @@ public class PatrimonioFormDialog extends JDialog {
             comboSala.addItem(new SalaItem(null)); // Item padrão
             
             // === SWING: Usar DAO diretamente (sem Spring) ===
-            SalaDAORefactored salaDAO = new SalaDAORefactored();
+            SalaDAO salaDAO = new SalaDAO();
             List<Sala> salas = salaDAO.listarSalas();
             
             for (Sala sala : salas) {

@@ -1,7 +1,7 @@
 package com.inventario.view;
 
-import com.inventario.dao.SalaDAORefactored;
-import com.inventario.dao.SetorDAORefactored;
+import com.inventario.dao.SalaDAO;
+import com.inventario.dao.SetorDAO;
 import com.inventario.model.Sala;
 import com.inventario.model.Setor;
 import com.inventario.view.ui.ModernButtons;
@@ -16,8 +16,8 @@ import java.util.List;
 public class SalaFormDialog extends JDialog {
     
     private Sala sala;
-    private final SalaDAORefactored salaDAO;
-    private final SetorDAORefactored setorDAO;
+    private final SalaDAO salaDAO;
+    private final SetorDAO setorDAO;
     private boolean salvo = false;
     
     // Componentes do formulário
@@ -36,8 +36,8 @@ public class SalaFormDialog extends JDialog {
         this.sala = sala;
         
         // === SWING: Usar DAOs diretamente (sem Spring) ===
-        this.salaDAO = new SalaDAORefactored();
-        this.setorDAO = new SetorDAORefactored();
+        this.salaDAO = new SalaDAO();
+        this.setorDAO = new SetorDAO();
         
         initializeComponents();
         carregarSetores();

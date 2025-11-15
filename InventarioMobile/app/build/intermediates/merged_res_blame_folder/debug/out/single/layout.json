@@ -12,6 +12,10 @@
         "source": "com.inventario.mobile.app-main-69:/layout/activity_offline_sync.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_load_state.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_load_state.xml"
+    },
+    {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_statistics_export.xml",
         "source": "com.inventario.mobile.app-main-69:/layout/fragment_statistics_export.xml"
     },
@@ -96,6 +100,10 @@
         "source": "com.inventario.mobile.app-main-69:/layout/item_loading.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_sala_selection_paging.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_sala_selection_paging.xml"
+    },
+    {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_descricao.xml",
         "source": "com.inventario.mobile.app-main-69:/layout/item_descricao.xml"
     },
@@ -166,6 +174,10 @@
     {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_smoke_test.xml",
         "source": "com.inventario.mobile.app-main-69:/layout/activity_smoke_test.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_sync_manual.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_sync_manual.xml"
     },
     {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/dialog_estado_patrimonio.xml",

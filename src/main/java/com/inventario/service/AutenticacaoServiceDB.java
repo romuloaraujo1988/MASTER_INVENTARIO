@@ -1,6 +1,6 @@
 package com.inventario.service;
 
-import com.inventario.dao.UsuarioDAORefactored;
+import com.inventario.dao.UsuarioDAO;
 import com.inventario.model.PerfilUsuario;
 import com.inventario.model.Usuario;
 import java.time.LocalDateTime;
@@ -14,11 +14,11 @@ import java.time.LocalDateTime;
  */
 public class AutenticacaoServiceDB {
     
-    private UsuarioDAORefactored usuarioDAO;
+    private UsuarioDAO usuarioDAO;
     private static final int MAX_TENTATIVAS_LOGIN = 5;
     
     public AutenticacaoServiceDB() {
-        this.usuarioDAO = new UsuarioDAORefactored();
+        this.usuarioDAO = new UsuarioDAO();
     }
     
     /**

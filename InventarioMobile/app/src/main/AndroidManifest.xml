@@ -119,6 +119,14 @@
             android:theme="@style/Theme.InventarioMobile.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
         
+        <!-- Sala Selection Paging Activity (Otimizada) -->
+        <activity
+            android:name=".presentation.sala.SalaSelectionPagingActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
         <!-- Manual Collection Activity -->
         <activity
             android:name=".presentation.coleta.ManualCollectionActivity"

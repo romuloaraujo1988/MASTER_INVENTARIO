@@ -1,7 +1,7 @@
 package com.inventario.view;
 
-import com.inventario.dao.UsuarioDAORefactored;
-import com.inventario.dao.SetorDAORefactored;
+import com.inventario.dao.UsuarioDAO;
+import com.inventario.dao.SetorDAO;
 import com.inventario.model.Usuario;
 import com.inventario.model.PerfilUsuario;
 import com.inventario.model.Setor;
@@ -38,8 +38,8 @@ public class UsuarioFormDialog extends JDialog {
     
     // Dados
     private Usuario usuario;
-    private UsuarioDAORefactored usuarioDAO;
-    private SetorDAORefactored setorDAO;
+    private UsuarioDAO usuarioDAO;
+    private SetorDAO setorDAO;
     private boolean usuarioSalvo = false;
     private boolean isEdicao = false;
     
@@ -52,7 +52,7 @@ public class UsuarioFormDialog extends JDialog {
         "^[A-Za-z0-9]{4,20}$"
     );
     
-    public UsuarioFormDialog(Frame parent, Usuario usuario, UsuarioDAORefactored usuarioDAO, SetorDAORefactored setorDAO) {
+    public UsuarioFormDialog(Frame parent, Usuario usuario, UsuarioDAO usuarioDAO, SetorDAO setorDAO) {
         super(parent, true);
         
         this.usuario = usuario;

@@ -1,6 +1,6 @@
 package com.inventario.service;
 
-import com.inventario.dao.UsuarioDAORefactored;
+import com.inventario.dao.UsuarioDAO;
 import com.inventario.model.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -28,7 +28,7 @@ public class UsuarioService {
     private static final Logger logger = LoggerFactory.getLogger(UsuarioService.class);
     
     @Autowired
-    private UsuarioDAORefactored usuarioDAO;
+    private UsuarioDAO usuarioDAO;
     
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     

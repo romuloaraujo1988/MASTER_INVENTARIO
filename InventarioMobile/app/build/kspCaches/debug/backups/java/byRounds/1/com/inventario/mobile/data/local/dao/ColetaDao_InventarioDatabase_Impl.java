@@ -37,11 +37,9 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
 
   private final EntityInsertionAdapter<ColetaEntity> __insertionAdapterOfColetaEntity;
 
-  private final SharedSQLiteStatement __preparedStmtOfUpdateSincronizado;
+  private final SharedSQLiteStatement __preparedStmtOfAtualizarSincronizado;
 
   private final SharedSQLiteStatement __preparedStmtOfMarcarSincronizada;
-
-  private final SharedSQLiteStatement __preparedStmtOfMarcarSincronizada_1;
 
   private final SharedSQLiteStatement __preparedStmtOfRegistrarErroSincronizacao;
 
@@ -49,7 +47,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
 
   private final SharedSQLiteStatement __preparedStmtOfLimparSincronizadas;
 
-  private final SharedSQLiteStatement __preparedStmtOfDeleteOldSyncedColetas;
+  private final SharedSQLiteStatement __preparedStmtOfLimparSincronizadasAntigas;
 
   public ColetaDao_InventarioDatabase_Impl(@NonNull final RoomDatabase __db) {
     this.__db = __db;
@@ -125,7 +123,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
         }
       }
     };
-    this.__preparedStmtOfUpdateSincronizado = new SharedSQLiteStatement(__db) {
+    this.__preparedStmtOfAtualizarSincronizado = new SharedSQLiteStatement(__db) {
       @Override
       @NonNull
       public String createQuery() {
@@ -134,14 +132,6 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
       }
     };
     this.__preparedStmtOfMarcarSincronizada = new SharedSQLiteStatement(__db) {
-      @Override
-      @NonNull
-      public String createQuery() {
-        final String _query = "UPDATE coleta SET sincronizado = 1 WHERE id = ?";
-        return _query;
-      }
-    };
-    this.__preparedStmtOfMarcarSincronizada_1 = new SharedSQLiteStatement(__db) {
       @Override
       @NonNull
       public String createQuery() {
@@ -173,7 +163,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
         return _query;
       }
     };
-    this.__preparedStmtOfDeleteOldSyncedColetas = new SharedSQLiteStatement(__db) {
+    this.__preparedStmtOfLimparSincronizadasAntigas = new SharedSQLiteStatement(__db) {
       @Override
       @NonNull
       public String createQuery() {
@@ -202,31 +192,13 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
   }
 
   @Override
-  public Object insert(final ColetaEntity coleta, final Continuation<? super Long> $completion) {
-    return CoroutinesRoom.execute(__db, true, new Callable<Long>() {
-      @Override
-      @NonNull
-      public Long call() throws Exception {
-        __db.beginTransaction();
-        try {
-          final Long _result = __insertionAdapterOfColetaEntity.insertAndReturnId(coleta);
-          __db.setTransactionSuccessful();
-          return _result;
-        } finally {
-          __db.endTransaction();
-        }
-      }
-    }, $completion);
-  }
-
-  @Override
-  public Object updateSincronizado(final long id, final boolean sincronizado, final int servidorId,
-      final Continuation<? super Unit> $completion) {
+  public Object atualizarSincronizado(final long id, final boolean sincronizado,
+      final int servidorId, final Continuation<? super Unit> $completion) {
     return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
       @Override
       @NonNull
       public Unit call() throws Exception {
-        final SupportSQLiteStatement _stmt = __preparedStmtOfUpdateSincronizado.acquire();
+        final SupportSQLiteStatement _stmt = __preparedStmtOfAtualizarSincronizado.acquire();
         int _argIndex = 1;
         final int _tmp = sincronizado ? 1 : 0;
         _stmt.bindLong(_argIndex, _tmp);
@@ -244,32 +216,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             __db.endTransaction();
           }
         } finally {
-          __preparedStmtOfUpdateSincronizado.release(_stmt);
-        }
-      }
-    }, $completion);
-  }
-
-  @Override
-  public Object marcarSincronizada(final long id, final Continuation<? super Unit> $completion) {
-    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
-      @Override
-      @NonNull
-      public Unit call() throws Exception {
-        final SupportSQLiteStatement _stmt = __preparedStmtOfMarcarSincronizada.acquire();
-        int _argIndex = 1;
-        _stmt.bindLong(_argIndex, id);
-        try {
-          __db.beginTransaction();
-          try {
-            _stmt.executeUpdateDelete();
-            __db.setTransactionSuccessful();
-            return Unit.INSTANCE;
-          } finally {
-            __db.endTransaction();
-          }
-        } finally {
-          __preparedStmtOfMarcarSincronizada.release(_stmt);
+          __preparedStmtOfAtualizarSincronizado.release(_stmt);
         }
       }
     }, $completion);
@@ -282,7 +229,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
       @Override
       @NonNull
       public Unit call() throws Exception {
-        final SupportSQLiteStatement _stmt = __preparedStmtOfMarcarSincronizada_1.acquire();
+        final SupportSQLiteStatement _stmt = __preparedStmtOfMarcarSincronizada.acquire();
         int _argIndex = 1;
         if (servidorId == null) {
           _stmt.bindNull(_argIndex);
@@ -301,7 +248,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             __db.endTransaction();
           }
         } finally {
-          __preparedStmtOfMarcarSincronizada_1.release(_stmt);
+          __preparedStmtOfMarcarSincronizada.release(_stmt);
         }
       }
     }, $completion);
@@ -316,7 +263,11 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
       public Unit call() throws Exception {
         final SupportSQLiteStatement _stmt = __preparedStmtOfRegistrarErroSincronizacao.acquire();
         int _argIndex = 1;
-        _stmt.bindString(_argIndex, erro);
+        if (erro == null) {
+          _stmt.bindNull(_argIndex);
+        } else {
+          _stmt.bindString(_argIndex, erro);
+        }
         _argIndex = 2;
         _stmt.bindLong(_argIndex, id);
         try {
@@ -384,13 +335,13 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
   }
 
   @Override
-  public Object deleteOldSyncedColetas(final long timestamp,
+  public Object limparSincronizadasAntigas(final long timestamp,
       final Continuation<? super Integer> $completion) {
     return CoroutinesRoom.execute(__db, true, new Callable<Integer>() {
       @Override
       @NonNull
       public Integer call() throws Exception {
-        final SupportSQLiteStatement _stmt = __preparedStmtOfDeleteOldSyncedColetas.acquire();
+        final SupportSQLiteStatement _stmt = __preparedStmtOfLimparSincronizadasAntigas.acquire();
         int _argIndex = 1;
         _stmt.bindLong(_argIndex, timestamp);
         try {
@@ -403,39 +354,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             __db.endTransaction();
           }
         } finally {
-          __preparedStmtOfDeleteOldSyncedColetas.release(_stmt);
-        }
-      }
-    }, $completion);
-  }
-
-  @Override
-  public Object incrementarTentativas(final long id, final String erro,
-      final Continuation<? super Unit> $completion) {
-    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
-      @Override
-      @NonNull
-      public Unit call() throws Exception {
-        final SupportSQLiteStatement _stmt = __preparedStmtOfRegistrarErroSincronizacao.acquire();
-        int _argIndex = 1;
-        if (erro == null) {
-          _stmt.bindNull(_argIndex);
-        } else {
-          _stmt.bindString(_argIndex, erro);
-        }
-        _argIndex = 2;
-        _stmt.bindLong(_argIndex, id);
-        try {
-          __db.beginTransaction();
-          try {
-            _stmt.executeUpdateDelete();
-            __db.setTransactionSuccessful();
-            return Unit.INSTANCE;
-          } finally {
-            __db.endTransaction();
-          }
-        } finally {
-          __preparedStmtOfRegistrarErroSincronizacao.release(_stmt);
+          __preparedStmtOfLimparSincronizadasAntigas.release(_stmt);
         }
       }
     }, $completion);
@@ -695,6 +614,131 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
   }
 
   @Override
+  public Object buscarTodas(final Continuation<? super List<ColetaEntity>> $completion) {
+    final String _sql = "SELECT * FROM coleta ORDER BY dataColeta DESC";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<ColetaEntity>>() {
+      @Override
+      @NonNull
+      public List<ColetaEntity> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfIdPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "idPatrimonio");
+          final int _cursorIndexOfNumeroPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "numeroPatrimonio");
+          final int _cursorIndexOfIdInventario = CursorUtil.getColumnIndexOrThrow(_cursor, "idInventario");
+          final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
+          final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
+          final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
+          final int _cursorIndexOfNomeResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeResponsavel");
+          final int _cursorIndexOfObservacao = CursorUtil.getColumnIndexOrThrow(_cursor, "observacao");
+          final int _cursorIndexOfEstadoPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "estadoPatrimonio");
+          final int _cursorIndexOfLatitude = CursorUtil.getColumnIndexOrThrow(_cursor, "latitude");
+          final int _cursorIndexOfLongitude = CursorUtil.getColumnIndexOrThrow(_cursor, "longitude");
+          final int _cursorIndexOfDataColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "dataColeta");
+          final int _cursorIndexOfIdUsuario = CursorUtil.getColumnIndexOrThrow(_cursor, "idUsuario");
+          final int _cursorIndexOfNomeUsuario = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeUsuario");
+          final int _cursorIndexOfSincronizado = CursorUtil.getColumnIndexOrThrow(_cursor, "sincronizado");
+          final int _cursorIndexOfTentativasSincronizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasSincronizacao");
+          final int _cursorIndexOfErroSincronizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "erroSincronizacao");
+          final int _cursorIndexOfServidorId = CursorUtil.getColumnIndexOrThrow(_cursor, "servidorId");
+          final List<ColetaEntity> _result = new ArrayList<ColetaEntity>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final ColetaEntity _item;
+            final long _tmpId;
+            _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final int _tmpIdPatrimonio;
+            _tmpIdPatrimonio = _cursor.getInt(_cursorIndexOfIdPatrimonio);
+            final String _tmpNumeroPatrimonio;
+            _tmpNumeroPatrimonio = _cursor.getString(_cursorIndexOfNumeroPatrimonio);
+            final int _tmpIdInventario;
+            _tmpIdInventario = _cursor.getInt(_cursorIndexOfIdInventario);
+            final Integer _tmpIdSala;
+            if (_cursor.isNull(_cursorIndexOfIdSala)) {
+              _tmpIdSala = null;
+            } else {
+              _tmpIdSala = _cursor.getInt(_cursorIndexOfIdSala);
+            }
+            final String _tmpNomeSala;
+            if (_cursor.isNull(_cursorIndexOfNomeSala)) {
+              _tmpNomeSala = null;
+            } else {
+              _tmpNomeSala = _cursor.getString(_cursorIndexOfNomeSala);
+            }
+            final Integer _tmpIdResponsavel;
+            if (_cursor.isNull(_cursorIndexOfIdResponsavel)) {
+              _tmpIdResponsavel = null;
+            } else {
+              _tmpIdResponsavel = _cursor.getInt(_cursorIndexOfIdResponsavel);
+            }
+            final String _tmpNomeResponsavel;
+            if (_cursor.isNull(_cursorIndexOfNomeResponsavel)) {
+              _tmpNomeResponsavel = null;
+            } else {
+              _tmpNomeResponsavel = _cursor.getString(_cursorIndexOfNomeResponsavel);
+            }
+            final String _tmpObservacao;
+            if (_cursor.isNull(_cursorIndexOfObservacao)) {
+              _tmpObservacao = null;
+            } else {
+              _tmpObservacao = _cursor.getString(_cursorIndexOfObservacao);
+            }
+            final String _tmpEstadoPatrimonio;
+            if (_cursor.isNull(_cursorIndexOfEstadoPatrimonio)) {
+              _tmpEstadoPatrimonio = null;
+            } else {
+              _tmpEstadoPatrimonio = _cursor.getString(_cursorIndexOfEstadoPatrimonio);
+            }
+            final Double _tmpLatitude;
+            if (_cursor.isNull(_cursorIndexOfLatitude)) {
+              _tmpLatitude = null;
+            } else {
+              _tmpLatitude = _cursor.getDouble(_cursorIndexOfLatitude);
+            }
+            final Double _tmpLongitude;
+            if (_cursor.isNull(_cursorIndexOfLongitude)) {
+              _tmpLongitude = null;
+            } else {
+              _tmpLongitude = _cursor.getDouble(_cursorIndexOfLongitude);
+            }
+            final long _tmpDataColeta;
+            _tmpDataColeta = _cursor.getLong(_cursorIndexOfDataColeta);
+            final int _tmpIdUsuario;
+            _tmpIdUsuario = _cursor.getInt(_cursorIndexOfIdUsuario);
+            final String _tmpNomeUsuario;
+            _tmpNomeUsuario = _cursor.getString(_cursorIndexOfNomeUsuario);
+            final boolean _tmpSincronizado;
+            final int _tmp;
+            _tmp = _cursor.getInt(_cursorIndexOfSincronizado);
+            _tmpSincronizado = _tmp != 0;
+            final int _tmpTentativasSincronizacao;
+            _tmpTentativasSincronizacao = _cursor.getInt(_cursorIndexOfTentativasSincronizacao);
+            final String _tmpErroSincronizacao;
+            if (_cursor.isNull(_cursorIndexOfErroSincronizacao)) {
+              _tmpErroSincronizacao = null;
+            } else {
+              _tmpErroSincronizacao = _cursor.getString(_cursorIndexOfErroSincronizacao);
+            }
+            final Long _tmpServidorId;
+            if (_cursor.isNull(_cursorIndexOfServidorId)) {
+              _tmpServidorId = null;
+            } else {
+              _tmpServidorId = _cursor.getLong(_cursorIndexOfServidorId);
+            }
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
   public Flow<Integer> observarQuantidadePendentes() {
     final String _sql = "SELECT COUNT(*) FROM coleta WHERE sincronizado = 0";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
@@ -723,6 +767,34 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
         _statement.release();
       }
     });
+  }
+
+  @Override
+  public Object contarPendentes(final Continuation<? super Integer> $completion) {
+    final String _sql = "SELECT COUNT(*) FROM coleta WHERE sincronizado = 0";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<Integer>() {
+      @Override
+      @NonNull
+      public Integer call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final Integer _result;
+          if (_cursor.moveToFirst()) {
+            final int _tmp;
+            _tmp = _cursor.getInt(0);
+            _result = _tmp;
+          } else {
+            _result = 0;
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
   }
 
   @Override
@@ -856,284 +928,6 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
   @Override
   public Object contarTodas(final Continuation<? super Integer> $completion) {
     final String _sql = "SELECT COUNT(*) FROM coleta";
-    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
-    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
-    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<Integer>() {
-      @Override
-      @NonNull
-      public Integer call() throws Exception {
-        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
-        try {
-          final Integer _result;
-          if (_cursor.moveToFirst()) {
-            final int _tmp;
-            _tmp = _cursor.getInt(0);
-            _result = _tmp;
-          } else {
-            _result = 0;
-          }
-          return _result;
-        } finally {
-          _cursor.close();
-          _statement.release();
-        }
-      }
-    }, $completion);
-  }
-
-  @Override
-  public Object getColetasPendentes(final Continuation<? super List<ColetaEntity>> $completion) {
-    final String _sql = "SELECT * FROM coleta WHERE sincronizado = 0";
-    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
-    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
-    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<ColetaEntity>>() {
-      @Override
-      @NonNull
-      public List<ColetaEntity> call() throws Exception {
-        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
-        try {
-          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
-          final int _cursorIndexOfIdPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "idPatrimonio");
-          final int _cursorIndexOfNumeroPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "numeroPatrimonio");
-          final int _cursorIndexOfIdInventario = CursorUtil.getColumnIndexOrThrow(_cursor, "idInventario");
-          final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
-          final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
-          final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
-          final int _cursorIndexOfNomeResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeResponsavel");
-          final int _cursorIndexOfObservacao = CursorUtil.getColumnIndexOrThrow(_cursor, "observacao");
-          final int _cursorIndexOfEstadoPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "estadoPatrimonio");
-          final int _cursorIndexOfLatitude = CursorUtil.getColumnIndexOrThrow(_cursor, "latitude");
-          final int _cursorIndexOfLongitude = CursorUtil.getColumnIndexOrThrow(_cursor, "longitude");
-          final int _cursorIndexOfDataColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "dataColeta");
-          final int _cursorIndexOfIdUsuario = CursorUtil.getColumnIndexOrThrow(_cursor, "idUsuario");
-          final int _cursorIndexOfNomeUsuario = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeUsuario");
-          final int _cursorIndexOfSincronizado = CursorUtil.getColumnIndexOrThrow(_cursor, "sincronizado");
-          final int _cursorIndexOfTentativasSincronizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasSincronizacao");
-          final int _cursorIndexOfErroSincronizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "erroSincronizacao");
-          final int _cursorIndexOfServidorId = CursorUtil.getColumnIndexOrThrow(_cursor, "servidorId");
-          final List<ColetaEntity> _result = new ArrayList<ColetaEntity>(_cursor.getCount());
-          while (_cursor.moveToNext()) {
-            final ColetaEntity _item;
-            final long _tmpId;
-            _tmpId = _cursor.getLong(_cursorIndexOfId);
-            final int _tmpIdPatrimonio;
-            _tmpIdPatrimonio = _cursor.getInt(_cursorIndexOfIdPatrimonio);
-            final String _tmpNumeroPatrimonio;
-            _tmpNumeroPatrimonio = _cursor.getString(_cursorIndexOfNumeroPatrimonio);
-            final int _tmpIdInventario;
-            _tmpIdInventario = _cursor.getInt(_cursorIndexOfIdInventario);
-            final Integer _tmpIdSala;
-            if (_cursor.isNull(_cursorIndexOfIdSala)) {
-              _tmpIdSala = null;
-            } else {
-              _tmpIdSala = _cursor.getInt(_cursorIndexOfIdSala);
-            }
-            final String _tmpNomeSala;
-            if (_cursor.isNull(_cursorIndexOfNomeSala)) {
-              _tmpNomeSala = null;
-            } else {
-              _tmpNomeSala = _cursor.getString(_cursorIndexOfNomeSala);
-            }
-            final Integer _tmpIdResponsavel;
-            if (_cursor.isNull(_cursorIndexOfIdResponsavel)) {
-              _tmpIdResponsavel = null;
-            } else {
-              _tmpIdResponsavel = _cursor.getInt(_cursorIndexOfIdResponsavel);
-            }
-            final String _tmpNomeResponsavel;
-            if (_cursor.isNull(_cursorIndexOfNomeResponsavel)) {
-              _tmpNomeResponsavel = null;
-            } else {
-              _tmpNomeResponsavel = _cursor.getString(_cursorIndexOfNomeResponsavel);
-            }
-            final String _tmpObservacao;
-            if (_cursor.isNull(_cursorIndexOfObservacao)) {
-              _tmpObservacao = null;
-            } else {
-              _tmpObservacao = _cursor.getString(_cursorIndexOfObservacao);
-            }
-            final String _tmpEstadoPatrimonio;
-            if (_cursor.isNull(_cursorIndexOfEstadoPatrimonio)) {
-              _tmpEstadoPatrimonio = null;
-            } else {
-              _tmpEstadoPatrimonio = _cursor.getString(_cursorIndexOfEstadoPatrimonio);
-            }
-            final Double _tmpLatitude;
-            if (_cursor.isNull(_cursorIndexOfLatitude)) {
-              _tmpLatitude = null;
-            } else {
-              _tmpLatitude = _cursor.getDouble(_cursorIndexOfLatitude);
-            }
-            final Double _tmpLongitude;
-            if (_cursor.isNull(_cursorIndexOfLongitude)) {
-              _tmpLongitude = null;
-            } else {
-              _tmpLongitude = _cursor.getDouble(_cursorIndexOfLongitude);
-            }
-            final long _tmpDataColeta;
-            _tmpDataColeta = _cursor.getLong(_cursorIndexOfDataColeta);
-            final int _tmpIdUsuario;
-            _tmpIdUsuario = _cursor.getInt(_cursorIndexOfIdUsuario);
-            final String _tmpNomeUsuario;
-            _tmpNomeUsuario = _cursor.getString(_cursorIndexOfNomeUsuario);
-            final boolean _tmpSincronizado;
-            final int _tmp;
-            _tmp = _cursor.getInt(_cursorIndexOfSincronizado);
-            _tmpSincronizado = _tmp != 0;
-            final int _tmpTentativasSincronizacao;
-            _tmpTentativasSincronizacao = _cursor.getInt(_cursorIndexOfTentativasSincronizacao);
-            final String _tmpErroSincronizacao;
-            if (_cursor.isNull(_cursorIndexOfErroSincronizacao)) {
-              _tmpErroSincronizacao = null;
-            } else {
-              _tmpErroSincronizacao = _cursor.getString(_cursorIndexOfErroSincronizacao);
-            }
-            final Long _tmpServidorId;
-            if (_cursor.isNull(_cursorIndexOfServidorId)) {
-              _tmpServidorId = null;
-            } else {
-              _tmpServidorId = _cursor.getLong(_cursorIndexOfServidorId);
-            }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId);
-            _result.add(_item);
-          }
-          return _result;
-        } finally {
-          _cursor.close();
-          _statement.release();
-        }
-      }
-    }, $completion);
-  }
-
-  @Override
-  public Object getPendentes(final Continuation<? super List<ColetaEntity>> $completion) {
-    final String _sql = "SELECT * FROM coleta WHERE sincronizado = 0 ORDER BY dataColeta ASC";
-    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
-    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
-    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<ColetaEntity>>() {
-      @Override
-      @NonNull
-      public List<ColetaEntity> call() throws Exception {
-        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
-        try {
-          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
-          final int _cursorIndexOfIdPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "idPatrimonio");
-          final int _cursorIndexOfNumeroPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "numeroPatrimonio");
-          final int _cursorIndexOfIdInventario = CursorUtil.getColumnIndexOrThrow(_cursor, "idInventario");
-          final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
-          final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
-          final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
-          final int _cursorIndexOfNomeResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeResponsavel");
-          final int _cursorIndexOfObservacao = CursorUtil.getColumnIndexOrThrow(_cursor, "observacao");
-          final int _cursorIndexOfEstadoPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "estadoPatrimonio");
-          final int _cursorIndexOfLatitude = CursorUtil.getColumnIndexOrThrow(_cursor, "latitude");
-          final int _cursorIndexOfLongitude = CursorUtil.getColumnIndexOrThrow(_cursor, "longitude");
-          final int _cursorIndexOfDataColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "dataColeta");
-          final int _cursorIndexOfIdUsuario = CursorUtil.getColumnIndexOrThrow(_cursor, "idUsuario");
-          final int _cursorIndexOfNomeUsuario = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeUsuario");
-          final int _cursorIndexOfSincronizado = CursorUtil.getColumnIndexOrThrow(_cursor, "sincronizado");
-          final int _cursorIndexOfTentativasSincronizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasSincronizacao");
-          final int _cursorIndexOfErroSincronizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "erroSincronizacao");
-          final int _cursorIndexOfServidorId = CursorUtil.getColumnIndexOrThrow(_cursor, "servidorId");
-          final List<ColetaEntity> _result = new ArrayList<ColetaEntity>(_cursor.getCount());
-          while (_cursor.moveToNext()) {
-            final ColetaEntity _item;
-            final long _tmpId;
-            _tmpId = _cursor.getLong(_cursorIndexOfId);
-            final int _tmpIdPatrimonio;
-            _tmpIdPatrimonio = _cursor.getInt(_cursorIndexOfIdPatrimonio);
-            final String _tmpNumeroPatrimonio;
-            _tmpNumeroPatrimonio = _cursor.getString(_cursorIndexOfNumeroPatrimonio);
-            final int _tmpIdInventario;
-            _tmpIdInventario = _cursor.getInt(_cursorIndexOfIdInventario);
-            final Integer _tmpIdSala;
-            if (_cursor.isNull(_cursorIndexOfIdSala)) {
-              _tmpIdSala = null;
-            } else {
-              _tmpIdSala = _cursor.getInt(_cursorIndexOfIdSala);
-            }
-            final String _tmpNomeSala;
-            if (_cursor.isNull(_cursorIndexOfNomeSala)) {
-              _tmpNomeSala = null;
-            } else {
-              _tmpNomeSala = _cursor.getString(_cursorIndexOfNomeSala);
-            }
-            final Integer _tmpIdResponsavel;
-            if (_cursor.isNull(_cursorIndexOfIdResponsavel)) {
-              _tmpIdResponsavel = null;
-            } else {
-              _tmpIdResponsavel = _cursor.getInt(_cursorIndexOfIdResponsavel);
-            }
-            final String _tmpNomeResponsavel;
-            if (_cursor.isNull(_cursorIndexOfNomeResponsavel)) {
-              _tmpNomeResponsavel = null;
-            } else {
-              _tmpNomeResponsavel = _cursor.getString(_cursorIndexOfNomeResponsavel);
-            }
-            final String _tmpObservacao;
-            if (_cursor.isNull(_cursorIndexOfObservacao)) {
-              _tmpObservacao = null;
-            } else {
-              _tmpObservacao = _cursor.getString(_cursorIndexOfObservacao);
-            }
-            final String _tmpEstadoPatrimonio;
-            if (_cursor.isNull(_cursorIndexOfEstadoPatrimonio)) {
-              _tmpEstadoPatrimonio = null;
-            } else {
-              _tmpEstadoPatrimonio = _cursor.getString(_cursorIndexOfEstadoPatrimonio);
-            }
-            final Double _tmpLatitude;
-            if (_cursor.isNull(_cursorIndexOfLatitude)) {
-              _tmpLatitude = null;
-            } else {
-              _tmpLatitude = _cursor.getDouble(_cursorIndexOfLatitude);
-            }
-            final Double _tmpLongitude;
-            if (_cursor.isNull(_cursorIndexOfLongitude)) {
-              _tmpLongitude = null;
-            } else {
-              _tmpLongitude = _cursor.getDouble(_cursorIndexOfLongitude);
-            }
-            final long _tmpDataColeta;
-            _tmpDataColeta = _cursor.getLong(_cursorIndexOfDataColeta);
-            final int _tmpIdUsuario;
-            _tmpIdUsuario = _cursor.getInt(_cursorIndexOfIdUsuario);
-            final String _tmpNomeUsuario;
-            _tmpNomeUsuario = _cursor.getString(_cursorIndexOfNomeUsuario);
-            final boolean _tmpSincronizado;
-            final int _tmp;
-            _tmp = _cursor.getInt(_cursorIndexOfSincronizado);
-            _tmpSincronizado = _tmp != 0;
-            final int _tmpTentativasSincronizacao;
-            _tmpTentativasSincronizacao = _cursor.getInt(_cursorIndexOfTentativasSincronizacao);
-            final String _tmpErroSincronizacao;
-            if (_cursor.isNull(_cursorIndexOfErroSincronizacao)) {
-              _tmpErroSincronizacao = null;
-            } else {
-              _tmpErroSincronizacao = _cursor.getString(_cursorIndexOfErroSincronizacao);
-            }
-            final Long _tmpServidorId;
-            if (_cursor.isNull(_cursorIndexOfServidorId)) {
-              _tmpServidorId = null;
-            } else {
-              _tmpServidorId = _cursor.getLong(_cursorIndexOfServidorId);
-            }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId);
-            _result.add(_item);
-          }
-          return _result;
-        } finally {
-          _cursor.close();
-          _statement.release();
-        }
-      }
-    }, $completion);
-  }
-
-  @Override
-  public Object countPendentes(final Continuation<? super Integer> $completion) {
-    final String _sql = "SELECT COUNT(*) FROM coleta WHERE sincronizado = 0";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
     final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
     return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<Integer>() {

@@ -21,8 +21,14 @@ import com.inventario.mobile.presentation.login.LoginActivity
 import com.inventario.mobile.presentation.settings.SettingsActivity
 import com.inventario.mobile.utils.PreferencesManager
 import com.inventario.mobile.utils.PermissionHelper
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
+/**
+ * Activity principal do app
+ * Clean Architecture + MVVM + Hilt
+ */
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding

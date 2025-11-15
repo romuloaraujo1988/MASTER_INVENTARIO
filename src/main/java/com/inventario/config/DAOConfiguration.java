@@ -1,9 +1,9 @@
 package com.inventario.config;
 
-import com.inventario.dao.UsuarioDAORefactored;
+import com.inventario.dao.UsuarioDAO;
 import com.inventario.dao.PatrimonioDAO;
-import com.inventario.dao.SalaDAORefactored;
-import com.inventario.dao.SetorDAORefactored;
+import com.inventario.dao.SalaDAO;
+import com.inventario.dao.SetorDAO;
 import com.inventario.dao.ResponsavelDAO;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,8 +30,8 @@ public class DAOConfiguration {
      */
     @Bean
     @Primary
-    public UsuarioDAORefactored usuarioDAO() {
-        return new UsuarioDAORefactored();
+    public UsuarioDAO usuarioDAO() {
+        return new UsuarioDAO();
     }
     
     /**
@@ -50,8 +50,8 @@ public class DAOConfiguration {
      * @return SalaDAORefactored configurado
      */
     @Bean
-    public SalaDAORefactored salaDAO() {
-        return new SalaDAORefactored();
+    public SalaDAO salaDAO() {
+        return new SalaDAO();
     }
     
     /**
@@ -60,8 +60,8 @@ public class DAOConfiguration {
      * @return SetorDAORefactored configurado
      */
     @Bean
-    public SetorDAORefactored setorDAO() {
-        return new SetorDAORefactored();
+    public SetorDAO setorDAO() {
+        return new SetorDAO();
     }
     
     /**

@@ -25,16 +25,21 @@ import com.inventario.mobile.databinding.FragmentDashboardBinding
 import com.inventario.mobile.utils.VoiceSearchManager
 import com.inventario.mobile.utils.VoiceCommandParser
 import com.inventario.mobile.utils.CommandAction
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
+/**
+ * Fragment do Dashboard
+ * Clean Architecture + MVVM + Hilt
+ */
+@AndroidEntryPoint
 class DashboardFragment : Fragment() {
 
     private var _binding: FragmentDashboardBinding? = null
     private val binding get() = _binding!!
     
-    private val viewModel: DashboardViewModel by viewModels {
-        DashboardViewModelFactory(requireActivity().application)
-    }
+    // ViewModel Clean injetado via Hilt
+    private val viewModel: DashboardViewModelClean by viewModels()
     
     private lateinit var voiceSearchManager: VoiceSearchManager
     private lateinit var voiceCommandParser: VoiceCommandParser
@@ -131,7 +136,7 @@ class DashboardFragment : Fragment() {
         
         binding.btnQuickScan.setOnClickListener {
             try {
-                // Navegar para seleção de sala antes de iniciar a coleta via QR Code
+                // Navegar para seleção de sala (com otimizações de duplicação)
                 val intent = Intent(requireContext(), com.inventario.mobile.presentation.sala.SalaSelectionActivity::class.java)
                 intent.putExtra("COLETA_TIPO", "QRCODE")
                 startActivity(intent)
@@ -145,7 +150,7 @@ class DashboardFragment : Fragment() {
         // Botão de coleta manual
         binding.btnManualCollection.setOnClickListener {
             try {
-                // Navegar para seleção de sala antes de iniciar a coleta manual
+                // Navegar para seleção de sala (com otimizações de duplicação)
                 val intent = Intent(requireContext(), com.inventario.mobile.presentation.sala.SalaSelectionActivity::class.java)
                 intent.putExtra("COLETA_TIPO", "MANUAL")
                 startActivity(intent)
@@ -171,7 +176,7 @@ class DashboardFragment : Fragment() {
         // Botão de coleta por descrição (sem patrimônio)
         binding.btnDescriptionCollection.setOnClickListener {
             try {
-                // Navegar para seleção de sala antes de iniciar a coleta por descrição
+                // Navegar para seleção de sala (com otimizações de duplicação)
                 val intent = Intent(requireContext(), com.inventario.mobile.presentation.sala.SalaSelectionActivity::class.java)
                 intent.putExtra("COLETA_TIPO", "DESCRICAO")
                 startActivity(intent)

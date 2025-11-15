@@ -248,6 +248,15 @@ class MockApiService : ApiService {
         return Response.success(apiResponse)
     }
     
+    override suspend fun buscarTodasColetasSemPaginacao(): Response<ApiResponse<List<MobileColetaResponseDto>>> {
+        val apiResponse = ApiResponse(
+            success = true,
+            message = "Mock data",
+            data = emptyList<MobileColetaResponseDto>()
+        )
+        return Response.success(apiResponse)
+    }
+    
     override suspend fun getColetasPaginadas(
         page: Int,
         size: Int

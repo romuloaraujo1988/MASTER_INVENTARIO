@@ -1,7 +1,7 @@
 package com.inventario.repository;
 
 import com.inventario.model.Setor;
-import com.inventario.dao.SetorDAORefactored;
+import com.inventario.dao.SetorDAO;
 import org.springframework.stereotype.Repository;
 
 import java.sql.SQLException;
@@ -17,13 +17,13 @@ import java.util.Optional;
 @Repository
 public class SetorRepository implements com.inventario.repository.Repository<Setor, Integer> {
     
-    private final SetorDAORefactored dao;
+    private final SetorDAO dao;
     
     public SetorRepository() {
-        this.dao = new SetorDAORefactored();
+        this.dao = new SetorDAO();
     }
     
-    public SetorRepository(SetorDAORefactored dao) {
+    public SetorRepository(SetorDAO dao) {
         this.dao = dao;
     }
     

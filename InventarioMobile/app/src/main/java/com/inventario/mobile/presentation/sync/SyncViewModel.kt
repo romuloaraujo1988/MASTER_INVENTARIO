@@ -1,208 +1,211 @@
 package com.inventario.mobile.presentation.sync
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.inventario.mobile.data.repository.InventarioRepository
+import com.inventario.mobile.data.migration.ColetaMigration
+import com.inventario.mobile.data.migration.MigrationResult
+import com.inventario.mobile.domain.usecase.SincronizarColetasDoServidorUseCase
+import com.inventario.mobile.domain.usecase.SyncResult
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-data class SyncUiState(
-    val isLoading: Boolean = false,
-    val isSyncing: Boolean = false,
-    val lastSyncTime: String? = null,
-    val pendingSyncCount: Int = 0,
-    val syncProgress: Int = 0,
-    val syncMessage: String = "",
-    val errorMessage: String? = null,
-    val syncSuccess: Boolean = false,
-    val isDeleting: Boolean = false,
-    val deleteSuccess: Boolean = false
-)
-
-class SyncViewModel(
-    private val repository: InventarioRepository
+/**
+ * ViewModel para sincronização de dados
+ */
+@HiltViewModel
+class SyncViewModel @Inject constructor(
+    private val sincronizarColetasUseCase: SincronizarColetasDoServidorUseCase,
+    private val enviarColetasPendentesUseCase: com.inventario.mobile.domain.usecase.EnviarColetasPendentesUseCase,
+    private val coletaMigration: ColetaMigration
 ) : ViewModel() {
-
-    private val _uiState = MutableStateFlow(SyncUiState())
-    val uiState: StateFlow<SyncUiState> = _uiState.asStateFlow()
-
-    init {
-        loadSyncStatus()
+    
+    companion object {
+        private const val TAG = "SyncViewModel"
     }
-
-    fun loadSyncStatus() {
+    
+    private val _syncState = MutableStateFlow<SyncState>(SyncState.Idle)
+    val syncState: StateFlow<SyncState> = _syncState.asStateFlow()
+    
+    /**
+     * Sincroniza coletas do servidor
+     */
+    fun sincronizarColetas() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            Log.d(TAG, "Iniciando sincronização de coletas...")
+            _syncState.value = SyncState.Syncing("Baixando coletas do servidor...")
             
-            try {
-                val lastSyncTime = repository.getLastSyncTime()
-                val coletasPendentes = repository.getColetasPendentes()
-                val pendingCount = coletasPendentes.size
-                
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    lastSyncTime = lastSyncTime,
-                    pendingSyncCount = pendingCount,
-                    syncMessage = if (pendingCount == 0) "Todos os dados estão sincronizados" 
-                                 else "${pendingCount} itens aguardando sincronização"
-                )
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = "Erro ao carregar status: ${e.message}"
-                )
-            }
-        }
-    }
-
-    fun startSync() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isSyncing = true,
-                syncProgress = 0,
-                syncMessage = "Iniciando sincronização...",
-                errorMessage = null,
-                syncSuccess = false
+            sincronizarColetasUseCase().fold(
+                onSuccess = { result ->
+                    Log.d(TAG, "✓ Sincronização concluída: ${result.sucesso} coletas")
+                    _syncState.value = SyncState.Success(
+                        message = "Sincronização concluída",
+                        syncResult = result
+                    )
+                },
+                onFailure = { error ->
+                    Log.e(TAG, "✗ Erro na sincronização", error)
+                    _syncState.value = SyncState.Error(
+                        error.message ?: "Erro ao sincronizar coletas"
+                    )
+                }
             )
-
-            try {
-                updateSyncProgress(10, "Verificando conexão...")
-                
-                // Buscar coletas pendentes antes da sincronização
-                val coletasPendentesAntes = repository.getColetasPendentes()
-                val countAntes = coletasPendentesAntes.size
-                
-                updateSyncProgress(30, "Enviando ${countAntes} coletas pendentes...")
-                
-                // Realizar sincronização real
-                val syncResult = repository.syncData()
-                
-                if (syncResult.isSuccess) {
-                    updateSyncProgress(60, "Recebendo atualizações do servidor...")
-                    
-                    // Verificar se há coletas pendentes após sincronização
-                    val coletasPendentesDepois = repository.getColetasPendentes()
-                    val countDepois = coletasPendentesDepois.size
-                    
-                    updateSyncProgress(90, "Finalizando sincronização...")
-                    
-                    val mensagemFinal = if (countAntes > 0) {
-                        if (countDepois == 0) {
-                            "Sincronização concluída! ${countAntes} coletas enviadas com sucesso."
-                        } else {
-                            "Sincronização parcial. ${countAntes - countDepois} de ${countAntes} coletas enviadas."
-                        }
-                    } else {
-                        "Sincronização concluída! Dados atualizados do servidor."
-                    }
-                    
-                    updateSyncProgress(100, mensagemFinal)
-                    
-                    _uiState.value = _uiState.value.copy(
-                        isSyncing = false,
-                        syncSuccess = true,
-                        pendingSyncCount = countDepois,
-                        lastSyncTime = getCurrentTime(),
-                        syncMessage = mensagemFinal
-                    )
-                } else {
-                    throw syncResult.exceptionOrNull() ?: Exception("Erro desconhecido na sincronização")
-                }
-
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isSyncing = false,
-                    errorMessage = "Erro durante a sincronização: ${e.message}",
-                    syncMessage = "Falha na sincronização"
-                )
-            }
         }
     }
-
-    private fun updateSyncProgress(progress: Int, message: String) {
-        _uiState.value = _uiState.value.copy(
-            syncProgress = progress,
-            syncMessage = message
-        )
-    }
-
-    private fun getLastSyncTime(): String {
-        // Implementar lógica para obter último tempo de sincronização
-        // Por enquanto, retorna um valor simulado
-        return "Hoje às 14:30"
-    }
-
-    fun clearPendingCollections() {
+    
+    /**
+     * Migra coletas antigas com dados incompletos
+     */
+    fun migrarColetasAntigas() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isDeleting = true, errorMessage = null)
+            Log.d(TAG, "Iniciando migração de coletas antigas...")
+            _syncState.value = SyncState.Syncing("Atualizando coletas antigas...")
             
-            try {
-                // Buscar coletas pendentes de sincronização
-                val coletasPendentes = repository.getColetasPendentes()
-                
-                if (coletasPendentes.isEmpty()) {
-                    _uiState.value = _uiState.value.copy(
-                        isDeleting = false,
-                        errorMessage = "Não há coletas pendentes para excluir"
+            coletaMigration.migrarColetasAntigas().fold(
+                onSuccess = { result ->
+                    Log.d(TAG, "✓ Migração concluída: ${result.atualizadas} coletas")
+                    _syncState.value = SyncState.MigrationSuccess(
+                        message = "Migração concluída",
+                        migrationResult = result
                     )
-                    return@launch
+                },
+                onFailure = { error ->
+                    Log.e(TAG, "✗ Erro na migração", error)
+                    _syncState.value = SyncState.Error(
+                        error.message ?: "Erro ao migrar coletas"
+                    )
                 }
-                
-                // Remover coletas pendentes
-                for (coleta in coletasPendentes) {
-                    repository.removeColeta(coleta.patrimonioId)
+            )
+        }
+    }
+    
+    /**
+     * Envia coletas pendentes para o servidor
+     */
+    fun enviarColetasPendentes() {
+        viewModelScope.launch {
+            Log.d(TAG, "Enviando coletas pendentes...")
+            _syncState.value = SyncState.Syncing("Enviando coletas pendentes...")
+            
+            enviarColetasPendentesUseCase().fold(
+                onSuccess = { result ->
+                    Log.d(TAG, "✓ Upload concluído: ${result.sucesso} coletas")
+                    _syncState.value = SyncState.UploadSuccess(
+                        message = "Upload concluído",
+                        uploadResult = result
+                    )
+                },
+                onFailure = { error ->
+                    Log.e(TAG, "✗ Erro no upload", error)
+                    _syncState.value = SyncState.Error(
+                        error.message ?: "Erro ao enviar coletas"
+                    )
                 }
-                
-                _uiState.value = _uiState.value.copy(
-                    isDeleting = false,
-                    deleteSuccess = true,
-                    syncMessage = "${coletasPendentes.size} coletas pendentes foram excluídas com sucesso"
+            )
+        }
+    }
+    
+    /**
+     * Sincroniza bidirecional (download + upload + migração)
+     */
+    fun sincronizarCompleto() {
+        viewModelScope.launch {
+            Log.d(TAG, "Iniciando sincronização completa (bidirecional)...")
+            
+            // 1. Enviar coletas pendentes
+            _syncState.value = SyncState.Syncing("Enviando coletas pendentes...")
+            
+            val uploadResult = enviarColetasPendentesUseCase()
+            
+            if (uploadResult.isFailure) {
+                Log.w(TAG, "⚠ Erro ao enviar pendentes, continuando...")
+            }
+            
+            // 2. Baixar coletas do servidor
+            _syncState.value = SyncState.Syncing("Baixando coletas do servidor...")
+            
+            val syncResult = sincronizarColetasUseCase()
+            
+            if (syncResult.isFailure) {
+                _syncState.value = SyncState.Error(
+                    syncResult.exceptionOrNull()?.message ?: "Erro na sincronização"
                 )
-                
-                // Recarregar status após exclusão
-                loadSyncStatus()
-                
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isDeleting = false,
-                    errorMessage = "Erro ao excluir coletas pendentes: ${e.message}"
+                return@launch
+            }
+            
+            // 3. Migrar coletas antigas
+            _syncState.value = SyncState.Syncing("Atualizando coletas antigas...")
+            
+            val migrationResult = coletaMigration.migrarColetasAntigas()
+            
+            if (migrationResult.isFailure) {
+                _syncState.value = SyncState.Error(
+                    migrationResult.exceptionOrNull()?.message ?: "Erro na migração"
                 )
+                return@launch
+            }
+            
+            // 4. Sucesso
+            _syncState.value = SyncState.CompleteSuccess(
+                message = "Sincronização completa",
+                syncResult = syncResult.getOrNull()!!,
+                migrationResult = migrationResult.getOrNull()!!,
+                uploadResult = uploadResult.getOrNull()
+            )
+            
+            Log.d(TAG, "✓ Sincronização completa concluída")
+        }
+    }
+    
+    /**
+     * Verifica se precisa migração
+     */
+    fun verificarMigracao() {
+        viewModelScope.launch {
+            val precisa = coletaMigration.precisaMigracao()
+            if (precisa) {
+                Log.d(TAG, "⚠ Coletas antigas precisam de migração")
+                _syncState.value = SyncState.NeedsMigration
             }
         }
     }
-
-    fun clearMessages() {
-        _uiState.value = _uiState.value.copy(
-            errorMessage = null,
-            deleteSuccess = false
-        )
-    }
-
-    private fun getCurrentTime(): String {
-        val formatter = java.text.SimpleDateFormat("dd/MM/yyyy 'às' HH:mm", java.util.Locale.getDefault())
-        return formatter.format(java.util.Date())
-    }
-
-    fun clearError() {
-        _uiState.value = _uiState.value.copy(errorMessage = null)
-    }
-
-    fun clearSuccess() {
-        _uiState.value = _uiState.value.copy(syncSuccess = false)
+    
+    /**
+     * Limpa o estado
+     */
+    fun limparEstado() {
+        _syncState.value = SyncState.Idle
     }
 }
 
-class SyncViewModelFactory(
-    private val repository: InventarioRepository
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(SyncViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return SyncViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
+/**
+ * Estados da sincronização
+ */
+sealed class SyncState {
+    object Idle : SyncState()
+    object NeedsMigration : SyncState()
+    data class Syncing(val message: String) : SyncState()
+    data class Success(
+        val message: String,
+        val syncResult: SyncResult
+    ) : SyncState()
+    data class UploadSuccess(
+        val message: String,
+        val uploadResult: com.inventario.mobile.domain.usecase.UploadResult
+    ) : SyncState()
+    data class MigrationSuccess(
+        val message: String,
+        val migrationResult: MigrationResult
+    ) : SyncState()
+    data class CompleteSuccess(
+        val message: String,
+        val syncResult: SyncResult,
+        val migrationResult: MigrationResult,
+        val uploadResult: com.inventario.mobile.domain.usecase.UploadResult?
+    ) : SyncState()
+    data class Error(val message: String) : SyncState()
 }

@@ -1,7 +1,7 @@
 package com.inventario.view;
 
 // === SWING: Usar DAOs diretamente (sem Spring) ===
-import com.inventario.dao.SalaDAORefactored;
+import com.inventario.dao.SalaDAO;
 import com.inventario.dao.PatrimonioDAO;
 import com.inventario.dao.ColetaDAO;
 import com.inventario.dao.InventarioDAO;
@@ -122,7 +122,7 @@ public class ColetaFrame_v2 extends JFrame {
     //private JLabel lblSugestoes;
 
     // === SWING: DAOs (sem Spring) ===
-    private SalaDAORefactored salaDAO;
+    private SalaDAO salaDAO;
     private PatrimonioDAO patrimonioDAO;
     private ColetaDAO coletaDAO;
     private InventarioDAO inventarioDAO;
@@ -195,7 +195,7 @@ public class ColetaFrame_v2 extends JFrame {
 
     private void initializeServices() {
         // === SWING: Inicializar DAOs diretamente ===
-        this.salaDAO = new SalaDAORefactored();
+        this.salaDAO = new SalaDAO();
         this.patrimonioDAO = new PatrimonioDAO();
         this.coletaDAO = new ColetaDAO();
         this.inventarioDAO = new InventarioDAO();

@@ -1,6 +1,6 @@
 package com.inventario.view;
 
-import com.inventario.dao.SalaDAORefactored;
+import com.inventario.dao.SalaDAO;
 import com.inventario.model.Sala;
 import com.inventario.view.ui.ButtonStyleFactory;
 import javax.swing.*;
@@ -16,7 +16,7 @@ import java.util.List;
  */
 public class SalaFrame extends JFrame {
     
-    private final SalaDAORefactored salaDAO;
+    private final SalaDAO salaDAO;
     private JTable tableSalas;
     private DefaultTableModel tableModel;
     private JTextField txtFiltro;
@@ -24,7 +24,7 @@ public class SalaFrame extends JFrame {
     
     public SalaFrame() {
         // === SWING: Usar DAO diretamente (sem Spring) ===
-        this.salaDAO = new SalaDAORefactored();
+        this.salaDAO = new SalaDAO();
         initializeComponents();
     }
     

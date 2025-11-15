@@ -6,26 +6,24 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.inventario.mobile.databinding.ActivityManualCollectionBinding
-import com.inventario.mobile.data.repository.InventarioRepository
-import com.inventario.mobile.data.remote.api.ApiService
-import com.inventario.mobile.di.NetworkModule
 import com.inventario.mobile.utils.PreferencesManager
 import com.inventario.mobile.utils.NavigationHelper
 import com.inventario.mobile.utils.SoundUtils
 import com.inventario.mobile.utils.VoiceSearchManager
 import com.inventario.mobile.presentation.dialog.EstadoPatrimonioDialog
-import com.inventario.mobile.data.model.EstadoPatrimonio
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class ManualCollectionActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityManualCollectionBinding
-    private lateinit var viewModel: ManualCollectionViewModel
+    private val viewModel: ManualCollectionViewModel by viewModels()
     private lateinit var preferencesManager: PreferencesManager
     private var voiceSearchManager: VoiceSearchManager? = null
     
@@ -65,20 +63,11 @@ class ManualCollectionActivity : AppCompatActivity() {
             return
         }
 
-        setupViewModel()
         setupUI()
         setupObservers()
         
         // Configurar informações da sala no ViewModel
         viewModel.setSalaInfo(salaId, salaNome)
-    }
-
-    private fun setupViewModel() {
-        val apiService = NetworkModule.getApiService(this)
-        val repository = InventarioRepository.getInstance(this, apiService)
-        
-        val factory = ManualCollectionViewModelFactory(repository)
-        viewModel = ViewModelProvider(this, factory)[ManualCollectionViewModel::class.java]
     }
 
     private fun setupUI() {

@@ -6,7 +6,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.util.List;
-import com.inventario.dao.SetorDAORefactored;
+import com.inventario.dao.SetorDAO;
 import com.inventario.model.Setor;
 import com.inventario.view.ui.ButtonStyleFactory;
 
@@ -17,13 +17,13 @@ import com.inventario.view.ui.ButtonStyleFactory;
 public class SetorFrame extends JFrame {
     private JTable tabelaSetor;
     private DefaultTableModel modeloTabela;
-    private final SetorDAORefactored setorDAO;
+    private final SetorDAO setorDAO;
     private JTextField campoBusca;
     private JButton btnNovo, btnEditar, btnExcluir, btnBuscar;
     
     public SetorFrame() {
         // === SWING: Usar DAO diretamente (sem Spring) ===
-        this.setorDAO = new SetorDAORefactored();
+        this.setorDAO = new SetorDAO();
         initComponents();
         aplicarEstiloModerno();
         carregarSetores();

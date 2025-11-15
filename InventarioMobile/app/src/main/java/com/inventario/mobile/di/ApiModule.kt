@@ -48,4 +48,16 @@ object ApiModule {
     ): com.inventario.mobile.api.SalaApi {
         return NetworkModule.getSalaApi(context)
     }
+    
+    /**
+     * Provider para ApiService (legado)
+     * NOTA: Mantido para compatibilidade com código legado.
+     */
+    @Provides
+    @Singleton
+    fun provideApiService(
+        @ApplicationContext context: Context
+    ): com.inventario.mobile.data.remote.api.ApiService {
+        return NetworkModule.getApiService(context)
+    }
 }

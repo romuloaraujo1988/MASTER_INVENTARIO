@@ -1,123 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk-auto/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="4dp"
-    android:layout_marginVertical="4dp"
+    android:layout_margin="8dp"
+    app:cardElevation="2dp"
+    app:cardCornerRadius="8dp"
     android:clickable="true"
     android:focusable="true"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="2dp"
-    app:rippleColor="@color/primary_color_light"
-    app:strokeColor="@color/card_stroke_color"
-    app:strokeWidth="1dp">
-
-    <androidx.constraintlayout.widget.ConstraintLayout
+    android:foreground="?attr/selectableItemBackground">
+    
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:padding="16dp">
-
-        <!-- Ícone da sala -->
-        <ImageView
-            android:id="@+id/imageViewSalaIcon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginEnd="16dp"
-            android:background="@drawable/circle_background_primary"
-            android:padding="8dp"
-            android:src="@drawable/ic_room"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="@android:color/white" />
-
-        <!-- Nome da sala -->
+        
         <TextView
-            android:id="@+id/textViewSalaNome"
-            android:layout_width="0dp"
+            android:id="@+id/tvSalaNome"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="@color/text_primary"
             android:textSize="16sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@id/imageViewArrow"
-            app:layout_constraintStart_toEndOf="@id/imageViewSalaIcon"
-            app:layout_constraintTop_toTopOf="@id/imageViewSalaIcon"
-            tools:text="Sala de Aula 101" />
-
-        <!-- Descrição da sala -->
+            android:textColor="?attr/colorOnSurface"
+            tools:text="Sala 101" />
+        
         <TextView
-            android:id="@+id/textViewSalaDescricao"
-            android:layout_width="0dp"
+            android:id="@+id/tvSalaDescricao"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
             android:layout_marginTop="4dp"
-            android:ellipsize="end"
-            android:maxLines="2"
-            android:textColor="@color/text_secondary"
             android:textSize="14sp"
-            app:layout_constraintEnd_toStartOf="@id/imageViewArrow"
-            app:layout_constraintStart_toEndOf="@id/imageViewSalaIcon"
-            app:layout_constraintTop_toBottomOf="@id/textViewSalaNome"
-            tools:text="Sala de aula para disciplinas de informática" />
-
-        <!-- Informações adicionais -->
-        <LinearLayout
-            android:id="@+id/layoutInfoAdicional"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toStartOf="@id/imageViewArrow"
-            app:layout_constraintStart_toEndOf="@id/imageViewSalaIcon"
-            app:layout_constraintTop_toBottomOf="@id/textViewSalaDescricao">
-
-            <!-- Andar -->
-            <TextView
-                android:id="@+id/textViewSalaAndar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="16dp"
-                android:background="@drawable/rounded_background_secondary"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="4dp"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                android:visibility="gone"
-                tools:text="Andar: 1"
-                tools:visibility="visible" />
-
-            <!-- Bloco -->
-            <TextView
-                android:id="@+id/textViewSalaBloco"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/rounded_background_secondary"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="4dp"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                android:visibility="gone"
-                tools:text="Bloco: A"
-                tools:visibility="visible" />
-
-        </LinearLayout>
-
-        <!-- Seta indicativa -->
-        <ImageView
-            android:id="@+id/imageViewArrow"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_arrow_forward"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/text_secondary" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
+            android:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="Laboratório de Informática" />
+        
+    </LinearLayout>
+    
 </com.google.android.material.card.MaterialCardView>

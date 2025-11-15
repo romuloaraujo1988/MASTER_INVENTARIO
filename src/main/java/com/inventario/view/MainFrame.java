@@ -107,7 +107,7 @@ public class MainFrame extends JFrame {
             JMenuItem itemColeta = new JMenuItem("Coleta de Dados");
             itemColeta.setFont(new Font("Arial", Font.PLAIN, 13));
             itemColeta.addActionListener(e -> abrirColeta());
-            JMenuItem itemImportarCSV = new JMenuItem("Importar CSV do SUAP");
+            JMenuItem itemImportarCSV = new JMenuItem("Importar Excel do SUAP");
             itemImportarCSV.setFont(new Font("Arial", Font.PLAIN, 13));
             itemImportarCSV.addActionListener(e -> abrirImportacaoCSV());
 
@@ -371,7 +371,7 @@ public class MainFrame extends JFrame {
             panel.add(btnColeta, gbc);
 
             // Botão Importar CSV
-            JButton btnImportarCSV = createSimpleButton("Importar CSV", "📥");
+            JButton btnImportarCSV = createSimpleButton("Importar CSV/XLS", "📥");
             btnImportarCSV.addActionListener(e -> abrirImportacaoCSV());
             gbc.gridx = 1;
             gbc.gridy = 4;
@@ -845,7 +845,7 @@ public class MainFrame extends JFrame {
             importacaoFrame.setVisible(true);
         } catch (Exception e) {
             ModernDialog.showMessage(this,
-                    "Erro ao abrir módulo de importação CSV: " + e.getMessage(),
+                    "Erro ao abrir módulo de importação CSV/XLS: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }

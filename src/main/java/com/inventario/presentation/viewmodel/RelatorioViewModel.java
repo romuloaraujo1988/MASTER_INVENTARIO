@@ -2,9 +2,9 @@ package com.inventario.presentation.viewmodel;
 
 import com.inventario.dao.RelatorioColetaDAO;
 import com.inventario.dao.InventarioDAO;
-import com.inventario.dao.SetorDAORefactored;
+import com.inventario.dao.SetorDAO;
 import com.inventario.dao.ResponsavelDAO;
-import com.inventario.dao.SalaDAORefactored;
+import com.inventario.dao.SalaDAO;
 import com.inventario.model.Inventario;
 import com.inventario.model.Setor;
 import com.inventario.model.Responsavel;
@@ -33,9 +33,9 @@ public class RelatorioViewModel {
     // DAOs - Acesso temporário direto (TODO: migrar para Use Cases)
     private final RelatorioColetaDAO relatorioDAO;
     private final InventarioDAO inventarioDAO;
-    private final SetorDAORefactored setorDAO;
+    private final SetorDAO setorDAO;
     private final ResponsavelDAO responsavelDAO;
-    private final SalaDAORefactored salaDAO;
+    private final SalaDAO salaDAO;
     
     // Estado atual
     private RelatorioState state;
@@ -46,9 +46,9 @@ public class RelatorioViewModel {
     public RelatorioViewModel() {
         this.relatorioDAO = new RelatorioColetaDAO();
         this.inventarioDAO = new InventarioDAO();
-        this.setorDAO = new SetorDAORefactored();
+        this.setorDAO = new SetorDAO();
         this.responsavelDAO = new ResponsavelDAO();
-        this.salaDAO = new SalaDAORefactored();
+        this.salaDAO = new SalaDAO();
         this.propertyChangeSupport = new PropertyChangeSupport(this);
         this.state = RelatorioState.Idle.INSTANCE;
     }

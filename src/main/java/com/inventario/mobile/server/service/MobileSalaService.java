@@ -1,6 +1,6 @@
 package com.inventario.mobile.server.service;
 
-import com.inventario.dao.SalaDAORefactored;
+import com.inventario.dao.SalaDAO;
 import com.inventario.model.Sala;
 import com.inventario.mobile.server.dto.MobileSalaDTO;
 import org.springframework.stereotype.Service;
@@ -19,10 +19,10 @@ public class MobileSalaService {
     
     private static final Logger logger = LoggerFactory.getLogger(MobileSalaService.class);
     
-    private final SalaDAORefactored salaDAO;
+    private final SalaDAO salaDAO;
     
     public MobileSalaService() {
-        this.salaDAO = new SalaDAORefactored();
+        this.salaDAO = new SalaDAO();
     }
     
     /**
@@ -122,9 +122,17 @@ public class MobileSalaService {
         MobileSalaDTO dto = new MobileSalaDTO();
         
         dto.setId(sala.getIdSala());
-        dto.setNome(sala.getNumeroSala()); // Usar numeroSala como nome
-        dto.setDescricao(sala.getDescricao());
-        dto.setAndar(sala.getAndar() != null ? sala.getAndar().toString() : null); // Converter Integer para String
+        
+        // Usar NUMERO_SALA se disponível, senão usar DESCRICAO
+        String numeroSala = sala.getNumeroSala();
+        String nomeExibicao = (numeroSala != null && !numeroSala.trim().isEmpty()) 
+            ? numeroSala 
+            : sala.getDescricao();
+        
+        dto.setNumeroSala(numeroSala);
+        dto.setNome(nomeExibicao); // Nome para exibição (NUMERO_SALA) - aparece em negrito
+        dto.setDescricao(sala.getDescricao()); // Descrição completa - aparece embaixo em cinza
+        dto.setAndar(sala.getAndar() != null ? sala.getAndar().toString() : null);
         dto.setBloco(sala.getBloco());
         dto.setAtiva(sala.isAtiva());
         

@@ -3380,6 +3380,7 @@ id btnManualCollection
 id btnQuickScan
 id btnRefresh
 id btnResetCollectionCount
+id btnRetry
 id btnRetryFailed
 id btnRollbackAll
 id btnRunDescricaoTest
@@ -3401,8 +3402,13 @@ id btnViewPending
 id btnViewStatistics
 id btnViewStatus
 id btnVoiceSearch
+id btn_download
+id btn_migrate
+id btn_sync_complete
+id btn_upload
 id buttonCancel
 id buttonClearFilters
+id buttonClearSearch
 id buttonColetar
 id buttonPanel
 id buttonRetry
@@ -3593,8 +3599,6 @@ id ifRoom
 id ignore
 id ignoreRequest
 id image
-id imageViewArrow
-id imageViewSalaIcon
 id immediateStop
 id included
 id indeterminate
@@ -3617,7 +3621,6 @@ id layout
 id layoutEmptyState
 id layoutEstado
 id layoutFilters
-id layoutInfoAdicional
 id layoutLocalizacao
 id layoutLocation
 id layoutMarcaModelo
@@ -3780,6 +3783,7 @@ id progressBarInventario
 id progressBarSync
 id progressConclusao
 id progressOverlay
+id progress_bar
 id progress_circular
 id progress_horizontal
 id radio
@@ -3813,6 +3817,7 @@ id scrollIndicatorDown
 id scrollIndicatorUp
 id scrollView
 id scrollable
+id searchCard
 id searchView
 id search_badge
 id search_bar
@@ -3923,10 +3928,6 @@ id textViewNumero
 id textViewPendentesCount
 id textViewResponsavel
 id textViewSala
-id textViewSalaAndar
-id textViewSalaBloco
-id textViewSalaDescricao
-id textViewSalaNome
 id textViewSetor
 id textViewStatus
 id textViewTitle
@@ -3982,6 +3983,7 @@ id tvDataColeta
 id tvDescricao
 id tvDivergencias
 id tvEmpty
+id tvEndOfList
 id tvError
 id tvErrorCount
 id tvEstado
@@ -4023,7 +4025,9 @@ id tvRequirements
 id tvResponsaveisCount
 id tvResultCount
 id tvSala
+id tvSalaDescricao
 id tvSalaInfo
+id tvSalaNome
 id tvSalasCount
 id tvScanInstruction
 id tvSearchTime
@@ -4054,6 +4058,7 @@ id tvVersion
 id tvVoiceStatus
 id tvVoiceSuggestions
 id tvVoiceText
+id tv_status
 id unchecked
 id uniform
 id unlabeled
@@ -4226,6 +4231,7 @@ layout activity_offline_sync
 layout activity_pending_collections
 layout activity_quick_search
 layout activity_sala_selection
+layout activity_sala_selection_paging
 layout activity_scanner
 layout activity_settings
 layout activity_simple_sala_selection
@@ -4233,6 +4239,7 @@ layout activity_smoke_test
 layout activity_splash
 layout activity_statistics
 layout activity_sync
+layout activity_sync_manual
 layout custom_dialog
 layout design_bottom_navigation_item
 layout design_bottom_sheet_dialog
@@ -4264,6 +4271,7 @@ layout ime_base_split_test_activity
 layout ime_secondary_split_test_activity
 layout item_coleta
 layout item_descricao
+layout item_load_state
 layout item_loading
 layout item_patrimonio
 layout item_pending_coleta

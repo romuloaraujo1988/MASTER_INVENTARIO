@@ -22,6 +22,7 @@ com\inventario\dao\BaseDAO.class
 com\inventario\view\JLogin$4.class
 com\inventario\view\ResponsavelFrame$1.class
 com\inventario\util\DatabaseExecuteUpdate.class
+com\inventario\config\ConfigurationPaths.class
 com\inventario\ui\ConfiguracaoBancoFrame$3.class
 com\inventario\config\DAOConfiguration.class
 com\inventario\util\VersionInfo.class
@@ -114,6 +115,7 @@ com\inventario\config\NotificationConfig.class
 com\inventario\util\SoundNotification.class
 com\inventario\service\RelatorioService.class
 com\inventario\util\ExcelExporterAlternativo.class
+com\inventario\config\ConfigurationPaths$ConfigMode.class
 com\inventario\siads\util\SiadsLayoutFormatter.class
 com\inventario\view\ResponsavelFormDialog.class
 com\inventario\mobile\server\dto\MobileSyncResponse.class
@@ -128,11 +130,13 @@ com\inventario\view\CampusFrame$2.class
 com\inventario\util\ImageUtils.class
 com\inventario\mobile\server\controller\MobileUsuarioController.class
 com\inventario\view\components\PaginationPanelTest.class
+com\inventario\dao\SetorDAO$SetorComEstatisticas.class
 com\inventario\view\CampusFormDialog$1.class
 com\inventario\mobile\server\controller\MobileAuthController.class
 com\inventario\util\DatabaseTestQuery.class
 com\inventario\mobile\server\controller\MobileDescricaoController.class
 com\inventario\mobile\server\dto\MobilePatrimonioDTO.class
+com\inventario\dao\UsuarioDAO.class
 com\inventario\util\RelatorioExcelGenerator.class
 com\inventario\view\ui\ModernButtons$2.class
 com\inventario\view\SetorFrame$2.class
@@ -143,7 +147,6 @@ com\inventario\model\ParticipanteInventario.class
 com\inventario\siads\service\SiadsIntegrationService.class
 com\inventario\siads\test\SiadsExportTest.class
 com\inventario\view\ResponsavelFrame$3.class
-com\inventario\dao\SetorDAORefactored.class
 com\inventario\mobile\server\controller\MobileHealthController.class
 com\inventario\config\DatabaseConfig.class
 com\inventario\view\MobileMonitorFrame$1.class
@@ -161,6 +164,7 @@ com\inventario\offline\OfflineManager$1.class
 com\inventario\view\RelatorioFrame$4.class
 com\inventario\mobile\server\dto\MobileLoginRequest.class
 com\inventario\service\PatrimonioService.class
+com\inventario\util\ConfiguracaoBancoUtil.class
 com\inventario\model\Coleta.class
 com\inventario\view\UsuarioFrame$2.class
 com\inventario\view\RelatorioFrame$7.class
@@ -169,6 +173,7 @@ com\inventario\view\ResponsavelFrame$2.class
 com\inventario\offline\ConnectivityManager.class
 com\inventario\view\SetorFormDialog.class
 com\inventario\presentation\state\RelatorioState$InventariosCarregados.class
+com\inventario\dao\SalaDAO.class
 com\inventario\mobile\server\dto\MobileSyncRequest.class
 com\inventario\siads\config\SiadsConfig.class
 com\inventario\ui\ConfiguracaoBancoController$3.class
@@ -234,7 +239,6 @@ com\inventario\mobile\server\service\MobilePatrimonioService.class
 com\inventario\model\QRCode.class
 com\inventario\view\RelatorioFrame$2.class
 com\inventario\view\CampusFormDialog.class
-com\inventario\dao\UsuarioDAORefactored.class
 com\inventario\mobile\server\service\MobileSalaService.class
 com\inventario\mobile\server\dto\ApiResponse.class
 com\inventario\siads\service\SiadsExportService.class
@@ -267,6 +271,7 @@ com\inventario\dao\ResponsavelDAO.class
 com\inventario\util\notification\NotificationManager$1.class
 com\inventario\model\Responsavel.class
 com\inventario\siads\view\SiadsExportDialog$2.class
+com\inventario\dao\SetorDAO.class
 com\inventario\util\PortManager.class
 com\inventario\chart\InventarioChartService.class
 com\inventario\presentation\state\RelatorioState.class
@@ -306,7 +311,6 @@ com\inventario\mobile\server\util\MobileValidationUtil.class
 com\inventario\view\ColetaFrame_v2$8.class
 com\inventario\util\DataSanitizer.class
 com\inventario\view\JLogin$2.class
-com\inventario\dao\SetorDAORefactored$SetorComEstatisticas.class
 com\inventario\view\MainFrame$4.class
 com\inventario\util\SingleInstanceLock.class
 com\inventario\dao\InventarioDAO.class
@@ -337,7 +341,6 @@ com\inventario\view\MainFrame$12.class
 com\inventario\view\JLogin$3.class
 com\inventario\service\DashboardService.class
 com\inventario\repository\impl\PatrimonioRepositoryImpl.class
-com\inventario\dao\SalaDAORefactored.class
 com\inventario\view\CampusManagementFrame.class
 com\inventario\service\MobileServerManager.class
 com\inventario\view\CampusManagementFrame$2.class
@@ -346,12 +349,14 @@ com\inventario\offline\SyncFrame.class
 com\inventario\util\ImportacaoCSV$RelatorioImportacao.class
 com\inventario\view\SalaFormDialog$1.class
 com\inventario\view\InventarioFrame$2.class
+com\inventario\view\JLogin$6.class
 com\inventario\siads\view\SiadsExportDialog.class
 com\inventario\mobile\server\service\MobileAuthService$2.class
 com\inventario\offline\SyncFrame$4.class
 com\inventario\offline\SQLiteConnection.class
 com\inventario\ui\ConfiguracaoBancoFrame$2.class
 com\inventario\view\JLogin.class
+com\inventario\util\ConfigurationMigration.class
 com\inventario\util\ConnectionManager.class
 com\inventario\config\MobileDataSourceConfig.class
 com\inventario\view\DashboardColetaFrame$1.class
@@ -383,6 +388,7 @@ com\inventario\mobile\server\service\MobileAuthService$1.class
 com\inventario\offline\SyncFrame$6.class
 com\inventario\view\JLogin$5.class
 com\inventario\service\CampusService.class
+com\inventario\util\PasswordEncryption.class
 com\inventario\view\PatrimonioFrame.class
 com\inventario\ui\ConfiguracaoBancoFrame$1.class
 com\inventario\view\MainFrame$5.class

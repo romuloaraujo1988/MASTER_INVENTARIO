@@ -9,7 +9,7 @@ import androidx.room.Index
  */
 @Entity(
     tableName = "sala",
-    indices = [Index(value = ["nome"])]
+    indices = [Index(value = ["nome"]), Index(value = ["ativa"])]
 )
 data class SalaEntity(
     @PrimaryKey
@@ -17,5 +17,6 @@ data class SalaEntity(
     val nome: String,
     val idSetor: Int?,
     val nomeSetor: String?,
+    val ativa: Boolean = true,
     val dataUltimaAtualizacao: Long = System.currentTimeMillis()
 )

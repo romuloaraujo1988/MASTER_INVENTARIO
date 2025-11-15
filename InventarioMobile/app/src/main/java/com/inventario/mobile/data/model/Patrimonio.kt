@@ -6,6 +6,7 @@ package com.inventario.mobile.data.model
  */
 data class Patrimonio(
     val id: Long = 0,
+    @com.google.gson.annotations.SerializedName("codigo")
     val numeroPatrimonio: String,
     val descricao: String,
     val marca: String? = null,

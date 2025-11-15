@@ -251,7 +251,7 @@ public class InventarioSetorDAO {
         
         // Se inclui todos os setores, busca todos os setores ativos
         if (inventarioIncluiTodosSetores(idInventario)) {
-            SetorDAORefactored setorDAO = new SetorDAORefactored();
+            SetorDAO setorDAO = new SetorDAO();
             try {
                 return setorDAO.findAll("NOME");
             } catch (SQLException e) {

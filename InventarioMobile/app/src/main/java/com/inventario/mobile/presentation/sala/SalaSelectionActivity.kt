@@ -5,27 +5,33 @@ import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.inventario.mobile.R
 import com.inventario.mobile.databinding.ActivitySalaSelectionBinding
 import com.inventario.mobile.presentation.adapter.SalaAdapter
-import com.inventario.mobile.ui.coleta.ColetaActivity
-// import com.inventario.mobile.data.repository.SalaRepositoryImpl
-// import com.inventario.mobile.data.local.database.InventarioDatabase
-import com.inventario.mobile.data.remote.api.ApiService
 import com.inventario.mobile.utils.NavigationHelper
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
+/**
+ * Activity para seleção de sala
+ * Clean Architecture + MVVM + Hilt
+ */
+@AndroidEntryPoint
 class SalaSelectionActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySalaSelectionBinding
+    
+    // ViewModel antigo (mantido temporariamente para compatibilidade)
     private lateinit var viewModel: SalaSelectionViewModel
+    
     private lateinit var salaAdapter: SalaAdapter
 
     private var coletaTipo: String = "QRCODE" // QRCODE ou MANUAL
+    private var allSalas: List<com.inventario.mobile.domain.model.Sala> = emptyList() // Cache de todas as salas
 
     companion object {
         private const val TAG = "SalaSelectionActivity"
@@ -46,13 +52,15 @@ class SalaSelectionActivity : AppCompatActivity() {
             coletaTipo = intent.getStringExtra(EXTRA_COLETA_TIPO) ?: "QRCODE"
             Log.d(TAG, "onCreate: Tipo de coleta = $coletaTipo")
             
-            // Inicializar ViewModel
-            viewModel = ViewModelProvider(
+            // Inicializar ViewModel (mantendo abordagem antiga por enquanto)
+            // TODO: Migrar completamente para SalaSelectionViewModelClean com Paging 3
+            viewModel = androidx.lifecycle.ViewModelProvider(
                 this,
                 SalaSelectionViewModelFactory(application)
             )[SalaSelectionViewModel::class.java]
             
             setupToolbar()
+            setupSearchView()
             setupRecyclerView()
             setupObservers()
             
@@ -98,6 +106,68 @@ class SalaSelectionActivity : AppCompatActivity() {
             }
             setDisplayHomeAsUpEnabled(true)
             setDisplayShowHomeEnabled(true)
+        }
+    }
+
+    private var searchJob: kotlinx.coroutines.Job? = null
+    
+    private fun setupSearchView() {
+        // Listener para mudanças no texto
+        binding.editTextSearch.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val query = s?.toString() ?: ""
+                
+                // Mostrar/ocultar botão de limpar
+                binding.buttonClearSearch.visibility = if (query.isNotEmpty()) {
+                    android.view.View.VISIBLE
+                } else {
+                    android.view.View.GONE
+                }
+                
+                // Cancelar busca anterior
+                searchJob?.cancel()
+                
+                // Debounce: esperar 500ms após parar de digitar
+                searchJob = lifecycleScope.launch {
+                    kotlinx.coroutines.delay(500)
+                    filterSalas(query)
+                }
+            }
+            
+            override fun afterTextChanged(s: android.text.Editable?) {}
+        })
+        
+        // Botão para limpar busca
+        binding.buttonClearSearch.setOnClickListener {
+            binding.editTextSearch.text.clear()
+            viewModel.loadSalas() // Recarregar lista normal
+        }
+    }
+    
+    private fun filterSalas(query: String) {
+        if (query.isBlank()) {
+            // Sem busca: carregar lista paginada normal
+            viewModel.loadSalas()
+        } else {
+            // Com busca: filtrar apenas localmente (mais rápido)
+            // Filtra apenas as salas já carregadas
+            val filtered = allSalas.filter { sala ->
+                sala.nome.contains(query, ignoreCase = true)
+            }
+            salaAdapter.submitList(filtered.toList())
+            
+            // Mostrar mensagem informativa
+            if (filtered.isEmpty()) {
+                if (allSalas.isEmpty()) {
+                    Toast.makeText(this, "Carregue as salas primeiro", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "Nenhuma sala encontrada. Role para baixo para carregar mais.", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Log.d(TAG, "filterSalas: ${filtered.size} salas encontradas para '$query'")
+            }
         }
     }
 
@@ -193,8 +263,16 @@ class SalaSelectionActivity : AppCompatActivity() {
     }
 
     private fun updateUI(state: SalaSelectionUiState) {
-        // Atualizar lista de salas
-        salaAdapter.submitList(state.salas.toList()) // Criar nova lista para forçar atualização
+        // Atualizar cache de todas as salas carregadas
+        allSalas = state.salas
+        
+        // Só atualizar lista se não estiver buscando
+        val currentQuery = binding.editTextSearch.text.toString()
+        if (currentQuery.isBlank()) {
+            // Sem busca: mostrar lista normal do estado
+            salaAdapter.submitList(state.salas.toList())
+        }
+        // Se estiver buscando, não atualiza a lista (mantém filtro)
         
         // Atualizar estado de loading (apenas para pull-to-refresh)
         binding.swipeRefreshLayout.isRefreshing = state.isLoading && state.salas.isEmpty()

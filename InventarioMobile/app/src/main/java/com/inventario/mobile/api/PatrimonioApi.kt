@@ -12,15 +12,15 @@ import retrofit2.http.Query
  */
 interface PatrimonioApi {
     
-    @GET("patrimonios")
+    @GET("patrimonio")
     suspend fun listarPatrimonios(): Response<ApiResponse<List<Patrimonio>>>
     
-    @GET("patrimonios/{id}")
+    @GET("patrimonio/{id}")
     suspend fun buscarPorId(
         @Path("id") id: Int
     ): Response<ApiResponse<Patrimonio>>
     
-    @GET("patrimonios/numero/{numero}")
+    @GET("patrimonio/numero/{numero}")
     suspend fun buscarPorNumero(
         @Path("numero") numero: String
     ): Response<ApiResponse<Patrimonio>>
@@ -30,7 +30,7 @@ interface PatrimonioApi {
         @Query("idInventario") idInventario: Int? = null
     ): Response<ApiResponse<List<String>>>
     
-    @GET("patrimonios/descricao/{descricao}/nao-coletados")
+    @GET("patrimonio/descricao/{descricao}/nao-coletados")
     suspend fun buscarPorDescricaoNaoColetados(
         @Path("descricao") descricao: String
     ): Response<ApiResponse<List<Patrimonio>>>

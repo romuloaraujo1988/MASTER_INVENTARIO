@@ -1,12 +1,22 @@
 package com.inventario.mobile.data.mapper
 
+import android.util.Log
+import com.inventario.mobile.data.local.dao.PatrimonioDao
 import com.inventario.mobile.data.local.entity.ColetaEntity
 import com.inventario.mobile.domain.model.Coleta
+import javax.inject.Inject
 
 /**
  * Mapper: Converte entre Entity (Room) e Model (Domain)
+ * 
+ * ATUALIZADO: Agora preenche campos completos ao converter para Entity
  */
-object ColetaMapper {
+class ColetaMapper @Inject constructor(
+    private val patrimonioDao: PatrimonioDao
+) {
+    companion object {
+        private const val TAG = "ColetaMapper"
+    }
     
     fun toDomain(entity: ColetaEntity): Coleta {
         return Coleta(
@@ -23,13 +33,50 @@ object ColetaMapper {
         )
     }
     
-    fun toEntity(domain: Coleta, idInventario: Int = 0): ColetaEntity {
+    /**
+     * Converte Domain para Entity, preenchendo campos completos
+     * Busca dados do patrimônio se necessário
+     */
+    suspend fun toEntity(domain: Coleta, idInventario: Int = 0): ColetaEntity {
+        // Buscar dados do patrimônio para preencher campos
+        val patrimonio = try {
+            patrimonioDao.buscarPorId(domain.patrimonioId.toInt())
+        } catch (e: Exception) {
+            Log.w(TAG, "Erro ao buscar patrimônio ${domain.patrimonioId}", e)
+            null
+        }
+        
         return ColetaEntity(
             id = domain.id,
             idPatrimonio = domain.patrimonioId.toInt(),
-            numeroPatrimonio = "", // Será preenchido pelo repositório
-            idInventario = idInventario, // ID do inventário ativo
-            idSala = null, // Será preenchido se necessário
+            numeroPatrimonio = patrimonio?.numero ?: "", // ✅ Preenchido do banco
+            idInventario = idInventario,
+            idSala = patrimonio?.idSala,
+            nomeSala = patrimonio?.nomeSala ?: domain.localizacaoAtual, // ✅ Preenchido
+            idResponsavel = patrimonio?.idResponsavel,
+            nomeResponsavel = patrimonio?.nomeResponsavel,
+            observacao = domain.observacoes,
+            estadoPatrimonio = null,
+            latitude = domain.latitude,
+            longitude = domain.longitude,
+            dataColeta = domain.dataColeta,
+            idUsuario = domain.usuarioId.toInt(),
+            nomeUsuario = "Usuário ${domain.usuarioId}", // TODO: Buscar nome real
+            sincronizado = domain.sincronizado
+        )
+    }
+    
+    /**
+     * Converte Domain para Entity sem buscar dados adicionais
+     * Usado quando os dados já estão completos
+     */
+    fun toEntitySimple(domain: Coleta, idInventario: Int = 0): ColetaEntity {
+        return ColetaEntity(
+            id = domain.id,
+            idPatrimonio = domain.patrimonioId.toInt(),
+            numeroPatrimonio = "",
+            idInventario = idInventario,
+            idSala = null,
             nomeSala = domain.localizacaoAtual,
             idResponsavel = null,
             nomeResponsavel = null,
@@ -39,7 +86,7 @@ object ColetaMapper {
             longitude = domain.longitude,
             dataColeta = domain.dataColeta,
             idUsuario = domain.usuarioId.toInt(),
-            nomeUsuario = "", // Será preenchido pelo repositório
+            nomeUsuario = "",
             sincronizado = domain.sincronizado
         )
     }
@@ -48,3 +95,4 @@ object ColetaMapper {
         return entities.map { toDomain(it) }
     }
 }
+

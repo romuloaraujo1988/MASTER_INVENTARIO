@@ -1,6 +1,6 @@
 package com.inventario.security;
 
-import com.inventario.dao.UsuarioDAORefactored;
+import com.inventario.dao.UsuarioDAO;
 import com.inventario.model.Usuario;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +29,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     private static final Logger logger = LoggerFactory.getLogger(CustomUserDetailsService.class);
     
     @Autowired
-    private UsuarioDAORefactored usuarioDAO;
+    private UsuarioDAO usuarioDAO;
     
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

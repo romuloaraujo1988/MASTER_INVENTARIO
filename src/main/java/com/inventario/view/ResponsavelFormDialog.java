@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import com.inventario.model.Responsavel;
 import com.inventario.dao.ResponsavelDAO;
-import com.inventario.dao.SetorDAORefactored;
+import com.inventario.dao.SetorDAO;
 import com.inventario.model.Setor;
 import java.util.List;
 
@@ -127,7 +127,7 @@ public class ResponsavelFormDialog extends JDialog {
     private void carregarSetores() {
         comboSetor.addItem("Selecione um setor...");
         try {
-            SetorDAORefactored setorDAO = new SetorDAORefactored();
+            SetorDAO setorDAO = new SetorDAO();
             List<Setor> setores = setorDAO.findAll("NOME");
             for (Setor setor : setores) {
                 comboSetor.addItem(setor);

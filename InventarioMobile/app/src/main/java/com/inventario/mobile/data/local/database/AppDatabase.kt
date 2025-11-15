@@ -20,7 +20,7 @@ import com.inventario.mobile.data.local.entity.*
         SincronizacaoEntity::class,
         SyncLogEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

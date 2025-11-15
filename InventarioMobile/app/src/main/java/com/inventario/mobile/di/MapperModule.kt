@@ -1,5 +1,6 @@
 package com.inventario.mobile.di
 
+import com.inventario.mobile.data.local.dao.PatrimonioDao
 import com.inventario.mobile.data.mapper.ColetaMapper
 import com.inventario.mobile.data.mapper.PatrimonioMapper
 import com.inventario.mobile.data.mapper.SalaMapper
@@ -30,7 +31,7 @@ object MapperModule {
     
     @Provides
     @Singleton
-    fun provideColetaMapper(): ColetaMapper {
-        return ColetaMapper
+    fun provideColetaMapper(patrimonioDao: PatrimonioDao): ColetaMapper {
+        return ColetaMapper(patrimonioDao)
     }
 }

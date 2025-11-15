@@ -1,7 +1,7 @@
 package com.inventario.mobile.server.service;
 
 import com.inventario.dao.PatrimonioDAO;
-import com.inventario.dao.SalaDAORefactored;
+import com.inventario.dao.SalaDAO;
 import com.inventario.dao.ColetaDAO;
 import com.inventario.dao.InventarioDAO;
 import com.inventario.model.Patrimonio;
@@ -27,13 +27,13 @@ public class MobilePatrimonioService {
     private static final Logger logger = LoggerFactory.getLogger(MobilePatrimonioService.class);
     
     private final PatrimonioDAO patrimonioDAO;
-    private final SalaDAORefactored salaDAO;
+    private final SalaDAO salaDAO;
     private final ColetaDAO coletaDAO;
     private final InventarioDAO inventarioDAO;
     
     public MobilePatrimonioService() {
         this.patrimonioDAO = new PatrimonioDAO();
-        this.salaDAO = new SalaDAORefactored();
+        this.salaDAO = new SalaDAO();
         this.coletaDAO = new ColetaDAO();
         this.inventarioDAO = new InventarioDAO();
     }

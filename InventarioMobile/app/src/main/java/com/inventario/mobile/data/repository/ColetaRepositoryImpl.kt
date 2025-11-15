@@ -87,22 +87,65 @@ class ColetaRepositoryImpl @Inject constructor(
     
     override suspend fun registrarColeta(coleta: Coleta): Result<Coleta> {
         return try {
-            // 1. Salvar localmente (offline-first)
-            val entity = mapper.toEntity(coleta)
+            // 1. Buscar dados do patrimônio para preencher campos
+            val patrimonio = patrimonioDao.buscarPorId(coleta.patrimonioId.toInt())
+            
+            // 2. Buscar dados do usuário (se disponível)
+            // TODO: Implementar busca de usuário quando necessário
+            
+            // 3. Criar entity com dados completos
+            val entity = mapper.toEntity(coleta).copy(
+                numeroPatrimonio = patrimonio?.numero ?: "",
+                nomeUsuario = "Usuário ${coleta.usuarioId}" // TODO: Buscar nome real
+            )
+            
+            // 4. Salvar localmente (offline-first)
             val id = coletaDao.inserir(entity)
             
-            // 2. Marcar patrimônio como coletado
+            // 5. Marcar patrimônio como coletado
             patrimonioDao.marcarComoColetado(coleta.patrimonioId.toInt())
             
-            // 3. Tentar sincronizar imediatamente (não bloqueia)
+            // 6. Tentar sincronizar imediatamente (não bloqueia)
             try {
-                val response = coletaApi.registrarColeta(coleta)
+                // Converter para MobileColetaRequest (formato esperado pelo servidor)
+                val request = com.inventario.mobile.data.remote.dto.MobileColetaRequest(
+                    numeroPatrimonio = patrimonio?.numero ?: "",
+                    idInventario = 2, // TODO: Obter ID do inventário ativo
+                    usuarioId = coleta.usuarioId.toInt(),
+                    idSala = patrimonio?.idSala,
+                    localizacaoEncontrada = coleta.localizacaoAtual,
+                    estadoEncontrado = coleta.status ?: "BOM",
+                    observacaoColeta = coleta.observacoes,
+                    dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
+                        .format(java.util.Date(coleta.dataColeta)),
+                    latitude = coleta.latitude,
+                    longitude = coleta.longitude,
+                    fotoPatrimonio = null,
+                    semEtiqueta = false,
+                    descricaoItemSemEtiqueta = null,
+                    categoriaItemSemEtiqueta = null,
+                    deviceId = android.os.Build.MODEL,
+                    appVersion = "1.2",
+                    divergencia = false,
+                    motivoDivergencia = null
+                )
+                
+                android.util.Log.d("ColetaRepositoryImpl", "Enviando coleta para servidor: $request")
+                
+                val response = coletaApi.registrarColeta(request)
+                
+                android.util.Log.d("ColetaRepositoryImpl", "Resposta do servidor: success=${response.success}, message=${response.message}")
+                
                 if (response.success) {
                     coletaDao.marcarSincronizada(id)
+                    android.util.Log.d("ColetaRepositoryImpl", "✓ Coleta sincronizada com sucesso")
+                } else {
+                    android.util.Log.w("ColetaRepositoryImpl", "⚠ Servidor retornou success=false: ${response.message}")
                 }
             } catch (e: Exception) {
                 // Falha na sincronização não impede o sucesso local
                 // Será sincronizado depois
+                android.util.Log.e("ColetaRepositoryImpl", "✗ Erro ao sincronizar coleta", e)
             }
             
             Result.success(coleta.copy(id = id))
@@ -128,7 +171,32 @@ class ColetaRepositoryImpl @Inject constructor(
             for (entity in coletasPendentes) {
                 try {
                     val coleta = mapper.toDomain(entity)
-                    val response = coletaApi.registrarColeta(coleta)
+                    val patrimonio = patrimonioDao.buscarPorId(coleta.patrimonioId.toInt())
+                    
+                    // Converter para MobileColetaRequest
+                    val request = com.inventario.mobile.data.remote.dto.MobileColetaRequest(
+                        numeroPatrimonio = patrimonio?.numero ?: entity.numeroPatrimonio,
+                        idInventario = 2, // TODO: Obter ID do inventário ativo
+                        usuarioId = coleta.usuarioId.toInt(),
+                        idSala = patrimonio?.idSala,
+                        localizacaoEncontrada = coleta.localizacaoAtual,
+                        estadoEncontrado = coleta.status ?: "BOM",
+                        observacaoColeta = coleta.observacoes,
+                        dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
+                            .format(java.util.Date(coleta.dataColeta)),
+                        latitude = coleta.latitude,
+                        longitude = coleta.longitude,
+                        fotoPatrimonio = null,
+                        semEtiqueta = false,
+                        descricaoItemSemEtiqueta = null,
+                        categoriaItemSemEtiqueta = null,
+                        deviceId = android.os.Build.MODEL,
+                        appVersion = "1.2",
+                        divergencia = false,
+                        motivoDivergencia = null
+                    )
+                    
+                    val response = coletaApi.registrarColeta(request)
                     
                     if (response.success) {
                         coletaDao.marcarSincronizada(entity.id)
@@ -154,6 +222,40 @@ class ColetaRepositoryImpl @Inject constructor(
     }
     
     override suspend fun getColetasLocal(): List<Coleta> {
-        return coletaDao.buscarPendentes().map { mapper.toDomain(it) }
+        return try {
+            coletaDao.buscarTodas().map { mapper.toDomain(it) }
+        } catch (e: Exception) {
+            android.util.Log.e("ColetaRepositoryImpl", "Erro ao buscar coletas locais", e)
+            emptyList()
+        }
+    }
+    
+    /**
+     * Atualiza coletas antigas que têm campos vazios
+     * Busca os dados do patrimônio e preenche
+     */
+    suspend fun atualizarColetasAntigas() {
+        try {
+            val coletas = coletaDao.buscarTodas()
+            
+            coletas.forEach { coleta ->
+                // Se numeroPatrimonio está vazio, atualizar
+                if (coleta.numeroPatrimonio.isBlank()) {
+                    val patrimonio = patrimonioDao.buscarPorId(coleta.idPatrimonio)
+                    
+                    if (patrimonio != null) {
+                        val coletaAtualizada = coleta.copy(
+                            numeroPatrimonio = patrimonio.numero
+                        )
+                        coletaDao.inserir(coletaAtualizada)
+                        
+                        android.util.Log.d("ColetaRepositoryImpl", 
+                            "Coleta ${coleta.id} atualizada com número ${patrimonio.numero}")
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("ColetaRepositoryImpl", "Erro ao atualizar coletas antigas", e)
+        }
     }
 }

@@ -1,0 +1,118 @@
+================================================================================
+                    SISTEMA DE INVENTÁRIO - MODO PRODUÇÃO
+================================================================================
+
+📋 PRÉ-REQUISITOS
+--------------------------------------------------------------------------------
+✓ Java 21 ou superior instalado
+✓ PostgreSQL rodando
+✓ Arquivo configuracao_banco.json configurado
+
+
+🚀 OPÇÃO 1: INICIALIZAÇÃO SIMPLES (Recomendado)
+--------------------------------------------------------------------------------
+
+1️⃣  Compilar o sistema:
+    
+    Clique duas vezes em: build-producao.bat
+    
+    Aguarde a mensagem: "BUILD CONCLUIDO COM SUCESSO!"
+
+
+2️⃣  Iniciar o sistema:
+    
+    Clique duas vezes em: start-producao.bat
+    
+    O sistema iniciará automaticamente!
+
+
+📱 OPÇÃO 2: INSTALAR COMO SERVIÇO WINDOWS
+--------------------------------------------------------------------------------
+
+1️⃣  Compilar (se ainda não compilou):
+    
+    Clique duas vezes em: build-producao.bat
+
+
+2️⃣  Instalar serviço (REQUER ADMINISTRADOR):
+    
+    Clique com botão direito em: instalar-servico-windows.bat
+    Selecione: "Executar como Administrador"
+    
+    Escolha "S" para iniciar o serviço automaticamente
+
+
+3️⃣  Gerenciar o serviço:
+    
+    Pressione: Windows + R
+    Digite: services.msc
+    Procure por: "Sistema de Inventario"
+    
+    Ou use comandos:
+    - Iniciar:  sc start SistemaInventario
+    - Parar:    sc stop SistemaInventario
+    - Status:   sc query SistemaInventario
+
+
+🔍 VERIFICAR SE ESTÁ FUNCIONANDO
+--------------------------------------------------------------------------------
+
+✓ Desktop: A tela de login deve abrir automaticamente
+
+✓ API Mobile: Abra o navegador em:
+  http://localhost:8080/api/mobile/auth/login
+
+✓ Logs: Verifique o arquivo:
+  logs\sistema-inventario-prod.log
+
+
+⚙️ CONFIGURAÇÕES
+--------------------------------------------------------------------------------
+
+Porta do servidor:     8080
+Memória JVM:          512MB - 2GB
+Arquivo de logs:      logs\sistema-inventario-prod.log
+Perfil ativo:         PRODUÇÃO
+
+
+📊 MONITORAMENTO
+--------------------------------------------------------------------------------
+
+Ver logs em tempo real (PowerShell):
+    Get-Content logs\sistema-inventario-prod.log -Wait -Tail 50
+
+Verificar porta em uso:
+    netstat -ano | findstr :8080
+
+
+🆘 PROBLEMAS?
+--------------------------------------------------------------------------------
+
+1. Porta 8080 em uso:
+   - Encontre o processo: netstat -ano | findstr :8080
+   - Mate o processo: taskkill /PID <numero> /F
+
+2. Erro de conexão com banco:
+   - Verifique se PostgreSQL está rodando
+   - Verifique configuracao_banco.json
+
+3. Erro de memória:
+   - Edite start-producao.bat
+   - Aumente -Xmx2048m para -Xmx4096m
+
+4. Outros erros:
+   - Consulte: PRODUCAO.md
+   - Verifique logs em: logs\sistema-inventario-prod.log
+
+
+📚 DOCUMENTAÇÃO COMPLETA
+--------------------------------------------------------------------------------
+
+Para mais detalhes, consulte:
+    PRODUCAO.md              - Guia completo
+    MODO_PRODUCAO_RESUMO.md  - Resumo executivo
+
+
+================================================================================
+                            BOA SORTE! 🚀
+================================================================================

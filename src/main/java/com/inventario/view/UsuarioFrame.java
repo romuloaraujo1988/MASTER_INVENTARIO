@@ -33,13 +33,13 @@ public class UsuarioFrame extends JFrame {
     private JLabel lblStatus;
 
     // === SWING: DAOs (sem Spring) ===
-    private final com.inventario.dao.UsuarioDAORefactored usuarioDAO;
-    private final com.inventario.dao.SetorDAORefactored setorDAO;
+    private final com.inventario.dao.UsuarioDAO usuarioDAO;
+    private final com.inventario.dao.SetorDAO setorDAO;
 
     public UsuarioFrame() {
         // === SWING: Usar DAOs diretamente (sem Spring) ===
-        this.usuarioDAO = new com.inventario.dao.UsuarioDAORefactored();
-        this.setorDAO = new com.inventario.dao.SetorDAORefactored();
+        this.usuarioDAO = new com.inventario.dao.UsuarioDAO();
+        this.setorDAO = new com.inventario.dao.SetorDAO();
         initializeComponents();
         setupLayout();
         aplicarEstiloModerno();

@@ -2,7 +2,9 @@
 
 ## Fase 1: Fundação - Data Access Objects (DAOs)
 
-- [x] 1. Auditar e padronizar métodos de DAOs
+- [ ] 1. Auditar e padronizar métodos de DAOs
+
+
 
 
   - Verificar todos os DAOs existentes (PatrimonioDao, SalaDao, ColetaDao, SincronizacaoDao)
@@ -12,7 +14,9 @@
 
 
 
-- [ ] 1.1 Corrigir PatrimonioDao
+- [x] 1.1 Corrigir PatrimonioDao
+
+
   - Verificar se todos os métodos usados no código existem
   - Garantir métodos: `buscarPorNumero()`, `buscarPorId()`, `getAllPatrimoniosList()`, `contarTodos()`, `contarColetados()`, `contarNaoColetados()`, `inserirTodos()`, `limparTodos()`
 
@@ -26,9 +30,13 @@
   - _Requirements: 1.1, 1.3_
 
 
+
+
 - [ ] 1.3 Validar SincronizacaoDao
   - Verificar se o DAO criado tem todos os métodos necessários
   - Garantir métodos: `buscarPendentes()`, `getUltimaSincronizacao()`, `inserir()`, `marcarComoSincronizado()`, `limparTodas()`
+
+
   - _Requirements: 1.1, 1.4_
 
 
