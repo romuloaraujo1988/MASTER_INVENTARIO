@@ -277,9 +277,84 @@ class InventarioRepository(
         page: Int = 0,
         size: Int = 50,
         coletado: Boolean? = null
-    ): Result<List<Patrimonio>> = Result.success(emptyList())
+    ): Result<List<Patrimonio>> {
+        return try {
+            android.util.Log.d("InventarioRepository", "Buscando patrimônios do responsável $responsavelId (page: $page, size: $size, coletado: $coletado)")
+            
+            val response = apiService.getPatrimoniosByResponsavel(responsavelId, page, size, coletado)
+            
+            if (response.isSuccessful && response.body() != null) {
+                val apiResponse = response.body()!!
+                
+                if (apiResponse.success && apiResponse.data != null) {
+                    val patrimonios = apiResponse.data.map { dto ->
+                        Patrimonio(
+                            id = dto.id,
+                            numeroPatrimonio = dto.codigo,
+                            descricao = dto.descricao,
+                            marca = dto.marca,
+                            modelo = dto.modelo,
+                            numeroSerie = dto.numeroSerie,
+                            estado = dto.estado,
+                            valor = dto.valor,
+                            setorId = dto.setorId,
+                            setorNome = dto.setorNome,
+                            salaId = dto.salaId,
+                            salaNome = dto.salaNome,
+                            responsavelId = dto.responsavelId,
+                            responsavelNome = dto.responsavelNome,
+                            coletado = dto.coletado,
+                            dataColeta = dto.dataColeta,
+                            observacoesColeta = null,
+                            observacoes = dto.observacoes
+                        )
+                    }
+                    
+                    android.util.Log.d("InventarioRepository", "✓ ${patrimonios.size} patrimônios carregados do responsável $responsavelId")
+                    Result.success(patrimonios)
+                } else {
+                    android.util.Log.w("InventarioRepository", "API retornou success=false ou data=null")
+                    Result.success(emptyList())
+                }
+            } else {
+                android.util.Log.e("InventarioRepository", "Erro HTTP ${response.code()}")
+                Result.failure(Exception("Erro ao buscar patrimônios: HTTP ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("InventarioRepository", "Erro ao buscar patrimônios do responsável", e)
+            Result.failure(e)
+        }
+    }
     
-    suspend fun getResponsaveis(): Result<List<com.inventario.mobile.data.model.Responsavel>> = Result.success(emptyList())
+    suspend fun getResponsaveis(): Result<List<com.inventario.mobile.data.model.Responsavel>> {
+        return try {
+            android.util.Log.d("InventarioRepository", "Buscando responsáveis...")
+            
+            val response = apiService.getResponsaveis()
+            
+            if (response.isSuccessful && response.body() != null) {
+                val apiResponse = response.body()!!
+                
+                if (apiResponse.success && apiResponse.data != null) {
+                    val responsaveis = apiResponse.data.map { dto ->
+                        com.inventario.mobile.data.model.Responsavel.fromDto(dto)
+                    }
+                    
+                    android.util.Log.d("InventarioRepository", "✓ ${responsaveis.size} responsáveis carregados")
+                    Result.success(responsaveis)
+                } else {
+                    android.util.Log.w("InventarioRepository", "API retornou success=false ou data=null")
+                    Result.success(emptyList())
+                }
+            } else {
+                android.util.Log.e("InventarioRepository", "Erro HTTP ${response.code()}")
+                Result.failure(Exception("Erro ao buscar responsáveis: HTTP ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("InventarioRepository", "Erro ao buscar responsáveis", e)
+            Result.failure(e)
+        }
+    }
     
     suspend fun getColetasPendentes(): List<Coleta> = emptyList()
     

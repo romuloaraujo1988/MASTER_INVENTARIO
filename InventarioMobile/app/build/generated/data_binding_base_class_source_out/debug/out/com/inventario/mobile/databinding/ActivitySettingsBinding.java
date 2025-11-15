@@ -41,6 +41,9 @@ public final class ActivitySettingsBinding implements ViewBinding {
   public final Button btnTestSync;
 
   @NonNull
+  public final LinearLayout layoutOfflineStatus;
+
+  @NonNull
   public final LinearLayout layoutSyncCount;
 
   @NonNull
@@ -51,6 +54,9 @@ public final class ActivitySettingsBinding implements ViewBinding {
 
   @NonNull
   public final SwitchMaterial switchAutoSyncByCount;
+
+  @NonNull
+  public final SwitchMaterial switchForceOffline;
 
   @NonNull
   public final SwitchMaterial switchWifiOnly;
@@ -71,8 +77,9 @@ public final class ActivitySettingsBinding implements ViewBinding {
       @NonNull Button btnDecreaseSyncCount, @NonNull Button btnDecreaseSyncInterval,
       @NonNull Button btnIncreaseSyncCount, @NonNull Button btnIncreaseSyncInterval,
       @NonNull Button btnResetCollectionCount, @NonNull Button btnTestSync,
-      @NonNull LinearLayout layoutSyncCount, @NonNull LinearLayout layoutSyncInterval,
-      @NonNull SwitchMaterial switchAutoSync, @NonNull SwitchMaterial switchAutoSyncByCount,
+      @NonNull LinearLayout layoutOfflineStatus, @NonNull LinearLayout layoutSyncCount,
+      @NonNull LinearLayout layoutSyncInterval, @NonNull SwitchMaterial switchAutoSync,
+      @NonNull SwitchMaterial switchAutoSyncByCount, @NonNull SwitchMaterial switchForceOffline,
       @NonNull SwitchMaterial switchWifiOnly, @NonNull Toolbar toolbar,
       @NonNull TextView tvCurrentCollectionCount, @NonNull TextView tvSyncCount,
       @NonNull TextView tvSyncInterval) {
@@ -83,10 +90,12 @@ public final class ActivitySettingsBinding implements ViewBinding {
     this.btnIncreaseSyncInterval = btnIncreaseSyncInterval;
     this.btnResetCollectionCount = btnResetCollectionCount;
     this.btnTestSync = btnTestSync;
+    this.layoutOfflineStatus = layoutOfflineStatus;
     this.layoutSyncCount = layoutSyncCount;
     this.layoutSyncInterval = layoutSyncInterval;
     this.switchAutoSync = switchAutoSync;
     this.switchAutoSyncByCount = switchAutoSyncByCount;
+    this.switchForceOffline = switchForceOffline;
     this.switchWifiOnly = switchWifiOnly;
     this.toolbar = toolbar;
     this.tvCurrentCollectionCount = tvCurrentCollectionCount;
@@ -157,6 +166,12 @@ public final class ActivitySettingsBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.layoutOfflineStatus;
+      LinearLayout layoutOfflineStatus = ViewBindings.findChildViewById(rootView, id);
+      if (layoutOfflineStatus == null) {
+        break missingId;
+      }
+
       id = R.id.layoutSyncCount;
       LinearLayout layoutSyncCount = ViewBindings.findChildViewById(rootView, id);
       if (layoutSyncCount == null) {
@@ -178,6 +193,12 @@ public final class ActivitySettingsBinding implements ViewBinding {
       id = R.id.switchAutoSyncByCount;
       SwitchMaterial switchAutoSyncByCount = ViewBindings.findChildViewById(rootView, id);
       if (switchAutoSyncByCount == null) {
+        break missingId;
+      }
+
+      id = R.id.switchForceOffline;
+      SwitchMaterial switchForceOffline = ViewBindings.findChildViewById(rootView, id);
+      if (switchForceOffline == null) {
         break missingId;
       }
 
@@ -213,9 +234,9 @@ public final class ActivitySettingsBinding implements ViewBinding {
 
       return new ActivitySettingsBinding((LinearLayout) rootView, btnDecreaseSyncCount,
           btnDecreaseSyncInterval, btnIncreaseSyncCount, btnIncreaseSyncInterval,
-          btnResetCollectionCount, btnTestSync, layoutSyncCount, layoutSyncInterval, switchAutoSync,
-          switchAutoSyncByCount, switchWifiOnly, toolbar, tvCurrentCollectionCount, tvSyncCount,
-          tvSyncInterval);
+          btnResetCollectionCount, btnTestSync, layoutOfflineStatus, layoutSyncCount,
+          layoutSyncInterval, switchAutoSync, switchAutoSyncByCount, switchForceOffline,
+          switchWifiOnly, toolbar, tvCurrentCollectionCount, tvSyncCount, tvSyncInterval);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

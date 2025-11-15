@@ -64,6 +64,25 @@ class SettingsViewModel(
         preferencesManager.resetCollectionCount()
     }
     
+    // Force offline mode
+    fun isForceOfflineMode(): Boolean = preferencesManager.isForceOfflineMode()
+    
+    fun setForceOfflineMode(enabled: Boolean) {
+        preferencesManager.setForceOfflineMode(enabled)
+        
+        // Se ativar modo offline, cancelar sincronizações agendadas
+        if (enabled) {
+            syncScheduler.cancelPeriodicSync()
+            android.util.Log.d("SettingsViewModel", "Modo offline ativado - sincronizações canceladas")
+        } else {
+            // Se desativar e auto-sync estiver ativo, reagendar
+            if (isAutoSyncEnabled()) {
+                syncScheduler.schedulePeriodicSync()
+                android.util.Log.d("SettingsViewModel", "Modo offline desativado - sincronizações reagendadas")
+            }
+        }
+    }
+    
     // Wi-Fi only sync
     fun isWifiOnlyEnabled(): Boolean = preferencesManager.isWifiOnlySyncEnabled()
     

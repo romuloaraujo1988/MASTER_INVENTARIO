@@ -213,6 +213,20 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
     }
     
     /**
+     * Busca patrimônios por responsável (ID)
+     */
+    public List<Patrimonio> buscarPorResponsavel(int idResponsavel) throws SQLException {
+        String sql = "SELECT p.*, r.NOME as nome_responsavel, s.DESCRICAO as nome_sala " +
+                    "FROM TABELA_PATRIMONIO p " +
+                    "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
+                    "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
+                    "WHERE p.ID_RESPONSAVEL = ? " +
+                    "ORDER BY p.NUMERO";
+        
+        return executeQuery(sql, idResponsavel);
+    }
+    
+    /**
      * Busca patrimônios por responsável (ID) com paginação
      */
     public List<Patrimonio> buscarPorResponsavelComPaginacao(int idResponsavel, int page, int size) throws SQLException {

@@ -50,6 +50,9 @@ class InventarioActivity : AppCompatActivity() {
             binding = ActivityInventarioBinding.inflate(layoutInflater)
             setContentView(binding.root)
 
+            // Adicionar indicador de modo offline
+            com.inventario.mobile.ui.components.OfflineIndicator.setup(this)
+
             android.util.Log.d("InventarioActivity", "Layout inflado com sucesso")
             
             setupViewModel()

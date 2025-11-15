@@ -216,10 +216,8 @@ public class ServiceFactory implements ApplicationContextAware {
     }
     
     private static SetorService createSetorService() {
-        throw new UnsupportedOperationException(
-            "SetorService requer Spring Framework. " +
-            "Para aplicações Swing, use SetorDAO diretamente."
-        );
+        // Criar instância do Service sem Spring para aplicações Swing
+        return new SetorService();
     }
     
     private static SalaService createSalaService() {
@@ -230,24 +228,18 @@ public class ServiceFactory implements ApplicationContextAware {
     }
     
     private static ResponsavelService createResponsavelService() {
-        throw new UnsupportedOperationException(
-            "ResponsavelService requer Spring Framework. " +
-            "Para aplicações Swing, use ResponsavelDAO diretamente."
-        );
+        // Criar instância do Service sem Spring para aplicações Swing
+        return new ResponsavelService();
     }
     
     private static UsuarioService createUsuarioService() {
-        throw new UnsupportedOperationException(
-            "UsuarioService requer Spring Framework. " +
-            "Para aplicações Swing, use UsuarioDAO diretamente."
-        );
+        // Criar instância do Service sem Spring para aplicações Swing
+        return new UsuarioService();
     }
     
     private static InventarioService createInventarioService() {
-        throw new UnsupportedOperationException(
-            "InventarioService requer Spring Framework. " +
-            "Para aplicações Swing, use InventarioDAO diretamente."
-        );
+        // Criar instância do Service sem Spring para aplicações Swing
+        return new InventarioService();
     }
     
     private static ColetaService createColetaService() {

@@ -98,6 +98,16 @@ class PreferencesManager(context: Context) {
     // Métodos de dispositivo
     fun getDispositivoId(): Int = getInt("dispositivo_id", 0)
     fun saveDispositivoId(dispositivoId: Int) = putInt("dispositivo_id", dispositivoId)
+    
+    // Métodos de modo offline forçado
+    fun setForceOfflineMode(enabled: Boolean) {
+        putBoolean("force_offline_mode", enabled)
+        android.util.Log.d("PreferencesManager", "Modo offline forçado ${if (enabled) "ATIVADO" else "DESATIVADO"}")
+    }
+    
+    fun isForceOfflineMode(): Boolean {
+        return getBoolean("force_offline_mode", false)
+    }
     fun getDispositivoStatus(): String = getString("dispositivo_status", "PENDENTE")
     fun saveDispositivoStatus(status: String) = putString("dispositivo_status", status)
     fun saveTokens(accessToken: String, refreshToken: String, expiresIn: Long) {

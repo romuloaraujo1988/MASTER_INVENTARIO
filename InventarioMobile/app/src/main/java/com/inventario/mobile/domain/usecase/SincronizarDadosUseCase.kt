@@ -1,16 +1,40 @@
 package com.inventario.mobile.domain.usecase
 
-import com.inventario.mobile.domain.repository.SincronizacaoRepository
+import com.inventario.mobile.data.repository.SyncRepository
 import javax.inject.Inject
 
 /**
- * Use Case: Sincronizar dados offline
- * Baixa patrimônios, salas e responsáveis para o banco local
+ * Use Case: Sincronizar todos os dados do servidor
+ * 
+ * Regras de negócio:
+ * - Baixa patrimônios, salas e responsáveis do servidor
+ * - Substitui dados locais pelos dados do servidor
+ * - Registra timestamp da sincronização
+ * - Retorna estatísticas da sincronização
  */
 class SincronizarDadosUseCase @Inject constructor(
-    private val sincronizacaoRepository: SincronizacaoRepository
+    private val syncRepository: SyncRepository
 ) {
-    suspend operator fun invoke(): Result<Int> {
-        return sincronizacaoRepository.sincronizarTodosDados()
+    /**
+     * Executa sincronização completa de dados
+     * 
+     * @return Result com resultado da sincronização ou erro
+     */
+    suspend operator fun invoke(): Result<SyncRepository.SyncResult> {
+        return syncRepository.forceSyncFromServer()
+    }
+    
+    /**
+     * Verifica se há dados locais
+     */
+    suspend fun hasLocalData(): Boolean {
+        return syncRepository.hasLocalData()
+    }
+    
+    /**
+     * Obtém estatísticas dos dados locais
+     */
+    suspend fun getLocalStats(): Map<String, Int> {
+        return syncRepository.getLocalStats()
     }
 }

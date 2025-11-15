@@ -38,6 +38,9 @@ class CollectionViewActivity : AppCompatActivity() {
         Log.d(TAG, "onCreate: iniciando CollectionViewActivity (Clean Architecture)")
         binding = ActivityCollectionViewBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        
+        // Adicionar indicador de modo offline
+        com.inventario.mobile.ui.components.OfflineIndicator.setup(this)
 
         setupRecyclerView()
         setupFilters()

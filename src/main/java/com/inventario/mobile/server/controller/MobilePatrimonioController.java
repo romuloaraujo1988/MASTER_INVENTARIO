@@ -147,6 +147,43 @@ public class MobilePatrimonioController {
     }
     
     /**
+     * Buscar patrimônios por responsável
+     * 
+     * @param responsavelId ID do responsável
+     * @param page página (padrão: 0)
+     * @param size tamanho da página (padrão: 50)
+     * @param coletado filtro de status de coleta (opcional)
+     * @return lista de patrimônios
+     */
+    @GetMapping("/responsavel/{responsavelId}")
+    public ResponseEntity<ApiResponse<List<MobilePatrimonioDTO>>> buscarPorResponsavel(
+            @PathVariable Integer responsavelId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(required = false) Boolean coletado) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication != null ? authentication.getName() : "anonymous";
+            
+            logger.info("Buscando patrimônios do responsável {} (page: {}, size: {}, coletado: {}) para usuário: {}", 
+                    responsavelId, page, size, coletado, username);
+            
+            List<MobilePatrimonioDTO> patrimonios = patrimonioService.buscarPorResponsavel(responsavelId, page, size, coletado);
+            
+            logger.info("✓ {} patrimônio(s) encontrado(s) para responsável {}", patrimonios.size(), responsavelId);
+            
+            return ResponseEntity.ok(
+                    ApiResponse.success(patrimonios, 
+                            String.format("%d patrimônio(s) encontrado(s)", patrimonios.size())));
+            
+        } catch (Exception e) {
+            logger.error("Erro ao buscar patrimônios por responsável", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao buscar patrimônios: " + e.getMessage(), "FETCH_ERROR"));
+        }
+    }
+    
+    /**
      * Listar todos os patrimônios (com paginação)
      * 
      * @param page página (padrão: 0)

@@ -166,59 +166,147 @@ class ColetaRepositoryImpl @Inject constructor(
     override suspend fun sincronizarColetasPendentes(): Int {
         return try {
             val coletasPendentes = coletaDao.buscarPendentes()
-            var sincronizadas = 0
             
-            for (entity in coletasPendentes) {
-                try {
-                    val coleta = mapper.toDomain(entity)
-                    val patrimonio = patrimonioDao.buscarPorId(coleta.patrimonioId.toInt())
-                    
-                    // Converter para MobileColetaRequest
-                    val request = com.inventario.mobile.data.remote.dto.MobileColetaRequest(
-                        numeroPatrimonio = patrimonio?.numero ?: entity.numeroPatrimonio,
-                        idInventario = 2, // TODO: Obter ID do inventário ativo
-                        usuarioId = coleta.usuarioId.toInt(),
-                        idSala = patrimonio?.idSala,
-                        localizacaoEncontrada = coleta.localizacaoAtual,
-                        estadoEncontrado = coleta.status ?: "BOM",
-                        observacaoColeta = coleta.observacoes,
-                        dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
-                            .format(java.util.Date(coleta.dataColeta)),
-                        latitude = coleta.latitude,
-                        longitude = coleta.longitude,
-                        fotoPatrimonio = null,
-                        semEtiqueta = false,
-                        descricaoItemSemEtiqueta = null,
-                        categoriaItemSemEtiqueta = null,
-                        deviceId = android.os.Build.MODEL,
-                        appVersion = "1.2",
-                        divergencia = false,
-                        motivoDivergencia = null
-                    )
-                    
-                    val response = coletaApi.registrarColeta(request)
-                    
-                    if (response.success) {
-                        coletaDao.marcarSincronizada(entity.id)
-                        sincronizadas++
-                    } else {
-                        coletaDao.registrarErroSincronizacao(
-                            entity.id,
-                            response.message ?: "Erro desconhecido"
-                        )
-                    }
-                } catch (e: Exception) {
-                    coletaDao.registrarErroSincronizacao(
-                        entity.id,
-                        e.message ?: "Erro de conexão"
-                    )
-                }
+            if (coletasPendentes.isEmpty()) {
+                android.util.Log.d("ColetaRepositoryImpl", "Nenhuma coleta pendente para sincronizar")
+                return 0
             }
             
+            android.util.Log.d("ColetaRepositoryImpl", "Sincronizando ${coletasPendentes.size} coletas pendentes")
+            
+            // Estratégia: Tentar batch primeiro, se falhar, sincronizar uma por uma
+            val sincronizadas = try {
+                sincronizarEmLote(coletasPendentes)
+            } catch (e: Exception) {
+                android.util.Log.w("ColetaRepositoryImpl", "Falha no sync em lote, tentando individual", e)
+                sincronizarIndividualmente(coletasPendentes)
+            }
+            
+            android.util.Log.d("ColetaRepositoryImpl", "✓ ${sincronizadas} coletas sincronizadas com sucesso")
             sincronizadas
+            
         } catch (e: Exception) {
+            android.util.Log.e("ColetaRepositoryImpl", "Erro ao sincronizar coletas pendentes", e)
             -1
         }
+    }
+    
+    /**
+     * Sincroniza coletas em lote (mais eficiente)
+     */
+    private suspend fun sincronizarEmLote(coletasPendentes: List<com.inventario.mobile.data.local.entity.ColetaEntity>): Int {
+        // Converter entities para requests
+        val requests = coletasPendentes.mapNotNull { entity ->
+            try {
+                val coleta = mapper.toDomain(entity)
+                val patrimonio = patrimonioDao.buscarPorId(coleta.patrimonioId.toInt())
+                
+                com.inventario.mobile.data.remote.dto.MobileColetaRequest(
+                    numeroPatrimonio = patrimonio?.numero ?: entity.numeroPatrimonio,
+                    idInventario = 2, // TODO: Obter ID do inventário ativo
+                    usuarioId = coleta.usuarioId.toInt(),
+                    idSala = patrimonio?.idSala,
+                    localizacaoEncontrada = coleta.localizacaoAtual,
+                    estadoEncontrado = coleta.status ?: "BOM",
+                    observacaoColeta = coleta.observacoes,
+                    dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
+                        .format(java.util.Date(coleta.dataColeta)),
+                    latitude = coleta.latitude,
+                    longitude = coleta.longitude,
+                    fotoPatrimonio = null,
+                    semEtiqueta = false,
+                    descricaoItemSemEtiqueta = null,
+                    categoriaItemSemEtiqueta = null,
+                    deviceId = android.os.Build.MODEL,
+                    appVersion = "1.2",
+                    divergencia = false,
+                    motivoDivergencia = null
+                )
+            } catch (e: Exception) {
+                android.util.Log.e("ColetaRepositoryImpl", "Erro ao converter coleta ${entity.id}", e)
+                null
+            }
+        }
+        
+        if (requests.isEmpty()) {
+            return 0
+        }
+        
+        // Enviar em lote
+        val batchRequest = com.inventario.mobile.data.remote.dto.MobileColetaBatchRequest(requests)
+        val response = coletaApi.registrarColetasEmLote(batchRequest)
+        
+        if (response.success) {
+            // Marcar todas como sincronizadas
+            coletasPendentes.forEach { entity ->
+                coletaDao.marcarSincronizada(entity.id)
+            }
+            
+            // Extrair quantidade de sucesso do response
+            val resultado = response.data
+            val sucesso = (resultado?.get("sucesso") as? Number)?.toInt() ?: coletasPendentes.size
+            
+            android.util.Log.d("ColetaRepositoryImpl", "Batch sync: ${sucesso} sucesso de ${coletasPendentes.size}")
+            return sucesso
+        } else {
+            throw Exception("Batch sync falhou: ${response.message}")
+        }
+    }
+    
+    /**
+     * Sincroniza coletas individualmente (fallback)
+     */
+    private suspend fun sincronizarIndividualmente(coletasPendentes: List<com.inventario.mobile.data.local.entity.ColetaEntity>): Int {
+        var sincronizadas = 0
+        
+        for (entity in coletasPendentes) {
+            try {
+                val coleta = mapper.toDomain(entity)
+                val patrimonio = patrimonioDao.buscarPorId(coleta.patrimonioId.toInt())
+                
+                // Converter para MobileColetaRequest
+                val request = com.inventario.mobile.data.remote.dto.MobileColetaRequest(
+                    numeroPatrimonio = patrimonio?.numero ?: entity.numeroPatrimonio,
+                    idInventario = 2, // TODO: Obter ID do inventário ativo
+                    usuarioId = coleta.usuarioId.toInt(),
+                    idSala = patrimonio?.idSala,
+                    localizacaoEncontrada = coleta.localizacaoAtual,
+                    estadoEncontrado = coleta.status ?: "BOM",
+                    observacaoColeta = coleta.observacoes,
+                    dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
+                        .format(java.util.Date(coleta.dataColeta)),
+                    latitude = coleta.latitude,
+                    longitude = coleta.longitude,
+                    fotoPatrimonio = null,
+                    semEtiqueta = false,
+                    descricaoItemSemEtiqueta = null,
+                    categoriaItemSemEtiqueta = null,
+                    deviceId = android.os.Build.MODEL,
+                    appVersion = "1.2",
+                    divergencia = false,
+                    motivoDivergencia = null
+                )
+                
+                val response = coletaApi.registrarColeta(request)
+                
+                if (response.success) {
+                    coletaDao.marcarSincronizada(entity.id)
+                    sincronizadas++
+                } else {
+                    coletaDao.registrarErroSincronizacao(
+                        entity.id,
+                        response.message ?: "Erro desconhecido"
+                    )
+                }
+            } catch (e: Exception) {
+                coletaDao.registrarErroSincronizacao(
+                    entity.id,
+                    e.message ?: "Erro de conexão"
+                )
+            }
+        }
+        
+        return sincronizadas
     }
     
     override suspend fun getColetasLocal(): List<Coleta> {

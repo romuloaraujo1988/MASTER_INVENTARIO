@@ -261,6 +261,7 @@ id layoutLocalizacao
 id layoutLocation
 id layoutMarcaModelo
 id layoutNoResults
+id layoutOfflineStatus
 id layoutPatrimonioInfo
 id layoutResponsavel
 id layoutSyncCount
@@ -286,6 +287,7 @@ id nav_statistics
 id nav_sync
 id nav_view
 id nav_voice_search
+id offlineIndicatorBar
 id progressBar
 id progressBarGrafico
 id progressBarInventario
@@ -317,6 +319,7 @@ id switchCleanArchitecture
 id switchColeta
 id switchDashboard
 id switchDescricao
+id switchForceOffline
 id switchNotifications
 id switchOfflineMode
 id switchSync
@@ -495,6 +498,7 @@ layout item_sala
 layout item_timeline_coleta
 layout nav_header_main
 layout view_connection_status_bar
+layout view_offline_indicator
 menu bottom_navigation
 menu main_menu
 menu menu_coletas

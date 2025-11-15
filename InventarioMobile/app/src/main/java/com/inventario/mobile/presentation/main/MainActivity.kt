@@ -51,6 +51,10 @@ class MainActivity : AppCompatActivity() {
             setContentView(binding.root)
             Log.d(TAG, "onCreate: setContentView executado com sucesso")
 
+            // Adicionar indicador de modo offline
+            com.inventario.mobile.ui.components.OfflineIndicator.setup(this)
+            Log.d(TAG, "onCreate: Indicador de modo offline configurado")
+
             // Inicializar PreferencesManager
             preferencesManager = PreferencesManager(this)
             Log.d(TAG, "onCreate: PreferencesManager inicializado")
@@ -78,6 +82,12 @@ class MainActivity : AppCompatActivity() {
             Log.e(TAG, "onCreate: Erro durante inicialização da MainActivity", e)
             e.printStackTrace()
         }
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Atualizar indicador de modo offline quando voltar para a activity
+        com.inventario.mobile.ui.components.OfflineIndicator.refresh(this)
     }
     
     private fun requestLocationPermissionIfNeeded() {

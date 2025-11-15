@@ -2,30 +2,25 @@ package com.inventario.mobile.presentation.sync
 
 import android.os.Bundle
 import android.view.View
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.inventario.mobile.R
 import com.inventario.mobile.databinding.ActivitySyncBinding
-import com.inventario.mobile.data.local.database.AppDatabase
-import com.inventario.mobile.data.repository.SyncRepository
 import com.inventario.mobile.utils.NetworkUtils
-import com.inventario.mobile.utils.PreferencesManager
 import com.google.android.material.snackbar.Snackbar
-import android.widget.Toast
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
 
 /**
  * Activity para gerenciar sincronização de dados
+ * Usa Clean Architecture com ViewModel e Use Cases
  */
+@AndroidEntryPoint
 class SyncActivity : AppCompatActivity() {
     
     private lateinit var binding: ActivitySyncBinding
-    private lateinit var syncRepository: SyncRepository
-    private lateinit var preferencesManager: PreferencesManager
-    
-    private val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
+    private val viewModel: SyncViewModel by viewModels()
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,9 +28,12 @@ class SyncActivity : AppCompatActivity() {
         setContentView(binding.root)
         
         setupToolbar()
-        initializeRepository()
         setupListeners()
-        updateUI()
+        setupObservers()
+        updateNetworkStatus()
+        
+        // Agendar sincronização periódica
+        viewModel.schedulePeriodicSync()
     }
     
     private fun setupToolbar() {
@@ -46,141 +44,101 @@ class SyncActivity : AppCompatActivity() {
         }
     }
     
-    private fun initializeRepository() {
-        preferencesManager = PreferencesManager(this)
-        
-        val database = AppDatabase.getInstance(this)
-        // TODO: Implementar criação correta das APIs
-        // val apiService = com.inventario.mobile.data.remote.api.ApiClient.getApiService(this)
-        
-        // Criar instâncias das APIs
-        // val patrimonioApi = apiService.create(com.inventario.mobile.api.PatrimonioApi::class.java)
-        // val salaApi = apiService.create(com.inventario.mobile.api.SalaApi::class.java)
-        
-        // TODO: Descomentar quando APIs estiverem disponíveis
-        /*
-        syncRepository = SyncRepository(
-            context = this,
-            patrimonioApi = patrimonioApi,
-            salaApi = salaApi,
-            patrimonioDao = database.patrimonioDao(),
-            salaDao = database.salaDao(),
-            sincronizacaoDao = database.sincronizacaoDao(),
-            preferencesManager = preferencesManager
-        )
-        */
-    }
-    
     private fun setupListeners() {
         binding.btnSyncNow.setOnClickListener {
-            // TODO: Implementar quando syncRepository estiver disponível
-            // forceSyncFromServer()
-            Toast.makeText(this, "Sincronização temporariamente desabilitada", Toast.LENGTH_SHORT).show()
+            viewModel.syncFromServer()
+        }
+        
+        binding.btnSyncColetas.setOnClickListener {
+            viewModel.syncPendingColetas()
         }
         
         binding.btnClearData.setOnClickListener {
-            // TODO: Implementar quando syncRepository estiver disponível
-            // showClearDataConfirmation()
-            Toast.makeText(this, "Limpeza temporariamente desabilitada", Toast.LENGTH_SHORT).show()
+            showClearDataConfirmation()
         }
         
         binding.btnRefresh.setOnClickListener {
-            updateUI()
+            viewModel.loadStats()
+            updateNetworkStatus()
+        }
+        
+        binding.btnForceSyncBackground.setOnClickListener {
+            viewModel.forceSyncNow()
+            showSuccess("Sincronização em background agendada")
         }
     }
     
-    private fun updateUI() {
+    private fun setupObservers() {
+        // Observar estado
         lifecycleScope.launch {
-            try {
-                // Status de rede
-                val isOnline = NetworkUtils.isNetworkAvailable(this@SyncActivity)
-                val connectionType = NetworkUtils.getConnectionType(this@SyncActivity)
-                
-                binding.tvNetworkStatus.text = if (isOnline) {
-                    "✓ Online ($connectionType)"
-                } else {
-                    "✗ Offline"
-                }
-                binding.tvNetworkStatus.setTextColor(
-                    getColor(if (isOnline) R.color.success else R.color.error)
-                )
-                
-                // TODO: Implementar quando syncRepository estiver disponível
-                /*
-                // Estatísticas locais
-                val stats = syncRepository.getLocalStats()
-                binding.tvPatrimoniosCount.text = stats["patrimonios"]?.toString() ?: "0"
-                binding.tvSalasCount.text = stats["salas"]?.toString() ?: "0"
-                binding.tvColetadosCount.text = stats["coletados"]?.toString() ?: "0"
-                binding.tvPendentesCount.text = stats["pendentes"]?.toString() ?: "0"
-                
-                // Última sincronização
-                val lastSync = syncRepository.getLastSync()
-                if (lastSync != null) {
-                    binding.tvLastSyncDate.text = dateFormat.format(lastSync.dataHora)
-                    binding.tvLastSyncStatus.text = if (lastSync.sincronizado) {
-                        "✓ Sucesso"
-                    } else {
-                        "✗ Falha"
+            viewModel.state.collect { state ->
+                when (state) {
+                    is SyncState.Idle -> {
+                        hideLoading()
                     }
-                    binding.tvLastSyncStatus.setTextColor(
-                        getColor(if (lastSync.sincronizado) R.color.success else R.color.error)
-                    )
-                    binding.tvLastSyncDetails.text = lastSync.mensagem
-                    
-                    binding.cardLastSync.visibility = View.VISIBLE
-                } else {
-                    binding.cardLastSync.visibility = View.GONE
+                    is SyncState.Loading -> {
+                        showLoading(state.message)
+                    }
+                    is SyncState.Success -> {
+                        hideLoading()
+                        showSuccess(buildSuccessMessage(state))
+                        viewModel.clearState()
+                    }
+                    is SyncState.ColetasSyncSuccess -> {
+                        hideLoading()
+                        showSuccess(state.message)
+                        viewModel.clearState()
+                    }
+                    is SyncState.Error -> {
+                        hideLoading()
+                        showError(state.message)
+                        viewModel.clearState()
+                    }
                 }
-                */
-                
-                // Habilitar/desabilitar botão de sincronização
-                binding.btnSyncNow.isEnabled = isOnline
-                
-            } catch (e: Exception) {
-                showError("Erro ao atualizar interface: ${e.message}")
+            }
+        }
+        
+        // Observar estatísticas
+        lifecycleScope.launch {
+            viewModel.stats.collect { stats ->
+                updateStatsUI(stats)
             }
         }
     }
     
-    private fun forceSyncFromServer() {
-        lifecycleScope.launch {
-            try {
-                // Mostrar loading
-                binding.progressBar.visibility = View.VISIBLE
-                binding.btnSyncNow.isEnabled = false
-                binding.tvSyncProgress.visibility = View.VISIBLE
-                binding.tvSyncProgress.text = "Sincronizando dados do servidor..."
-                
-                // Executar sincronização
-                val result = syncRepository.forceSyncFromServer()
-                
-                if (result.isSuccess) {
-                    val syncResult = result.getOrNull()!!
-                    
-                    val message = """
-                        Sincronização concluída com sucesso!
-                        
-                        Patrimônios: ${syncResult.patrimoniosSincronizados}
-                        Salas: ${syncResult.salasSincronizadas}
-                        Tempo: ${syncResult.tempoDecorrido}ms
-                    """.trimIndent()
-                    
-                    showSuccess(message)
-                    updateUI()
-                } else {
-                    val error = result.exceptionOrNull()
-                    showError("Erro na sincronização: ${error?.message}")
-                }
-                
-            } catch (e: Exception) {
-                showError("Erro ao sincronizar: ${e.message}")
-            } finally {
-                binding.progressBar.visibility = View.GONE
-                binding.btnSyncNow.isEnabled = true
-                binding.tvSyncProgress.visibility = View.GONE
-            }
+    private fun buildSuccessMessage(state: SyncState.Success): String {
+        return """
+            ${state.message}
+            
+            Patrimônios: ${state.patrimoniosSincronizados}
+            Salas: ${state.salasSincronizadas}
+            Tempo: ${state.tempoDecorrido}ms
+        """.trimIndent()
+    }
+    
+    private fun updateStatsUI(stats: Map<String, Int>) {
+        binding.tvPatrimoniosCount.text = stats["patrimonios"]?.toString() ?: "0"
+        binding.tvSalasCount.text = stats["salas"]?.toString() ?: "0"
+        binding.tvColetadosCount.text = stats["coletados"]?.toString() ?: "0"
+        binding.tvPendentesCount.text = stats["pendentes"]?.toString() ?: "0"
+    }
+    
+    private fun updateNetworkStatus() {
+        val isOnline = NetworkUtils.isNetworkAvailable(this)
+        val connectionType = NetworkUtils.getConnectionType(this)
+        
+        binding.tvNetworkStatus.text = if (isOnline) {
+            "✓ Online ($connectionType)"
+        } else {
+            "✗ Offline"
         }
+        binding.tvNetworkStatus.setTextColor(
+            getColor(if (isOnline) R.color.success else R.color.error)
+        )
+        
+        // Habilitar/desabilitar botões
+        binding.btnSyncNow.isEnabled = isOnline
+        binding.btnSyncColetas.isEnabled = isOnline
     }
     
     private fun showClearDataConfirmation() {
@@ -188,32 +146,26 @@ class SyncActivity : AppCompatActivity() {
             .setTitle("Limpar Dados Locais")
             .setMessage("Tem certeza que deseja limpar todos os dados locais?\n\nIsso removerá todos os patrimônios e salas do banco local. Você precisará sincronizar novamente.")
             .setPositiveButton("Sim, Limpar") { _, _ ->
-                clearLocalData()
+                viewModel.clearLocalData()
             }
             .setNegativeButton("Cancelar", null)
             .show()
     }
     
-    private fun clearLocalData() {
-        lifecycleScope.launch {
-            try {
-                binding.progressBar.visibility = View.VISIBLE
-                
-                val result = syncRepository.clearLocalData()
-                
-                if (result.isSuccess) {
-                    showSuccess("Dados locais limpos com sucesso!")
-                    updateUI()
-                } else {
-                    showError("Erro ao limpar dados: ${result.exceptionOrNull()?.message}")
-                }
-                
-            } catch (e: Exception) {
-                showError("Erro ao limpar dados: ${e.message}")
-            } finally {
-                binding.progressBar.visibility = View.GONE
-            }
-        }
+    private fun showLoading(message: String) {
+        binding.progressBar.visibility = View.VISIBLE
+        binding.tvSyncProgress.visibility = View.VISIBLE
+        binding.tvSyncProgress.text = message
+        binding.btnSyncNow.isEnabled = false
+        binding.btnSyncColetas.isEnabled = false
+        binding.btnClearData.isEnabled = false
+    }
+    
+    private fun hideLoading() {
+        binding.progressBar.visibility = View.GONE
+        binding.tvSyncProgress.visibility = View.GONE
+        updateNetworkStatus() // Reabilitar botões baseado na conexão
+        binding.btnClearData.isEnabled = true
     }
     
     private fun showSuccess(message: String) {

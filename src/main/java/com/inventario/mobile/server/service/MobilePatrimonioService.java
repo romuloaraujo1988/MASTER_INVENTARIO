@@ -113,6 +113,65 @@ public class MobilePatrimonioService {
     }
     
     /**
+     * Busca patrimônios por responsável
+     */
+    public List<MobilePatrimonioDTO> buscarPorResponsavel(Integer responsavelId, int page, int size, Boolean coletado) throws SQLException {
+        logger.info("Buscando patrimônios do responsável {} (page: {}, size: {}, coletado: {})", responsavelId, page, size, coletado);
+        
+        // Buscar patrimônios do responsável
+        List<Patrimonio> patrimonios = patrimonioDAO.buscarPorResponsavel(responsavelId);
+        
+        logger.info("Encontrados {} patrimônios do responsável {} no banco", patrimonios.size(), responsavelId);
+        
+        // Obter inventário ativo
+        Inventario inventarioAtivo = inventarioDAO.buscarInventarioAtivo();
+        Integer idInventarioAtivo = inventarioAtivo != null ? inventarioAtivo.getId() : null;
+        
+        logger.info("Inventário ativo: {}", idInventarioAtivo);
+        
+        List<MobilePatrimonioDTO> dtos = new ArrayList<>();
+        
+        // Filtrar por status de coleta se especificado
+        for (Patrimonio patrimonio : patrimonios) {
+            // Verificar se foi coletado no inventário ativo
+            boolean foiColetado = false;
+            if (idInventarioAtivo != null) {
+                foiColetado = coletaDAO.verificarSePatrimonioFoiColetado(patrimonio.getId(), idInventarioAtivo);
+            }
+            
+            // Aplicar filtro de coleta se especificado
+            if (coletado != null) {
+                if (coletado && !foiColetado) {
+                    continue; // Pular se queremos coletados mas não foi coletado
+                }
+                if (!coletado && foiColetado) {
+                    continue; // Pular se queremos não coletados mas foi coletado
+                }
+            }
+            
+            MobilePatrimonioDTO dto = converterParaDTO(patrimonio);
+            dto.setColetado(foiColetado);
+            dtos.add(dto);
+        }
+        
+        logger.info("Após filtro de coleta: {} patrimônios", dtos.size());
+        
+        // Aplicar paginação
+        int start = page * size;
+        int end = Math.min(start + size, dtos.size());
+        
+        List<MobilePatrimonioDTO> paginados = new ArrayList<>();
+        for (int i = start; i < end && i < dtos.size(); i++) {
+            paginados.add(dtos.get(i));
+        }
+        
+        logger.info("✓ Retornando {} patrimônios do responsável {} (página {}, total filtrado: {})", 
+                paginados.size(), responsavelId, page, dtos.size());
+        
+        return paginados;
+    }
+    
+    /**
      * Lista patrimônios com paginação
      */
     public List<MobilePatrimonioDTO> listarPatrimonios(int page, int size) throws SQLException {

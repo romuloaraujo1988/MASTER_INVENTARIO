@@ -20,6 +20,9 @@ class SettingsActivity : AppCompatActivity() {
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
+        // Adicionar indicador de modo offline
+        com.inventario.mobile.ui.components.OfflineIndicator.setup(this)
+        
         preferencesManager = PreferencesManager(this)
         
         // Inicializar InventarioRepository
@@ -50,6 +53,23 @@ class SettingsActivity : AppCompatActivity() {
     
     private fun setupUI() {
         binding.apply {
+            // Modo Offline Forçado
+            switchForceOffline.setOnCheckedChangeListener { _, isChecked ->
+                viewModel.setForceOfflineMode(isChecked)
+                updateOfflineStatusVisibility(isChecked)
+                
+                // Atualizar indicador na barra superior
+                com.inventario.mobile.ui.components.OfflineIndicator.updateVisibility(this@SettingsActivity, isChecked)
+                
+                // Mostrar mensagem ao usuário
+                val message = if (isChecked) {
+                    "Modo offline ativado. O app trabalhará apenas com dados locais."
+                } else {
+                    "Modo offline desativado. O app voltará a sincronizar com o servidor."
+                }
+                Toast.makeText(this@SettingsActivity, message, Toast.LENGTH_LONG).show()
+            }
+            
             // Configurações de sincronização por tempo
             switchAutoSync.setOnCheckedChangeListener { _, isChecked ->
                 viewModel.setAutoSyncEnabled(isChecked)
@@ -122,16 +142,22 @@ class SettingsActivity : AppCompatActivity() {
     private fun loadCurrentSettings() {
         binding.apply {
             // Carregar configurações atuais
+            switchForceOffline.isChecked = viewModel.isForceOfflineMode()
             switchAutoSync.isChecked = viewModel.isAutoSyncEnabled()
             switchWifiOnly.isChecked = viewModel.isWifiOnlyEnabled()
             switchAutoSyncByCount.isChecked = viewModel.isAutoSyncByCountEnabled()
             
+            updateOfflineStatusVisibility(switchForceOffline.isChecked)
             updateSyncTimeVisibility(switchAutoSync.isChecked)
             updateSyncCountVisibility(switchAutoSyncByCount.isChecked)
             updateSyncIntervalDisplay()
             updateSyncCountDisplay()
             updateCollectionCountDisplay()
         }
+    }
+    
+    private fun updateOfflineStatusVisibility(enabled: Boolean) {
+        binding.layoutOfflineStatus.visibility = if (enabled) android.view.View.VISIBLE else android.view.View.GONE
     }
     
     private fun updateSyncTimeVisibility(enabled: Boolean) {
