@@ -362,6 +362,63 @@ class InventarioRepository(
     
     suspend fun sincronizarDados(): Result<Int> = Result.success(0)
     
+    /**
+     * Busca evolução de coletas por dia (últimos N dias)
+     * Usado para gráfico de linhas no dashboard
+     */
+    suspend fun getColetasEvolucao(dias: Int = 30): Result<List<com.inventario.mobile.data.remote.dto.ColetasPorDiaDto>> {
+        return try {
+            android.util.Log.d("InventarioRepository", "Buscando evolução de coletas (últimos $dias dias)...")
+            
+            val response = apiService.getColetasEvolucao(dias = dias)
+            
+            if (response.isSuccessful && response.body() != null) {
+                val apiResponse = response.body()!!
+                
+                if (apiResponse.success && apiResponse.data != null) {
+                    // Converter Map<String, Int> para List<ColetasPorDiaDto>
+                    val evolucaoMap = apiResponse.data["evolucao"] as? Map<*, *>
+                    
+                    if (evolucaoMap != null) {
+                        val evolucaoList = evolucaoMap.entries.map { entry ->
+                            val dataFormatada = entry.key.toString()
+                            val quantidade = (entry.value as? Number)?.toInt() ?: 0
+                            
+                            // Converter data formatada "dd/MM" para "2025-11-dd"
+                            val ano = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+                            val partes = dataFormatada.split("/")
+                            val dia = partes.getOrNull(0)?.padStart(2, '0') ?: "01"
+                            val mes = partes.getOrNull(1)?.padStart(2, '0') ?: "01"
+                            val dataISO = "$ano-$mes-$dia"
+                            
+                            com.inventario.mobile.data.remote.dto.ColetasPorDiaDto(
+                                data = dataISO,
+                                quantidade = quantidade,
+                                coletoresAtivos = 0,
+                                dataFormatada = dataFormatada
+                            )
+                        }.sortedBy { it.data }
+                        
+                        android.util.Log.d("InventarioRepository", "Evolução carregada: ${evolucaoList.size} dias")
+                        Result.success(evolucaoList)
+                    } else {
+                        android.util.Log.w("InventarioRepository", "Dados de evolução não encontrados")
+                        Result.success(emptyList())
+                    }
+                } else {
+                    android.util.Log.e("InventarioRepository", "Resposta sem sucesso: ${apiResponse.message}")
+                    Result.failure(Exception(apiResponse.message ?: "Erro ao buscar evolução"))
+                }
+            } else {
+                android.util.Log.e("InventarioRepository", "Erro HTTP ${response.code()}")
+                Result.failure(Exception("Erro ao buscar evolução: HTTP ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("InventarioRepository", "Erro ao buscar evolução de coletas", e)
+            Result.failure(e)
+        }
+    }
+    
     // Métodos auxiliares
     fun getCurrentUser(): com.inventario.mobile.data.model.Usuario? = null
     

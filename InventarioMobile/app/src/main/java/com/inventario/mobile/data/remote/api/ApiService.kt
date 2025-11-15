@@ -145,6 +145,15 @@ interface ApiService {
     @GET("dashboard/stats/{inventarioId}")
     suspend fun getDashboardStatsByInventario(@Path("inventarioId") inventarioId: Int): Response<ApiResponse<DashboardStatsDto>>
     
-    @GET("dashboard/coletas-evolucao")
-    suspend fun getColetasEvolucao(@Query("dias") dias: Int = 7): Response<ApiResponse<List<ColetasPorDiaDto>>>
+    @GET("dashboard/evolucao")
+    suspend fun getColetasEvolucao(@Query("dias") dias: Int = 30): Response<ApiResponse<Map<String, Any>>>
+    
+    @GET("dashboard/top-itens")
+    suspend fun getTopItens(@Query("limit") limit: Int = 10): Response<ApiResponse<Map<String, Any>>>
+    
+    @GET("dashboard/distribuicao-sala")
+    suspend fun getDistribuicaoPorSala(@Query("limit") limit: Int = 10): Response<ApiResponse<Map<String, Any>>>
+    
+    @GET("dashboard/status")
+    suspend fun getEstatisticasPorStatus(): Response<ApiResponse<Map<String, Any>>>
 }

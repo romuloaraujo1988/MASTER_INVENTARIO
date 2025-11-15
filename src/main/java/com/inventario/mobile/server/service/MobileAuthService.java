@@ -144,6 +144,83 @@ public class MobileAuthService {
     }
     
     /**
+     * Renova access token usando refresh token
+     * 
+     * @param refreshToken refresh token válido
+     * @return novo access token
+     * @throws AuthenticationException se refresh token inválido
+     */
+    public MobileLoginResponse refreshAccessToken(String refreshToken) {
+        try {
+            logger.info("=== REFRESH TOKEN SOLICITADO ===");
+            
+            // Validar refresh token
+            if (!jwtTokenProvider.validateToken(refreshToken)) {
+                logger.error("Refresh token inválido ou expirado");
+                throw new AuthenticationException("Refresh token inválido") {};
+            }
+            
+            // Extrair username do refresh token
+            String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
+            logger.info("Username extraído do refresh token: {}", username);
+            
+            if (username == null) {
+                logger.error("Não foi possível extrair username do refresh token");
+                throw new AuthenticationException("Token inválido") {};
+            }
+            
+            // Buscar usuário
+            Usuario usuario = usuarioService.buscarPorUsername(username);
+            
+            if (usuario == null) {
+                logger.error("Usuário não encontrado: {}", username);
+                throw new AuthenticationException("Usuário não encontrado") {};
+            }
+            
+            if (!usuario.getAtivo()) {
+                logger.error("Usuário inativo: {}", username);
+                throw new AuthenticationException("Usuário inativo") {};
+            }
+            
+            // Criar nova autenticação
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                username, 
+                null, 
+                new java.util.ArrayList<>()
+            );
+            
+            // Gerar novo access token
+            String newAccessToken = jwtTokenProvider.generateToken(authentication);
+            Long expiresIn = jwtTokenProvider.getExpirationTime();
+            
+            // Criar informações do usuário
+            MobileUserInfo userInfo = new MobileUserInfo(
+                usuario.getId() != null ? usuario.getId().longValue() : null,
+                usuario.getLogin(),
+                usuario.getNomeCompleto(),
+                usuario.getEmail(),
+                usuario.getIdSetor() != null ? usuario.getIdSetor().longValue() : null,
+                usuario.getNomeSetor(),
+                usuario.getPerfil().name(),
+                usuario.getAtivo()
+            );
+            
+            logger.info("=== REFRESH TOKEN CONCLUÍDO COM SUCESSO ===");
+            logger.info("Novo access token gerado para: {}", username);
+            
+            // Retornar com o mesmo refresh token (não precisa renovar)
+            return new MobileLoginResponse(newAccessToken, refreshToken, expiresIn, userInfo);
+            
+        } catch (AuthenticationException e) {
+            logger.error("Falha no refresh token", e);
+            throw e;
+        } catch (Exception e) {
+            logger.error("Erro inesperado durante refresh token", e);
+            throw new RuntimeException("Erro interno do servidor", e);
+        }
+    }
+    
+    /**
      * Registra dispositivo do usuário
      * 
      * @param userId ID do usuário

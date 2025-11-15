@@ -260,7 +260,101 @@
 
         </LinearLayout>
 
+        <!-- Seção de Gráfico de Evolução -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <View
+                android:layout_width="4dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/gradient_primary" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Evolução de Coletas"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- Card do Gráfico -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Progress Bar do Gráfico -->
+                <ProgressBar
+                    android:id="@+id/progressBarGrafico"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginVertical="32dp"
+                    android:visibility="gone" />
+
+                <!-- Gráfico de Linhas -->
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/lineChartEvolucao"
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    android:visibility="visible" />
+
+                <!-- Mensagem de Erro do Gráfico -->
+                <TextView
+                    android:id="@+id/tvGraficoError"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="32dp"
+                    android:gravity="center"
+                    android:text="Sem dados para exibir"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Ações Rápidas de Coleta -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <View
+                android:layout_width="4dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/gradient_primary" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Ações Rápidas"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
         
         <!-- Botão de Scan Rápido -->
         <com.google.android.material.button.MaterialButton

@@ -155,6 +155,8 @@ id btnLogin
 id btnManualCollection
 id btnQuickScan
 id btnRefresh
+id btnRegistrar
+id btnRemoverFoto
 id btnResetCollectionCount
 id btnRetry
 id btnRetryFailed
@@ -173,6 +175,7 @@ id btnTestBiometric
 id btnTestConnectivity
 id btnTestServer
 id btnTestSync
+id btnTirarFoto
 id btnViewCollections
 id btnViewPending
 id btnViewStatistics
@@ -232,6 +235,9 @@ id chipWeek
 id divider
 id drawer_layout
 id editTextSearch
+id edtDescricao
+id edtLocalizacao
+id edtObservacoes
 id emptyView
 id etCodigo
 id etDescricao
@@ -247,6 +253,7 @@ id fabScanQr
 id fabSearch
 id fabVoiceSearch
 id fragment_container
+id imgPreview
 id ivBiometricStatus
 id ivConnectionStatus
 id ivLogo
@@ -307,6 +314,8 @@ id rvTimeline
 id scrollView
 id searchCard
 id searchView
+id spinnerCategoria
+id spinnerEstado
 id spinnerResponsavel
 id spinnerSalas
 id spinnerStatus
@@ -376,6 +385,7 @@ id tvEndOfList
 id tvError
 id tvErrorCount
 id tvEstado
+id tvFotoStatus
 id tvGraficoError
 id tvHorario
 id tvKpiColetados
@@ -460,6 +470,7 @@ layout activity_descricao_selection
 layout activity_developer_settings
 layout activity_filtros
 layout activity_inventario
+layout activity_item_sem_etiqueta
 layout activity_login
 layout activity_main
 layout activity_manual_collection

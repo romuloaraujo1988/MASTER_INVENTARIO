@@ -1,87 +1,145 @@
 package com.inventario.mobile.server.controller;
 
-import com.inventario.dao.InventarioDAO;
 import com.inventario.mobile.server.dto.ApiResponse;
-import com.inventario.model.Inventario;
+import com.inventario.mobile.server.dto.MobileInventarioDTO;
+import com.inventario.mobile.server.service.MobileInventarioService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.SQLException;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Controlador REST para operações de inventário mobile
- * 
- * @author Sistema de Inventário
- * @version 1.0.0
  */
 @RestController
-@RequestMapping("/api/mobile")
+@RequestMapping("/api/mobile/inventario")
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class MobileInventarioController {
     
     private static final Logger logger = LoggerFactory.getLogger(MobileInventarioController.class);
     
-    private final InventarioDAO inventarioDAO;
+    @Autowired
+    private MobileInventarioService inventarioService;
     
-    public MobileInventarioController() {
-        this.inventarioDAO = new InventarioDAO();
+    /**
+     * Busca o inventário ativo (em andamento)
+     * GET /api/mobile/inventario/ativo
+     */
+    @GetMapping("/ativo")
+    public ResponseEntity<ApiResponse<MobileInventarioDTO>> buscarInventarioAtivo() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication != null ? authentication.getName() : "anonymous";
+            
+            logger.info("Buscando inventário ativo para usuário: {}", username);
+            
+            MobileInventarioDTO inventario = inventarioService.buscarInventarioAtivo();
+            
+            if (inventario != null) {
+                logger.info("✓ Inventário ativo encontrado: ID={}, Nome={}, Status={}", 
+                        inventario.getId(), inventario.getNome(), inventario.getStatus());
+                
+                return ResponseEntity.ok(
+                        ApiResponse.success(inventario, "Inventário ativo encontrado"));
+            } else {
+                logger.warn("Nenhum inventário ativo encontrado");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.error("Nenhum inventário ativo encontrado", "NO_ACTIVE_INVENTORY"));
+            }
+            
+        } catch (Exception e) {
+            logger.error("Erro ao buscar inventário ativo", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao buscar inventário ativo: " + e.getMessage(), "FETCH_ERROR"));
+        }
     }
     
     /**
-     * Busca o inventário ativo (status EM_ANDAMENTO)
-     * 
-     * @return dados do inventário ativo
+     * Busca inventário por ID
+     * GET /api/mobile/inventario/{id}
      */
-    @GetMapping("/test/inventarios-ativos")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> obterInventarioAtivo() {
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<MobileInventarioDTO>> buscarPorId(@PathVariable Integer id) {
         try {
-            logger.info("Buscando inventário ativo...");
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication != null ? authentication.getName() : "anonymous";
             
-            Inventario inventarioAtivo = inventarioDAO.buscarInventarioAtivo();
+            logger.info("Buscando inventário {} para usuário: {}", id, username);
             
-            Map<String, Object> response = new HashMap<>();
+            MobileInventarioDTO inventario = inventarioService.buscarPorId(id);
             
-            if (inventarioAtivo != null) {
-                logger.info("Inventário ativo encontrado: ID={}, Nome={}, Status={}", 
-                        inventarioAtivo.getId(), inventarioAtivo.getNome(), inventarioAtivo.getStatusInventario());
-                
-                Map<String, Object> inventarioData = new HashMap<>();
-                inventarioData.put("id", inventarioAtivo.getId());
-                inventarioData.put("nome", inventarioAtivo.getNome());
-                inventarioData.put("status", inventarioAtivo.getStatusInventario());
-                inventarioData.put("dataInicio", inventarioAtivo.getDataInicio());
-                inventarioData.put("dataFim", inventarioAtivo.getDataFim());
-                inventarioData.put("percentualConclusao", inventarioAtivo.getPercentualConclusao());
-                inventarioData.put("responsavel", inventarioAtivo.getResponsavelInventario());
-                
-                response.put("existeInventarioAtivo", true);
-                response.put("inventarioAtivo", inventarioData);
-                
+            if (inventario != null) {
                 return ResponseEntity.ok(
-                        ApiResponse.success(response, "Inventário ativo encontrado"));
+                        ApiResponse.success(inventario, "Inventário encontrado"));
             } else {
-                logger.warn("Nenhum inventário ativo encontrado");
-                
-                response.put("existeInventarioAtivo", false);
-                response.put("inventarioAtivo", null);
-                
-                return ResponseEntity.ok(
-                        ApiResponse.success(response, "Nenhum inventário ativo no momento"));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.error("Inventário não encontrado", "NOT_FOUND"));
             }
             
-        } catch (SQLException e) {
-            logger.error("Erro ao buscar inventário ativo", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Erro ao buscar inventário ativo: " + e.getMessage(), "DATABASE_ERROR"));
         } catch (Exception e) {
-            logger.error("Erro inesperado ao buscar inventário ativo", e);
+            logger.error("Erro ao buscar inventário por ID", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Erro inesperado: " + e.getMessage(), "INTERNAL_ERROR"));
+                    .body(ApiResponse.error("Erro ao buscar inventário", "FETCH_ERROR"));
+        }
+    }
+    
+    /**
+     * Lista todos os inventários
+     * GET /api/mobile/inventario
+     */
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<MobileInventarioDTO>>> listarInventarios() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication != null ? authentication.getName() : "anonymous";
+            
+            logger.info("Listando inventários para usuário: {}", username);
+            
+            List<MobileInventarioDTO> inventarios = inventarioService.listarInventarios();
+            
+            return ResponseEntity.ok(
+                    ApiResponse.success(inventarios, 
+                            String.format("%d inventário(s) encontrado(s)", inventarios.size())));
+            
+        } catch (Exception e) {
+            logger.error("Erro ao listar inventários", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao listar inventários", "FETCH_ERROR"));
+        }
+    }
+    
+    /**
+     * Busca estatísticas do inventário
+     * GET /api/mobile/inventario/{id}/estatisticas
+     */
+    @GetMapping("/{id}/estatisticas")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> buscarEstatisticas(@PathVariable Integer id) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication != null ? authentication.getName() : "anonymous";
+            
+            logger.info("Buscando estatísticas do inventário {} para usuário: {}", id, username);
+            
+            Map<String, Object> estatisticas = inventarioService.buscarEstatisticas(id);
+            
+            return ResponseEntity.ok(
+                    ApiResponse.success(estatisticas, "Estatísticas carregadas"));
+            
+        } catch (IllegalArgumentException e) {
+            logger.warn("Inventário não encontrado: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(e.getMessage(), "NOT_FOUND"));
+        } catch (Exception e) {
+            logger.error("Erro ao buscar estatísticas", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao buscar estatísticas", "FETCH_ERROR"));
         }
     }
 }

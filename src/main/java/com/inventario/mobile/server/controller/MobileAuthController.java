@@ -139,24 +139,42 @@ public class MobileAuthController {
     
     /**
      * Endpoint para refresh token
+     * POST /api/mobile/auth/refresh
      * 
      * @param refreshToken token de refresh
-     * @return novo access token
+     * @return novo access token e informações do usuário
      */
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<String>> refreshToken(@RequestParam String refreshToken) {
+    public ResponseEntity<MobileLoginResponse> refreshToken(@RequestParam String refreshToken) {
         try {
-            // Implementar lógica de refresh token
-            logger.info("Refresh token solicitado");
+            logger.info("═══════════════════════════════════════════════════════════");
+            logger.info("REFRESH TOKEN SOLICITADO");
+            logger.info("Refresh Token: {}", refreshToken != null ? refreshToken.substring(0, Math.min(20, refreshToken.length())) + "..." : "null");
+            logger.info("═══════════════════════════════════════════════════════════");
             
-            // Por enquanto retorna erro - implementar conforme necessário
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
-                    .body(ApiResponse.error("Funcionalidade não implementada", "NOT_IMPLEMENTED"));
+            MobileLoginResponse response = mobileAuthService.refreshAccessToken(refreshToken);
+            
+            logger.info("═══════════════════════════════════════════════════════════");
+            logger.info("REFRESH TOKEN BEM-SUCEDIDO!");
+            logger.info("Novo Access Token: {}", response.getAccessToken() != null ? response.getAccessToken().substring(0, Math.min(20, response.getAccessToken().length())) + "..." : "null");
+            logger.info("Usuário: {}", response.getUser() != null ? response.getUser().getUsername() : "null");
+            logger.info("═══════════════════════════════════════════════════════════");
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (AuthenticationException e) {
+            logger.error("═══════════════════════════════════════════════════════════");
+            logger.error("FALHA NO REFRESH TOKEN");
+            logger.error("Erro: {}", e.getMessage());
+            logger.error("═══════════════════════════════════════════════════════════");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             
         } catch (Exception e) {
-            logger.error("Erro no refresh token", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Erro interno do servidor", "INTERNAL_ERROR"));
+            logger.error("═══════════════════════════════════════════════════════════");
+            logger.error("ERRO INESPERADO NO REFRESH TOKEN");
+            logger.error("Erro: {}", e.getMessage(), e);
+            logger.error("═══════════════════════════════════════════════════════════");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

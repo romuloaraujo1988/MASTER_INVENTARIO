@@ -268,4 +268,133 @@ class PreferencesManager(context: Context) {
      * Define contador de coletas
      */
     fun setCollectionCount(count: Int) = putInt("collection_count", count)
+    
+    // ===== MÉTODOS DE INVENTÁRIO ATIVO =====
+    
+    /**
+     * Salva dados do inventário ativo
+     */
+    fun saveInventarioAtivo(id: Int, nome: String, status: String = "EM_ANDAMENTO") {
+        putInt("inventario_ativo_id", id)
+        putString("inventario_ativo_nome", nome)
+        putString("inventario_ativo_status", status)
+        putLong("inventario_ativo_timestamp", System.currentTimeMillis())
+        android.util.Log.d("PreferencesManager", "Inventário ativo salvo: ID=$id, Nome=$nome")
+    }
+    
+    /**
+     * Obtém ID do inventário ativo
+     */
+    fun getInventarioAtivoId(): Int? {
+        val id = getInt("inventario_ativo_id", 0)
+        return if (id > 0) id else null
+    }
+    
+    /**
+     * Obtém nome do inventário ativo
+     */
+    fun getInventarioAtivoNome(): String? {
+        return getString("inventario_ativo_nome", "").takeIf { it.isNotEmpty() }
+    }
+    
+    /**
+     * Obtém status do inventário ativo
+     */
+    fun getInventarioAtivoStatus(): String? {
+        return getString("inventario_ativo_status", "").takeIf { it.isNotEmpty() }
+    }
+    
+    /**
+     * Verifica se há inventário ativo salvo
+     */
+    fun hasInventarioAtivo(): Boolean {
+        return getInventarioAtivoId() != null
+    }
+    
+    /**
+     * Limpa dados do inventário ativo
+     */
+    fun clearInventarioAtivo() {
+        remove("inventario_ativo_id")
+        remove("inventario_ativo_nome")
+        remove("inventario_ativo_status")
+        remove("inventario_ativo_timestamp")
+        android.util.Log.d("PreferencesManager", "Inventário ativo limpo")
+    }
+    
+    /**
+     * Salva estatísticas do inventário
+     */
+    fun saveInventarioEstatisticas(
+        totalPatrimonios: Int,
+        totalColetados: Int,
+        percentualConclusao: Double
+    ) {
+        putInt("inventario_total_patrimonios", totalPatrimonios)
+        putInt("inventario_total_coletados", totalColetados)
+        putFloat("inventario_percentual_conclusao", percentualConclusao.toFloat())
+    }
+    
+    /**
+     * Obtém total de patrimônios do inventário
+     */
+    fun getInventarioTotalPatrimonios(): Int {
+        return getInt("inventario_total_patrimonios", 0)
+    }
+    
+    /**
+     * Obtém total de patrimônios coletados
+     */
+    fun getInventarioTotalColetados(): Int {
+        return getInt("inventario_total_coletados", 0)
+    }
+    
+    /**
+     * Obtém percentual de conclusão do inventário
+     */
+    fun getInventarioPercentualConclusao(): Float {
+        return getFloat("inventario_percentual_conclusao", 0f)
+    }
+    
+    // ===== MÉTODOS DE REFRESH TOKEN =====
+    
+    /**
+     * Obtém refresh token
+     */
+    fun getRefreshToken(): String? {
+        return getString("refresh_token", "").takeIf { it.isNotEmpty() }
+    }
+    
+    /**
+     * Verifica se o token está próximo de expirar (menos de 5 minutos)
+     */
+    fun isTokenExpiringSoon(): Boolean {
+        val expiresAt = getLong("token_expires_at", 0L)
+        val now = System.currentTimeMillis()
+        val fiveMinutes = 5 * 60 * 1000L
+        return (expiresAt - now) < fiveMinutes
+    }
+    
+    /**
+     * Verifica se o token expirou
+     */
+    fun isTokenExpired(): Boolean {
+        val expiresAt = getLong("token_expires_at", 0L)
+        return System.currentTimeMillis() >= expiresAt
+    }
+    
+    /**
+     * Obtém ID do usuário
+     */
+    fun getUserId(): Int? {
+        val id = getInt("user_id", 0)
+        return if (id > 0) id else null
+    }
+    
+    /**
+     * Salva ID do usuário
+     */
+    fun saveUserId(userId: Int) {
+        putInt("user_id", userId)
+    }
 }

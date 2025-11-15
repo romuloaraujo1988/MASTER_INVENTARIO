@@ -106,9 +106,8 @@ class DashboardFragment : Fragment() {
             Log.d(TAG, "onViewCreated: loadDashboardData executado com sucesso")
             
             // Carregar dados do gráfico
-            // TODO: Descomentar após resolver dependência MPAndroidChart
-            // viewModel.loadColetasEvolucao()
-            // Log.d(TAG, "onViewCreated: loadColetasEvolucao executado com sucesso")
+            viewModel.loadColetasEvolucao()
+            Log.d(TAG, "onViewCreated: loadColetasEvolucao executado com sucesso")
         } catch (e: Exception) {
             Log.e(TAG, "onViewCreated: Erro durante configuração da view", e)
         }
@@ -129,8 +128,7 @@ class DashboardFragment : Fragment() {
         // Estatísticas acessíveis via Navigation Drawer
         
         // Configurar gráfico
-        // TODO: Descomentar após resolver dependência MPAndroidChart
-        // setupChart()
+        setupChart()
         
         // Cards de navegação removidos - usar Navigation Drawer ou botões de ação
         
@@ -199,18 +197,18 @@ class DashboardFragment : Fragment() {
         }
     }
 
-    private fun updateUI(state: DashboardUiState) {
+    private fun updateUI(state: DashboardUiStateClean) {
         try {
             Log.d(TAG, "updateUI: Atualizando UI com estado: $state")
             
             // Dados do usuário e estatísticas acessíveis via Navigation Drawer e Estatísticas
             state.dashboardStats?.let { stats ->
-                Log.d(TAG, "updateUI: Estatísticas recebidas - Coletados: ${stats.patrimoniosColetados}, Pendentes: ${stats.patrimoniosPendentes}, Divergências: ${stats.divergencias}, Coletores: ${stats.coletoresAtivos}")
+                Log.d(TAG, "updateUI: Estatísticas recebidas - Coletados: ${stats.totalColetados}, Pendentes: ${stats.totalPendentes}, Divergências: ${stats.divergencias}, Coletores: ${stats.coletoresAtivos}")
                 
                 // Atualizar KPIs detalhados
                 try {
-                    animateNumber(binding.tvKpiColetados, stats.patrimoniosColetados)
-                    animateNumber(binding.tvKpiPendentes, stats.patrimoniosPendentes)
+                    animateNumber(binding.tvKpiColetados, stats.totalColetados)
+                    animateNumber(binding.tvKpiPendentes, stats.totalPendentes)
                     animateNumber(binding.tvKpiDivergencias, stats.divergencias)
                     animateNumber(binding.tvKpiColetores, stats.coletoresAtivos)
                     
@@ -227,8 +225,6 @@ class DashboardFragment : Fragment() {
             binding.swipeRefresh.isRefreshing = state.isLoading
             
             // Atualizar gráfico
-            // TODO: Descomentar após resolver dependência MPAndroidChart
-            /*
             binding.progressBarGrafico.visibility = if (state.isLoadingGrafico) View.VISIBLE else View.GONE
             
             if (state.graficoError != null) {
@@ -236,9 +232,10 @@ class DashboardFragment : Fragment() {
                 binding.tvGraficoError.visibility = View.VISIBLE
                 binding.tvGraficoError.text = state.graficoError
             } else if (state.coletasEvolucao.isNotEmpty()) {
-                updateChart(state.coletasEvolucao)
+                // Converter Domain Model para DTO (compatibilidade com gráfico)
+                val coletasDtos = DashboardAdapter.toDtoList(state.coletasEvolucao)
+                updateChart(coletasDtos)
             }
-            */
             
             // Atualizar mensagem de erro
             if (state.error != null) {
@@ -305,7 +302,6 @@ class DashboardFragment : Fragment() {
             .start()
     }
 
-    /* TODO: Descomentar após resolver dependência MPAndroidChart
     private fun setupChart() {
         try {
             val chart = binding.lineChartEvolucao
@@ -426,7 +422,6 @@ class DashboardFragment : Fragment() {
             binding.tvGraficoError.text = "Erro ao exibir gráfico"
         }
     }
-    */
 
     // ========== BUSCA POR VOZ ==========
     

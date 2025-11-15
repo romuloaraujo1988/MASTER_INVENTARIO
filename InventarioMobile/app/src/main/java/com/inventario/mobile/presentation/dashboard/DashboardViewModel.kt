@@ -64,14 +64,26 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         loadDashboardData()
     }
 
-    fun loadColetasEvolucao() {
+    fun loadColetasEvolucao(dias: Int = 30) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoadingGrafico = true)
             
             try {
-                // TODO: Implementar carregamento de dados do gráfico
-                _uiState.value = _uiState.value.copy(
-                    isLoadingGrafico = false
+                val result = repository.getColetasEvolucao(dias)
+                result.fold(
+                    onSuccess = { evolucao ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoadingGrafico = false,
+                            coletasEvolucao = evolucao,
+                            graficoError = null
+                        )
+                    },
+                    onFailure = { e ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoadingGrafico = false,
+                            graficoError = e.message
+                        )
+                    }
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -90,6 +102,7 @@ data class DashboardUiState(
     val isLoading: Boolean = false,
     val isLoadingGrafico: Boolean = false,
     val dashboardStats: DashboardStats? = null,
+    val coletasEvolucao: List<com.inventario.mobile.data.remote.dto.ColetasPorDiaDto> = emptyList(),
     val error: String? = null,
     val graficoError: String? = null
 )

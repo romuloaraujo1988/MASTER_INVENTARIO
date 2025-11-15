@@ -1340,4 +1340,196 @@ public class ColetaDAO {
         
         return coletas;
     }
+    
+    /**
+     * Busca evolução de coletas por dia (últimos N dias)
+     * Retorna quantidade de coletas agrupadas por data
+     * 
+     * @param inventarioId ID do inventário
+     * @param dias Quantidade de dias para buscar
+     * @return Lista de mapas com data e quantidade
+     * @throws SQLException Se ocorrer erro na consulta
+     */
+    public List<Map<String, Object>> buscarEvolucaoColetasPorDia(int inventarioId, int dias) throws SQLException {
+        String sql = "SELECT " +
+                    "    CAST(DATA_COLETA AS DATE) as data, " +
+                    "    COUNT(*) as quantidade " +
+                    "FROM TABELA_COLETA " +
+                    "WHERE ID_INVENTARIO = ? " +
+                    "    AND DATA_COLETA >= CURRENT_DATE - ? " +
+                    "GROUP BY CAST(DATA_COLETA AS DATE) " +
+                    "ORDER BY data ASC";
+        
+        List<Map<String, Object>> resultado = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, inventarioId);
+            stmt.setInt(2, dias);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> item = new java.util.HashMap<>();
+                    item.put("data", rs.getDate("data"));
+                    item.put("quantidade", rs.getInt("quantidade"));
+                    resultado.add(item);
+                }
+            }
+        }
+        
+        return resultado;
+    }
+    
+    /**
+     * Busca top itens mais coletados (por descrição)
+     * Agrupa coletas por descrição do patrimônio e retorna os mais coletados
+     * 
+     * @param inventarioId ID do inventário
+     * @param limit Quantidade máxima de itens a retornar
+     * @return Lista de mapas com descrição e quantidade
+     * @throws SQLException Se ocorrer erro na consulta
+     */
+    public List<Map<String, Object>> buscarTopItensColetados(int inventarioId, int limit) throws SQLException {
+        String sql = "SELECT " +
+                    "    COALESCE(p.DESCRICAO, c.DESCRICAO_ITEM_SEM_ETIQUETA, 'Sem Descrição') as descricao, " +
+                    "    COUNT(*) as quantidade " +
+                    "FROM TABELA_COLETA c " +
+                    "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
+                    "WHERE c.ID_INVENTARIO = ? " +
+                    "GROUP BY COALESCE(p.DESCRICAO, c.DESCRICAO_ITEM_SEM_ETIQUETA, 'Sem Descrição') " +
+                    "ORDER BY quantidade DESC " +
+                    "LIMIT ?";
+        
+        List<Map<String, Object>> resultado = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, inventarioId);
+            stmt.setInt(2, limit);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> item = new java.util.HashMap<>();
+                    item.put("descricao", rs.getString("descricao"));
+                    item.put("quantidade", rs.getInt("quantidade"));
+                    resultado.add(item);
+                }
+            }
+        }
+        
+        return resultado;
+    }
+    
+    /**
+     * Busca estatísticas de coletas por status
+     * Retorna quantidade de coletas agrupadas por status
+     * 
+     * @param inventarioId ID do inventário
+     * @return Lista de mapas com status e quantidade
+     * @throws SQLException Se ocorrer erro na consulta
+     */
+    public List<Map<String, Object>> buscarEstatisticasPorStatus(int inventarioId) throws SQLException {
+        String sql = "SELECT " +
+                    "    STATUS_COLETA as status, " +
+                    "    COUNT(*) as quantidade " +
+                    "FROM TABELA_COLETA " +
+                    "WHERE ID_INVENTARIO = ? " +
+                    "GROUP BY STATUS_COLETA " +
+                    "ORDER BY quantidade DESC";
+        
+        List<Map<String, Object>> resultado = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, inventarioId);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> item = new java.util.HashMap<>();
+                    item.put("status", rs.getString("status"));
+                    item.put("quantidade", rs.getInt("quantidade"));
+                    resultado.add(item);
+                }
+            }
+        }
+        
+        return resultado;
+    }
+    
+    /**
+     * Busca coletas por período (data inicial e final)
+     * 
+     * @param inventarioId ID do inventário
+     * @param dataInicio Data inicial do período
+     * @param dataFim Data final do período
+     * @return Quantidade de coletas no período
+     * @throws SQLException Se ocorrer erro na consulta
+     */
+    public int contarColetasPorPeriodo(int inventarioId, Date dataInicio, Date dataFim) throws SQLException {
+        String sql = "SELECT COUNT(*) as total " +
+                    "FROM TABELA_COLETA " +
+                    "WHERE ID_INVENTARIO = ? " +
+                    "    AND DATA_COLETA >= ? " +
+                    "    AND DATA_COLETA <= ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, inventarioId);
+            stmt.setDate(2, dataInicio);
+            stmt.setDate(3, dataFim);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        }
+        
+        return 0;
+    }
+    
+    /**
+     * Busca distribuição de coletas por sala
+     * Retorna quantidade de coletas agrupadas por sala
+     * 
+     * @param inventarioId ID do inventário
+     * @param limit Quantidade máxima de salas a retornar
+     * @return Lista de mapas com sala e quantidade
+     * @throws SQLException Se ocorrer erro na consulta
+     */
+    public List<Map<String, Object>> buscarDistribuicaoPorSala(int inventarioId, int limit) throws SQLException {
+        String sql = "SELECT " +
+                    "    c.LOCALIZACAO_ENCONTRADA as sala, " +
+                    "    COUNT(*) as quantidade " +
+                    "FROM TABELA_COLETA c " +
+                    "WHERE c.ID_INVENTARIO = ? " +
+                    "    AND c.LOCALIZACAO_ENCONTRADA IS NOT NULL " +
+                    "GROUP BY c.LOCALIZACAO_ENCONTRADA " +
+                    "ORDER BY quantidade DESC " +
+                    "LIMIT ?";
+        
+        List<Map<String, Object>> resultado = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, inventarioId);
+            stmt.setInt(2, limit);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> item = new java.util.HashMap<>();
+                    item.put("sala", rs.getString("sala"));
+                    item.put("quantidade", rs.getInt("quantidade"));
+                    resultado.add(item);
+                }
+            }
+        }
+        
+        return resultado;
+    }
 }

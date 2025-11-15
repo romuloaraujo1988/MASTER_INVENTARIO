@@ -147,17 +147,17 @@ public class MobilePatrimonioController {
     }
     
     /**
-     * Buscar patrimônios por responsável
+     * Buscar patrimônios por responsável com paginação e filtro de coleta
      * 
-     * @param responsavelId ID do responsável
+     * @param idResponsavel ID do responsável
      * @param page página (padrão: 0)
      * @param size tamanho da página (padrão: 50)
-     * @param coletado filtro de status de coleta (opcional)
+     * @param coletado filtro de status de coleta (opcional: true=coletados, false=não coletados, null=todos)
      * @return lista de patrimônios
      */
-    @GetMapping("/responsavel/{responsavelId}")
+    @GetMapping("/responsavel/{idResponsavel}")
     public ResponseEntity<ApiResponse<List<MobilePatrimonioDTO>>> buscarPorResponsavel(
-            @PathVariable Integer responsavelId,
+            @PathVariable Integer idResponsavel,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size,
             @RequestParam(required = false) Boolean coletado) {
@@ -166,11 +166,11 @@ public class MobilePatrimonioController {
             String username = authentication != null ? authentication.getName() : "anonymous";
             
             logger.info("Buscando patrimônios do responsável {} (page: {}, size: {}, coletado: {}) para usuário: {}", 
-                    responsavelId, page, size, coletado, username);
+                    idResponsavel, page, size, coletado, username);
             
-            List<MobilePatrimonioDTO> patrimonios = patrimonioService.buscarPorResponsavel(responsavelId, page, size, coletado);
+            List<MobilePatrimonioDTO> patrimonios = patrimonioService.buscarPorResponsavel(idResponsavel, page, size, coletado);
             
-            logger.info("✓ {} patrimônio(s) encontrado(s) para responsável {}", patrimonios.size(), responsavelId);
+            logger.info("✓ {} patrimônio(s) encontrado(s) para responsável {}", patrimonios.size(), idResponsavel);
             
             return ResponseEntity.ok(
                     ApiResponse.success(patrimonios, 
@@ -180,6 +180,33 @@ public class MobilePatrimonioController {
             logger.error("Erro ao buscar patrimônios por responsável", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro ao buscar patrimônios: " + e.getMessage(), "FETCH_ERROR"));
+        }
+    }
+    
+    /**
+     * Contar total de patrimônios por responsável
+     * 
+     * @param idResponsavel ID do responsável
+     * @return total de patrimônios
+     */
+    @GetMapping("/responsavel/{idResponsavel}/count")
+    public ResponseEntity<ApiResponse<Integer>> contarPatrimoniosPorResponsavel(@PathVariable Integer idResponsavel) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication != null ? authentication.getName() : "anonymous";
+            
+            logger.info("Contando patrimônios do responsável {} para usuário: {}", idResponsavel, username);
+            
+            int total = patrimonioService.contarPatrimoniosPorResponsavel(idResponsavel);
+            
+            return ResponseEntity.ok(
+                    ApiResponse.success(total, 
+                            String.format("Total de %d patrimônio(s) encontrado(s)", total)));
+            
+        } catch (Exception e) {
+            logger.error("Erro ao contar patrimônios por responsável", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao contar patrimônios", "COUNT_ERROR"));
         }
     }
     
@@ -269,66 +296,78 @@ public class MobilePatrimonioController {
                     .body(ApiResponse.error("Erro ao buscar patrimônio", "FETCH_ERROR"));
         }
     }
-
+    
     /**
-     * Buscar patrimônios por responsável com paginação e filtro de coleta
+     * Verifica se um patrimônio já foi coletado no inventário
+     * GET /api/mobile/patrimonio/numero/{numero}/coletado?inventarioId=2
      * 
-     * @param idResponsavel ID do responsável
-     * @param page página (padrão: 0)
-     * @param size tamanho da página (padrão: 50)
-     * @param coletado filtro de status de coleta (opcional: true=coletados, false=não coletados, null=todos)
-     * @return lista de patrimônios
+     * @param numero número do patrimônio
+     * @param inventarioId ID do inventário (opcional, usa ativo se não informado)
+     * @return informações sobre a coleta
      */
-    @GetMapping("/responsavel/{idResponsavel}")
-    public ResponseEntity<ApiResponse<List<MobilePatrimonioDTO>>> buscarPorResponsavel(
-            @PathVariable Integer idResponsavel,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size,
-            @RequestParam(required = false) Boolean coletado) {
+    @GetMapping("/numero/{numero}/coletado")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> verificarSePatrimonioFoiColetado(
+            @PathVariable String numero,
+            @RequestParam(required = false) Integer inventarioId) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
+            String username = authentication != null ? authentication.getName() : "anonymous";
             
-            logger.info("Buscando patrimônios do responsável {} (page: {}, size: {}, coletado: {}) para usuário: {}", 
-                       idResponsavel, page, size, coletado, username);
+            logger.info("Verificando se patrimônio {} foi coletado (inventário: {}) para usuário: {}", 
+                    numero, inventarioId, username);
             
-            List<MobilePatrimonioDTO> patrimonios = patrimonioService.buscarPorResponsavel(idResponsavel, page, size, coletado);
+            java.util.Map<String, Object> resultado = patrimonioService.verificarSePatrimonioFoiColetado(numero, inventarioId);
             
-            return ResponseEntity.ok(
-                    ApiResponse.success(patrimonios, 
-                            String.format("%d patrimônio(s) encontrado(s)", patrimonios.size())));
+            boolean coletado = (Boolean) resultado.get("coletado");
+            String mensagem = coletado 
+                    ? "Patrimônio já foi coletado" 
+                    : "Patrimônio ainda não foi coletado";
+            
+            return ResponseEntity.ok(ApiResponse.success(resultado, mensagem));
+            
+        } catch (IllegalArgumentException e) {
+            logger.warn("Erro de validação ao verificar coleta: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage(), "VALIDATION_ERROR"));
+        } catch (Exception e) {
+            logger.error("Erro ao verificar se patrimônio foi coletado", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao verificar coleta: " + e.getMessage(), "CHECK_ERROR"));
+        }
+    }
+    
+    /**
+     * Valida um número de patrimônio antes de coletar
+     * GET /api/mobile/patrimonio/numero/{numero}/validar
+     * 
+     * @param numero número do patrimônio
+     * @return informações de validação
+     */
+    @GetMapping("/numero/{numero}/validar")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> validarPatrimonio(@PathVariable String numero) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication != null ? authentication.getName() : "anonymous";
+            
+            logger.info("Validando patrimônio {} para usuário: {}", numero, username);
+            
+            java.util.Map<String, Object> resultado = patrimonioService.validarPatrimonio(numero);
+            
+            boolean valido = (Boolean) resultado.get("valido");
+            String mensagem = valido 
+                    ? "Patrimônio válido e pode ser coletado" 
+                    : (String) resultado.get("mensagem");
+            
+            HttpStatus status = valido ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
+            
+            return ResponseEntity.status(status)
+                    .body(ApiResponse.success(resultado, mensagem));
             
         } catch (Exception e) {
-            logger.error("Erro ao buscar patrimônios por responsável", e);
+            logger.error("Erro ao validar patrimônio", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Erro ao buscar patrimônios", "FETCH_ERROR"));
+                    .body(ApiResponse.error("Erro ao validar patrimônio: " + e.getMessage(), "VALIDATION_ERROR"));
         }
     }
 
-    /**
-     * Contar total de patrimônios por responsável
-     * 
-     * @param idResponsavel ID do responsável
-     * @return total de patrimônios
-     */
-    @GetMapping("/responsavel/{idResponsavel}/count")
-    public ResponseEntity<ApiResponse<Integer>> contarPatrimoniosPorResponsavel(@PathVariable Integer idResponsavel) {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
-            
-            logger.info("Contando patrimônios do responsável {} para usuário: {}", idResponsavel, username);
-            
-            int total = patrimonioService.contarPatrimoniosPorResponsavel(idResponsavel);
-            
-            return ResponseEntity.ok(
-                    ApiResponse.success(total, 
-                            String.format("Total de %d patrimônio(s) encontrado(s)", total)));
-            
-        } catch (Exception e) {
-            logger.error("Erro ao contar patrimônios por responsável", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Erro ao contar patrimônios", "COUNT_ERROR"));
-        }
-    }
 }

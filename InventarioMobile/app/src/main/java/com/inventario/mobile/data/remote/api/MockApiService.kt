@@ -204,8 +204,52 @@ class MockApiService : ApiService {
         throw NotImplementedError("Mock implementation - not available offline")
     }
     
-    override suspend fun getColetasEvolucao(dias: Int): Response<ApiResponse<List<ColetasPorDiaDto>>> {
-        throw NotImplementedError("Mock implementation - not available offline")
+    override suspend fun getColetasEvolucao(dias: Int): Response<ApiResponse<Map<String, Any>>> {
+        val mockData: Map<String, Any> = mapOf(
+            "evolucao" to emptyMap<String, Int>()
+        )
+        val apiResponse = ApiResponse(
+            success = true,
+            message = "Mock data",
+            data = mockData
+        )
+        return Response.success(apiResponse)
+    }
+    
+    override suspend fun getTopItens(limit: Int): Response<ApiResponse<Map<String, Any>>> {
+        val mockData: Map<String, Any> = mapOf(
+            "topItens" to emptyMap<String, Int>()
+        )
+        val apiResponse = ApiResponse(
+            success = true,
+            message = "Mock data",
+            data = mockData
+        )
+        return Response.success(apiResponse)
+    }
+    
+    override suspend fun getDistribuicaoPorSala(limit: Int): Response<ApiResponse<Map<String, Any>>> {
+        val mockData: Map<String, Any> = mapOf(
+            "distribuicaoPorSala" to emptyMap<String, Int>()
+        )
+        val apiResponse = ApiResponse(
+            success = true,
+            message = "Mock data",
+            data = mockData
+        )
+        return Response.success(apiResponse)
+    }
+    
+    override suspend fun getEstatisticasPorStatus(): Response<ApiResponse<Map<String, Any>>> {
+        val mockData: Map<String, Any> = mapOf(
+            "statusDistribuicao" to emptyMap<String, Int>()
+        )
+        val apiResponse = ApiResponse(
+            success = true,
+            message = "Mock data",
+            data = mockData
+        )
+        return Response.success(apiResponse)
     }
 
     override suspend fun getDescricoes(): Response<ApiResponse<List<Map<String, Any>>>> {

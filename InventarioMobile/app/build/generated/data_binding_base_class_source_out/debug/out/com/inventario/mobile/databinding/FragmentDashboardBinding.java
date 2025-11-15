@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
+import com.github.mikephil.charting.charts.LineChart;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.inventario.mobile.R;
@@ -46,13 +47,22 @@ public final class FragmentDashboardBinding implements ViewBinding {
   public final ImageView ivMicAnimation;
 
   @NonNull
+  public final LineChart lineChartEvolucao;
+
+  @NonNull
   public final ProgressBar progressBar;
+
+  @NonNull
+  public final ProgressBar progressBarGrafico;
 
   @NonNull
   public final SwipeRefreshLayout swipeRefresh;
 
   @NonNull
   public final TextView tvError;
+
+  @NonNull
+  public final TextView tvGraficoError;
 
   @NonNull
   public final TextView tvKpiColetados;
@@ -82,12 +92,14 @@ public final class FragmentDashboardBinding implements ViewBinding {
       @NonNull MaterialButton btnCancelVoice, @NonNull MaterialButton btnDescriptionCollection,
       @NonNull MaterialButton btnManualCollection, @NonNull MaterialButton btnQuickScan,
       @NonNull MaterialButton btnViewCollections, @NonNull FloatingActionButton fabVoiceSearch,
-      @NonNull ImageView ivMicAnimation, @NonNull ProgressBar progressBar,
+      @NonNull ImageView ivMicAnimation, @NonNull LineChart lineChartEvolucao,
+      @NonNull ProgressBar progressBar, @NonNull ProgressBar progressBarGrafico,
       @NonNull SwipeRefreshLayout swipeRefresh, @NonNull TextView tvError,
-      @NonNull TextView tvKpiColetados, @NonNull TextView tvKpiColetores,
-      @NonNull TextView tvKpiDivergencias, @NonNull TextView tvKpiPendentes,
-      @NonNull TextView tvVoiceStatus, @NonNull TextView tvVoiceSuggestions,
-      @NonNull TextView tvVoiceText, @NonNull FrameLayout voiceListeningOverlay) {
+      @NonNull TextView tvGraficoError, @NonNull TextView tvKpiColetados,
+      @NonNull TextView tvKpiColetores, @NonNull TextView tvKpiDivergencias,
+      @NonNull TextView tvKpiPendentes, @NonNull TextView tvVoiceStatus,
+      @NonNull TextView tvVoiceSuggestions, @NonNull TextView tvVoiceText,
+      @NonNull FrameLayout voiceListeningOverlay) {
     this.rootView = rootView;
     this.btnCancelVoice = btnCancelVoice;
     this.btnDescriptionCollection = btnDescriptionCollection;
@@ -96,9 +108,12 @@ public final class FragmentDashboardBinding implements ViewBinding {
     this.btnViewCollections = btnViewCollections;
     this.fabVoiceSearch = fabVoiceSearch;
     this.ivMicAnimation = ivMicAnimation;
+    this.lineChartEvolucao = lineChartEvolucao;
     this.progressBar = progressBar;
+    this.progressBarGrafico = progressBarGrafico;
     this.swipeRefresh = swipeRefresh;
     this.tvError = tvError;
+    this.tvGraficoError = tvGraficoError;
     this.tvKpiColetados = tvKpiColetados;
     this.tvKpiColetores = tvKpiColetores;
     this.tvKpiDivergencias = tvKpiDivergencias;
@@ -178,9 +193,21 @@ public final class FragmentDashboardBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.lineChartEvolucao;
+      LineChart lineChartEvolucao = ViewBindings.findChildViewById(rootView, id);
+      if (lineChartEvolucao == null) {
+        break missingId;
+      }
+
       id = R.id.progressBar;
       ProgressBar progressBar = ViewBindings.findChildViewById(rootView, id);
       if (progressBar == null) {
+        break missingId;
+      }
+
+      id = R.id.progressBarGrafico;
+      ProgressBar progressBarGrafico = ViewBindings.findChildViewById(rootView, id);
+      if (progressBarGrafico == null) {
         break missingId;
       }
 
@@ -193,6 +220,12 @@ public final class FragmentDashboardBinding implements ViewBinding {
       id = R.id.tvError;
       TextView tvError = ViewBindings.findChildViewById(rootView, id);
       if (tvError == null) {
+        break missingId;
+      }
+
+      id = R.id.tvGraficoError;
+      TextView tvGraficoError = ViewBindings.findChildViewById(rootView, id);
+      if (tvGraficoError == null) {
         break missingId;
       }
 
@@ -246,9 +279,9 @@ public final class FragmentDashboardBinding implements ViewBinding {
 
       return new FragmentDashboardBinding((FrameLayout) rootView, btnCancelVoice,
           btnDescriptionCollection, btnManualCollection, btnQuickScan, btnViewCollections,
-          fabVoiceSearch, ivMicAnimation, progressBar, swipeRefresh, tvError, tvKpiColetados,
-          tvKpiColetores, tvKpiDivergencias, tvKpiPendentes, tvVoiceStatus, tvVoiceSuggestions,
-          tvVoiceText, voiceListeningOverlay);
+          fabVoiceSearch, ivMicAnimation, lineChartEvolucao, progressBar, progressBarGrafico,
+          swipeRefresh, tvError, tvGraficoError, tvKpiColetados, tvKpiColetores, tvKpiDivergencias,
+          tvKpiPendentes, tvVoiceStatus, tvVoiceSuggestions, tvVoiceText, voiceListeningOverlay);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

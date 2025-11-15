@@ -25,4 +25,21 @@ interface ColetaApi {
     suspend fun registrarColetasEmLote(
         @Body request: MobileColetaBatchRequest
     ): ApiResponse<Map<String, Any>>
+    
+    /**
+     * Verifica se uma coleta seria duplicada
+     * Endpoint: POST /api/mobile/coletas/verificar-duplicata
+     */
+    @POST("api/mobile/coletas/verificar-duplicata")
+    suspend fun verificarDuplicataColeta(
+        @Body request: VerificarDuplicataRequest
+    ): ApiResponse<Map<String, Any>>
 }
+
+/**
+ * Request para verificação de duplicata de coleta
+ */
+data class VerificarDuplicataRequest(
+    val numeroPatrimonio: String,
+    val inventarioId: Int? = null
+)

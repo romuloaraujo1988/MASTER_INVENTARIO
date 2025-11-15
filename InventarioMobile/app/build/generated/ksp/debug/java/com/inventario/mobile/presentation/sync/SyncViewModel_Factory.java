@@ -1,8 +1,9 @@
 package com.inventario.mobile.presentation.sync;
 
-import com.inventario.mobile.data.migration.ColetaMigration;
-import com.inventario.mobile.domain.usecase.EnviarColetasPendentesUseCase;
-import com.inventario.mobile.domain.usecase.SincronizarColetasDoServidorUseCase;
+import com.inventario.mobile.data.repository.SyncRepository;
+import com.inventario.mobile.domain.usecase.SincronizarColetasPendentesUseCase;
+import com.inventario.mobile.domain.usecase.SincronizarDadosUseCase;
+import com.inventario.mobile.sync.SyncManager;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
 import dagger.internal.QualifierMetadata;
@@ -24,37 +25,38 @@ import javax.inject.Provider;
     "KotlinInternalInJava"
 })
 public final class SyncViewModel_Factory implements Factory<SyncViewModel> {
-  private final Provider<SincronizarColetasDoServidorUseCase> sincronizarColetasUseCaseProvider;
+  private final Provider<SincronizarDadosUseCase> sincronizarDadosUseCaseProvider;
 
-  private final Provider<EnviarColetasPendentesUseCase> enviarColetasPendentesUseCaseProvider;
+  private final Provider<SincronizarColetasPendentesUseCase> sincronizarColetasPendentesUseCaseProvider;
 
-  private final Provider<ColetaMigration> coletaMigrationProvider;
+  private final Provider<SyncRepository> syncRepositoryProvider;
 
-  public SyncViewModel_Factory(
-      Provider<SincronizarColetasDoServidorUseCase> sincronizarColetasUseCaseProvider,
-      Provider<EnviarColetasPendentesUseCase> enviarColetasPendentesUseCaseProvider,
-      Provider<ColetaMigration> coletaMigrationProvider) {
-    this.sincronizarColetasUseCaseProvider = sincronizarColetasUseCaseProvider;
-    this.enviarColetasPendentesUseCaseProvider = enviarColetasPendentesUseCaseProvider;
-    this.coletaMigrationProvider = coletaMigrationProvider;
+  private final Provider<SyncManager> syncManagerProvider;
+
+  public SyncViewModel_Factory(Provider<SincronizarDadosUseCase> sincronizarDadosUseCaseProvider,
+      Provider<SincronizarColetasPendentesUseCase> sincronizarColetasPendentesUseCaseProvider,
+      Provider<SyncRepository> syncRepositoryProvider, Provider<SyncManager> syncManagerProvider) {
+    this.sincronizarDadosUseCaseProvider = sincronizarDadosUseCaseProvider;
+    this.sincronizarColetasPendentesUseCaseProvider = sincronizarColetasPendentesUseCaseProvider;
+    this.syncRepositoryProvider = syncRepositoryProvider;
+    this.syncManagerProvider = syncManagerProvider;
   }
 
   @Override
   public SyncViewModel get() {
-    return newInstance(sincronizarColetasUseCaseProvider.get(), enviarColetasPendentesUseCaseProvider.get(), coletaMigrationProvider.get());
+    return newInstance(sincronizarDadosUseCaseProvider.get(), sincronizarColetasPendentesUseCaseProvider.get(), syncRepositoryProvider.get(), syncManagerProvider.get());
   }
 
   public static SyncViewModel_Factory create(
-      Provider<SincronizarColetasDoServidorUseCase> sincronizarColetasUseCaseProvider,
-      Provider<EnviarColetasPendentesUseCase> enviarColetasPendentesUseCaseProvider,
-      Provider<ColetaMigration> coletaMigrationProvider) {
-    return new SyncViewModel_Factory(sincronizarColetasUseCaseProvider, enviarColetasPendentesUseCaseProvider, coletaMigrationProvider);
+      Provider<SincronizarDadosUseCase> sincronizarDadosUseCaseProvider,
+      Provider<SincronizarColetasPendentesUseCase> sincronizarColetasPendentesUseCaseProvider,
+      Provider<SyncRepository> syncRepositoryProvider, Provider<SyncManager> syncManagerProvider) {
+    return new SyncViewModel_Factory(sincronizarDadosUseCaseProvider, sincronizarColetasPendentesUseCaseProvider, syncRepositoryProvider, syncManagerProvider);
   }
 
-  public static SyncViewModel newInstance(
-      SincronizarColetasDoServidorUseCase sincronizarColetasUseCase,
-      EnviarColetasPendentesUseCase enviarColetasPendentesUseCase,
-      ColetaMigration coletaMigration) {
-    return new SyncViewModel(sincronizarColetasUseCase, enviarColetasPendentesUseCase, coletaMigration);
+  public static SyncViewModel newInstance(SincronizarDadosUseCase sincronizarDadosUseCase,
+      SincronizarColetasPendentesUseCase sincronizarColetasPendentesUseCase,
+      SyncRepository syncRepository, SyncManager syncManager) {
+    return new SyncViewModel(sincronizarDadosUseCase, sincronizarColetasPendentesUseCase, syncRepository, syncManager);
   }
 }

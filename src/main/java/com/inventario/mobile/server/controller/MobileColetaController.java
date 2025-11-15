@@ -435,4 +435,58 @@ public class MobileColetaController {
                             "FETCH_ERROR"));
         }
     }
+
+    /**
+     * Verifica se uma coleta seria duplicada
+     * POST /api/mobile/coletas/verificar-duplicata
+     * 
+     * @param request dados para verificação (numeroPatrimonio, inventarioId)
+     * @return informações sobre duplicação
+     */
+    @PostMapping("/verificar-duplicata")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> verificarDuplicataColeta(
+            @RequestBody Map<String, Object> request) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication != null ? authentication.getName() : "anonymous";
+            
+            String numeroPatrimonio = (String) request.get("numeroPatrimonio");
+            Integer inventarioId = request.get("inventarioId") != null 
+                    ? Integer.valueOf(request.get("inventarioId").toString()) 
+                    : null;
+            
+            if (numeroPatrimonio == null || numeroPatrimonio.trim().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.error("Número do patrimônio é obrigatório", "MISSING_PARAMETER"));
+            }
+            
+            logger.info("Verificando duplicata de coleta: patrimônio={}, inventário={}, usuário={}", 
+                    numeroPatrimonio, inventarioId, username);
+            
+            // Usar o serviço de patrimônio para verificar duplicata
+            com.inventario.mobile.server.service.MobilePatrimonioService patrimonioService = 
+                    new com.inventario.mobile.server.service.MobilePatrimonioService();
+            
+            Map<String, Object> resultado = patrimonioService.verificarDuplicataColeta(
+                    numeroPatrimonio, inventarioId);
+            
+            boolean duplicado = (Boolean) resultado.get("duplicado");
+            String mensagem = (String) resultado.get("mensagem");
+            
+            HttpStatus status = duplicado ? HttpStatus.CONFLICT : HttpStatus.OK;
+            
+            return ResponseEntity.status(status)
+                    .body(ApiResponse.success(resultado, mensagem));
+            
+        } catch (IllegalArgumentException e) {
+            logger.warn("Erro de validação ao verificar duplicata: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage(), "VALIDATION_ERROR"));
+        } catch (Exception e) {
+            logger.error("Erro ao verificar duplicata de coleta", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao verificar duplicata: " + e.getMessage(), "CHECK_ERROR"));
+        }
+    }
+
 }

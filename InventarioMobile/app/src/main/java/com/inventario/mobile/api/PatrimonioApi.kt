@@ -34,4 +34,21 @@ interface PatrimonioApi {
     suspend fun buscarPorDescricaoNaoColetados(
         @Path("descricao") descricao: String
     ): Response<ApiResponse<List<Patrimonio>>>
+    
+    /**
+     * Verifica se um patrimônio já foi coletado no inventário
+     */
+    @GET("patrimonio/numero/{numero}/coletado")
+    suspend fun verificarSePatrimonioFoiColetado(
+        @Path("numero") numero: String,
+        @Query("inventarioId") inventarioId: Int? = null
+    ): Response<ApiResponse<Map<String, Any>>>
+    
+    /**
+     * Valida um número de patrimônio antes de coletar
+     */
+    @GET("patrimonio/numero/{numero}/validar")
+    suspend fun validarPatrimonio(
+        @Path("numero") numero: String
+    ): Response<ApiResponse<Map<String, Any>>>
 }
