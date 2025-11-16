@@ -3649,6 +3649,7 @@ id leftToRight
 id legacy
 id line1
 id line3
+id lineChart
 id lineChartEvolucao
 id linear
 id listMode

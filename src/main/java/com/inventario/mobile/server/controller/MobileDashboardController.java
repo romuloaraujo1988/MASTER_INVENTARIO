@@ -29,8 +29,9 @@ public class MobileDashboardController {
     /**
      * Busca estatísticas gerais do dashboard
      * GET /api/mobile/dashboard/estatisticas
+     * GET /api/mobile/dashboard/stats (alias para compatibilidade)
      */
-    @GetMapping("/estatisticas")
+    @GetMapping({"/estatisticas", "/stats"})
     public ResponseEntity<ApiResponse<Map<String, Object>>> buscarEstatisticas(
             @RequestParam(required = false) Integer inventarioId) {
         try {

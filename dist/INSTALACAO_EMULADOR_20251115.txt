@@ -1,0 +1,102 @@
+═══════════════════════════════════════════════════════════════
+  INSTALAÇÃO NO EMULADOR ANDROID - RESUMO
+═══════════════════════════════════════════════════════════════
+
+📅 Data: 15/11/2025
+📱 APK: InventarioMobile-debug-20251115.apk
+✅ Status: INSTALADO E EXECUTANDO COM SUCESSO
+
+═══════════════════════════════════════════════════════════════
+  INFORMAÇÕES DO DISPOSITIVO
+═══════════════════════════════════════════════════════════════
+
+🔌 Dispositivo: emulator-5554
+📦 Package: com.inventario.mobile.debug
+🏷️  Versão: 1.2 (versionCode: 3)
+🎯 SDK Mínimo: 23 (Android 6.0)
+🎯 SDK Target: 34 (Android 14)
+
+═══════════════════════════════════════════════════════════════
+  PROCESSO DE INSTALAÇÃO
+═══════════════════════════════════════════════════════════════
+
+1️⃣  Verificação do Emulador
+   ✅ Emulador detectado: emulator-5554
+
+2️⃣  Instalação do APK
+   ✅ Comando: adb install -r
+   ✅ Resultado: Success (Streamed Install)
+
+3️⃣  Inicialização do App
+   ✅ Método: monkey launcher
+   ✅ Activity: MainActivity
+   ✅ Status: Aplicativo aberto com sucesso
+
+═══════════════════════════════════════════════════════════════
+  TELA ATUAL
+═══════════════════════════════════════════════════════════════
+
+📱 Activity em Foco:
+   com.inventario.mobile.presentation.main.MainActivity
+
+═══════════════════════════════════════════════════════════════
+  COMANDOS ÚTEIS
+═══════════════════════════════════════════════════════════════
+
+📋 Verificar dispositivos conectados:
+   adb devices
+
+📦 Instalar APK:
+   adb install -r dist\InventarioMobile-debug-20251115.apk
+
+🚀 Iniciar aplicativo:
+   adb shell monkey -p com.inventario.mobile.debug -c android.intent.category.LAUNCHER 1
+
+📱 Ver activity atual:
+   adb shell dumpsys window | Select-String "mCurrentFocus"
+
+📊 Ver informações do app:
+   adb shell dumpsys package com.inventario.mobile.debug
+
+🗑️  Desinstalar:
+   adb uninstall com.inventario.mobile.debug
+
+📋 Ver logs em tempo real:
+   adb logcat | Select-String "inventario"
+
+🔄 Reinstalar (limpar dados):
+   adb uninstall com.inventario.mobile.debug
+   adb install dist\InventarioMobile-debug-20251115.apk
+
+═══════════════════════════════════════════════════════════════
+  PRÓXIMOS PASSOS
+═══════════════════════════════════════════════════════════════
+
+1. ✅ Testar login no aplicativo
+2. ✅ Verificar conexão com o servidor backend
+3. ✅ Testar funcionalidades principais:
+   • Autenticação
+   • Listagem de patrimônios
+   • Coleta de itens
+   • Sincronização offline
+   • Consulta de patrimônios
+
+═══════════════════════════════════════════════════════════════
+  CONFIGURAÇÃO DO SERVIDOR
+═══════════════════════════════════════════════════════════════
+
+⚠️  IMPORTANTE: Para o app funcionar completamente, certifique-se
+    de que o servidor backend está rodando:
+
+🖥️  Iniciar servidor:
+   mvn exec:java -Dexec.mainClass="com.inventario.MobileApiApplication"
+
+🌐 URL do servidor (para emulador):
+   http://10.0.2.2:8081/inventario/api/mobile
+
+📝 Nota: O emulador usa 10.0.2.2 para acessar localhost do host
+
+═══════════════════════════════════════════════════════════════
+
+✅ Instalação concluída com sucesso!
+🎉 O aplicativo está pronto para uso no emulador!

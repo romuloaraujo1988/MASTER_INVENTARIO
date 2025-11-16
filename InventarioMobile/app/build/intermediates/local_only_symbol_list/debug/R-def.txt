@@ -280,6 +280,7 @@ id layoutResponsavel
 id layoutSyncCount
 id layoutSyncInterval
 id layoutUserInfo
+id lineChart
 id lineChartEvolucao
 id loadingMoreIndicator
 id nav_about

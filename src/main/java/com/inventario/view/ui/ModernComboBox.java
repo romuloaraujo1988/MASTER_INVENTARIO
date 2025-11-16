@@ -173,11 +173,9 @@ public final class ModernComboBox {
      */
     private static class ModernComboBoxRenderer extends DefaultListCellRenderer {
         private final Color bgColor;
-        private final Color textColor;
-
+       
         public ModernComboBoxRenderer(Color bgColor, Color textColor) {
             this.bgColor = bgColor;
-            this.textColor = textColor;
         }
 
         @Override

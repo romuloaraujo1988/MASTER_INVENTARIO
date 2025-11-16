@@ -285,6 +285,7 @@ public final class InventarioMobileApplication_HiltComponents {
   @FragmentScoped
   public abstract static class FragmentC implements ChartsFragment_GeneratedInjector,
       DashboardFragment_GeneratedInjector,
+      com.inventario.mobile.presentation.statistics.ChartsFragment_GeneratedInjector,
       ValidationExampleFragment_GeneratedInjector,
       FragmentComponent,
       DefaultViewModelFactories.FragmentEntryPoint,

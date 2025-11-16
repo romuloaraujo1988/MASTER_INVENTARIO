@@ -9,6 +9,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\Coleta.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\WebSocketConfig.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\ConnectedDevicesManager.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\siads\view\SiadsConfigDialog.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileInventarioDTO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\FormUtils.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\AlterarSenhaDialog.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\DashboardColetaFrame.java
@@ -35,6 +36,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\UsuarioFormDialog.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\print\ImpressoraTermicaService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\ModernDialog.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\UsuarioFrame.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\service\MobileInventarioService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\InventarioFormDialog.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\UsuarioService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\CampusService.java
@@ -48,6 +50,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\print\EtiquetaData.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\config\DatabaseConfiguration.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\ModernConfirmDialog.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\dao\DispositivoMobileDAO.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileConsultaController.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\SalaService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\ApiResponse.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\presentation\viewmodel\RelatorioViewModel.java
@@ -123,6 +126,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\model\DispositivoMobile.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\DataSyncScheduler.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\util\IconManager.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileSyncRequest.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\PatrimonioDetalheDTO.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileColetaRequest.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\offline\SyncFrame.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\BusinessException.java
@@ -229,6 +233,7 @@ D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\PatrimonioFormDialog.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\print\EtiquetaConfig.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\service\SalaInventarioService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileAuthController.java
+D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\service\MobileConsultaService.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\config\RequestLoggingFilter.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\repository\PatrimonioRepository.java
 D:\MASTER_INVENTARIO\src\main\java\com\inventario\view\ui\ModernComboBox.java

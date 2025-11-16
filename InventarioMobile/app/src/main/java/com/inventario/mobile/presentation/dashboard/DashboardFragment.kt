@@ -127,9 +127,6 @@ class DashboardFragment : Fragment() {
         
         // Estatísticas acessíveis via Navigation Drawer
         
-        // Configurar gráfico
-        setupChart()
-        
         // Cards de navegação removidos - usar Navigation Drawer ou botões de ação
         
         binding.btnQuickScan.setOnClickListener {
@@ -224,19 +221,6 @@ class DashboardFragment : Fragment() {
             binding.progressBar.visibility = if (state.isLoading) View.VISIBLE else View.GONE
             binding.swipeRefresh.isRefreshing = state.isLoading
             
-            // Atualizar gráfico
-            binding.progressBarGrafico.visibility = if (state.isLoadingGrafico) View.VISIBLE else View.GONE
-            
-            if (state.graficoError != null) {
-                binding.lineChartEvolucao.visibility = View.GONE
-                binding.tvGraficoError.visibility = View.VISIBLE
-                binding.tvGraficoError.text = state.graficoError
-            } else if (state.coletasEvolucao.isNotEmpty()) {
-                // Converter Domain Model para DTO (compatibilidade com gráfico)
-                val coletasDtos = DashboardAdapter.toDtoList(state.coletasEvolucao)
-                updateChart(coletasDtos)
-            }
-            
             // Atualizar mensagem de erro
             if (state.error != null) {
                 binding.tvError.text = state.error
@@ -302,126 +286,7 @@ class DashboardFragment : Fragment() {
             .start()
     }
 
-    private fun setupChart() {
-        try {
-            val chart = binding.lineChartEvolucao
-            
-            // Configurações gerais
-            chart.description.isEnabled = false
-            chart.setTouchEnabled(true)
-            chart.isDragEnabled = true
-            chart.setScaleEnabled(false)
-            chart.setPinchZoom(false)
-            chart.setDrawGridBackground(false)
-            chart.animateX(1000)
-            
-            // Configurar eixo X (datas)
-            val xAxis = chart.xAxis
-            xAxis.position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
-            xAxis.setDrawGridLines(false)
-            xAxis.granularity = 1f
-            xAxis.textColor = resources.getColor(R.color.text_secondary, null)
-            xAxis.textSize = 10f
-            
-            // Configurar eixo Y esquerdo
-            val leftAxis = chart.axisLeft
-            leftAxis.setDrawGridLines(true)
-            leftAxis.gridColor = resources.getColor(R.color.divider, null)
-            leftAxis.textColor = resources.getColor(R.color.text_secondary, null)
-            leftAxis.textSize = 10f
-            leftAxis.axisMinimum = 0f
-            leftAxis.granularity = 1f
-            
-            // Desabilitar eixo Y direito
-            chart.axisRight.isEnabled = false
-            
-            // Configurar legenda
-            val legend = chart.legend
-            legend.isEnabled = true
-            legend.textColor = resources.getColor(R.color.text_primary, null)
-            legend.textSize = 12f
-            legend.form = com.github.mikephil.charting.components.Legend.LegendForm.LINE
-            legend.verticalAlignment = com.github.mikephil.charting.components.Legend.LegendVerticalAlignment.TOP
-            legend.horizontalAlignment = com.github.mikephil.charting.components.Legend.LegendHorizontalAlignment.RIGHT
-            
-            Log.d(TAG, "Gráfico configurado com sucesso")
-            
-        } catch (e: Exception) {
-            Log.e(TAG, "Erro ao configurar gráfico", e)
-        }
-    }
     
-    private fun updateChart(dados: List<com.inventario.mobile.data.remote.dto.ColetasPorDiaDto>) {
-        try {
-            if (dados.isEmpty()) {
-                binding.lineChartEvolucao.visibility = View.GONE
-                binding.tvGraficoError.visibility = View.VISIBLE
-                binding.tvGraficoError.text = "Sem dados para exibir"
-                return
-            }
-            
-            binding.lineChartEvolucao.visibility = View.VISIBLE
-            binding.tvGraficoError.visibility = View.GONE
-            
-            val chart = binding.lineChartEvolucao
-            
-            // Criar entradas para o gráfico
-            val entries = dados.mapIndexed { index, item ->
-                com.github.mikephil.charting.data.Entry(index.toFloat(), item.quantidade.toFloat())
-            }
-            
-            // Criar dataset
-            val dataSet = com.github.mikephil.charting.data.LineDataSet(entries, "Coletas")
-            dataSet.color = resources.getColor(R.color.primary, null)
-            dataSet.setCircleColor(resources.getColor(R.color.primary, null))
-            dataSet.lineWidth = 3f
-            dataSet.circleRadius = 5f
-            dataSet.setDrawCircleHole(true)
-            dataSet.circleHoleRadius = 2.5f
-            dataSet.valueTextSize = 10f
-            dataSet.valueTextColor = resources.getColor(R.color.text_primary, null)
-            dataSet.setDrawFilled(true)
-            dataSet.fillColor = resources.getColor(R.color.primary, null)
-            dataSet.fillAlpha = 50
-            dataSet.mode = com.github.mikephil.charting.data.LineDataSet.Mode.CUBIC_BEZIER
-            dataSet.cubicIntensity = 0.2f
-            
-            // Configurar formatador de valores
-            dataSet.valueFormatter = object : com.github.mikephil.charting.formatter.ValueFormatter() {
-                override fun getFormattedValue(value: Float): String {
-                    return value.toInt().toString()
-                }
-            }
-            
-            // Criar LineData
-            val lineData = com.github.mikephil.charting.data.LineData(dataSet)
-            chart.data = lineData
-            
-            // Configurar formatador do eixo X (datas)
-            chart.xAxis.valueFormatter = object : com.github.mikephil.charting.formatter.ValueFormatter() {
-                override fun getFormattedValue(value: Float): String {
-                    val index = value.toInt()
-                    return if (index >= 0 && index < dados.size) {
-                        com.inventario.mobile.data.remote.dto.getDataFormatada(dados[index])
-                    } else {
-                        ""
-                    }
-                }
-            }
-            
-            // Atualizar gráfico com animação
-            chart.animateX(1000)
-            chart.invalidate()
-            
-            Log.d(TAG, "Gráfico atualizado com ${dados.size} pontos")
-            
-        } catch (e: Exception) {
-            Log.e(TAG, "Erro ao atualizar gráfico", e)
-            binding.lineChartEvolucao.visibility = View.GONE
-            binding.tvGraficoError.visibility = View.VISIBLE
-            binding.tvGraficoError.text = "Erro ao exibir gráfico"
-        }
-    }
 
     // ========== BUSCA POR VOZ ==========
     

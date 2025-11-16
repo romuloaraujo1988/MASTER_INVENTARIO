@@ -4,12 +4,13 @@ package com.inventario.mobile.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.widget.NestedScrollView;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
+import com.github.mikephil.charting.charts.LineChart;
 import com.inventario.mobile.R;
 import java.lang.NullPointerException;
 import java.lang.Override;
@@ -17,20 +18,24 @@ import java.lang.String;
 
 public final class FragmentStatisticsChartsBinding implements ViewBinding {
   @NonNull
-  private final FrameLayout rootView;
+  private final NestedScrollView rootView;
+
+  @NonNull
+  public final LineChart lineChart;
 
   @NonNull
   public final TextView tvPlaceholder;
 
-  private FragmentStatisticsChartsBinding(@NonNull FrameLayout rootView,
-      @NonNull TextView tvPlaceholder) {
+  private FragmentStatisticsChartsBinding(@NonNull NestedScrollView rootView,
+      @NonNull LineChart lineChart, @NonNull TextView tvPlaceholder) {
     this.rootView = rootView;
+    this.lineChart = lineChart;
     this.tvPlaceholder = tvPlaceholder;
   }
 
   @Override
   @NonNull
-  public FrameLayout getRoot() {
+  public NestedScrollView getRoot() {
     return rootView;
   }
 
@@ -55,13 +60,20 @@ public final class FragmentStatisticsChartsBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.lineChart;
+      LineChart lineChart = ViewBindings.findChildViewById(rootView, id);
+      if (lineChart == null) {
+        break missingId;
+      }
+
       id = R.id.tvPlaceholder;
       TextView tvPlaceholder = ViewBindings.findChildViewById(rootView, id);
       if (tvPlaceholder == null) {
         break missingId;
       }
 
-      return new FragmentStatisticsChartsBinding((FrameLayout) rootView, tvPlaceholder);
+      return new FragmentStatisticsChartsBinding((NestedScrollView) rootView, lineChart,
+          tvPlaceholder);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));
