@@ -27,6 +27,7 @@ import com.inventario.mobile.utils.VoiceCommandParser
 import com.inventario.mobile.utils.CommandAction
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Fragment do Dashboard
@@ -40,6 +41,9 @@ class DashboardFragment : Fragment() {
     
     // ViewModel Clean injetado via Hilt
     private val viewModel: DashboardViewModelClean by viewModels()
+    
+    @Inject
+    lateinit var preferencesManager: com.inventario.mobile.utils.PreferencesManager
     
     private lateinit var voiceSearchManager: VoiceSearchManager
     private lateinit var voiceCommandParser: VoiceCommandParser
@@ -101,13 +105,13 @@ class DashboardFragment : Fragment() {
             observeViewModel()
             Log.d(TAG, "onViewCreated: observeViewModel executado com sucesso")
             
-            // Carregar dados do dashboard
-            viewModel.loadDashboardData()
-            Log.d(TAG, "onViewCreated: loadDashboardData executado com sucesso")
+            // Obter ID do inventário ativo
+            val inventarioId = preferencesManager.getInventarioAtivoId()
+            Log.d(TAG, "onViewCreated: Inventário ativo ID = $inventarioId")
             
-            // Carregar dados do gráfico
-            viewModel.loadColetasEvolucao()
-            Log.d(TAG, "onViewCreated: loadColetasEvolucao executado com sucesso")
+            // Carregar dados do dashboard
+            viewModel.loadDashboardData(inventarioId)
+            Log.d(TAG, "onViewCreated: loadDashboardData executado com sucesso")
         } catch (e: Exception) {
             Log.e(TAG, "onViewCreated: Erro durante configuração da view", e)
         }

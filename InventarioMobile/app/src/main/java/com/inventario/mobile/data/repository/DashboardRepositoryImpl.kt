@@ -22,9 +22,13 @@ class DashboardRepositoryImpl @Inject constructor(
     
     override suspend fun buscarEstatisticas(inventarioId: Int?): Result<com.inventario.mobile.domain.model.DashboardStats> {
         return try {
-            Log.d(TAG, "Buscando estatísticas...")
+            Log.d(TAG, "Buscando estatísticas (inventário: $inventarioId)...")
             
-            val response = apiService.getDashboardStats()
+            val response = if (inventarioId != null) {
+                apiService.getDashboardStatsWithInventario(inventarioId)
+            } else {
+                apiService.getDashboardStats()
+            }
             
             if (response.isSuccessful && response.body() != null) {
                 val apiResponse = response.body()!!

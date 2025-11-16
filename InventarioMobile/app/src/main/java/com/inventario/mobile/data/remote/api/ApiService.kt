@@ -142,8 +142,8 @@ interface ApiService {
     @GET("dashboard/stats")
     suspend fun getDashboardStats(): Response<ApiResponse<DashboardStatsDto>>
     
-    @GET("dashboard/stats/{inventarioId}")
-    suspend fun getDashboardStatsByInventario(@Path("inventarioId") inventarioId: Int): Response<ApiResponse<DashboardStatsDto>>
+    @GET("dashboard/stats")
+    suspend fun getDashboardStatsWithInventario(@Query("inventarioId") inventarioId: Int): Response<ApiResponse<DashboardStatsDto>>
     
     @GET("dashboard/evolucao")
     suspend fun getColetasEvolucao(@Query("dias") dias: Int = 30): Response<ApiResponse<Map<String, Any>>>
