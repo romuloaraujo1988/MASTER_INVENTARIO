@@ -1514,7 +1514,7 @@ public class RelatorioFrame extends JFrame {
 
         try {
             // Buscar dados reais do banco de dados
-            List<Patrimonio> patrimonios = patrimonioDAO.listarTodos();
+            List<Patrimonio> patrimonios = patrimonioDAO.findAll();
 
             // === MVVM: Obter dados do ViewModel ao invés de DAOs ===
             List<Responsavel> todosResponsaveis = new ArrayList<>();
@@ -1669,7 +1669,7 @@ public class RelatorioFrame extends JFrame {
 
             // Buscar dados reais do banco de dados
             System.out.println("Buscando patrimônios...");
-            List<Patrimonio> patrimonios = patrimonioDAO.listarTodos();
+            List<Patrimonio> patrimonios = patrimonioDAO.findAll();
             System.out.println("Patrimônios encontrados: " + (patrimonios != null ? patrimonios.size() : 0));
 
             // === MVVM: Obter dados do ViewModel ao invés de DAOs ===

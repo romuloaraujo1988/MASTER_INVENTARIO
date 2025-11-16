@@ -40,6 +40,12 @@ abstract class RepositoryModule {
         impl: com.inventario.mobile.data.repository.SalaRepositoryImpl
     ): com.inventario.mobile.domain.repository.SalaRepository
     
+    @Binds
+    @Singleton
+    abstract fun bindPatrimonioConsultaRepository(
+        impl: com.inventario.mobile.data.repository.PatrimonioConsultaRepositoryImpl
+    ): com.inventario.mobile.domain.repository.PatrimonioConsultaRepository
+    
     companion object {
         /**
          * Provider para InventarioRepository (stub temporário)

@@ -1,6 +1,5 @@
 package com.inventario.mobile.di;
 
-import android.content.Context;
 import com.inventario.mobile.data.remote.api.PatrimonioApi;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
@@ -9,9 +8,10 @@ import dagger.internal.QualifierMetadata;
 import dagger.internal.ScopeMetadata;
 import javax.annotation.processing.Generated;
 import javax.inject.Provider;
+import retrofit2.Retrofit;
 
 @ScopeMetadata("javax.inject.Singleton")
-@QualifierMetadata("dagger.hilt.android.qualifiers.ApplicationContext")
+@QualifierMetadata
 @DaggerGenerated
 @Generated(
     value = "dagger.internal.codegen.ComponentProcessor",
@@ -24,22 +24,22 @@ import javax.inject.Provider;
     "KotlinInternalInJava"
 })
 public final class ApiModule_ProvidePatrimonioApiFactory implements Factory<PatrimonioApi> {
-  private final Provider<Context> contextProvider;
+  private final Provider<Retrofit> retrofitProvider;
 
-  public ApiModule_ProvidePatrimonioApiFactory(Provider<Context> contextProvider) {
-    this.contextProvider = contextProvider;
+  public ApiModule_ProvidePatrimonioApiFactory(Provider<Retrofit> retrofitProvider) {
+    this.retrofitProvider = retrofitProvider;
   }
 
   @Override
   public PatrimonioApi get() {
-    return providePatrimonioApi(contextProvider.get());
+    return providePatrimonioApi(retrofitProvider.get());
   }
 
-  public static ApiModule_ProvidePatrimonioApiFactory create(Provider<Context> contextProvider) {
-    return new ApiModule_ProvidePatrimonioApiFactory(contextProvider);
+  public static ApiModule_ProvidePatrimonioApiFactory create(Provider<Retrofit> retrofitProvider) {
+    return new ApiModule_ProvidePatrimonioApiFactory(retrofitProvider);
   }
 
-  public static PatrimonioApi providePatrimonioApi(Context context) {
-    return Preconditions.checkNotNullFromProvides(ApiModule.INSTANCE.providePatrimonioApi(context));
+  public static PatrimonioApi providePatrimonioApi(Retrofit retrofit) {
+    return Preconditions.checkNotNullFromProvides(ApiModule.INSTANCE.providePatrimonioApi(retrofit));
   }
 }

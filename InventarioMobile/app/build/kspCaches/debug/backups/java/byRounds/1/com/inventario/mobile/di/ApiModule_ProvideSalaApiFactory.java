@@ -1,6 +1,5 @@
 package com.inventario.mobile.di;
 
-import android.content.Context;
 import com.inventario.mobile.api.SalaApi;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
@@ -9,9 +8,10 @@ import dagger.internal.QualifierMetadata;
 import dagger.internal.ScopeMetadata;
 import javax.annotation.processing.Generated;
 import javax.inject.Provider;
+import retrofit2.Retrofit;
 
 @ScopeMetadata("javax.inject.Singleton")
-@QualifierMetadata("dagger.hilt.android.qualifiers.ApplicationContext")
+@QualifierMetadata
 @DaggerGenerated
 @Generated(
     value = "dagger.internal.codegen.ComponentProcessor",
@@ -24,22 +24,22 @@ import javax.inject.Provider;
     "KotlinInternalInJava"
 })
 public final class ApiModule_ProvideSalaApiFactory implements Factory<SalaApi> {
-  private final Provider<Context> contextProvider;
+  private final Provider<Retrofit> retrofitProvider;
 
-  public ApiModule_ProvideSalaApiFactory(Provider<Context> contextProvider) {
-    this.contextProvider = contextProvider;
+  public ApiModule_ProvideSalaApiFactory(Provider<Retrofit> retrofitProvider) {
+    this.retrofitProvider = retrofitProvider;
   }
 
   @Override
   public SalaApi get() {
-    return provideSalaApi(contextProvider.get());
+    return provideSalaApi(retrofitProvider.get());
   }
 
-  public static ApiModule_ProvideSalaApiFactory create(Provider<Context> contextProvider) {
-    return new ApiModule_ProvideSalaApiFactory(contextProvider);
+  public static ApiModule_ProvideSalaApiFactory create(Provider<Retrofit> retrofitProvider) {
+    return new ApiModule_ProvideSalaApiFactory(retrofitProvider);
   }
 
-  public static SalaApi provideSalaApi(Context context) {
-    return Preconditions.checkNotNullFromProvides(ApiModule.INSTANCE.provideSalaApi(context));
+  public static SalaApi provideSalaApi(Retrofit retrofit) {
+    return Preconditions.checkNotNullFromProvides(ApiModule.INSTANCE.provideSalaApi(retrofit));
   }
 }

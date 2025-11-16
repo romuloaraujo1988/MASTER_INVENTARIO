@@ -15,7 +15,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class SyncManager @Inject constructor(
-    private val context: Context
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context
 ) {
     companion object {
         private const val TAG = "SyncManager"

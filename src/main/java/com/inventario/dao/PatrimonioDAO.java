@@ -481,4 +481,227 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
         
         return idsColetados;
     }
+    
+    /**
+     * Busca patrimônios por código parcial (para consulta quando etiqueta está danificada)
+     * 
+     * @param codigoParcial Parte do código do patrimônio
+     * @param limit Quantidade máxima de resultados
+     * @return Lista de patrimônios encontrados
+     * @throws SQLException Se ocorrer erro na consulta
+     */
+    public List<Patrimonio> buscarPorCodigoParcial(String codigoParcial, int limit) throws SQLException {
+        String sql = "SELECT p.*, s.NOME as SALA_NOME, r.NOME_COMPLETO as RESPONSAVEL_NOME " +
+                    "FROM TABELA_PATRIMONIO p " +
+                    "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID " +
+                    "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
+                    "WHERE p.NUMERO LIKE ? " +
+                    "  AND p.STATUS = 'ATIVO' " +
+                    "ORDER BY p.NUMERO " +
+                    "LIMIT ?";
+        
+        List<Patrimonio> patrimonios = new ArrayList<>();
+        Connection conn = null;
+        
+        try {
+            conn = com.inventario.util.ConnectionManager.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            
+            stmt.setString(1, "%" + codigoParcial + "%");
+            stmt.setInt(2, limit);
+            
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                patrimonios.add(mapResultSetToEntity(rs));
+            }
+            
+            rs.close();
+            stmt.close();
+            
+        } catch (SQLException e) {
+            throw e;
+        } finally {
+            com.inventario.util.ConnectionManager.closeConnection(conn);
+        }
+        
+        return patrimonios;
+    }
+    
+    /**
+     * Busca patrimônios por descrição (para consulta quando etiqueta está danificada)
+     * 
+     * @param descricao Parte da descrição do patrimônio
+     * @param limit Quantidade máxima de resultados
+     * @return Lista de patrimônios encontrados
+     * @throws SQLException Se ocorrer erro na consulta
+     */
+    public List<Patrimonio> buscarPorDescricao(String descricao, int limit) throws SQLException {
+        String sql = "SELECT p.*, s.NOME as SALA_NOME, r.NOME_COMPLETO as RESPONSAVEL_NOME " +
+                    "FROM TABELA_PATRIMONIO p " +
+                    "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID " +
+                    "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
+                    "WHERE UPPER(p.DESCRICAO) LIKE UPPER(?) " +
+                    "  AND p.STATUS = 'ATIVO' " +
+                    "ORDER BY p.DESCRICAO " +
+                    "LIMIT ?";
+        
+        List<Patrimonio> patrimonios = new ArrayList<>();
+        Connection conn = null;
+        
+        try {
+            conn = com.inventario.util.ConnectionManager.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            
+            stmt.setString(1, "%" + descricao + "%");
+            stmt.setInt(2, limit);
+            
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                patrimonios.add(mapResultSetToEntity(rs));
+            }
+            
+            rs.close();
+            stmt.close();
+            
+        } catch (SQLException e) {
+            throw e;
+        } finally {
+            com.inventario.util.ConnectionManager.closeConnection(conn);
+        }
+        
+        return patrimonios;
+    }
+    
+    /**
+     * Busca detalhes completos de um patrimônio incluindo histórico de coletas
+     * 
+     * @param patrimonioId ID do patrimônio
+     * @return Patrimônio com todos os detalhes ou null se não encontrado
+     * @throws SQLException Se ocorrer erro na consulta
+     */
+    public Patrimonio buscarDetalhesCompletos(Long patrimonioId) throws SQLException {
+        String sql = "SELECT p.*, " +
+                    "s.NOME as SALA_NOME, s.BLOCO as SALA_BLOCO, s.ANDAR as SALA_ANDAR, s.DESCRICAO as SALA_DESCRICAO, " +
+                    "r.NOME_COMPLETO as RESPONSAVEL_NOME, r.MATRICULA as RESPONSAVEL_MATRICULA, " +
+                    "r.EMAIL as RESPONSAVEL_EMAIL, " +
+                    "st.NOME as SETOR_NOME " +
+                    "FROM TABELA_PATRIMONIO p " +
+                    "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID " +
+                    "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
+                    "LEFT JOIN TABELA_SETOR st ON r.ID_SETOR = st.ID " +
+                    "WHERE p.ID = ?";
+        
+        Connection conn = null;
+        
+        try {
+            conn = com.inventario.util.ConnectionManager.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            
+            stmt.setLong(1, patrimonioId);
+            
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                Patrimonio patrimonio = mapResultSetToEntity(rs);
+                rs.close();
+                stmt.close();
+                return patrimonio;
+            }
+            
+            rs.close();
+            stmt.close();
+            
+        } catch (SQLException e) {
+            throw e;
+        } finally {
+            com.inventario.util.ConnectionManager.closeConnection(conn);
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Busca avançada com múltiplos critérios
+     * Permite buscar por termo geral combinado com filtros específicos
+     * 
+     * @param termo Termo de busca geral (código ou descrição)
+     * @param salaId ID da sala (opcional)
+     * @param responsavelId ID do responsável (opcional)
+     * @param limit Quantidade máxima de resultados
+     * @return Lista de patrimônios encontrados
+     * @throws SQLException Se ocorrer erro na consulta
+     */
+    public List<Patrimonio> buscarAvancada(
+            String termo, 
+            Integer salaId, 
+            Integer responsavelId, 
+            int limit) throws SQLException {
+        
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT p.*, s.NOME as SALA_NOME, r.NOME_COMPLETO as RESPONSAVEL_NOME ");
+        sql.append("FROM TABELA_PATRIMONIO p ");
+        sql.append("LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID ");
+        sql.append("LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID ");
+        sql.append("WHERE p.ATIVO = true ");
+        
+        List<Object> parametros = new ArrayList<>();
+        
+        // Busca por termo (código ou descrição)
+        if (termo != null && !termo.trim().isEmpty()) {
+            sql.append("AND (UPPER(p.NUMERO) LIKE UPPER(?) ");
+            sql.append("OR UPPER(p.DESCRICAO) LIKE UPPER(?) ");
+            sql.append("OR UPPER(p.MARCA) LIKE UPPER(?) ");
+            sql.append("OR UPPER(p.MODELO) LIKE UPPER(?)) ");
+            
+            String termoLike = "%" + termo.trim() + "%";
+            parametros.add(termoLike);
+            parametros.add(termoLike);
+            parametros.add(termoLike);
+            parametros.add(termoLike);
+        }
+        
+        // Filtro por sala
+        if (salaId != null && salaId > 0) {
+            sql.append("AND p.ID_SALA = ? ");
+            parametros.add(salaId);
+        }
+        
+        // Filtro por responsável
+        if (responsavelId != null && responsavelId > 0) {
+            sql.append("AND p.ID_RESPONSAVEL = ? ");
+            parametros.add(responsavelId);
+        }
+        
+        sql.append("ORDER BY p.NUMERO ");
+        sql.append("LIMIT ?");
+        parametros.add(limit);
+        
+        List<Patrimonio> patrimonios = new ArrayList<>();
+        Connection conn = null;
+        
+        try {
+            conn = com.inventario.util.ConnectionManager.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql.toString());
+            
+            // Definir parâmetros
+            for (int i = 0; i < parametros.size(); i++) {
+                stmt.setObject(i + 1, parametros.get(i));
+            }
+            
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Patrimonio patrimonio = mapResultSetToEntity(rs);
+                patrimonios.add(patrimonio);
+            }
+            
+            rs.close();
+            stmt.close();
+            
+        } catch (SQLException e) {
+            throw e;
+        } finally {
+            com.inventario.util.ConnectionManager.closeConnection(conn);
+        }
+        
+        return patrimonios;
+    }
 }

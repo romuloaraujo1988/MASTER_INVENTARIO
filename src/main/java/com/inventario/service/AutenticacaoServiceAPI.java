@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -43,7 +44,7 @@ public class AutenticacaoServiceAPI {
         HttpURLConnection conn = null;
         try {
             // Preparar URL do endpoint de login
-            URL url = new URL(API_BASE_URL + "/auth/login");
+            URL url = URI.create(API_BASE_URL + "/auth/login").toURL();
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");
@@ -147,7 +148,7 @@ public class AutenticacaoServiceAPI {
     public boolean verificarConexao() {
         HttpURLConnection conn = null;
         try {
-            URL url = new URL(API_BASE_URL + "/test/ping");
+            URL url = URI.create(API_BASE_URL + "/test/ping").toURL();
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setConnectTimeout(TIMEOUT);

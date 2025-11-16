@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="72dp"
+    android:height="72dp"
+    android:viewportWidth="72"
+    android:viewportHeight="72">
+    
+    <!-- Background Circle -->
+    <path
+        android:fillColor="#1976D2"
+        android:pathData="M36,36m-33,0a33,33 0,1 1,66 0a33,33 0,1 1,-66 0"/>
+    
+    <!-- Main Clipboard/Inventory Icon -->
+    <group android:translateX="36" android:translateY="36">
+        <!-- Clipboard Background -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M-10,-15 L10,-15 C11.1,-15 12,-14.1 12,-13 L12,13 C12,14.1 11.1,15 10,15 L-10,15 C-11.1,15 -12,14.1 -12,13 L-12,-13 C-12,-14.1 -11.1,-15 -10,-15 Z"/>
+        
+        <!-- Clipboard Clip -->
+        <path
+            android:fillColor="#FFC107"
+            android:pathData="M-5,-17 L5,-17 C6.1,-17 7,-16.1 7,-15 L7,-11 C7,-9.9 6.1,-9 5,-9 L-5,-9 C-6.1,-9 -7,-9.9 -7,-11 L-7,-15 C-7,-16.1 -6.1,-17 -5,-17 Z"/>
+        
+        <!-- Inventory Lines -->
+        <path
+            android:fillColor="#1976D2"
+            android:pathData="M-7,-7 L7,-7 L7,-5 L-7,-5 Z"/>
+        <path
+            android:fillColor="#1976D2"
+            android:pathData="M-7,-1 L7,-1 L7,1 L-7,1 Z"/>
+        <path
+            android:fillColor="#1976D2"
+            android:pathData="M-7,5 L7,5 L7,7 L-7,7 Z"/>
+        <path
+            android:fillColor="#1976D2"
+            android:pathData="M-7,11 L3,11 L3,13 L-7,13 Z"/>
+        
+        <!-- Checkmarks -->
+        <path
+            android:fillColor="#4CAF50"
+            android:pathData="M-9,-6 L-8,-5 L-6,-7 L-5,-6 L-8,-3 L-10,-5 Z"/>
+        <path
+            android:fillColor="#4CAF50"
+            android:pathData="M-9,0 L-8,1 L-6,-1 L-5,0 L-8,3 L-10,1 Z"/>
+        <path
+            android:fillColor="#4CAF50"
+            android:pathData="M-9,6 L-8,7 L-6,5 L-5,6 L-8,9 L-10,7 Z"/>
+    </group>
+    
+</vector>

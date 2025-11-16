@@ -42,27 +42,21 @@ class ItemSemEtiquetaViewModel @Inject constructor(
                 // Obter ID do usuário logado
                 val usuarioId = preferencesManager.getUserId() ?: 0
                 
-                // Criar coleta para item sem etiqueta
-                val coleta = Coleta(
-                    id = 0,
-                    patrimonioId = 0, // Sem patrimônio (item sem etiqueta)
-                    usuarioId = usuarioId.toLong(),
-                    dataColeta = System.currentTimeMillis(),
+                // Registrar coleta para item sem etiqueta
+                // Usa número especial "SEM_ETIQUETA_" + timestamp para identificar
+                val numeroEspecial = "SEM_ETIQUETA_${System.currentTimeMillis()}"
+                
+                val observacoesCompletas = "SEM ETIQUETA - $descricao | Categoria: $categoria | $observacoes"
+                
+                val result = registrarColetaUseCase(
+                    numeroPatrimonio = numeroEspecial,
                     localizacaoAtual = localizacao,
-                    status = estado,
-                    observacoes = observacoes,
+                    estadoEncontrado = estado,
+                    observacoes = observacoesCompletas,
                     latitude = null,
                     longitude = null,
-                    sincronizado = false,
-                    // Campos específicos para item sem etiqueta
-                    semEtiqueta = true,
-                    descricaoItemSemEtiqueta = descricao,
-                    categoriaItemSemEtiqueta = categoria,
-                    fotoPatrimonio = fotoBase64
+                    idUsuario = usuarioId.toLong()
                 )
-                
-                // Registrar coleta
-                val result = registrarColetaUseCase(coleta)
                 
                 if (result.isSuccess) {
                     _state.value = ItemSemEtiquetaState.Success

@@ -6,10 +6,6 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.inventario.mobile.domain.usecase.SincronizarColetasPendentesUseCase
-import com.inventario.mobile.sync.SyncLogger
-import com.inventario.mobile.sync.SyncType
-import com.inventario.mobile.sync.toSyncError
-import com.inventario.mobile.utils.NotificationUtils
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
@@ -27,62 +23,38 @@ import dagger.assisted.AssistedInject
 class ColetaSyncWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
-    private val sincronizarColetasUseCase: SincronizarColetasPendentesUseCase,
-    private val syncLogger: SyncLogger,
-    private val notificationHelper: com.inventario.mobile.sync.NotificationHelper
+    private val sincronizarColetasUseCase: SincronizarColetasPendentesUseCase
 ) : CoroutineWorker(appContext, workerParams) {
     
     override suspend fun doWork(): Result {
         return try {
-            // Determinar tipo de sincronização baseado nas tags
-            val syncType = when {
-                tags.contains(TAG_MANUAL) -> SyncType.MANUAL
-                tags.contains(TAG_BY_COUNT) -> SyncType.BY_COUNT
-                else -> SyncType.AUTO
-            }
-            
-            android.util.Log.i(TAG, "🔄 Iniciando sincronização ${syncType.displayName}...")
-            
-            // Registrar início
-            syncLogger.logStart(syncType)
+            android.util.Log.i(TAG, "🔄 Iniciando sincronização...")
             
             // Executar sincronização
             val result = sincronizarColetasUseCase()
             
             result.fold(
-                onSuccess = { stats ->
-                    android.util.Log.i(TAG, "✅ Sincronização concluída: ${stats.synced} coletas, ${stats.failed} falhas")
-                    
-                    // Registrar sucesso
-                    syncLogger.logSuccess(stats)
-                    
-                    // Notificar usuário
-                    notificationHelper.showSyncSuccess(stats)
+                onSuccess = { quantidadeSincronizada ->
+                    android.util.Log.i(TAG, "✅ Sincronização concluída: $quantidadeSincronizada coletas")
                     
                     // Retornar sucesso com dados
                     Result.success(workDataOf(
-                        KEY_SYNCED to stats.synced,
-                        KEY_FAILED to stats.failed
+                        KEY_SYNCED to quantidadeSincronizada,
+                        KEY_FAILED to 0
                     ))
                 },
                 onFailure = { error ->
                     android.util.Log.e(TAG, "❌ Erro na sincronização: ${error.message}", error)
                     
-                    // Converter para SyncError
-                    val syncError = error.toSyncError()
-                    
-                    // Registrar erro
-                    syncLogger.logError(syncError)
-                    
-                    // Decidir se deve fazer retry
-                    if (syncError.shouldRetry()) {
+                    // Retry em caso de erro de rede
+                    if (error.message?.contains("network", ignoreCase = true) == true ||
+                        error.message?.contains("connection", ignoreCase = true) == true) {
                         android.util.Log.w(TAG, "⏳ Agendando retry...")
                         Result.retry()
                     } else {
                         android.util.Log.e(TAG, "🚫 Erro sem retry")
-                        notificationHelper.showSyncError(syncError)
                         Result.failure(workDataOf(
-                            KEY_ERROR to syncError.message
+                            KEY_ERROR to (error.message ?: "Erro desconhecido")
                         ))
                     }
                 }
@@ -90,16 +62,14 @@ class ColetaSyncWorker @AssistedInject constructor(
         } catch (e: Exception) {
             android.util.Log.e(TAG, "💥 Exceção inesperada na sincronização", e)
             
-            // Registrar erro
-            syncLogger.logError(e)
-            
-            // Converter e verificar retry
-            val syncError = e.toSyncError()
-            if (syncError.shouldRetry()) {
+            // Retry em caso de erro de rede
+            if (e.message?.contains("network", ignoreCase = true) == true ||
+                e.message?.contains("connection", ignoreCase = true) == true) {
                 Result.retry()
             } else {
-                notificationHelper.showSyncError(syncError)
-                Result.failure()
+                Result.failure(workDataOf(
+                    KEY_ERROR to (e.message ?: "Erro desconhecido")
+                ))
             }
         }
     }

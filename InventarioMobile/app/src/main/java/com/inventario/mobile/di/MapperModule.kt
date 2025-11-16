@@ -34,4 +34,16 @@ object MapperModule {
     fun provideColetaMapper(patrimonioDao: PatrimonioDao): ColetaMapper {
         return ColetaMapper(patrimonioDao)
     }
+    
+    @Provides
+    @Singleton
+    fun providePatrimonioConsultaMapper(): com.inventario.mobile.data.mapper.PatrimonioConsultaMapper {
+        return com.inventario.mobile.data.mapper.PatrimonioConsultaMapper()
+    }
+    
+    @Provides
+    @Singleton
+    fun providePatrimonioDetalheMapper(): com.inventario.mobile.data.mapper.PatrimonioDetalheMapper {
+        return com.inventario.mobile.data.mapper.PatrimonioDetalheMapper()
+    }
 }

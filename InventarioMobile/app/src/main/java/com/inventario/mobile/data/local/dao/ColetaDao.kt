@@ -95,19 +95,3 @@ interface ColetaDao {
     suspend fun getTopItems(idInventario: Int): List<TopItemData>
     
 }
-
-/**
- * DTO para dados de evolução diária
- */
-data class EvolutionData(
-    val data: String,
-    val quantidade: Int
-)
-
-/**
- * DTO para top itens coletados
- */
-data class TopItemData(
-    val descricao: String,
-    val quantidade: Int
-)

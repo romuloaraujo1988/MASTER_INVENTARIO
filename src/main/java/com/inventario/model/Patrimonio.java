@@ -3,7 +3,6 @@ package com.inventario.model;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;

@@ -49,10 +49,6 @@ class SyncActivity : AppCompatActivity() {
             viewModel.syncFromServer()
         }
         
-        binding.btnSyncColetas.setOnClickListener {
-            viewModel.syncPendingColetas()
-        }
-        
         binding.btnClearData.setOnClickListener {
             showClearDataConfirmation()
         }
@@ -60,11 +56,6 @@ class SyncActivity : AppCompatActivity() {
         binding.btnRefresh.setOnClickListener {
             viewModel.loadStats()
             updateNetworkStatus()
-        }
-        
-        binding.btnForceSyncBackground.setOnClickListener {
-            viewModel.forceSyncNow()
-            showSuccess("Sincronização em background agendada")
         }
     }
     
@@ -138,7 +129,6 @@ class SyncActivity : AppCompatActivity() {
         
         // Habilitar/desabilitar botões
         binding.btnSyncNow.isEnabled = isOnline
-        binding.btnSyncColetas.isEnabled = isOnline
     }
     
     private fun showClearDataConfirmation() {
@@ -157,7 +147,6 @@ class SyncActivity : AppCompatActivity() {
         binding.tvSyncProgress.visibility = View.VISIBLE
         binding.tvSyncProgress.text = message
         binding.btnSyncNow.isEnabled = false
-        binding.btnSyncColetas.isEnabled = false
         binding.btnClearData.isEnabled = false
     }
     

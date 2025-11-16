@@ -1,6 +1,5 @@
 package com.inventario.mobile.presentation.sync;
 
-import com.inventario.mobile.data.repository.SyncRepository;
 import com.inventario.mobile.domain.usecase.SincronizarColetasPendentesUseCase;
 import com.inventario.mobile.domain.usecase.SincronizarDadosUseCase;
 import com.inventario.mobile.sync.SyncManager;
@@ -29,34 +28,31 @@ public final class SyncViewModel_Factory implements Factory<SyncViewModel> {
 
   private final Provider<SincronizarColetasPendentesUseCase> sincronizarColetasPendentesUseCaseProvider;
 
-  private final Provider<SyncRepository> syncRepositoryProvider;
-
   private final Provider<SyncManager> syncManagerProvider;
 
   public SyncViewModel_Factory(Provider<SincronizarDadosUseCase> sincronizarDadosUseCaseProvider,
       Provider<SincronizarColetasPendentesUseCase> sincronizarColetasPendentesUseCaseProvider,
-      Provider<SyncRepository> syncRepositoryProvider, Provider<SyncManager> syncManagerProvider) {
+      Provider<SyncManager> syncManagerProvider) {
     this.sincronizarDadosUseCaseProvider = sincronizarDadosUseCaseProvider;
     this.sincronizarColetasPendentesUseCaseProvider = sincronizarColetasPendentesUseCaseProvider;
-    this.syncRepositoryProvider = syncRepositoryProvider;
     this.syncManagerProvider = syncManagerProvider;
   }
 
   @Override
   public SyncViewModel get() {
-    return newInstance(sincronizarDadosUseCaseProvider.get(), sincronizarColetasPendentesUseCaseProvider.get(), syncRepositoryProvider.get(), syncManagerProvider.get());
+    return newInstance(sincronizarDadosUseCaseProvider.get(), sincronizarColetasPendentesUseCaseProvider.get(), syncManagerProvider.get());
   }
 
   public static SyncViewModel_Factory create(
       Provider<SincronizarDadosUseCase> sincronizarDadosUseCaseProvider,
       Provider<SincronizarColetasPendentesUseCase> sincronizarColetasPendentesUseCaseProvider,
-      Provider<SyncRepository> syncRepositoryProvider, Provider<SyncManager> syncManagerProvider) {
-    return new SyncViewModel_Factory(sincronizarDadosUseCaseProvider, sincronizarColetasPendentesUseCaseProvider, syncRepositoryProvider, syncManagerProvider);
+      Provider<SyncManager> syncManagerProvider) {
+    return new SyncViewModel_Factory(sincronizarDadosUseCaseProvider, sincronizarColetasPendentesUseCaseProvider, syncManagerProvider);
   }
 
   public static SyncViewModel newInstance(SincronizarDadosUseCase sincronizarDadosUseCase,
       SincronizarColetasPendentesUseCase sincronizarColetasPendentesUseCase,
-      SyncRepository syncRepository, SyncManager syncManager) {
-    return new SyncViewModel(sincronizarDadosUseCase, sincronizarColetasPendentesUseCase, syncRepository, syncManager);
+      SyncManager syncManager) {
+    return new SyncViewModel(sincronizarDadosUseCase, sincronizarColetasPendentesUseCase, syncManager);
   }
 }
