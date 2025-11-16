@@ -200,7 +200,7 @@ class MockApiService : ApiService {
         throw NotImplementedError("Mock implementation - not available offline")
     }
     
-    override suspend fun getDashboardStatsByInventario(inventarioId: Int): Response<ApiResponse<DashboardStatsDto>> {
+    override suspend fun getDashboardStatsWithInventario(inventarioId: Int): Response<ApiResponse<DashboardStatsDto>> {
         throw NotImplementedError("Mock implementation - not available offline")
     }
     
