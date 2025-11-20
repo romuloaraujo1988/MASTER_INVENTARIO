@@ -1,0 +1,35 @@
+# Auto detect text files and normalize line endings to LF
+* text=auto
+
+# Java source files
+*.java text eol=lf
+*.kt text eol=lf
+*.xml text eol=lf
+*.gradle text eol=lf
+*.properties text eol=lf
+
+# Windows scripts
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Unix scripts
+*.sh text eol=lf
+
+# Binary files
+*.apk binary
+*.jar binary
+*.class binary
+*.dex binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.db binary
+
+# Factory path (Eclipse)
+.factorypath text eol=lf
+
+# VSCode configuration
+.vscode/*.json text eol=lf
