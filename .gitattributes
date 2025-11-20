@@ -33,3 +33,8 @@
 
 # VSCode configuration
 .vscode/*.json text eol=lf
+
+# Gradle files (ignore build artifacts)
+.gradle/** binary
+*.lock binary
+*.bin binary
