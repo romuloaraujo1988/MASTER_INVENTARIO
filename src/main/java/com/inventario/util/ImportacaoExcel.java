@@ -272,6 +272,7 @@ public class ImportacaoExcel {
             // Dados básicos
             patrimonio.setNumero(valor(campos, ImportacaoCSVConstants.COL_NUMERO));
             patrimonio.setStatus(valor(campos, ImportacaoCSVConstants.COL_STATUS));
+            patrimonio.setEd(valor(campos, ImportacaoCSVConstants.COL_ED));
             patrimonio.setDescricao(valor(campos, ImportacaoCSVConstants.COL_DESCRICAO));
             patrimonio.setRotulos(valor(campos, ImportacaoCSVConstants.COL_ROTULOS));
 
@@ -283,7 +284,11 @@ public class ImportacaoExcel {
             patrimonio.setNumeroNotaFiscal(valor(campos, ImportacaoCSVConstants.COL_NUMERO_NOTA_FISCAL));
             patrimonio.setNumeroSerie(valor(campos, ImportacaoCSVConstants.COL_NUMERO_SERIE));
             patrimonio.setFornecedor(valor(campos, ImportacaoCSVConstants.COL_FORNECEDOR));
-            patrimonio.setEstadoConservacao(valor(campos, ImportacaoCSVConstants.COL_ESTADO_CONSERVACAO));
+            
+            // Normalizar estado de conservação para os valores corretos do sistema
+            String estadoOriginal = valor(campos, ImportacaoCSVConstants.COL_ESTADO_CONSERVACAO);
+            String estadoNormalizado = normalizarEstadoConservacao(estadoOriginal);
+            patrimonio.setEstadoConservacao(estadoNormalizado);
 
             // Datas
             Date dataEntrada = DateFormatUtils.parseDate(valor(campos, ImportacaoCSVConstants.COL_DATA_ENTRADA));
@@ -465,6 +470,92 @@ public class ImportacaoExcel {
             return new BigDecimal(valorLimpo);
         } catch (NumberFormatException e) {
             return BigDecimal.ZERO;
+        }
+    }
+    
+    /**
+     * Normaliza o estado de conservação para os valores corretos do sistema
+     * Converte variações do SUAP/Excel para os estados padronizados
+     * 
+     * Estados corretos: BOM, OCIOSO, ANTIECONÔMICO, RECUPERÁVEL, IRRECUPERÁVEL
+     */
+    private String normalizarEstadoConservacao(String estadoOriginal) {
+        if (estadoOriginal == null || estadoOriginal.trim().isEmpty() || estadoOriginal.equals("-")) {
+            return "BOM"; // Padrão quando não informado
+        }
+        
+        String estado = estadoOriginal.trim().toUpperCase();
+        
+        // Remover acentos para facilitar comparação
+        estado = estado.replace("Á", "A").replace("É", "E").replace("Í", "I")
+                       .replace("Ó", "O").replace("Ú", "U").replace("Ã", "A")
+                       .replace("Õ", "O").replace("Ç", "C");
+        
+        // Mapeamento de estados do SUAP para estados do sistema
+        switch (estado) {
+            // BOM
+            case "BOM":
+            case "OTIMO":
+            case "ÓTIMO":
+            case "EXCELENTE":
+                return "BOM";
+            
+            // OCIOSO
+            case "OCIOSO":
+            case "NAO UTILIZADO":
+            case "NÃO UTILIZADO":
+            case "SEM USO":
+                return "OCIOSO";
+            
+            // ANTIECONÔMICO
+            case "ANTIECONOMICO":
+            case "ANTIECONÔMICO":
+            case "NAO ECONOMICO":
+            case "NÃO ECONÔMICO":
+                return "ANTIECONÔMICO";
+            
+            // RECUPERÁVEL
+            case "RECUPERAVEL":
+            case "RECUPERÁVEL":
+            case "PODE SER RECUPERADO":
+            case "CONSERTAVEL":
+            case "CONSERTÁVEL":
+            case "REGULAR":
+                return "RECUPERÁVEL";
+            
+            // IRRECUPERÁVEL
+            case "IRRECUPERAVEL":
+            case "IRRECUPERÁVEL":
+            case "NAO RECUPERAVEL":
+            case "NÃO RECUPERÁVEL":
+            case "INSERVIVEL":
+            case "INSERVÍVEL":
+            case "RUIM":
+            case "PESSIMO":
+            case "PÉSSIMO":
+            case "SUCATA":
+                return "IRRECUPERÁVEL";
+            
+            default:
+                // Se não reconhecer, tentar mapear por palavras-chave
+                if (estado.contains("BOM") || estado.contains("OTIMO")) {
+                    return "BOM";
+                } else if (estado.contains("OCIOSO")) {
+                    return "OCIOSO";
+                } else if (estado.contains("ANTIECONOMICO") || estado.contains("ECONOMICO")) {
+                    return "ANTIECONÔMICO";
+                } else if (estado.contains("RECUPERAVEL") || estado.contains("REGULAR") || estado.contains("CONSERT")) {
+                    return "RECUPERÁVEL";
+                } else if (estado.contains("IRRECUPERAVEL") || estado.contains("INSERVIVEL") || 
+                          estado.contains("RUIM") || estado.contains("PESSIMO") || estado.contains("SUCATA")) {
+                    return "IRRECUPERÁVEL";
+                }
+                
+                // Se não conseguir mapear, usar BOM como padrão e registrar aviso
+                if (progressCallback != null) {
+                    progressCallback.onInfo("Estado não reconhecido: '" + estadoOriginal + "' - usando 'BOM' como padrão");
+                }
+                return "BOM";
         }
     }
 

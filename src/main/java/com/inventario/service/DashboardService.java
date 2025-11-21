@@ -20,25 +20,26 @@ import java.util.Map;
  */
 @Service
 public class DashboardService {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(DashboardService.class);
-    
+
     private final DashboardColetaDAO dashboardDAO;
     private final InventarioDAO inventarioDAO;
-    
+
     public DashboardService() {
         this.dashboardDAO = new DashboardColetaDAO();
         this.inventarioDAO = new InventarioDAO();
     }
-    
+
     public DashboardService(DashboardColetaDAO dashboardDAO, InventarioDAO inventarioDAO) {
         this.dashboardDAO = dashboardDAO;
         this.inventarioDAO = inventarioDAO;
     }
-    
+
     /**
      * Obtém inventário ativo
      */
+    @SuppressWarnings("deprecation")
     public Inventario obterInventarioAtivo() {
         try {
             return inventarioDAO.buscarInventarioPorStatus("EM_ANDAMENTO");
@@ -47,7 +48,7 @@ public class DashboardService {
             return null;
         }
     }
-    
+
     /**
      * Obtém estatísticas gerais do inventário
      */
@@ -61,7 +62,7 @@ public class DashboardService {
             return new HashMap<>();
         }
     }
-    
+
     /**
      * Obtém progresso por setor
      */
@@ -69,21 +70,21 @@ public class DashboardService {
         try {
             Map<String, Map<String, Integer>> progressoMap = dashboardDAO.buscarProgressoPorSetor(idInventario);
             List<Map<String, Object>> resultado = new ArrayList<>();
-            
+
             for (Map.Entry<String, Map<String, Integer>> entry : progressoMap.entrySet()) {
                 Map<String, Object> setor = new HashMap<>();
                 setor.put("setor", entry.getKey());
                 setor.putAll(entry.getValue());
                 resultado.add(setor);
             }
-            
+
             return resultado;
         } catch (Exception e) {
             logger.error("Erro ao obter progresso por setor do inventário: {}", idInventario, e);
             return new ArrayList<>();
         }
     }
-    
+
     /**
      * Obtém itens coletados recentemente
      * Nota: Método não implementado no DAO atual
@@ -92,7 +93,7 @@ public class DashboardService {
         logger.warn("Método obterItensColetadosRecentes não implementado no DAO");
         return new ArrayList<>();
     }
-    
+
     /**
      * Obtém divergências encontradas
      * Nota: Método não implementado no DAO atual
@@ -101,7 +102,7 @@ public class DashboardService {
         logger.warn("Método obterDivergencias não implementado no DAO");
         return new ArrayList<>();
     }
-    
+
     /**
      * Obtém total de patrimônios
      */
@@ -114,7 +115,7 @@ public class DashboardService {
             return 0;
         }
     }
-    
+
     /**
      * Obtém total de patrimônios coletados
      */
@@ -127,15 +128,16 @@ public class DashboardService {
             return 0;
         }
     }
-    
+
     /**
      * Obtém percentual de conclusão
      */
     public double obterPercentualConclusao(int idInventario) {
         try {
             int total = obterTotalPatrimonios(idInventario);
-            if (total == 0) return 0.0;
-            
+            if (total == 0)
+                return 0.0;
+
             int coletados = obterTotalColetados(idInventario);
             return (coletados * 100.0) / total;
         } catch (Exception e) {
@@ -143,16 +145,19 @@ public class DashboardService {
             return 0.0;
         }
     }
-    
+
     /**
      * Obtém estatísticas por sala
-     * Nota: Método não implementado no DAO atual
      */
     public List<Map<String, Object>> obterEstatisticasPorSala(int idInventario) {
-        logger.warn("Método obterEstatisticasPorSala não implementado no DAO");
-        return new ArrayList<>();
+        try {
+            return dashboardDAO.buscarEstatisticasPorSala(idInventario);
+        } catch (Exception e) {
+            logger.error("Erro ao obter estatísticas por sala do inventário: {}", idInventario, e);
+            return new ArrayList<>();
+        }
     }
-    
+
     /**
      * Obtém estatísticas por responsável
      */
@@ -160,21 +165,21 @@ public class DashboardService {
         try {
             Map<String, Map<String, Integer>> statsMap = dashboardDAO.buscarEstatisticasPorResponsavel(idInventario);
             List<Map<String, Object>> resultado = new ArrayList<>();
-            
+
             for (Map.Entry<String, Map<String, Integer>> entry : statsMap.entrySet()) {
                 Map<String, Object> responsavel = new HashMap<>();
                 responsavel.put("responsavel", entry.getKey());
                 responsavel.putAll(entry.getValue());
                 resultado.add(responsavel);
             }
-            
+
             return resultado;
         } catch (Exception e) {
             logger.error("Erro ao obter estatísticas por responsável do inventário: {}", idInventario, e);
             return new ArrayList<>();
         }
     }
-    
+
     /**
      * Obtém estatísticas por coletor
      */
@@ -186,7 +191,7 @@ public class DashboardService {
             return new HashMap<>();
         }
     }
-    
+
     /**
      * Obtém desempenho detalhado dos coletores por período
      */

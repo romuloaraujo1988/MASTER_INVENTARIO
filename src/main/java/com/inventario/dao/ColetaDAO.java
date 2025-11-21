@@ -426,6 +426,42 @@ public class ColetaDAO {
     }
     
     /**
+     * Busca coletas por sala e inventário (mais eficiente - filtro no banco)
+     * @param idSala ID da sala
+     * @param idInventario ID do inventário
+     * @return Lista de coletas da sala no inventário especificado
+     * @throws SQLException Se ocorrer erro na consulta
+     */
+    public List<Coleta> buscarColetasPorSalaEInventario(int idSala, int idInventario) throws SQLException {
+        String sql = "SELECT c.*, p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
+                    "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO " +
+                    "FROM TABELA_COLETA c " +
+                    "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
+                    "LEFT JOIN TABELA_PARTICIPANTE_INVENTARIO pi ON c.ID_PARTICIPANTE_INVENTARIO = pi.id_participante " +
+                    "LEFT JOIN TABELA_USUARIO u ON pi.ID_USUARIO = u.ID " +
+                    "LEFT JOIN TABELA_INVENTARIO i ON c.ID_INVENTARIO = i.ID " +
+                    "WHERE p.ID_SALA = ? AND c.ID_INVENTARIO = ? " +
+                    "ORDER BY c.DATA_COLETA DESC";
+        
+        List<Coleta> coletas = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idSala);
+            stmt.setInt(2, idInventario);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    coletas.add(criarColetaFromResultSet(rs));
+                }
+            }
+        }
+        
+        return coletas;
+    }
+    
+    /**
      * Busca APENAS coletas de patrimônios COM etiqueta em uma sala específica
      * @param idSala ID da sala
      * @return Lista de coletas de patrimônios com etiqueta
@@ -515,6 +551,154 @@ public class ColetaDAO {
         return coletas;
     }
     
+    /**
+     * Conta o número de divergências em um inventário
+     * @param idInventario ID do inventário
+     * @return Número de coletas com divergência
+     */
+    public int contarDivergenciasPorInventario(int idInventario) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM TABELA_COLETA WHERE ID_INVENTARIO = ? AND DIVERGENCIA = true";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idInventario);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        
+        return 0;
+    }
+    
+    /**
+     * Conta o número de coletores ativos (usuários distintos) em um inventário
+     * @param idInventario ID do inventário
+     * @return Número de usuários que fizeram coletas
+     */
+    public int contarColetoresAtivosPorInventario(int idInventario) throws SQLException {
+        String sql = "SELECT COUNT(DISTINCT pi.ID_USUARIO) " +
+                    "FROM TABELA_COLETA c " +
+                    "INNER JOIN TABELA_PARTICIPANTE_INVENTARIO pi ON c.ID_PARTICIPANTE_INVENTARIO = pi.id_participante " +
+                    "WHERE c.ID_INVENTARIO = ? AND pi.ID_USUARIO IS NOT NULL";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idInventario);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    return count > 0 ? count : 1; // Retorna pelo menos 1 se houver coletas
+                }
+            }
+        }
+        
+        return 0;
+    }
+    
+    /**
+     * Verifica se um patrimônio foi coletado em um inventário específico
+     * @param idPatrimonio ID do patrimônio
+     * @param idInventario ID do inventário
+     * @return true se foi coletado, false caso contrário
+     */
+    public boolean verificarSePatrimonioFoiColetado(int idPatrimonio, int idInventario) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM TABELA_COLETA " +
+                    "WHERE ID_PATRIMONIO = ? AND ID_INVENTARIO = ? AND STATUS_COLETA = 'COLETADO'";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idPatrimonio);
+            stmt.setInt(2, idInventario);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Busca a data de coleta de um patrimônio em um inventário específico
+     * @param idPatrimonio ID do patrimônio
+     * @param idInventario ID do inventário
+     * @return Data da coleta ou null se não foi coletado
+     */
+    public java.sql.Timestamp buscarDataColetaPatrimonio(int idPatrimonio, int idInventario) throws SQLException {
+        String sql = "SELECT DATA_COLETA FROM TABELA_COLETA " +
+                    "WHERE ID_PATRIMONIO = ? AND ID_INVENTARIO = ? AND STATUS_COLETA = 'COLETADO' " +
+                    "ORDER BY DATA_COLETA DESC LIMIT 1";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idPatrimonio);
+            stmt.setInt(2, idInventario);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getTimestamp("DATA_COLETA");
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Busca o histórico de coletas de um patrimônio (todos os inventários)
+     * @param idPatrimonio ID do patrimônio
+     * @return Lista com histórico de coletas
+     */
+    public List<Map<String, Object>> buscarHistoricoColetasPatrimonio(int idPatrimonio) throws SQLException {
+        String sql = "SELECT c.ID, c.DATA_COLETA, c.STATUS_COLETA, c.OBSERVACAO_COLETA, " +
+                    "c.LOCALIZACAO_ENCONTRADA, c.ESTADO_ENCONTRADO, c.DIVERGENCIA, " +
+                    "i.ID as INVENTARIO_ID, i.NOME as INVENTARIO_NOME, " +
+                    "u.NOME_COMPLETO as COLETOR_NOME " +
+                    "FROM TABELA_COLETA c " +
+                    "INNER JOIN TABELA_INVENTARIO i ON c.ID_INVENTARIO = i.ID " +
+                    "LEFT JOIN TABELA_PARTICIPANTE_INVENTARIO pi ON c.ID_PARTICIPANTE_INVENTARIO = pi.id_participante " +
+                    "LEFT JOIN TABELA_USUARIO u ON pi.ID_USUARIO = u.ID " +
+                    "WHERE c.ID_PATRIMONIO = ? " +
+                    "ORDER BY c.DATA_COLETA DESC";
+        
+        List<Map<String, Object>> historico = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idPatrimonio);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> coleta = new java.util.LinkedHashMap<>();
+                    coleta.put("id", rs.getInt("ID"));
+                    coleta.put("dataColeta", rs.getTimestamp("DATA_COLETA"));
+                    coleta.put("statusColeta", rs.getString("STATUS_COLETA"));
+                    coleta.put("observacao", rs.getString("OBSERVACAO_COLETA"));
+                    coleta.put("localizacaoEncontrada", rs.getString("LOCALIZACAO_ENCONTRADA"));
+                    coleta.put("estadoEncontrado", rs.getString("ESTADO_ENCONTRADO"));
+                    coleta.put("divergencia", rs.getBoolean("DIVERGENCIA"));
+                    coleta.put("inventarioId", rs.getInt("INVENTARIO_ID"));
+                    coleta.put("inventarioNome", rs.getString("INVENTARIO_NOME"));
+                    coleta.put("coletorNome", rs.getString("COLETOR_NOME"));
+                    historico.add(coleta);
+                }
+            }
+        }
+        
+        return historico;
+    }
+    
     public boolean coletaExiste(int idInventario, int idPatrimonio) throws SQLException {
         String sql = "SELECT COUNT(*) FROM TABELA_COLETA WHERE ID_INVENTARIO = ? AND ID_PATRIMONIO = ? AND STATUS_COLETA = 'COLETADO'";
         
@@ -535,7 +719,7 @@ public class ColetaDAO {
     }
     
     public int contarColetasPorInventario(int idInventario) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM TABELA_COLETA WHERE ID_INVENTARIO = ?";
+        String sql = "SELECT COUNT(*)::INTEGER FROM TABELA_COLETA WHERE ID_INVENTARIO = ?";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -676,21 +860,86 @@ public class ColetaDAO {
     
     /**
      * Agrupa itens sem etiqueta por descrições similares para facilitar identificação
-     * Retorna uma lista com descrições agrupadas e contagem de ocorrências
+     * Retorna uma lista com descrições agrupadas e contagem de ocorrências (todos os inventários)
+     * 
+     * @return Lista de arrays com [descrição, categoria, quantidade, última_coleta]
+     * @throws SQLException Se ocorrer erro na consulta
      */
     public List<Object[]> agruparItensSemEtiquetaPorDescricao() throws SQLException {
-        // Funcionalidade temporariamente desabilitada - colunas SEM_ETIQUETA e DESCRICAO_ITEM_SEM_ETIQUETA não existem
+        String sql = "SELECT " +
+                    "    TRIM(c.DESCRICAO_ITEM_SEM_ETIQUETA) as descricao, " +
+                    "    c.CATEGORIA_ITEM_SEM_ETIQUETA as categoria, " +
+                    "    COUNT(*) as quantidade, " +
+                    "    MAX(c.DATA_COLETA) as ultima_coleta " +
+                    "FROM TABELA_COLETA c " +
+                    "WHERE c.SEM_ETIQUETA = true " +
+                    "    AND c.DESCRICAO_ITEM_SEM_ETIQUETA IS NOT NULL " +
+                    "    AND TRIM(c.DESCRICAO_ITEM_SEM_ETIQUETA) != '' " +
+                    "GROUP BY TRIM(c.DESCRICAO_ITEM_SEM_ETIQUETA), c.CATEGORIA_ITEM_SEM_ETIQUETA " +
+                    "ORDER BY quantidade DESC, descricao ASC";
+        
         List<Object[]> resultados = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                Object[] item = new Object[4];
+                item[0] = rs.getString("descricao");
+                item[1] = rs.getString("categoria");
+                item[2] = rs.getInt("quantidade");
+                item[3] = rs.getTimestamp("ultima_coleta");
+                resultados.add(item);
+            }
+        }
+        
         return resultados;
     }
     
     /**
      * Agrupa itens sem etiqueta por descrições similares para um inventário específico
+     * Retorna descrições agrupadas com contagem de ocorrências
+     * 
+     * @param idInventario ID do inventário
+     * @return Lista de mapas com descrição, categoria, quantidade e última data de coleta
+     * @throws SQLException Se ocorrer erro na consulta
      */
     public List<Map<String, Object>> agruparItensSemEtiquetaPorDescricao(int idInventario) throws SQLException {
-        // Funcionalidade temporariamente desabilitada - colunas SEM_ETIQUETA e DESCRICAO_ITEM_SEM_ETIQUETA não existem
+        String sql = "SELECT " +
+                    "    TRIM(c.DESCRICAO_ITEM_SEM_ETIQUETA) as descricao, " +
+                    "    c.CATEGORIA_ITEM_SEM_ETIQUETA as categoria, " +
+                    "    COUNT(*) as quantidade, " +
+                    "    MAX(c.DATA_COLETA) as ultima_coleta, " +
+                    "    STRING_AGG(DISTINCT c.LOCALIZACAO_ENCONTRADA, ', ' ORDER BY c.LOCALIZACAO_ENCONTRADA) as localizacoes " +
+                    "FROM TABELA_COLETA c " +
+                    "WHERE c.SEM_ETIQUETA = true " +
+                    "    AND c.ID_INVENTARIO = ? " +
+                    "    AND c.DESCRICAO_ITEM_SEM_ETIQUETA IS NOT NULL " +
+                    "    AND TRIM(c.DESCRICAO_ITEM_SEM_ETIQUETA) != '' " +
+                    "GROUP BY TRIM(c.DESCRICAO_ITEM_SEM_ETIQUETA), c.CATEGORIA_ITEM_SEM_ETIQUETA " +
+                    "ORDER BY quantidade DESC, descricao ASC";
+        
         List<Map<String, Object>> resultados = new ArrayList<>();
-        // TODO: Executar script implementar_itens_sem_etiqueta.sql para adicionar as colunas necessárias
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idInventario);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> item = new java.util.LinkedHashMap<>();
+                    item.put("descricao", rs.getString("descricao"));
+                    item.put("categoria", rs.getString("categoria"));
+                    item.put("quantidade", rs.getInt("quantidade"));
+                    item.put("ultimaColeta", rs.getTimestamp("ultima_coleta"));
+                    item.put("localizacoes", rs.getString("localizacoes"));
+                    resultados.add(item);
+                }
+            }
+        }
+        
         return resultados;
     }
     
@@ -1253,30 +1502,15 @@ public class ColetaDAO {
     }
     
     /**
-     * Busca coletas com etiqueta baseado na localização encontrada
+     * Busca coletas com etiqueta baseado na localização encontrada (busca EXATA)
+     * IMPORTANTE: Usa comparação exata para evitar que salas com nomes similares retornem os mesmos dados
      * @param localizacaoEncontrada A localização onde os itens foram encontrados
      * @return Lista de coletas com etiqueta encontradas na localização especificada
      * @throws SQLException Se ocorrer erro na consulta
      */
     public List<Coleta> buscarColetasComEtiquetaPorLocalizacaoEncontrada(String localizacaoEncontrada) throws SQLException {
-        // Primeiro tenta busca exata
-        List<Coleta> coletas = buscarColetasComEtiquetaPorLocalizacaoExata(localizacaoEncontrada);
+        System.out.println("[DEBUG ColetaDAO] Buscando coletas para localização EXATA: '" + localizacaoEncontrada + "'");
         
-        // Se não encontrou resultados, tenta busca flexível
-        if (coletas.isEmpty()) {
-            coletas = buscarColetasComEtiquetaPorLocalizacaoFlexivel(localizacaoEncontrada);
-        }
-        
-        return coletas;
-    }
-    
-    /**
-     * Busca coletas com etiqueta baseado na localização encontrada (busca exata)
-     * @param localizacaoEncontrada A localização onde os itens foram encontrados
-     * @return Lista de coletas com etiqueta encontradas na localização especificada
-     * @throws SQLException Se ocorrer erro na consulta
-     */
-    private List<Coleta> buscarColetasComEtiquetaPorLocalizacaoExata(String localizacaoEncontrada) throws SQLException {
         String sql = "SELECT c.*, p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
                     "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO " +
                     "FROM TABELA_COLETA c " +
@@ -1284,7 +1518,8 @@ public class ColetaDAO {
                     "LEFT JOIN TABELA_PARTICIPANTE_INVENTARIO pi ON c.ID_PARTICIPANTE_INVENTARIO = pi.id_participante " +
                     "LEFT JOIN TABELA_USUARIO u ON pi.ID_USUARIO = u.ID " +
                     "LEFT JOIN TABELA_INVENTARIO i ON c.ID_INVENTARIO = i.ID " +
-                    "WHERE c.LOCALIZACAO_ENCONTRADA = ? AND (c.SEM_ETIQUETA = false OR c.SEM_ETIQUETA IS NULL) " +
+                    "WHERE (c.SEM_ETIQUETA = false OR c.SEM_ETIQUETA IS NULL) " +
+                    "AND c.LOCALIZACAO_ENCONTRADA = ? " + // Comparação EXATA (não LIKE)
                     "ORDER BY c.DATA_COLETA DESC";
         
         List<Coleta> coletas = new ArrayList<>();
@@ -1301,43 +1536,7 @@ public class ColetaDAO {
             }
         }
         
-        return coletas;
-    }
-    
-    /**
-     * Busca coletas com etiqueta baseado na localização encontrada (busca flexível)
-     * Permite correspondências parciais para resolver incompatibilidades de nomenclatura
-     * @param localizacaoEncontrada A localização onde os itens foram encontrados
-     * @return Lista de coletas com etiqueta encontradas na localização especificada
-     * @throws SQLException Se ocorrer erro na consulta
-     */
-    private List<Coleta> buscarColetasComEtiquetaPorLocalizacaoFlexivel(String localizacaoEncontrada) throws SQLException {
-        String sql = "SELECT c.*, p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
-                    "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO " +
-                    "FROM TABELA_COLETA c " +
-                    "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
-                    "LEFT JOIN TABELA_PARTICIPANTE_INVENTARIO pi ON c.ID_PARTICIPANTE_INVENTARIO = pi.id_participante " +
-                    "LEFT JOIN TABELA_USUARIO u ON pi.ID_USUARIO = u.ID " +
-                    "LEFT JOIN TABELA_INVENTARIO i ON c.ID_INVENTARIO = i.ID " +
-                    "WHERE (c.LOCALIZACAO_ENCONTRADA LIKE ? OR ? LIKE '%' || c.LOCALIZACAO_ENCONTRADA || '%') " +
-                    "AND (c.SEM_ETIQUETA = false OR c.SEM_ETIQUETA IS NULL) " +
-                    "ORDER BY c.DATA_COLETA DESC";
-        
-        List<Coleta> coletas = new ArrayList<>();
-        
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, "%" + localizacaoEncontrada + "%");
-            stmt.setString(2, localizacaoEncontrada);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    coletas.add(criarColetaFromResultSet(rs));
-                }
-            }
-        }
-        
+        System.out.println("[DEBUG ColetaDAO] Encontradas " + coletas.size() + " coletas para '" + localizacaoEncontrada + "'");
         return coletas;
     }
     
@@ -1350,7 +1549,7 @@ public class ColetaDAO {
      * @return Lista de mapas com data e quantidade
      * @throws SQLException Se ocorrer erro na consulta
      */
-    public List<Map<String, Object>> buscarEvolucaoColetasPorDia(int inventarioId, int dias) throws SQLException {
+    public List<Map<String, Object>> buscarEvolucaoColetasPorDia(Integer inventarioId, int dias) throws SQLException {
         String sql = "SELECT " +
                     "    CAST(DATA_COLETA AS DATE) as data, " +
                     "    COUNT(*) as quantidade " +
@@ -1382,22 +1581,21 @@ public class ColetaDAO {
     }
     
     /**
-     * Busca top itens mais coletados (por descrição)
-     * Agrupa coletas por descrição do patrimônio e retorna os mais coletados
+     * Busca top itens mais coletados (por descrição do patrimônio)
      * 
      * @param inventarioId ID do inventário
      * @param limit Quantidade máxima de itens a retornar
      * @return Lista de mapas com descrição e quantidade
      * @throws SQLException Se ocorrer erro na consulta
      */
-    public List<Map<String, Object>> buscarTopItensColetados(int inventarioId, int limit) throws SQLException {
+    public List<Map<String, Object>> buscarTopItensColetados(Integer inventarioId, int limit) throws SQLException {
         String sql = "SELECT " +
-                    "    COALESCE(p.DESCRICAO, c.DESCRICAO_ITEM_SEM_ETIQUETA, 'Sem Descrição') as descricao, " +
+                    "    p.DESCRICAO as descricao, " +
                     "    COUNT(*) as quantidade " +
                     "FROM TABELA_COLETA c " +
-                    "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
+                    "INNER JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
                     "WHERE c.ID_INVENTARIO = ? " +
-                    "GROUP BY COALESCE(p.DESCRICAO, c.DESCRICAO_ITEM_SEM_ETIQUETA, 'Sem Descrição') " +
+                    "GROUP BY p.DESCRICAO " +
                     "ORDER BY quantidade DESC " +
                     "LIMIT ?";
         
@@ -1424,13 +1622,12 @@ public class ColetaDAO {
     
     /**
      * Busca estatísticas de coletas por status
-     * Retorna quantidade de coletas agrupadas por status
      * 
      * @param inventarioId ID do inventário
      * @return Lista de mapas com status e quantidade
      * @throws SQLException Se ocorrer erro na consulta
      */
-    public List<Map<String, Object>> buscarEstatisticasPorStatus(int inventarioId) throws SQLException {
+    public List<Map<String, Object>> buscarEstatisticasPorStatus(Integer inventarioId) throws SQLException {
         String sql = "SELECT " +
                     "    STATUS_COLETA as status, " +
                     "    COUNT(*) as quantidade " +
@@ -1460,54 +1657,19 @@ public class ColetaDAO {
     }
     
     /**
-     * Busca coletas por período (data inicial e final)
-     * 
-     * @param inventarioId ID do inventário
-     * @param dataInicio Data inicial do período
-     * @param dataFim Data final do período
-     * @return Quantidade de coletas no período
-     * @throws SQLException Se ocorrer erro na consulta
-     */
-    public int contarColetasPorPeriodo(int inventarioId, Date dataInicio, Date dataFim) throws SQLException {
-        String sql = "SELECT COUNT(*) as total " +
-                    "FROM TABELA_COLETA " +
-                    "WHERE ID_INVENTARIO = ? " +
-                    "    AND DATA_COLETA >= ? " +
-                    "    AND DATA_COLETA <= ?";
-        
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, inventarioId);
-            stmt.setDate(2, dataInicio);
-            stmt.setDate(3, dataFim);
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt("total");
-                }
-            }
-        }
-        
-        return 0;
-    }
-    
-    /**
      * Busca distribuição de coletas por sala
-     * Retorna quantidade de coletas agrupadas por sala
      * 
      * @param inventarioId ID do inventário
      * @param limit Quantidade máxima de salas a retornar
      * @return Lista de mapas com sala e quantidade
      * @throws SQLException Se ocorrer erro na consulta
      */
-    public List<Map<String, Object>> buscarDistribuicaoPorSala(int inventarioId, int limit) throws SQLException {
+    public List<Map<String, Object>> buscarDistribuicaoPorSala(Integer inventarioId, int limit) throws SQLException {
         String sql = "SELECT " +
                     "    c.LOCALIZACAO_ENCONTRADA as sala, " +
                     "    COUNT(*) as quantidade " +
                     "FROM TABELA_COLETA c " +
                     "WHERE c.ID_INVENTARIO = ? " +
-                    "    AND c.LOCALIZACAO_ENCONTRADA IS NOT NULL " +
                     "GROUP BY c.LOCALIZACAO_ENCONTRADA " +
                     "ORDER BY quantidade DESC " +
                     "LIMIT ?";

@@ -200,6 +200,20 @@ class LoginViewModel(
                         Log.d("LoginViewModel", "Usuário: ${loginResponse.data.usuario.nome}")
                         Log.d("LoginViewModel", "Verificando isLoggedIn: ${preferencesManager.isLoggedIn()}")
                         
+                        // ========== SALVAR DADOS PARA LOGIN OFFLINE ==========
+                        // Salvar username e nome completo para possível login offline futuro
+                        val username = currentState.login
+                        val fullName = loginResponse.data.usuario.nome
+                        val accessToken = loginResponse.data.accessToken
+                        
+                        preferencesManager.saveUserForOfflineLogin(username, fullName, accessToken)
+                        
+                        // ✅ SALVAR ÚLTIMO USUÁRIO QUE FEZ LOGIN (para preencher automaticamente)
+                        preferencesManager.saveLastLoginUsername(username)
+                        Log.d("LoginViewModel", "✓ Último usuário salvo: $username")
+                        
+                        Log.d("LoginViewModel", "✓ Dados salvos para possível login offline futuro")
+                        
                         // TODO: Registrar dispositivo automaticamente
                         // registrarDispositivoAutomaticamente(loginResponse.data.usuario.id)
                         
@@ -300,6 +314,273 @@ class LoginViewModel(
             }
         }
     }
+    
+    // ========== MÉTODOS PARA LOGIN OFFLINE COM BIOMETRIA E PIN ==========
+    
+    /**
+     * Verifica se deve oferecer configuração de PIN
+     */
+    fun checkPinSetup() {
+        viewModelScope.launch {
+            try {
+                val pinAuthManager = com.inventario.mobile.security.PinAuthManager(context)
+                val biometricManager = com.inventario.mobile.security.BiometricAuthManager(context)
+                
+                val hasBiometric = biometricManager.isBiometricAvailable().isAvailable()
+                val hasPinEnabled = pinAuthManager.isPinEnabled()
+                val hasUserSaved = preferencesManager.hasUserSavedLocally()
+                
+                // Oferecer PIN se:
+                // 1. Não tem biometria
+                // 2. Não tem PIN configurado
+                // 3. Tem usuário salvo (fez login antes)
+                val shouldOfferPin = !hasBiometric && !hasPinEnabled && hasUserSaved
+                
+                _uiState.value = _uiState.value.copy(
+                    shouldOfferPinSetup = shouldOfferPin,
+                    hasPinEnabled = hasPinEnabled
+                )
+                
+                Log.d("LoginViewModel", "Check PIN: hasBiometric=$hasBiometric, hasPinEnabled=$hasPinEnabled, shouldOffer=$shouldOfferPin")
+            } catch (e: Exception) {
+                Log.e("LoginViewModel", "Erro ao verificar PIN", e)
+            }
+        }
+    }
+    
+    /**
+     * Verifica se há login offline disponível
+     * Deve ser chamado no onCreate da Activity
+     */
+    fun checkOfflineLogin() {
+        viewModelScope.launch {
+            try {
+                val hasUser = preferencesManager.hasUserSavedLocally()
+                val biometricEnabled = preferencesManager.isBiometricEnabled()
+                val pinAuthManager = com.inventario.mobile.security.PinAuthManager(context)
+                val pinEnabled = pinAuthManager.isPinEnabled()
+                val isOnline = com.inventario.mobile.utils.NetworkUtils.isNetworkAvailable(context)
+                val savedUserName = preferencesManager.getSavedUserFullName()
+                
+                Log.d("LoginViewModel", "═══════════════════════════════════════════")
+                Log.d("LoginViewModel", "VERIFICANDO LOGIN OFFLINE")
+                Log.d("LoginViewModel", "Usuário salvo localmente: $hasUser")
+                Log.d("LoginViewModel", "Biometria habilitada: $biometricEnabled")
+                Log.d("LoginViewModel", "PIN habilitado: $pinEnabled")
+                Log.d("LoginViewModel", "Online: $isOnline")
+                Log.d("LoginViewModel", "Nome do usuário: $savedUserName")
+                Log.d("LoginViewModel", "═══════════════════════════════════════════")
+                
+                // Mostrar biometria OU PIN (prioridade para biometria)
+                val showBiometric = hasUser && biometricEnabled
+                val showPin = hasUser && pinEnabled && !biometricEnabled
+                
+                _uiState.value = _uiState.value.copy(
+                    hasUserSavedLocally = hasUser,
+                    biometricEnabled = biometricEnabled,
+                    hasPinEnabled = pinEnabled,
+                    isOnline = isOnline,
+                    showBiometricButton = showBiometric,
+                    showPinLogin = showPin,
+                    savedUserName = savedUserName
+                )
+            } catch (e: Exception) {
+                Log.e("LoginViewModel", "Erro ao verificar login offline", e)
+            }
+        }
+    }
+    
+    /**
+     * Realiza login offline usando dados salvos localmente
+     * Deve ser chamado APÓS validação biométrica bem-sucedida
+     */
+    fun loginWithBiometric() {
+        viewModelScope.launch {
+            try {
+                Log.d("LoginViewModel", "═══════════════════════════════════════════")
+                Log.d("LoginViewModel", "INICIANDO LOGIN OFFLINE COM BIOMETRIA")
+                
+                _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+                
+                // Carregar dados do usuário local
+                val username = preferencesManager.getSavedUsername()
+                val fullName = preferencesManager.getSavedUserFullName()
+                val token = preferencesManager.getAccessToken()
+                val isLoggedIn = preferencesManager.isLoggedIn()
+                
+                Log.d("LoginViewModel", "Username: $username")
+                Log.d("LoginViewModel", "Nome completo: $fullName")
+                Log.d("LoginViewModel", "Token presente: ${token != null}")
+                Log.d("LoginViewModel", "Já logado: $isLoggedIn")
+                
+                if (username != null && fullName != null && token != null) {
+                    // Login offline bem-sucedido
+                    Log.d("LoginViewModel", "✅ LOGIN OFFLINE BEM-SUCEDIDO")
+                    Log.d("LoginViewModel", "Usuário: $fullName")
+                    Log.d("LoginViewModel", "Modo: OFFLINE")
+                    Log.d("LoginViewModel", "═══════════════════════════════════════════")
+                    
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isLoginSuccessful = true,
+                        offlineMode = true
+                    )
+                } else {
+                    // Dados locais inválidos ou incompletos
+                    Log.e("LoginViewModel", "❌ DADOS LOCAIS INVÁLIDOS")
+                    Log.e("LoginViewModel", "Username: ${username != null}")
+                    Log.e("LoginViewModel", "FullName: ${fullName != null}")
+                    Log.e("LoginViewModel", "Token: ${token != null}")
+                    Log.e("LoginViewModel", "═══════════════════════════════════════════")
+                    
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "Dados locais inválidos. Conecte-se à internet para fazer login."
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("LoginViewModel", "❌ ERRO NO LOGIN OFFLINE", e)
+                Log.e("LoginViewModel", "═══════════════════════════════════════════")
+                
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Erro ao fazer login offline: ${e.message}"
+                )
+            }
+        }
+    }
+    
+    /**
+     * Habilita login por biometria
+     * Deve ser chamado após login bem-sucedido e confirmação do usuário
+     */
+    fun enableBiometric(username: String, fullName: String, accessToken: String) {
+        try {
+            Log.d("LoginViewModel", "Habilitando login por biometria para: $fullName")
+            
+            preferencesManager.saveUserForOfflineLogin(username, fullName, accessToken)
+            preferencesManager.setBiometricEnabled(true)
+            
+            Log.d("LoginViewModel", "✅ Login por biometria habilitado com sucesso")
+        } catch (e: Exception) {
+            Log.e("LoginViewModel", "Erro ao habilitar biometria", e)
+        }
+    }
+    
+    /**
+     * Desabilita login por biometria
+     */
+    fun disableBiometric() {
+        try {
+            Log.d("LoginViewModel", "Desabilitando login por biometria")
+            preferencesManager.setBiometricEnabled(false)
+            Log.d("LoginViewModel", "✅ Login por biometria desabilitado")
+        } catch (e: Exception) {
+            Log.e("LoginViewModel", "Erro ao desabilitar biometria", e)
+        }
+    }
+    
+    /**
+     * Login com PIN
+     */
+    fun loginWithPin(pin: String) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+                
+                val pinAuthManager = com.inventario.mobile.security.PinAuthManager(context)
+                
+                // Verificar se conta está bloqueada
+                if (pinAuthManager.isAccountLocked()) {
+                    val minutes = pinAuthManager.getLockTimeRemaining()
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "Conta bloqueada. Tente novamente em $minutes minutos."
+                    )
+                    return@launch
+                }
+                
+                // Validar PIN
+                if (pinAuthManager.validatePin(pin)) {
+                    // PIN correto - fazer login offline
+                    loginWithOfflineCredentials()
+                } else {
+                    // PIN incorreto
+                    val remaining = pinAuthManager.getRemainingAttempts()
+                    
+                    val message = if (remaining > 0) {
+                        "PIN incorreto. Tentativas restantes: $remaining"
+                    } else {
+                        "Conta bloqueada por 30 minutos devido a múltiplas tentativas incorretas."
+                    }
+                    
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = message,
+                        pinAttemptsRemaining = remaining
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("LoginViewModel", "Erro no login com PIN", e)
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Erro ao validar PIN: ${e.message}"
+                )
+            }
+        }
+    }
+    
+    /**
+     * Login offline usando credenciais salvas
+     */
+    private fun loginWithOfflineCredentials() {
+        val username = preferencesManager.getSavedUsername()
+        val fullName = preferencesManager.getSavedUserFullName()
+        val token = preferencesManager.getAccessToken()
+        
+        if (username != null && fullName != null && token != null) {
+            Log.d("LoginViewModel", "✅ Login offline bem-sucedido")
+            
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                isLoginSuccessful = true,
+                offlineMode = true
+            )
+        } else {
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                errorMessage = "Dados locais inválidos. Conecte-se à internet."
+            )
+        }
+    }
+    
+    /**
+     * Limpa todos os dados do usuário salvo
+     * Útil para logout ou troca de usuário
+     */
+    fun clearSavedUser() {
+        try {
+            Log.d("LoginViewModel", "Limpando dados do usuário salvo")
+            preferencesManager.clearSavedUser()
+            
+            // Limpar PIN também
+            val pinAuthManager = com.inventario.mobile.security.PinAuthManager(context)
+            pinAuthManager.clearPin()
+            
+            _uiState.value = _uiState.value.copy(
+                hasUserSavedLocally = false,
+                biometricEnabled = false,
+                hasPinEnabled = false,
+                showBiometricButton = false,
+                showPinLogin = false,
+                savedUserName = null
+            )
+            
+            Log.d("LoginViewModel", "✅ Dados do usuário limpos")
+        } catch (e: Exception) {
+            Log.e("LoginViewModel", "Erro ao limpar dados do usuário", e)
+        }
+    }
 }
 
 // Estado da UI de Login
@@ -314,5 +595,17 @@ data class LoginUiState(
     val loginError: String? = null,
     val passwordError: String? = null,
     val serverIpError: String? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    
+    // ========== CAMPOS PARA LOGIN OFFLINE COM BIOMETRIA E PIN ==========
+    val hasUserSavedLocally: Boolean = false,
+    val biometricEnabled: Boolean = false,
+    val hasPinEnabled: Boolean = false,
+    val isOnline: Boolean = true,
+    val showBiometricButton: Boolean = false,
+    val showPinLogin: Boolean = false,
+    val offlineMode: Boolean = false,
+    val savedUserName: String? = null,
+    val shouldOfferPinSetup: Boolean = false,
+    val pinAttemptsRemaining: Int = 3
 )

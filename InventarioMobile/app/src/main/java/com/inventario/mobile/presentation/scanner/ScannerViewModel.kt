@@ -13,7 +13,8 @@ import kotlinx.coroutines.launch
 
 class ScannerViewModel(
     private val inventarioRepository: InventarioRepository,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val registrarColetaUseCase: com.inventario.mobile.domain.usecase.RegistrarColetaUseCase? = null
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(ScannerUiState())
@@ -29,18 +30,23 @@ class ScannerViewModel(
                 _uiState.value = _uiState.value.copy(
                     isLoading = true,
                     statusMessage = "Buscando patrimônio...",
-                    errorMessage = null
+                    errorMessage = null,
+                    scanResult = null // Limpar resultado anterior
                 )
                 
-                val result = inventarioRepository.findPatrimonioByNumero(codigo) // TODO: Implementar findPatrimonioById
+                Log.d("ScannerViewModel", "Buscando patrimônio - ID: $patrimonioId, Código: $codigo")
+                
+                // Buscar patrimônio no repositório
+                val result = inventarioRepository.findPatrimonioByNumero(codigo)
                 
                 result.fold(
                     onSuccess = { patrimonio ->
                         if (patrimonio != null) {
                             Log.d("ScannerViewModel", "Patrimônio encontrado - ID: ${patrimonio.id}, Número: ${patrimonio.numeroPatrimonio}")
                             
-                            // TODO: Implementar verificação de sincronização
-                            val jaColetado = false // Stub temporário
+                            // Verificar se já foi coletado
+                            val jaColetado = patrimonio.coletado
+                            Log.d("ScannerViewModel", "Patrimônio já coletado: $jaColetado")
                             
                             _uiState.value = _uiState.value.copy(
                                 isLoading = false,
@@ -56,30 +62,37 @@ class ScannerViewModel(
                                     jaColetado = jaColetado,
                                     coletadoPor = patrimonio.coletadoPor,
                                     dataColetaFormatada = patrimonio.dataColetaFormatada
-                                )
+                                ),
+                                errorMessage = null
                             )
                         } else {
+                            Log.w("ScannerViewModel", "Patrimônio não encontrado - Código: $codigo")
                             _uiState.value = _uiState.value.copy(
                                 isLoading = false,
                                 statusMessage = "Patrimônio não encontrado",
-                                errorMessage = "Patrimônio com ID $patrimonioId ou código $codigo não foi encontrado"
+                                errorMessage = "Patrimônio '$codigo' não foi encontrado no sistema. Verifique o código e tente novamente.",
+                                scanResult = null
                             )
                         }
                     },
                     onFailure = { exception ->
+                        Log.e("ScannerViewModel", "Erro ao buscar patrimônio", exception)
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             statusMessage = "Erro na busca",
-                            errorMessage = "Erro ao buscar patrimônio: ${exception.message}"
+                            errorMessage = "Erro ao buscar patrimônio: ${exception.message}\n\nTente escanear novamente.",
+                            scanResult = null
                         )
                     }
                 )
                 
             } catch (e: Exception) {
+                Log.e("ScannerViewModel", "Erro inesperado na busca", e)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     statusMessage = "Erro na busca",
-                    errorMessage = "Erro inesperado: ${e.message}"
+                    errorMessage = "Erro inesperado: ${e.message}\n\nTente escanear novamente.",
+                    scanResult = null
                 )
             }
         }
@@ -91,18 +104,24 @@ class ScannerViewModel(
                 _uiState.value = _uiState.value.copy(
                     isLoading = true,
                     statusMessage = "Buscando patrimônio por código...",
-                    errorMessage = null
+                    errorMessage = null,
+                    scanResult = null // Limpar resultado anterior
                 )
                 
                 if (codigo.isBlank()) {
+                    Log.w("ScannerViewModel", "Código vazio fornecido")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         statusMessage = "Código inválido",
-                        errorMessage = "Código não pode estar vazio"
+                        errorMessage = "Código não pode estar vazio. Tente escanear novamente.",
+                        scanResult = null
                     )
                     return@launch
                 }
                 
+                Log.d("ScannerViewModel", "Buscando patrimônio por código: $codigo")
+                
+                // Buscar patrimônio no repositório
                 val result = inventarioRepository.findPatrimonioByNumero(codigo)
                 
                 result.fold(
@@ -110,8 +129,9 @@ class ScannerViewModel(
                         if (patrimonio != null) {
                             Log.d("ScannerViewModel", "Patrimônio encontrado por código - ID: ${patrimonio.id}, Número: ${patrimonio.numeroPatrimonio}")
                             
-                            // TODO: Implementar verificação de sincronização
-                            val jaColetado = false // Stub temporário
+                            // Verificar se já foi coletado
+                            val jaColetado = patrimonio.coletado
+                            Log.d("ScannerViewModel", "Patrimônio já coletado: $jaColetado")
                             
                             _uiState.value = _uiState.value.copy(
                                 isLoading = false,
@@ -124,31 +144,40 @@ class ScannerViewModel(
                                     patrimonioId = patrimonio.id,
                                     patrimonioCodigo = codigo,
                                     patrimonio = patrimonio,
-                                    jaColetado = jaColetado
-                                )
+                                    jaColetado = jaColetado,
+                                    coletadoPor = patrimonio.coletadoPor,
+                                    dataColetaFormatada = patrimonio.dataColetaFormatada
+                                ),
+                                errorMessage = null
                             )
                         } else {
+                            Log.w("ScannerViewModel", "Patrimônio não encontrado - Código: $codigo")
                             _uiState.value = _uiState.value.copy(
                                 isLoading = false,
                                 statusMessage = "Patrimônio não encontrado",
-                                errorMessage = "Patrimônio com código $codigo não foi encontrado"
+                                errorMessage = "Patrimônio '$codigo' não foi encontrado no sistema. Verifique o código e tente novamente.",
+                                scanResult = null
                             )
                         }
                     },
                     onFailure = { exception ->
+                        Log.e("ScannerViewModel", "Erro ao buscar patrimônio por código", exception)
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             statusMessage = "Erro na busca",
-                            errorMessage = "Erro ao buscar patrimônio: ${exception.message}"
+                            errorMessage = "Erro ao buscar patrimônio: ${exception.message}\n\nTente escanear novamente.",
+                            scanResult = null
                         )
                     }
                 )
                 
             } catch (e: Exception) {
+                Log.e("ScannerViewModel", "Erro inesperado na busca por código", e)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     statusMessage = "Erro na busca",
-                    errorMessage = "Erro inesperado: ${e.message}"
+                    errorMessage = "Erro inesperado: ${e.message}\n\nTente escanear novamente.",
+                    scanResult = null
                 )
             }
         }
@@ -171,11 +200,21 @@ class ScannerViewModel(
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
     
+    fun clearMessages() {
+        _uiState.value = _uiState.value.copy(
+            errorMessage = null,
+            successMessage = null
+        )
+    }
+    
     fun clearScanResult() {
+        Log.d("ScannerViewModel", "Limpando resultado do scan")
         _uiState.value = _uiState.value.copy(
             scanResult = null,
             statusMessage = "Pronto para escanear",
-            errorMessage = null
+            errorMessage = null,
+            successMessage = null,
+            isLoading = false
         )
     }
     
@@ -268,7 +307,12 @@ class ScannerViewModel(
     fun coletarPatrimonioComEstado(patrimonioId: Long, salaNome: String, estadoEncontrado: String) {
         viewModelScope.launch {
             try {
-                Log.d("ScannerViewModel", "Iniciando coleta - Patrimônio ID: $patrimonioId, Sala: $salaNome, Estado: $estadoEncontrado")
+                Log.d("ScannerViewModel", "═══════════════════════════════════════")
+                Log.d("ScannerViewModel", "INICIANDO COLETA (MESMA ESTRUTURA DA COLETA MANUAL)")
+                Log.d("ScannerViewModel", "═══════════════════════════════════════")
+                Log.d("ScannerViewModel", "Patrimônio ID: $patrimonioId")
+                Log.d("ScannerViewModel", "Sala: $salaNome")
+                Log.d("ScannerViewModel", "Estado: $estadoEncontrado")
                 
                 _uiState.value = _uiState.value.copy(
                     isLoading = true,
@@ -279,51 +323,73 @@ class ScannerViewModel(
                 // Usar o patrimônio que já está no scanResult
                 val patrimonio = _uiState.value.scanResult?.patrimonio
                 
-                if (patrimonio != null) {
-                    val result = inventarioRepository.coletarPatrimonioComSala(
-                        patrimonio = patrimonio,
-                        salaNome = salaNome,
-                        estadoEncontrado = estadoEncontrado
-                    )
-                    
-                    result.fold(
-                        onSuccess = { coleta ->
-                            Log.d("ScannerViewModel", "Coleta realizada com sucesso - Coleta ID: ${coleta.patrimonioId}")
-                            
-                            // Incrementar contador de coletas
-                            preferencesManager.incrementCollectionCount()
-                            
-                            _uiState.value = _uiState.value.copy(
-                                isLoading = false,
-                                statusMessage = "Patrimônio ${patrimonio.numeroPatrimonio} coletado com sucesso!",
-                                scanResult = _uiState.value.scanResult?.copy(jaColetado = true)
-                            )
-                            
-                            // Atualizar contador de coletas
-                            loadColetasCount()
-                            
-                            // Verificar se deve sincronizar automaticamente
-                            checkAutoSyncByCount()
-                        },
-                        onFailure = { exception ->
-                            Log.e("ScannerViewModel", "Erro ao coletar patrimônio", exception)
-                            _uiState.value = _uiState.value.copy(
-                                isLoading = false,
-                                statusMessage = "Erro ao coletar",
-                                errorMessage = "Erro ao coletar patrimônio: ${exception.message}"
-                            )
-                        }
-                    )
-                } else {
+                if (patrimonio == null) {
+                    Log.e("ScannerViewModel", "Patrimônio não encontrado no scanResult")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         statusMessage = "Erro ao coletar",
                         errorMessage = "Patrimônio não encontrado. Escaneie novamente."
                     )
+                    return@launch
                 }
                 
+                Log.d("ScannerViewModel", "Patrimônio encontrado: ${patrimonio.numeroPatrimonio}")
+                
+                // Usar RegistrarColetaUseCase (mesma estrutura da coleta manual)
+                val result = if (registrarColetaUseCase != null) {
+                    Log.d("ScannerViewModel", "Usando RegistrarColetaUseCase (Clean Architecture)")
+                    registrarColetaUseCase.invoke(
+                        numeroPatrimonio = patrimonio.numeroPatrimonio,
+                        localizacaoAtual = salaNome,
+                        estadoEncontrado = estadoEncontrado,
+                        observacoes = null
+                    )
+                } else {
+                    Log.d("ScannerViewModel", "Usando InventarioRepository (fallback)")
+                    inventarioRepository.coletarPatrimonioComSala(
+                        patrimonio = patrimonio,
+                        salaNome = salaNome,
+                        estadoEncontrado = estadoEncontrado
+                    )
+                }
+                
+                result.fold(
+                    onSuccess = { coleta ->
+                        Log.d("ScannerViewModel", "✓ Coleta realizada com sucesso!")
+                        Log.d("ScannerViewModel", "  Patrimônio: ${patrimonio.numeroPatrimonio}")
+                        Log.d("ScannerViewModel", "  Sala: $salaNome")
+                        Log.d("ScannerViewModel", "  Estado: $estadoEncontrado")
+                        
+                        // Incrementar contador de coletas
+                        preferencesManager.incrementCollectionCount()
+                        
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            statusMessage = "Coleta realizada com sucesso!",
+                            successMessage = "Patrimônio ${patrimonio.numeroPatrimonio} coletado com sucesso! Estado: $estadoEncontrado",
+                            scanResult = null, // Limpar resultado para permitir nova coleta
+                            errorMessage = null
+                        )
+                        
+                        // Atualizar contador de coletas
+                        loadColetasCount()
+                        
+                        // Verificar se deve sincronizar automaticamente
+                        checkAutoSyncByCount()
+                    },
+                    onFailure = { exception ->
+                        Log.e("ScannerViewModel", "✗ Erro ao coletar patrimônio", exception)
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            statusMessage = "Erro ao coletar",
+                            errorMessage = "Erro ao coletar patrimônio: ${exception.message}",
+                            successMessage = null
+                        )
+                    }
+                )
+                
             } catch (e: Exception) {
-                Log.e("ScannerViewModel", "Erro inesperado ao coletar", e)
+                Log.e("ScannerViewModel", "✗ Erro inesperado ao coletar", e)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     statusMessage = "Erro ao coletar",
@@ -338,6 +404,7 @@ data class ScannerUiState(
     val isLoading: Boolean = false,
     val statusMessage: String = "Iniciando scanner...",
     val errorMessage: String? = null,
+    val successMessage: String? = null,
     val scanResult: ScanResult? = null,
     val totalColetas: Int = 0
 )

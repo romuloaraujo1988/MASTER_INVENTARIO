@@ -12,8 +12,9 @@ import com.inventario.model.Inventario;
 import com.inventario.model.Patrimonio;
 import com.inventario.model.Sala;
 import com.inventario.model.Usuario;
+import com.inventario.offline.ColetaOfflineService;
+import com.inventario.offline.OfflineManager;
 import com.inventario.util.SoundNotification;
-import com.inventario.view.ui.ModernButtons;
 import com.inventario.view.ui.ModernComboBox;
 import java.util.List;
 import java.util.Optional;
@@ -23,8 +24,12 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
+import java.awt.Cursor;
+import java.awt.FontMetrics;
+import java.awt.GradientPaint;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.text.SimpleDateFormat;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.sql.Timestamp;
@@ -46,6 +51,7 @@ public class ColetaFrame_v2 extends JFrame {
     private JButton btnBuscar;
 
     private JButton btnFinalizarColeta; // Botão para finalizar coleta na sala
+    private JButton btnReabrirColeta; // Botão para reabrir coleta da sala (apenas admin/supervisor)
     private JButton btnRemoverItem; // Botão para remover item (não disponível para coletor)
     private JLabel lblResumoSala;
     private JLabel lblInventarioAtual;
@@ -72,6 +78,10 @@ public class ColetaFrame_v2 extends JFrame {
     private JScrollPane scrollResultados;
     private JPanel panelBuscaDescricao;
     private Patrimonio patrimonioSelecionadoDescricao;
+    
+    // Componentes para indicador de loading
+    private JLabel lblLoadingDescricao;
+    private JProgressBar progressBarDescricao;
 
     // Componentes para agrupamento de itens sem etiqueta
     private JButton btnVerItensAgrupados;
@@ -104,7 +114,6 @@ public class ColetaFrame_v2 extends JFrame {
     private JTextField campoDescricaoSemPatrimonio;
 
     // Novos componentes para a interface moderna de itens sem patrimônio
-    private JComboBox<String> comboCategoriaSemPatrimonio;
     private JTextArea areaObservacoesSemPatrimonio;
     private JButton btnRegistrarSemPatrimonio;
     private JButton btnRemoverSemPatrimonio;
@@ -121,24 +130,28 @@ public class ColetaFrame_v2 extends JFrame {
     //private JPanel painelSugestoes;
     //private JLabel lblSugestoes;
 
-    // === SWING: DAOs (sem Spring) ===
-    private SalaDAO salaDAO;
     private PatrimonioDAO patrimonioDAO;
     private ColetaDAO coletaDAO;
     private InventarioDAO inventarioDAO;
     private SalaInventarioDAO salaInventarioDAO;
     private ParticipanteInventarioDAO participanteInventarioDAO;
+    
+    // === OFFLINE: Serviços de modo offline ===
+    private ColetaOfflineService coletaOfflineService;
+    private OfflineManager offlineManager;
 
     private Patrimonio patrimonioSelecionado;
     private long ultimaDigitacao = 0;
     private StringBuilder bufferCodigoBarras = new StringBuilder();
     private List<Sala> todasSalas = new ArrayList<>();
     private Usuario usuarioLogado; // Usuário logado para verificar permissões
-    private Timer filtroTimer; // Timer para controlar a filtragem das salas
-    private boolean filtrandoSalas = false; // Flag para controlar se está filtrando salas
 
     // Lista de componentes que devem ser desabilitados até a seleção da sala
     private java.util.List<Component> componentesParaDesabilitar = new ArrayList<>();
+    
+    // Modo de coleta automática com leitor de código de barras
+    private JCheckBox chkColetaAutomatica;
+    private boolean modoColetaAutomatica = false;
 
     public ColetaFrame_v2() {
         this(null); // Chama o construtor com usuário null para compatibilidade
@@ -194,13 +207,19 @@ public class ColetaFrame_v2 extends JFrame {
     }
 
     private void initializeServices() {
-        // === SWING: Inicializar DAOs diretamente ===
-        this.salaDAO = new SalaDAO();
+        new SalaDAO();
         this.patrimonioDAO = new PatrimonioDAO();
         this.coletaDAO = new ColetaDAO();
         this.inventarioDAO = new InventarioDAO();
         this.salaInventarioDAO = new SalaInventarioDAO();
         this.participanteInventarioDAO = new ParticipanteInventarioDAO();
+        
+        // === OFFLINE: Inicializar serviços de modo offline ===
+        this.coletaOfflineService = ColetaOfflineService.getInstance();
+        this.offlineManager = OfflineManager.getInstance();
+        
+        System.out.println("DEBUG: Serviços offline inicializados - Estado: " + 
+            offlineManager.getCurrentState());
     }
 
     private void initializeComponents() {
@@ -212,10 +231,11 @@ public class ColetaFrame_v2 extends JFrame {
         // Color corAviso = new Color(241, 196, 15); // Amarelo moderno
         Color corTexto = new Color(44, 62, 80); // Texto escuro
 
-        // Combo de salas pesquisável com design moderno
+        // Combo de salas simples com barra de rolagem
         comboSalas = ModernComboBox.standard(new Sala[0]);
-        comboSalas.setEditable(true);
-        comboSalas.setPreferredSize(new Dimension(350, 35));
+        comboSalas.setEditable(false); // Não editável - apenas seleção
+        comboSalas.setPreferredSize(new Dimension(500, 35));
+        comboSalas.setMaximumRowCount(20); // Mostrar até 20 salas por vez com scroll
         comboSalas.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index,
@@ -223,43 +243,13 @@ public class ColetaFrame_v2 extends JFrame {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (value instanceof Sala) {
                     Sala sala = (Sala) value;
-                    setText(sala.getNumeroSala());
+                    setText(sala.getIdentificacaoCompleta());
+                } else if (value == null) {
+                    setText("-- Selecione uma sala --");
+                    setForeground(new Color(150, 150, 150));
                 }
+                setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
                 return this;
-            }
-        });
-
-        // Configurar filtro para o combo pesquisável
-        JTextField editorCombo = (JTextField) comboSalas.getEditor().getEditorComponent();
-        editorCombo.addKeyListener(new KeyListener() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-                // Permitir navegação normal com setas
-                if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN ||
-                        e.getKeyCode() == KeyEvent.VK_ENTER || e.getKeyCode() == KeyEvent.VK_TAB) {
-                    return;
-                }
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-                // Só filtrar se não for tecla de navegação
-                if (e.getKeyCode() != KeyEvent.VK_UP && e.getKeyCode() != KeyEvent.VK_DOWN &&
-                        e.getKeyCode() != KeyEvent.VK_ENTER && e.getKeyCode() != KeyEvent.VK_TAB &&
-                        e.getKeyCode() != KeyEvent.VK_ESCAPE) {
-
-                    // Usar Timer para evitar filtros excessivos
-                    if (filtroTimer != null) {
-                        filtroTimer.stop();
-                    }
-                    filtroTimer = new Timer(300, evt -> filtrarSalas(editorCombo.getText()));
-                    filtroTimer.setRepeats(false);
-                    filtroTimer.start();
-                }
             }
         });
 
@@ -291,7 +281,7 @@ public class ColetaFrame_v2 extends JFrame {
         });
 
         // Botão de busca com design moderno
-        btnBuscar = ModernButtons.secondary("Buscar Item");
+        btnBuscar = createStyledButton("Buscar Item", new Color(108, 117, 125));
 
         // Painel de informações do item pesquisado com design moderno
         panelInfoItem = new JPanel(new GridBagLayout());
@@ -408,7 +398,7 @@ public class ColetaFrame_v2 extends JFrame {
         comboCategoriasBusca.setForeground(new Color(108, 117, 125));
         comboCategoriasBusca.setEnabled(false);
 
-        btnBuscarDescricao = ModernButtons.secondary("🔍 Buscar");
+        btnBuscarDescricao = createStyledButton("🔍 Buscar", new Color(108, 117, 125));
         btnBuscarDescricao.setEnabled(false);
 
         // Tabela de resultados da busca por descrição
@@ -450,7 +440,7 @@ public class ColetaFrame_v2 extends JFrame {
         scrollItensAgrupados.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
         // Botão para ver itens agrupados com design moderno
-        btnVerItensAgrupados = ModernButtons.secondary("📊 Ver Itens Sem Etiqueta Agrupados");
+        btnVerItensAgrupados = createStyledButton("📊 Ver Itens Sem Etiqueta Agrupados", new Color(52, 152, 219));
         btnVerItensAgrupados.setEnabled(false);
 
         // Painel para itens agrupados (inicialmente oculto)
@@ -525,7 +515,7 @@ public class ColetaFrame_v2 extends JFrame {
         panelBuscaDescricao.add(lblInstrucao, BorderLayout.SOUTH);
 
         // Botão coletar com design moderno
-        btnColetar = ModernButtons.primary("Registrar");
+        btnColetar = createStyledButton("✅ Registrar", new Color(46, 204, 113));
         btnColetar.setEnabled(false);
         btnColetar.setToolTipText("Clique para registrar o item encontrado ou pressione F4");
 
@@ -543,21 +533,36 @@ public class ColetaFrame_v2 extends JFrame {
         });
 
         // Botão remover item com design moderno
-        btnRemoverItem = ModernButtons.danger("🗑️ Remover Item");
+        btnRemoverItem = createStyledButton("🗑️ Remover", new Color(231, 76, 60));
         btnRemoverItem.setEnabled(false);
-        btnRemoverItem.setToolTipText("Clique para remover o item selecionado");
+        btnRemoverItem.setToolTipText("Clique para remover o item selecionado (apenas Admin/Supervisor)");
 
         // Controle de visibilidade baseado no perfil do usuário
-        // Permitir que todos os usuários logados vejam o botão de remover item
-        boolean visivel = usuarioLogado != null;
-        System.out.println("DEBUG: btnRemoverItem.setVisible(" + visivel + ") - Usuario: " +
-                (usuarioLogado != null ? usuarioLogado.getNomeCompleto() : "null"));
-        btnRemoverItem.setVisible(visivel);
+        // Apenas administradores e supervisores podem remover itens
+        boolean podeRemover = usuarioLogado != null && 
+                             ("ADMIN".equals(usuarioLogado.getPerfil().name()) || 
+                              "SUPERVISOR".equals(usuarioLogado.getPerfil().name()));
+        System.out.println("DEBUG: btnRemoverItem.setVisible(" + podeRemover + ") - Usuario: " +
+                (usuarioLogado != null ? usuarioLogado.getNomeCompleto() + " (" + usuarioLogado.getPerfil() + ")" : "null"));
+        btnRemoverItem.setVisible(podeRemover);
 
         // Botão para finalizar coleta na sala com design moderno
-        btnFinalizarColeta = ModernButtons.primary("🏁 Finalizar Coleta da Sala");
+        btnFinalizarColeta = createStyledButton("🏁 Finalizar", new Color(40, 167, 69));
         btnFinalizarColeta.setEnabled(false);
         btnFinalizarColeta.setToolTipText("Marcar a coleta desta sala como finalizada");
+
+        // Botão para reabrir coleta da sala (apenas admin/supervisor)
+        btnReabrirColeta = createStyledButton("⚠️ Reabrir", new Color(255, 193, 7));
+        btnReabrirColeta.setPreferredSize(new Dimension(140, 35));
+        btnReabrirColeta.setEnabled(false);
+        btnReabrirColeta.setToolTipText("Reabrir uma sala finalizada para permitir novas coletas");
+        // Controlar visibilidade baseado no perfil do usuário
+        boolean podeReabrir = usuarioLogado != null && 
+                             ("ADMIN".equals(usuarioLogado.getPerfil().name()) || 
+                              "SUPERVISOR".equals(usuarioLogado.getPerfil().name()));
+        btnReabrirColeta.setVisible(podeReabrir);
+        System.out.println("DEBUG: btnReabrirColeta.setVisible(" + podeReabrir + ") - Usuario: " +
+                (usuarioLogado != null ? usuarioLogado.getNomeCompleto() + " (" + usuarioLogado.getPerfil() + ")" : "null"));
 
         // Labels de resumo
         lblResumoSala = new JLabel("Selecione uma sala para iniciar a coleta");
@@ -631,6 +636,11 @@ public class ColetaFrame_v2 extends JFrame {
         componentesParaDesabilitar.add(btnRemoverItem);
 
         componentesParaDesabilitar.add(btnFinalizarColeta);
+        
+        // Adicionar botão reabrir à lista (será controlado separadamente)
+        if (btnReabrirColeta.isVisible()) {
+            componentesParaDesabilitar.add(btnReabrirColeta);
+        }
 
         // Componentes da nova interface de itens sem patrimônio serão controlados por
         // habilitarComponentesPorAba
@@ -641,6 +651,11 @@ public class ColetaFrame_v2 extends JFrame {
         configurarBotaoComEstiloDesabilitado(btnRemoverItem, new Color(231, 76, 60), new Color(240, 140, 130));
 
         configurarBotaoComEstiloDesabilitado(btnFinalizarColeta, new Color(40, 167, 69), new Color(120, 200, 140));
+        
+        // Configurar estilo do botão reabrir (amarelo/laranja para ação de aviso)
+        if (btnReabrirColeta.isVisible()) {
+            configurarBotaoComEstiloDesabilitado(btnReabrirColeta, new Color(255, 193, 7), new Color(255, 220, 100));
+        }
 
         // Configurar estilo dos novos botões da aba de itens sem patrimônio (serão
         // criados depois)
@@ -727,15 +742,19 @@ public class ColetaFrame_v2 extends JFrame {
 
         gbcSala.gridx = 1;
         gbcSala.gridy = 1;
-        gbcSala.weightx = 0.3;
+        gbcSala.weightx = 1.0;
         gbcSala.fill = GridBagConstraints.HORIZONTAL;
-        comboSalas.setPreferredSize(new Dimension(350, 25));
         panelSelecaoSala.add(comboSalas, gbcSala);
 
-        gbcSala.gridx = 2;
-        gbcSala.gridy = 1;
-        gbcSala.weightx = 0.7;
-        gbcSala.insets = new Insets(5, 20, 5, 5);
+        // Label de resumo abaixo do combo
+        gbcSala.gridx = 0;
+        gbcSala.gridy = 2;
+        gbcSala.gridwidth = 2;
+        gbcSala.weightx = 1.0;
+        gbcSala.fill = GridBagConstraints.HORIZONTAL;
+        gbcSala.insets = new Insets(5, 8, 5, 8);
+        lblResumoSala.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblResumoSala.setForeground(new Color(100, 100, 100));
         panelSelecaoSala.add(lblResumoSala, gbcSala);
 
         panelSuperior.add(panelSelecaoSala, BorderLayout.CENTER);
@@ -759,6 +778,20 @@ public class ColetaFrame_v2 extends JFrame {
         panelBusca.add(lblBusca);
         panelBusca.add(campoBusca);
         panelBusca.add(btnBuscar);
+        
+        // Checkbox para modo de coleta automática com leitor
+        chkColetaAutomatica = new JCheckBox("⚡ Coleta Automática (Leitor de Código)");
+        chkColetaAutomatica.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        chkColetaAutomatica.setForeground(new Color(52, 152, 219));
+        chkColetaAutomatica.setBackground(Color.WHITE);
+        chkColetaAutomatica.setToolTipText("Ativa coleta automática ao escanear código de barras");
+        chkColetaAutomatica.addActionListener(e -> {
+            modoColetaAutomatica = chkColetaAutomatica.isSelected();
+            if (modoColetaAutomatica) {
+                campoBusca.requestFocusInWindow();
+            }
+        });
+        panelBusca.add(chkColetaAutomatica);
 
         // Panel de histórico - SEMPRE VISÍVEL com design moderno
         JPanel panelHistorico = new JPanel(new BorderLayout());
@@ -783,6 +816,11 @@ public class ColetaFrame_v2 extends JFrame {
         }
         
         panelBotoesHistorico.add(btnFinalizarColeta);
+        
+        // Adicionar o botão reabrir se visível (apenas admin/supervisor)
+        if (btnReabrirColeta.isVisible()) {
+            panelBotoesHistorico.add(btnReabrirColeta);
+        }
 
 
         panelHistorico.add(scrollHistorico, BorderLayout.CENTER);
@@ -858,6 +896,7 @@ public class ColetaFrame_v2 extends JFrame {
                         corTexto),
                 BorderFactory.createEmptyBorder(10, 15, 15, 15)));
         panelAcoes.setBackground(Color.WHITE);
+        panelAcoes.setPreferredSize(new Dimension(0, 280)); // Aumentar altura para mostrar botão completo
 
         panelFormulario = new JPanel(new GridBagLayout());
         panelFormulario.setBackground(Color.WHITE);
@@ -1078,7 +1117,7 @@ public class ColetaFrame_v2 extends JFrame {
                 BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
                 BorderFactory.createEmptyBorder(5, 10, 5, 10)));
 
-        btnBuscarDescricao = ModernButtons.secondary("🔍 Pesquisar");
+        btnBuscarDescricao = createStyledButton("🔍 Pesquisar", new Color(108, 117, 125));
         btnBuscarDescricao.addActionListener(e -> buscarPorDescricao());
         
         // Listener para Enter no campo de busca
@@ -1134,6 +1173,31 @@ public class ColetaFrame_v2 extends JFrame {
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 13));
         lblTitulo.setForeground(corTexto);
 
+        // Painel de loading (inicialmente oculto)
+        JPanel painelLoading = new JPanel(new GridBagLayout());
+        painelLoading.setBackground(Color.WHITE);
+        painelLoading.setVisible(false);
+        
+        GridBagConstraints gbcLoading = new GridBagConstraints();
+        gbcLoading.gridx = 0;
+        gbcLoading.gridy = 0;
+        gbcLoading.insets = new Insets(10, 10, 10, 10);
+        
+        // Label de loading com ícone animado
+        lblLoadingDescricao = new JLabel("🔍 Pesquisando descrições...");
+        lblLoadingDescricao.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblLoadingDescricao.setForeground(new Color(52, 152, 219));
+        painelLoading.add(lblLoadingDescricao, gbcLoading);
+        
+        gbcLoading.gridy = 1;
+        progressBarDescricao = new JProgressBar();
+        progressBarDescricao.setIndeterminate(true);
+        progressBarDescricao.setPreferredSize(new Dimension(300, 25));
+        progressBarDescricao.setStringPainted(true);
+        progressBarDescricao.setString("Aguarde...");
+        progressBarDescricao.setForeground(new Color(52, 152, 219));
+        painelLoading.add(progressBarDescricao, gbcLoading);
+
         // Tabela de resultados - apenas Descrição
         String[] colunas = { "Descrição" };
         modeloTabelaResultados = new DefaultTableModel(colunas, 0) {
@@ -1170,13 +1234,18 @@ public class ColetaFrame_v2 extends JFrame {
         JScrollPane scrollPane = new JScrollPane(tabelaResultadosDescricao);
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
 
+        // Painel central que alterna entre loading e tabela
+        JPanel painelCentral = new JPanel(new CardLayout());
+        painelCentral.add(scrollPane, "tabela");
+        painelCentral.add(painelLoading, "loading");
+
         // Instrução
         JLabel lblInstrucao = new JLabel("<html><i>Clique em uma descrição para usá-la no formulário →</i></html>");
         lblInstrucao.setFont(new Font("Segoe UI", Font.ITALIC, 10));
         lblInstrucao.setForeground(new Color(120, 120, 120));
 
         painel.add(lblTitulo, BorderLayout.NORTH);
-        painel.add(scrollPane, BorderLayout.CENTER);
+        painel.add(painelCentral, BorderLayout.CENTER);
         painel.add(lblInstrucao, BorderLayout.SOUTH);
 
         return painel;
@@ -1292,49 +1361,29 @@ public class ColetaFrame_v2 extends JFrame {
         painelBotoes.setBackground(Color.WHITE);
 
         // Criar botões Registrar e Limpar
-        btnRegistrarSemPatrimonio = new JButton("✅ Registrar");
-        btnRegistrarSemPatrimonio.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        btnRegistrarSemPatrimonio = createStyledButton("✅ Registrar", new Color(46, 204, 113));
         btnRegistrarSemPatrimonio.setPreferredSize(new Dimension(120, 32));
-        btnRegistrarSemPatrimonio.setBackground(new Color(46, 204, 113));
-        btnRegistrarSemPatrimonio.setForeground(Color.WHITE);
-        btnRegistrarSemPatrimonio.setFocusPainted(false);
-        btnRegistrarSemPatrimonio.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnRegistrarSemPatrimonio.addActionListener(e -> registrarColetaComDescricaoSelecionada());
 
-        JButton btnLimpar = new JButton("🗑️ Limpar");
-        btnLimpar.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        JButton btnLimpar = createStyledButton("🗑️ Limpar", new Color(108, 117, 125));
         btnLimpar.setPreferredSize(new Dimension(120, 32));
-        btnLimpar.setBackground(new Color(149, 165, 166));
-        btnLimpar.setForeground(Color.WHITE);
-        btnLimpar.setFocusPainted(false);
-        btnLimpar.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnLimpar.addActionListener(e -> limparFormularioSemPatrimonio());
 
-        btnRemoverSemPatrimonio = new JButton("❌ Remover");
-        btnRemoverSemPatrimonio.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        btnRemoverSemPatrimonio = createStyledButton("❌ Remover", new Color(231, 76, 60));
         btnRemoverSemPatrimonio.setPreferredSize(new Dimension(120, 32));
-        btnRemoverSemPatrimonio.setBackground(new Color(231, 76, 60));
-        btnRemoverSemPatrimonio.setForeground(Color.WHITE);
-        btnRemoverSemPatrimonio.setFocusPainted(false);
-        btnRemoverSemPatrimonio.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnRemoverSemPatrimonio.setEnabled(false);
         btnRemoverSemPatrimonio.addActionListener(e -> removerItemSemPatrimonioSelecionado());
         
-        // Ocultar botão remover para coletores (apenas admin e coordenador podem remover)
+        // Ocultar botão remover para coletores (apenas admin e supervisor podem remover)
         if (usuarioLogado != null) {
             String perfil = usuarioLogado.getPerfil().name();
-            btnRemoverSemPatrimonio.setVisible("ADMIN".equals(perfil) || "COORDENADOR".equals(perfil));
+            btnRemoverSemPatrimonio.setVisible("ADMIN".equals(perfil) || "SUPERVISOR".equals(perfil));
         } else {
             btnRemoverSemPatrimonio.setVisible(false);
         }
 
-        JButton btnAtualizar = new JButton("🔄 Atualizar");
-        btnAtualizar.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        JButton btnAtualizar = createStyledButton("🔄 Atualizar", new Color(52, 152, 219));
         btnAtualizar.setPreferredSize(new Dimension(120, 32));
-        btnAtualizar.setBackground(new Color(52, 152, 219));
-        btnAtualizar.setForeground(Color.WHITE);
-        btnAtualizar.setFocusPainted(false);
-        btnAtualizar.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnAtualizar.addActionListener(e -> carregarTodosItensSemPatrimonio());
 
         // Adicionar botões na ordem: Registrar, Limpar, Remover (se visível), Atualizar
@@ -1381,7 +1430,7 @@ public class ColetaFrame_v2 extends JFrame {
         tabelaSemPatrimonio.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 boolean temSelecao = tabelaSemPatrimonio.getSelectedRow() != -1;
-                // Só habilitar se houver seleção E o botão estiver visível (admin/coordenador)
+                // Só habilitar se houver seleção E o botão estiver visível (admin/supervisor)
                 btnRemoverSemPatrimonio.setEnabled(temSelecao && btnRemoverSemPatrimonio.isVisible());
             }
         });
@@ -1471,6 +1520,17 @@ public class ColetaFrame_v2 extends JFrame {
             return;
         }
 
+        // Limpar descrição removendo contadores "(X pendente(s))" se existirem
+        String descricaoLimpa = descricao;
+        int indexParenteses = descricao.lastIndexOf(" (");
+        if (indexParenteses > 0 && descricao.endsWith(")")) {
+            String possivelContador = descricao.substring(indexParenteses);
+            // Verificar se é realmente um contador (contém "pendente")
+            if (possivelContador.toLowerCase().contains("pendente")) {
+                descricaoLimpa = descricao.substring(0, indexParenteses).trim();
+            }
+        }
+
         String observacoes = areaObservacoesSemPatrimonio.getText().trim();
 
         try {
@@ -1533,11 +1593,14 @@ public class ColetaFrame_v2 extends JFrame {
             coleta.setEstadoEncontrado("N/A");
             coleta.setDivergencia(false);
             coleta.setSemEtiqueta(true);
-            coleta.setDescricaoItemSemEtiqueta(descricao);
+            coleta.setDescricaoItemSemEtiqueta(descricaoLimpa); // Usar descrição limpa sem contadores
             coleta.setCategoriaItemSemEtiqueta("OUTROS"); // Categoria padrão
 
-            // Inserir no banco
-            coletaDAO.inserirColeta(coleta);
+            // Inserir no banco (usando serviço offline)
+            coletaOfflineService.salvarColeta(coleta);
+            
+            System.out.println("DEBUG: Coleta sem etiqueta salva - Modo: " + 
+                offlineManager.getCurrentState());
 
             // Reproduzir som de sucesso
             SoundNotification.playColetaSalvaSound();
@@ -1649,12 +1712,7 @@ public class ColetaFrame_v2 extends JFrame {
     }
 
     private void setupEventListeners() {
-        comboSalas.addActionListener(e -> {
-            // Só executar se não estiver filtrando
-            if (!filtrandoSalas) {
-                carregarDadosSala();
-            }
-        });
+        comboSalas.addActionListener(e -> carregarDadosSala());
         btnBuscar.addActionListener(e -> buscarPatrimonio());
         campoBusca.addActionListener(e -> buscarPatrimonio());
         btnColetar.addActionListener(e -> registrarItemEncontrado());
@@ -1679,14 +1737,25 @@ public class ColetaFrame_v2 extends JFrame {
 
         // Listener para o botão de finalização da coleta
         btnFinalizarColeta.addActionListener(e -> finalizarColetaSala());
+        
+        // Listener para o botão de reabertura da coleta (apenas admin/supervisor)
+        if (btnReabrirColeta.isVisible()) {
+            btnReabrirColeta.addActionListener(e -> reabrirColetaSala());
+        }
 
-        // Listener para seleção na tabela de histórico (para habilitar/desabilitar
-        // botões)
+        // Listener para seleção na tabela de histórico (para habilitar/desabilitar botões)
         tabelaHistorico.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 // Habilitar botão de finalização se há uma sala selecionada
                 Sala salaSelecionada = (Sala) comboSalas.getSelectedItem();
                 btnFinalizarColeta.setEnabled(salaSelecionada != null);
+                
+                // Habilitar botão remover se há item selecionado na tabela E usuário tem permissão
+                int linhaSelecionada = tabelaHistorico.getSelectedRow();
+                boolean podeRemover = usuarioLogado != null && 
+                                     ("ADMIN".equals(usuarioLogado.getPerfil().name()) || 
+                                      "SUPERVISOR".equals(usuarioLogado.getPerfil().name()));
+                btnRemoverItem.setEnabled(linhaSelecionada != -1 && podeRemover);
             }
         });
 
@@ -1721,21 +1790,59 @@ public class ColetaFrame_v2 extends JFrame {
     // Métodos auxiliares (copiados da classe original)
     private void carregarSalas() {
         try {
-            todasSalas = salaDAO.listarSalas();
+            // Buscar inventário ativo
+            Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
+            
+            if (inventarioAtivo == null) {
+                todasSalas = new ArrayList<>();
+                JOptionPane.showMessageDialog(this, 
+                    "Nenhum inventário ativo encontrado.\nNão é possível realizar coletas.",
+                    "Aviso", JOptionPane.WARNING_MESSAGE);
+            } else {
+                System.out.println("DEBUG ColetaFrame: Inventário ativo encontrado: " + inventarioAtivo.getNome() + " (ID: " + inventarioAtivo.getId() + ")");
+                
+                // Carregar apenas salas abertas (não finalizadas) para o inventário ativo
+                todasSalas = salaInventarioDAO.buscarSalasAbertasParaColeta(inventarioAtivo.getId());
+                
+                System.out.println("DEBUG ColetaFrame: Carregadas " + todasSalas.size() + " salas abertas para coleta");
+                for (Sala sala : todasSalas) {
+                    System.out.println("  - " + sala.getIdentificacaoCompleta());
+                }
+                
+                // Se não encontrou salas vinculadas, carregar TODAS as salas ativas como fallback
+                if (todasSalas.isEmpty()) {
+                    System.out.println("DEBUG ColetaFrame: Nenhuma sala vinculada encontrada, carregando TODAS as salas ativas");
+                    todasSalas = salaInventarioDAO.buscarTodasSalasAtivas();
+                    
+                    if (todasSalas.isEmpty()) {
+                        JOptionPane.showMessageDialog(this, 
+                            "Nenhuma sala ativa encontrada no sistema.\n" +
+                            "Cadastre salas antes de realizar coletas.",
+                            "Aviso", JOptionPane.WARNING_MESSAGE);
+                    } else {
+                        System.out.println("DEBUG ColetaFrame: Carregadas " + todasSalas.size() + " salas ativas (fallback)");
+                        JOptionPane.showMessageDialog(this, 
+                            "Carregadas " + todasSalas.size() + " salas ativas.\n" +
+                            "Nota: Estas salas não estão vinculadas ao inventário atual,\n" +
+                            "mas você pode realizar coletas normalmente.",
+                            "Informação", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                }
+            }
         } catch (Exception e) {
             todasSalas = new ArrayList<>();
-            JOptionPane.showMessageDialog(this, "Erro ao carregar salas: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Erro ao carregar salas: " + e.getMessage(),
+                "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
+        
+        // Preencher combo com todas as salas
         comboSalas.removeAllItems();
         comboSalas.addItem(null);
         for (Sala sala : todasSalas) {
             comboSalas.addItem(sala);
         }
-
-        if (todasSalas.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Nenhuma sala encontrada no sistema.",
-                    "Aviso", JOptionPane.WARNING_MESSAGE);
-        }
+        System.out.println("DEBUG ColetaFrame: Combo preenchido com " + comboSalas.getItemCount() + " itens (incluindo null)");
     }
 
     private void desabilitarComponentes() {
@@ -1885,51 +1992,7 @@ public class ColetaFrame_v2 extends JFrame {
         repaint();
     }
 
-    private void filtrarSalas(String filtro) {
-        if (todasSalas.isEmpty() || filtrandoSalas) {
-            return;
-        }
 
-        filtrandoSalas = true;
-
-        try {
-            // Remover temporariamente o ActionListener para evitar loops
-            ActionListener[] listeners = comboSalas.getActionListeners();
-            for (ActionListener listener : listeners) {
-                comboSalas.removeActionListener(listener);
-            }
-
-            comboSalas.removeAllItems();
-            comboSalas.addItem(null);
-
-            if (filtro == null || filtro.trim().isEmpty()) {
-                for (Sala sala : todasSalas) {
-                    comboSalas.addItem(sala);
-                }
-            } else {
-                String filtroLower = filtro.toLowerCase();
-                for (Sala sala : todasSalas) {
-                    String identificacao = sala.getIdentificacaoCompleta().toLowerCase();
-                    if (identificacao.contains(filtroLower)) {
-                        comboSalas.addItem(sala);
-                    }
-                }
-            }
-
-            // Restaurar os ActionListeners
-            for (ActionListener listener : listeners) {
-                comboSalas.addActionListener(listener);
-            }
-
-            // Só mostrar popup se há filtro e resultados
-            if (filtro != null && !filtro.trim().isEmpty() && comboSalas.getItemCount() > 1) {
-                comboSalas.showPopup();
-            }
-
-        } finally {
-            filtrandoSalas = false;
-        }
-    }
 
     private void carregarDadosSala() {
         System.out.println("DEBUG: carregarDadosSala() chamado");
@@ -1960,7 +2023,7 @@ public class ColetaFrame_v2 extends JFrame {
             // Habilitar componentes quando uma sala válida é selecionada
             habilitarComponentes();
 
-            carregarHistoricoColeta(salaSelecionada.getIdentificacaoCompleta());
+            carregarHistoricoColeta(salaSelecionada.getNumeroSala());
             
             // Carregar itens sem patrimônio se estiver na aba correspondente
             if (tabbedPane.getSelectedIndex() == 1) {
@@ -1981,10 +2044,22 @@ public class ColetaFrame_v2 extends JFrame {
                         String.format("Coletando em: %s [FINALIZADA]", salaSelecionada.getIdentificacaoCompleta()));
                 btnFinalizarColeta.setText("Reabrir Coleta da Sala");
                 btnFinalizarColeta.setBackground(new Color(255, 193, 7));
+                
+                // Habilitar botão reabrir e desabilitar finalizar quando sala está finalizada
+                btnFinalizarColeta.setEnabled(false);
+                if (btnReabrirColeta.isVisible()) {
+                    btnReabrirColeta.setEnabled(true);
+                }
             } else {
                 lblResumoSala.setText(String.format("Coletando em: %s", salaSelecionada.getIdentificacaoCompleta()));
-                btnFinalizarColeta.setText("Finalizar Coleta da Sala");
+                btnFinalizarColeta.setText("🏁 Finalizar");
                 btnFinalizarColeta.setBackground(new Color(40, 167, 69));
+                
+                // Habilitar botão finalizar e desabilitar reabrir quando sala não está finalizada
+                btnFinalizarColeta.setEnabled(true);
+                if (btnReabrirColeta.isVisible()) {
+                    btnReabrirColeta.setEnabled(false);
+                }
 
                 // Iniciar coleta se ainda não foi iniciada (registra quem iniciou)
                 if (usuarioLogado != null) {
@@ -2030,28 +2105,56 @@ public class ColetaFrame_v2 extends JFrame {
     }
 
     private void carregarHistoricoColeta(String localizacaoEncontrada) {
+        System.out.println("[DEBUG ColetaFrame] Carregando histórico para localização: '" + localizacaoEncontrada + "'");
+        
         // Limpar dados anteriores
         modeloTabelaHistorico.setRowCount(0);
 
         try {
-            // Buscar APENAS itens COM etiqueta coletados na localização especificada
-            List<Coleta> coletasNaLocalizacao = coletaDAO.buscarColetasComEtiquetaPorLocalizacaoEncontrada(localizacaoEncontrada);
-
-            for (Coleta coleta : coletasNaLocalizacao) {
-                Object[] linha = {
-                        coleta.getDataColetaFormatada(),
-                        coleta.getNumeroPatrimonio(),
-                        coleta.getDescricaoPatrimonio(),
-                        coleta.getEstadoEncontrado()
-                };
-                modeloTabelaHistorico.addRow(linha);
+            // Buscar inventário ativo
+            Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
+            if (inventarioAtivo == null) {
+                System.out.println("[DEBUG ColetaFrame] Nenhum inventário ativo encontrado");
+                return;
             }
+            
+            System.out.println("[DEBUG ColetaFrame] Inventário ativo: " + inventarioAtivo.getNome() + " (ID: " + inventarioAtivo.getId() + ")");
+            
+            // Usar método específico do DAO que faz busca EXATA por localização
+            List<Coleta> coletasNaLocalizacao = coletaDAO.buscarColetasComEtiquetaPorLocalizacaoEncontrada(localizacaoEncontrada);
+            System.out.println("[DEBUG ColetaFrame] Total de coletas COM etiqueta na localização: " + coletasNaLocalizacao.size());
+            
+            // Filtrar apenas coletas do inventário ativo
+            int contador = 0;
+            for (Coleta coleta : coletasNaLocalizacao) {
+                // Verificar se pertence ao inventário ativo
+                if (coleta.getIdInventario() == inventarioAtivo.getId()) {
+                    Object[] linha = {
+                            coleta.getDataColetaFormatada(),
+                            coleta.getNumeroPatrimonio(),
+                            coleta.getDescricaoPatrimonio(),
+                            coleta.getEstadoEncontrado()
+                    };
+                    modeloTabelaHistorico.addRow(linha);
+                    contador++;
+                    
+                    if (contador <= 3) {
+                        System.out.println("[DEBUG ColetaFrame] Coleta " + contador + ": " + 
+                                         coleta.getNumeroPatrimonio() + " - " + 
+                                         coleta.getDescricaoPatrimonio());
+                    }
+                }
+            }
+            
+            System.out.println("[DEBUG ColetaFrame] Total de coletas exibidas no histórico: " + contador);
 
             // Forçar atualização da tabela
             tabelaHistorico.revalidate();
             tabelaHistorico.repaint();
 
         } catch (Exception e) {
+            System.err.println("[DEBUG ColetaFrame] ERRO ao carregar histórico: " + e.getMessage());
+            e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Erro ao carregar histórico: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
         }
@@ -2082,15 +2185,43 @@ public class ColetaFrame_v2 extends JFrame {
                         .findFirst()
                         .orElse(patrimonios.get(0));
 
+                // Verificar se já foi coletado ANTES de exibir informações
+                Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
+                boolean jaColetado = false;
+                
+                if (inventarioAtivo != null) {
+                    jaColetado = coletaDAO.coletaExiste(inventarioAtivo.getId(), patrimonio.getId());
+                }
+
                 exibirInformacoesItem(patrimonio);
                 patrimonioSelecionado = patrimonio;
-                btnColetar.setEnabled(comboSalas.getSelectedItem() != null);
-                btnRemoverItem.setEnabled(patrimonioSelecionado != null && btnRemoverItem.isVisible());
+                
+                // Habilitar botão coletar apenas se não foi coletado e há sala selecionada
+                btnColetar.setEnabled(comboSalas.getSelectedItem() != null && !jaColetado);
+                
+                // Habilitar botão remover se patrimônio está selecionado e usuário tem permissão
+                boolean podeRemover = usuarioLogado != null && 
+                                     ("ADMIN".equals(usuarioLogado.getPerfil().name()) || 
+                                      "SUPERVISOR".equals(usuarioLogado.getPerfil().name()));
+                btnRemoverItem.setEnabled(patrimonioSelecionado != null && podeRemover);
+
+                // Reproduzir som apropriado
+                if (jaColetado) {
+                    SoundNotification.playSound(SoundNotification.SoundType.WARNING);
+                    mostrarFeedbackVisualAviso("Patrimônio já coletado!");
+                } else {
+                    // Som diferente para patrimônio encontrado (não é a coleta ainda)
+                    SoundNotification.playSound(SoundNotification.SoundType.INFO);
+                }
 
                 // Manter foco no campo de pesquisa
                 SwingUtilities.invokeLater(() -> campoBusca.requestFocusInWindow());
             } else {
                 limparInformacoesItem();
+                
+                // Som de erro para patrimônio não encontrado
+                SoundNotification.playSound(SoundNotification.SoundType.ERROR);
+                
                 JOptionPane.showMessageDialog(this,
                         "Patrimônio não encontrado: " + termoBusca,
                         "Item não encontrado", JOptionPane.WARNING_MESSAGE);
@@ -2100,6 +2231,7 @@ public class ColetaFrame_v2 extends JFrame {
             }
 
         } catch (Exception e) {
+            SoundNotification.playSound(SoundNotification.SoundType.ERROR);
             JOptionPane.showMessageDialog(this,
                     "Erro ao buscar patrimônio: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
@@ -2109,10 +2241,33 @@ public class ColetaFrame_v2 extends JFrame {
     private void exibirInformacoesItem(Patrimonio patrimonio) {
         lblNumeroItem.setText(patrimonio.getNumero());
         lblDescricaoItem.setText(patrimonio.getDescricao());
-        lblLocalizacaoOriginal.setText(patrimonio.getNomeSala());
-        lblEstadoOriginal.setText(patrimonio.getEstadoConservacao());
+        lblLocalizacaoOriginal.setText(patrimonio.getNomeSala() != null ? patrimonio.getNomeSala() : "-");
+        lblEstadoOriginal.setText(patrimonio.getEstadoConservacao() != null ? patrimonio.getEstadoConservacao() : "-");
+        
+        // Exibir status do patrimônio (ATIVO, BAIXADO, etc)
+        String status = patrimonio.getStatus();
+        if (status != null && !status.isEmpty()) {
+            lblStatusItem.setText(status);
+            // Colorir baseado no status
+            if ("ATIVO".equals(status)) {
+                lblStatusItem.setForeground(new Color(46, 204, 113)); // Verde
+            } else if ("BAIXADO".equals(status) || "INATIVO".equals(status)) {
+                lblStatusItem.setForeground(new Color(231, 76, 60)); // Vermelho
+            } else {
+                lblStatusItem.setForeground(new Color(241, 196, 15)); // Amarelo
+            }
+        } else {
+            lblStatusItem.setText("-");
+            lblStatusItem.setForeground(new Color(149, 165, 166)); // Cinza
+        }
 
-        comboEstado.setSelectedItem(patrimonio.getEstadoConservacao());
+        // Preencher combo de estado com o estado atual
+        if (patrimonio.getEstadoConservacao() != null) {
+            comboEstado.setSelectedItem(patrimonio.getEstadoConservacao());
+        } else {
+            // Se não tem estado, selecionar "BOM" como padrão
+            comboEstado.setSelectedItem("BOM");
+        }
     }
 
     private void limparInformacoesItem() {
@@ -2120,15 +2275,13 @@ public class ColetaFrame_v2 extends JFrame {
         lblDescricaoItem.setText("-");
         lblLocalizacaoOriginal.setText("-");
         lblEstadoOriginal.setText("-");
+        lblStatusItem.setText("-");
+        lblStatusItem.setForeground(new Color(149, 165, 166)); // Cinza
         patrimonioSelecionado = null;
 
-        // Só desabilitar o botão se não estiver no modo sem etiqueta
-        // Sempre buscar patrimônio já que não há mais checkbox (há aba dedicada para
-        // itens sem etiqueta)
-        if (true) {
-            btnColetar.setEnabled(false);
-            btnRemoverItem.setEnabled(false);
-        }
+        // Desabilitar botões quando não há patrimônio selecionado
+        btnColetar.setEnabled(false);
+        btnRemoverItem.setEnabled(false);
     }
 
     /**
@@ -2142,105 +2295,184 @@ public class ColetaFrame_v2 extends JFrame {
         String termoBusca = campoBuscaDescricao.getText().trim();
 
         if (termoBusca.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Digite uma descrição para buscar.",
-                    "Campo Vazio",
-                    JOptionPane.WARNING_MESSAGE);
+            lblLoadingDescricao.setText("⚠️ Digite uma descrição para buscar");
+            lblLoadingDescricao.setForeground(new Color(241, 196, 15));
+            mostrarLoading(true);
+            
+            Timer timer = new Timer(2000, e -> mostrarLoading(false));
+            timer.setRepeats(false);
+            timer.start();
             return;
         }
 
-        try {
-            // Limpar resultados anteriores
-            modeloTabelaResultados.setRowCount(0);
+        // Mostrar loading
+        mostrarLoading(true);
+        lblLoadingDescricao.setText("🔍 Pesquisando descrições...");
+        lblLoadingDescricao.setForeground(new Color(52, 152, 219));
+        progressBarDescricao.setString("Buscando no banco de dados...");
+        
+        // Desabilitar botão durante busca
+        btnBuscarDescricao.setEnabled(false);
+        campoBuscaDescricao.setEnabled(false);
 
-            // Buscar patrimônios por descrição
-            List<Patrimonio> patrimonios = patrimonioDAO.buscarPorDescricao(termoBusca);
+        // Executar busca em background
+        SwingWorker<ResultadoBusca, Void> worker = new SwingWorker<ResultadoBusca, Void>() {
+            @Override
+            protected ResultadoBusca doInBackground() throws Exception {
+                // Limpar resultados anteriores
+                SwingUtilities.invokeLater(() -> modeloTabelaResultados.setRowCount(0));
 
-            if (patrimonios == null || patrimonios.isEmpty()) {
-                JOptionPane.showMessageDialog(this,
-                        "Nenhuma descrição encontrada com o termo: \"" + termoBusca + "\"\n\n" +
-                                "💡 Dica: Tente usar palavras-chave mais genéricas.",
-                        "Sem Resultados",
-                        JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
+                // Buscar patrimônios por descrição
+                List<Patrimonio> patrimonios = patrimonioDAO.buscarPorDescricao(termoBusca);
 
-            // Buscar inventário ativo para filtrar pendentes
-            Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
-            Integer idInventario = inventarioAtivo != null ? inventarioAtivo.getId() : null;
-            
-            // Filtrar apenas patrimônios pendentes (não coletados)
-            List<Patrimonio> patrimoniosPendentes = new ArrayList<>();
-            for (Patrimonio p : patrimonios) {
-                try {
-                    boolean jaColetado = coletaDAO.coletaExiste(idInventario, p.getId());
-                    if (!jaColetado) {
+                if (patrimonios == null || patrimonios.isEmpty()) {
+                    return new ResultadoBusca(false, "Nenhuma descrição encontrada com o termo: \"" + termoBusca + "\"", 0, 0, 0);
+                }
+
+                // Buscar inventário ativo para filtrar pendentes
+                Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
+                Integer idInventario = inventarioAtivo != null ? inventarioAtivo.getId() : null;
+                
+                // Filtrar apenas patrimônios pendentes (não coletados)
+                List<Patrimonio> patrimoniosPendentes = new ArrayList<>();
+                for (Patrimonio p : patrimonios) {
+                    try {
+                        boolean jaColetado = coletaDAO.coletaExiste(idInventario, p.getId());
+                        if (!jaColetado) {
+                            patrimoniosPendentes.add(p);
+                        }
+                    } catch (Exception e) {
+                        // Em caso de erro, incluir o patrimônio
                         patrimoniosPendentes.add(p);
                     }
+                }
+
+                if (patrimoniosPendentes.isEmpty()) {
+                    return new ResultadoBusca(false, "Todos os patrimônios com essa descrição já foram coletados!", 
+                            patrimonios.size(), 0, patrimonios.size());
+                }
+
+                // Agrupar por descrição única (apenas pendentes)
+                java.util.Set<String> descricoesUnicas = new java.util.LinkedHashSet<>();
+                java.util.Map<String, Integer> contagemPorDescricao = new java.util.HashMap<>();
+                
+                for (Patrimonio p : patrimoniosPendentes) {
+                    String desc = p.getDescricao();
+                    if (desc != null && !desc.trim().isEmpty()) {
+                        descricoesUnicas.add(desc);
+                        contagemPorDescricao.put(desc, contagemPorDescricao.getOrDefault(desc, 0) + 1);
+                    }
+                }
+
+                // Adicionar à tabela com contagem de pendentes
+                for (String descricao : descricoesUnicas) {
+                    int qtdPendente = contagemPorDescricao.get(descricao);
+                    String descricaoComContagem = String.format("%s (%d pendente%s)", 
+                        descricao, qtdPendente, qtdPendente > 1 ? "s" : "");
+                    Object[] linha = { descricaoComContagem };
+                    SwingUtilities.invokeLater(() -> modeloTabelaResultados.addRow(linha));
+                }
+
+                return new ResultadoBusca(true, "Busca concluída com sucesso!", 
+                        patrimonios.size(), patrimoniosPendentes.size(), 
+                        patrimonios.size() - patrimoniosPendentes.size());
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    ResultadoBusca resultado = get();
+                    
+                    // Ocultar loading
+                    mostrarLoading(false);
+                    
+                    // Reabilitar componentes
+                    btnBuscarDescricao.setEnabled(true);
+                    campoBuscaDescricao.setEnabled(true);
+                    
+                    // Mostrar resultado na label de loading temporariamente
+                    if (resultado.sucesso) {
+                        lblLoadingDescricao.setText(String.format("✅ %d descrição(ões) encontrada(s) | %d pendente(s) | %d coletado(s)", 
+                                modeloTabelaResultados.getRowCount(), resultado.totalPendentes, resultado.totalColetados));
+                        lblLoadingDescricao.setForeground(new Color(46, 204, 113));
+                    } else {
+                        lblLoadingDescricao.setText("ℹ️ " + resultado.mensagem);
+                        lblLoadingDescricao.setForeground(new Color(241, 196, 15));
+                    }
+                    
+                    // Mostrar mensagem temporariamente
+                    mostrarLoading(true);
+                    progressBarDescricao.setVisible(false);
+                    
+                    Timer timer = new Timer(3000, e -> {
+                        mostrarLoading(false);
+                        progressBarDescricao.setVisible(true);
+                    });
+                    timer.setRepeats(false);
+                    timer.start();
+                    
                 } catch (Exception e) {
-                    // Em caso de erro, incluir o patrimônio
-                    patrimoniosPendentes.add(p);
+                    mostrarLoading(false);
+                    btnBuscarDescricao.setEnabled(true);
+                    campoBuscaDescricao.setEnabled(true);
+                    
+                    lblLoadingDescricao.setText("❌ Erro ao buscar: " + e.getMessage());
+                    lblLoadingDescricao.setForeground(new Color(231, 76, 60));
+                    mostrarLoading(true);
+                    progressBarDescricao.setVisible(false);
+                    
+                    Timer timer = new Timer(3000, ev -> {
+                        mostrarLoading(false);
+                        progressBarDescricao.setVisible(true);
+                    });
+                    timer.setRepeats(false);
+                    timer.start();
+                    
+                    e.printStackTrace();
                 }
             }
-
-            if (patrimoniosPendentes.isEmpty()) {
-                JOptionPane.showMessageDialog(this,
-                        "✅ Todos os patrimônios com essa descrição já foram coletados!\n\n" +
-                                "Não há itens pendentes para: \"" + termoBusca + "\"",
-                        "Coleta Completa",
-                        JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
-
-            // Agrupar por descrição única (apenas pendentes)
-            java.util.Set<String> descricoesUnicas = new java.util.LinkedHashSet<>();
-            java.util.Map<String, Integer> contagemPorDescricao = new java.util.HashMap<>();
-            
-            for (Patrimonio p : patrimoniosPendentes) {
-                String desc = p.getDescricao();
-                if (desc != null && !desc.trim().isEmpty()) {
-                    descricoesUnicas.add(desc);
-                    contagemPorDescricao.put(desc, contagemPorDescricao.getOrDefault(desc, 0) + 1);
+        };
+        
+        worker.execute();
+    }
+    
+    /**
+     * Mostra ou oculta o indicador de loading
+     */
+    private void mostrarLoading(boolean mostrar) {
+        // Encontrar o painel central que contém o CardLayout
+        Component[] components = tabelaResultadosDescricao.getParent().getParent().getComponents();
+        for (Component comp : components) {
+            if (comp instanceof JPanel) {
+                JPanel painelCentral = (JPanel) comp;
+                if (painelCentral.getLayout() instanceof CardLayout) {
+                    CardLayout layout = (CardLayout) painelCentral.getLayout();
+                    if (mostrar) {
+                        layout.show(painelCentral, "loading");
+                    } else {
+                        layout.show(painelCentral, "tabela");
+                    }
+                    break;
                 }
             }
-
-            // Adicionar à tabela com contagem de pendentes
-            for (String descricao : descricoesUnicas) {
-                int qtdPendente = contagemPorDescricao.get(descricao);
-                String descricaoComContagem = String.format("%s (%d pendente%s)", 
-                    descricao, qtdPendente, qtdPendente > 1 ? "s" : "");
-                Object[] linha = { descricaoComContagem };
-                modeloTabelaResultados.addRow(linha);
-            }
-
-            // Calcular estatísticas diretamente
-            int totalEncontrados = patrimonios.size();
-            int totalPendentes = patrimoniosPendentes.size();
-            int totalColetados = totalEncontrados - totalPendentes;
-            
-            double percentualPendente = totalEncontrados > 0 ? (totalPendentes * 100.0 / totalEncontrados) : 0;
-            double percentualColetado = totalEncontrados > 0 ? (totalColetados * 100.0 / totalEncontrados) : 0;
-
-            JOptionPane.showMessageDialog(this,
-                    String.format("✅ Encontradas %d descrição(ões) com itens pendentes!\n\n" +
-                            "📊 Estatísticas:\n" +
-                            "   • Total de patrimônios: %d\n" +
-                            "   • Pendentes: %d (%.1f%%)\n" +
-                            "   • Já coletados: %d (%.1f%%)\n\n" +
-                            "💡 Clique em uma linha para usar a descrição no formulário.",
-                            descricoesUnicas.size(),
-                            totalEncontrados,
-                            totalPendentes, percentualPendente,
-                            totalColetados, percentualColetado),
-                    "Busca Concluída - Apenas Pendentes",
-                    JOptionPane.INFORMATION_MESSAGE);
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this,
-                    "Erro ao buscar descrições: " + e.getMessage(),
-                    "Erro",
-                    JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Classe auxiliar para armazenar resultado da busca
+     */
+    private static class ResultadoBusca {
+        boolean sucesso;
+        String mensagem;
+        int totalPendentes;
+        int totalColetados;
+        
+        ResultadoBusca(boolean sucesso, String mensagem, int totalEncontrados, int totalPendentes, int totalColetados) {
+            this.sucesso = sucesso;
+            this.mensagem = mensagem;
+            // totalEncontrados não é usado, apenas totalPendentes e totalColetados
+            this.totalPendentes = totalPendentes;
+            this.totalColetados = totalColetados;
         }
     }
 
@@ -2257,10 +2489,17 @@ public class ColetaFrame_v2 extends JFrame {
         }
 
         try {
-            String descricaoSelecionada = (String) modeloTabelaResultados.getValueAt(linhaSelecionada, 0);
+            String descricaoComContagem = (String) modeloTabelaResultados.getValueAt(linhaSelecionada, 0);
+            
+            // Extrair apenas a descrição, removendo a parte "(X pendente(s))"
+            String descricaoLimpa = descricaoComContagem;
+            int indexParenteses = descricaoComContagem.lastIndexOf(" (");
+            if (indexParenteses > 0) {
+                descricaoLimpa = descricaoComContagem.substring(0, indexParenteses).trim();
+            }
 
-            // Preencher campo de descrição do formulário
-            campoDescricaoSemPatrimonio.setText(descricaoSelecionada);
+            // Preencher campo de descrição do formulário com a descrição limpa
+            campoDescricaoSemPatrimonio.setText(descricaoLimpa);
 
             // Focar no campo de observações
             areaObservacoesSemPatrimonio.requestFocus();
@@ -2275,34 +2514,45 @@ public class ColetaFrame_v2 extends JFrame {
     }
 
     private void registrarItemEncontrado() {
+        System.out.println("DEBUG: registrarItemEncontrado() iniciado");
+        
         // Verificar se o usuário tem permissão para realizar coletas
         if (usuarioLogado == null) {
+            System.out.println("DEBUG: Usuário não autenticado");
             JOptionPane.showMessageDialog(this,
                     "Usuário não autenticado. Faça login para realizar coletas.",
                     "Acesso Negado", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        
+        System.out.println("DEBUG: Usuário autenticado: " + usuarioLogado.getNomeCompleto());
 
         // Buscar inventário ativo para verificar permissão
         try {
             Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
             if (inventarioAtivo == null) {
+                System.out.println("DEBUG: Nenhum inventário ativo encontrado");
                 JOptionPane.showMessageDialog(this, "Nenhum inventário ativo encontrado.",
                         "Erro", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+            
+            System.out.println("DEBUG: Inventário ativo: " + inventarioAtivo.getNome());
 
             // Verificar se o usuário tem autorização para realizar coletas
             Integer autorizacao = verificarAutorizacaoColeta(inventarioAtivo);
 
             if (autorizacao == null) {
+                System.out.println("DEBUG: Usuário sem autorização");
                 JOptionPane.showMessageDialog(this,
                         "Acesso Negado!\n\n" +
                                 "Você não está habilitado para realizar coletas neste inventário.\n" +
-                                "Entre em contato com o coordenador do inventário para obter as permissões necessárias.",
+                                "Entre em contato com o supervisor do inventário para obter as permissões necessárias.",
                         "Acesso Negado", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+            
+            System.out.println("DEBUG: Autorização obtida: " + autorizacao);
 
             // Para admins, buscar ou criar um participante temporário se necessário
             Integer idParticipante = autorizacao;
@@ -2319,6 +2569,7 @@ public class ColetaFrame_v2 extends JFrame {
                 }
             }
         } catch (Exception e) {
+            System.err.println("DEBUG: Erro ao verificar permissões: " + e.getMessage());
             JOptionPane.showMessageDialog(this,
                     "Erro ao verificar permissões: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
@@ -2327,16 +2578,20 @@ public class ColetaFrame_v2 extends JFrame {
 
         Sala salaAtual = (Sala) comboSalas.getSelectedItem();
         if (salaAtual == null) {
+            System.out.println("DEBUG: Nenhuma sala selecionada");
             JOptionPane.showMessageDialog(this, "Selecione uma sala primeiro.",
                     "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        
+        System.out.println("DEBUG: Sala selecionada: " + salaAtual.getIdentificacaoCompleta());
 
         boolean itemSemEtiqueta = false; // Sempre false - itens sem etiqueta são tratados na aba dedicada
 
         // Validações específicas para cada tipo de item
         if (itemSemEtiqueta) {
             if (txtDescricaoSemEtiqueta.getText().trim().isEmpty()) {
+                System.out.println("DEBUG: Descrição vazia para item sem etiqueta");
                 JOptionPane.showMessageDialog(this, "Informe a descrição do item sem etiqueta.",
                         "Aviso", JOptionPane.WARNING_MESSAGE);
                 txtDescricaoSemEtiqueta.requestFocus();
@@ -2344,10 +2599,12 @@ public class ColetaFrame_v2 extends JFrame {
             }
         } else {
             if (patrimonioSelecionado == null) {
+                System.out.println("DEBUG: Nenhum patrimônio selecionado");
                 JOptionPane.showMessageDialog(this, "Busque um patrimônio primeiro ou marque 'Item sem etiqueta'.",
                         "Aviso", JOptionPane.WARNING_MESSAGE);
                 return;
             }
+            System.out.println("DEBUG: Patrimônio selecionado: " + patrimonioSelecionado.getNumero());
         }
 
         try {
@@ -2448,11 +2705,15 @@ public class ColetaFrame_v2 extends JFrame {
                 }
             }
 
-            // Registrar no banco
-            coletaDAO.inserirColeta(coleta);
+            // Registrar no banco (usando serviço offline)
+            System.out.println("DEBUG: Inserindo coleta no banco...");
+            coletaOfflineService.salvarColeta(coleta);
+            System.out.println("DEBUG: Coleta inserida com sucesso! Modo: " + 
+                offlineManager.getCurrentState());
 
-            // Reproduzir som de sucesso
-            SoundNotification.playColetaSalvaSound();
+            // Reproduzir som de sucesso da COLETA (diferente do som de encontrar)
+            SoundNotification.playColetaSalvaSound(); // Som SUCCESS (800Hz, 200ms)
+            System.out.println("DEBUG: Som de coleta salva reproduzido");
 
             // Atualizar estatísticas na tabela SALA_INVENTARIO
             try {
@@ -2465,6 +2726,7 @@ public class ColetaFrame_v2 extends JFrame {
                     // Atualizar estatísticas
                     salaInventarioDAO.atualizarEstatisticas(salaAtual.getIdSala(), inventarioAtivo.getId(), totalItens,
                             itensSemEtiqueta);
+                    System.out.println("DEBUG: Estatísticas atualizadas");
                 }
             } catch (Exception e) {
                 // Log do erro, mas não interrompe o fluxo principal
@@ -2472,22 +2734,29 @@ public class ColetaFrame_v2 extends JFrame {
             }
 
             // Atualizar tabela de histórico
-            carregarHistoricoColeta(salaAtual.getIdentificacaoCompleta());
+            System.out.println("DEBUG: Atualizando histórico...");
+            carregarHistoricoColeta(salaAtual.getNumeroSala());
+
+            // Feedback visual de sucesso - piscar o painel de informações em verde
+            mostrarFeedbackVisualSucesso();
 
             // Limpar formulário
             limparFormulario();
+            System.out.println("DEBUG: Formulário limpo");
 
-            // Manter foco no campo de pesquisa
-            SwingUtilities.invokeLater(() -> campoBusca.requestFocusInWindow());
-
-            String mensagem = itemSemEtiqueta ? "Item sem etiqueta registrado com sucesso!"
-                    : "Patrimônio registrado com sucesso!";
-            JOptionPane.showMessageDialog(this, mensagem, "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            // SEMPRE retornar foco ao campo de pesquisa
+            SwingUtilities.invokeLater(() -> {
+                campoBusca.requestFocusInWindow();
+                campoBusca.selectAll(); // Selecionar todo o texto para facilitar nova digitação
+            });
+            
+            System.out.println("DEBUG: registrarItemEncontrado() concluído com sucesso!");
 
         } catch (Exception e) {
+            System.err.println("DEBUG: ERRO ao registrar item: " + e.getMessage());
+            e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Erro ao registrar item: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
 
@@ -2509,11 +2778,86 @@ public class ColetaFrame_v2 extends JFrame {
                 String textoFinal = campoBusca.getText().trim();
                 // Se o texto ainda tem 6 dígitos, fazer a busca
                 if (textoFinal.length() >= 6 && textoFinal.length() <= 6 && textoFinal.matches("\\d+")) {
-                    SwingUtilities.invokeLater(() -> buscarPatrimonio());
+                    if (modoColetaAutomatica) {
+                        // Modo automático: buscar e coletar imediatamente
+                        SwingUtilities.invokeLater(() -> buscarEColetarAutomaticamente());
+                    } else {
+                        // Modo normal: apenas buscar
+                        SwingUtilities.invokeLater(() -> buscarPatrimonio());
+                    }
                 }
             });
             timer.setRepeats(false);
             timer.start();
+        }
+    }
+    
+    /**
+     * Busca e coleta automaticamente um patrimônio (modo leitor de código de barras)
+     */
+    private void buscarEColetarAutomaticamente() {
+        String termoBusca = campoBusca.getText().trim();
+        
+        if (termoBusca.isEmpty()) {
+            return;
+        }
+        
+        // Verificar se há sala selecionada
+        Sala salaAtual = (Sala) comboSalas.getSelectedItem();
+        if (salaAtual == null) {
+            SoundNotification.playSound(SoundNotification.SoundType.ERROR);
+            mostrarFeedbackVisualErro("Selecione uma sala primeiro!");
+            campoBusca.selectAll();
+            return;
+        }
+
+        try {
+            // Buscar patrimônio
+            Patrimonio patrimonioEncontrado = patrimonioDAO.buscarPorNumero(termoBusca);
+            
+            if (patrimonioEncontrado == null) {
+                SoundNotification.playSound(SoundNotification.SoundType.ERROR);
+                mostrarFeedbackVisualErro("Patrimônio não encontrado: " + termoBusca);
+                campoBusca.selectAll();
+                return;
+            }
+            
+            // Verificar se já foi coletado ANTES de exibir informações
+            Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
+            if (inventarioAtivo != null && coletaDAO.coletaExiste(inventarioAtivo.getId(), patrimonioEncontrado.getId())) {
+                // Exibir informações mesmo se já coletado
+                exibirInformacoesItem(patrimonioEncontrado);
+                patrimonioSelecionado = patrimonioEncontrado;
+                
+                SoundNotification.playSound(SoundNotification.SoundType.WARNING);
+                mostrarFeedbackVisualAviso("Patrimônio já coletado!");
+                campoBusca.selectAll();
+                return;
+            }
+            
+            // Exibir informações
+            exibirInformacoesItem(patrimonioEncontrado);
+            patrimonioSelecionado = patrimonioEncontrado;
+            
+            // Habilitar botão coletar temporariamente para permitir o registro
+            btnColetar.setEnabled(true);
+            
+            // Registrar automaticamente
+            System.out.println("DEBUG: Modo automático - Registrando patrimônio: " + termoBusca);
+            registrarItemEncontrado();
+            
+            // Limpar campo após registro bem-sucedido
+            SwingUtilities.invokeLater(() -> {
+                campoBusca.setText("");
+                campoBusca.requestFocusInWindow();
+            });
+            
+        } catch (Exception e) {
+            SoundNotification.playSound(SoundNotification.SoundType.ERROR);
+            mostrarFeedbackVisualErro("Erro: " + e.getMessage());
+            System.err.println("ERRO no modo automático: " + e.getMessage());
+            e.printStackTrace();
+            campoBusca.selectAll();
         }
     }
 
@@ -2538,6 +2882,9 @@ public class ColetaFrame_v2 extends JFrame {
         // chkSemEtiqueta removido - checkbox não existe mais
         // alternarModoSemEtiqueta() não é mais necessário // Resetar modo
         limparInformacoesItem();
+        
+        // Garantir que o foco volte ao campo de pesquisa
+        SwingUtilities.invokeLater(() -> campoBusca.requestFocusInWindow());
     }
 
     /**
@@ -2728,29 +3075,52 @@ public class ColetaFrame_v2 extends JFrame {
     }
 
     /**
-     * Remove o item selecionado da coleta atual
+     * Remove o item selecionado da coleta atual (da tabela de histórico)
      */
     private void removerItemSelecionado() {
-        // Verificar se há um patrimônio selecionado
-        if (patrimonioSelecionado == null) {
-            JOptionPane.showMessageDialog(this, "Selecione um item para remover.",
-                    "Aviso", JOptionPane.WARNING_MESSAGE);
+        // Verificar permissão do usuário
+        if (usuarioLogado == null || 
+            (!("ADMIN".equals(usuarioLogado.getPerfil().name()) || 
+               "SUPERVISOR".equals(usuarioLogado.getPerfil().name())))) {
+            JOptionPane.showMessageDialog(this, 
+                "Apenas Administradores e Supervisores podem remover itens da coleta.",
+                "Acesso Negado", 
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Verificar se há uma linha selecionada na tabela de histórico
+        int linhaSelecionada = tabelaHistorico.getSelectedRow();
+        if (linhaSelecionada == -1) {
+            JOptionPane.showMessageDialog(this, 
+                "Selecione um item na tabela de histórico para remover.",
+                "Aviso", 
+                JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         // Verificar se há uma sala selecionada
         Sala salaAtual = (Sala) comboSalas.getSelectedItem();
         if (salaAtual == null) {
-            JOptionPane.showMessageDialog(this, "Selecione uma sala para remover o item.",
-                    "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, 
+                "Selecione uma sala primeiro.",
+                "Aviso", 
+                JOptionPane.WARNING_MESSAGE);
             return;
         }
 
+        // Obter dados da linha selecionada
+        String dataHora = (String) modeloTabelaHistorico.getValueAt(linhaSelecionada, 0);
+        String numeroPatrimonio = (String) modeloTabelaHistorico.getValueAt(linhaSelecionada, 1);
+        String descricao = (String) modeloTabelaHistorico.getValueAt(linhaSelecionada, 2);
+        String estado = (String) modeloTabelaHistorico.getValueAt(linhaSelecionada, 3);
+
         // Confirmar remoção
         int confirmacao = JOptionPane.showConfirmDialog(this,
-                "Tem certeza que deseja remover o item da coleta?\n" +
-                        "Patrimônio: " + patrimonioSelecionado.getNumero() + "\n" +
-                        "Descrição: " + patrimonioSelecionado.getDescricao() + "\n\n" +
+                "⚠️ Tem certeza que deseja remover este item da coleta?\n\n" +
+                        "Patrimônio: " + numeroPatrimonio + "\n" +
+                        "Descrição: " + descricao + "\n" +
+                        "Data/Hora: " + dataHora + "\n\n" +
                         "Esta ação não pode ser desfeita!",
                 "Confirmar Remoção",
                 JOptionPane.YES_NO_OPTION,
@@ -2761,37 +3131,22 @@ public class ColetaFrame_v2 extends JFrame {
         }
 
         try {
-            // Buscar a coleta mais recente deste patrimônio na sala atual
-            List<Coleta> coletasDoItem = coletaDAO.buscarPorPatrimonio(patrimonioSelecionado.getId());
-            Coleta coletaParaRemover = null;
-
-            // Para verificar se a coleta é da sala atual, precisamos comparar com o
-            // patrimônio selecionado
-            // que já está na sala atual
-            for (Coleta coleta : coletasDoItem) {
-                if (coleta.getIdPatrimonio() == patrimonioSelecionado.getId()) {
-                    coletaParaRemover = coleta;
-                    break;
-                }
-            }
-
-            if (coletaParaRemover == null) {
-                JOptionPane.showMessageDialog(this, "Este item não foi coletado nesta sala.",
-                        "Aviso", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            // Remover a coleta
+            // Remover a coleta usando os dados da tabela
             boolean sucesso = coletaDAO.excluirColeta(
                     salaAtual.getIdSala(),
-                    patrimonioSelecionado.getNumero(),
-                    coletaParaRemover.getDataColetaFormatada(),
-                    coletaParaRemover.getEstadoEncontrado(),
-                    coletaParaRemover.getObservacaoColeta() != null ? coletaParaRemover.getObservacaoColeta() : "");
+                    numeroPatrimonio,
+                    dataHora,
+                    estado,
+                    ""); // Observações vazias pois não temos na tabela
 
             if (sucesso) {
-                JOptionPane.showMessageDialog(this, "Item removido da coleta com sucesso!",
-                        "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                // Som de sucesso
+                SoundNotification.playSound(SoundNotification.SoundType.SUCCESS);
+                
+                JOptionPane.showMessageDialog(this, 
+                    "✅ Item removido da coleta com sucesso!",
+                    "Sucesso", 
+                    JOptionPane.INFORMATION_MESSAGE);
 
                 // Atualizar estatísticas na tabela SALA_INVENTARIO
                 try {
@@ -2814,19 +3169,33 @@ public class ColetaFrame_v2 extends JFrame {
                 // Recarregar histórico
                 carregarHistoricoColeta(salaAtual.getIdentificacaoCompleta());
 
-                // Limpar seleção atual
-                limparInformacoesItem();
-                campoBusca.setText("");
+                // Limpar seleção atual se o patrimônio removido era o selecionado
+                if (patrimonioSelecionado != null && 
+                    patrimonioSelecionado.getNumero().equals(numeroPatrimonio)) {
+                    limparInformacoesItem();
+                    campoBusca.setText("");
+                }
+                
                 campoBusca.requestFocusInWindow();
 
             } else {
-                JOptionPane.showMessageDialog(this, "Erro ao remover item da coleta. Verifique se o item ainda existe.",
-                        "Erro", JOptionPane.ERROR_MESSAGE);
+                // Som de erro
+                SoundNotification.playSound(SoundNotification.SoundType.ERROR);
+                
+                JOptionPane.showMessageDialog(this, 
+                    "❌ Erro ao remover item da coleta.\nVerifique se o item ainda existe.",
+                    "Erro", 
+                    JOptionPane.ERROR_MESSAGE);
             }
 
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao remover item: " + e.getMessage(),
-                    "Erro", JOptionPane.ERROR_MESSAGE);
+            // Som de erro
+            SoundNotification.playSound(SoundNotification.SoundType.ERROR);
+            
+            JOptionPane.showMessageDialog(this, 
+                "❌ Erro ao remover item: " + e.getMessage(),
+                "Erro", 
+                JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
     }
@@ -2867,7 +3236,7 @@ public class ColetaFrame_v2 extends JFrame {
                             "Sucesso", JOptionPane.INFORMATION_MESSAGE);
 
                     // Atualizar texto do botão
-                    btnFinalizarColeta.setText("Finalizar Coleta da Sala");
+                    btnFinalizarColeta.setText("🏁 Finalizar");
                     btnFinalizarColeta.setBackground(new Color(40, 167, 69));
 
                     // Atualizar resumo da sala
@@ -2935,7 +3304,7 @@ public class ColetaFrame_v2 extends JFrame {
                     "Sucesso", JOptionPane.INFORMATION_MESSAGE);
 
             // Atualizar interface
-            btnFinalizarColeta.setText("Reabrir Coleta da Sala");
+            btnFinalizarColeta.setText("Reabrir Coleta");
             btnFinalizarColeta.setBackground(new Color(255, 193, 7));
 
             // Atualizar resumo da sala
@@ -2945,6 +3314,95 @@ public class ColetaFrame_v2 extends JFrame {
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Erro ao finalizar coleta: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Reabre a coleta de uma sala finalizada
+     * Apenas administradores e supervisores podem executar esta ação
+     */
+    private void reabrirColetaSala() {
+        Sala salaAtual = (Sala) comboSalas.getSelectedItem();
+        if (salaAtual == null) {
+            JOptionPane.showMessageDialog(this, 
+                "Selecione uma sala para reabrir a coleta.",
+                "Aviso", 
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            // Buscar inventário ativo
+            Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
+            if (inventarioAtivo == null) {
+                JOptionPane.showMessageDialog(this, 
+                    "Nenhum inventário ativo encontrado.",
+                    "Erro", 
+                    JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Verificar se a coleta está realmente finalizada
+            if (!salaInventarioDAO.isColetaFinalizada(salaAtual.getIdSala(), inventarioAtivo.getId())) {
+                JOptionPane.showMessageDialog(this,
+                    "Esta sala não está finalizada.\n" +
+                    "Apenas salas finalizadas podem ser reabertas.",
+                    "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Confirmar reabertura com popup de confirmação
+            int confirmacao = JOptionPane.showConfirmDialog(this,
+                "⚠️ ATENÇÃO: Deseja realmente REABRIR a coleta desta sala?\n\n" +
+                "Sala: " + salaAtual.getIdentificacaoCompleta() + "\n" +
+                "Inventário: " + inventarioAtivo.getNome() + "\n\n" +
+                "Ao reabrir:\n" +
+                "• A sala voltará a aparecer no aplicativo mobile\n" +
+                "• Será possível adicionar novas coletas\n" +
+                "• O status será alterado para EM ANDAMENTO\n\n" +
+                "Confirma a reabertura?",
+                "Confirmar Reabertura de Sala",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+
+            if (confirmacao != JOptionPane.YES_OPTION) {
+                return;
+            }
+
+            // Reabrir coleta usando o DAO
+            salaInventarioDAO.reabrirColeta(salaAtual.getIdSala(), inventarioAtivo.getId());
+
+            // Reproduzir som de sucesso
+            SoundNotification.playSound(SoundNotification.SoundType.SUCCESS);
+
+            JOptionPane.showMessageDialog(this,
+                "✅ Coleta da sala reaberta com sucesso!\n\n" +
+                "Sala: " + salaAtual.getIdentificacaoCompleta() + "\n\n" +
+                "A sala voltará a aparecer no aplicativo mobile e\n" +
+                "poderá receber novas coletas.",
+                "Sucesso",
+                JOptionPane.INFORMATION_MESSAGE);
+
+            // Atualizar interface
+            btnFinalizarColeta.setText("🏁 Finalizar");
+            btnFinalizarColeta.setBackground(new Color(40, 167, 69));
+            
+            // Habilitar botão reabrir apenas se sala estiver finalizada
+            if (btnReabrirColeta.isVisible()) {
+                btnReabrirColeta.setEnabled(false);
+            }
+
+            // Atualizar resumo da sala (remover marcação de FINALIZADA)
+            lblResumoSala.setText(String.format("Coletando em: %s",
+                salaAtual.getIdentificacaoCompleta()));
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, 
+                "❌ Erro ao reabrir coleta:\n\n" + e.getMessage(),
+                "Erro", 
+                JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
     }
@@ -3066,10 +3524,323 @@ public class ColetaFrame_v2 extends JFrame {
         }
     }
 
+    /**
+     * Mostra feedback visual de sucesso ao registrar um item
+     * Pisca o painel de informações em verde para indicar sucesso
+     */
+    private void mostrarFeedbackVisualSucesso() {
+        // Salvar cor original
+        Color corOriginal = panelInfoItem.getBackground();
+        Color corSucesso = new Color(46, 204, 113, 100); // Verde com transparência
+        
+        // Criar animação de piscar
+        Timer timer = new Timer(100, null);
+        final int[] contador = {0};
+        
+        timer.addActionListener(e -> {
+            if (contador[0] % 2 == 0) {
+                panelInfoItem.setBackground(corSucesso);
+                lblResumoSala.setForeground(new Color(0, 150, 0));
+                lblResumoSala.setFont(new Font("Segoe UI", Font.BOLD, 13));
+            } else {
+                panelInfoItem.setBackground(corOriginal);
+                lblResumoSala.setForeground(new Color(100, 100, 100));
+                lblResumoSala.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            }
+            
+            contador[0]++;
+            
+            // Parar após 3 piscadas (6 mudanças)
+            if (contador[0] >= 6) {
+                timer.stop();
+                panelInfoItem.setBackground(corOriginal);
+                lblResumoSala.setForeground(new Color(100, 100, 100));
+                lblResumoSala.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            }
+        });
+        
+        timer.start();
+        
+        // Mostrar mensagem temporária no label de resumo
+        String textoOriginal = lblResumoSala.getText();
+        lblResumoSala.setText("✅ Item registrado com sucesso!");
+        lblResumoSala.setForeground(new Color(46, 204, 113));
+        
+        // Restaurar texto original após 2 segundos
+        Timer timerTexto = new Timer(2000, e -> {
+            lblResumoSala.setText(textoOriginal);
+            lblResumoSala.setForeground(new Color(100, 100, 100));
+        });
+        timerTexto.setRepeats(false);
+        timerTexto.start();
+    }
+    
+    /**
+     * Mostra feedback visual de erro
+     * Pisca o painel em vermelho e mostra mensagem
+     */
+    private void mostrarFeedbackVisualErro(String mensagem) {
+        // Salvar cor original
+        Color corOriginal = panelInfoItem.getBackground();
+        Color corErro = new Color(231, 76, 60, 100); // Vermelho com transparência
+        
+        // Criar animação de piscar
+        Timer timer = new Timer(100, null);
+        final int[] contador = {0};
+        
+        timer.addActionListener(e -> {
+            if (contador[0] % 2 == 0) {
+                panelInfoItem.setBackground(corErro);
+            } else {
+                panelInfoItem.setBackground(corOriginal);
+            }
+            
+            contador[0]++;
+            
+            // Parar após 3 piscadas (6 mudanças)
+            if (contador[0] >= 6) {
+                timer.stop();
+                panelInfoItem.setBackground(corOriginal);
+            }
+        });
+        
+        timer.start();
+        
+        // Mostrar mensagem temporária no label de resumo
+        String textoOriginal = lblResumoSala.getText();
+        lblResumoSala.setText("❌ " + mensagem);
+        lblResumoSala.setForeground(new Color(231, 76, 60));
+        lblResumoSala.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        
+        // Restaurar texto original após 3 segundos
+        Timer timerTexto = new Timer(3000, e -> {
+            lblResumoSala.setText(textoOriginal);
+            lblResumoSala.setForeground(new Color(100, 100, 100));
+            lblResumoSala.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        });
+        timerTexto.setRepeats(false);
+        timerTexto.start();
+    }
+    
+    /**
+     * Mostra feedback visual de aviso
+     * Pisca o painel em amarelo e mostra mensagem
+     */
+    private void mostrarFeedbackVisualAviso(String mensagem) {
+        // Salvar cor original
+        Color corOriginal = panelInfoItem.getBackground();
+        Color corAviso = new Color(241, 196, 15, 100); // Amarelo com transparência
+        
+        // Criar animação de piscar
+        Timer timer = new Timer(100, null);
+        final int[] contador = {0};
+        
+        timer.addActionListener(e -> {
+            if (contador[0] % 2 == 0) {
+                panelInfoItem.setBackground(corAviso);
+            } else {
+                panelInfoItem.setBackground(corOriginal);
+            }
+            
+            contador[0]++;
+            
+            // Parar após 3 piscadas (6 mudanças)
+            if (contador[0] >= 6) {
+                timer.stop();
+                panelInfoItem.setBackground(corOriginal);
+            }
+        });
+        
+        timer.start();
+        
+        // Mostrar mensagem temporária no label de resumo
+        String textoOriginal = lblResumoSala.getText();
+        lblResumoSala.setText("⚠️ " + mensagem);
+        lblResumoSala.setForeground(new Color(241, 196, 15));
+        lblResumoSala.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        
+        // Restaurar texto original após 3 segundos
+        Timer timerTexto = new Timer(3000, e -> {
+            lblResumoSala.setText(textoOriginal);
+            lblResumoSala.setForeground(new Color(100, 100, 100));
+            lblResumoSala.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        });
+        timerTexto.setRepeats(false);
+        timerTexto.start();
+    }
+
+    /**
+     * Cria um botão estilizado no padrão do MainFrame
+     * 
+     * @param text Texto do botão (pode conter emojis)
+     * @param baseColor Cor base do botão
+     * @return JButton estilizado
+     */
+    private JButton createStyledButton(String text, Color baseColor) {
+        JButton button = new JButton(text) {
+            private boolean isHovered = false;
+
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+
+                Color hoverColor = baseColor.brighter();
+                Color topColor = isHovered ? hoverColor : baseColor;
+                Color bottomColor = isHovered ? hoverColor.darker() : baseColor.darker();
+
+                if (!isEnabled()) {
+                    topColor = new Color(180, 180, 180);
+                    bottomColor = new Color(150, 150, 150);
+                }
+
+                GradientPaint gradient = new GradientPaint(
+                        0, 0, topColor,
+                        0, getHeight(), bottomColor);
+                g2d.setPaint(gradient);
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+
+                // Borda sutil
+                g2d.setColor(new Color(255, 255, 255, 50));
+                g2d.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+
+                g2d.dispose();
+
+                // Desenhar texto com suporte a emojis
+                g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+
+                // Separar emoji do texto
+                String emoji = "";
+                String textOnly = text;
+                
+                // Detectar emoji no início do texto
+                if (text.length() > 0) {
+                    int codePoint = text.codePointAt(0);
+                    // Verificar se é um emoji (vários ranges Unicode)
+                    boolean isEmoji = (codePoint >= 0x1F300 && codePoint <= 0x1F9FF) || // Emojis diversos
+                                     (codePoint >= 0x2600 && codePoint <= 0x26FF) ||   // Símbolos diversos
+                                     (codePoint >= 0x2700 && codePoint <= 0x27BF) ||   // Dingbats
+                                     (codePoint >= 0x231A && codePoint <= 0x23FF) ||   // Símbolos técnicos
+                                     (codePoint >= 0x2B50 && codePoint <= 0x2BFF);     // Estrelas e outros
+                    
+                    if (isEmoji) {
+                        int emojiEnd = Character.charCount(codePoint);
+                        emoji = text.substring(0, emojiEnd).trim();
+                        if (emojiEnd < text.length()) {
+                            textOnly = text.substring(emojiEnd).trim();
+                        } else {
+                            textOnly = "";
+                        }
+                    }
+                }
+
+                int centerX = getWidth() / 2;
+                int centerY = getHeight() / 2;
+
+                if (!emoji.isEmpty()) {
+                    // Renderizar emoji com fonte especial
+                    g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
+                    FontMetrics fmEmoji = g2d.getFontMetrics();
+                    int emojiWidth = fmEmoji.stringWidth(emoji);
+                    
+                    // Renderizar texto ao lado do emoji
+                    g2d.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                    FontMetrics fmText = g2d.getFontMetrics();
+                    int textWidth = fmText.stringWidth(textOnly);
+                    
+                    int totalWidth = emojiWidth + (textOnly.isEmpty() ? 0 : 4 + textWidth);
+                    int startX = centerX - (totalWidth / 2);
+                    
+                    // Desenhar emoji
+                    g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
+                    g2d.setColor(isEnabled() ? Color.WHITE : new Color(200, 200, 200));
+                    g2d.drawString(emoji, startX, centerY + fmEmoji.getAscent() / 2);
+                    
+                    // Desenhar texto se existir
+                    if (!textOnly.isEmpty()) {
+                        g2d.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                        int textX = startX + emojiWidth + 4;
+                        int textY = centerY + fmText.getAscent() / 2;
+                        
+                        // Sombra do texto
+                        if (isEnabled()) {
+                            g2d.setColor(new Color(0, 0, 0, 80));
+                            g2d.drawString(textOnly, textX + 1, textY + 1);
+                        }
+                        
+                        // Texto principal
+                        g2d.setColor(isEnabled() ? Color.WHITE : new Color(200, 200, 200));
+                        g2d.drawString(textOnly, textX, textY);
+                    }
+                } else {
+                    // Sem emoji, renderizar apenas texto centralizado
+                    g2d.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                    FontMetrics fm = g2d.getFontMetrics();
+                    int textWidth = fm.stringWidth(text);
+                    int textX = centerX - (textWidth / 2);
+                    int textY = centerY + fm.getAscent() / 2;
+
+                    // Sombra do texto
+                    if (isEnabled()) {
+                        g2d.setColor(new Color(0, 0, 0, 80));
+                        g2d.drawString(text, textX + 1, textY + 1);
+                    }
+
+                    // Texto principal
+                    g2d.setColor(isEnabled() ? Color.WHITE : new Color(200, 200, 200));
+                    g2d.drawString(text, textX, textY);
+                }
+
+                g2d.dispose();
+            }
+
+            @Override
+            public void setEnabled(boolean enabled) {
+                super.setEnabled(enabled);
+                repaint();
+            }
+        };
+
+        button.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        button.setForeground(Color.WHITE);
+        button.setPreferredSize(new Dimension(120, 35));
+        button.setBorderPainted(false);
+        button.setContentAreaFilled(false);
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Efeito hover
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                if (button.isEnabled()) {
+                    try {
+                        java.lang.reflect.Field field = button.getClass().getDeclaredField("isHovered");
+                        field.setAccessible(true);
+                        field.set(button, true);
+                        button.repaint();
+                    } catch (Exception e) {
+                        // Fallback silencioso
+                    }
+                }
+            }
+
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                try {
+                    java.lang.reflect.Field field = button.getClass().getDeclaredField("isHovered");
+                    field.setAccessible(true);
+                    field.set(button, false);
+                    button.repaint();
+                } catch (Exception e) {
+                    // Fallback silencioso
+                }
+            }
+        });
+
+        return button;
+    }
+
 }
-
-
-
-
-
-

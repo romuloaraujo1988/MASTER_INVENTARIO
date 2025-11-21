@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -26,9 +27,15 @@ public class MobileConsultaService {
     private static final Logger logger = LoggerFactory.getLogger(MobileConsultaService.class);
     
     private final PatrimonioDAO patrimonioDAO;
+    private final com.inventario.dao.ColetaDAO coletaDAO;
+    private final com.inventario.dao.InventarioDAO inventarioDAO;
+    private final com.inventario.dao.SalaDAO salaDAO;
     
     public MobileConsultaService() {
         this.patrimonioDAO = new PatrimonioDAO();
+        this.coletaDAO = new com.inventario.dao.ColetaDAO();
+        this.inventarioDAO = new com.inventario.dao.InventarioDAO();
+        this.salaDAO = new com.inventario.dao.SalaDAO();
     }
     
     /**
@@ -102,12 +109,42 @@ public class MobileConsultaService {
         detalhes.setValor(patrimonio.getValor());
         detalhes.setObservacoes(patrimonio.getObservacoes());
         
-        // Dados da sala (campos diretos)
+        // Dados da sala (buscar dados completos da tabela SALA)
         if (patrimonio.getIdSala() > 0) {
             detalhes.setSalaId(patrimonio.getIdSala());
             detalhes.setSalaNome(patrimonio.getNomeSala());
-            // Bloco e andar não estão disponíveis no modelo atual
-            // TODO: Buscar da tabela SALA se necessário
+            
+            // Buscar dados completos da sala (bloco e andar)
+            try {
+                com.inventario.model.Sala sala = salaDAO.buscarSalaPorId(patrimonio.getIdSala());
+                if (sala != null) {
+                    detalhes.setSalaBloco(sala.getBloco());
+                    detalhes.setSalaAndar(sala.getAndar() != null ? sala.getAndar().toString() : null);
+                    
+                    // Montar localização completa (ex: "Bloco A - 2º Andar - Sala 201")
+                    StringBuilder localizacao = new StringBuilder();
+                    if (sala.getBloco() != null && !sala.getBloco().isEmpty()) {
+                        localizacao.append("Bloco ").append(sala.getBloco());
+                    }
+                    if (sala.getAndar() != null) {
+                        if (localizacao.length() > 0) localizacao.append(" - ");
+                        localizacao.append(sala.getAndar()).append("º Andar");
+                    }
+                    if (sala.getNumeroSala() != null && !sala.getNumeroSala().isEmpty()) {
+                        if (localizacao.length() > 0) localizacao.append(" - ");
+                        localizacao.append("Sala ").append(sala.getNumeroSala());
+                    }
+                    detalhes.setSalaLocalizacaoCompleta(localizacao.toString());
+                    
+                    logger.debug("Dados da sala carregados: bloco={}, andar={}, localização={}", 
+                            sala.getBloco(), sala.getAndar(), localizacao.toString());
+                } else {
+                    logger.warn("Sala não encontrada: ID {}", patrimonio.getIdSala());
+                }
+            } catch (SQLException e) {
+                logger.warn("Erro ao buscar dados da sala {}: {}", 
+                        patrimonio.getIdSala(), e.getMessage());
+            }
         }
         
         // Dados do responsável (campos diretos)
@@ -120,17 +157,47 @@ public class MobileConsultaService {
         
         // Status de coleta (buscar da tabela COLETA)
         try {
-            // TODO: Implementar verificação de coleta quando tiver inventário ativo
-            // Por enquanto, deixar como false
-            detalhes.setColetado(false);
-            detalhes.setDataColeta(null);
+            // Buscar inventário ativo
+            com.inventario.model.Inventario inventarioAtivo = inventarioDAO.buscarInventarioAtivo();
+            
+            if (inventarioAtivo != null) {
+                // Verificar se foi coletado no inventário ativo
+                boolean coletado = coletaDAO.verificarSePatrimonioFoiColetado(
+                    patrimonio.getId(), 
+                    inventarioAtivo.getId()
+                );
+                detalhes.setColetado(coletado);
+                
+                // Buscar data da coleta se foi coletado
+                if (coletado) {
+                    java.sql.Timestamp dataColeta = coletaDAO.buscarDataColetaPatrimonio(
+                        patrimonio.getId(), 
+                        inventarioAtivo.getId()
+                    );
+                    detalhes.setDataColeta(dataColeta);
+                } else {
+                    detalhes.setDataColeta(null);
+                }
+            } else {
+                // Sem inventário ativo
+                detalhes.setColetado(false);
+                detalhes.setDataColeta(null);
+            }
         } catch (Exception e) {
             logger.warn("Erro ao verificar coleta do patrimônio {}: {}", id, e.getMessage());
             detalhes.setColetado(false);
+            detalhes.setDataColeta(null);
         }
         
-        // Buscar histórico de coletas (se necessário)
-        // TODO: Implementar busca de histórico se necessário
+        // Buscar histórico de coletas
+        try {
+            List<Map<String, Object>> historico = coletaDAO.buscarHistoricoColetasPatrimonio(patrimonio.getId());
+            detalhes.setHistoricoColetas(historico);
+            logger.info("Histórico de coletas carregado: {} registros", historico.size());
+        } catch (Exception e) {
+            logger.warn("Erro ao buscar histórico de coletas do patrimônio {}: {}", id, e.getMessage());
+            detalhes.setHistoricoColetas(new java.util.ArrayList<>());
+        }
         
         logger.info("Detalhes do patrimônio {} carregados com sucesso", id);
         
@@ -214,14 +281,37 @@ public class MobileConsultaService {
         
         // Status de coleta (buscar da tabela COLETA)
         try {
-            // TODO: Implementar verificação de coleta quando tiver inventário ativo
-            // Por enquanto, deixar como false
-            dto.setColetado(false);
-            dto.setDataColeta(null);
+            // Buscar inventário ativo
+            com.inventario.model.Inventario inventarioAtivo = inventarioDAO.buscarInventarioAtivo();
+            
+            if (inventarioAtivo != null) {
+                // Verificar se foi coletado no inventário ativo
+                boolean coletado = coletaDAO.verificarSePatrimonioFoiColetado(
+                    patrimonio.getId(), 
+                    inventarioAtivo.getId()
+                );
+                dto.setColetado(coletado);
+                
+                // Buscar data da coleta se foi coletado
+                if (coletado) {
+                    java.sql.Timestamp dataColeta = coletaDAO.buscarDataColetaPatrimonio(
+                        patrimonio.getId(), 
+                        inventarioAtivo.getId()
+                    );
+                    dto.setDataColeta(dataColeta != null ? dataColeta.toString() : null);
+                } else {
+                    dto.setDataColeta(null);
+                }
+            } else {
+                // Sem inventário ativo
+                dto.setColetado(false);
+                dto.setDataColeta(null);
+            }
         } catch (Exception e) {
             logger.warn("Erro ao verificar coleta do patrimônio {}: {}", 
                 patrimonio.getId(), e.getMessage());
             dto.setColetado(false);
+            dto.setDataColeta(null);
         }
         
         return dto;

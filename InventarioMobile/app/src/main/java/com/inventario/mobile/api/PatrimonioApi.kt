@@ -12,25 +12,31 @@ import retrofit2.http.Query
  */
 interface PatrimonioApi {
     
-    @GET("patrimonio")
+    @GET("api/mobile/patrimonio")
     suspend fun listarPatrimonios(): Response<ApiResponse<List<Patrimonio>>>
     
-    @GET("patrimonio/{id}")
+    @GET("api/mobile/patrimonio")
+    suspend fun listarPatrimoniosPaginado(
+        @Query("page") page: Int,
+        @Query("size") size: Int
+    ): Response<ApiResponse<List<Patrimonio>>>
+    
+    @GET("api/mobile/patrimonio/{id}")
     suspend fun buscarPorId(
         @Path("id") id: Int
     ): Response<ApiResponse<Patrimonio>>
     
-    @GET("patrimonio/numero/{numero}")
+    @GET("api/mobile/patrimonio/numero/{numero}")
     suspend fun buscarPorNumero(
         @Path("numero") numero: String
     ): Response<ApiResponse<Patrimonio>>
     
-    @GET("descricoes/nao-coletadas")
+    @GET("api/mobile/descricoes/nao-coletadas")
     suspend fun buscarDescricoesNaoColetadas(
         @Query("idInventario") idInventario: Int? = null
     ): Response<ApiResponse<List<String>>>
     
-    @GET("patrimonio/descricao/{descricao}/nao-coletados")
+    @GET("api/mobile/patrimonio/descricao/{descricao}/nao-coletados")
     suspend fun buscarPorDescricaoNaoColetados(
         @Path("descricao") descricao: String
     ): Response<ApiResponse<List<Patrimonio>>>
@@ -38,7 +44,7 @@ interface PatrimonioApi {
     /**
      * Verifica se um patrimônio já foi coletado no inventário
      */
-    @GET("patrimonio/numero/{numero}/coletado")
+    @GET("api/mobile/patrimonio/numero/{numero}/coletado")
     suspend fun verificarSePatrimonioFoiColetado(
         @Path("numero") numero: String,
         @Query("inventarioId") inventarioId: Int? = null
@@ -47,7 +53,7 @@ interface PatrimonioApi {
     /**
      * Valida um número de patrimônio antes de coletar
      */
-    @GET("patrimonio/numero/{numero}/validar")
+    @GET("api/mobile/patrimonio/numero/{numero}/validar")
     suspend fun validarPatrimonio(
         @Path("numero") numero: String
     ): Response<ApiResponse<Map<String, Any>>>

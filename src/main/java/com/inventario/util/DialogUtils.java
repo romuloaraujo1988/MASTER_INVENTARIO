@@ -9,12 +9,6 @@ import java.awt.*;
  */
 public class DialogUtils {
     
-    // Cores padronizadas
-    private static final Color COLOR_SUCCESS = new Color(46, 204, 113);
-    private static final Color COLOR_ERROR = new Color(231, 76, 60);
-    private static final Color COLOR_WARNING = new Color(241, 196, 15);
-    private static final Color COLOR_INFO = new Color(52, 152, 219);
-    
     /**
      * Exibe mensagem de sucesso
      */

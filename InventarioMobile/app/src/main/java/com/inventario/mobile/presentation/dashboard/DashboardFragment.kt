@@ -97,21 +97,18 @@ class DashboardFragment : Fragment() {
             voiceCommandParser = VoiceCommandParser()
             
             setupUI()
-            Log.d(TAG, "onViewCreated: setupUI executado com sucesso")
-            
             setupVoiceSearch()
-            Log.d(TAG, "onViewCreated: setupVoiceSearch executado com sucesso")
+            Log.d(TAG, "onViewCreated: setupVoiceSearch executado")
             
             observeViewModel()
-            Log.d(TAG, "onViewCreated: observeViewModel executado com sucesso")
+            Log.d(TAG, "onViewCreated: observeViewModel executado")
             
-            // Obter ID do inventário ativo
+            // Obter ID do inventário ativo e carregar dados
             val inventarioId = preferencesManager.getInventarioAtivoId()
             Log.d(TAG, "onViewCreated: Inventário ativo ID = $inventarioId")
             
-            // Carregar dados do dashboard
             viewModel.loadDashboardData(inventarioId)
-            Log.d(TAG, "onViewCreated: loadDashboardData executado com sucesso")
+            Log.d(TAG, "onViewCreated: loadDashboardData chamado")
         } catch (e: Exception) {
             Log.e(TAG, "onViewCreated: Erro durante configuração da view", e)
         }
@@ -126,7 +123,8 @@ class DashboardFragment : Fragment() {
         )
         binding.swipeRefresh.setOnRefreshListener {
             Log.d(TAG, "Pull-to-refresh acionado")
-            viewModel.refreshData()
+            val inventarioId = preferencesManager.getInventarioAtivoId()
+            viewModel.refreshData(inventarioId)
         }
         
         // Estatísticas acessíveis via Navigation Drawer
@@ -200,25 +198,29 @@ class DashboardFragment : Fragment() {
 
     private fun updateUI(state: DashboardUiStateClean) {
         try {
-            Log.d(TAG, "updateUI: Atualizando UI com estado: $state")
-            
             // Dados do usuário e estatísticas acessíveis via Navigation Drawer e Estatísticas
             state.dashboardStats?.let { stats ->
-                Log.d(TAG, "updateUI: Estatísticas recebidas - Coletados: ${stats.totalColetados}, Pendentes: ${stats.totalPendentes}, Divergências: ${stats.divergencias}, Coletores: ${stats.coletoresAtivos}")
                 
-                // Atualizar KPIs detalhados
-                try {
-                    animateNumber(binding.tvKpiColetados, stats.totalColetados)
-                    animateNumber(binding.tvKpiPendentes, stats.totalPendentes)
-                    animateNumber(binding.tvKpiDivergencias, stats.divergencias)
-                    animateNumber(binding.tvKpiColetores, stats.coletoresAtivos)
-                    
-                    Log.d(TAG, "updateUI: KPIs atualizados com sucesso")
-                } catch (e: Exception) {
-                    Log.e(TAG, "updateUI: Erro ao atualizar KPIs", e)
+                // Salvar inventário ativo se não estiver salvo
+                stats.inventarioId?.let { invId ->
+                    if (!preferencesManager.hasInventarioAtivo() && invId > 0) {
+                        preferencesManager.saveInventarioAtivo(
+                            id = invId,
+                            nome = stats.inventarioNome ?: "Inventário $invId"
+                        )
+                        Log.d(TAG, "updateUI: Inventário ativo salvo - ID: $invId")
+                    }
                 }
-            } ?: run {
-                Log.w(TAG, "updateUI: dashboardStats é null")
+                
+                // Atualizar KPIs detalhados (sem animação para melhor performance)
+                try {
+                    binding.tvKpiColetados.text = stats.totalColetados.toString()
+                    binding.tvKpiPendentes.text = stats.totalPendentes.toString()
+                    binding.tvKpiDivergencias.text = stats.divergencias.toString()
+                    binding.tvKpiColetores.text = stats.coletoresAtivos.toString()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Erro ao atualizar KPIs", e)
+                }
             }
             
             // Atualizar estado de loading
@@ -229,12 +231,9 @@ class DashboardFragment : Fragment() {
             if (state.error != null) {
                 binding.tvError.text = state.error
                 binding.tvError.visibility = View.VISIBLE
-                Log.w(TAG, "Erro no dashboard: ${state.error}")
             } else {
                 binding.tvError.visibility = View.GONE
             }
-            
-            Log.d(TAG, "UI atualizada com sucesso")
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao atualizar UI", e)
         }

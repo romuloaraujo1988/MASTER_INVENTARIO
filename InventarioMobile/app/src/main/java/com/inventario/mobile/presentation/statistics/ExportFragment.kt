@@ -6,14 +6,35 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.inventario.mobile.databinding.FragmentStatisticsExportBinding
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Fragment para exportar relatórios
  */
+@AndroidEntryPoint
 class ExportFragment : Fragment() {
 
     private var _binding: FragmentStatisticsExportBinding? = null
     private val binding get() = _binding!!
+    
+    private var idInventario: Int = 0
+    
+    companion object {
+        private const val ARG_INVENTARIO_ID = "inventario_id"
+        
+        fun newInstance(idInventario: Int) = ExportFragment().apply {
+            arguments = Bundle().apply {
+                putInt(ARG_INVENTARIO_ID, idInventario)
+            }
+        }
+    }
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        arguments?.let {
+            idInventario = it.getInt(ARG_INVENTARIO_ID, 0)
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

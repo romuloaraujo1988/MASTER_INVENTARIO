@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:columnCount="3"
+    android:rowCount="4">
+
+    <!-- Linha 1: 1, 2, 3 -->
+    <Button
+        android:id="@+id/btn1"
+        style="@style/PinKeypadButton"
+        android:text="1"/>
+    <Button
+        android:id="@+id/btn2"
+        style="@style/PinKeypadButton"
+        android:text="2"/>
+    <Button
+        android:id="@+id/btn3"
+        style="@style/PinKeypadButton"
+        android:text="3"/>
+
+    <!-- Linha 2: 4, 5, 6 -->
+    <Button
+        android:id="@+id/btn4"
+        style="@style/PinKeypadButton"
+        android:text="4"/>
+    <Button
+        android:id="@+id/btn5"
+        style="@style/PinKeypadButton"
+        android:text="5"/>
+    <Button
+        android:id="@+id/btn6"
+        style="@style/PinKeypadButton"
+        android:text="6"/>
+
+    <!-- Linha 3: 7, 8, 9 -->
+    <Button
+        android:id="@+id/btn7"
+        style="@style/PinKeypadButton"
+        android:text="7"/>
+    <Button
+        android:id="@+id/btn8"
+        style="@style/PinKeypadButton"
+        android:text="8"/>
+    <Button
+        android:id="@+id/btn9"
+        style="@style/PinKeypadButton"
+        android:text="9"/>
+
+    <!-- Linha 4: Cancelar, 0, Backspace -->
+    <Button
+        android:id="@+id/btnCancel"
+        style="@style/PinKeypadButton"
+        android:text="✕"/>
+    <Button
+        android:id="@+id/btn0"
+        style="@style/PinKeypadButton"
+        android:text="0"/>
+    <Button
+        android:id="@+id/btnBackspace"
+        style="@style/PinKeypadButton"
+        android:text="⌫"/>
+
+</GridLayout>

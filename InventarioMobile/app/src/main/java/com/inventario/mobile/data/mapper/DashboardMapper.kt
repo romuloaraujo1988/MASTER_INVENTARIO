@@ -14,18 +14,19 @@ class DashboardMapper @Inject constructor() {
     
     /**
      * Converte DashboardStatsDto para DashboardStats (Domain)
+     * ✅ CORRIGIDO: Agora mapeia inventarioId e inventarioNome
      */
     fun toDomain(dto: DashboardStatsDto): DashboardStats {
         return DashboardStats(
+            inventarioId = dto.inventarioId,
+            inventarioNome = dto.inventarioNome,
             totalPatrimonios = dto.totalPatrimonios,
             totalColetados = dto.patrimoniosColetados,
             totalPendentes = dto.patrimoniosPendentes,
             percentualConclusao = dto.percentualConclusao,
             coletoresAtivos = dto.coletoresAtivos,
             divergencias = dto.divergencias,
-            valorTotal = dto.valorTotal,
-            inventarioId = null,
-            inventarioNome = null
+            valorTotal = dto.valorTotal
         )
     }
     

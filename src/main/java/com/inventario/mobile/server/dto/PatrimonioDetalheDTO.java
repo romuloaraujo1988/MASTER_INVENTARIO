@@ -2,6 +2,8 @@ package com.inventario.mobile.server.dto;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.List;
+import java.util.Map;
 
 /**
  * DTO para detalhes completos de um patrimônio
@@ -49,6 +51,7 @@ public class PatrimonioDetalheDTO {
     // Histórico
     private Integer totalColetas;
     private Timestamp ultimaColeta;
+    private List<Map<String, Object>> historicoColetas;
     
     // Foto
     private String fotoUrl;
@@ -289,5 +292,13 @@ public class PatrimonioDetalheDTO {
     
     public void setFotoUrl(String fotoUrl) {
         this.fotoUrl = fotoUrl;
+    }
+    
+    public List<Map<String, Object>> getHistoricoColetas() {
+        return historicoColetas;
+    }
+    
+    public void setHistoricoColetas(List<Map<String, Object>> historicoColetas) {
+        this.historicoColetas = historicoColetas;
     }
 }

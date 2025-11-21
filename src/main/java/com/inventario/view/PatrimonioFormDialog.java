@@ -167,7 +167,8 @@ public class PatrimonioFormDialog extends JDialog {
         painelCampos.add(criarPainelCampo("Número de Série:", campoNumeroSerie = new JTextField(25)));
         painelCampos.add(Box.createVerticalStrut(8));
         
-        comboEstado = new JComboBox<>(new String[]{"BOM", "REGULAR", "RUIM", "INSERVÍVEL"});
+        // Estados de conservação corretos conforme padrão do sistema
+        comboEstado = new JComboBox<>(new String[]{"BOM", "OCIOSO", "ANTIECONÔMICO", "RECUPERÁVEL", "IRRECUPERÁVEL"});
         comboEstado.setPreferredSize(new Dimension(200, 25));
         painelCampos.add(criarPainelCampo("Estado:", comboEstado));
         painelCampos.add(Box.createVerticalStrut(8));

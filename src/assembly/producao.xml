@@ -1,10 +1,13 @@
 <assembly xmlns="http://maven.apache.org/ASSEMBLY/2.1.0"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.1.0 http://maven.apache.org/xsd/assembly-2.1.0.xsd">
+    
     <id>producao</id>
+    
     <formats>
         <format>zip</format>
     </formats>
+    
     <includeBaseDirectory>true</includeBaseDirectory>
     <baseDirectory>sistema-inventario-${project.version}</baseDirectory>
     
@@ -22,25 +25,31 @@
         <fileSet>
             <directory>${project.build.directory}/lib</directory>
             <outputDirectory>/lib</outputDirectory>
+            <includes>
+                <include>*.jar</include>
+            </includes>
         </fileSet>
         
         <!-- Arquivos de configuração -->
         <fileSet>
-            <directory>${project.basedir}</directory>
+            <directory>${project.build.outputDirectory}</directory>
             <outputDirectory>/config</outputDirectory>
             <includes>
                 <include>application.properties</include>
                 <include>application-prod.properties</include>
+                <include>log4j2.xml</include>
             </includes>
         </fileSet>
         
-        <!-- Scripts SQL -->
+        <!-- Scripts de execução -->
         <fileSet>
-            <directory>${project.basedir}/sql</directory>
-            <outputDirectory>/sql</outputDirectory>
+            <directory>src/assembly/scripts</directory>
+            <outputDirectory>/</outputDirectory>
             <includes>
-                <include>**/*.sql</include>
+                <include>*.bat</include>
+                <include>*.sh</include>
             </includes>
+            <fileMode>0755</fileMode>
         </fileSet>
         
         <!-- Documentação -->
@@ -50,35 +59,17 @@
             <includes>
                 <include>README.md</include>
                 <include>CHANGELOG.md</include>
-                <include>INICIO_RAPIDO.md</include>
             </includes>
         </fileSet>
     </fileSets>
     
     <files>
-        <!-- Script de inicialização Windows -->
-        <file>
-            <source>${project.basedir}/scripts/start-desktop.bat</source>
-            <outputDirectory>/</outputDirectory>
-            <destName>iniciar.bat</destName>
-            <filtered>true</filtered>
-        </file>
-        
-        <!-- Script de inicialização Linux/Mac -->
-        <file>
-            <source>${project.basedir}/scripts/start-desktop.sh</source>
-            <outputDirectory>/</outputDirectory>
-            <destName>iniciar.sh</destName>
-            <filtered>true</filtered>
-            <fileMode>0755</fileMode>
-        </file>
-        
         <!-- README de instalação -->
         <file>
-            <source>${project.basedir}/scripts/LEIA-ME-INSTALACAO.txt</source>
+            <source>src/assembly/README-INSTALACAO.txt</source>
             <outputDirectory>/</outputDirectory>
-            <destName>LEIA-ME.txt</destName>
             <filtered>true</filtered>
         </file>
     </files>
+    
 </assembly>

@@ -20,18 +20,12 @@ class SalaSelectionViewModel(
     private val _uiState = MutableStateFlow(SalaSelectionUiState())
     val uiState: StateFlow<SalaSelectionUiState> = _uiState.asStateFlow()
 
-    private var currentPage = 0
-    private val pageSize = 50 // 50 itens por página (melhor para busca local)
-    private var isLoadingMore = false
-    private var hasMorePages = true
-    private var allSalasLoaded = false
-
     companion object {
         private const val TAG = "SalaSelectionViewModel"
     }
 
     fun loadSalas(forceRefresh: Boolean = false) {
-        Log.d(TAG, "loadSalas: Carregando salas (forceRefresh=$forceRefresh)")
+        Log.d(TAG, "loadSalas: Carregando TODAS as salas (forceRefresh=$forceRefresh)")
         
         // Verificar se há cache válido e não é refresh forçado
         if (!forceRefresh && SalaCache.isValid()) {
@@ -43,21 +37,11 @@ class SalaSelectionViewModel(
                     isLoading = false,
                     errorMessage = null
                 )
-                
-                // Atualizar estado de paginação baseado no cache
-                currentPage = (cachedSalas.size / pageSize)
-                hasMorePages = SalaCache.hasMorePages()
-                allSalasLoaded = !hasMorePages
-                
                 return
             }
         }
         
-        // Se não há cache válido ou é refresh forçado, carregar do servidor
-        currentPage = 0
-        hasMorePages = true
-        allSalasLoaded = false
-        
+        // Carregar TODAS as salas de uma vez
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(
@@ -65,7 +49,10 @@ class SalaSelectionViewModel(
                     errorMessage = null,
                     salas = emptyList()
                 )
-                loadSalasPage(0)
+                
+                // Carregar TODAS as salas
+                loadAllSalas()
+                
             } catch (e: Exception) {
                 Log.e(TAG, "loadSalas: Erro ao carregar salas", e)
                 _uiState.value = _uiState.value.copy(
@@ -76,75 +63,30 @@ class SalaSelectionViewModel(
         }
     }
     
-    fun loadNextPage() {
-        // Verificar se já está carregando ou se não há mais páginas
-        if (isLoadingMore || !hasMorePages || allSalasLoaded) {
-            Log.d(TAG, "loadNextPage: Ignorando (isLoadingMore=$isLoadingMore, hasMorePages=$hasMorePages, allLoaded=$allSalasLoaded)")
-            return
-        }
-        
-        Log.d(TAG, "loadNextPage: Iniciando carregamento da página ${currentPage + 1}")
-        isLoadingMore = true
-        
-        // Atualizar UI para mostrar loading
-        _uiState.value = _uiState.value.copy(isLoadingMore = true)
-        
-        viewModelScope.launch {
-            try {
-                loadSalasPage(currentPage + 1)
-            } catch (e: Exception) {
-                Log.e(TAG, "loadNextPage: Erro ao carregar próxima página", e)
-                _uiState.value = _uiState.value.copy(
-                    isLoadingMore = false,
-                    errorMessage = "Erro ao carregar mais salas: ${e.message}"
-                )
-            } finally {
-                isLoadingMore = false
-            }
-        }
-    }
-    
-    private suspend fun loadSalasPage(page: Int) {
-        Log.d(TAG, "loadSalasPage: Carregando página $page com tamanho $pageSize")
+    /**
+     * Carrega TODAS as salas de uma vez (sem paginação)
+     */
+    private suspend fun loadAllSalas() {
+        Log.d(TAG, "loadAllSalas: Carregando TODAS as salas de uma vez")
         
         try {
-            // Buscar salas da API com paginação
             val apiService = com.inventario.mobile.data.remote.api.ApiClient.getApiService(getApplication())
             val response = withContext(Dispatchers.IO) {
-                apiService.getSalasPaginadas(page, pageSize)
+                // Usar endpoint sem paginação
+                apiService.getSalasWithResponse()
             }
             
-            Log.d(TAG, "loadSalasPage: Response code: ${response.code()}")
-            
-            // Verificar se a resposta foi bem-sucedida
             if (!response.isSuccessful || response.body() == null) {
                 throw Exception("Erro ao buscar salas: ${response.message()}")
             }
             
             val apiResponse = response.body()!!
-            Log.d(TAG, "loadSalasPage: API Response success: ${apiResponse.success}")
-            
             if (!apiResponse.success || apiResponse.data == null) {
                 throw Exception(apiResponse.message ?: "Erro desconhecido")
             }
             
             val salasDto = apiResponse.data
-            Log.d(TAG, "loadSalasPage: Recebidas ${salasDto.size} salas do servidor")
-            
-            // Se não recebeu nenhuma sala, marcar como todas carregadas
-            if (salasDto.isEmpty()) {
-                Log.d(TAG, "loadSalasPage: Nenhuma sala recebida, todas já foram carregadas")
-                allSalasLoaded = true
-                hasMorePages = false
-                isLoadingMore = false
-                
-                // Atualizar apenas o estado de loading
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    isLoadingMore = false
-                )
-                return
-            }
+            Log.d(TAG, "loadAllSalas: Recebidas ${salasDto.size} salas do servidor")
             
             // Converter DTO para modelo de domínio
             val salas = salasDto.map { dto ->
@@ -152,7 +94,6 @@ class SalaSelectionViewModel(
                     id = dto.id.toLong(),
                     nome = dto.nome,
                     codigo = dto.codigo,
-                    // Evitar duplicação: se descricao for igual ao nome, deixar vazio
                     descricao = dto.descricao?.takeIf { it != dto.nome } ?: "",
                     setorId = dto.setorIdFinal.toLong(),
                     ativo = dto.ativa ?: dto.ativo,
@@ -163,47 +104,19 @@ class SalaSelectionViewModel(
                 )
             }
             
-            // Combinar com salas existentes se for página > 0
-            val todasSalas = if (page == 0) {
-                // Primeira página: substituir cache
-                SalaCache.setSalas(salas)
-                salas
-            } else {
-                // Páginas seguintes: adicionar ao cache
-                SalaCache.addSalas(salas)
-                _uiState.value.salas + salas
-            }
-            
-            // Atualizar página atual
-            currentPage = page
-            
-            // Se recebeu menos salas que o tamanho da página, não há mais páginas
-            if (salas.size < pageSize) {
-                Log.d(TAG, "loadSalasPage: Última página alcançada (recebeu ${salas.size} de $pageSize)")
-                hasMorePages = false
-                allSalasLoaded = true
-            } else {
-                hasMorePages = true
-            }
-            
-            // Atualizar informações de paginação no cache
-            SalaCache.setLastPageSize(salas.size, pageSize)
-            
-            isLoadingMore = false
-            
-            Log.d(TAG, "loadSalasPage: ${salas.size} salas carregadas (total: ${todasSalas.size})")
-            Log.d(TAG, "loadSalasPage: HasMorePages: $hasMorePages, AllLoaded: $allSalasLoaded")
-            Log.d(TAG, "loadSalasPage: Cache atualizado com ${SalaCache.size()} salas")
+            // Salvar no cache
+            SalaCache.setSalas(salas)
             
             _uiState.value = _uiState.value.copy(
-                salas = todasSalas,
+                salas = salas,
                 isLoading = false,
-                isLoadingMore = false,
                 errorMessage = null
             )
+            
+            Log.d(TAG, "loadAllSalas: ✅ ${salas.size} salas carregadas com sucesso")
+            
         } catch (e: Exception) {
-            Log.e(TAG, "loadSalasPage: Erro ao carregar página $page", e)
-            isLoadingMore = false
+            Log.e(TAG, "loadAllSalas: Erro ao carregar salas", e)
             throw e
         }
     }

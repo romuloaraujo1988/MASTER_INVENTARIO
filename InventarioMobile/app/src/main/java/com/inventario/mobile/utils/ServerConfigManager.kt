@@ -30,9 +30,9 @@ class ServerConfigManager private constructor(private val context: Context) {
 
         // Configurações padrão (podem ser sobrescritas por resources)
         // IP padrão do servidor para fallback
-        private const val FALLBACK_IP = "192.168.10.107"  // Usado se resources não estiverem disponíveis
+        private const val FALLBACK_IP = "10.14.250.214"  // ✅ IP padrão configurado
         private const val DEFAULT_PORT = 8081
-        private const val DEFAULT_CONTEXT_PATH = "/inventario"
+        private const val DEFAULT_CONTEXT_PATH = "/inventario"  // Restaurado
         private const val DEFAULT_API_PATH = "/api/mobile"
         private const val DEFAULT_PROTOCOL_HTTP = "http"
         private const val DEFAULT_PROTOCOL_HTTPS = "https"
@@ -106,12 +106,15 @@ class ServerConfigManager private constructor(private val context: Context) {
 
     /**
      * Constrói a URL base completa
+     * IMPORTANTE: Retorna apenas http://ip:port/inventario/ 
+     * Os endpoints das APIs já incluem /api/mobile/
      */
     fun getBaseUrl(): String {
         val serverUrl = preferencesManager.getServerUrl()
         return if (serverUrl.isNullOrBlank()) {
             // Retornar URL padrão válida se não houver configuração
-            "http://$FALLBACK_IP:$DEFAULT_PORT"
+            // Apenas protocolo://ip:port/context-path/
+            "http://$FALLBACK_IP:$DEFAULT_PORT$DEFAULT_CONTEXT_PATH/"
         } else {
             serverUrl
         }
@@ -350,7 +353,9 @@ class ServerConfigManager private constructor(private val context: Context) {
 
     // Métodos privados
     private fun buildBaseUrl(protocol: String, ip: String, port: Int): String {
-        return "$protocol://$ip:$port$DEFAULT_CONTEXT_PATH$DEFAULT_API_PATH"
+        // Retorna apenas protocolo://ip:port/context-path/
+        // Os endpoints das APIs já incluem /api/mobile/
+        return "$protocol://$ip:$port$DEFAULT_CONTEXT_PATH/"
     }
 
     private fun saveServerConfig(ip: String, port: Int, useHttps: Boolean) {

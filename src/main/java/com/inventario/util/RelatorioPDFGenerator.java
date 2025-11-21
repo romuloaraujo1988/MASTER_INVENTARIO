@@ -73,33 +73,57 @@ public class RelatorioPDFGenerator {
                         .setTextAlignment(TextAlignment.CENTER);
                 document.add(semDados);
             } else {
-                // Criar tabela PDF
+                // Criar tabela PDF com larguras personalizadas para 8 colunas
                 int numColunas = modeloTabela.getColumnCount();
-                Table tabela = new Table(UnitValue.createPercentArray(numColunas))
+                
+                // Definir larguras relativas das colunas (ajustadas para caber na página)
+                float[] largurasColunas;
+                if (numColunas == 8) {
+                    // Larguras otimizadas para as 8 colunas do relatório
+                    // [Número, Descrição, Sala, Estado, Setor/Local, Responsável, Situação, Valor]
+                    largurasColunas = new float[]{8f, 20f, 12f, 10f, 12f, 15f, 10f, 10f};
+                } else {
+                    // Larguras iguais para outros casos
+                    largurasColunas = new float[numColunas];
+                    for (int i = 0; i < numColunas; i++) {
+                        largurasColunas[i] = 1f;
+                    }
+                }
+                
+                Table tabela = new Table(UnitValue.createPercentArray(largurasColunas))
                         .useAllAvailableWidth();
                 
-                // Adicionar cabeçalhos
+                // Adicionar cabeçalhos com fonte menor
                 for (int col = 0; col < numColunas; col++) {
                     Cell celulaCabecalho = new Cell()
                             .add(new Paragraph(modeloTabela.getColumnName(col)))
                             .setFont(boldFont)
-                            .setFontSize(10)
+                            .setFontSize(7)  // Reduzido de 10 para 7
                             .setTextAlignment(TextAlignment.CENTER)
-                            .setBackgroundColor(ColorConstants.LIGHT_GRAY);
+                            .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                            .setPadding(3);  // Reduzir padding
                     tabela.addHeaderCell(celulaCabecalho);
                 }
                 
-                // Adicionar dados
+                // Adicionar dados com fonte menor
                 for (int row = 0; row < modeloTabela.getRowCount(); row++) {
                     for (int col = 0; col < numColunas; col++) {
                         Object valor = modeloTabela.getValueAt(row, col);
                         String textoValor = valor != null ? valor.toString() : "";
                         
+                        // Truncar textos muito longos para evitar quebra de página
+                        if (textoValor.length() > 50 && col == 1) { // Descrição
+                            textoValor = textoValor.substring(0, 47) + "...";
+                        } else if (textoValor.length() > 30 && (col == 2 || col == 4 || col == 5)) { // Sala, Setor, Responsável
+                            textoValor = textoValor.substring(0, 27) + "...";
+                        }
+                        
                         Cell celula = new Cell()
                                 .add(new Paragraph(textoValor))
                                 .setFont(font)
-                                .setFontSize(9)
-                                .setTextAlignment(TextAlignment.LEFT);
+                                .setFontSize(6.5f)  // Reduzido de 9 para 6.5
+                                .setTextAlignment(col == 7 ? TextAlignment.RIGHT : TextAlignment.LEFT)  // Valor alinhado à direita
+                                .setPadding(2);  // Reduzir padding
                         tabela.addCell(celula);
                     }
                 }

@@ -14,14 +14,14 @@ import com.inventario.view.ui.ModernButtons;
 public class SetorFormDialog extends JDialog {
     private Setor setor;
     private boolean confirmado = false;
-    
+
     // Campos do formulário
     private JTextField campoNome;
     private JTextField campoDescricao;
     private JTextField campoResponsavel;
-    
+
     private JButton btnSalvar, btnCancelar;
-    
+
     public SetorFormDialog(Frame parent, Setor setor) {
         super(parent, setor == null ? "Novo Setor" : "Editar Setor", true);
         this.setor = setor;
@@ -31,16 +31,16 @@ public class SetorFormDialog extends JDialog {
             preencherCampos();
         }
     }
-    
+
     private void initComponents() {
         setLayout(new BorderLayout());
         getContentPane().setBackground(new Color(245, 245, 245));
-        
+
         // Painel principal com título e campos
         JPanel painelPrincipal = new JPanel(new BorderLayout());
         painelPrincipal.setBackground(new Color(245, 245, 245));
         painelPrincipal.setBorder(new EmptyBorder(25, 30, 20, 30));
-        
+
         // Título
         JLabel lblTitulo = new JLabel(setor == null ? "📁 Novo Setor" : "✏️ Editar Setor");
         lblTitulo.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
@@ -48,76 +48,79 @@ public class SetorFormDialog extends JDialog {
         lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
         lblTitulo.setBorder(new EmptyBorder(0, 0, 20, 0));
         painelPrincipal.add(lblTitulo, BorderLayout.NORTH);
-        
+
         // Painel de campos
         JPanel painelCampos = new JPanel();
         painelCampos.setLayout(new BoxLayout(painelCampos, BoxLayout.Y_AXIS));
         painelCampos.setBackground(Color.WHITE);
         painelCampos.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(222, 226, 230), 1),
-            new EmptyBorder(25, 25, 25, 25)
-        ));
-        
+                BorderFactory.createLineBorder(new Color(222, 226, 230), 1),
+                new EmptyBorder(25, 25, 25, 25)));
+
         // Campo Nome
         painelCampos.add(criarCampoFormulario("📝 Nome do Setor *", campoNome = new JTextField()));
         painelCampos.add(Box.createVerticalStrut(20));
-        
+
         // Campo Descrição
         painelCampos.add(criarCampoFormulario("📄 Descrição", campoDescricao = new JTextField()));
         painelCampos.add(Box.createVerticalStrut(20));
-        
+
         // Campo Responsável
         painelCampos.add(criarCampoFormulario("👤 Responsável", campoResponsavel = new JTextField()));
-        
+
         painelPrincipal.add(painelCampos, BorderLayout.CENTER);
         add(painelPrincipal, BorderLayout.CENTER);
-        
+
         // Painel de botões
         JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
         painelBotoes.setBackground(new Color(245, 245, 245));
         painelBotoes.setBorder(new EmptyBorder(20, 30, 25, 30));
-        
+
         btnSalvar = ModernButtons.secondary("💾 Salvar");
         btnCancelar = ModernButtons.muted("❌ Cancelar");
-        
+
+        // Ajuste de tamanho para garantir que o texto apareça
+        Dimension btnSize = new Dimension(130, 35);
+        btnSalvar.setPreferredSize(btnSize);
+        btnCancelar.setPreferredSize(btnSize);
+
         painelBotoes.add(btnSalvar);
         painelBotoes.add(btnCancelar);
         add(painelBotoes, BorderLayout.SOUTH);
-        
+
         // Configurar eventos
         configurarEventos();
-        
+
         setSize(500, 480);
         setLocationRelativeTo(getParent());
         setResizable(false);
     }
-    
+
     private JPanel criarCampoFormulario(String labelTexto, JTextField campo) {
         JPanel painel = new JPanel();
         painel.setLayout(new BoxLayout(painel, BoxLayout.Y_AXIS));
         painel.setBackground(Color.WHITE);
-        
+
         JLabel label = new JLabel(labelTexto);
         label.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
         label.setForeground(new Color(73, 80, 87));
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
-        
+
         campo.setPreferredSize(new Dimension(400, 35));
         campo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
         campo.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
         campo.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(206, 212, 218), 1),
-            new EmptyBorder(8, 12, 8, 12)
-        ));
+                BorderFactory.createLineBorder(new Color(206, 212, 218), 1),
+                new EmptyBorder(8, 12, 8, 12)));
         campo.setAlignmentX(Component.LEFT_ALIGNMENT);
-        
+
         painel.add(label);
         painel.add(Box.createVerticalStrut(8));
         painel.add(campo);
-        
+
         return painel;
     }
-    
+
     private void aplicarEstiloModerno() {
         // Estilo dos botões agora é fornecido por ModernButtons.
         // Mantemos apenas os efeitos de focus nos campos.
@@ -125,36 +128,33 @@ public class SetorFormDialog extends JDialog {
         adicionarEfeitoFocus(campoDescricao);
         adicionarEfeitoFocus(campoResponsavel);
     }
-    
 
     private void adicionarEfeitoFocus(JTextField campo) {
         Color corNormal = new Color(206, 212, 218);
         Color corFocus = new Color(0, 123, 255);
-        
+
         campo.addFocusListener(new java.awt.event.FocusAdapter() {
             @Override
             public void focusGained(java.awt.event.FocusEvent e) {
                 campo.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(corFocus, 2),
-                    new EmptyBorder(7, 11, 7, 11)
-                ));
+                        BorderFactory.createLineBorder(corFocus, 2),
+                        new EmptyBorder(7, 11, 7, 11)));
             }
-            
+
             @Override
             public void focusLost(java.awt.event.FocusEvent e) {
                 campo.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(corNormal, 1),
-                    new EmptyBorder(8, 12, 8, 12)
-                ));
+                        BorderFactory.createLineBorder(corNormal, 1),
+                        new EmptyBorder(8, 12, 8, 12)));
             }
         });
     }
-    
+
     private void configurarEventos() {
         btnSalvar.addActionListener(e -> salvarSetor());
         btnCancelar.addActionListener(e -> dispose());
     }
-    
+
     private void preencherCampos() {
         if (setor != null) {
             campoNome.setText(setor.getNome() != null ? setor.getNome() : "");
@@ -162,7 +162,7 @@ public class SetorFormDialog extends JDialog {
             campoResponsavel.setText(setor.getResponsavelSetor() != null ? setor.getResponsavelSetor() : "");
         }
     }
-    
+
     private void salvarSetor() {
         try {
             // Validar campos obrigatórios
@@ -170,50 +170,49 @@ public class SetorFormDialog extends JDialog {
                 JOptionPane.showMessageDialog(this, "O nome do setor é obrigatório.");
                 return;
             }
-            
 
-            
             // Criar ou atualizar setor
             if (setor == null) {
                 setor = new Setor();
             }
-            
+
             setor.setNome(campoNome.getText().trim());
             setor.setDescricao(campoDescricao.getText().trim());
             setor.setResponsavelSetor(campoResponsavel.getText().trim());
-            
+
             // Salvar no banco de dados
             SetorService setorService = new SetorService();
-            
+
             try {
                 setorService.salvar(setor);
-                
+
                 if (setor.getId() == 0) {
                     JOptionPane.showMessageDialog(this, "Setor cadastrado com sucesso!");
                 } else {
                     JOptionPane.showMessageDialog(this, "Setor atualizado com sucesso!");
                 }
-                
+
                 confirmado = true;
                 dispose();
-                
+
             } catch (BusinessException e) {
                 JOptionPane.showMessageDialog(this, e.getMessage(), "Erro de Validação", JOptionPane.WARNING_MESSAGE);
                 return;
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Erro ao salvar setor: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Erro ao salvar setor: " + e.getMessage(), "Erro",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            
+
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Erro ao salvar setor: " + e.getMessage());
         }
     }
-    
+
     public boolean isConfirmado() {
         return confirmado;
     }
-    
+
     public Setor getSetor() {
         return setor;
     }

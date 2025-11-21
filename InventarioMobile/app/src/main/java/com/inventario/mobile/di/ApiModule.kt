@@ -65,6 +65,7 @@ object ApiModule {
     
     /**
      * Fornece instância do OkHttpClient
+     * OTIMIZADO: Timeouts reduzidos para evitar ANR
      */
     @Provides
     @Singleton
@@ -82,10 +83,10 @@ object ApiModule {
             .addInterceptor(deviceInfoInterceptor)
             .addInterceptor(authInterceptor)
             .addInterceptor(loggingInterceptor)
-            .connectTimeout(45, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
-            .callTimeout(120, TimeUnit.SECONDS)
+            .connectTimeout(10, TimeUnit.SECONDS)  // Reduzido de 45s para 10s
+            .readTimeout(15, TimeUnit.SECONDS)     // Reduzido de 60s para 15s
+            .writeTimeout(15, TimeUnit.SECONDS)    // Reduzido de 60s para 15s
+            .callTimeout(30, TimeUnit.SECONDS)     // Reduzido de 120s para 30s
             .retryOnConnectionFailure(true)
             .followRedirects(true)
             .followSslRedirects(true)
@@ -106,34 +107,21 @@ object ApiModule {
     
     /**
      * Fornece interceptor de autenticação
+     * CORRIGIDO: Removido runBlocking que causava ANR
      */
     @Provides
     @Singleton
     fun provideAuthInterceptor(
         @ApplicationContext context: Context,
-        localDataManager: LocalDataManager,
         preferencesManager: PreferencesManager
     ): Interceptor {
         return Interceptor { chain ->
             val originalRequest = chain.request()
             
-            var token: String? = null
-            var isTokenValid = false
-            
-            try {
-                val currentUser = kotlinx.coroutines.runBlocking {
-                    localDataManager.getCurrentUser()
-                }
-                token = currentUser?.accessToken
-                isTokenValid = currentUser?.isTokenValid() ?: false
-            } catch (e: Exception) {
-                // Fallback para PreferencesManager
-            }
-            
-            if (token == null || !isTokenValid) {
-                token = preferencesManager.getAccessToken()
-                isTokenValid = preferencesManager.isTokenValid()
-            }
+            // Usar apenas PreferencesManager (síncrono e rápido)
+            // Não usar LocalDataManager aqui pois requer coroutine
+            val token = preferencesManager.getAccessToken()
+            val isTokenValid = preferencesManager.isTokenValid()
             
             val newRequest = if (token != null && isTokenValid) {
                 originalRequest.newBuilder()
@@ -189,6 +177,18 @@ object ApiModule {
     @Singleton
     fun providePatrimonioConsultaApi(retrofit: Retrofit): com.inventario.mobile.data.remote.api.PatrimonioConsultaApi {
         return retrofit.create(com.inventario.mobile.data.remote.api.PatrimonioConsultaApi::class.java)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideSyncApi(retrofit: Retrofit): com.inventario.mobile.data.remote.api.SyncApi {
+        return retrofit.create(com.inventario.mobile.data.remote.api.SyncApi::class.java)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideOfflineSyncApi(retrofit: Retrofit): com.inventario.mobile.data.remote.api.OfflineSyncApi {
+        return retrofit.create(com.inventario.mobile.data.remote.api.OfflineSyncApi::class.java)
     }
     
     /**

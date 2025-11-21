@@ -283,6 +283,7 @@ public class ImportacaoCSV {
             // Dados básicos
             patrimonio.setNumero(campos[COL_NUMERO].trim());
             patrimonio.setStatus(campos[COL_STATUS].trim());
+            patrimonio.setEd(campos[COL_ED].trim());
             patrimonio.setDescricao(campos[COL_DESCRICAO].trim());
             patrimonio.setRotulos(campos[COL_ROTULOS].trim());
             
@@ -294,7 +295,11 @@ public class ImportacaoCSV {
             patrimonio.setNumeroNotaFiscal(campos[COL_NUMERO_NOTA_FISCAL].trim());
             patrimonio.setNumeroSerie(campos[COL_NUMERO_SERIE].trim());
             patrimonio.setFornecedor(campos[COL_FORNECEDOR].trim());
-            patrimonio.setEstadoConservacao(campos[COL_ESTADO_CONSERVACAO].trim());
+            
+            // Normalizar estado de conservação para os valores corretos do sistema
+            String estadoOriginal = campos[COL_ESTADO_CONSERVACAO].trim();
+            String estadoNormalizado = normalizarEstadoConservacao(estadoOriginal);
+            patrimonio.setEstadoConservacao(estadoNormalizado);
             
             // Datas
             Date dataEntrada = parseData(campos[COL_DATA_ENTRADA]);
@@ -530,6 +535,92 @@ public class ImportacaoCSV {
      */
     private Date parseData(String data) {
         return DateFormatUtils.parseDate(data);
+    }
+    
+    /**
+     * Normaliza o estado de conservação para os valores corretos do sistema
+     * Converte variações do SUAP/Excel para os estados padronizados
+     * 
+     * Estados corretos: BOM, OCIOSO, ANTIECONÔMICO, RECUPERÁVEL, IRRECUPERÁVEL
+     */
+    private String normalizarEstadoConservacao(String estadoOriginal) {
+        if (estadoOriginal == null || estadoOriginal.trim().isEmpty() || estadoOriginal.equals("-")) {
+            return "BOM"; // Padrão quando não informado
+        }
+        
+        String estado = estadoOriginal.trim().toUpperCase();
+        
+        // Remover acentos para facilitar comparação
+        estado = estado.replace("Á", "A").replace("É", "E").replace("Í", "I")
+                       .replace("Ó", "O").replace("Ú", "U").replace("Ã", "A")
+                       .replace("Õ", "O").replace("Ç", "C");
+        
+        // Mapeamento de estados do SUAP para estados do sistema
+        switch (estado) {
+            // BOM
+            case "BOM":
+            case "OTIMO":
+            case "ÓTIMO":
+            case "EXCELENTE":
+                return "BOM";
+            
+            // OCIOSO
+            case "OCIOSO":
+            case "NAO UTILIZADO":
+            case "NÃO UTILIZADO":
+            case "SEM USO":
+                return "OCIOSO";
+            
+            // ANTIECONÔMICO
+            case "ANTIECONOMICO":
+            case "ANTIECONÔMICO":
+            case "NAO ECONOMICO":
+            case "NÃO ECONÔMICO":
+                return "ANTIECONÔMICO";
+            
+            // RECUPERÁVEL
+            case "RECUPERAVEL":
+            case "RECUPERÁVEL":
+            case "PODE SER RECUPERADO":
+            case "CONSERTAVEL":
+            case "CONSERTÁVEL":
+            case "REGULAR":
+                return "RECUPERÁVEL";
+            
+            // IRRECUPERÁVEL
+            case "IRRECUPERAVEL":
+            case "IRRECUPERÁVEL":
+            case "NAO RECUPERAVEL":
+            case "NÃO RECUPERÁVEL":
+            case "INSERVIVEL":
+            case "INSERVÍVEL":
+            case "RUIM":
+            case "PESSIMO":
+            case "PÉSSIMO":
+            case "SUCATA":
+                return "IRRECUPERÁVEL";
+            
+            default:
+                // Se não reconhecer, tentar mapear por palavras-chave
+                if (estado.contains("BOM") || estado.contains("OTIMO")) {
+                    return "BOM";
+                } else if (estado.contains("OCIOSO")) {
+                    return "OCIOSO";
+                } else if (estado.contains("ANTIECONOMICO") || estado.contains("ECONOMICO")) {
+                    return "ANTIECONÔMICO";
+                } else if (estado.contains("RECUPERAVEL") || estado.contains("REGULAR") || estado.contains("CONSERT")) {
+                    return "RECUPERÁVEL";
+                } else if (estado.contains("IRRECUPERAVEL") || estado.contains("INSERVIVEL") || 
+                          estado.contains("RUIM") || estado.contains("PESSIMO") || estado.contains("SUCATA")) {
+                    return "IRRECUPERÁVEL";
+                }
+                
+                // Se não conseguir mapear, usar BOM como padrão e registrar aviso
+                if (progressCallback != null) {
+                    progressCallback.onInfo("Estado não reconhecido: '" + estadoOriginal + "' - usando 'BOM' como padrão");
+                }
+                return "BOM";
+        }
     }
     
     /**

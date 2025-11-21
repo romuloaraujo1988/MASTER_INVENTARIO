@@ -115,27 +115,28 @@ public class MobilePatrimonioService {
 
     
     /**
-     * Lista patrimônios com paginação
+     * Lista patrimônios com paginação (OTIMIZADO)
+     * Usa paginação no banco de dados ao invés de carregar tudo em memória
      */
     public List<MobilePatrimonioDTO> listarPatrimonios(int page, int size) throws SQLException {
-        logger.info("Listando patrimônios (page: {}, size: {})", page, size);
+        logger.info("═══════════════════════════════════════════");
+        logger.info("LISTANDO PATRIMÔNIOS (OTIMIZADO)");
+        logger.info("Page: {}, Size: {}", page, size);
+        logger.info("═══════════════════════════════════════════");
         
-        // Buscar todos os patrimônios com joins
-        List<Patrimonio> todosPatrimonios = patrimonioDAO.listarTodosComJoins();
+        // Buscar patrimônios com paginação no banco (OTIMIZADO)
+        List<Patrimonio> patrimonios = patrimonioDAO.listarComPaginacao(page, size);
         
-        logger.info("Total de patrimônios no banco: {}", todosPatrimonios.size());
+        logger.info("✓ {} patrimônios retornados do banco (página {})", patrimonios.size(), page);
         
         List<MobilePatrimonioDTO> dtos = new ArrayList<>();
         
-        // Aplicar paginação manual
-        int start = page * size;
-        int end = Math.min(start + size, todosPatrimonios.size());
-        
-        for (int i = start; i < end && i < todosPatrimonios.size(); i++) {
-            dtos.add(converterParaDTO(todosPatrimonios.get(i)));
+        for (Patrimonio patrimonio : patrimonios) {
+            dtos.add(converterParaDTO(patrimonio));
         }
         
-        logger.info("Retornando {} patrimônios (página {}, total: {})", dtos.size(), page, todosPatrimonios.size());
+        logger.info("✓ {} DTOs convertidos e prontos para retornar", dtos.size());
+        logger.info("═══════════════════════════════════════════");
         
         return dtos;
     }
@@ -509,6 +510,9 @@ public class MobilePatrimonioService {
         }
         
         dto.setObservacoes(patrimonio.getObservacoes());
+        dto.setEd(patrimonio.getEd());
+        dto.setNumeroNotaFiscal(patrimonio.getNumeroNotaFiscal());
+        dto.setFornecedor(patrimonio.getFornecedor());
         
         // Verificar se o patrimônio foi coletado no inventário ativo
         boolean coletado = false;

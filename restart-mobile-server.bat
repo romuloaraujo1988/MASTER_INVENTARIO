@@ -18,7 +18,7 @@ timeout /t 1 /nobreak >nul
 
 echo.
 echo [3/4] Compilando projeto...
-call mvn clean compile -DskipTests
+call mvnw.cmd clean compile -DskipTests
 if errorlevel 1 (
     echo.
     echo ERRO: Falha na compilacao!
@@ -32,7 +32,7 @@ echo.
 echo Servidor iniciando na porta 8081...
 echo Pressione Ctrl+C para parar
 echo.
-start "Mobile API Server" mvn exec:java -Dexec.mainClass="com.inventario.MobileApiApplication"
+start "Mobile API Server" mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=mobile -Dserver.port=8081
 
 timeout /t 5 /nobreak >nul
 echo.

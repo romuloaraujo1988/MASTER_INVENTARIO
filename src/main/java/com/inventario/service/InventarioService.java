@@ -185,6 +185,30 @@ public class InventarioService {
     }
     
     /**
+     * Verifica se o inventário inclui todos os setores
+     */
+    public boolean inventarioIncluiTodosSetores(int idInventario) {
+        try {
+            return inventarioSetorDAO.inventarioIncluiTodosSetores(idInventario);
+        } catch (Exception e) {
+            logger.error("Erro ao verificar se inventário inclui todos os setores: {}", idInventario, e);
+            return false;
+        }
+    }
+    
+    /**
+     * Busca os setores de um inventário
+     */
+    public List<com.inventario.model.Setor> buscarSetoresDoInventario(int idInventario) {
+        try {
+            return inventarioSetorDAO.buscarSetoresDoInventario(idInventario);
+        } catch (Exception e) {
+            logger.error("Erro ao buscar setores do inventário: {}", idInventario, e);
+            return new ArrayList<>();
+        }
+    }
+    
+    /**
      * Busca inventário por status
      */
     public Inventario buscarPorStatus(String status) {

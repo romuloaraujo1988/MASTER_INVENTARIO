@@ -16,15 +16,31 @@ object PatrimonioMapper {
      */
     fun dtoToEntity(dto: MobilePatrimonioDto): PatrimonioEntity {
         return PatrimonioEntity(
-            id = dto.id.toInt(), // Conversão Long → Int
+            id = dto.id, // Long → Long (agora compatível)
             numero = dto.codigo, // DTO usa 'codigo', Entity usa 'numero'
+            numeroPatrimonio = dto.codigo, // Campo obrigatório adicionado
             descricao = dto.descricao,
+            marca = dto.marca,
+            modelo = dto.modelo,
+            numeroSerie = dto.numeroSerie,
+            estado = dto.estado,
+            valor = dto.valor,
+            setorId = dto.setorId?.toInt(),
+            setorNome = dto.setorNome,
             idSala = dto.salaId?.toInt(), // DTO usa Long, Entity usa Int
             nomeSala = dto.salaNome,
+            salaId = dto.salaId?.toInt(),
+            salaNome = dto.salaNome,
             idResponsavel = dto.responsavelId?.toInt(),
             nomeResponsavel = dto.responsavelNome,
-            status = dto.estado ?: "ATIVO", // DTO usa 'estado', Entity usa 'status'
+            responsavelId = dto.responsavelId?.toInt(),
+            responsavelNome = dto.responsavelNome,
+            status = dto.estado,
             coletado = dto.coletado,
+            dataColeta = dto.dataColeta?.toLongOrNull(),
+            coletadoPor = dto.coletadoPor,
+            observacoesColeta = null,
+            observacoes = dto.observacoes,
             dataUltimaAtualizacao = System.currentTimeMillis()
         )
     }

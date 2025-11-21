@@ -1,5 +1,0 @@
-com\inventario\util\ExcelExporterTest.class
-com\inventario\controller\mobile\MobileConnectionControllerTest.class
-com\inventario\util\PasswordEncryptionTest.class
-com\inventario\config\DatabaseConfigManagerEncryptionTest.class
-com\inventario\view\ConfiguracaoBancoDialogTest.class

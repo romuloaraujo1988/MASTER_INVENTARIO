@@ -70,6 +70,15 @@ public class MobilePatrimonioDTO {
     @JsonProperty("dataColetaFormatada")
     private String dataColetaFormatada;
     
+    @JsonProperty("ed")
+    private String ed;
+    
+    @JsonProperty("numeroNotaFiscal")
+    private String numeroNotaFiscal;
+    
+    @JsonProperty("fornecedor")
+    private String fornecedor;
+    
     // Construtores
     public MobilePatrimonioDTO() {}
     
@@ -232,5 +241,29 @@ public class MobilePatrimonioDTO {
     
     public void setDataColetaFormatada(String dataColetaFormatada) {
         this.dataColetaFormatada = dataColetaFormatada;
+    }
+    
+    public String getEd() {
+        return ed;
+    }
+    
+    public void setEd(String ed) {
+        this.ed = ed;
+    }
+    
+    public String getNumeroNotaFiscal() {
+        return numeroNotaFiscal;
+    }
+    
+    public void setNumeroNotaFiscal(String numeroNotaFiscal) {
+        this.numeroNotaFiscal = numeroNotaFiscal;
+    }
+    
+    public String getFornecedor() {
+        return fornecedor;
+    }
+    
+    public void setFornecedor(String fornecedor) {
+        this.fornecedor = fornecedor;
     }
 }

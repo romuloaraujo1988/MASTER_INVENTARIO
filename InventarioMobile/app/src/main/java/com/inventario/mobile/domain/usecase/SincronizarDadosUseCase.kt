@@ -18,10 +18,19 @@ class SincronizarDadosUseCase @Inject constructor(
     /**
      * Executa sincronização completa de dados
      * 
+     * v2.2: USA ENDPOINT OTIMIZADO (1 requisição ao invés de múltiplas)
+     * 
      * @return Result com resultado da sincronização ou erro
      */
     suspend operator fun invoke(): Result<SyncRepository.SyncResult> {
-        return syncRepository.forceSyncFromServer()
+        return try {
+            // Tentar endpoint otimizado primeiro
+            syncRepository.forceSyncFromServerOptimized()
+        } catch (e: Exception) {
+            android.util.Log.w("SincronizarDadosUseCase", "Endpoint otimizado falhou, usando método antigo", e)
+            // Fallback para método antigo se o novo falhar
+            syncRepository.forceSyncFromServer()
+        }
     }
     
     /**

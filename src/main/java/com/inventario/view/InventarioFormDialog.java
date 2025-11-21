@@ -195,8 +195,10 @@ public class InventarioFormDialog extends JDialog {
         
         // Lista de usuários para busca
         modeloBuscaUsuarios = new DefaultListModel<>();
-        carregarUsuarios();
         listaBuscaUsuarios = new JList<>(modeloBuscaUsuarios);
+        
+        // Carregar usuários após criar a lista
+        carregarUsuarios();
         listaBuscaUsuarios.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         // Configurar renderer personalizado
@@ -461,27 +463,67 @@ public class InventarioFormDialog extends JDialog {
     
     private void carregarUsuarios() {
         try {
-            System.out.println("[DEBUG] Iniciando carregamento de usuários...");
+            System.out.println("[DEBUG] ========== CARREGANDO USUÁRIOS ==========");
+            System.out.println("[DEBUG] Obtendo UsuarioService...");
             
             UsuarioService usuarioService = ServiceFactory.getUsuarioService();
+            System.out.println("[DEBUG] UsuarioService obtido: " + (usuarioService != null ? "OK" : "NULL"));
+            
+            if (usuarioService == null) {
+                throw new Exception("UsuarioService não foi inicializado");
+            }
+            
+            System.out.println("[DEBUG] Chamando listarTodos()...");
             todosUsuarios = usuarioService.listarTodos();
+            System.out.println("[DEBUG] listarTodos() retornou: " + (todosUsuarios != null ? "OK" : "NULL"));
+            
+            if (todosUsuarios == null) {
+                todosUsuarios = new ArrayList<>();
+                System.out.println("[AVISO] listarTodos() retornou null, inicializando lista vazia");
+            }
             
             System.out.println("[DEBUG] Quantidade de usuários encontrados: " + todosUsuarios.size());
             
-            modeloBuscaUsuarios.clear();
-            for (Usuario usuario : todosUsuarios) {
-                modeloBuscaUsuarios.addElement(usuario);
-                System.out.println("[DEBUG] Adicionando usuário: " + usuario.getNomeCompleto());
+            if (todosUsuarios.isEmpty()) {
+                System.out.println("[AVISO] Nenhum usuário encontrado no banco de dados!");
+                JOptionPane.showMessageDialog(this, 
+                    "Nenhum usuário encontrado no banco de dados.\n" +
+                    "Cadastre usuários no sistema para poder adicioná-los como participantes.", 
+                    "Aviso", JOptionPane.WARNING_MESSAGE);
+                return;
             }
             
-            System.out.println("[DEBUG] Usuários carregados com sucesso!");
+            System.out.println("[DEBUG] Limpando modelo da lista...");
+            modeloBuscaUsuarios.clear();
+            
+            System.out.println("[DEBUG] Adicionando usuários ao modelo...");
+            for (Usuario usuario : todosUsuarios) {
+                modeloBuscaUsuarios.addElement(usuario);
+                System.out.println("[DEBUG] Adicionado: " + usuario.getNomeCompleto() + " (ID: " + usuario.getId() + ")");
+            }
+            
+            System.out.println("[DEBUG] Total de usuários no modelo: " + modeloBuscaUsuarios.getSize());
+            System.out.println("[DEBUG] ========== USUÁRIOS CARREGADOS COM SUCESSO ==========");
             
         } catch (Exception e) {
-            System.err.println("[ERRO] Erro ao carregar usuários: " + e.getMessage());
+            System.err.println("[ERRO] ========== ERRO AO CARREGAR USUÁRIOS ==========");
+            System.err.println("[ERRO] Tipo: " + e.getClass().getName());
+            System.err.println("[ERRO] Mensagem: " + e.getMessage());
+            System.err.println("[ERRO] Stack trace:");
             e.printStackTrace();
             
+            // Inicializar lista vazia para evitar NullPointerException
+            if (todosUsuarios == null) {
+                todosUsuarios = new ArrayList<>();
+            }
+            
             JOptionPane.showMessageDialog(this, 
-                "Erro ao carregar usuários do banco de dados:\n" + e.getMessage(), 
+                "Erro ao carregar usuários do banco de dados:\n" + 
+                e.getClass().getSimpleName() + ": " + e.getMessage() + "\n\n" +
+                "Verifique:\n" +
+                "1. Se há usuários cadastrados no sistema\n" +
+                "2. Se a conexão com o banco está funcionando\n" +
+                "3. Os logs do console para mais detalhes", 
                 "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -618,28 +660,37 @@ public class InventarioFormDialog extends JDialog {
      */
     private void carregarConfiguracaoSetores() {
         if (inventario == null || inventario.getId() == null) {
+            System.out.println("[DEBUG] Inventário nulo ou sem ID, não carregando setores");
             return;
         }
         
         try {
+            System.out.println("[DEBUG] ========== CARREGANDO CONFIGURAÇÃO DE SETORES ==========");
+            System.out.println("[DEBUG] ID do Inventário: " + inventario.getId());
+            
+            InventarioService inventarioService = ServiceFactory.getInventarioService();
+            
             // Verificar se inclui todos os setores
-            // TODO: Implementar método no serviço para verificar se inclui todos
-            boolean incluiTodos = false; // Por enquanto, assume que não inclui todos
+            boolean incluiTodos = inventarioService.inventarioIncluiTodosSetores(inventario.getId());
+            System.out.println("[DEBUG] Inclui todos os setores: " + incluiTodos);
+            
             checkIncluirTodos.setSelected(incluiTodos);
             listaSetores.setEnabled(!incluiTodos);
             
             if (!incluiTodos) {
                 // Buscar setores específicos do inventário
-                // TODO: Implementar busca de setores do inventário no serviço
-                List<Setor> setoresInventario = new ArrayList<>();
+                List<Setor> setoresInventario = inventarioService.buscarSetoresDoInventario(inventario.getId());
+                System.out.println("[DEBUG] Setores encontrados: " + setoresInventario.size());
                 
                 // Selecionar os setores na lista
                 List<Integer> indicesSelecionar = new ArrayList<>();
                 for (Setor setorInventario : setoresInventario) {
+                    System.out.println("[DEBUG] Procurando setor: " + setorInventario.getNome() + " (ID: " + setorInventario.getId() + ")");
                     for (int i = 0; i < modeloListaSetores.size(); i++) {
                         Setor setorLista = modeloListaSetores.getElementAt(i);
                         if (setorLista.getId() == setorInventario.getId()) {
                             indicesSelecionar.add(i);
+                            System.out.println("[DEBUG] Setor encontrado na lista no índice: " + i);
                             break;
                         }
                     }
@@ -649,12 +700,21 @@ public class InventarioFormDialog extends JDialog {
                 int[] indices = indicesSelecionar.stream().mapToInt(Integer::intValue).toArray();
                 listaSetores.setSelectedIndices(indices);
                 
-                System.out.println("[DEBUG] Carregados " + setoresInventario.size() + " setores do inventário");
+                System.out.println("[DEBUG] Total de setores selecionados: " + indices.length);
+                System.out.println("[DEBUG] Índices selecionados: " + java.util.Arrays.toString(indices));
+            } else {
+                System.out.println("[DEBUG] Inventário configurado para incluir todos os setores");
             }
             
+            System.out.println("[DEBUG] ========== CONFIGURAÇÃO DE SETORES CARREGADA ==========");
+            
         } catch (Exception e) {
-            System.err.println("Erro ao carregar configuração de setores: " + e.getMessage());
+            System.err.println("[ERRO] Erro ao carregar configuração de setores: " + e.getMessage());
             e.printStackTrace();
+            
+            JOptionPane.showMessageDialog(this, 
+                "Erro ao carregar configuração de setores:\n" + e.getMessage(), 
+                "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
     

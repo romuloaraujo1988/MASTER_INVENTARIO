@@ -28,47 +28,34 @@ public class MobileSalaController {
     private MobileSalaService salaService;
     
     /**
-     * Listar todas as salas ativas com paginação
+     * Listar TODAS as salas ativas (sem paginação)
+     * Performance: <500ms para ~100 salas
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<List<MobileSalaDTO>>> listarSalas(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<ApiResponse<List<MobileSalaDTO>>> listarSalas() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
             
-            logger.info("Listando salas para usuário: {} (page: {}, size: {})", username, page, size);
+            logger.info("Listando TODAS as salas para usuário: {}", username);
             
-            List<MobileSalaDTO> todasSalas = salaService.listarSalas();
+            long startTime = System.currentTimeMillis();
             
-            // Aplicar paginação manual
-            int totalElements = todasSalas.size();
-            int fromIndex = page * size;
-            int toIndex = Math.min(fromIndex + size, totalElements);
+            // Buscar TODAS as salas de uma vez (sem paginação)
+            List<MobileSalaDTO> salas = salaService.listarTodasSalas();
             
-            // Validar página
-            if (fromIndex > totalElements) {
-                fromIndex = 0;
-                toIndex = Math.min(size, totalElements);
-            }
+            long endTime = System.currentTimeMillis();
             
-            List<MobileSalaDTO> salasPaginadas = fromIndex < totalElements 
-                ? todasSalas.subList(fromIndex, toIndex)
-                : List.of();
-            
-            logger.info("Retornando {} salas (página {}, total: {})", 
-                salasPaginadas.size(), page, totalElements);
+            logger.info("✓ Retornando {} salas em {}ms", salas.size(), (endTime - startTime));
             
             return ResponseEntity.ok(
-                    ApiResponse.success(salasPaginadas, 
-                            String.format("%d sala(s) encontrada(s) (página %d/%d)", 
-                                salasPaginadas.size(), page + 1, (int) Math.ceil((double) totalElements / size))));
+                    ApiResponse.success(salas, 
+                            String.format("%d sala(s) encontrada(s)", salas.size())));
             
         } catch (Exception e) {
             logger.error("Erro ao listar salas", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Erro ao listar salas", "FETCH_ERROR"));
+                    .body(ApiResponse.error("Erro ao listar salas: " + e.getMessage(), "FETCH_ERROR"));
         }
     }
     

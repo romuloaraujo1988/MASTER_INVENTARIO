@@ -134,6 +134,125 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tilPassword" />
 
+        <!-- ========== CARD DE MODO OFFLINE ========== -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardOfflineMode"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="@color/warning_light"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tilPassword"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <!-- Título do Card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📴"
+                        android:textSize="24sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Modo Offline"
+                        android:textColor="@color/warning_dark"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <!-- Mensagem -->
+                <TextView
+                    android:id="@+id/tvOfflineModeMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:text="Sem conexão com a internet.\nUse biometria ou PIN para continuar."
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp" />
+
+                <!-- Nome do Usuário -->
+                <TextView
+                    android:id="@+id/tvOfflineUsername"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:text="Bem-vindo, Admin"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:textStyle="italic" />
+
+                <!-- Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:background="@color/divider" />
+
+                <!-- Botão Biometria -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnOfflineBiometric"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:text="🔐 Login com Biometria"
+                    android:textSize="16sp"
+                    android:visibility="gone"
+                    app:cornerRadius="8dp"
+                    app:icon="@drawable/ic_person"
+                    app:iconGravity="textStart"
+                    tools:visibility="visible" />
+
+                <!-- Botão PIN -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnOfflinePin"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="12dp"
+                    android:text="🔢 Login com PIN"
+                    android:textSize="16sp"
+                    android:visibility="gone"
+                    app:backgroundTint="@color/purple_700"
+                    app:cornerRadius="8dp"
+                    tools:visibility="visible" />
+
+                <!-- Mensagem quando nenhum método está disponível -->
+                <TextView
+                    android:id="@+id/tvNoOfflineMethod"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:text="⚠️ Configure biometria ou PIN para usar o modo offline"
+                    android:textColor="@color/warning_dark"
+                    android:textSize="13sp"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Divider -->
         <View
             android:id="@+id/divider"
@@ -159,18 +278,61 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/divider" />
 
+        <!-- Divider para Biometria -->
+        <View
+            android:id="@+id/dividerBiometric"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="24dp"
+            android:background="@color/divider"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btnLogin"
+            tools:visibility="visible" />
+
+        <!-- Hint de Biometria -->
+        <TextView
+            android:id="@+id/tvBiometricHint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Ou use biometria para login rápido"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dividerBiometric"
+            tools:visibility="visible" />
+
+        <!-- Nome do Usuário Salvo -->
+        <TextView
+            android:id="@+id/tvSavedUser"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Bem-vindo, Usuário"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvBiometricHint"
+            tools:visibility="visible" />
+
         <!-- Botão Biometria -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardBiometric"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="16dp"
             android:visibility="gone"
             app:cardCornerRadius="12dp"
             app:cardElevation="2dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/divider"
+            app:layout_constraintTop_toBottomOf="@id/tvSavedUser"
             tools:visibility="visible">
 
             <LinearLayout
@@ -212,6 +374,22 @@
 
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Indicador de Modo Offline -->
+        <TextView
+            android:id="@+id/tvOfflineMode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="📴 Modo Offline"
+            android:textColor="@color/warning"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cardBiometric"
+            tools:visibility="visible" />
+
         <!-- Progress Bar -->
         <ProgressBar
             android:id="@+id/progressBar"
@@ -236,7 +414,7 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cardBiometric"
+            app:layout_constraintTop_toBottomOf="@id/tvOfflineMode"
             tools:text="Erro ao fazer login"
             tools:visibility="visible" />
 

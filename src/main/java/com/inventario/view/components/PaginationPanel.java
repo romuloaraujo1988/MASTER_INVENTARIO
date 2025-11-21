@@ -24,7 +24,6 @@ public class PaginationPanel extends JPanel {
     private int currentPage = 0;
     private int totalPages = 0;
     private long totalElements = 0;
-    private int pageSize = 50;
     
     public PaginationPanel() {
         initComponents();
@@ -192,7 +191,6 @@ public class PaginationPanel extends JPanel {
      */
     public void setPageSize(int size) {
         cboPageSize.setSelectedItem(size);
-        this.pageSize = size;
     }
     
     /**

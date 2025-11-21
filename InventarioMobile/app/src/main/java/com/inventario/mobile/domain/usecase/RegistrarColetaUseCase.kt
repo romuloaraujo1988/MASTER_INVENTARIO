@@ -34,10 +34,11 @@ class RegistrarColetaUseCase @Inject constructor(
             
             // 3. TODO: Verificar se já foi coletado (implementar método no repositório)
             
-            // 4. Criar coleta
+            // 4. Criar coleta com número do patrimônio
             val coleta = Coleta(
                 id = 0,
                 patrimonioId = patrimonio.id,
+                numeroPatrimonio = numeroPatrimonio, // ✅ ADICIONAR número do patrimônio
                 usuarioId = idUsuario ?: 0L, // TODO: Obter do contexto de autenticação
                 dataColeta = System.currentTimeMillis(),
                 localizacaoAtual = localizacaoAtual,

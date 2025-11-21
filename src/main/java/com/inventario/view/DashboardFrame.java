@@ -1,7 +1,6 @@
 package com.inventario.view;
 
 import com.inventario.chart.InventarioChartService;
-import com.inventario.model.Usuario;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 
@@ -17,20 +16,17 @@ public class DashboardFrame extends JFrame {
     private static final Color BACKGROUND_COLOR = new Color(236, 240, 241);
     private static final Color CARD_COLOR = Color.WHITE;
     
-    private final Usuario usuario;
     private final InventarioChartService chartService;
     private Integer idInventarioAtivo;
 
-    public DashboardFrame(Usuario usuario) {
-        this.usuario = usuario;
+    public DashboardFrame() {
         this.chartService = new InventarioChartService();
         
         initComponents();
         setLocationRelativeTo(null);
     }
 
-    public DashboardFrame(Usuario usuario, Integer idInventario) {
-        this.usuario = usuario;
+    public DashboardFrame(Integer idInventario) {
         this.chartService = new InventarioChartService();
         this.idInventarioAtivo = idInventario;
         
@@ -175,11 +171,7 @@ public class DashboardFrame extends JFrame {
     // Método main para teste standalone
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            // Criar usuário de teste
-            Usuario usuario = new Usuario();
-            usuario.setNomeCompleto("Teste Dashboard");
-            
-            DashboardFrame frame = new DashboardFrame(usuario, 1);
+            DashboardFrame frame = new DashboardFrame(1);
             frame.setVisible(true);
         });
     }

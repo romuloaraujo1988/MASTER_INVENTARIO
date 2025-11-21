@@ -410,25 +410,18 @@ public class UsuarioFormDialog extends JDialog {
             usuario.setObservacoes(txtObservacoes.getText().trim().isEmpty() ? 
                                  null : txtObservacoes.getText().trim());
             
-            // Salvar no banco
-            boolean sucesso;
+            // Salvar no banco usando métodos do BaseDAO
             if (isEdicao) {
-                sucesso = usuarioDAO.atualizarUsuario(usuario);
+                usuarioDAO.update(usuario);
             } else {
-                sucesso = usuarioDAO.inserirUsuario(usuario);
+                usuarioDAO.insert(usuario);
             }
             
-            if (sucesso) {
-                usuarioSalvo = true;
-                JOptionPane.showMessageDialog(this,
-                    isEdicao ? "Usuário atualizado com sucesso!" : "Usuário criado com sucesso!",
-                    "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                dispose();
-            } else {
-                JOptionPane.showMessageDialog(this,
-                    "Erro ao salvar usuário. Tente novamente.",
-                    "Erro", JOptionPane.ERROR_MESSAGE);
-            }
+            usuarioSalvo = true;
+            JOptionPane.showMessageDialog(this,
+                isEdicao ? "Usuário atualizado com sucesso!" : "Usuário criado com sucesso!",
+                "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            dispose();
             
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this,

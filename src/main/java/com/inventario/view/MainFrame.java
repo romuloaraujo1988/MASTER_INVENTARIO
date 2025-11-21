@@ -1,7 +1,10 @@
 package com.inventario.view;
 
 import com.inventario.model.Usuario;
+import com.inventario.offline.ImportacaoDadosDialog;
 import com.inventario.offline.OfflineManager;
+import com.inventario.offline.StatusBarPanel;
+import com.inventario.offline.SyncStatusManager;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -32,21 +35,26 @@ public class MainFrame extends JFrame {
     private JButton btnModoOffline;
     private JButton btnTentarOnline;
     private OfflineManager offlineManager;
+    private StatusBarPanel statusBarPanel;
+    private SyncStatusManager syncStatusManager;
     private Timer statusTimer;
 
     // Controle do servidor mobile
     private Process servidorMobileProcess;
     private boolean servidorMobileAtivo = false;
+    private JLabel lblServidorMobile;
     // private ConfigurableApplicationContext mobileServerContext;
 
     public MainFrame(Usuario usuarioLogado) {
         this.usuarioLogado = usuarioLogado;
         this.offlineManager = OfflineManager.getInstance();
+        this.syncStatusManager = SyncStatusManager.getInstance();
 
         initializeComponents();
         setupLayout();
         setupEventListeners();
         setupOfflineControls();
+        setupSyncStatusListeners();
 
         setTitle("SIHCP - Sistema de Histórico e Coleta Patrimonial");
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -81,10 +89,36 @@ public class MainFrame extends JFrame {
 
         // Verificar se é usuário CONSULTA - só tem acesso ao dashboard
         boolean isConsulta = usuarioLogado.getPerfil().name().equals("CONSULTA");
+        boolean isAdmin = usuarioLogado.getPerfil().name().equals("ADMIN");
 
+        // Menu Administração (apenas para administradores) - SEGUNDO na ordem
+        JMenu menuAdmin = null;
+        if (isAdmin) {
+            menuAdmin = new JMenu("Administração");
+            menuAdmin.setFont(new Font("Arial", Font.BOLD, 14));
+            JMenuItem itemUsuarios = new JMenuItem("Gerenciar Usuários");
+            itemUsuarios.setFont(new Font("Arial", Font.PLAIN, 13));
+            itemUsuarios.addActionListener(e -> abrirGerenciamentoUsuarios());
+            JMenuItem itemConfigBanco = new JMenuItem("Configuração do Banco");
+            itemConfigBanco.setFont(new Font("Arial", Font.PLAIN, 13));
+            itemConfigBanco.addActionListener(e -> abrirConfiguracaoBanco());
+            JMenuItem itemServidorMobile = new JMenuItem("Servidor Mobile");
+            itemServidorMobile.setFont(new Font("Arial", Font.PLAIN, 13));
+            itemServidorMobile.addActionListener(e -> abrirGerenciamentoServidorMobile());
+
+            menuAdmin.add(itemUsuarios);
+            menuAdmin.add(itemConfigBanco);
+            menuAdmin.addSeparator();
+            menuAdmin.add(itemServidorMobile);
+        }
+
+        // Menu Inventário e Relatórios (não disponível para CONSULTA) - TERCEIRO na
+        // ordem
+        JMenu menuInventario = null;
+        JMenu menuRelatorios = null;
         if (!isConsulta) {
-            // Menu Inventário (não disponível para CONSULTA)
-            JMenu menuInventario = new JMenu("Inventário");
+            // Menu Inventário
+            menuInventario = new JMenu("Inventário");
             menuInventario.setFont(new Font("Arial", Font.BOLD, 14));
             JMenuItem itemGerenciarInventarios = new JMenuItem("Gerenciar Inventários");
             itemGerenciarInventarios.setFont(new Font("Arial", Font.PLAIN, 13));
@@ -122,50 +156,50 @@ public class MainFrame extends JFrame {
             menuInventario.addSeparator();
             menuInventario.add(itemImportarCSV);
 
-            // Menu Relatórios (não disponível para CONSULTA)
-            JMenu menuRelatorios = new JMenu("Relatórios");
+            // Menu Relatórios
+            menuRelatorios = new JMenu("Relatórios");
             menuRelatorios.setFont(new Font("Arial", Font.BOLD, 14));
             JMenuItem itemRelInventario = new JMenuItem("Relatório de Inventário");
             itemRelInventario.setFont(new Font("Arial", Font.PLAIN, 13));
             itemRelInventario.addActionListener(e -> abrirRelatorioInventario());
             menuRelatorios.add(itemRelInventario);
 
-            menuBar.add(menuInventario);
-            menuBar.add(menuRelatorios);
+            JMenuItem itemRelDivergencias = new JMenuItem("Relatório de Divergências");
+            itemRelDivergencias.setFont(new Font("Arial", Font.PLAIN, 13));
+            itemRelDivergencias.addActionListener(e -> abrirRelatorioDivergencias());
+            menuRelatorios.add(itemRelDivergencias);
+
+            menuRelatorios.addSeparator();
+
+            // Item SIADS
+            JMenuItem itemSiads = new JMenuItem("Exportar SIADS");
+            itemSiads.setFont(new Font("Arial", Font.PLAIN, 13));
+            itemSiads.setToolTipText("Exportar dados para o Sistema Integrado de Administração de Serviços");
+            itemSiads.addActionListener(e -> abrirExportacaoSiads());
+            menuRelatorios.add(itemSiads);
         }
 
-        // Menu Dashboard (disponível para todos os perfis)
+        // Menu Dashboard (disponível para todos os perfis) - QUARTO na ordem
         JMenu menuDashboard = new JMenu("Dashboard");
         menuDashboard.setFont(new Font("Arial", Font.BOLD, 14));
         JMenuItem itemDashboardColeta = new JMenuItem("Dashboard de Coleta");
         itemDashboardColeta.setFont(new Font("Arial", Font.PLAIN, 13));
         itemDashboardColeta.addActionListener(e -> abrirDashboardColeta());
+
+        JMenuItem itemStatusSalas = new JMenuItem("Status das Salas");
+        itemStatusSalas.setFont(new Font("Arial", Font.PLAIN, 13));
+        itemStatusSalas.addActionListener(e -> abrirStatusSalas());
+
         menuDashboard.add(itemDashboardColeta);
-
-        // Menu Administração (apenas para administradores)
-        if (usuarioLogado.getPerfil().name().equals("ADMIN")) {
-            JMenu menuAdmin = new JMenu("Administração");
-            menuAdmin.setFont(new Font("Arial", Font.BOLD, 14));
-            JMenuItem itemUsuarios = new JMenuItem("Gerenciar Usuários");
-            itemUsuarios.setFont(new Font("Arial", Font.PLAIN, 13));
-            itemUsuarios.addActionListener(e -> abrirGerenciamentoUsuarios());
-            JMenuItem itemConfigBanco = new JMenuItem("Configuração do Banco");
-            itemConfigBanco.setFont(new Font("Arial", Font.PLAIN, 13));
-            itemConfigBanco.addActionListener(e -> abrirConfiguracaoBanco());
-            JMenuItem itemServidorMobile = new JMenuItem("Servidor Mobile");
-            itemServidorMobile.setFont(new Font("Arial", Font.PLAIN, 13));
-            itemServidorMobile.addActionListener(e -> abrirGerenciamentoServidorMobile());
-
-            menuAdmin.add(itemUsuarios);
-            menuAdmin.add(itemConfigBanco);
-            menuAdmin.addSeparator();
-            menuAdmin.add(itemServidorMobile);
-            menuBar.add(menuAdmin);
-        }
+        menuDashboard.add(itemStatusSalas);
 
         // Menu Sistema (para controles offline/online)
         JMenu menuSistema = new JMenu("Sistema");
         menuSistema.setFont(new Font("Arial", Font.BOLD, 14));
+
+        JMenuItem itemImportarDados = new JMenuItem("Importar Dados Offline");
+        itemImportarDados.setFont(new Font("Arial", Font.PLAIN, 13));
+        itemImportarDados.addActionListener(e -> abrirImportacaoDadosOffline());
 
         JMenuItem itemForcarOffline = new JMenuItem("Forçar Modo Offline");
         itemForcarOffline.setFont(new Font("Arial", Font.PLAIN, 13));
@@ -190,11 +224,13 @@ public class MainFrame extends JFrame {
         JMenuItem itemMonitorMobile = new JMenuItem("Monitor de Usuários Mobile");
         itemMonitorMobile.setFont(new Font("Arial", Font.PLAIN, 13));
         itemMonitorMobile.addActionListener(e -> abrirMonitorMobile());
-        
+
         JMenuItem itemConfigurarFirewall = new JMenuItem("Configurar Firewall para Mobile");
         itemConfigurarFirewall.setFont(new Font("Arial", Font.PLAIN, 13));
         itemConfigurarFirewall.addActionListener(e -> mostrarInstrucoesFirewall());
 
+        menuSistema.add(itemImportarDados);
+        menuSistema.addSeparator();
         menuSistema.add(itemForcarOffline);
         menuSistema.add(itemTentarOnline);
         menuSistema.addSeparator();
@@ -213,10 +249,32 @@ public class MainFrame extends JFrame {
         itemSobre.addActionListener(e -> mostrarSobre());
         menuAjuda.add(itemSobre);
 
-        // Adicionar menus à barra
+        // Adicionar menus à barra na ordem: Arquivo, Administração, Inventário,
+        // Relatórios, Dashboard, Sistema, Ajuda
         menuBar.add(menuArquivo);
+
+        // Administração (apenas ADMIN)
+        if (menuAdmin != null) {
+            menuBar.add(menuAdmin);
+        }
+
+        // Inventário (não disponível para CONSULTA)
+        if (menuInventario != null) {
+            menuBar.add(menuInventario);
+        }
+
+        // Relatórios (não disponível para CONSULTA) - ANTES do Dashboard
+        if (menuRelatorios != null) {
+            menuBar.add(menuRelatorios);
+        }
+
+        // Dashboard (disponível para todos)
         menuBar.add(menuDashboard);
+
+        // Sistema (disponível para todos)
         menuBar.add(menuSistema);
+
+        // Ajuda (disponível para todos)
         menuBar.add(menuAjuda);
 
         // Label do usuário logado
@@ -249,19 +307,43 @@ public class MainFrame extends JFrame {
         panelTop.setOpaque(false);
         panelTop.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
+        // Painel direito com usuário e status do servidor mobile
+        JPanel panelDireito = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
+        panelDireito.setOpaque(false);
+        
+        // Verificar se é administrador
+        boolean isAdmin = usuarioLogado.getPerfil().name().equals("ADMIN");
+        
+        // Indicador do servidor mobile (apenas para ADMIN)
+        if (isAdmin) {
+            lblServidorMobile = new JLabel();
+            lblServidorMobile.setFont(new Font("Segoe UI Emoji", Font.BOLD, 12));
+            lblServidorMobile.setOpaque(true);
+            lblServidorMobile.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.WHITE, 1),
+                BorderFactory.createEmptyBorder(5, 10, 5, 10)
+            ));
+            
+            atualizarIndicadorServidorMobile();
+            panelDireito.add(lblServidorMobile);
+        }
+        
         // Ajustar cor do label do usuário para branco
         lblUsuarioLogado.setForeground(Color.WHITE);
-        panelTop.add(lblUsuarioLogado, BorderLayout.EAST);
+        
+        panelDireito.add(lblUsuarioLogado);
+        panelTop.add(panelDireito, BorderLayout.EAST);
 
         // Painel central com dashboard
         JPanel panelCenter = createDashboardPanel();
 
-        // Painel inferior com controles offline/online
-        JPanel panelBottom = createBottomPanel();
+        // Criar StatusBarPanel (substitui o painel inferior antigo)
+        statusBarPanel = new StatusBarPanel();
+        statusBarPanel.addSincronizarListener(e -> executarSincronizacao());
 
         add(panelTop, BorderLayout.NORTH);
         add(panelCenter, BorderLayout.CENTER);
-        add(panelBottom, BorderLayout.SOUTH);
+        add(statusBarPanel, BorderLayout.SOUTH);
     }
 
     private JPanel createDashboardPanel() {
@@ -270,16 +352,18 @@ public class MainFrame extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(15, 15, 15, 15);
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.gridx = 0;
+        gbc.gridwidth = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
 
         // Título principal
         JLabel lblTitulo = new JLabel("SIHCP - Sistema de Histórico e Coleta Patrimonial");
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 28));
         lblTitulo.setForeground(new Color(44, 62, 80));
         lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
-        gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.gridwidth = 3;
         panel.add(lblTitulo, gbc);
 
         // Subtítulo
@@ -288,25 +372,21 @@ public class MainFrame extends JFrame {
         lblSubtitulo.setForeground(new Color(127, 140, 141));
         lblSubtitulo.setHorizontalAlignment(SwingConstants.CENTER);
         gbc.gridy = 1;
+        gbc.insets = new Insets(0, 10, 30, 10); // Mais espaço abaixo do subtítulo
         panel.add(lblSubtitulo, gbc);
 
         // Verificar se é usuário CONSULTA
         boolean isConsulta = usuarioLogado.getPerfil().name().equals("CONSULTA");
 
-        // Botões principais simples - com tamanho máximo controlado
-        gbc.gridwidth = 1;
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.weightx = 1.0;
-        gbc.weighty = 1.0;
+        // Container para os botões
+        JPanel buttonContainer = new JPanel();
+        buttonContainer.setOpaque(false);
 
         if (isConsulta) {
-            // Para usuários CONSULTA, mostrar apenas o dashboard centralizado
+            buttonContainer.setLayout(new GridBagLayout()); // Centralizar único botão
             JButton btnDashboard = createSimpleButton("Dashboard", "📈");
             btnDashboard.addActionListener(e -> abrirDashboardColeta());
-            gbc.gridx = 1;
-            gbc.gridy = 2;
-            gbc.gridwidth = 1;
-            panel.add(btnDashboard, gbc);
+            buttonContainer.add(btnDashboard);
 
             // Adicionar mensagem informativa
             JLabel lblInfo = new JLabel(
@@ -314,91 +394,82 @@ public class MainFrame extends JFrame {
             lblInfo.setFont(new Font("Arial", Font.PLAIN, 14));
             lblInfo.setForeground(new Color(100, 100, 100));
             lblInfo.setHorizontalAlignment(SwingConstants.CENTER);
-            gbc.gridx = 0;
+
+            gbc.gridy = 2;
+            panel.add(buttonContainer, gbc);
+
             gbc.gridy = 3;
-            gbc.gridwidth = 3;
+            gbc.insets = new Insets(20, 10, 10, 10);
             panel.add(lblInfo, gbc);
+
         } else {
-            // Para outros perfis, mostrar todos os botões
+            // Grid para os botões (3 colunas)
+            GridLayout gridLayout = new GridLayout(0, 3, 20, 20);
+            buttonContainer.setLayout(gridLayout);
 
             // Botão Inventários
             JButton btnInventarios = createSimpleButton("Inventários", "📋");
             btnInventarios.addActionListener(e -> abrirGerenciamentoInventarios());
-            gbc.gridx = 0;
-            gbc.gridy = 2;
-            panel.add(btnInventarios, gbc);
+            buttonContainer.add(btnInventarios);
 
             // Botão Salas
             JButton btnSalas = createSimpleButton("Salas", "🚪");
             btnSalas.addActionListener(e -> abrirGerenciamentoSalas());
-            gbc.gridx = 1;
-            gbc.gridy = 2;
-            panel.add(btnSalas, gbc);
+            buttonContainer.add(btnSalas);
 
             // Botão Setores
             JButton btnSetores = createSimpleButton("Setores", "🏢");
             btnSetores.addActionListener(e -> abrirGerenciamentoSetores());
-            gbc.gridx = 2;
-            gbc.gridy = 2;
-            panel.add(btnSetores, gbc);
+            buttonContainer.add(btnSetores);
 
             // Botão Campus
             JButton btnCampus = createSimpleButton("Campus", "🏫");
             btnCampus.addActionListener(e -> abrirGerenciamentoCampus());
-            gbc.gridx = 0;
-            gbc.gridy = 3;
-            panel.add(btnCampus, gbc);
+            buttonContainer.add(btnCampus);
 
             // Botão Responsáveis
             JButton btnResponsaveis = createSimpleButton("Responsáveis", "👥");
             btnResponsaveis.addActionListener(e -> abrirGerenciamentoResponsaveis());
-            gbc.gridx = 1;
-            gbc.gridy = 3;
-            panel.add(btnResponsaveis, gbc);
+            buttonContainer.add(btnResponsaveis);
 
             // Botão Patrimônio
             JButton btnPatrimonio = createSimpleButton("Patrimônio", "📦");
             btnPatrimonio.addActionListener(e -> abrirPatrimonio());
-            gbc.gridx = 2;
-            gbc.gridy = 3;
-            panel.add(btnPatrimonio, gbc);
+            buttonContainer.add(btnPatrimonio);
 
             // Botão Coleta
             JButton btnColeta = createSimpleButton("Coleta", "📝");
             btnColeta.addActionListener(e -> abrirColeta());
-            gbc.gridx = 0;
-            gbc.gridy = 4;
-            panel.add(btnColeta, gbc);
+            buttonContainer.add(btnColeta);
 
             // Botão Importar CSV
             JButton btnImportarCSV = createSimpleButton("Importar CSV/XLS", "📥");
             btnImportarCSV.addActionListener(e -> abrirImportacaoCSV());
-            gbc.gridx = 1;
-            gbc.gridy = 4;
-            panel.add(btnImportarCSV, gbc);
+            buttonContainer.add(btnImportarCSV);
 
             // Botão Dashboard de Coleta
             JButton btnDashboard = createSimpleButton("Dashboard", "📈");
             btnDashboard.addActionListener(e -> abrirDashboardColeta());
-            gbc.gridx = 2;
-            gbc.gridy = 4;
-            panel.add(btnDashboard, gbc);
+            buttonContainer.add(btnDashboard);
 
             // Botão Relatórios
             JButton btnRelatorios = createSimpleButton("Relatórios", "📊");
             btnRelatorios.addActionListener(e -> abrirRelatorioInventario());
-            gbc.gridx = 0;
-            gbc.gridy = 5;
-            panel.add(btnRelatorios, gbc);
+            buttonContainer.add(btnRelatorios);
 
             // Botão Usuários (apenas para admin)
             if (usuarioLogado.getPerfil().name().equals("ADMIN")) {
                 JButton btnUsuarios = createSimpleButton("Usuários", "👤");
                 btnUsuarios.addActionListener(e -> abrirGerenciamentoUsuarios());
-                gbc.gridx = 1;
-                gbc.gridy = 5;
-                panel.add(btnUsuarios, gbc);
+                buttonContainer.add(btnUsuarios);
             }
+
+            gbc.gridy = 2;
+            gbc.weightx = 1.0;
+            gbc.weighty = 1.0;
+            gbc.fill = GridBagConstraints.NONE; // Não esticar o container
+            gbc.anchor = GridBagConstraints.CENTER; // Centralizar
+            panel.add(buttonContainer, gbc);
         }
 
         return panel;
@@ -841,7 +912,8 @@ public class MainFrame extends JFrame {
 
     private void abrirImportacaoCSV() {
         try {
-            ImportacaoCSVFrame importacaoFrame = new ImportacaoCSVFrame();
+            // Passar o usuário logado para validação de perfil
+            ImportacaoCSVFrame importacaoFrame = new ImportacaoCSVFrame(usuarioLogado);
             importacaoFrame.setVisible(true);
         } catch (Exception e) {
             ModernDialog.showMessage(this,
@@ -858,6 +930,29 @@ public class MainFrame extends JFrame {
             ModernDialog.showMessage(this,
                     "Erro ao abrir relatórios: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void abrirRelatorioDivergencias() {
+        try {
+            RelatorioDivergenciasFrame divergenciasFrame = new RelatorioDivergenciasFrame();
+            divergenciasFrame.setVisible(true);
+        } catch (Exception e) {
+            ModernDialog.showMessage(this,
+                    "Erro ao abrir relatório de divergências: " + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void abrirExportacaoSiads() {
+        try {
+            com.inventario.siads.view.SiadsExportDialog dialog = new com.inventario.siads.view.SiadsExportDialog(this);
+            dialog.setVisible(true);
+        } catch (Exception e) {
+            ModernDialog.showMessage(this,
+                    "Erro ao abrir exportação SIADS: " + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
     }
 
@@ -911,15 +1006,33 @@ public class MainFrame extends JFrame {
         // Usar JLabel com HTML para melhor formatação
         JLabel label = new JLabel(com.inventario.util.VersionInfo.getVersionInfoHtml());
         label.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        
-        JOptionPane.showMessageDialog(this, 
-            label, 
-            "Sobre o Sistema", 
-            JOptionPane.INFORMATION_MESSAGE);
+
+        JOptionPane.showMessageDialog(this,
+                label,
+                "Sobre o Sistema",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void forcarModoOffline() {
         try {
+            // Verificar se existem dados locais antes de ativar modo offline
+            if (!verificarDadosLocaisDisponiveis()) {
+                int opcao = JOptionPane.showConfirmDialog(this,
+                    "⚠️ ATENÇÃO: Não foram encontrados dados locais!\n\n" +
+                    "Para trabalhar em modo offline, você precisa primeiro importar\n" +
+                    "os dados do servidor para o banco de dados local.\n\n" +
+                    "Deseja importar os dados agora?",
+                    "Dados Locais Não Encontrados",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
+                
+                if (opcao == JOptionPane.YES_OPTION) {
+                    // Abrir dialog de importação
+                    abrirImportacaoDadosOffline();
+                }
+                return;
+            }
+            
             int opcao = showModernConfirmDialog(
                     "Deseja forçar o sistema para modo offline?\n" +
                             "Isso desconectará o sistema da rede e operará apenas localmente.\n" +
@@ -950,10 +1063,19 @@ public class MainFrame extends JFrame {
 
     private void tentarModoOnline() {
         try {
-            int opcao = showModernConfirmDialog(
-                    "Deseja tentar reconectar ao servidor?\n" +
-                            "O sistema verificará a conectividade e sincronizará os dados.",
-                    "Confirmar Reconexão");
+            // Verificar se há dados locais para sincronizar
+            boolean temDadosLocais = verificarDadosLocaisDisponiveis();
+            
+            String mensagem = "Deseja tentar reconectar ao servidor?\n" +
+                    "O sistema verificará a conectividade e sincronizará os dados.";
+            
+            if (!temDadosLocais) {
+                mensagem = "Deseja tentar reconectar ao servidor?\n\n" +
+                        "⚠️ Aviso: Não foram encontrados dados locais.\n" +
+                        "Recomenda-se importar os dados após reconectar.";
+            }
+            
+            int opcao = showModernConfirmDialog(mensagem, "Confirmar Reconexão");
 
             if (opcao == JOptionPane.YES_OPTION) {
                 // Mostra progresso
@@ -1081,12 +1203,12 @@ public class MainFrame extends JFrame {
                     System.err.println("Erro ao parar servidor mobile: " + e.getMessage());
                 }
             }
-            
+
             // Parar timer de status antes de sair
             if (statusTimer != null) {
                 statusTimer.cancel();
             }
-            
+
             System.exit(0);
         }
     }
@@ -1127,7 +1249,7 @@ public class MainFrame extends JFrame {
             protected Boolean doInBackground() throws Exception {
                 try {
                     publish("Iniciando servidor mobile...\n\n");
-                    
+
                     // Verificar se a porta 8081 está disponível
                     publish("Verificando disponibilidade da porta 8081...\n");
                     if (!verificarPortaDisponivel(8081)) {
@@ -1136,16 +1258,16 @@ public class MainFrame extends JFrame {
                         return false;
                     }
                     publish("✓ Porta 8081 disponível\n\n");
-                    
+
                     // Iniciar o servidor mobile como processo externo
                     String javaHome = System.getProperty("java.home");
                     String javaBin = javaHome + "/bin/java.exe"; // Windows
                     if (!new java.io.File(javaBin).exists()) {
                         javaBin = javaHome + "/bin/java"; // Linux/Mac
                     }
-                    
+
                     String classpath = System.getProperty("java.class.path");
-                    
+
                     publish("Java: " + javaBin + "\n");
                     publish("Classpath: " + classpath.substring(0, Math.min(100, classpath.length())) + "...\n");
                     publish("\nConfiguração do Servidor:\n");
@@ -1153,33 +1275,32 @@ public class MainFrame extends JFrame {
                     publish("  • Porta: 8081\n");
                     publish("  • Endereço: 0.0.0.0 (todas as interfaces)\n");
                     publish("  • Context Path: /inventario\n\n");
-                    
+
                     ProcessBuilder processBuilder = new ProcessBuilder(
-                        javaBin,
-                        "-cp", classpath,
-                        // Propriedades do sistema Java (ANTES da classe)
-                        "-Dspring.profiles.active=mobile",
-                        "-Dspring.config.name=application",
-                        "-Dspring.config.location=classpath:/",
-                        "-Dserver.port=8081",
-                        "-Dserver.address=0.0.0.0",
-                        "-Dserver.servlet.context-path=/inventario",
-                        "-Dspring.jmx.enabled=false",
-                        "-Dcom.sun.management.jmxremote=false",
-                        // Classe principal
-                        "com.inventario.MobileApiApplication",
-                        // Argumentos do Spring Boot (DEPOIS da classe)
-                        "--spring.profiles.active=mobile",
-                        "--server.port=8081",
-                        "--server.address=0.0.0.0"
-                    );
-                    
+                            javaBin,
+                            "-cp", classpath,
+                            // Propriedades do sistema Java (ANTES da classe)
+                            "-Dspring.profiles.active=mobile",
+                            "-Dspring.config.name=application",
+                            "-Dspring.config.location=classpath:/",
+                            "-Dserver.port=8081",
+                            "-Dserver.address=0.0.0.0",
+                            "-Dserver.servlet.context-path=/inventario",
+                            "-Dspring.jmx.enabled=false",
+                            "-Dcom.sun.management.jmxremote=false",
+                            // Classe principal
+                            "com.inventario.MobileApiApplication",
+                            // Argumentos do Spring Boot (DEPOIS da classe)
+                            "--spring.profiles.active=mobile",
+                            "--server.port=8081",
+                            "--server.address=0.0.0.0");
+
                     processBuilder.redirectErrorStream(true);
                     servidorMobileProcess = processBuilder.start();
-                    
+
                     publish("Processo iniciado! PID: " + servidorMobileProcess.pid() + "\n");
                     publish("Aguardando inicialização do Spring Boot...\n\n");
-                    
+
                     // Ler saída do processo em thread separada
                     Thread outputReader = new Thread(() -> {
                         try (java.io.BufferedReader reader = new java.io.BufferedReader(
@@ -1188,10 +1309,10 @@ public class MainFrame extends JFrame {
                             while ((line = reader.readLine()) != null) {
                                 publish(line + "\n");
                                 System.out.println("[MOBILE SERVER] " + line);
-                                
+
                                 // Verificar se o servidor iniciou com sucesso
-                                if (line.contains("Started MobileApiApplication") || 
-                                    line.contains("Tomcat started on port")) {
+                                if (line.contains("Started MobileApiApplication") ||
+                                        line.contains("Tomcat started on port")) {
                                     servidorMobileAtivo = true;
                                 }
                             }
@@ -1201,7 +1322,7 @@ public class MainFrame extends JFrame {
                     });
                     outputReader.setDaemon(true);
                     outputReader.start();
-                    
+
                     // Aguardar até 30 segundos para o servidor iniciar
                     for (int i = 0; i < 30; i++) {
                         Thread.sleep(1000);
@@ -1214,10 +1335,10 @@ public class MainFrame extends JFrame {
                             return false;
                         }
                     }
-                    
+
                     publish("\n⚠ Timeout: Servidor pode ainda estar iniciando...\n");
                     return true;
-                    
+
                 } catch (Exception e) {
                     publish("\n✗ ERRO: " + e.getMessage() + "\n");
                     e.printStackTrace();
@@ -1237,7 +1358,7 @@ public class MainFrame extends JFrame {
             protected void done() {
                 try {
                     boolean sucesso = get();
-                    
+
                     // Adicionar botão de fechar
                     JButton btnFechar = new JButton("Fechar");
                     btnFechar.addActionListener(e -> progressDialog.dispose());
@@ -1245,20 +1366,21 @@ public class MainFrame extends JFrame {
                     buttonPanel.add(btnFechar);
                     progressDialog.add(buttonPanel, BorderLayout.SOUTH);
                     progressDialog.revalidate();
-                    
+
                     // Atualizar status visual
                     updateConnectionStatus(offlineManager.getCurrentState());
-                    
+                    atualizarIndicadorServidorMobile();
+
                     if (sucesso) {
                         outputArea.append("\n=== SERVIDOR MOBILE ATIVO ===\n");
-                        
+
                         // Obter IP da rede local
                         String ipLocal = obterIPLocal();
-                        
+
                         outputArea.append("\nAcesso Local (neste computador):\n");
                         outputArea.append("  URL: http://localhost:8081/inventario\n");
                         outputArea.append("  Swagger: http://localhost:8081/inventario/swagger-ui.html\n");
-                        
+
                         if (ipLocal != null && !ipLocal.isEmpty()) {
                             outputArea.append("\nAcesso pela Rede (smartphone/tablet):\n");
                             outputArea.append("  URL: http://" + ipLocal + ":8081/inventario\n");
@@ -1266,9 +1388,10 @@ public class MainFrame extends JFrame {
                             outputArea.append("\n💡 Use este endereço no aplicativo mobile!\n");
                         } else {
                             outputArea.append("\n⚠ Não foi possível detectar o IP da rede local.\n");
-                            outputArea.append("Execute 'ipconfig' (Windows) ou 'ifconfig' (Linux/Mac) para descobrir.\n");
+                            outputArea
+                                    .append("Execute 'ipconfig' (Windows) ou 'ifconfig' (Linux/Mac) para descobrir.\n");
                         }
-                        
+
                         outputArea.append("\n📱 Certifique-se de que:\n");
                         outputArea.append("  • O smartphone está na mesma rede Wi-Fi\n");
                         outputArea.append("  • O firewall permite conexões na porta 8081\n");
@@ -1278,7 +1401,7 @@ public class MainFrame extends JFrame {
                         outputArea.append("\n=== FALHA AO INICIAR ===\n");
                         outputArea.append("Verifique os logs acima para mais detalhes.\n");
                     }
-                    
+
                 } catch (Exception e) {
                     servidorMobileAtivo = false;
                     outputArea.append("\nErro: " + e.getMessage() + "\n");
@@ -1303,18 +1426,19 @@ public class MainFrame extends JFrame {
         try {
             // Encerrar o processo do servidor
             servidorMobileProcess.destroy();
-            
+
             // Aguardar até 5 segundos para o processo terminar
             if (!servidorMobileProcess.waitFor(5, java.util.concurrent.TimeUnit.SECONDS)) {
                 // Se não terminou, forçar
                 servidorMobileProcess.destroyForcibly();
             }
-            
+
             servidorMobileProcess = null;
             servidorMobileAtivo = false;
 
             // Atualizar status visual
             updateConnectionStatus(offlineManager.getCurrentState());
+            atualizarIndicadorServidorMobile();
 
             ModernDialog.showMessage(this,
                     "Servidor mobile foi parado com sucesso.",
@@ -1341,7 +1465,7 @@ public class MainFrame extends JFrame {
                     JOptionPane.ERROR_MESSAGE);
         }
     }
-    
+
     /**
      * Verifica se o servidor mobile está respondendo
      */
@@ -1352,14 +1476,14 @@ public class MainFrame extends JFrame {
             conn.setRequestMethod("GET");
             conn.setConnectTimeout(2000);
             conn.setReadTimeout(2000);
-            
+
             int responseCode = conn.getResponseCode();
             return responseCode == 200;
         } catch (Exception e) {
             return false;
         }
     }
-    
+
     /**
      * Verifica se uma porta está disponível
      */
@@ -1371,34 +1495,35 @@ public class MainFrame extends JFrame {
             return false;
         }
     }
-    
+
     /**
      * Obtém o endereço IP local da rede
      */
     private String obterIPLocal() {
         try {
-            java.util.Enumeration<java.net.NetworkInterface> interfaces = java.net.NetworkInterface.getNetworkInterfaces();
+            java.util.Enumeration<java.net.NetworkInterface> interfaces = java.net.NetworkInterface
+                    .getNetworkInterfaces();
             while (interfaces.hasMoreElements()) {
                 java.net.NetworkInterface iface = interfaces.nextElement();
-                
+
                 // Ignorar interfaces desativadas e loopback
                 if (iface.isLoopback() || !iface.isUp()) {
                     continue;
                 }
-                
+
                 java.util.Enumeration<java.net.InetAddress> addresses = iface.getInetAddresses();
                 while (addresses.hasMoreElements()) {
                     java.net.InetAddress addr = addresses.nextElement();
-                    
+
                     // Pegar apenas IPv4 e ignorar loopback
                     if (addr instanceof java.net.Inet4Address && !addr.isLoopbackAddress()) {
                         String ip = addr.getHostAddress();
-                        
+
                         // Preferir IPs da rede local (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
-                        if (ip.startsWith("192.168.") || ip.startsWith("10.") || 
-                            (ip.startsWith("172.") && 
-                             Integer.parseInt(ip.split("\\.")[1]) >= 16 && 
-                             Integer.parseInt(ip.split("\\.")[1]) <= 31)) {
+                        if (ip.startsWith("192.168.") || ip.startsWith("10.") ||
+                                (ip.startsWith("172.") &&
+                                        Integer.parseInt(ip.split("\\.")[1]) >= 16 &&
+                                        Integer.parseInt(ip.split("\\.")[1]) <= 31)) {
                             return ip;
                         }
                     }
@@ -1409,18 +1534,18 @@ public class MainFrame extends JFrame {
         }
         return null;
     }
-    
+
     /**
      * Mostra instruções para configurar o firewall
      */
     private void mostrarInstrucoesFirewall() {
         String ipLocal = obterIPLocal();
         String ipInfo = ipLocal != null ? ipLocal : "[SEU_IP_LOCAL]";
-        
+
         StringBuilder instrucoes = new StringBuilder();
         instrucoes.append("=== CONFIGURAÇÃO DO FIREWALL PARA SERVIDOR MOBILE ===\n\n");
         instrucoes.append("Para que o smartphone consiga se conectar ao servidor, você precisa:\n\n");
-        
+
         instrucoes.append("1️⃣ VERIFICAR SEU IP LOCAL\n");
         if (ipLocal != null) {
             instrucoes.append("   ✓ Seu IP detectado: ").append(ipLocal).append("\n");
@@ -1429,7 +1554,7 @@ public class MainFrame extends JFrame {
             instrucoes.append("   • Procure por 'Endereço IPv4' na sua rede Wi-Fi\n");
         }
         instrucoes.append("\n");
-        
+
         instrucoes.append("2️⃣ CONFIGURAR FIREWALL DO WINDOWS\n");
         instrucoes.append("   a) Abra o 'Firewall do Windows Defender'\n");
         instrucoes.append("   b) Clique em 'Configurações avançadas'\n");
@@ -1439,63 +1564,344 @@ public class MainFrame extends JFrame {
         instrucoes.append("   f) Selecione 'Permitir a conexão' → Avançar\n");
         instrucoes.append("   g) Marque todos os perfis → Avançar\n");
         instrucoes.append("   h) Nome: 'Servidor Mobile Inventário' → Concluir\n\n");
-        
+
         instrucoes.append("3️⃣ CONFIGURAR NO SMARTPHONE\n");
         instrucoes.append("   • Conecte o smartphone na MESMA rede Wi-Fi\n");
         instrucoes.append("   • No app, configure o servidor como:\n");
         instrucoes.append("     URL: http://").append(ipInfo).append(":8081/inventario\n\n");
-        
+
         instrucoes.append("4️⃣ TESTAR CONEXÃO\n");
         instrucoes.append("   • No navegador do smartphone, acesse:\n");
         instrucoes.append("     http://").append(ipInfo).append(":8081/inventario/actuator/health\n");
         instrucoes.append("   • Deve retornar: {\"status\":\"UP\"}\n\n");
-        
+
         instrucoes.append("5️⃣ COMANDO RÁPIDO (PowerShell como Administrador)\n");
         instrucoes.append("   netsh advfirewall firewall add rule name=\"Servidor Mobile Inventário\" ");
         instrucoes.append("dir=in action=allow protocol=TCP localport=8081\n\n");
-        
+
         instrucoes.append("⚠️ PROBLEMAS COMUNS:\n");
         instrucoes.append("   • Antivírus bloqueando: Adicione exceção para porta 8081\n");
         instrucoes.append("   • Redes diferentes: Smartphone e PC devem estar na mesma rede\n");
         instrucoes.append("   • Servidor não iniciado: Inicie pelo menu Sistema\n");
-        
+
         JTextArea textArea = new JTextArea(instrucoes.toString());
         textArea.setEditable(false);
         textArea.setFont(new Font("Monospaced", Font.PLAIN, 11));
         textArea.setCaretPosition(0);
-        
+
         JScrollPane scrollPane = new JScrollPane(textArea);
         scrollPane.setPreferredSize(new Dimension(700, 500));
-        
+
         JOptionPane.showMessageDialog(this,
                 scrollPane,
                 "Configurar Firewall para Servidor Mobile",
                 JOptionPane.INFORMATION_MESSAGE);
     }
-    
+
     /**
      * Abre o diálogo para o usuário alterar sua própria senha
      */
     private void alterarMinhaSenha() {
         try {
             AlterarSenhaDialog dialog = new AlterarSenhaDialog(
-                this, 
-                usuarioLogado.getId(), 
-                usuarioLogado.getNomeCompleto(), 
-                true // Requer senha atual
+                    this,
+                    usuarioLogado.getId(),
+                    usuarioLogado.getNomeCompleto(),
+                    true // Requer senha atual
             );
             dialog.setVisible(true);
-            
+
             if (dialog.isSenhaSalva()) {
                 ModernDialog.showMessage(this,
-                    "Senha alterada com sucesso!\nSua nova senha já está ativa.",
-                    "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                        "Senha alterada com sucesso!\nSua nova senha já está ativa.",
+                        "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             }
         } catch (Exception e) {
             ModernDialog.showMessage(this,
-                "Erro ao abrir diálogo de alteração de senha: " + e.getMessage(),
-                "Erro", JOptionPane.ERROR_MESSAGE);
+                    "Erro ao abrir diálogo de alteração de senha: " + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
+        }
+    }
+
+    private void abrirStatusSalas() {
+        try {
+            StatusSalasFrame statusFrame = new StatusSalasFrame();
+            statusFrame.setVisible(true);
+        } catch (Exception e) {
+            ModernDialog.showMessage(this,
+                    "Erro ao abrir status das salas: " + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Configura listeners para mudanças de status de sincronização
+     */
+    private void setupSyncStatusListeners() {
+        // Listener para mudanças no OfflineManager
+        offlineManager.addStateListener(new OfflineManager.OfflineStateListener() {
+            @Override
+            public void onStateChanged(OfflineManager.OfflineState oldState, OfflineManager.OfflineState newState) {
+                SwingUtilities.invokeLater(() -> {
+                    statusBarPanel.atualizarStatus(newState);
+                    
+                    // Se mudou para ONLINE, atualizar última sincronização
+                    if (newState == OfflineManager.OfflineState.ONLINE) {
+                        statusBarPanel.atualizarUltimaSincronizacao(java.time.LocalDateTime.now());
+                        syncStatusManager.atualizarUltimaSincronizacaoGeral();
+                    }
+                });
+            }
+        });
+        
+        // Listener para mudanças no SyncStatusManager
+        syncStatusManager.addListener((totalPendentes, ultimaSincronizacao) -> {
+            SwingUtilities.invokeLater(() -> {
+                statusBarPanel.atualizarColetasPendentes(totalPendentes);
+                if (ultimaSincronizacao != null) {
+                    statusBarPanel.atualizarUltimaSincronizacao(ultimaSincronizacao);
+                }
+            });
+        });
+        
+        // Atualizar status inicial
+        OfflineManager.OfflineState estadoInicial = offlineManager.getCurrentState();
+        statusBarPanel.atualizarStatus(estadoInicial);
+    }
+    
+    /**
+     * Abre o dialog de importação de dados offline
+     */
+    private void abrirImportacaoDadosOffline() {
+        try {
+            // Verificar se já está em modo offline
+            if (offlineManager.isOperatingOffline()) {
+                int opcao = JOptionPane.showConfirmDialog(this,
+                    "O sistema já está em modo offline.\n" +
+                    "Deseja reimportar os dados do servidor?",
+                    "Confirmar Importação",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+                
+                if (opcao != JOptionPane.YES_OPTION) {
+                    return;
+                }
+            }
+            
+            // Verificar conectividade antes de importar
+            if (!verificarConectividadeServidor()) {
+                JOptionPane.showMessageDialog(this,
+                    "Não foi possível conectar ao servidor PostgreSQL.\n" +
+                    "Verifique sua conexão e tente novamente.",
+                    "Erro de Conexão",
+                    JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            // Abrir dialog de importação
+            ImportacaoDadosDialog dialog = new ImportacaoDadosDialog(this);
+            dialog.setVisible(true);
+            
+            // Se importação foi bem-sucedida, atualizar status
+            if (dialog.isImportacaoSucesso()) {
+                syncStatusManager.atualizarUltimaSincronizacaoGeral();
+                statusBarPanel.atualizarUltimaSincronizacao(java.time.LocalDateTime.now());
+                
+                JOptionPane.showMessageDialog(this,
+                    "Dados importados com sucesso!\n" +
+                    "O sistema está pronto para operar em modo offline.",
+                    "Importação Concluída",
+                    JOptionPane.INFORMATION_MESSAGE);
+            }
+            
+        } catch (Exception e) {
+            ModernDialog.showMessage(this,
+                    "Erro ao abrir importação de dados: " + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Executa sincronização de dados
+     */
+    private void executarSincronizacao() {
+        // Verificar se está online
+        if (offlineManager.isOperatingOffline()) {
+            JOptionPane.showMessageDialog(this,
+                "Sistema está em modo offline.\n" +
+                "Conecte-se ao servidor para sincronizar.",
+                "Modo Offline",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // Mostrar progresso
+        statusBarPanel.mostrarSincronizandoProgresso();
+        statusBarPanel.atualizarStatus(OfflineManager.OfflineState.SYNCING);
+        
+        // Executar sincronização em thread separada
+        SwingWorker<Boolean, String> worker = new SwingWorker<Boolean, String>() {
+            @Override
+            protected Boolean doInBackground() throws Exception {
+                try {
+                    // Executar sincronização real
+                    com.inventario.offline.DataSynchronizer.SyncResult result = 
+                        offlineManager.executarSincronizacaoManual();
+                    
+                    // Atualizar status de sincronização
+                    if (result.success) {
+                        syncStatusManager.atualizarUltimaSincronizacaoGeral();
+                    }
+                    
+                    return result.success;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            }
+            
+            @Override
+            protected void done() {
+                try {
+                    boolean sucesso = get();
+                    
+                    statusBarPanel.restaurarBotaoSincronizar();
+                    
+                    if (sucesso) {
+                        statusBarPanel.atualizarStatus(OfflineManager.OfflineState.ONLINE);
+                        statusBarPanel.atualizarUltimaSincronizacao(java.time.LocalDateTime.now());
+                        statusBarPanel.atualizarColetasPendentes(0);
+                        
+                        JOptionPane.showMessageDialog(MainFrame.this,
+                            "Sincronização concluída com sucesso!",
+                            "Sincronização",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        statusBarPanel.atualizarStatus(OfflineManager.OfflineState.ERROR);
+                        
+                        JOptionPane.showMessageDialog(MainFrame.this,
+                            "Erro durante a sincronização.\n" +
+                            "Verifique sua conexão e tente novamente.",
+                            "Erro",
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                    
+                } catch (Exception e) {
+                    statusBarPanel.restaurarBotaoSincronizar();
+                    statusBarPanel.atualizarStatus(OfflineManager.OfflineState.ERROR);
+                    
+                    JOptionPane.showMessageDialog(MainFrame.this,
+                        "Erro ao sincronizar: " + e.getMessage(),
+                        "Erro",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        
+        worker.execute();
+    }
+    
+    /**
+     * Atualiza o indicador visual do servidor mobile
+     * Visível apenas para administradores
+     */
+    private void atualizarIndicadorServidorMobile() {
+        if (lblServidorMobile == null) return;
+        
+        SwingUtilities.invokeLater(() -> {
+            // Garantir que a fonte suporte emojis
+            lblServidorMobile.setFont(new Font("Segoe UI Emoji", Font.BOLD, 12));
+            
+            if (servidorMobileAtivo) {
+                lblServidorMobile.setText("📱 Mobile: ONLINE");
+                lblServidorMobile.setForeground(Color.WHITE);
+                lblServidorMobile.setBackground(new Color(46, 204, 113)); // Verde
+                lblServidorMobile.setToolTipText("Servidor mobile ativo na porta 8081 - Clique em Sistema > Servidor Mobile para gerenciar");
+            } else {
+                lblServidorMobile.setText("📱 Mobile: OFFLINE");
+                lblServidorMobile.setForeground(Color.WHITE);
+                lblServidorMobile.setBackground(new Color(149, 165, 166)); // Cinza
+                lblServidorMobile.setToolTipText("Servidor mobile inativo - Clique em Sistema > Iniciar Servidor Mobile");
+            }
+        });
+    }
+    
+    /**
+     * Verifica conectividade com o servidor PostgreSQL
+     */
+    private boolean verificarConectividadeServidor() {
+        try {
+            // Usar o ConnectivityManager do OfflineManager
+            com.inventario.offline.ConnectivityManager connManager = 
+                com.inventario.offline.ConnectivityManager.getInstance();
+            return connManager.checkDatabaseConnection();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Verifica se existem dados locais (SQLite) disponíveis para modo offline
+     * Verifica a existência de dados essenciais: usuários, patrimônios, salas
+     */
+    private boolean verificarDadosLocaisDisponiveis() {
+        try {
+            // Obter caminho do banco SQLite
+            String userHome = System.getProperty("user.home");
+            String dbPath = userHome + "/.inventario/data/inventario_offline.db";
+            
+            java.io.File dbFile = new java.io.File(dbPath);
+            
+            // Verificar se o arquivo do banco existe
+            if (!dbFile.exists()) {
+                System.out.println("Banco SQLite não encontrado: " + dbPath);
+                return false;
+            }
+            
+            // Verificar se o banco tem dados
+            try (java.sql.Connection conn = java.sql.DriverManager.getConnection("jdbc:sqlite:" + dbPath)) {
+                
+                // Verificar se existem usuários
+                try (java.sql.Statement stmt = conn.createStatement();
+                     java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as total FROM usuario")) {
+                    if (rs.next() && rs.getInt("total") == 0) {
+                        System.out.println("Nenhum usuário encontrado no banco local");
+                        return false;
+                    }
+                }
+                
+                // Verificar se existem patrimônios
+                try (java.sql.Statement stmt = conn.createStatement();
+                     java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as total FROM patrimonio")) {
+                    if (rs.next() && rs.getInt("total") == 0) {
+                        System.out.println("Nenhum patrimônio encontrado no banco local");
+                        return false;
+                    }
+                }
+                
+                // Verificar se existem salas
+                try (java.sql.Statement stmt = conn.createStatement();
+                     java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as total FROM sala")) {
+                    if (rs.next() && rs.getInt("total") == 0) {
+                        System.out.println("Nenhuma sala encontrada no banco local");
+                        return false;
+                    }
+                }
+                
+                System.out.println("Dados locais verificados com sucesso");
+                return true;
+                
+            } catch (java.sql.SQLException e) {
+                System.err.println("Erro ao verificar dados locais: " + e.getMessage());
+                return false;
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao verificar disponibilidade de dados locais: " + e.getMessage());
+            return false;
         }
     }
 }

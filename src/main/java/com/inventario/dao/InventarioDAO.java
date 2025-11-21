@@ -121,6 +121,41 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
     }
     
     /**
+     * Busca o inventário ativo (em andamento)
+     * Retorna o inventário com status EM_ANDAMENTO mais recente
+     */
+    public Inventario buscarInventarioAtivo() throws SQLException {
+        System.out.println("[InventarioDAO] Buscando inventário ativo (status: EM_ANDAMENTO)");
+        
+        String sql = "SELECT * FROM TABELA_INVENTARIO " +
+                    "WHERE STATUS_INVENTARIO = 'EM_ANDAMENTO' " +
+                    "ORDER BY DATA_INICIO DESC LIMIT 1";
+        
+        Inventario inventario = executeQuerySingle(sql);
+        
+        if (inventario != null) {
+            System.out.println("[InventarioDAO] Inventário ativo encontrado: ID=" + inventario.getId() + 
+                ", Nome=" + inventario.getNome());
+        } else {
+            System.out.println("[InventarioDAO] Nenhum inventário ativo encontrado! Tentando buscar o mais recente...");
+            
+            // Fallback: buscar o inventário mais recente independente do status
+            sql = "SELECT * FROM TABELA_INVENTARIO " +
+                  "ORDER BY DATA_INICIO DESC LIMIT 1";
+            inventario = executeQuerySingle(sql);
+            
+            if (inventario != null) {
+                System.out.println("[InventarioDAO] Usando inventário mais recente: ID=" + inventario.getId() + 
+                    ", Nome=" + inventario.getNome() + ", Status=" + inventario.getStatusInventario());
+            } else {
+                System.err.println("[InventarioDAO] ERRO: Nenhum inventário encontrado no banco de dados!");
+            }
+        }
+        
+        return inventario;
+    }
+    
+    /**
      * Busca inventários por status (todos)
      */
     public List<Inventario> buscarTodosPorStatus(String status) throws SQLException {
@@ -172,12 +207,7 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         return count != null && count > 0;
     }
     
-    /**
-     * Busca inventário ativo (EM_ANDAMENTO)
-     */
-    public Inventario buscarInventarioAtivo() throws SQLException {
-        return buscarPorStatus("EM_ANDAMENTO");
-    }
+
     
     // ==================== MÉTODOS LEGADOS (COMPATIBILIDADE) ====================
     

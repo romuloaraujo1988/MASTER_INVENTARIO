@@ -101,15 +101,17 @@ class SyncActivity : AppCompatActivity() {
         return """
             ${state.message}
             
-            Patrimônios: ${state.patrimoniosSincronizados}
-            Salas: ${state.salasSincronizadas}
-            Tempo: ${state.tempoDecorrido}ms
+            📦 Patrimônios: ${state.patrimoniosSincronizados}
+            🏢 Salas: ${state.salasSincronizadas}
+            👤 Responsáveis: ${state.responsaveisSincronizados}
+            ⏱️ Tempo: ${state.tempoDecorrido / 1000.0}s
         """.trimIndent()
     }
     
     private fun updateStatsUI(stats: Map<String, Int>) {
         binding.tvPatrimoniosCount.text = stats["patrimonios"]?.toString() ?: "0"
         binding.tvSalasCount.text = stats["salas"]?.toString() ?: "0"
+        binding.tvResponsaveisCount.text = stats["responsaveis"]?.toString() ?: "0"
         binding.tvColetadosCount.text = stats["coletados"]?.toString() ?: "0"
         binding.tvPendentesCount.text = stats["pendentes"]?.toString() ?: "0"
     }

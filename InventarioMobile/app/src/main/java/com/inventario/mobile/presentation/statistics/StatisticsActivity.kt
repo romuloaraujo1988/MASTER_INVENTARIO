@@ -9,11 +9,13 @@ import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.inventario.mobile.R
 import com.inventario.mobile.databinding.ActivityStatisticsBinding
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Activity para exibir estatísticas e relatórios detalhados
  * Organizada em tabs: Visão Geral, Gráficos, Rankings, Exportar
  */
+@AndroidEntryPoint
 class StatisticsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityStatisticsBinding
@@ -47,7 +49,10 @@ class StatisticsActivity : AppCompatActivity() {
     }
 
     private fun setupViewPager() {
-        pagerAdapter = StatisticsPagerAdapter(this)
+        // Obter ID do inventário (pode vir de Intent ou usar inventário ativo)
+        val idInventario = intent.getIntExtra("INVENTARIO_ID", 0)
+        
+        pagerAdapter = StatisticsPagerAdapter(this, idInventario)
         binding.viewPager.adapter = pagerAdapter
         
         // Configurar tabs

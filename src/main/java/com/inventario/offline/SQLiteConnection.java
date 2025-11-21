@@ -210,6 +210,27 @@ public class SQLiteConnection {
      */
     private void createMirrorTables(Statement stmt) throws SQLException {
         
+        // Tabela local de usuários (CRÍTICA PARA LOGIN OFFLINE)
+        stmt.execute("""
+            CREATE TABLE IF NOT EXISTS local_usuario (
+                id INTEGER PRIMARY KEY,
+                login TEXT UNIQUE NOT NULL,
+                senha_hash TEXT NOT NULL,
+                nome_completo TEXT,
+                email TEXT,
+                matricula TEXT,
+                perfil TEXT,
+                ativo BOOLEAN DEFAULT TRUE,
+                bloqueado BOOLEAN DEFAULT FALSE,
+                tentativas_login INTEGER DEFAULT 0,
+                primeiro_acesso BOOLEAN DEFAULT TRUE,
+                data_ultimo_acesso DATETIME,
+                sync_status TEXT DEFAULT 'PENDING',
+                last_modified DATETIME DEFAULT CURRENT_TIMESTAMP,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """);
+        
         // Tabela local de patrimônios
         stmt.execute("""
             CREATE TABLE IF NOT EXISTS local_patrimonio (
@@ -299,6 +320,11 @@ public class SQLiteConnection {
         stmt.execute("CREATE INDEX IF NOT EXISTS idx_sync_control_table ON sync_control(table_name)");
         stmt.execute("CREATE INDEX IF NOT EXISTS idx_sync_control_synced ON sync_control(synced)");
         stmt.execute("CREATE INDEX IF NOT EXISTS idx_sync_control_timestamp ON sync_control(timestamp)");
+        
+        // Índices para tabela de usuários
+        stmt.execute("CREATE INDEX IF NOT EXISTS idx_local_usuario_login ON local_usuario(login)");
+        stmt.execute("CREATE INDEX IF NOT EXISTS idx_local_usuario_sync ON local_usuario(sync_status)");
+        stmt.execute("CREATE INDEX IF NOT EXISTS idx_local_usuario_ativo ON local_usuario(ativo)");
         
         // Índices para tabelas locais
         stmt.execute("CREATE INDEX IF NOT EXISTS idx_local_patrimonio_numero ON local_patrimonio(numero)");

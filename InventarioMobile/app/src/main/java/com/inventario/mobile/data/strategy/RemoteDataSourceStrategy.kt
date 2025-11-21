@@ -94,18 +94,22 @@ class RemoteDataSourceStrategy(
     
     override suspend fun getSalaPorId(id: Int): Result<Sala> {
         return try {
-            // Buscar todas e filtrar (ou criar endpoint específico)
-            val result = getSalas()
+            Log.d(TAG, "Buscando sala $id do servidor...")
             
-            if (result.isSuccess) {
-                val sala = result.getOrNull()?.find { it.id == id }
+            val response = salaApi.buscarSalaPorId(id)
+            
+            if (response.isSuccessful && response.body()?.success == true) {
+                val sala = response.body()?.data
                 if (sala != null) {
+                    Log.d(TAG, "✓ Sala encontrada no servidor")
                     Result.success(sala)
                 } else {
                     Result.failure(Exception("Sala não encontrada"))
                 }
             } else {
-                Result.failure(result.exceptionOrNull() ?: Exception("Erro ao buscar sala"))
+                val error = "Erro na API: ${response.message()}"
+                Log.e(TAG, error)
+                Result.failure(Exception(error))
             }
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao buscar sala do servidor", e)

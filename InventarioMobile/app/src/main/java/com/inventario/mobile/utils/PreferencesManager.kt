@@ -99,6 +99,10 @@ class PreferencesManager(context: Context) {
     fun getDispositivoId(): Int = getInt("dispositivo_id", 0)
     fun saveDispositivoId(dispositivoId: Int) = putInt("dispositivo_id", dispositivoId)
     
+    // Métodos de inventário
+    fun getInventarioId(): Int = getInt("inventario_id", 1)
+    fun saveInventarioId(inventarioId: Int) = putInt("inventario_id", inventarioId)
+    
     // Métodos de modo offline forçado
     fun setForceOfflineMode(enabled: Boolean) {
         putBoolean("force_offline_mode", enabled)
@@ -144,6 +148,103 @@ class PreferencesManager(context: Context) {
     
     // Métodos de usuário
     fun getUserName(): String = getString("user_name", "")
+    
+    // ========== MÉTODOS PARA LOGIN OFFLINE COM BIOMETRIA ==========
+    
+    /**
+     * Verifica se a biometria está habilitada para login
+     */
+    fun isBiometricEnabled(): Boolean {
+        return getBoolean("biometric_enabled", false)
+    }
+    
+    /**
+     * Habilita ou desabilita login por biometria
+     */
+    fun setBiometricEnabled(enabled: Boolean) {
+        putBoolean("biometric_enabled", enabled)
+        android.util.Log.d("PreferencesManager", "Login por biometria ${if (enabled) "HABILITADO" else "DESABILITADO"}")
+    }
+    
+    /**
+     * Verifica se há um usuário salvo localmente
+     */
+    fun hasUserSavedLocally(): Boolean {
+        return getString("saved_username", "").isNotEmpty()
+    }
+    
+    /**
+     * Obtém o username do usuário salvo
+     */
+    fun getSavedUsername(): String? {
+        return getString("saved_username", "").takeIf { it.isNotEmpty() }
+    }
+    
+    /**
+     * Salva o username do usuário
+     */
+    fun setSavedUsername(username: String) {
+        putString("saved_username", username)
+        android.util.Log.d("PreferencesManager", "Username salvo: $username")
+    }
+    
+    /**
+     * Obtém o nome completo do usuário salvo
+     */
+    fun getSavedUserFullName(): String? {
+        return getString("saved_user_full_name", "").takeIf { it.isNotEmpty() }
+    }
+    
+    /**
+     * Salva o nome completo do usuário
+     */
+    fun setSavedUserFullName(fullName: String) {
+        putString("saved_user_full_name", fullName)
+        android.util.Log.d("PreferencesManager", "Nome completo salvo: $fullName")
+    }
+    
+    /**
+     * Limpa todos os dados do usuário salvo
+     */
+    fun clearSavedUser() {
+        remove("saved_username")
+        remove("saved_user_full_name")
+        remove("biometric_enabled")
+        remove("access_token")
+        remove("refresh_token")
+        remove("token_expires_at")
+        remove("token_valid")
+        remove("user_logged_in")
+        remove("user_name")
+        remove("user_profile")
+        android.util.Log.d("PreferencesManager", "Dados do usuário limpos")
+    }
+    
+    /**
+     * Salva dados completos do usuário para login offline
+     */
+    fun saveUserForOfflineLogin(username: String, fullName: String, accessToken: String) {
+        setSavedUsername(username)
+        setSavedUserFullName(fullName)
+        putString("access_token", accessToken)
+        putBoolean("user_logged_in", true)
+        android.util.Log.d("PreferencesManager", "Usuário salvo para login offline: $username")
+    }
+    
+    /**
+     * Salva o último usuário que fez login (para preencher automaticamente)
+     */
+    fun saveLastLoginUsername(username: String) {
+        putString("last_login_username", username)
+        android.util.Log.d("PreferencesManager", "Último usuário salvo: $username")
+    }
+    
+    /**
+     * Obtém o último usuário que fez login
+     */
+    fun getLastLoginUsername(): String? {
+        return getString("last_login_username", "").takeIf { it.isNotEmpty() }
+    }
     fun getUserProfile(): String = getString("user_profile", "")
     
     // Métodos de sincronização

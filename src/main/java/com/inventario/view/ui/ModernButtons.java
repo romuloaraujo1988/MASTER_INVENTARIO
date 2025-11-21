@@ -34,6 +34,10 @@ public final class ModernButtons {
     public static JButton muted(String text) {
         return roundedSolid(text, MUTED_COLOR, Color.WHITE, 8, new Dimension(120, 40));
     }
+    
+    public static JButton info(String text) {
+        return roundedSolid(text, new Color(23, 162, 184), Color.WHITE, 8, new Dimension(120, 40));
+    }
 
     public static JButton smallPrimary(String text) {
         return roundedSolid(text, PRIMARY_COLOR, Color.WHITE, 6, new Dimension(120, 30));

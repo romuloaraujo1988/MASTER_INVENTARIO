@@ -220,29 +220,7 @@ class SalaSelectionActivity : AppCompatActivity() {
         binding.recyclerViewSalas.apply {
             this.layoutManager = layoutManager
             adapter = salaAdapter
-            
-            // Adicionar scroll listener para paginação infinita
-            addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: androidx.recyclerview.widget.RecyclerView, dx: Int, dy: Int) {
-                    super.onScrolled(recyclerView, dx, dy)
-                    
-                    // Só carregar mais se estiver rolando para baixo
-                    if (dy <= 0) return
-                    
-                    val visibleItemCount = layoutManager.childCount
-                    val totalItemCount = layoutManager.itemCount
-                    val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
-                    
-                    // Carregar mais quando estiver a 3 itens do fim
-                    val threshold = 3
-                    if ((visibleItemCount + firstVisibleItemPosition + threshold) >= totalItemCount
-                        && firstVisibleItemPosition >= 0
-                        && totalItemCount > 0) {
-                        Log.d(TAG, "onScrolled: Próximo do fim (${totalItemCount - (visibleItemCount + firstVisibleItemPosition)} itens restantes), carregando mais...")
-                        viewModel.loadNextPage()
-                    }
-                }
-            })
+            // Todas as salas são carregadas de uma vez - sem scroll infinito
         }
     }
 

@@ -143,7 +143,11 @@ public class ConfiguracaoBancoDialog extends JDialog {
         btnSalvar = ModernButtons.primary("Salvar");
         btnCancelar = ModernButtons.muted("Cancelar");
         JButton btnLimpar = ModernButtons.danger("Limpar Config");
+        JButton btnAjuda = ModernButtons.info("📖 Ajuda");
         
+        btnAjuda.setToolTipText("Abrir guia de configuração PostgreSQL remoto");
+        
+        painelBotoes.add(btnAjuda);
         painelBotoes.add(btnTestar);
         painelBotoes.add(btnSalvar);
         painelBotoes.add(btnLimpar);
@@ -152,6 +156,9 @@ public class ConfiguracaoBancoDialog extends JDialog {
         
         // Evento para limpar configurações
         btnLimpar.addActionListener(e -> limparConfiguracoes());
+        
+        // Evento para abrir ajuda
+        btnAjuda.addActionListener(e -> abrirGuiaAjuda());
         
         // Configurar eventos
         configurarEventos();
@@ -229,12 +236,112 @@ public class ConfiguracaoBancoDialog extends JDialog {
             
         } catch (SQLException e) {
             SwingUtilities.invokeLater(() -> {
+                String mensagemErro = interpretarErroConexao(e);
                 JOptionPane.showMessageDialog(this, 
-                    "Erro ao conectar com o banco de dados:\n" + e.getMessage(),
+                    mensagemErro,
                     "Erro de Conexão", 
                     JOptionPane.ERROR_MESSAGE);
             });
             return false;
+        }
+    }
+    
+    /**
+     * Interpreta erros de conexão e retorna mensagem amigável
+     */
+    private String interpretarErroConexao(SQLException e) {
+        String mensagem = e.getMessage().toLowerCase();
+        
+        // Erro de pg_hba.conf (acesso remoto não configurado)
+        if (mensagem.contains("pg_hba.conf") || mensagem.contains("no pg_hba.conf entry")) {
+            return "❌ Erro de Configuração do PostgreSQL\n\n" +
+                   "O servidor PostgreSQL não está configurado para aceitar\n" +
+                   "conexões remotas deste computador.\n\n" +
+                   "Solução:\n" +
+                   "1. No servidor PostgreSQL, edite o arquivo pg_hba.conf\n" +
+                   "2. Adicione uma linha permitindo seu IP:\n" +
+                   "   host    all    all    " + obterIPLocal() + "/32    md5\n" +
+                   "3. Edite postgresql.conf e configure:\n" +
+                   "   listen_addresses = '*'\n" +
+                   "4. Reinicie o PostgreSQL\n" +
+                   "5. Abra a porta 5432 no firewall\n\n" +
+                   "Consulte o arquivo GUIA_CONFIGURACAO_POSTGRESQL_REMOTO.md\n" +
+                   "para instruções detalhadas.\n\n" +
+                   "Erro técnico: " + e.getMessage();
+        }
+        
+        // Erro de conexão recusada (servidor não está rodando ou firewall)
+        if (mensagem.contains("connection refused") || mensagem.contains("conexão recusada")) {
+            return "❌ Conexão Recusada\n\n" +
+                   "Não foi possível conectar ao servidor PostgreSQL.\n\n" +
+                   "Possíveis causas:\n" +
+                   "• PostgreSQL não está rodando no servidor\n" +
+                   "• Firewall bloqueando a porta " + campoPorta.getText() + "\n" +
+                   "• Endereço ou porta incorretos\n\n" +
+                   "Verifique:\n" +
+                   "1. Se o PostgreSQL está rodando\n" +
+                   "2. Se o firewall permite conexões na porta " + campoPorta.getText() + "\n" +
+                   "3. Se o endereço está correto: " + campoServidor.getText() + "\n\n" +
+                   "Erro técnico: " + e.getMessage();
+        }
+        
+        // Erro de timeout (servidor não responde)
+        if (mensagem.contains("timeout") || mensagem.contains("timed out")) {
+            return "❌ Tempo Esgotado (Timeout)\n\n" +
+                   "O servidor não respondeu dentro do tempo esperado.\n\n" +
+                   "Possíveis causas:\n" +
+                   "• Servidor está muito lento ou sobrecarregado\n" +
+                   "• Problemas de rede\n" +
+                   "• Firewall bloqueando a conexão\n\n" +
+                   "Tente novamente ou verifique a conexão de rede.\n\n" +
+                   "Erro técnico: " + e.getMessage();
+        }
+        
+        // Erro de autenticação (usuário/senha incorretos)
+        if (mensagem.contains("password authentication failed") || 
+            mensagem.contains("autenticação") ||
+            mensagem.contains("authentication")) {
+            return "❌ Falha na Autenticação\n\n" +
+                   "Usuário ou senha incorretos.\n\n" +
+                   "Verifique:\n" +
+                   "• Usuário: " + campoUsuario.getText() + "\n" +
+                   "• Senha digitada\n" +
+                   "• Se o usuário tem permissão no banco\n\n" +
+                   "Erro técnico: " + e.getMessage();
+        }
+        
+        // Erro de banco não existe
+        if (mensagem.contains("database") && mensagem.contains("does not exist")) {
+            return "❌ Banco de Dados Não Encontrado\n\n" +
+                   "O banco de dados '" + campoBanco.getText() + "' não existe.\n\n" +
+                   "Solução:\n" +
+                   "1. Verifique se o nome está correto\n" +
+                   "2. Crie o banco de dados no PostgreSQL:\n" +
+                   "   CREATE DATABASE " + campoBanco.getText() + ";\n\n" +
+                   "Erro técnico: " + e.getMessage();
+        }
+        
+        // Erro genérico
+        return "❌ Erro ao Conectar com o Banco de Dados\n\n" +
+               "Detalhes do erro:\n" + e.getMessage() + "\n\n" +
+               "Verifique:\n" +
+               "• Servidor: " + campoServidor.getText() + "\n" +
+               "• Porta: " + campoPorta.getText() + "\n" +
+               "• Banco: " + campoBanco.getText() + "\n" +
+               "• Usuário: " + campoUsuario.getText() + "\n\n" +
+               "Consulte o arquivo GUIA_CONFIGURACAO_POSTGRESQL_REMOTO.md\n" +
+               "para mais informações.";
+    }
+    
+    /**
+     * Obtém o IP local da máquina (melhor esforço)
+     */
+    private String obterIPLocal() {
+        try {
+            java.net.InetAddress localHost = java.net.InetAddress.getLocalHost();
+            return localHost.getHostAddress();
+        } catch (Exception e) {
+            return "SEU_IP";
         }
     }
     
@@ -525,5 +632,49 @@ public class ConfiguracaoBancoDialog extends JDialog {
                 config.getUsername());
         }
         return "Nenhuma configuração salva";
+    }
+    
+    /**
+     * Abre o guia de ajuda para configuração PostgreSQL remoto
+     */
+    private void abrirGuiaAjuda() {
+        try {
+            File guia = new File("GUIA_CONFIGURACAO_POSTGRESQL_REMOTO.md");
+            
+            if (!guia.exists()) {
+                JOptionPane.showMessageDialog(this,
+                    "Arquivo de ajuda não encontrado.\n\n" +
+                    "Procure pelo arquivo:\n" +
+                    "GUIA_CONFIGURACAO_POSTGRESQL_REMOTO.md\n\n" +
+                    "na pasta raiz do sistema.",
+                    "Ajuda",
+                    JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            
+            // Tentar abrir com o aplicativo padrão
+            if (Desktop.isDesktopSupported()) {
+                Desktop desktop = Desktop.getDesktop();
+                if (desktop.isSupported(Desktop.Action.OPEN)) {
+                    desktop.open(guia);
+                    return;
+                }
+            }
+            
+            // Fallback: mostrar caminho do arquivo
+            JOptionPane.showMessageDialog(this,
+                "Abra o arquivo manualmente:\n\n" +
+                guia.getAbsolutePath() + "\n\n" +
+                "Este arquivo contém instruções detalhadas para\n" +
+                "configurar o PostgreSQL para aceitar conexões remotas.",
+                "Ajuda",
+                JOptionPane.INFORMATION_MESSAGE);
+                
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "Erro ao abrir o guia de ajuda:\n" + e.getMessage(),
+                "Erro",
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 }

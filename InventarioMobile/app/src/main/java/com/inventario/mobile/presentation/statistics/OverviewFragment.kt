@@ -11,12 +11,14 @@ import androidx.lifecycle.lifecycleScope
 import com.inventario.mobile.databinding.FragmentStatisticsOverviewBinding
 import com.inventario.mobile.presentation.dashboard.DashboardViewModel
 import com.inventario.mobile.presentation.dashboard.DashboardViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 /**
  * Fragment para exibir visão geral das estatísticas
  * KPIs detalhados, percentuais e valores totais
  */
+@AndroidEntryPoint
 class OverviewFragment : Fragment() {
 
     private var _binding: FragmentStatisticsOverviewBinding? = null
@@ -25,9 +27,25 @@ class OverviewFragment : Fragment() {
     private val viewModel: DashboardViewModel by viewModels {
         DashboardViewModelFactory(requireActivity().application)
     }
+    
+    private var idInventario: Int = 0
 
     companion object {
         private const val TAG = "OverviewFragment"
+        private const val ARG_INVENTARIO_ID = "inventario_id"
+        
+        fun newInstance(idInventario: Int) = OverviewFragment().apply {
+            arguments = Bundle().apply {
+                putInt(ARG_INVENTARIO_ID, idInventario)
+            }
+        }
+    }
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        arguments?.let {
+            idInventario = it.getInt(ARG_INVENTARIO_ID, 0)
+        }
     }
 
     override fun onCreateView(

@@ -31,8 +31,11 @@ object MapperModule {
     
     @Provides
     @Singleton
-    fun provideColetaMapper(patrimonioDao: PatrimonioDao): ColetaMapper {
-        return ColetaMapper(patrimonioDao)
+    fun provideColetaMapper(
+        patrimonioDao: PatrimonioDao,
+        preferencesManager: com.inventario.mobile.utils.PreferencesManager
+    ): ColetaMapper {
+        return ColetaMapper(patrimonioDao, preferencesManager)
     }
     
     @Provides

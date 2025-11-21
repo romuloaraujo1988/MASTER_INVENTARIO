@@ -239,11 +239,11 @@ object NetworkModule {
             .addInterceptor(deviceInfoInterceptor)  // Device info
             .addInterceptor(authInterceptor)  // Auth
             .addInterceptor(loggingInterceptor)  // Log por último para ver todos os headers
-            // Timeouts aumentados para dispositivos físicos Android 14
-            .connectTimeout(45, TimeUnit.SECONDS)  // Aumentado de 30 para 45
-            .readTimeout(60, TimeUnit.SECONDS)     // Aumentado de 30 para 60
-            .writeTimeout(60, TimeUnit.SECONDS)    // Aumentado de 30 para 60
-            .callTimeout(120, TimeUnit.SECONDS)    // Timeout total da chamada
+            // Timeouts aumentados para sincronização de grandes volumes
+            .connectTimeout(45, TimeUnit.SECONDS)  
+            .readTimeout(120, TimeUnit.SECONDS)    // Aumentado para 120s (patrimônios grandes)
+            .writeTimeout(60, TimeUnit.SECONDS)    
+            .callTimeout(180, TimeUnit.SECONDS)    // Timeout total de 3 minutos
             .retryOnConnectionFailure(true)
             // Configurações adicionais para Android 14
             .followRedirects(true)

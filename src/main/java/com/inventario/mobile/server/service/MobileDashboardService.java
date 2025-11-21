@@ -38,33 +38,47 @@ public class MobileDashboardService {
         // Obter inventário
         Inventario inventario;
         if (inventarioId != null) {
+            logger.info("Buscando inventário por ID: {}", inventarioId);
             inventario = inventarioDAO.findById(inventarioId);
         } else {
+            logger.info("Buscando inventário ativo automaticamente");
             inventario = inventarioDAO.buscarInventarioAtivo();
         }
         
         if (inventario == null) {
+            logger.error("Inventário não encontrado! inventarioId={}", inventarioId);
             throw new IllegalArgumentException("Inventário não encontrado");
         }
         
+        logger.info("Inventário encontrado: ID={}, Nome={}", inventario.getId(), inventario.getNome());
+        
         // Estatísticas básicas
-        int totalPatrimonios = patrimonioDAO.findAll().size();
+        int totalPatrimonios = patrimonioDAO.contarPatrimoniosAtivos();
         int totalColetados = coletaDAO.contarColetasPorInventario(inventario.getId());
         int totalPendentes = totalPatrimonios - totalColetados;
         double percentualConclusao = totalPatrimonios > 0 
                 ? (totalColetados * 100.0) / totalPatrimonios 
                 : 0.0;
         
+        // Buscar divergências (patrimônios coletados em local diferente do cadastrado)
+        int divergencias = coletaDAO.contarDivergenciasPorInventario(inventario.getId());
+        
+        // Buscar coletores ativos (usuários que fizeram coletas neste inventário)
+        int coletoresAtivos = coletaDAO.contarColetoresAtivosPorInventario(inventario.getId());
+        
         Map<String, Object> estatisticas = new HashMap<>();
         estatisticas.put("inventarioId", inventario.getId());
         estatisticas.put("inventarioNome", inventario.getNome());
         estatisticas.put("totalPatrimonios", totalPatrimonios);
-        estatisticas.put("totalColetados", totalColetados);
-        estatisticas.put("totalPendentes", totalPendentes);
+        // ✅ CORRIGIDO: Usar nomes consistentes com DTO
+        estatisticas.put("patrimoniosColetados", totalColetados);
+        estatisticas.put("patrimoniosPendentes", totalPendentes);
         estatisticas.put("percentualConclusao", Math.round(percentualConclusao * 100.0) / 100.0);
+        estatisticas.put("divergencias", divergencias);
+        estatisticas.put("coletoresAtivos", coletoresAtivos);
         
-        logger.info("Estatísticas: {}% concluído ({}/{})", 
-                Math.round(percentualConclusao), totalColetados, totalPatrimonios);
+        logger.info("Estatísticas: {}% concluído ({}/{}), Divergências: {}, Coletores: {}", 
+                Math.round(percentualConclusao), totalColetados, totalPatrimonios, divergencias, coletoresAtivos);
         
         return estatisticas;
     }

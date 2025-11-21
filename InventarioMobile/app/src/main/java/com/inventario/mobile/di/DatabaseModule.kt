@@ -58,4 +58,9 @@ object DatabaseModule {
     fun provideSyncLogDao(database: AppDatabase): SyncLogDao {
         return database.syncLogDao()
     }
+    
+    @Provides
+    fun provideLogColetaDao(database: AppDatabase): LogColetaDao {
+        return database.logColetaDao()
+    }
 }

@@ -44,6 +44,7 @@ class CollectionViewActivity : AppCompatActivity() {
 
         setupRecyclerView()
         setupFilters()
+        setupBackButton()
         observeViewModel()
 
         Log.d(TAG, "onCreate: carregando coletas via Use Case")
@@ -55,6 +56,18 @@ class CollectionViewActivity : AppCompatActivity() {
         binding.recyclerViewColetas.apply {
             layoutManager = LinearLayoutManager(this@CollectionViewActivity)
             adapter = this@CollectionViewActivity.adapter
+        }
+    }
+    
+    private fun setupBackButton() {
+        Log.d(TAG, "setupBackButton: configurando botão de retorno ao Dashboard")
+        binding.fabBackToDashboard.setOnClickListener {
+            Log.d(TAG, "fabBackToDashboard: voltando para MainActivity")
+            // Voltar para a MainActivity (Dashboard)
+            val intent = android.content.Intent(this, com.inventario.mobile.presentation.main.MainActivity::class.java)
+            intent.flags = android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
+            startActivity(intent)
+            finish()
         }
     }
     

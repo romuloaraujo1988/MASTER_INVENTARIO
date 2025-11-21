@@ -67,7 +67,7 @@ public class ResponsavelFrame extends JFrame {
         JPanel painelAcoes = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         painelAcoes.setBackground(new Color(245, 245, 245));
 
-        btnNovo = ButtonStyleFactory.createSuccessButton("Novo Responsável");
+        btnNovo = ButtonStyleFactory.createSuccessButton("Novo");
         btnEditar = ButtonStyleFactory.createPrimaryButton("Editar");
         btnExcluir = ButtonStyleFactory.createDangerButton("Excluir");
 

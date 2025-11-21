@@ -7,7 +7,8 @@ import java.awt.event.MouseEvent;
 
 /**
  * Fábrica de botões com estilo padronizado baseado no frame de login.
- * Centraliza a criação de botões para manter consistência visual em todo o sistema.
+ * Centraliza a criação de botões para manter consistência visual em todo o
+ * sistema.
  * 
  * @author Sistema de Inventário
  * @version 1.0.0
@@ -71,7 +72,7 @@ public class ButtonStyleFactory {
     public static JButton createSmallPrimaryButton(String text) {
         JButton button = createStyledButton(text, PRIMARY_COLOR, Color.WHITE);
         button.setPreferredSize(new Dimension(80, 30));
-        button.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        button.setFont(new Font("Segoe UI Emoji", Font.BOLD, 11));
         return button;
     }
 
@@ -81,7 +82,7 @@ public class ButtonStyleFactory {
     public static JButton createSmallDangerButton(String text) {
         JButton button = createStyledButton(text, DANGER_COLOR, Color.WHITE);
         button.setPreferredSize(new Dimension(80, 30));
-        button.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        button.setFont(new Font("Segoe UI Emoji", Font.BOLD, 11));
         return button;
     }
 
@@ -91,7 +92,7 @@ public class ButtonStyleFactory {
     public static JButton createSmallSuccessButton(String text) {
         JButton button = createStyledButton(text, SECONDARY_COLOR, Color.WHITE);
         button.setPreferredSize(new Dimension(80, 30));
-        button.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        button.setFont(new Font("Segoe UI Emoji", Font.BOLD, 11));
         return button;
     }
 
@@ -120,7 +121,7 @@ public class ButtonStyleFactory {
             }
         };
 
-        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        button.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
         button.setForeground(textColor);
         button.setPreferredSize(new Dimension(100, 40));
         button.setBorderPainted(false);
@@ -136,11 +137,11 @@ public class ButtonStyleFactory {
      */
     public static JButton createIconButton(String text, String icon, Color bgColor, Color textColor) {
         JButton button = createStyledButton(text, bgColor, textColor);
-        
+
         if (icon != null && !icon.isEmpty()) {
             button.setText(icon + " " + text);
         }
-        
+
         return button;
     }
 
@@ -194,7 +195,7 @@ public class ButtonStyleFactory {
                 }
 
                 // Desenhar texto abaixo do ícone com sombra
-                g2d.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                g2d.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
 
                 // Sombra do texto
                 g2d.setColor(new Color(0, 0, 0, 80));

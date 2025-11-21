@@ -25,10 +25,6 @@ public class MobileServerPanel extends JPanel implements ServerStatusListener {
     private JButton restartButton;
     private JButton refreshButton;
     private JProgressBar progressBar;
-    private JList<String> devicesList;
-    private DefaultListModel<String> devicesListModel;
-    private JLabel devicesCountLabel;
-    
     public MobileServerPanel() {
         initComponents();
         MobileServerManager.addStatusListener(this);

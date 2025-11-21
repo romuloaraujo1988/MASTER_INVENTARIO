@@ -3,6 +3,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "ImportacaoCSVFrame",
+            "request": "launch",
+            "mainClass": "com.inventario.view.ImportacaoCSVFrame",
+            "projectName": "MASTER_INVENTARIO"
+        },
+        {
+            "type": "java",
             "name": "TesteColetaCompleto",
             "request": "launch",
             "mainClass": "com.inventario.test.TesteColetaCompleto",

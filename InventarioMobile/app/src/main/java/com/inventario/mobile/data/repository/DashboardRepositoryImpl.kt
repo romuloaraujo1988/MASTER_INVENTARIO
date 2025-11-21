@@ -22,31 +22,50 @@ class DashboardRepositoryImpl @Inject constructor(
     
     override suspend fun buscarEstatisticas(inventarioId: Int?): Result<com.inventario.mobile.domain.model.DashboardStats> {
         return try {
-            Log.d(TAG, "Buscando estatísticas (inventário: $inventarioId)...")
+            Log.d(TAG, "═══ BUSCAR ESTATÍSTICAS ═══")
+            Log.d(TAG, "Inventário ID: $inventarioId")
             
             val response = if (inventarioId != null) {
+                Log.d(TAG, "Chamando: getDashboardStatsWithInventario($inventarioId)")
                 apiService.getDashboardStatsWithInventario(inventarioId)
             } else {
+                Log.d(TAG, "Chamando: getDashboardStats()")
                 apiService.getDashboardStats()
             }
             
+            Log.d(TAG, "Response Code: ${response.code()}")
+            Log.d(TAG, "Response Success: ${response.isSuccessful}")
+            Log.d(TAG, "Response Body: ${response.body()}")
+            
             if (response.isSuccessful && response.body() != null) {
                 val apiResponse = response.body()!!
+                Log.d(TAG, "API Response Success: ${apiResponse.success}")
+                Log.d(TAG, "API Response Message: ${apiResponse.message}")
+                Log.d(TAG, "API Response Data: ${apiResponse.data}")
                 
                 if (apiResponse.success && apiResponse.data != null) {
                     val dto = apiResponse.data
-                    val stats = mapper.toDomain(dto)
+                    Log.d(TAG, "DTO: totalPatrimonios=${dto.totalPatrimonios}, coletados=${dto.patrimoniosColetados}, pendentes=${dto.patrimoniosPendentes}")
                     
-                    Log.d(TAG, "Estatísticas carregadas: ${stats.percentualConclusao}%")
+                    val stats = mapper.toDomain(dto)
+                    Log.d(TAG, "Stats mapeados: ${stats.percentualConclusao}% (${stats.totalColetados}/${stats.totalPatrimonios})")
+                    Log.d(TAG, "═══ SUCESSO ═══")
                     Result.success(stats)
                 } else {
-                    Result.failure(Exception(apiResponse.message ?: "Erro"))
+                    val error = "API retornou erro: ${apiResponse.message}"
+                    Log.e(TAG, error)
+                    Result.failure(Exception(error))
                 }
             } else {
-                Result.failure(Exception("HTTP ${response.code()}"))
+                val error = "HTTP ${response.code()}: ${response.message()}"
+                Log.e(TAG, error)
+                Result.failure(Exception(error))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Erro", e)
+            Log.e(TAG, "═══ ERRO ═══", e)
+            Log.e(TAG, "Tipo: ${e.javaClass.simpleName}")
+            Log.e(TAG, "Mensagem: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }

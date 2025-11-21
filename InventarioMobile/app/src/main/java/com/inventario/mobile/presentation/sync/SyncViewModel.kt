@@ -62,6 +62,7 @@ class SyncViewModel @Inject constructor(
                     message = "Sincronização concluída!",
                     patrimoniosSincronizados = syncResult.patrimonios,
                     salasSincronizadas = syncResult.salas,
+                    responsaveisSincronizados = syncResult.responsaveis,
                     tempoDecorrido = syncResult.tempoMs
                 )
                 loadStats() // Atualizar estatísticas
@@ -115,9 +116,10 @@ class SyncViewModel @Inject constructor(
                 message = "Dados locais limpos com sucesso!",
                 patrimoniosSincronizados = 0,
                 salasSincronizadas = 0,
+                responsaveisSincronizados = 0,
                 tempoDecorrido = 0
-                )
-                loadStats() // Atualizar estatísticas
+            )
+            loadStats() // Atualizar estatísticas
         }
     }
     
@@ -160,6 +162,7 @@ sealed class SyncState {
         val message: String,
         val patrimoniosSincronizados: Int,
         val salasSincronizadas: Int,
+        val responsaveisSincronizados: Int = 0,
         val tempoDecorrido: Long
     ) : SyncState()
     data class ColetasSyncSuccess(

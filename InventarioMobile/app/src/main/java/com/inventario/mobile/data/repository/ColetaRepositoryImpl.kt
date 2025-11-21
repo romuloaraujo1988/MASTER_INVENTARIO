@@ -13,13 +13,19 @@ import javax.inject.Inject
 /**
  * Implementação do repositório de Coleta
  * Estratégia: Offline-first com sincronização automática
+ * v2.0: Usa PreferencesManager para obter inventário ativo
+ * v2.1: Usa NetworkQualityMonitor para decisão inteligente de sync
  */
 @javax.inject.Singleton
 class ColetaRepositoryImpl @Inject constructor(
     private val coletaDao: ColetaDao,
     private val patrimonioDao: PatrimonioDao,
     private val coletaApi: ColetaApi,
-    private val mapper: ColetaMapper
+    private val patrimonioApi: com.inventario.mobile.data.remote.api.PatrimonioApi,
+    private val mapper: ColetaMapper,
+    private val preferencesManager: com.inventario.mobile.utils.PreferencesManager,
+    private val networkQualityMonitor: com.inventario.mobile.network.NetworkQualityMonitor,
+    private val auditService: com.inventario.mobile.data.audit.AuditService  // v2.2: Auditoria
 ) : ColetaRepository {
     
     override fun getAllColetas(): Flow<List<Coleta>> {
@@ -87,65 +93,182 @@ class ColetaRepositoryImpl @Inject constructor(
     
     override suspend fun registrarColeta(coleta: Coleta): Result<Coleta> {
         return try {
-            // 1. Buscar dados do patrimônio para preencher campos
-            val patrimonio = patrimonioDao.buscarPorId(coleta.patrimonioId.toInt())
+            // ========================================
+            // FASE 1: VALIDAÇÃO RIGOROSA
+            // ========================================
             
-            // 2. Buscar dados do usuário (se disponível)
-            // TODO: Implementar busca de usuário quando necessário
-            
-            // 3. Criar entity com dados completos
-            val entity = mapper.toEntity(coleta).copy(
-                numeroPatrimonio = patrimonio?.numero ?: "",
-                nomeUsuario = "Usuário ${coleta.usuarioId}" // TODO: Buscar nome real
-            )
-            
-            // 4. Salvar localmente (offline-first)
-            val id = coletaDao.inserir(entity)
-            
-            // 5. Marcar patrimônio como coletado
-            patrimonioDao.marcarComoColetado(coleta.patrimonioId.toInt())
-            
-            // 6. Tentar sincronizar imediatamente (não bloqueia)
-            try {
-                // Converter para MobileColetaRequest (formato esperado pelo servidor)
-                val request = com.inventario.mobile.data.remote.dto.MobileColetaRequest(
-                    numeroPatrimonio = patrimonio?.numero ?: "",
-                    idInventario = 2, // TODO: Obter ID do inventário ativo
-                    usuarioId = coleta.usuarioId.toInt(),
-                    idSala = patrimonio?.idSala,
-                    localizacaoEncontrada = coleta.localizacaoAtual,
-                    estadoEncontrado = coleta.status ?: "BOM",
-                    observacaoColeta = coleta.observacoes,
-                    dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
-                        .format(java.util.Date(coleta.dataColeta)),
-                    latitude = coleta.latitude,
-                    longitude = coleta.longitude,
-                    fotoPatrimonio = null,
-                    semEtiqueta = false,
-                    descricaoItemSemEtiqueta = null,
-                    categoriaItemSemEtiqueta = null,
-                    deviceId = android.os.Build.MODEL,
-                    appVersion = "1.2",
-                    divergencia = false,
-                    motivoDivergencia = null
+            // 1. Validar dados críticos ANTES de salvar
+            com.inventario.mobile.domain.validator.ColetaValidator.validar(coleta).getOrElse { erro ->
+                android.util.Log.e("ColetaRepositoryImpl", "❌ Validação falhou: ${erro.message}")
+                
+                // Registrar falha de validação no log de auditoria
+                auditService.registrarValidacao(
+                    coletaId = 0,
+                    sucesso = false,
+                    erro = erro.message
                 )
                 
-                android.util.Log.d("ColetaRepositoryImpl", "Enviando coleta para servidor: $request")
+                return Result.failure(erro)
+            }
+            
+            android.util.Log.d("ColetaRepositoryImpl", "✓ Validação passou - Dados críticos OK")
+            
+            // ========================================
+            // FASE 2: VERIFICAR DUPLICATA
+            // ========================================
+            
+            // 2. Verificar se patrimônio já foi coletado neste inventário
+            val inventarioId = preferencesManager.getInventarioAtivoId() ?: 0
+            val coletaExistente = coletaDao.buscarColetaExistente(
+                coleta.patrimonioId.toInt(),
+                inventarioId
+            )
+            
+            if (coletaExistente != null) {
+                val dataFormatada = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+                    .format(java.util.Date(coletaExistente.dataColeta))
                 
-                val response = coletaApi.registrarColeta(request)
+                android.util.Log.w("ColetaRepositoryImpl", "⚠️ Patrimônio já coletado em $dataFormatada")
                 
-                android.util.Log.d("ColetaRepositoryImpl", "Resposta do servidor: success=${response.success}, message=${response.message}")
+                // Registrar detecção de duplicata
+                auditService.registrarDuplicataDetectada(
+                    coletaId = 0,
+                    numeroPatrimonio = coleta.numeroPatrimonio ?: "",
+                    coletaAnteriorId = coletaExistente.id
+                )
                 
-                if (response.success) {
-                    coletaDao.marcarSincronizada(id)
-                    android.util.Log.d("ColetaRepositoryImpl", "✓ Coleta sincronizada com sucesso")
-                } else {
-                    android.util.Log.w("ColetaRepositoryImpl", "⚠ Servidor retornou success=false: ${response.message}")
-                }
+                return Result.failure(Exception(
+                    "⚠️ Patrimônio ${coleta.numeroPatrimonio} já foi coletado em $dataFormatada por ${coletaExistente.nomeUsuario}"
+                ))
+            }
+            
+            android.util.Log.d("ColetaRepositoryImpl", "✓ Sem duplicata - Patrimônio não foi coletado ainda")
+            
+            // ========================================
+            // FASE 3: PREPARAR DADOS
+            // ========================================
+            
+            // 3. Buscar dados do patrimônio para preencher campos
+            val patrimonio = patrimonioDao.buscarPorId(coleta.patrimonioId.toInt())
+            
+            // 2. Obter número do patrimônio (CRÍTICO: não pode ser vazio!)
+            val numeroPatrimonio = coleta.numeroPatrimonio ?: patrimonio?.numero ?: coleta.patrimonioId.toString()
+            
+            android.util.Log.d("ColetaRepositoryImpl", "Patrimônio ID: ${coleta.patrimonioId}, Número: $numeroPatrimonio, numeroPatrimonio da coleta: ${coleta.numeroPatrimonio}")
+            
+            // 4. Criar entity com dados completos (mapper já usa PreferencesManager)
+            val entity = mapper.toEntity(coleta)
+            
+            // ========================================
+            // FASE 4: SALVAR COM TRANSAÇÃO ATÔMICA
+            // ========================================
+            
+            // 5. Salvar localmente com transação (tudo ou nada)
+            val id = try {
+                coletaDao.registrarColetaComTransacao(entity)
             } catch (e: Exception) {
-                // Falha na sincronização não impede o sucesso local
-                // Será sincronizado depois
-                android.util.Log.e("ColetaRepositoryImpl", "✗ Erro ao sincronizar coleta", e)
+                android.util.Log.e("ColetaRepositoryImpl", "❌ Erro na transação atômica", e)
+                return Result.failure(Exception("Erro ao salvar coleta: ${e.message}"))
+            }
+            
+            android.util.Log.d("ColetaRepositoryImpl", "✓ Coleta salva com sucesso (ID: $id) - Transação atômica OK")
+            
+            // Registrar criação da coleta no log de auditoria
+            auditService.registrarColetaCriada(
+                coletaId = id,
+                numeroPatrimonio = numeroPatrimonio,
+                sucesso = true
+            )
+            
+            // Registrar validação bem-sucedida
+            auditService.registrarValidacao(
+                coletaId = id,
+                sucesso = true
+            )
+            
+            // ========================================
+            // FASE 5: SINCRONIZAÇÃO INTELIGENTE
+            // ========================================
+            
+            // 6. Decidir se tenta sincronizar baseado na qualidade da rede
+            val shouldAttemptSync = networkQualityMonitor.shouldAttemptSync()
+            val networkQuality = networkQualityMonitor.networkQuality.value
+            
+            android.util.Log.d("ColetaRepositoryImpl", 
+                "Qualidade da rede: $networkQuality - Tentar sync: $shouldAttemptSync")
+            
+            if (shouldAttemptSync) {
+                // Rede boa: tentar sincronizar imediatamente
+                try {
+                    // ✅ Obter ID do inventário ativo
+                    val inventarioId = preferencesManager.getInventarioAtivoId() ?: 0
+                    
+                    // Converter para MobileColetaRequest (formato esperado pelo servidor)
+                    val request = com.inventario.mobile.data.remote.dto.MobileColetaRequest(
+                        numeroPatrimonio = numeroPatrimonio,
+                        idInventario = inventarioId,
+                        usuarioId = coleta.usuarioId.toInt(),
+                        idSala = patrimonio?.idSala,
+                        localizacaoEncontrada = coleta.localizacaoAtual,
+                        estadoEncontrado = coleta.status ?: "BOM",
+                        observacaoColeta = coleta.observacoes,
+                        dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
+                            .format(java.util.Date(coleta.dataColeta)),
+                        latitude = coleta.latitude,
+                        longitude = coleta.longitude,
+                        fotoPatrimonio = null,
+                        semEtiqueta = false,
+                        descricaoItemSemEtiqueta = null,
+                        categoriaItemSemEtiqueta = null,
+                        deviceId = android.os.Build.MODEL,
+                        appVersion = "1.2",
+                        divergencia = false,
+                        motivoDivergencia = null
+                    )
+                    
+                    android.util.Log.d("ColetaRepositoryImpl", "Enviando coleta para servidor (rede: $networkQuality)")
+                    
+                    val response = coletaApi.registrarColeta(request)
+                    
+                    android.util.Log.d("ColetaRepositoryImpl", "Resposta do servidor: success=${response.success}, message=${response.message}")
+                    
+                    if (response.success) {
+                        coletaDao.marcarSincronizada(id)
+                        networkQualityMonitor.registerSyncSuccess()
+                        android.util.Log.d("ColetaRepositoryImpl", "✓ Coleta sincronizada com sucesso")
+                        
+                        // Registrar sincronização bem-sucedida
+                        auditService.registrarSincronizacao(
+                            coletaId = id,
+                            servidorId = null
+                        )
+                    } else {
+                        networkQualityMonitor.registerSyncFailure()
+                        android.util.Log.w("ColetaRepositoryImpl", "⚠ Servidor retornou success=false: ${response.message}")
+                        
+                        // Registrar erro de sincronização
+                        auditService.registrarErroSincronizacao(
+                            coletaId = id,
+                            erro = response.message ?: "Erro desconhecido",
+                            tentativa = 1
+                        )
+                    }
+                } catch (e: Exception) {
+                    // Registrar falha para ajustar qualidade da rede
+                    networkQualityMonitor.registerSyncFailure()
+                    android.util.Log.e("ColetaRepositoryImpl", "✗ Erro ao sincronizar coleta", e)
+                    
+                    // Registrar erro de sincronização
+                    auditService.registrarErroSincronizacao(
+                        coletaId = id,
+                        erro = e.message ?: "Erro de conexão",
+                        tentativa = 1
+                    )
+                }
+            } else {
+                // Rede ruim/instável: salvar apenas localmente
+                android.util.Log.d("ColetaRepositoryImpl", 
+                    "⚠ Rede instável ($networkQuality) - Salvando apenas localmente. Será sincronizado em background.")
             }
             
             Result.success(coleta.copy(id = id))
@@ -201,9 +324,12 @@ class ColetaRepositoryImpl @Inject constructor(
                 val coleta = mapper.toDomain(entity)
                 val patrimonio = patrimonioDao.buscarPorId(coleta.patrimonioId.toInt())
                 
+                // ✅ Obter ID do inventário ativo
+                val inventarioId = preferencesManager.getInventarioAtivoId() ?: 0
+                
                 com.inventario.mobile.data.remote.dto.MobileColetaRequest(
                     numeroPatrimonio = patrimonio?.numero ?: entity.numeroPatrimonio,
-                    idInventario = 2, // TODO: Obter ID do inventário ativo
+                    idInventario = inventarioId, // ✅ Do PreferencesManager
                     usuarioId = coleta.usuarioId.toInt(),
                     idSala = patrimonio?.idSala,
                     localizacaoEncontrada = coleta.localizacaoAtual,
@@ -264,10 +390,13 @@ class ColetaRepositoryImpl @Inject constructor(
                 val coleta = mapper.toDomain(entity)
                 val patrimonio = patrimonioDao.buscarPorId(coleta.patrimonioId.toInt())
                 
+                // ✅ Obter ID do inventário ativo
+                val inventarioId = preferencesManager.getInventarioAtivoId() ?: 0
+                
                 // Converter para MobileColetaRequest
                 val request = com.inventario.mobile.data.remote.dto.MobileColetaRequest(
                     numeroPatrimonio = patrimonio?.numero ?: entity.numeroPatrimonio,
-                    idInventario = 2, // TODO: Obter ID do inventário ativo
+                    idInventario = inventarioId, // ✅ Do PreferencesManager
                     usuarioId = coleta.usuarioId.toInt(),
                     idSala = patrimonio?.idSala,
                     localizacaoEncontrada = coleta.localizacaoAtual,

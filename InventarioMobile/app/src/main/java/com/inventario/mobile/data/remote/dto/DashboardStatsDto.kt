@@ -4,8 +4,15 @@ import com.google.gson.annotations.SerializedName
 
 /**
  * DTO para estatísticas do dashboard
+ * ✅ ATUALIZADO: Adicionados campos de inventário
  */
 data class DashboardStatsDto(
+    @SerializedName("inventarioId")
+    val inventarioId: Int? = null,
+    
+    @SerializedName("inventarioNome")
+    val inventarioNome: String? = null,
+    
     @SerializedName("totalPatrimonios")
     val totalPatrimonios: Int = 0,
     

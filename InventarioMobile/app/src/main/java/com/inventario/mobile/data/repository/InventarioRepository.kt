@@ -120,7 +120,127 @@ class InventarioRepository(
     
     suspend fun getPatrimoniosNaoColetados(): List<Patrimonio> = emptyList()
     
-    suspend fun findPatrimonioByNumero(numero: String): Result<Patrimonio?> = Result.success(null)
+    suspend fun findPatrimonioByNumero(numero: String): Result<Patrimonio?> {
+        return try {
+            android.util.Log.d("InventarioRepository", "Buscando patrimônio por número: $numero")
+            
+            // Primeiro tentar buscar do banco local (Room)
+            val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(context)
+            val patrimonioDao = database.patrimonioDao()
+            
+            val patrimonioEntity = patrimonioDao.buscarPorNumero(numero)
+            
+            if (patrimonioEntity != null) {
+                android.util.Log.d("InventarioRepository", "✓ Patrimônio encontrado no banco local")
+                
+                val patrimonio = Patrimonio(
+                    id = patrimonioEntity.id,
+                    numeroPatrimonio = patrimonioEntity.numeroPatrimonio,
+                    descricao = patrimonioEntity.descricao,
+                    marca = patrimonioEntity.marca,
+                    modelo = patrimonioEntity.modelo,
+                    numeroSerie = patrimonioEntity.numeroSerie,
+                    estado = patrimonioEntity.estado,
+                    valor = patrimonioEntity.valor,
+                    setorId = patrimonioEntity.setorId?.toLong(),
+                    setorNome = patrimonioEntity.setorNome,
+                    salaId = patrimonioEntity.salaId?.toLong() ?: patrimonioEntity.idSala?.toLong(),
+                    salaNome = patrimonioEntity.salaNome ?: patrimonioEntity.nomeSala,
+                    responsavelId = patrimonioEntity.responsavelId?.toLong() ?: patrimonioEntity.idResponsavel?.toLong(),
+                    responsavelNome = patrimonioEntity.responsavelNome ?: patrimonioEntity.nomeResponsavel,
+                    coletado = patrimonioEntity.coletado,
+                    dataColeta = patrimonioEntity.dataColeta?.toString(),
+                    coletadoPor = patrimonioEntity.coletadoPor,
+                    observacoesColeta = patrimonioEntity.observacoesColeta,
+                    observacoes = patrimonioEntity.observacoes
+                )
+                
+                return Result.success(patrimonio)
+            }
+            
+            // Se não encontrou no banco local, buscar da API
+            android.util.Log.d("InventarioRepository", "Patrimônio não encontrado localmente, buscando da API...")
+            
+            val response = apiService.getPatrimonioByNumero(numero)
+            
+            if (response.isSuccessful && response.body() != null) {
+                val apiResponse = response.body()!!
+                
+                if (apiResponse.success && apiResponse.data != null) {
+                    val dto = apiResponse.data
+                    
+                    val patrimonio = Patrimonio(
+                        id = dto.id,
+                        numeroPatrimonio = dto.codigo,
+                        descricao = dto.descricao,
+                        marca = dto.marca,
+                        modelo = dto.modelo,
+                        numeroSerie = dto.numeroSerie,
+                        estado = dto.estado,
+                        valor = dto.valor,
+                        setorId = dto.setorId,
+                        setorNome = dto.setorNome,
+                        salaId = dto.salaId,
+                        salaNome = dto.salaNome,
+                        responsavelId = dto.responsavelId,
+                        responsavelNome = dto.responsavelNome,
+                        coletado = dto.coletado,
+                        dataColeta = dto.dataColeta,
+                        observacoesColeta = null,
+                        observacoes = dto.observacoes
+                    )
+                    
+                    android.util.Log.d("InventarioRepository", "✓ Patrimônio encontrado na API")
+                    
+                    // Salvar no banco local para cache
+                    try {
+                        val entity = com.inventario.mobile.data.local.entity.PatrimonioEntity(
+                            id = patrimonio.id,
+                            numero = patrimonio.numeroPatrimonio,
+                            numeroPatrimonio = patrimonio.numeroPatrimonio,
+                            descricao = patrimonio.descricao,
+                            marca = patrimonio.marca,
+                            modelo = patrimonio.modelo,
+                            numeroSerie = patrimonio.numeroSerie,
+                            estado = patrimonio.estado,
+                            valor = patrimonio.valor,
+                            setorId = patrimonio.setorId?.toInt(),
+                            setorNome = patrimonio.setorNome,
+                            idSala = patrimonio.salaId?.toInt(),
+                            nomeSala = patrimonio.salaNome,
+                            salaId = patrimonio.salaId?.toInt(),
+                            salaNome = patrimonio.salaNome,
+                            idResponsavel = patrimonio.responsavelId?.toInt(),
+                            nomeResponsavel = patrimonio.responsavelNome,
+                            responsavelId = patrimonio.responsavelId?.toInt(),
+                            responsavelNome = patrimonio.responsavelNome,
+                            status = patrimonio.estado,
+                            coletado = patrimonio.coletado,
+                            dataColeta = patrimonio.dataColeta?.toLongOrNull(),
+                            coletadoPor = patrimonio.coletadoPor,
+                            observacoesColeta = patrimonio.observacoesColeta,
+                            observacoes = patrimonio.observacoes
+                        )
+                        patrimonioDao.inserir(entity)
+                        android.util.Log.d("InventarioRepository", "✓ Patrimônio salvo no cache local")
+                    } catch (e: Exception) {
+                        android.util.Log.w("InventarioRepository", "Erro ao salvar no cache local", e)
+                    }
+                    
+                    Result.success(patrimonio)
+                } else {
+                    android.util.Log.w("InventarioRepository", "Patrimônio não encontrado na API")
+                    Result.success(null)
+                }
+            } else {
+                android.util.Log.e("InventarioRepository", "Erro HTTP ${response.code()}")
+                Result.success(null)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("InventarioRepository", "Erro ao buscar patrimônio por número", e)
+            Result.failure(e)
+        }
+    }
     
     suspend fun coletarPatrimonio(
         patrimonio: Patrimonio,
@@ -136,7 +256,212 @@ class InventarioRepository(
         observacoes: String? = null,
         latitude: Double? = null,
         longitude: Double? = null
-    ): Result<Coleta> = Result.failure(Exception("Use ColetaRepository"))
+    ): Result<Coleta> {
+        return try {
+            android.util.Log.d("InventarioRepository", "═══════════════════════════════════════")
+            android.util.Log.d("InventarioRepository", "INICIANDO COLETA DE PATRIMÔNIO")
+            android.util.Log.d("InventarioRepository", "═══════════════════════════════════════")
+            android.util.Log.d("InventarioRepository", "Patrimônio: ${patrimonio.numeroPatrimonio}")
+            android.util.Log.d("InventarioRepository", "Sala: $salaNome")
+            android.util.Log.d("InventarioRepository", "Estado: $estadoEncontrado")
+            android.util.Log.d("InventarioRepository", "Observações: $observacoes")
+            
+            // Obter dados do usuário e inventário
+            val usuarioId = localDataManager.getUserId()
+            // TODO: Obter inventário ativo do PreferencesManager ou API
+            val inventarioId = 1 // Usar inventário padrão por enquanto
+            
+            // Criar DTO para enviar à API
+            val coletaRequest = com.inventario.mobile.data.remote.dto.MobileColetaRequest(
+                numeroPatrimonio = patrimonio.numeroPatrimonio,
+                idInventario = inventarioId,
+                usuarioId = usuarioId,
+                idSala = patrimonio.salaId?.toInt(),
+                localizacaoEncontrada = salaNome,
+                estadoEncontrado = estadoEncontrado,
+                observacaoColeta = observacoes,
+                dataColeta = System.currentTimeMillis().toString(),
+                latitude = latitude,
+                longitude = longitude,
+                deviceId = android.provider.Settings.Secure.getString(context.contentResolver, android.provider.Settings.Secure.ANDROID_ID),
+                appVersion = try { context.packageManager.getPackageInfo(context.packageName, 0).versionName } catch (e: Exception) { "1.0.0" }
+            )
+            
+            android.util.Log.d("InventarioRepository", "DTO criado:")
+            android.util.Log.d("InventarioRepository", "  numeroPatrimonio: ${coletaRequest.numeroPatrimonio}")
+            android.util.Log.d("InventarioRepository", "  usuarioId: ${coletaRequest.usuarioId}")
+            android.util.Log.d("InventarioRepository", "  estadoEncontrado: ${coletaRequest.estadoEncontrado}")
+            android.util.Log.d("InventarioRepository", "  idInventario: ${coletaRequest.idInventario}")
+            android.util.Log.d("InventarioRepository", "  localizacaoEncontrada: ${coletaRequest.localizacaoEncontrada}")
+            
+            // Tentar enviar para API
+            android.util.Log.d("InventarioRepository", "Tentando enviar coleta para API...")
+            android.util.Log.d("InventarioRepository", "Request: numeroPatrimonio=${coletaRequest.numeroPatrimonio}, idInventario=${coletaRequest.idInventario}, usuarioId=${coletaRequest.usuarioId}")
+            
+            try {
+                val response = apiService.registrarColeta(coletaRequest)
+                
+                android.util.Log.d("InventarioRepository", "Response recebida: code=${response.code()}, isSuccessful=${response.isSuccessful}")
+                
+                if (response.isSuccessful && response.body() != null) {
+                    val apiResponse = response.body()!!
+                    
+                    android.util.Log.d("InventarioRepository", "API Response: success=${apiResponse.success}, hasData=${apiResponse.data != null}")
+                    
+                    if (apiResponse.success && apiResponse.data != null) {
+                        val dto = apiResponse.data
+                        
+                        val coleta = Coleta(
+                            id = dto.id?.toInt(),
+                            patrimonioId = patrimonio.id.toInt(),
+                            usuarioId = usuarioId,
+                            dataColeta = dto.dataColeta ?: System.currentTimeMillis().toString(),
+                            localizacaoAtual = salaNome,
+                            estadoEncontrado = estadoEncontrado,
+                            observacoes = observacoes,
+                            latitude = latitude,
+                            longitude = longitude,
+                            sincronizado = true,
+                            status = "SINCRONIZADO",
+                            numeroPatrimonio = patrimonio.numeroPatrimonio,
+                            nomeSala = salaNome
+                        )
+                        
+                        android.util.Log.d("InventarioRepository", "✓ Coleta registrada com sucesso na API")
+                        
+                        // Salvar no banco local
+                        try {
+                            val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(context)
+                            val coletaDao = database.coletaDao()
+                            
+                            val coletaEntity = com.inventario.mobile.data.local.entity.ColetaEntity(
+                                id = coleta.id?.toLong() ?: 0L,
+                                idPatrimonio = coleta.patrimonioId,
+                                numeroPatrimonio = coleta.numeroPatrimonio ?: patrimonio.numeroPatrimonio,
+                                idInventario = inventarioId,
+                                idSala = patrimonio.salaId?.toInt(),
+                                nomeSala = salaNome,
+                                idResponsavel = patrimonio.responsavelId?.toInt(),
+                                nomeResponsavel = patrimonio.responsavelNome,
+                                observacao = coleta.observacoes,
+                                estadoPatrimonio = coleta.estadoEncontrado,
+                                latitude = coleta.latitude,
+                                longitude = coleta.longitude,
+                                dataColeta = coleta.dataColeta.toLongOrNull() ?: System.currentTimeMillis(),
+                                idUsuario = coleta.usuarioId,
+                                nomeUsuario = localDataManager.getUserName() ?: "Usuário",
+                                sincronizado = true,
+                                servidorId = coleta.id?.toLong()
+                            )
+                            
+                            coletaDao.inserir(coletaEntity)
+                            
+                            // Marcar patrimônio como coletado
+                            val patrimonioDao = database.patrimonioDao()
+                            patrimonioDao.marcarComoColetado(patrimonio.id)
+                            
+                            android.util.Log.d("InventarioRepository", "✓ Coleta salva no banco local")
+                        } catch (e: Exception) {
+                            android.util.Log.w("InventarioRepository", "Erro ao salvar coleta localmente", e)
+                        }
+                        
+                        // Invalidar cache de estatísticas
+                        invalidarCacheEstatisticas()
+                        
+                        return Result.success(coleta)
+                    } else {
+                        android.util.Log.w("InventarioRepository", "API retornou success=false ou data=null")
+                        android.util.Log.w("InventarioRepository", "Message: ${apiResponse.message}")
+                    }
+                } else {
+                    android.util.Log.w("InventarioRepository", "Response não foi successful ou body é null")
+                    if (!response.isSuccessful) {
+                        android.util.Log.e("InventarioRepository", "HTTP Error: ${response.code()} - ${response.message()}")
+                        try {
+                            val errorBody = response.errorBody()?.string()
+                            android.util.Log.e("InventarioRepository", "Error body: $errorBody")
+                        } catch (e: Exception) {
+                            android.util.Log.e("InventarioRepository", "Não foi possível ler error body", e)
+                        }
+                    }
+                }
+                
+                android.util.Log.w("InventarioRepository", "Falha na API, salvando coleta localmente (offline)")
+            } catch (e: Exception) {
+                android.util.Log.e("InventarioRepository", "EXCEÇÃO ao conectar com API!", e)
+                android.util.Log.e("InventarioRepository", "Tipo: ${e.javaClass.simpleName}")
+                android.util.Log.e("InventarioRepository", "Mensagem: ${e.message}")
+                android.util.Log.e("InventarioRepository", "Salvando localmente (offline)...")
+            }
+            
+            // Se chegou aqui, salvar apenas localmente (modo offline)
+            android.util.Log.d("InventarioRepository", "Salvando coleta no modo OFFLINE")
+            
+            val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(context)
+            val coletaDao = database.coletaDao()
+            val patrimonioDao = database.patrimonioDao()
+            
+            android.util.Log.d("InventarioRepository", "Criando ColetaEntity...")
+            val coletaEntity = com.inventario.mobile.data.local.entity.ColetaEntity(
+                id = 0, // ID será gerado pelo Room
+                idPatrimonio = patrimonio.id.toInt(),
+                numeroPatrimonio = patrimonio.numeroPatrimonio,
+                idInventario = inventarioId,
+                idSala = patrimonio.salaId?.toInt(),
+                nomeSala = salaNome,
+                idResponsavel = patrimonio.responsavelId?.toInt(),
+                nomeResponsavel = patrimonio.responsavelNome,
+                observacao = observacoes,
+                estadoPatrimonio = estadoEncontrado,
+                latitude = latitude,
+                longitude = longitude,
+                dataColeta = System.currentTimeMillis(),
+                idUsuario = usuarioId,
+                nomeUsuario = localDataManager.getUserName() ?: "Usuário",
+                sincronizado = false // Marcar como não sincronizado
+            )
+            
+            android.util.Log.d("InventarioRepository", "Inserindo coleta no banco...")
+            val coletaId = coletaDao.inserir(coletaEntity)
+            android.util.Log.d("InventarioRepository", "✓ Coleta inserida com ID: $coletaId")
+            
+            // Marcar patrimônio como coletado
+            android.util.Log.d("InventarioRepository", "Marcando patrimônio como coletado...")
+            patrimonioDao.marcarComoColetado(patrimonio.id)
+            android.util.Log.d("InventarioRepository", "✓ Patrimônio marcado como coletado")
+            
+            val coleta = Coleta(
+                id = coletaId.toInt(),
+                patrimonioId = patrimonio.id.toInt(),
+                usuarioId = usuarioId,
+                dataColeta = System.currentTimeMillis().toString(),
+                localizacaoAtual = salaNome,
+                estadoEncontrado = estadoEncontrado,
+                observacoes = observacoes,
+                latitude = latitude,
+                longitude = longitude,
+                sincronizado = false,
+                status = "PENDENTE",
+                numeroPatrimonio = patrimonio.numeroPatrimonio,
+                nomeSala = salaNome
+            )
+            
+            android.util.Log.d("InventarioRepository", "✓ Coleta salva localmente (modo offline)")
+            android.util.Log.d("InventarioRepository", "  Coleta ID: $coletaId")
+            android.util.Log.d("InventarioRepository", "  Patrimônio: ${patrimonio.numeroPatrimonio}")
+            android.util.Log.d("InventarioRepository", "  Sala: $salaNome")
+            android.util.Log.d("InventarioRepository", "  Estado: $estadoEncontrado")
+            
+            // Invalidar cache de estatísticas
+            invalidarCacheEstatisticas()
+            
+            return Result.success(coleta)
+            
+        } catch (e: Exception) {
+            android.util.Log.e("InventarioRepository", "Erro ao coletar patrimônio", e)
+            Result.failure(e)
+        }
+    }
     
     suspend fun getColetas(): List<Coleta> = emptyList()
     

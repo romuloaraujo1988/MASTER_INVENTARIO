@@ -183,6 +183,10 @@ class MockApiService : ApiService {
     override suspend fun createColeta(coleta: MobileColetaRequest): Response<ApiResponse<ColetaDto>> {
         throw NotImplementedError("Mock implementation - not available offline")
     }
+    
+    override suspend fun registrarColeta(coleta: MobileColetaRequest): Response<ApiResponse<MobileColetaResponseDto>> {
+        throw NotImplementedError("Mock implementation - not available offline")
+    }
 
     override suspend fun updateColeta(id: Long, coleta: MobileColetaRequest): Response<ApiResponse<ColetaDto>> {
         throw NotImplementedError("Mock implementation - not available offline")

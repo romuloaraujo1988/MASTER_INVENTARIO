@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface PatrimonioDao {
     
-    @Query("SELECT * FROM patrimonio WHERE numero = :numero LIMIT 1")
+    @Query("SELECT * FROM patrimonio WHERE numeroPatrimonio = :numero LIMIT 1")
     suspend fun buscarPorNumero(numero: String): PatrimonioEntity?
     
     @Query("SELECT * FROM patrimonio WHERE id = :id LIMIT 1")
@@ -32,7 +32,7 @@ interface PatrimonioDao {
     suspend fun buscarPorSalaNaoColetados(idSala: Int): List<PatrimonioEntity>
     
     @Query("UPDATE patrimonio SET coletado = 1 WHERE id = :id")
-    suspend fun marcarComoColetado(id: Int)
+    suspend fun marcarComoColetado(id: Long)
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun inserir(patrimonio: PatrimonioEntity)

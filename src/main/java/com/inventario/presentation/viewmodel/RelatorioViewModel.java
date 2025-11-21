@@ -29,20 +29,20 @@ import java.beans.PropertyChangeSupport;
  * - Validar entrada do usuário
  */
 public class RelatorioViewModel {
-    
+
     // DAOs - Acesso temporário direto (TODO: migrar para Use Cases)
     private final RelatorioColetaDAO relatorioDAO;
     private final InventarioDAO inventarioDAO;
     private final SetorDAO setorDAO;
     private final ResponsavelDAO responsavelDAO;
     private final SalaDAO salaDAO;
-    
+
     // Estado atual
     private RelatorioState state;
-    
+
     // Suporte para notificação de mudanças (Observer pattern)
     private final PropertyChangeSupport propertyChangeSupport;
-    
+
     public RelatorioViewModel() {
         this.relatorioDAO = new RelatorioColetaDAO();
         this.inventarioDAO = new InventarioDAO();
@@ -52,29 +52,29 @@ public class RelatorioViewModel {
         this.propertyChangeSupport = new PropertyChangeSupport(this);
         this.state = RelatorioState.Idle.INSTANCE;
     }
-    
+
     // ========== GERENCIAMENTO DE ESTADO ==========
-    
+
     public RelatorioState getState() {
         return state;
     }
-    
+
     private void setState(RelatorioState newState) {
         RelatorioState oldState = this.state;
         this.state = newState;
         propertyChangeSupport.firePropertyChange("state", oldState, newState);
     }
-    
+
     public void addPropertyChangeListener(PropertyChangeListener listener) {
         propertyChangeSupport.addPropertyChangeListener(listener);
     }
-    
+
     public void removePropertyChangeListener(PropertyChangeListener listener) {
         propertyChangeSupport.removePropertyChangeListener(listener);
     }
-    
+
     // ========== OPERAÇÕES DE NEGÓCIO ==========
-    
+
     /**
      * Carrega lista de inventários disponíveis
      */
@@ -87,7 +87,7 @@ public class RelatorioViewModel {
             setState(new RelatorioState.Error("Erro ao carregar inventários: " + e.getMessage()));
         }
     }
-    
+
     /**
      * Carrega lista de setores
      */
@@ -99,7 +99,7 @@ public class RelatorioViewModel {
             setState(new RelatorioState.Error("Erro ao carregar setores: " + e.getMessage()));
         }
     }
-    
+
     /**
      * Carrega lista de responsáveis
      */
@@ -111,7 +111,7 @@ public class RelatorioViewModel {
             setState(new RelatorioState.Error("Erro ao carregar responsáveis: " + e.getMessage()));
         }
     }
-    
+
     /**
      * Carrega responsáveis de um setor específico
      */
@@ -123,7 +123,7 @@ public class RelatorioViewModel {
             setState(new RelatorioState.Error("Erro ao carregar responsáveis do setor: " + e.getMessage()));
         }
     }
-    
+
     /**
      * Carrega lista de salas
      */
@@ -135,23 +135,26 @@ public class RelatorioViewModel {
             setState(new RelatorioState.Error("Erro ao carregar salas: " + e.getMessage()));
         }
     }
-    
+
     /**
      * Gera relatório baseado no tipo selecionado
      */
-    public void gerarRelatorio(String tipoRelatorio, int idInventario, String setor, 
-                               String responsavel, Date dataInicio, Date dataFim) {
+    /**
+     * Gera relatório baseado no tipo selecionado
+     */
+    public void gerarRelatorio(String tipoRelatorio, int idInventario, String setor,
+            String responsavel, Date dataInicio, Date dataFim, String status) {
         try {
             // Validar entrada
             if (idInventario == -1 && !tipoRelatorio.equals("Relatório Geral de Patrimônio")) {
                 setState(new RelatorioState.Error("Selecione um inventário"));
                 return;
             }
-            
+
             setState(RelatorioState.Loading.INSTANCE);
-            
+
             List<Map<String, Object>> dados = new ArrayList<>();
-            
+
             // Delegar para DAO apropriado baseado no tipo
             switch (tipoRelatorio) {
                 case "Itens Encontrados":
@@ -165,7 +168,7 @@ public class RelatorioViewModel {
                     break;
                 case "Relatório por Responsável":
                     if (!"Todos".equals(responsavel)) {
-                        dados = relatorioDAO.gerarRelatorioDetalhadoPorResponsavel(idInventario, responsavel);
+                        dados = relatorioDAO.gerarRelatorioDetalhadoPorResponsavel(idInventario, responsavel, status);
                     } else {
                         dados = relatorioDAO.gerarRelatorioItensEncontrados(idInventario);
                     }
@@ -181,14 +184,14 @@ public class RelatorioViewModel {
                     break;
                 case "Relatório Avançado por Setor":
                     String setorSelecionado = "Todos".equals(setor) ? "" : setor;
-                    dados = relatorioDAO.gerarRelatorioAvancadoPorSetor(idInventario, setorSelecionado, 
-                                                                        dataInicio, dataFim);
+                    dados = relatorioDAO.gerarRelatorioAvancadoPorSetor(idInventario, setorSelecionado,
+                            dataInicio, dataFim, status);
                     break;
                 case "Relatório Avançado por Responsável":
                     String responsavelSelecionado = "Todos".equals(responsavel) ? "" : responsavel;
-                    dados = relatorioDAO.gerarRelatorioAvancadoPorResponsavel(idInventario, 
-                                                                              responsavelSelecionado, 
-                                                                              dataInicio, dataFim);
+                    dados = relatorioDAO.gerarRelatorioAvancadoPorResponsavel(idInventario,
+                            responsavelSelecionado,
+                            dataInicio, dataFim, status);
                     break;
                 case "Relatório Avançado por Período":
                     dados = relatorioDAO.gerarRelatorioAvancadoPorPeriodo(idInventario, dataInicio, dataFim);
@@ -202,14 +205,14 @@ public class RelatorioViewModel {
                 default:
                     dados = relatorioDAO.gerarRelatorioGeralCompleto(idInventario);
             }
-            
+
             setState(new RelatorioState.Success(dados, tipoRelatorio));
-            
+
         } catch (Exception e) {
             setState(new RelatorioState.Error("Erro ao gerar relatório: " + e.getMessage()));
         }
     }
-    
+
     /**
      * Limpa o estado atual
      */

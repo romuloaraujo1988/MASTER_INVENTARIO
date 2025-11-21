@@ -134,11 +134,12 @@ public class InventarioChartFactory {
 
     // Métodos de estilização privados
 
+    @SuppressWarnings("unchecked")
     private static void stylePieChart(JFreeChart chart) {
         chart.setBackgroundPaint(Color.WHITE);
         chart.getTitle().setFont(new Font("Arial", Font.BOLD, 16));
 
-        PiePlot plot = (PiePlot) chart.getPlot();
+        PiePlot<String> plot = (PiePlot<String>) chart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
         plot.setOutlineVisible(false);
         plot.setShadowPaint(null);
@@ -147,7 +148,7 @@ public class InventarioChartFactory {
         // Aplicar cores personalizadas
         int colorIndex = 0;
         for (Object key : plot.getDataset().getKeys()) {
-            plot.setSectionPaint((Comparable) key, CHART_COLORS[colorIndex % CHART_COLORS.length]);
+            plot.setSectionPaint((Comparable<?>) key, CHART_COLORS[colorIndex % CHART_COLORS.length]);
             colorIndex++;
         }
     }

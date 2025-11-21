@@ -53,6 +53,62 @@ interface ColetaDao {
     suspend fun contarTodas(): Int
     
     // ========================================
+    // TRANSAÇÕES ATÔMICAS (v2.2)
+    // ========================================
+    
+    /**
+     * Registra coleta com transação atômica
+     * Garante que coleta e atualização do patrimônio aconteçam juntas
+     * Se uma falhar, ambas são revertidas (tudo ou nada)
+     */
+    @Transaction
+    suspend fun registrarColetaComTransacao(coleta: ColetaEntity): Long {
+        // 1. Inserir coleta
+        val coletaId = inserir(coleta)
+        
+        // 2. Marcar patrimônio como coletado (mesma transação)
+        marcarPatrimonioColetado(coleta.idPatrimonio)
+        
+        // 3. Retornar ID da coleta
+        return coletaId
+    }
+    
+    /**
+     * Marca patrimônio como coletado
+     * Usado dentro de transação
+     */
+    @Query("UPDATE patrimonio SET coletado = 1 WHERE id = :patrimonioId")
+    suspend fun marcarPatrimonioColetado(patrimonioId: Int)
+    
+    /**
+     * Verifica se patrimônio já foi coletado neste inventário
+     * CRÍTICO: Evita duplicatas
+     */
+    @Query("""
+        SELECT * FROM coleta 
+        WHERE idPatrimonio = :idPatrimonio 
+        AND idInventario = :idInventario
+        LIMIT 1
+    """)
+    suspend fun buscarColetaExistente(
+        idPatrimonio: Int, 
+        idInventario: Int
+    ): ColetaEntity?
+    
+    /**
+     * Conta quantas vezes um patrimônio foi coletado
+     */
+    @Query("""
+        SELECT COUNT(*) FROM coleta 
+        WHERE idPatrimonio = :idPatrimonio 
+        AND idInventario = :idInventario
+    """)
+    suspend fun contarColetasPatrimonio(
+        idPatrimonio: Int, 
+        idInventario: Int
+    ): Int
+    
+    // ========================================
     // Queries para Gráficos
     // ========================================
     

@@ -459,8 +459,6 @@ public class MobileMonitorFrame extends JFrame {
         
         int modelRow = tabelaConexoes.convertRowIndexToModel(selectedRow);
         Integer id = (Integer) modeloTabela.getValueAt(modelRow, 0);
-        String usuario = (String) modeloTabela.getValueAt(modelRow, 1);
-        
         try {
             dispositivoService.desbloquearDispositivo(id);
             JOptionPane.showMessageDialog(this,

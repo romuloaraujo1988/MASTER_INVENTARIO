@@ -5,6 +5,7 @@ import com.inventario.mobile.data.remote.dto.PagedResponse
 import com.inventario.mobile.data.model.Sala
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 /**
@@ -17,6 +18,24 @@ interface SalaApi {
      */
     @GET("api/mobile/salas")
     suspend fun listarSalas(): Response<ApiResponse<List<Sala>>>
+    
+    /**
+     * Lista TODAS as salas de uma vez (otimizado para sincronização)
+     * Usa endpoint /sync/salas que retorna todas as ~108 salas
+     */
+    @GET("api/mobile/sync/salas")
+    suspend fun listarTodasSalas(): Response<ApiResponse<List<Sala>>>
+    
+    /**
+     * Busca sala por ID
+     * 
+     * @param id ID da sala
+     * @return Sala encontrada
+     */
+    @GET("api/mobile/salas/{id}")
+    suspend fun buscarSalaPorId(
+        @Path("id") id: Int
+    ): Response<ApiResponse<Sala>>
     
     /**
      * Lista salas com paginação

@@ -90,7 +90,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:weightSum="2">
+                        android:weightSum="3">
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -105,7 +105,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="0"
-                                android:textSize="32sp"
+                                android:textSize="28sp"
                                 android:textStyle="bold"
                                 android:textColor="?attr/colorPrimary" />
 
@@ -113,7 +113,8 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Patrimônios"
-                                android:textSize="14sp" />
+                                android:textSize="12sp"
+                                android:gravity="center" />
 
                         </LinearLayout>
 
@@ -130,7 +131,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="0"
-                                android:textSize="32sp"
+                                android:textSize="28sp"
                                 android:textStyle="bold"
                                 android:textColor="?attr/colorPrimary" />
 
@@ -138,7 +139,34 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Salas"
-                                android:textSize="14sp" />
+                                android:textSize="12sp"
+                                android:gravity="center" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:padding="8dp">
+
+                            <TextView
+                                android:id="@+id/tvResponsaveisCount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0"
+                                android:textSize="28sp"
+                                android:textStyle="bold"
+                                android:textColor="?attr/colorPrimary" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Responsáveis"
+                                android:textSize="12sp"
+                                android:gravity="center" />
 
                         </LinearLayout>
 

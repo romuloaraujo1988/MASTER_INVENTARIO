@@ -13,8 +13,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.google.zxing.integration.android.IntentIntegrator
-import com.google.zxing.integration.android.IntentResult
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 import com.inventario.mobile.databinding.ActivityScannerBinding
 import com.inventario.mobile.utils.QRCodeUtils
 import com.inventario.mobile.data.repository.InventarioRepository
@@ -53,6 +53,31 @@ class ScannerActivity : AppCompatActivity() {
         } else {
             Toast.makeText(this, "Permissão de câmera negada. Não é possível escanear códigos.", Toast.LENGTH_LONG).show()
             finish()
+        }
+    }
+    
+    // Launcher moderno para scanner (substitui IntentIntegrator deprecated)
+    private val barcodeLauncher = registerForActivityResult(ScanContract()) { result ->
+        android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
+        android.util.Log.d("ScannerActivity", "Resultado do scanner recebido")
+        android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
+        
+        isInitializing = false // Reset flag
+        
+        if (result.contents == null) {
+            // Scan cancelado pelo usuário
+            android.util.Log.w("ScannerActivity", "Scan cancelado pelo usuário")
+            showError("Scan cancelado")
+            finish()
+        } else {
+            // Código lido com sucesso
+            android.util.Log.d("ScannerActivity", "Código lido: ${result.contents}")
+            android.util.Log.d("ScannerActivity", "Formato: ${result.formatName}")
+            
+            // Tocar som suave de sucesso
+            SoundUtils.playSuccessSound()
+            
+            processQRCode(result.contents)
         }
     }
     
@@ -148,45 +173,27 @@ class ScannerActivity : AppCompatActivity() {
         android.util.Log.d("ScannerActivity", "VERIFICANDO PERMISSÃO DE CÂMERA (Android 14+)")
         android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
         
-        // Usar o Android14CameraHelper para verificar e solicitar permissões
+        // Verificar se já tem permissão
         if (android14CameraHelper.checkCameraPermissions()) {
-            android.util.Log.d("ScannerActivity", "✓ Permissões já concedidas, iniciando scanner")
-            android14CameraHelper.initializeCameraWithDelay {
-                initializeScanner()
-            }
+            android.util.Log.d("ScannerActivity", "Permissão já concedida, inicializando scanner")
+            initializeScanner()
         } else {
-            android.util.Log.d("ScannerActivity", "✗ Permissões não concedidas, solicitando...")
-            android14CameraHelper.requestCameraPermissions { granted ->
-                if (granted) {
-                    android.util.Log.d("ScannerActivity", "✓ Permissões concedidas!")
-                    Toast.makeText(this, "Permissão concedida!", Toast.LENGTH_SHORT).show()
-                    android14CameraHelper.initializeCameraWithDelay {
-                        initializeScanner()
-                    }
-                } else {
-                    android.util.Log.e("ScannerActivity", "✗ Permissões negadas!")
-                    Toast.makeText(this, "Permissão de câmera negada. Não é possível escanear QR Code.", Toast.LENGTH_LONG).show()
+            // Mostrar rationale e solicitar permissão
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Permissão de Câmera Necessária")
+                .setMessage("Este aplicativo precisa acessar a câmera para escanear códigos QR dos patrimônios.")
+                .setPositiveButton("Permitir") { _, _ ->
+                    android.util.Log.d("ScannerActivity", "Usuário aceitou o rationale, solicitando permissão")
+                    requestCameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                }
+                .setNegativeButton("Cancelar") { _, _ ->
+                    android.util.Log.w("ScannerActivity", "Usuário negou o rationale")
+                    Toast.makeText(this, "Não é possível escanear sem permissão de câmera", Toast.LENGTH_LONG).show()
                     finish()
                 }
-            }
+                .setCancelable(false)
+                .show()
         }
-    }
-    
-    private fun showPermissionRationale() {
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Permissão de Câmera Necessária")
-            .setMessage("Este aplicativo precisa acessar a câmera para escanear códigos QR dos patrimônios.")
-            .setPositiveButton("Permitir") { _, _ ->
-                android.util.Log.d("ScannerActivity", "Usuário aceitou o rationale, solicitando permissão")
-                requestCameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
-            }
-            .setNegativeButton("Cancelar") { _, _ ->
-                android.util.Log.w("ScannerActivity", "Usuário negou o rationale")
-                Toast.makeText(this, "Não é possível escanear sem permissão de câmera", Toast.LENGTH_LONG).show()
-                finish()
-            }
-            .setCancelable(false)
-            .show()
     }
     
 
@@ -241,6 +248,8 @@ class ScannerActivity : AppCompatActivity() {
         }
         
         binding.buttonRetry.setOnClickListener {
+            android.util.Log.d("ScannerActivity", "=== BOTÃO ESCANEAR NOVAMENTE CLICADO ===")
+            resetScannerState()
             initializeScanner()
         }
         
@@ -250,6 +259,35 @@ class ScannerActivity : AppCompatActivity() {
         }
     }
     
+    /**
+     * Reseta o estado do scanner para permitir nova leitura
+     */
+    private fun resetScannerState() {
+        android.util.Log.d("ScannerActivity", "Resetando estado do scanner...")
+        
+        // Limpar resultado atual
+        currentScanResult = null
+        
+        // Limpar estado do ViewModel
+        viewModel.clearScanResult()
+        
+        // Ocultar card de informações
+        binding.cardPatrimonioInfo.visibility = View.GONE
+        
+        // Ocultar botões
+        binding.buttonColetar.visibility = View.GONE
+        binding.buttonRetry.visibility = View.GONE
+        binding.buttonCancel.visibility = View.VISIBLE
+        
+        // Resetar contador de tentativas
+        retryCount = 0
+        
+        // Atualizar status
+        binding.textStatus.text = "Preparando scanner..."
+        
+        android.util.Log.d("ScannerActivity", "Estado resetado com sucesso")
+    }
+    
     private fun updateUI(state: ScannerUiState) {
         binding.progressBar.visibility = if (state.isLoading) 
             View.VISIBLE else View.GONE
@@ -257,9 +295,24 @@ class ScannerActivity : AppCompatActivity() {
         binding.textStatus.text = state.statusMessage
         binding.textColetasCount.text = state.totalColetas.toString()
         
+        // Tratar mensagem de sucesso (coleta realizada)
+        state.successMessage?.let { message ->
+            // Tocar som de sucesso
+            SoundUtils.playSuccessSound()
+            
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            viewModel.clearMessages()
+            
+            // Limpar formulário e preparar para próxima coleta
+            clearFormAndPrepareForNext()
+        }
+        
         state.errorMessage?.let { message ->
             Toast.makeText(this, message, Toast.LENGTH_LONG).show()
             viewModel.clearError()
+            
+            // Mostrar botão de tentar novamente quando houver erro
+            showRetryInterface()
         }
         
         state.scanResult?.let { result ->
@@ -274,6 +327,50 @@ class ScannerActivity : AppCompatActivity() {
                 handleScanSuccess(result)
             }
         }
+    }
+    
+    /**
+     * Limpa o formulário e prepara para próxima coleta (similar à coleta manual)
+     */
+    private fun clearFormAndPrepareForNext() {
+        android.util.Log.d("ScannerActivity", "Limpando formulário e preparando para próxima coleta...")
+        
+        // Limpar resultado atual
+        currentScanResult = null
+        
+        // Limpar estado do ViewModel
+        viewModel.clearScanResult()
+        
+        // Ocultar card de informações
+        binding.cardPatrimonioInfo.visibility = View.GONE
+        
+        // Ocultar botão de coletar
+        binding.buttonColetar.visibility = View.GONE
+        
+        // Mostrar botão de escanear outro
+        binding.buttonRetry.visibility = View.VISIBLE
+        binding.buttonRetry.text = "Escanear Outro"
+        binding.buttonCancel.visibility = View.VISIBLE
+        
+        // Atualizar status
+        binding.textStatus.text = "Coleta realizada! Pronto para escanear outro patrimônio."
+        
+        android.util.Log.d("ScannerActivity", "Formulário limpo, pronto para próxima coleta")
+    }
+    
+    private fun showRetryInterface() {
+        // Ocultar card de informações do patrimônio
+        binding.cardPatrimonioInfo.visibility = View.GONE
+        
+        // Ocultar botão de coletar
+        binding.buttonColetar.visibility = View.GONE
+        
+        // Mostrar botão de tentar novamente
+        binding.buttonRetry.visibility = View.VISIBLE
+        binding.buttonRetry.text = "Escanear Novamente"
+        
+        // Mostrar botão de cancelar
+        binding.buttonCancel.visibility = View.VISIBLE
     }
     
     private fun displayPatrimonioInfo(result: ScanResult) {
@@ -305,12 +402,16 @@ class ScannerActivity : AppCompatActivity() {
     }
     
     private fun showCollectionInterface(result: ScanResult) {
+        // Mostrar card de informações
+        binding.cardPatrimonioInfo.visibility = View.VISIBLE
+        
         if (result.jaColetado) {
             // Se já foi coletado, NÃO mostrar botão de coletar
             // Princípio: Cada coleta é única, sem possibilidade de duplicação
             binding.buttonColetar.visibility = View.GONE
             binding.buttonRetry.visibility = View.VISIBLE
             binding.buttonRetry.text = "Escanear Outro"
+            binding.buttonCancel.visibility = View.VISIBLE
             
             android.util.Log.w("ScannerActivity", "Patrimônio ${result.patrimonioCodigo} já foi coletado. Botão de coleta ocultado.")
         } else {
@@ -319,6 +420,7 @@ class ScannerActivity : AppCompatActivity() {
             binding.buttonColetar.text = "Coletar"
             binding.buttonRetry.visibility = View.VISIBLE
             binding.buttonRetry.text = "Escanear Outro"
+            binding.buttonCancel.visibility = View.VISIBLE
         }
     }
     
@@ -356,37 +458,32 @@ class ScannerActivity : AppCompatActivity() {
         }
         
         try {
-            android.util.Log.d("ScannerActivity", "Criando IntentIntegrator...")
-            val integrator = IntentIntegrator(this)
+            android.util.Log.d("ScannerActivity", "Configurando ScanOptions...")
             
-            android.util.Log.d("ScannerActivity", "Configurando scanner...")
-            // Suporte para QR Codes e códigos de barras tradicionais
-            integrator.setDesiredBarcodeFormats(
-                IntentIntegrator.QR_CODE,
-                IntentIntegrator.EAN_13,
-                IntentIntegrator.EAN_8,
-                IntentIntegrator.CODE_128,
-                IntentIntegrator.CODE_39,
-                IntentIntegrator.CODE_93,
-                IntentIntegrator.UPC_A,
-                IntentIntegrator.UPC_E,
-                IntentIntegrator.ITF
-            )
-            integrator.setPrompt("Posicione o QR Code ou código de barras dentro do quadro")
-            integrator.setCameraId(0) // Câmera traseira
-            integrator.setBeepEnabled(false) // Desabilitar beep padrão - usaremos som customizado
-            integrator.setBarcodeImageEnabled(false)
-            integrator.setOrientationLocked(true)
+            // Configurar opções do scanner (API moderna)
+            val options = ScanOptions().apply {
+                setDesiredBarcodeFormats(
+                    com.google.zxing.BarcodeFormat.QR_CODE.name,
+                    com.google.zxing.BarcodeFormat.EAN_13.name,
+                    com.google.zxing.BarcodeFormat.EAN_8.name,
+                    com.google.zxing.BarcodeFormat.CODE_128.name,
+                    com.google.zxing.BarcodeFormat.CODE_39.name,
+                    com.google.zxing.BarcodeFormat.CODE_93.name,
+                    com.google.zxing.BarcodeFormat.UPC_A.name,
+                    com.google.zxing.BarcodeFormat.UPC_E.name,
+                    com.google.zxing.BarcodeFormat.ITF.name
+                )
+                setPrompt("Posicione o QR Code ou código de barras dentro do quadro")
+                setCameraId(0) // Câmera traseira
+                setBeepEnabled(false) // Desabilitar beep padrão - usaremos som customizado
+                setBarcodeImageEnabled(false)
+                setOrientationLocked(true)
+                setTimeout(30000) // 30 segundos timeout
+            }
             
-            // Configurações adicionais para estabilidade
-            integrator.setTimeout(30000) // 30 segundos timeout
-            integrator.addExtra("SCAN_WIDTH", 800)
-            integrator.addExtra("SCAN_HEIGHT", 800)
-            integrator.addExtra("RESULT_DISPLAY_DURATION_MS", 500L)
-            
-            android.util.Log.d("ScannerActivity", "Chamando initiateScan()...")
-            integrator.initiateScan()
-            android.util.Log.d("ScannerActivity", "initiateScan() chamado com sucesso!")
+            android.util.Log.d("ScannerActivity", "Iniciando scanner com ScanContract...")
+            barcodeLauncher.launch(options)
+            android.util.Log.d("ScannerActivity", "Scanner iniciado com sucesso!")
             
         } catch (e: Exception) {
             android.util.Log.e("ScannerActivity", "ERRO ao inicializar scanner", e)
@@ -440,63 +537,7 @@ class ScannerActivity : AppCompatActivity() {
             .show()
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
-        android.util.Log.d("ScannerActivity", "onActivityResult chamado")
-        android.util.Log.d("ScannerActivity", "requestCode: $requestCode")
-        android.util.Log.d("ScannerActivity", "resultCode: $resultCode")
-        android.util.Log.d("ScannerActivity", "data: $data")
-        android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
-        
-        isInitializing = false // Reset flag
-        
-        try {
-            val result: IntentResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
-            
-            if (result != null) {
-                android.util.Log.d("ScannerActivity", "Resultado do scanner recebido")
-                android.util.Log.d("ScannerActivity", "Contents: ${result.contents}")
-                android.util.Log.d("ScannerActivity", "Format: ${result.formatName}")
-                
-                if (result.contents == null) {
-                    // Scan cancelado pelo usuário
-                    android.util.Log.w("ScannerActivity", "Scan cancelado pelo usuário")
-                    showError("Scan cancelado")
-                    finish()
-                } else {
-                    // Código lido com sucesso
-                    android.util.Log.d("ScannerActivity", "Código lido: ${result.contents}")
-                    
-                    // Tocar som suave de sucesso
-                    SoundUtils.playSuccessSound()
-                    
-                    processQRCode(result.contents)
-                }
-            } else {
-                android.util.Log.w("ScannerActivity", "Resultado do scanner é null, chamando super")
-                super.onActivityResult(requestCode, resultCode, data)
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("ScannerActivity", "Erro ao processar resultado do scanner", e)
-            showError("Erro ao processar resultado: ${e.message}")
-        }
-    }
-    
-    private fun processQRCode(qrContent: String) {
-        binding.textStatus.text = "Processando código..."
-        
-        // Primeiro, tenta decodificar como código de patrimônio (QR Code ou código de barras)
-        val patrimonioData = QRCodeUtils.decodePatrimonioQRCode(qrContent)
-        
-        if (patrimonioData != null) {
-            // É um código de patrimônio válido
-            viewModel.searchPatrimonio(patrimonioData.patrimonioId, patrimonioData.codigo)
-        } else {
-            // Tenta interpretar como código simples
-            viewModel.searchPatrimonioByCodigo(qrContent)
-        }
-    }
-    
+
     /**
      * Executa diagnóstico detalhado da câmera
      */
@@ -512,7 +553,7 @@ class ScannerActivity : AppCompatActivity() {
             appendLine("• Android: ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})")
             appendLine()
             
-            // Verificações de permissão
+              // Verificações de permissão
             appendLine("🔐 PERMISSÕES:")
             val hasCameraPermission = PermissionHelper.hasCameraPermission(this@ScannerActivity)
             appendLine("• Permissão CAMERA: ${if (hasCameraPermission) "✓ CONCEDIDA" else "✗ NEGADA"}")
@@ -541,7 +582,7 @@ class ScannerActivity : AppCompatActivity() {
                 val cameraIds = cameraManager.cameraIdList
                 appendLine("• Câmeras encontradas: ${cameraIds.size}")
                 
-                cameraIds.forEachIndexed { index, cameraId ->
+                cameraIds.forEachIndexed { _, cameraId ->
                     try {
                         val characteristics = cameraManager.getCameraCharacteristics(cameraId)
                         val facing = characteristics.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
@@ -602,6 +643,31 @@ class ScannerActivity : AppCompatActivity() {
             .show()
     }
     
+    private fun processQRCode(qrContent: String) {
+        android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
+        android.util.Log.d("ScannerActivity", "Processando código escaneado: $qrContent")
+        android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
+        
+        binding.textStatus.text = "Processando código..."
+        
+        // Primeiro, tenta decodificar como código de patrimônio (QR Code estruturado)
+        val patrimonioData = QRCodeUtils.decodePatrimonioQRCode(qrContent)
+        
+        if (patrimonioData != null) {
+            // É um QR Code estruturado (formato: PATRIMONIO:ID:CODIGO)
+            android.util.Log.d("ScannerActivity", "QR Code estruturado detectado")
+            android.util.Log.d("ScannerActivity", "Patrimônio ID: ${patrimonioData.patrimonioId}")
+            android.util.Log.d("ScannerActivity", "Código: ${patrimonioData.codigo}")
+            
+            viewModel.searchPatrimonio(patrimonioData.patrimonioId, patrimonioData.codigo)
+        } else {
+            // Tenta interpretar como código simples (número do patrimônio direto)
+            android.util.Log.d("ScannerActivity", "Código simples detectado, buscando por número: $qrContent")
+            
+            viewModel.searchPatrimonioByCodigo(qrContent)
+        }
+    }
+    
     private fun handleScanSuccess(result: ScanResult) {
         val resultIntent = Intent().apply {
             putExtra(EXTRA_QR_RESULT, result.qrContent)
@@ -622,6 +688,7 @@ class ScannerActivity : AppCompatActivity() {
         return true
     }
     
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         setResult(Activity.RESULT_CANCELED)
         super.onBackPressed()

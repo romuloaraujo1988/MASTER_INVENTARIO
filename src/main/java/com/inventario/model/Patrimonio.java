@@ -29,6 +29,7 @@ public class Patrimonio {
     private java.sql.Date dataEntrada;
     private Timestamp dataCarga;
     private String fornecedor;
+    private String ed; // Elemento de Despesa (SIADS)
     private int idSala;
     private String estadoConservacao;
     private String observacoes;
@@ -317,6 +318,14 @@ public class Patrimonio {
     
     public void setFornecedor(String fornecedor) {
         this.fornecedor = fornecedor;
+    }
+    
+    public String getEd() {
+        return ed;
+    }
+    
+    public void setEd(String ed) {
+        this.ed = ed;
     }
     
     public int getIdResponsavel() {

@@ -36,6 +36,7 @@ data class Coleta(
     
     // Relacionamentos
     val patrimonioId: Long,
+    val numeroPatrimonio: String? = null, // ✅ ADICIONAR número do patrimônio
     val usuarioId: Long,
     
     // Dados da coleta

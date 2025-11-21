@@ -57,12 +57,34 @@ public class UsuarioFrame extends JFrame {
         cbFiltroTipo = new JComboBox<>(new String[] { "Todos", "Nome", "Login", "Email", "Perfil", "Setor" });
 
         // Botões de ação usando ButtonStyleFactory
+        // Configuração de estilo para botões
+        Font btnFont = new Font(Font.SANS_SERIF, Font.BOLD, 11);
+        Dimension btnSize = new Dimension(110, 30);
+
+        // Botões de ação usando ButtonStyleFactory
         btnNovo = ButtonStyleFactory.createPrimaryButton("Novo");
+        btnNovo.setFont(btnFont);
+        btnNovo.setPreferredSize(new Dimension(80, 30));
+
         btnEditar = ButtonStyleFactory.createInfoButton("Editar");
+        btnEditar.setFont(btnFont);
+        btnEditar.setPreferredSize(new Dimension(80, 30));
+
         btnExcluir = ButtonStyleFactory.createDangerButton("Excluir");
+        btnExcluir.setFont(btnFont);
+        btnExcluir.setPreferredSize(new Dimension(80, 30));
+
         btnBloquear = ButtonStyleFactory.createWarningButton("Bloquear");
+        btnBloquear.setFont(btnFont);
+        btnBloquear.setPreferredSize(btnSize);
+
         btnDesbloquear = ButtonStyleFactory.createSuccessButton("Desbloquear");
+        btnDesbloquear.setFont(btnFont);
+        btnDesbloquear.setPreferredSize(btnSize);
+
         btnAlterarSenha = ButtonStyleFactory.createInfoButton("Alterar Senha");
+        btnAlterarSenha.setFont(btnFont);
+        btnAlterarSenha.setPreferredSize(new Dimension(120, 30));
 
         // Ícones removidos para evitar erro de 'location is null'
         // Os botões funcionarão apenas com texto
@@ -136,6 +158,8 @@ public class UsuarioFrame extends JFrame {
         panelFiltros.add(txtFiltro);
 
         JButton btnFiltrar = ButtonStyleFactory.createSecondaryButton("Filtrar");
+        btnFiltrar.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 11));
+        btnFiltrar.setPreferredSize(new Dimension(100, 30));
         btnFiltrar.addActionListener(e -> aplicarFiltro());
         panelFiltros.add(btnFiltrar);
 
@@ -288,17 +312,17 @@ public class UsuarioFrame extends JFrame {
                 case "Login":
                 case "Email":
                     usuariosFiltrados = usuarioDAO.findAll().stream()
-                        .filter(u -> u.getNomeCompleto().toLowerCase().contains(filtro.toLowerCase()) ||
-                                     u.getLogin().toLowerCase().contains(filtro.toLowerCase()) ||
-                                     u.getEmail().toLowerCase().contains(filtro.toLowerCase()))
-                        .collect(java.util.stream.Collectors.toList());
+                            .filter(u -> u.getNomeCompleto().toLowerCase().contains(filtro.toLowerCase()) ||
+                                    u.getLogin().toLowerCase().contains(filtro.toLowerCase()) ||
+                                    u.getEmail().toLowerCase().contains(filtro.toLowerCase()))
+                            .collect(java.util.stream.Collectors.toList());
                     break;
                 case "Perfil":
                     try {
                         PerfilUsuario perfil = PerfilUsuario.valueOf(filtro.toUpperCase());
                         usuariosFiltrados = usuarioDAO.findAll().stream()
-                            .filter(u -> u.getPerfil() == perfil)
-                            .collect(java.util.stream.Collectors.toList());
+                                .filter(u -> u.getPerfil() == perfil)
+                                .collect(java.util.stream.Collectors.toList());
                     } catch (IllegalArgumentException e) {
                         JOptionPane.showMessageDialog(this,
                                 "Perfil inválido. Use: ADMIN, SUPERVISOR, COLETOR, CONSULTA",
@@ -308,9 +332,9 @@ public class UsuarioFrame extends JFrame {
                     break;
                 default:
                     usuariosFiltrados = usuarioDAO.findAll().stream()
-                        .filter(u -> u.getNomeCompleto().toLowerCase().contains(filtro.toLowerCase()) ||
-                                     u.getLogin().toLowerCase().contains(filtro.toLowerCase()))
-                        .collect(java.util.stream.Collectors.toList());
+                            .filter(u -> u.getNomeCompleto().toLowerCase().contains(filtro.toLowerCase()) ||
+                                    u.getLogin().toLowerCase().contains(filtro.toLowerCase()))
+                            .collect(java.util.stream.Collectors.toList());
                     break;
             }
 
@@ -351,8 +375,6 @@ public class UsuarioFrame extends JFrame {
         header.setForeground(new Color(73, 80, 87));
         header.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(222, 226, 230)));
     }
-
-
 
     private void novoUsuario() {
         UsuarioFormDialog dialog = new UsuarioFormDialog(this, null, usuarioDAO, setorDAO);
@@ -414,29 +436,64 @@ public class UsuarioFrame extends JFrame {
             int modelRow = tabelaUsuarios.convertRowIndexToModel(linhaSelecionada);
             Integer idUsuario = (Integer) modeloTabela.getValueAt(modelRow, 0);
             String nomeUsuario = (String) modeloTabela.getValueAt(modelRow, 2);
+            String loginUsuario = (String) modeloTabela.getValueAt(modelRow, 1);
 
-            int opcao = JOptionPane.showConfirmDialog(this,
-                    "Tem certeza que deseja excluir o usuário '" + nomeUsuario + "'?\n" +
-                            "Esta ação irá desativar o usuário no sistema.",
-                    "Confirmar Exclusão", JOptionPane.YES_NO_OPTION);
+            // Primeira confirmação - aviso sobre exclusão permanente
+            int opcao1 = JOptionPane.showConfirmDialog(this,
+                    "⚠️ ATENÇÃO: EXCLUSÃO PERMANENTE ⚠️\n\n" +
+                            "Você está prestes a EXCLUIR PERMANENTEMENTE o usuário:\n\n" +
+                            "Nome: " + nomeUsuario + "\n" +
+                            "Login: " + loginUsuario + "\n\n" +
+                            "Esta ação é IRREVERSÍVEL e irá:\n" +
+                            "• Remover o usuário do banco de dados\n" +
+                            "• Apagar todos os dados associados\n" +
+                            "• Impossibilitar o login deste usuário\n\n" +
+                            "Deseja continuar?",
+                    "⚠️ Confirmar Exclusão Permanente",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
 
-            if (opcao == JOptionPane.YES_OPTION) {
+            if (opcao1 != JOptionPane.YES_OPTION) {
+                return;
+            }
+
+            // Segunda confirmação - confirmação final
+            int opcao2 = JOptionPane.showConfirmDialog(this,
+                    "ÚLTIMA CONFIRMAÇÃO\n\n" +
+                            "Tem ABSOLUTA CERTEZA que deseja excluir permanentemente\n" +
+                            "o usuário '" + nomeUsuario + "'?\n\n" +
+                            "Esta ação NÃO PODE SER DESFEITA!",
+                    "⚠️ Confirmação Final",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.ERROR_MESSAGE);
+
+            if (opcao2 == JOptionPane.YES_OPTION) {
                 try {
+                    // Executar exclusão permanente
                     usuarioDAO.delete(idUsuario);
+
                     JOptionPane.showMessageDialog(this,
-                            "Usuário excluído com sucesso!",
-                            "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                            "Usuário '" + nomeUsuario + "' foi excluído permanentemente do sistema.",
+                            "Exclusão Concluída",
+                            JOptionPane.INFORMATION_MESSAGE);
+
                     carregarUsuarios();
+
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(this,
-                            "Erro ao excluir usuário: " + ex.getMessage(),
-                            "Erro", JOptionPane.ERROR_MESSAGE);
+                            "Erro ao excluir usuário: " + ex.getMessage() + "\n\n" +
+                                    "Possíveis causas:\n" +
+                                    "• Usuário possui registros vinculados no sistema\n" +
+                                    "• Restrições de integridade do banco de dados\n" +
+                                    "• Permissões insuficientes",
+                            "Erro na Exclusão",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             }
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this,
-                    "Erro ao excluir usuário: " + e.getMessage(),
+                    "Erro ao processar exclusão: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }

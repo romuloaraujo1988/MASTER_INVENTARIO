@@ -4,7 +4,6 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import com.inventario.service.AutenticacaoServiceDB;
 import com.inventario.model.Usuario;
 
 /**
@@ -25,17 +24,19 @@ public class JLogin extends JFrame {
     private JPasswordField txtSenha;
     private JButton btnLogin;
     private JButton btnCancelar;
+    private JCheckBox chkModoOffline;
 
-    // Serviço de autenticação
-    private AutenticacaoServiceDB autenticacaoService;
+    // Serviço de autenticação unificado (online + offline)
+    private com.inventario.service.UnifiedAuthService unifiedAuthService;
     private Usuario usuarioLogado;
+    private JLabel lblModoOffline;
 
     public JLogin() {
-        // Inicializar serviço de autenticação
+        // Inicializar serviço de autenticação unificado
         try {
-            autenticacaoService = new AutenticacaoServiceDB();
+            unifiedAuthService = new com.inventario.service.UnifiedAuthService();
             // Criar usuário admin padrão se não existir
-            autenticacaoService.criarUsuarioAdminPadrao();
+            unifiedAuthService.criarUsuarioAdminPadrao();
         } catch (Exception e) {
             System.err.println("Erro ao inicializar serviço de autenticação: " + e.getMessage());
             e.printStackTrace();
@@ -44,6 +45,16 @@ public class JLogin extends JFrame {
         initComponents();
         setupEventHandlers();
         setLocationRelativeTo(null);
+        
+        // Atualizar indicador de modo offline
+        atualizarIndicadorModoOffline();
+        
+        // Focar no campo de usuário após a janela ser exibida
+        SwingUtilities.invokeLater(() -> {
+            if (txtUsuario != null) {
+                txtUsuario.requestFocusInWindow();
+            }
+        });
     }
 
     private void initComponents() {
@@ -90,10 +101,14 @@ public class JLogin extends JFrame {
     }
 
     private JPanel createHeaderPanel() {
-        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setOpaque(false);
         headerPanel.setBorder(new EmptyBorder(30, 20, 20, 20));
 
+        // Painel central com título
+        JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        centerPanel.setOpaque(false);
+        
         JLabel titleLabel = new JLabel("SIHCP");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         titleLabel.setForeground(Color.WHITE);
@@ -107,7 +122,18 @@ public class JLogin extends JFrame {
         titleContainer.add(titleLabel, BorderLayout.CENTER);
         titleContainer.add(subtitleLabel, BorderLayout.SOUTH);
 
-        headerPanel.add(titleContainer);
+        centerPanel.add(titleContainer);
+        
+        // Indicador de modo offline (canto superior direito)
+        lblModoOffline = new JLabel();
+        lblModoOffline.setFont(new Font("Arial", Font.BOLD, 12));
+        lblModoOffline.setForeground(new Color(255, 193, 7)); // Amarelo
+        lblModoOffline.setHorizontalAlignment(SwingConstants.RIGHT);
+        lblModoOffline.setBorder(new EmptyBorder(0, 0, 0, 10));
+        
+        headerPanel.add(centerPanel, BorderLayout.CENTER);
+        headerPanel.add(lblModoOffline, BorderLayout.EAST);
+        
         return headerPanel;
     }
 
@@ -175,10 +201,20 @@ public class JLogin extends JFrame {
         txtSenha.setMaximumSize(new Dimension(280, 40));
         txtSenha.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        // Checkbox modo offline
+        chkModoOffline = new JCheckBox("Forçar login em modo offline");
+        chkModoOffline.setFont(new Font("Arial", Font.PLAIN, 12));
+        chkModoOffline.setForeground(TEXT_COLOR);
+        chkModoOffline.setOpaque(false);
+        chkModoOffline.setAlignmentX(Component.CENTER_ALIGNMENT);
+        chkModoOffline.setBorder(new EmptyBorder(15, 0, 0, 0));
+        chkModoOffline.setToolTipText("Marque para fazer login usando apenas dados locais (modo offline)");
+
         fieldsPanel.add(userLabel);
         fieldsPanel.add(txtUsuario);
         fieldsPanel.add(passwordLabel);
         fieldsPanel.add(txtSenha);
+        fieldsPanel.add(chkModoOffline);
 
         return fieldsPanel;
     }
@@ -248,6 +284,22 @@ public class JLogin extends JFrame {
      */
     private void abrirConfiguracaoBanco() {
         com.inventario.util.ConfiguracaoBancoUtil.abrirDialogConfiguracao(this);
+    }
+    
+    /**
+     * Atualiza o indicador visual de modo offline
+     */
+    private void atualizarIndicadorModoOffline() {
+        if (lblModoOffline != null && unifiedAuthService != null) {
+            boolean modoOffline = unifiedAuthService.isOperatingOffline();
+            if (modoOffline) {
+                lblModoOffline.setText("⚠ MODO OFFLINE");
+                lblModoOffline.setVisible(true);
+            } else {
+                lblModoOffline.setText("");
+                lblModoOffline.setVisible(false);
+            }
+        }
     }
 
     private void styleTextField(JTextField field) {
@@ -347,11 +399,26 @@ public class JLogin extends JFrame {
         }
 
         try {
-            // Autenticar usando o banco de dados
-            usuarioLogado = autenticacaoService.autenticar(usuario, senha);
+            // Verificar se usuário forçou modo offline
+            boolean forcarOffline = chkModoOffline.isSelected();
+            
+            if (forcarOffline) {
+                // Forçar modo offline
+                unifiedAuthService.setAuthMode(com.inventario.service.UnifiedAuthService.AuthMode.OFFLINE_ONLY);
+            } else {
+                // Modo automático (tenta online primeiro)
+                unifiedAuthService.setAuthMode(com.inventario.service.UnifiedAuthService.AuthMode.AUTO);
+            }
+            
+            // Autenticar usando o serviço unificado (online + offline)
+            com.inventario.service.UnifiedAuthService.AuthResult resultado = unifiedAuthService.autenticar(usuario, senha);
 
-            if (usuarioLogado != null) {
-                showMessage("Login realizado com sucesso!\nBem-vindo, " + usuarioLogado.getNomeCompleto() + "!",
+            if (resultado.success && resultado.usuario != null) {
+                usuarioLogado = resultado.usuario;
+                
+                // Mostrar mensagem indicando se foi offline ou online
+                String modoAuth = resultado.wasOffline ? " (Modo Offline)" : "";
+                showMessage("Login realizado com sucesso!" + modoAuth + "\nBem-vindo, " + usuarioLogado.getNomeCompleto() + "!",
                         "Sucesso", JOptionPane.INFORMATION_MESSAGE);
 
                 // Fechar a janela de login
@@ -360,7 +427,7 @@ public class JLogin extends JFrame {
                 // Abrir o sistema principal
                 abrirSistemaPrincipal();
             } else {
-                showMessage("Usuário ou senha incorretos.\nVerifique suas credenciais e tente novamente.",
+                showMessage(resultado.message != null ? resultado.message : "Usuário ou senha incorretos.\nVerifique suas credenciais e tente novamente.",
                         "Erro de autenticação", JOptionPane.ERROR_MESSAGE);
                 txtSenha.setText("");
                 txtUsuario.requestFocus();

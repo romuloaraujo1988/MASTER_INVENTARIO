@@ -18,19 +18,19 @@ import java.util.Map;
  */
 @Service
 public class RelatorioService {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(RelatorioService.class);
-    
+
     private final RelatorioColetaDAO relatorioDAO;
-    
+
     public RelatorioService() {
         this.relatorioDAO = new RelatorioColetaDAO();
     }
-    
+
     public RelatorioService(RelatorioColetaDAO relatorioDAO) {
         this.relatorioDAO = relatorioDAO;
     }
-    
+
     /**
      * Gera relatório de itens encontrados
      */
@@ -42,7 +42,7 @@ public class RelatorioService {
             return new ArrayList<>();
         }
     }
-    
+
     /**
      * Gera relatório de itens não encontrados
      */
@@ -54,7 +54,7 @@ public class RelatorioService {
             return new ArrayList<>();
         }
     }
-    
+
     /**
      * Gera relatório de itens sem etiqueta
      */
@@ -66,19 +66,19 @@ public class RelatorioService {
             return new ArrayList<>();
         }
     }
-    
+
     /**
      * Gera relatório detalhado por responsável
      */
     public List<Map<String, Object>> gerarRelatorioDetalhadoPorResponsavel(int idInventario, String nomeResponsavel) {
         try {
-            return relatorioDAO.gerarRelatorioDetalhadoPorResponsavel(idInventario, nomeResponsavel);
+            return relatorioDAO.gerarRelatorioDetalhadoPorResponsavel(idInventario, nomeResponsavel, null);
         } catch (Exception e) {
             logger.error("Erro ao gerar relatório por responsável: {} - {}", idInventario, nomeResponsavel, e);
             return new ArrayList<>();
         }
     }
-    
+
     /**
      * Gera relatório de itens não coletados
      */
@@ -90,7 +90,7 @@ public class RelatorioService {
             return new ArrayList<>();
         }
     }
-    
+
     /**
      * Gera relatório de divergências
      */
@@ -102,7 +102,19 @@ public class RelatorioService {
             return new ArrayList<>();
         }
     }
-    
+
+    /**
+     * Gera relatório de divergências automáticas
+     */
+    public List<Map<String, Object>> gerarRelatorioDivergenciasAutomaticas(int idInventario) {
+        try {
+            return relatorioDAO.gerarRelatorioDivergenciasAutomaticas(idInventario);
+        } catch (Exception e) {
+            logger.error("Erro ao gerar relatório de divergências automáticas: {}", idInventario, e);
+            return new ArrayList<>();
+        }
+    }
+
     /**
      * Gera estatísticas gerais
      */
@@ -114,36 +126,34 @@ public class RelatorioService {
             return new ArrayList<>();
         }
     }
-    
+
     /**
      * Gera relatório avançado por setor
      */
-    public List<Map<String, Object>> gerarRelatorioAvancadoPorSetor(int idInventario, String nomeSetor, 
+    public List<Map<String, Object>> gerarRelatorioAvancadoPorSetor(int idInventario, String nomeSetor,
             Date dataInicio, Date dataFim) {
         try {
-            return relatorioDAO.gerarRelatorioAvancadoPorSetor(idInventario, nomeSetor, dataInicio, dataFim);
+            return relatorioDAO.gerarRelatorioAvancadoPorSetor(idInventario, nomeSetor, dataInicio, dataFim, null);
         } catch (Exception e) {
             logger.error("Erro ao gerar relatório avançado por setor: {} - {}", idInventario, nomeSetor, e);
             return new ArrayList<>();
         }
     }
-    
+
     /**
      * Gera relatório avançado por responsável
      */
     public List<Map<String, Object>> gerarRelatorioAvancadoPorResponsavel(int idInventario, String nomeResponsavel,
             Date dataInicio, Date dataFim) {
         try {
-            return relatorioDAO.gerarRelatorioAvancadoPorResponsavel(idInventario, nomeResponsavel, dataInicio, dataFim);
+            return relatorioDAO.gerarRelatorioAvancadoPorResponsavel(idInventario, nomeResponsavel, dataInicio,
+                    dataFim, null);
         } catch (Exception e) {
             logger.error("Erro ao gerar relatório avançado por responsável: {} - {}", idInventario, nomeResponsavel, e);
             return new ArrayList<>();
         }
     }
-    
-    /**
-     * Gera relatório avançado por período
-     */
+
     public List<Map<String, Object>> gerarRelatorioAvancadoPorPeriodo(int idInventario, Date dataInicio, Date dataFim) {
         try {
             return relatorioDAO.gerarRelatorioAvancadoPorPeriodo(idInventario, dataInicio, dataFim);
@@ -152,11 +162,12 @@ public class RelatorioService {
             return new ArrayList<>();
         }
     }
-    
+
     /**
      * Gera estatísticas avançadas por setor
      */
-    public List<Map<String, Object>> gerarEstatisticasAvancadasPorSetor(int idInventario, Date dataInicio, Date dataFim) {
+    public List<Map<String, Object>> gerarEstatisticasAvancadasPorSetor(int idInventario, Date dataInicio,
+            Date dataFim) {
         try {
             return relatorioDAO.gerarEstatisticasAvancadasPorSetor(idInventario, dataInicio, dataFim);
         } catch (Exception e) {
@@ -164,7 +175,7 @@ public class RelatorioService {
             return new ArrayList<>();
         }
     }
-    
+
     /**
      * Gera relatório consolidado
      */
@@ -176,7 +187,7 @@ public class RelatorioService {
             return new ArrayList<>();
         }
     }
-    
+
     /**
      * Gera relatório geral completo
      */
@@ -185,6 +196,18 @@ public class RelatorioService {
             return relatorioDAO.gerarRelatorioGeralCompleto(idInventario);
         } catch (Exception e) {
             logger.error("Erro ao gerar relatório geral completo: {}", idInventario, e);
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * Gera relatório por responsável
+     */
+    public List<Map<String, Object>> gerarRelatorioPorResponsavel(int idInventario) {
+        try {
+            return relatorioDAO.gerarRelatorioPorResponsavel(idInventario);
+        } catch (Exception e) {
+            logger.error("Erro ao gerar relatório por responsável: {}", idInventario, e);
             return new ArrayList<>();
         }
     }

@@ -27,17 +27,36 @@ public class UsuarioService {
     
     private static final Logger logger = LoggerFactory.getLogger(UsuarioService.class);
     
-    @Autowired
+    @Autowired(required = false)
     private UsuarioDAO usuarioDAO;
     
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    
+    /**
+     * Construtor padrão para Spring
+     */
+    public UsuarioService() {
+        // Spring irá injetar o UsuarioDAO via @Autowired
+    }
+    
+    /**
+     * Obtém ou cria instância do UsuarioDAO
+     * Para aplicações Swing sem Spring
+     */
+    private UsuarioDAO getUsuarioDAO() {
+        if (usuarioDAO == null) {
+            logger.warn("UsuarioDAO não foi injetado pelo Spring, criando instância manual");
+            usuarioDAO = new UsuarioDAO();
+        }
+        return usuarioDAO;
+    }
     
     /**
      * Busca usuário por ID (Long)
      */
     public Usuario buscarPorId(Long id) {
         try {
-            return usuarioDAO.findById(id.intValue());
+            return getUsuarioDAO().findById(id.intValue());
         } catch (Exception e) {
             logger.error("Erro ao buscar usuário por ID: {}", id, e);
             return null;
@@ -49,7 +68,7 @@ public class UsuarioService {
      */
     public Usuario buscarPorId(Integer id) {
         try {
-            return usuarioDAO.findById(id);
+            return getUsuarioDAO().findById(id);
         } catch (Exception e) {
             logger.error("Erro ao buscar usuário por ID: {}", id, e);
             return null;
@@ -62,7 +81,7 @@ public class UsuarioService {
     public Usuario buscarPorUsername(String username) {
         try {
             logger.info("UsuarioService.buscarPorUsername - Buscando: '{}'", username);
-            Usuario usuario = usuarioDAO.buscarPorLogin(username);
+            Usuario usuario = getUsuarioDAO().buscarPorLogin(username);
             if (usuario != null) {
                 logger.info("Usuário encontrado - ID: {}, Login: '{}', Nome: {}, Ativo: {}", 
                            usuario.getId(), usuario.getLogin(), usuario.getNomeCompleto(), usuario.getAtivo());
@@ -81,7 +100,7 @@ public class UsuarioService {
      */
     public Usuario buscarPorEmail(String email) {
         try {
-            return usuarioDAO.buscarPorEmail(email);
+            return getUsuarioDAO().buscarPorEmail(email);
         } catch (Exception e) {
             logger.error("Erro ao buscar usuário por email: {}", email, e);
             return null;
@@ -110,10 +129,10 @@ public class UsuarioService {
             }
             
             if (usuario.getId() != null && usuario.getId() > 0) {
-                usuarioDAO.update(usuario);
+                getUsuarioDAO().update(usuario);
                 logger.info("Usuário atualizado: {}", usuario.getLogin());
             } else {
-                usuarioDAO.insert(usuario);
+                getUsuarioDAO().insert(usuario);
                 logger.info("Usuário criado: {}", usuario.getLogin());
             }
         } catch (Exception e) {
@@ -123,13 +142,48 @@ public class UsuarioService {
     }
     
     /**
-     * Lista todos os usuários
+     * Lista todos os usuários (incluindo inativos)
+     * CORRIGIDO: Agora lista TODOS os usuários, não apenas os ativos
      */
     public List<Usuario> listarTodos() {
         try {
-            return usuarioDAO.findAll();
+            logger.info("========== LISTANDO TODOS OS USUÁRIOS ==========");
+            logger.info("Tentando buscar usuários incluindo inativos...");
+            
+            List<Usuario> usuarios = getUsuarioDAO().findAllIncludingInactive();
+            logger.info("Método findAllIncludingInactive() retornou {} usuários", usuarios.size());
+            
+            // Se não encontrou nenhum usuário, tentar apenas os ativos
+            if (usuarios.isEmpty()) {
+                logger.warn("Nenhum usuário encontrado com findAllIncludingInactive()");
+                logger.info("Tentando buscar apenas usuários ativos...");
+                usuarios = getUsuarioDAO().findAll();
+                logger.info("Método findAll() retornou {} usuários", usuarios.size());
+            }
+            
+            // Log detalhado dos usuários encontrados
+            if (!usuarios.isEmpty()) {
+                logger.info("Usuários encontrados:");
+                for (Usuario u : usuarios) {
+                    logger.info("  - ID: {}, Login: {}, Nome: {}, Ativo: {}", 
+                        u.getId(), u.getLogin(), u.getNomeCompleto(), u.getAtivo());
+                }
+            } else {
+                logger.error("NENHUM USUÁRIO ENCONTRADO NO BANCO DE DADOS!");
+                logger.error("Verifique:");
+                logger.error("  1. Se a tabela TABELA_USUARIO existe");
+                logger.error("  2. Se há registros na tabela");
+                logger.error("  3. Se a conexão com o banco está funcionando");
+            }
+            
+            logger.info("========== FIM DA LISTAGEM ==========");
+            return usuarios;
+            
         } catch (Exception e) {
-            logger.error("Erro ao listar usuários", e);
+            logger.error("========== ERRO AO LISTAR USUÁRIOS ==========");
+            logger.error("Tipo: {}", e.getClass().getName());
+            logger.error("Mensagem: {}", e.getMessage());
+            logger.error("Stack trace:", e);
             return new ArrayList<>();
         }
     }
@@ -142,7 +196,7 @@ public class UsuarioService {
         try {
             // Por enquanto, retorna todos os usuários
             // TODO: Implementar filtro por data de atualização quando campo for adicionado
-            return usuarioDAO.findAll();
+            return getUsuarioDAO().findAll();
         } catch (Exception e) {
             logger.error("Erro ao buscar usuários atualizados", e);
             return new ArrayList<>();
@@ -169,7 +223,7 @@ public class UsuarioService {
      */
     public void excluir(int id) {
         try {
-            usuarioDAO.delete(id);
+            getUsuarioDAO().delete(id);
         } catch (Exception e) {
             logger.error("Erro ao excluir usuário: {}", id, e);
             throw new RuntimeException("Erro ao excluir usuário", e);
@@ -183,7 +237,7 @@ public class UsuarioService {
      */
     public boolean autenticar(String login, String senha) {
         try {
-            Usuario usuario = usuarioDAO.buscarPorLogin(login);
+            Usuario usuario = getUsuarioDAO().buscarPorLogin(login);
             if (usuario == null) {
                 return false;
             }
@@ -215,7 +269,7 @@ public class UsuarioService {
      */
     public boolean alterarSenha(Integer usuarioId, String novaSenha) {
         try {
-            Usuario usuario = usuarioDAO.findById(usuarioId);
+            Usuario usuario = getUsuarioDAO().findById(usuarioId);
             if (usuario == null) {
                 logger.error("Usuário não encontrado: {}", usuarioId);
                 return false;
@@ -226,7 +280,7 @@ public class UsuarioService {
             usuario.setSenhaHash(senhaEncriptada);
             
             // Atualizar no banco
-            usuarioDAO.update(usuario);
+            getUsuarioDAO().update(usuario);
             logger.info("Senha alterada com sucesso para usuário: {}", usuario.getLogin());
             
             return true;
@@ -246,7 +300,7 @@ public class UsuarioService {
      */
     public boolean alterarSenhaPorLogin(String login, String novaSenha) {
         try {
-            Usuario usuario = usuarioDAO.buscarPorLogin(login);
+            Usuario usuario = getUsuarioDAO().buscarPorLogin(login);
             if (usuario == null) {
                 logger.error("Usuário não encontrado: {}", login);
                 return false;
@@ -264,7 +318,7 @@ public class UsuarioService {
      */
     public boolean atualizarSenha(Integer idUsuario, String senhaHash) {
         try {
-            usuarioDAO.atualizarSenha(idUsuario, senhaHash);
+            getUsuarioDAO().atualizarSenha(idUsuario, senhaHash);
             logger.info("Senha atualizada com sucesso para usuário ID: {}", idUsuario);
             return true;
         } catch (Exception e) {

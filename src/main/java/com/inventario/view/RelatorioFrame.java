@@ -56,7 +56,7 @@ public class RelatorioFrame extends JFrame {
     private JComboBox<String> comboInventario;
     private JCheckBox checkIncluirImagens;
     private JCheckBox checkAgruparPorSetor;
-    
+
     // === FILTROS INTELIGENTES AVANÇADOS - FASE 2 ===
     private JSpinner spinnerValorMinimo;
     private JSpinner spinnerValorMaximo;
@@ -78,7 +78,7 @@ public class RelatorioFrame extends JFrame {
 
     // === MVVM - ViewModel (substitui acesso direto aos DAOs) ===
     private final RelatorioViewModel viewModel = new RelatorioViewModel();
-    
+
     // Utilitários
     private com.inventario.dao.PatrimonioDAO patrimonioDAO; // Usado apenas para dados de exemplo
     private RelatorioExcelGenerator excelGenerator;
@@ -93,46 +93,46 @@ public class RelatorioFrame extends JFrame {
 
     public RelatorioFrame() {
         super("Relatórios do Sistema");
-        
+
         try {
             // === MVVM: ViewModel já inicializado na declaração ===
-            
+
             // Utilitários (não são parte do MVVM)
             this.patrimonioDAO = new com.inventario.dao.PatrimonioDAO(); // Apenas para dados de exemplo
             this.excelGenerator = new RelatorioExcelGenerator();
-            
+
             // Inicializar componentes da interface
             initComponents();
             aplicarEstiloModerno();
-            
+
             // === MVVM: Observar mudanças no ViewModel ===
             observarViewModel();
-            
+
             // Carregar dados iniciais via ViewModel
             viewModel.carregarInventarios();
             viewModel.carregarSetores();
             viewModel.carregarResponsaveis();
             viewModel.carregarSalas();
-            
+
             System.out.println("✅ RelatorioFrame inicializado com sucesso (MVVM)");
-            
+
         } catch (Exception e) {
             System.err.println("❌ Erro ao inicializar RelatorioFrame: " + e.getMessage());
             e.printStackTrace();
-            
+
             JOptionPane.showMessageDialog(null,
                     "⚠️ ERRO AO INICIALIZAR RELATÓRIOS\n\n" +
-                    "Erro: " + e.getMessage() + "\n\n" +
-                    "Por favor, use as seguintes alternativas:\n" +
-                    "• Dashboard de Coleta (disponível no menu principal)\n" +
-                    "• Exportação de dados via Excel nas telas de listagem",
+                            "Erro: " + e.getMessage() + "\n\n" +
+                            "Por favor, use as seguintes alternativas:\n" +
+                            "• Dashboard de Coleta (disponível no menu principal)\n" +
+                            "• Exportação de dados via Excel nas telas de listagem",
                     "Erro - Relatórios",
                     JOptionPane.ERROR_MESSAGE);
-            
+
             dispose();
         }
     }
-    
+
     /**
      * === MVVM: Observer Pattern ===
      * Observa mudanças no ViewModel e atualiza a UI
@@ -143,7 +143,7 @@ public class RelatorioFrame extends JFrame {
             public void propertyChange(PropertyChangeEvent evt) {
                 if ("state".equals(evt.getPropertyName())) {
                     RelatorioState newState = (RelatorioState) evt.getNewValue();
-                    
+
                     // Atualizar UI na thread do Swing
                     SwingUtilities.invokeLater(() -> {
                         atualizarUI(newState);
@@ -152,7 +152,7 @@ public class RelatorioFrame extends JFrame {
             }
         });
     }
-    
+
     /**
      * === MVVM: Atualização Centralizada da UI ===
      * Método único que atualiza a UI baseado no estado do ViewModel
@@ -162,13 +162,13 @@ public class RelatorioFrame extends JFrame {
             progressBar.setVisible(false);
             labelStatus.setText("✅ Pronto para gerar relatório");
             btnGerar.setEnabled(true);
-            
+
         } else if (state instanceof RelatorioState.Loading) {
             progressBar.setVisible(true);
             progressBar.setIndeterminate(true);
             labelStatus.setText("⏳ Gerando relatório...");
             btnGerar.setEnabled(false);
-            
+
         } else if (state instanceof RelatorioState.Success) {
             RelatorioState.Success success = (RelatorioState.Success) state;
             progressBar.setVisible(false);
@@ -176,42 +176,56 @@ public class RelatorioFrame extends JFrame {
             btnGerar.setEnabled(true);
             btnExportar.setEnabled(true);
             btnImprimir.setEnabled(true);
-            
+
             List<Map<String, Object>> dados = success.getDados();
             if (dados.isEmpty()) {
-                JOptionPane.showMessageDialog(this, 
-                    "Nenhum dado encontrado para os filtros selecionados.", 
-                    "Aviso", 
-                    JOptionPane.INFORMATION_MESSAGE);
+                String tipoRelatorio = success.getTipoRelatorio();
+                String mensagem = "Nenhum dado encontrado para os filtros selecionados.";
+
+                // Mensagens específicas por tipo de relatório
+                if ("Itens Não Coletados".equals(tipoRelatorio)) {
+                    mensagem = "✅ Excelente! Todos os patrimônios já foram coletados neste inventário.\n\n" +
+                            "Não há itens pendentes de coleta.";
+                } else if ("Itens Não Encontrados".equals(tipoRelatorio)) {
+                    mensagem = "✅ Ótimo! Todos os patrimônios foram encontrados durante a coleta.\n\n" +
+                            "Não há itens não localizados.";
+                } else if ("Itens Sem Plaqueta de Patrimônio".equals(tipoRelatorio)) {
+                    mensagem = "✅ Perfeito! Não há itens sem etiqueta registrados neste inventário.";
+                }
+
+                JOptionPane.showMessageDialog(this,
+                        mensagem,
+                        "Informação",
+                        JOptionPane.INFORMATION_MESSAGE);
             } else {
                 preencherTabelaComDados(dados);
                 gerarResumoEstatistico(dados);
                 atualizarGraficos();
                 SoundNotification.playSound(SoundNotification.SoundType.SUCCESS);
             }
-            
+
         } else if (state instanceof RelatorioState.Error) {
             RelatorioState.Error error = (RelatorioState.Error) state;
             progressBar.setVisible(false);
             labelStatus.setText("❌ Erro ao gerar relatório");
             btnGerar.setEnabled(true);
-            JOptionPane.showMessageDialog(this, 
-                error.getMessage(), 
-                "Erro", 
-                JOptionPane.ERROR_MESSAGE);
-                
+            JOptionPane.showMessageDialog(this,
+                    error.getMessage(),
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE);
+
         } else if (state instanceof RelatorioState.InventariosCarregados) {
             RelatorioState.InventariosCarregados inventariosState = (RelatorioState.InventariosCarregados) state;
             preencherComboInventarios(inventariosState.getInventarios());
-            
+
         } else if (state instanceof RelatorioState.SetoresCarregados) {
             RelatorioState.SetoresCarregados setoresState = (RelatorioState.SetoresCarregados) state;
             preencherComboSetores(setoresState.getSetores());
-            
+
         } else if (state instanceof RelatorioState.ResponsaveisCarregados) {
             RelatorioState.ResponsaveisCarregados responsaveisState = (RelatorioState.ResponsaveisCarregados) state;
             preencherComboResponsaveis(responsaveisState.getResponsaveis());
-            
+
         } else if (state instanceof RelatorioState.SalasCarregadas) {
             RelatorioState.SalasCarregadas salasState = (RelatorioState.SalasCarregadas) state;
             preencherComboSalas(salasState.getSalas());
@@ -248,7 +262,7 @@ public class RelatorioFrame extends JFrame {
 
         // Configurar eventos
         configurarEventos();
-        
+
         // Aplicar filtros iniciais baseado no tipo de relatório selecionado
         // (chamado após todos os componentes serem criados)
         atualizarFiltros();
@@ -274,19 +288,19 @@ public class RelatorioFrame extends JFrame {
         // Criar painéis organizados
         JPanel painelSuperior = new JPanel(new BorderLayout());
         painelSuperior.setBackground(Color.WHITE);
-        
+
         painelSuperior.add(criarPainelFiltrosBasicos(), BorderLayout.NORTH);
         painelSuperior.add(criarPainelSelecao(), BorderLayout.CENTER);
-        
+
         JPanel painelInferior = new JPanel(new BorderLayout());
         painelInferior.setBackground(Color.WHITE);
-        
+
         painelInferior.add(criarPainelOpcoes(), BorderLayout.NORTH);
         painelInferior.add(criarPainelFiltrosAvancados(), BorderLayout.CENTER);
-        
+
         painelPrincipal.add(painelSuperior, BorderLayout.NORTH);
         painelPrincipal.add(painelInferior, BorderLayout.CENTER);
-        
+
         return painelPrincipal;
     }
 
@@ -300,7 +314,7 @@ public class RelatorioFrame extends JFrame {
         labelTipo.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
         labelTipo.setForeground(new Color(0, 100, 200));
         painel.add(labelTipo);
-        
+
         comboTipoRelatorio = new JComboBox<>(new String[] {
                 "Relatório Geral de Patrimônio",
                 "Itens Encontrados",
@@ -333,8 +347,11 @@ public class RelatorioFrame extends JFrame {
         spinnerDataInicio = new JSpinner(new SpinnerDateModel());
         JSpinner.DateEditor editorInicio = new JSpinner.DateEditor(spinnerDataInicio, "dd/MM/yyyy");
         spinnerDataInicio.setEditor(editorInicio);
-        spinnerDataInicio.setPreferredSize(new Dimension(120, 25));
+        spinnerDataInicio.setPreferredSize(new Dimension(150, 30));
         painel.add(spinnerDataInicio);
+
+        // Separador
+        painel.add(Box.createHorizontalStrut(15));
 
         // Data fim
         painel.add(new JLabel("Data Fim:"));
@@ -342,7 +359,7 @@ public class RelatorioFrame extends JFrame {
         JSpinner.DateEditor editorFim = new JSpinner.DateEditor(spinnerDataFim, "dd/MM/yyyy");
         spinnerDataFim.setEditor(editorFim);
         spinnerDataFim.setValue(new Date());
-        spinnerDataFim.setPreferredSize(new Dimension(120, 25));
+        spinnerDataFim.setPreferredSize(new Dimension(150, 30));
         painel.add(spinnerDataFim);
 
         return painel;
@@ -361,7 +378,7 @@ public class RelatorioFrame extends JFrame {
         gbc.gridx = 0;
         gbc.gridy = 0;
         painel.add(new JLabel("Setor:"), gbc);
-        
+
         gbc.gridx = 1;
         comboSetor = new JComboBox<>();
         comboSetor.setPreferredSize(new Dimension(200, 25));
@@ -370,7 +387,7 @@ public class RelatorioFrame extends JFrame {
         // Responsável
         gbc.gridx = 2;
         painel.add(new JLabel("Responsável:"), gbc);
-        
+
         gbc.gridx = 3;
         comboResponsavel = new JComboBox<>();
         comboResponsavel.setPreferredSize(new Dimension(200, 25));
@@ -383,7 +400,7 @@ public class RelatorioFrame extends JFrame {
         labelInventario.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
         labelInventario.setForeground(new Color(200, 0, 0));
         painel.add(labelInventario, gbc);
-        
+
         gbc.gridx = 1;
         gbc.gridwidth = 3;
         comboInventario = new JComboBox<>();
@@ -403,7 +420,7 @@ public class RelatorioFrame extends JFrame {
         gbc.gridx = 0;
         gbc.gridy = 2;
         painel.add(new JLabel("Situação:"), gbc);
-        
+
         gbc.gridx = 1;
         comboStatus = new JComboBox<>(new String[] {
                 "Todos", "Encontrado", "Não Encontrado", "Não Coletado"
@@ -447,7 +464,7 @@ public class RelatorioFrame extends JFrame {
         gbc.gridx = 0;
         gbc.gridy = 0;
         painel.add(new JLabel("Valor Mínimo (R$):"), gbc);
-        
+
         gbc.gridx = 1;
         spinnerValorMinimo = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 999999999.0, 100.0));
         JSpinner.NumberEditor editorMin = new JSpinner.NumberEditor(spinnerValorMinimo, "#,##0.00");
@@ -457,7 +474,7 @@ public class RelatorioFrame extends JFrame {
 
         gbc.gridx = 2;
         painel.add(new JLabel("Valor Máximo (R$):"), gbc);
-        
+
         gbc.gridx = 3;
         spinnerValorMaximo = new JSpinner(new SpinnerNumberModel(999999999.0, 0.0, 999999999.0, 100.0));
         JSpinner.NumberEditor editorMax = new JSpinner.NumberEditor(spinnerValorMaximo, "#,##0.00");
@@ -469,7 +486,7 @@ public class RelatorioFrame extends JFrame {
         gbc.gridx = 0;
         gbc.gridy = 1;
         painel.add(new JLabel("Sala:"), gbc);
-        
+
         gbc.gridx = 1;
         comboSala = new JComboBox<>();
         comboSala.setPreferredSize(new Dimension(150, 25));
@@ -477,10 +494,10 @@ public class RelatorioFrame extends JFrame {
 
         gbc.gridx = 2;
         painel.add(new JLabel("Estado de Conservação:"), gbc);
-        
+
         gbc.gridx = 3;
-        comboEstadoConservacao = new JComboBox<>(new String[] { 
-            "Todos", "BOM", "REGULAR", "RUIM", "PÉSSIMO", "NOVO", "USADO" 
+        comboEstadoConservacao = new JComboBox<>(new String[] {
+                "Todos", "BOM", "REGULAR", "RUIM", "PÉSSIMO", "NOVO", "USADO"
         });
         comboEstadoConservacao.setPreferredSize(new Dimension(150, 25));
         painel.add(comboEstadoConservacao, gbc);
@@ -498,7 +515,7 @@ public class RelatorioFrame extends JFrame {
         gbc.gridx = 2;
         gbc.gridwidth = 1;
         painel.add(new JLabel("Operador:"), gbc);
-        
+
         gbc.gridx = 3;
         comboOperadorLogico = new JComboBox<>(new String[] { "E (AND)", "OU (OR)" });
         comboOperadorLogico.setPreferredSize(new Dimension(100, 25));
@@ -533,8 +550,9 @@ public class RelatorioFrame extends JFrame {
     private List<Inventario> inventariosCarregados = new ArrayList<>();
 
     /**
-     * @deprecated Substituído por viewModel.carregarInventarios() + preencherComboInventarios()
-     * === MVVM: Delegar para ViewModel ===
+     * @deprecated Substituído por viewModel.carregarInventarios() +
+     *             preencherComboInventarios()
+     *             === MVVM: Delegar para ViewModel ===
      */
     @Deprecated
     private void carregarInventarios() {
@@ -581,26 +599,28 @@ public class RelatorioFrame extends JFrame {
     }
 
     /**
-     * @deprecated Substituído por viewModel.carregarSetores() + preencherComboSetores()
-     * === MVVM: Delegar para ViewModel ===
+     * @deprecated Substituído por viewModel.carregarSetores() +
+     *             preencherComboSetores()
+     *             === MVVM: Delegar para ViewModel ===
      */
     @Deprecated
     private void carregarSetores() {
         viewModel.carregarSetores();
     }
-    
+
     /**
-     * @deprecated Substituído por viewModel.carregarResponsaveis() + preencherComboResponsaveis()
-     * === MVVM: Delegar para ViewModel ===
+     * @deprecated Substituído por viewModel.carregarResponsaveis() +
+     *             preencherComboResponsaveis()
+     *             === MVVM: Delegar para ViewModel ===
      */
     @Deprecated
     private void carregarResponsaveis() {
         viewModel.carregarResponsaveis();
     }
-    
+
     /**
      * @deprecated Substituído por viewModel.carregarSalas() + preencherComboSalas()
-     * === MVVM: Delegar para ViewModel ===
+     *             === MVVM: Delegar para ViewModel ===
      */
     @Deprecated
     private void carregarSalas() {
@@ -637,26 +657,26 @@ public class RelatorioFrame extends JFrame {
         // === PAINEL DE BUSCA EM TEMPO REAL - FASE 2 ===
         JPanel painelBusca = new JPanel(new FlowLayout(FlowLayout.LEFT));
         painelBusca.setBackground(new Color(245, 245, 245));
-        
+
         JLabel labelBusca = new JLabel("Buscar na tabela:");
         labelBusca.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
         painelBusca.add(labelBusca);
-        
+
         campoBusca = new JTextField(30);
         campoBusca.setToolTipText("Digite para filtrar os resultados em tempo real");
         campoBusca.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
         painelBusca.add(campoBusca);
-        
+
         btnLimparBusca = ButtonStyleFactory.createSecondaryButton("Limpar");
         btnLimparBusca.setToolTipText("Limpar campo de busca");
         btnLimparBusca.setPreferredSize(new Dimension(70, 25));
         painelBusca.add(btnLimparBusca);
-        
+
         labelResultadosBusca = new JLabel("0 resultados");
         labelResultadosBusca.setFont(new Font(Font.SANS_SERIF, Font.ITALIC, 11));
         labelResultadosBusca.setForeground(new Color(100, 100, 100));
         painelBusca.add(labelResultadosBusca);
-        
+
         painel.add(painelBusca, BorderLayout.NORTH);
 
         // Tabela de preview
@@ -726,34 +746,34 @@ public class RelatorioFrame extends JFrame {
         // Painel superior com controles
         JPanel painelControles = new JPanel(new FlowLayout(FlowLayout.LEFT));
         painelControles.setBackground(new Color(245, 245, 245));
-        
+
         JLabel labelTipoGrafico = new JLabel("Tipo de Gráfico:");
         labelTipoGrafico.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
         painelControles.add(labelTipoGrafico);
-        
-        comboTipoGrafico = new JComboBox<>(new String[]{
-            "Pizza - Status de Coleta",
-            "Barras - Itens por Setor",
-            "Barras - Itens por Responsável",
-            "Pizza - Estado de Conservação"
+
+        comboTipoGrafico = new JComboBox<>(new String[] {
+                "Pizza - Status de Coleta",
+                "Barras - Itens por Setor",
+                "Barras - Itens por Responsável",
+                "Pizza - Estado de Conservação"
         });
         comboTipoGrafico.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
         comboTipoGrafico.setPreferredSize(new Dimension(250, 25));
         painelControles.add(comboTipoGrafico);
-        
+
         painel.add(painelControles, BorderLayout.NORTH);
 
         // Painel central para os gráficos
         JPanel painelGraficos = new JPanel(new GridLayout(1, 2, 10, 10));
         painelGraficos.setBackground(new Color(245, 245, 245));
-        
+
         // Criar gráficos iniciais vazios
         painelGraficoPizza = criarGraficoPizzaVazio();
         painelGraficoBarras = criarGraficoBarrasVazio();
-        
+
         painelGraficos.add(painelGraficoPizza);
         painelGraficos.add(painelGraficoBarras);
-        
+
         painel.add(painelGraficos, BorderLayout.CENTER);
 
         return painel;
@@ -762,45 +782,43 @@ public class RelatorioFrame extends JFrame {
     private ChartPanel criarGraficoPizzaVazio() {
         DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
         dataset.setValue("Aguardando dados...", 1);
-        
+
         JFreeChart chart = ChartFactory.createPieChart(
-            "Status de Coleta",
-            dataset,
-            true,
-            true,
-            false
-        );
-        
+                "Status de Coleta",
+                dataset,
+                true,
+                true,
+                false);
+
         chart.setBackgroundPaint(Color.WHITE);
-        
+
         ChartPanel chartPanel = new ChartPanel(chart);
         chartPanel.setPreferredSize(new Dimension(400, 300));
         chartPanel.setBorder(BorderFactory.createTitledBorder("Gráfico de Pizza"));
-        
+
         return chartPanel;
     }
 
     private ChartPanel criarGraficoBarrasVazio() {
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
         dataset.addValue(1, "Aguardando", "dados...");
-        
+
         JFreeChart chart = ChartFactory.createBarChart(
-            "Itens por Categoria",
-            "Categoria",
-            "Quantidade",
-            dataset,
-            PlotOrientation.VERTICAL,
-            true,
-            true,
-            false
-        );
-        
+                "Itens por Categoria",
+                "Categoria",
+                "Quantidade",
+                dataset,
+                PlotOrientation.VERTICAL,
+                true,
+                true,
+                false);
+
         chart.setBackgroundPaint(Color.WHITE);
-        
+
         ChartPanel chartPanel = new ChartPanel(chart);
         chartPanel.setPreferredSize(new Dimension(400, 300));
         chartPanel.setBorder(BorderFactory.createTitledBorder("Gráfico de Barras"));
-        
+
         return chartPanel;
     }
 
@@ -833,7 +851,7 @@ public class RelatorioFrame extends JFrame {
 
         btnGerar = ButtonStyleFactory.createPrimaryButton("📊 Gerar Relatório");
         btnGerar.setPreferredSize(new Dimension(160, 40));
-        btnGerar.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        btnGerar.setFont(new Font("Segoe UI Emoji", Font.BOLD, 12));
 
         btnLimpar = ButtonStyleFactory.createWarningButton("🗑️ Limpar");
         btnLimpar.setPreferredSize(new Dimension(120, 40));
@@ -936,7 +954,7 @@ public class RelatorioFrame extends JFrame {
         btnLimpar.addActionListener(e -> limparRelatorio());
 
         comboTipoRelatorio.addActionListener(e -> atualizarFiltros());
-        
+
         // Atualizar status quando inventário for alterado
         comboInventario.addActionListener(e -> atualizarFiltros());
 
@@ -951,7 +969,7 @@ public class RelatorioFrame extends JFrame {
         });
 
         // === LISTENERS DOS FILTROS AVANÇADOS - FASE 2 ===
-        
+
         // Listener para habilitar/desabilitar filtros avançados
         checkFiltrosAvancados.addActionListener(e -> {
             boolean habilitado = checkFiltrosAvancados.isSelected();
@@ -961,7 +979,7 @@ public class RelatorioFrame extends JFrame {
             comboEstadoConservacao.setEnabled(habilitado);
             comboOperadorLogico.setEnabled(habilitado);
             checkExcluirSemValor.setEnabled(habilitado);
-            
+
             if (habilitado) {
                 labelStatus.setText("Filtros avançados habilitados");
             } else {
@@ -1048,24 +1066,25 @@ public class RelatorioFrame extends JFrame {
         Date dataFim = (Date) spinnerDataFim.getValue();
         String setor = (String) comboSetor.getSelectedItem();
         String responsavel = (String) comboResponsavel.getSelectedItem();
-        
+        String status = (String) comboStatus.getSelectedItem();
+
         // Validar filtros obrigatórios (validação de UI apenas)
         if (!validarFiltrosRelatoriosAvancados(tipoRelatorio, setor, responsavel, dataInicio, dataFim)) {
             return;
         }
-        
+
         // Obter ID do inventário
         int idInventario = obterIdInventarioSelecionado();
-        
+
         // === MVVM: Delegar para ViewModel em background ===
         SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() throws Exception {
                 // === MVVM: ViewModel faz todo o trabalho ===
-                viewModel.gerarRelatorio(tipoRelatorio, idInventario, setor, responsavel, dataInicio, dataFim);
+                viewModel.gerarRelatorio(tipoRelatorio, idInventario, setor, responsavel, dataInicio, dataFim, status);
                 return null;
             }
-            
+
             @Override
             protected void done() {
                 // Nada a fazer aqui - atualizarUI() será chamado automaticamente
@@ -1090,79 +1109,84 @@ public class RelatorioFrame extends JFrame {
             // Filtro por valor mínimo e máximo
             Double valorMin = (Double) spinnerValorMinimo.getValue();
             Double valorMax = (Double) spinnerValorMaximo.getValue();
-            
+
             if (valorMin != null && valorMin > 0) {
                 dadosFiltrados = dadosFiltrados.stream()
-                    .filter(item -> {
-                        Object valorObj = item.get("valor");
-                        if (valorObj == null) return false;
-                        try {
-                            double valor = Double.parseDouble(valorObj.toString());
-                            return valor >= valorMin;
-                        } catch (NumberFormatException e) {
-                            return false;
-                        }
-                    })
-                    .collect(Collectors.toList());
+                        .filter(item -> {
+                            Object valorObj = item.get("valor");
+                            if (valorObj == null)
+                                return false;
+                            try {
+                                double valor = Double.parseDouble(valorObj.toString());
+                                return valor >= valorMin;
+                            } catch (NumberFormatException e) {
+                                return false;
+                            }
+                        })
+                        .collect(Collectors.toList());
             }
 
             if (valorMax != null && valorMax > 0) {
                 dadosFiltrados = dadosFiltrados.stream()
-                    .filter(item -> {
-                        Object valorObj = item.get("valor");
-                        if (valorObj == null) return false;
-                        try {
-                            double valor = Double.parseDouble(valorObj.toString());
-                            return valor <= valorMax;
-                        } catch (NumberFormatException e) {
-                            return false;
-                        }
-                    })
-                    .collect(Collectors.toList());
+                        .filter(item -> {
+                            Object valorObj = item.get("valor");
+                            if (valorObj == null)
+                                return false;
+                            try {
+                                double valor = Double.parseDouble(valorObj.toString());
+                                return valor <= valorMax;
+                            } catch (NumberFormatException e) {
+                                return false;
+                            }
+                        })
+                        .collect(Collectors.toList());
             }
 
             // Filtro por sala
             String salaSelecionada = (String) comboSala.getSelectedItem();
             if (salaSelecionada != null && !"Todas as Salas".equals(salaSelecionada)) {
                 dadosFiltrados = dadosFiltrados.stream()
-                    .filter(item -> {
-                        Object salaObj = item.get("sala");
-                        if (salaObj == null) return false;
-                        return salaObj.toString().contains(salaSelecionada);
-                    })
-                    .collect(Collectors.toList());
+                        .filter(item -> {
+                            Object salaObj = item.get("sala");
+                            if (salaObj == null)
+                                return false;
+                            return salaObj.toString().contains(salaSelecionada);
+                        })
+                        .collect(Collectors.toList());
             }
 
             // Filtro por estado de conservação
             String estadoSelecionado = (String) comboEstadoConservacao.getSelectedItem();
             if (estadoSelecionado != null && !"Todos".equals(estadoSelecionado)) {
                 dadosFiltrados = dadosFiltrados.stream()
-                    .filter(item -> {
-                        Object estadoObj = item.get("estado_conservacao");
-                        if (estadoObj == null) return false;
-                        return estadoObj.toString().equalsIgnoreCase(estadoSelecionado);
-                    })
-                    .collect(Collectors.toList());
+                        .filter(item -> {
+                            Object estadoObj = item.get("estado_conservacao");
+                            if (estadoObj == null)
+                                return false;
+                            return estadoObj.toString().equalsIgnoreCase(estadoSelecionado);
+                        })
+                        .collect(Collectors.toList());
             }
 
             // Filtro para excluir itens sem valor
             if (checkExcluirSemValor.isSelected()) {
                 dadosFiltrados = dadosFiltrados.stream()
-                    .filter(item -> {
-                        Object valorObj = item.get("valor");
-                        if (valorObj == null) return false;
-                        try {
-                            double valor = Double.parseDouble(valorObj.toString());
-                            return valor > 0;
-                        } catch (NumberFormatException e) {
-                            return false;
-                        }
-                    })
-                    .collect(Collectors.toList());
+                        .filter(item -> {
+                            Object valorObj = item.get("valor");
+                            if (valorObj == null)
+                                return false;
+                            try {
+                                double valor = Double.parseDouble(valorObj.toString());
+                                return valor > 0;
+                            } catch (NumberFormatException e) {
+                                return false;
+                            }
+                        })
+                        .collect(Collectors.toList());
             }
 
-            System.out.println("Filtros avançados aplicados. Itens antes: " + dados.size() + 
-                             ", depois: " + dadosFiltrados.size());
+            System.out.println("Filtros avançados aplicados. Itens antes: " + dados.size() +
+                    ", depois: " + dadosFiltrados.size());
 
         } catch (Exception e) {
             System.err.println("Erro ao aplicar filtros avançados: " + e.getMessage());
@@ -1176,23 +1200,22 @@ public class RelatorioFrame extends JFrame {
     // === MÉTODO PARA BUSCA EM TEMPO REAL - FASE 2 ===
     private void filtrarTabelaEmTempoReal() {
         String textoBusca = campoBusca.getText().toLowerCase().trim();
-        
+
         try {
             // Garantir que a tabela tenha um TableRowSorter
             javax.swing.table.TableRowSorter<DefaultTableModel> sorter;
             javax.swing.RowSorter<? extends javax.swing.table.TableModel> existingSorter = tabelaPreview.getRowSorter();
-            
+
             if (existingSorter instanceof javax.swing.table.TableRowSorter<?>) {
                 // Verificar se o modelo é compatível antes de fazer o cast
                 @SuppressWarnings("unchecked")
-                javax.swing.table.TableRowSorter<DefaultTableModel> typedSorter = 
-                    (javax.swing.table.TableRowSorter<DefaultTableModel>) existingSorter;
+                javax.swing.table.TableRowSorter<DefaultTableModel> typedSorter = (javax.swing.table.TableRowSorter<DefaultTableModel>) existingSorter;
                 sorter = typedSorter;
             } else {
                 sorter = new javax.swing.table.TableRowSorter<>(modeloTabela);
                 tabelaPreview.setRowSorter(sorter);
             }
-            
+
             if (textoBusca.isEmpty()) {
                 // Se não há texto de busca, remove o filtro
                 sorter.setRowFilter(null);
@@ -1217,11 +1240,11 @@ public class RelatorioFrame extends JFrame {
 
             // Aplicar o filtro
             sorter.setRowFilter(filtro);
-            
+
             // Atualizar contador de resultados
             int resultados = tabelaPreview.getRowCount();
             labelResultadosBusca.setText(resultados + " resultado" + (resultados != 1 ? "s" : ""));
-            
+
         } catch (Exception e) {
             System.err.println("Erro ao filtrar tabela: " + e.getMessage());
             e.printStackTrace();
@@ -1236,7 +1259,7 @@ public class RelatorioFrame extends JFrame {
         }
 
         String tipoGrafico = (String) comboTipoGrafico.getSelectedItem();
-        
+
         try {
             switch (tipoGrafico) {
                 case "Pizza - Status de Coleta":
@@ -1261,7 +1284,7 @@ public class RelatorioFrame extends JFrame {
     private void atualizarGraficoPizzaStatus() {
         DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
         Map<String, Integer> contadores = new HashMap<>();
-        
+
         // Contar status (assumindo que está na coluna 6)
         for (int i = 0; i < modeloTabela.getRowCount(); i++) {
             String status = (String) modeloTabela.getValueAt(i, 6);
@@ -1269,22 +1292,21 @@ public class RelatorioFrame extends JFrame {
                 contadores.put(status, contadores.getOrDefault(status, 0) + 1);
             }
         }
-        
+
         // Adicionar dados ao dataset
         for (Map.Entry<String, Integer> entry : contadores.entrySet()) {
             dataset.setValue(entry.getKey(), entry.getValue());
         }
-        
+
         // Criar novo gráfico
         JFreeChart chart = ChartFactory.createPieChart(
-            "Status de Coleta",
-            dataset,
-            true,
-            true,
-            false
-        );
+                "Status de Coleta",
+                dataset,
+                true,
+                true,
+                false);
         chart.setBackgroundPaint(Color.WHITE);
-        
+
         // Atualizar o painel
         painelGraficoPizza.setChart(chart);
     }
@@ -1292,7 +1314,7 @@ public class RelatorioFrame extends JFrame {
     private void atualizarGraficoBarrasSetor() {
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
         Map<String, Integer> contadores = new HashMap<>();
-        
+
         // Contar por setor (assumindo que está na coluna 4)
         for (int i = 0; i < modeloTabela.getRowCount(); i++) {
             String setor = (String) modeloTabela.getValueAt(i, 4);
@@ -1300,25 +1322,24 @@ public class RelatorioFrame extends JFrame {
                 contadores.put(setor, contadores.getOrDefault(setor, 0) + 1);
             }
         }
-        
+
         // Adicionar dados ao dataset
         for (Map.Entry<String, Integer> entry : contadores.entrySet()) {
             dataset.addValue(entry.getValue(), "Itens", entry.getKey());
         }
-        
+
         // Criar novo gráfico
         JFreeChart chart = ChartFactory.createBarChart(
-            "Itens por Setor",
-            "Setor",
-            "Quantidade",
-            dataset,
-            PlotOrientation.VERTICAL,
-            true,
-            true,
-            false
-        );
+                "Itens por Setor",
+                "Setor",
+                "Quantidade",
+                dataset,
+                PlotOrientation.VERTICAL,
+                true,
+                true,
+                false);
         chart.setBackgroundPaint(Color.WHITE);
-        
+
         // Atualizar o painel
         painelGraficoBarras.setChart(chart);
     }
@@ -1326,7 +1347,7 @@ public class RelatorioFrame extends JFrame {
     private void atualizarGraficoBarrasResponsavel() {
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
         Map<String, Integer> contadores = new HashMap<>();
-        
+
         // Contar por responsável (assumindo que está na coluna 5)
         for (int i = 0; i < modeloTabela.getRowCount(); i++) {
             String responsavel = (String) modeloTabela.getValueAt(i, 5);
@@ -1334,25 +1355,24 @@ public class RelatorioFrame extends JFrame {
                 contadores.put(responsavel, contadores.getOrDefault(responsavel, 0) + 1);
             }
         }
-        
+
         // Adicionar dados ao dataset
         for (Map.Entry<String, Integer> entry : contadores.entrySet()) {
             dataset.addValue(entry.getValue(), "Itens", entry.getKey());
         }
-        
+
         // Criar novo gráfico
         JFreeChart chart = ChartFactory.createBarChart(
-            "Itens por Responsável",
-            "Responsável",
-            "Quantidade",
-            dataset,
-            PlotOrientation.VERTICAL,
-            true,
-            true,
-            false
-        );
+                "Itens por Responsável",
+                "Responsável",
+                "Quantidade",
+                dataset,
+                PlotOrientation.VERTICAL,
+                true,
+                true,
+                false);
         chart.setBackgroundPaint(Color.WHITE);
-        
+
         // Atualizar o painel
         painelGraficoBarras.setChart(chart);
     }
@@ -1360,41 +1380,42 @@ public class RelatorioFrame extends JFrame {
     private void atualizarGraficoPizzaConservacao() {
         DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
         Map<String, Integer> contadores = new HashMap<>();
-        
-        // Contar estado de conservação (pode estar em diferentes colunas dependendo do relatório)
+
+        // Contar estado de conservação (pode estar em diferentes colunas dependendo do
+        // relatório)
         for (int i = 0; i < modeloTabela.getRowCount(); i++) {
             // Tentar encontrar coluna de estado/conservação
             String estado = null;
             for (int j = 0; j < modeloTabela.getColumnCount(); j++) {
                 String nomeColuna = modeloTabela.getColumnName(j).toLowerCase();
-                if (nomeColuna.contains("estado") || nomeColuna.contains("conservacao") || nomeColuna.contains("situacao")) {
+                if (nomeColuna.contains("estado") || nomeColuna.contains("conservacao")
+                        || nomeColuna.contains("situacao")) {
                     estado = (String) modeloTabela.getValueAt(i, j);
                     break;
                 }
             }
-            
+
             if (estado == null) {
                 estado = "Não informado";
             }
-            
+
             contadores.put(estado, contadores.getOrDefault(estado, 0) + 1);
         }
-        
+
         // Adicionar dados ao dataset
         for (Map.Entry<String, Integer> entry : contadores.entrySet()) {
             dataset.setValue(entry.getKey(), entry.getValue());
         }
-        
+
         // Criar novo gráfico
         JFreeChart chart = ChartFactory.createPieChart(
-            "Estado de Conservação",
-            dataset,
-            true,
-            true,
-            false
-        );
+                "Estado de Conservação",
+                dataset,
+                true,
+                true,
+                false);
         chart.setBackgroundPaint(Color.WHITE);
-        
+
         // Atualizar o painel
         painelGraficoPizza.setChart(chart);
     }
@@ -1519,7 +1540,7 @@ public class RelatorioFrame extends JFrame {
             // === MVVM: Obter dados do ViewModel ao invés de DAOs ===
             List<Responsavel> todosResponsaveis = new ArrayList<>();
             List<Setor> todosSetores = new ArrayList<>();
-            
+
             RelatorioState state = viewModel.getState();
             if (state instanceof RelatorioState.ResponsaveisCarregados) {
                 todosResponsaveis = ((RelatorioState.ResponsaveisCarregados) state).getResponsaveis();
@@ -1527,7 +1548,7 @@ public class RelatorioFrame extends JFrame {
             if (state instanceof RelatorioState.SetoresCarregados) {
                 todosSetores = ((RelatorioState.SetoresCarregados) state).getSetores();
             }
-            
+
             // Se não estiverem carregados, carregar agora
             if (todosResponsaveis.isEmpty()) {
                 viewModel.carregarResponsaveis();
@@ -1676,7 +1697,7 @@ public class RelatorioFrame extends JFrame {
             System.out.println("Buscando responsáveis...");
             List<Responsavel> todosResponsaveis = new ArrayList<>();
             List<Setor> todosSetores = new ArrayList<>();
-            
+
             RelatorioState state = viewModel.getState();
             if (state instanceof RelatorioState.ResponsaveisCarregados) {
                 todosResponsaveis = ((RelatorioState.ResponsaveisCarregados) state).getResponsaveis();
@@ -1684,8 +1705,9 @@ public class RelatorioFrame extends JFrame {
             if (state instanceof RelatorioState.SetoresCarregados) {
                 todosSetores = ((RelatorioState.SetoresCarregados) state).getSetores();
             }
-            
-            System.out.println("Responsáveis encontrados: " + (todosResponsaveis != null ? todosResponsaveis.size() : 0));
+
+            System.out
+                    .println("Responsáveis encontrados: " + (todosResponsaveis != null ? todosResponsaveis.size() : 0));
             System.out.println("Setores encontrados: " + (todosSetores != null ? todosSetores.size() : 0));
 
             // Criar mapas para busca rápida
@@ -1855,16 +1877,16 @@ public class RelatorioFrame extends JFrame {
         }
 
         StringBuilder resumo = new StringBuilder();
-        
+
         // RESUMO EXECUTIVO
         resumo.append("📊 RESUMO EXECUTIVO - INVENTÁRIO DE PATRIMÔNIO\n");
         resumo.append("==============================================\n\n");
-        
+
         // Indicadores principais
         double percentualColetado = totalItens > 0 ? (itensColetados * 100.0) / totalItens : 0;
         double percentualNaoEncontrado = totalItens > 0 ? (itensNaoEncontrados * 100.0) / totalItens : 0;
         double percentualDanificado = totalItens > 0 ? (itensDanificados * 100.0) / totalItens : 0;
-        
+
         // Status geral do inventário
         String statusGeral;
         String emoji;
@@ -1881,18 +1903,21 @@ public class RelatorioFrame extends JFrame {
             statusGeral = "CRÍTICO";
             emoji = "🔴";
         }
-        
-        resumo.append(String.format("%s STATUS GERAL: %s (%.1f%% coletado)\n\n", emoji, statusGeral, percentualColetado));
-        
+
+        resumo.append(
+                String.format("%s STATUS GERAL: %s (%.1f%% coletado)\n\n", emoji, statusGeral, percentualColetado));
+
         // Métricas principais
         resumo.append("📈 INDICADORES PRINCIPAIS\n");
         resumo.append("-------------------------\n");
         resumo.append(String.format("• Total de Patrimônios: %,d itens\n", totalItens));
         resumo.append(String.format("• Taxa de Coleta: %.1f%% (%,d itens)\n", percentualColetado, itensColetados));
-        resumo.append(String.format("• Itens Não Localizados: %.1f%% (%,d itens)\n", percentualNaoEncontrado, itensNaoEncontrados));
-        resumo.append(String.format("• Itens Danificados: %.1f%% (%,d itens)\n", percentualDanificado, itensDanificados));
+        resumo.append(String.format("• Itens Não Localizados: %.1f%% (%,d itens)\n", percentualNaoEncontrado,
+                itensNaoEncontrados));
+        resumo.append(
+                String.format("• Itens Danificados: %.1f%% (%,d itens)\n", percentualDanificado, itensDanificados));
         resumo.append(String.format("• Itens Sem Etiqueta: %,d itens\n\n", itensSemEtiqueta));
-        
+
         // Análise de riscos
         resumo.append("⚠️ ANÁLISE DE RISCOS\n");
         resumo.append("--------------------\n");
@@ -1903,27 +1928,28 @@ public class RelatorioFrame extends JFrame {
         } else {
             resumo.append("🟢 BAIXO: Taxa de itens não encontrados controlada\n");
         }
-        
+
         if (itensSemEtiqueta > totalItens * 0.05) {
             resumo.append("🔴 ATENÇÃO: Muitos itens sem etiqueta de patrimônio\n");
         }
-        
+
         if (itensDanificados > 0) {
             resumo.append(String.format("⚠️ MANUTENÇÃO: %d itens necessitam reparo\n", itensDanificados));
         }
-        
+
         resumo.append("\n");
-        
+
         // Informações do relatório
         resumo.append("📋 INFORMAÇÕES DO RELATÓRIO\n");
         resumo.append("---------------------------\n");
-        resumo.append("Data de Geração: ").append(DateFormatUtils.formatDateTimeFull(DateFormatUtils.nowAsDate())).append("\n");
+        resumo.append("Data de Geração: ").append(DateFormatUtils.formatDateTimeFull(DateFormatUtils.nowAsDate()))
+                .append("\n");
         resumo.append("Tipo de Relatório: ").append(comboTipoRelatorio.getSelectedItem()).append("\n");
         resumo.append("Filtros Aplicados:\n");
         resumo.append("  • Setor: ").append(comboSetor.getSelectedItem()).append("\n");
         resumo.append("  • Responsável: ").append(comboResponsavel.getSelectedItem()).append("\n");
         resumo.append("  • Situação: ").append(comboStatus.getSelectedItem()).append("\n\n");
-        
+
         // Recomendações
         resumo.append("💡 RECOMENDAÇÕES\n");
         resumo.append("----------------\n");
@@ -2070,15 +2096,121 @@ public class RelatorioFrame extends JFrame {
 
     private void imprimirRelatorio() {
         try {
-            // TODO: Implementar impressão real
-            boolean imprimir = tabelaPreview.print();
-            if (imprimir) {
-                labelStatus.setText("Relatório enviado para impressão");
+            // Verificar se há dados para imprimir
+            if (modeloTabela.getRowCount() == 0) {
+                JOptionPane.showMessageDialog(this,
+                        "Não há dados para imprimir. Gere um relatório primeiro.",
+                        "Aviso", JOptionPane.WARNING_MESSAGE);
+                return;
             }
+
+            labelStatus.setText("Preparando impressão...");
+
+            // Configurar cabeçalho e rodapé da impressão
+            String tipoRelatorio = (String) comboTipoRelatorio.getSelectedItem();
+            String cabecalho = "RELATÓRIO: " + tipoRelatorio.toUpperCase();
+            String rodape = "Gerado em: " + DateFormatUtils.formatDateTimeFull(new Date()) + 
+                           " | Página {0}";
+
+            // Criar MessageFormat para cabeçalho e rodapé
+            java.text.MessageFormat headerFormat = new java.text.MessageFormat(cabecalho);
+            java.text.MessageFormat footerFormat = new java.text.MessageFormat(rodape);
+
+            // Configurar modo de impressão
+            // JTable.PrintMode.FIT_WIDTH - ajusta a largura da tabela à página
+            // JTable.PrintMode.NORMAL - mantém tamanho original (pode cortar)
+            javax.swing.JTable.PrintMode printMode = javax.swing.JTable.PrintMode.FIT_WIDTH;
+
+            // Mostrar dialog de confirmação antes de imprimir
+            int opcao = JOptionPane.showConfirmDialog(this,
+                    "Deseja imprimir o relatório?\n\n" +
+                    "Tipo: " + tipoRelatorio + "\n" +
+                    "Registros: " + modeloTabela.getRowCount() + "\n\n" +
+                    "O relatório será ajustado automaticamente à largura da página.",
+                    "Confirmar Impressão",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+
+            if (opcao != JOptionPane.YES_OPTION) {
+                labelStatus.setText("Impressão cancelada");
+                return;
+            }
+
+            labelStatus.setText("Enviando para impressora...");
+
+            // Executar impressão em background para não travar a UI
+            SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
+                private String mensagemErro = null;
+
+                @Override
+                protected Boolean doInBackground() throws Exception {
+                    try {
+                        // Imprimir a tabela com cabeçalho e rodapé
+                        boolean sucesso = tabelaPreview.print(
+                            printMode,           // Modo de impressão
+                            headerFormat,        // Cabeçalho
+                            footerFormat,        // Rodapé
+                            true,                // Mostrar dialog de impressão
+                            null,                // PrintRequestAttributeSet (null = padrão)
+                            true,                // Interativo (permite cancelar)
+                            null                 // PrintService (null = impressora padrão)
+                        );
+                        
+                        return sucesso;
+                    } catch (java.awt.print.PrinterException pe) {
+                        mensagemErro = "Erro na impressora: " + pe.getMessage();
+                        return false;
+                    } catch (Exception e) {
+                        mensagemErro = "Erro ao imprimir: " + e.getMessage();
+                        return false;
+                    }
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        Boolean sucesso = get();
+                        
+                        if (sucesso != null && sucesso) {
+                            labelStatus.setText("✅ Relatório enviado para impressão com sucesso!");
+                            SoundNotification.playSound(SoundNotification.SoundType.SUCCESS);
+                            
+                            JOptionPane.showMessageDialog(RelatorioFrame.this,
+                                    "Relatório enviado para impressão com sucesso!\n\n" +
+                                    "Verifique a fila de impressão do seu sistema.",
+                                    "Impressão Concluída",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                        } else {
+                            labelStatus.setText("❌ Impressão cancelada ou falhou");
+                            
+                            if (mensagemErro != null) {
+                                JOptionPane.showMessageDialog(RelatorioFrame.this,
+                                        mensagemErro,
+                                        "Erro de Impressão",
+                                        JOptionPane.ERROR_MESSAGE);
+                            }
+                        }
+                    } catch (Exception e) {
+                        labelStatus.setText("❌ Erro na impressão");
+                        JOptionPane.showMessageDialog(RelatorioFrame.this,
+                                "Erro ao processar impressão: " + e.getMessage(),
+                                "Erro",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            };
+            
+            worker.execute();
+
         } catch (Exception e) {
+            System.err.println("❌ Erro ao preparar impressão: " + e.getMessage());
+            e.printStackTrace();
+            labelStatus.setText("❌ Erro ao preparar impressão");
             JOptionPane.showMessageDialog(this,
-                    "Erro ao imprimir: " + e.getMessage(),
-                    "Erro de Impressão", JOptionPane.ERROR_MESSAGE);
+                    "Erro ao preparar impressão:\n\n" + e.getMessage() +
+                    "\n\nVerifique se há uma impressora configurada no sistema.",
+                    "Erro de Impressão",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -2089,13 +2221,13 @@ public class RelatorioFrame extends JFrame {
         btnExportar.setEnabled(false);
         btnImprimir.setEnabled(false);
         labelStatus.setText("Relatório limpo");
-        
+
         // === MVVM: Limpar estado do ViewModel ===
         viewModel.limpar();
     }
-    
+
     // ========== MÉTODOS AUXILIARES MVVM ==========
-    
+
     /**
      * === MVVM: Preenche combo de inventários ===
      * Chamado quando ViewModel notifica InventariosCarregados
@@ -2103,26 +2235,26 @@ public class RelatorioFrame extends JFrame {
     private void preencherComboInventarios(List<Inventario> inventarios) {
         comboInventario.removeAllItems();
         inventariosCarregados.clear();
-        
+
         if (inventarios.isEmpty()) {
             comboInventario.addItem("Nenhum inventário disponível");
             return;
         }
-        
+
         if (inventarios.size() == 1) {
             Inventario inv = inventarios.get(0);
-            comboInventario.addItem(String.format("%s (%s) - %s", 
-                inv.getNome(), 
-                inv.getAno() != null ? inv.getAno().toString() : "S/A", 
-                inv.getStatusInventario()));
+            comboInventario.addItem(String.format("%s (%s) - %s",
+                    inv.getNome(),
+                    inv.getAno() != null ? inv.getAno().toString() : "S/A",
+                    inv.getStatusInventario()));
             inventariosCarregados.add(inv);
         } else {
             comboInventario.addItem("Selecione um inventário...");
             for (Inventario inv : inventarios) {
-                comboInventario.addItem(String.format("%s (%s) - %s", 
-                    inv.getNome(), 
-                    inv.getAno() != null ? inv.getAno().toString() : "S/A", 
-                    inv.getStatusInventario()));
+                comboInventario.addItem(String.format("%s (%s) - %s",
+                        inv.getNome(),
+                        inv.getAno() != null ? inv.getAno().toString() : "S/A",
+                        inv.getStatusInventario()));
                 inventariosCarregados.add(inv);
             }
             if (comboInventario.getItemCount() > 1) {
@@ -2130,7 +2262,7 @@ public class RelatorioFrame extends JFrame {
             }
         }
     }
-    
+
     /**
      * === MVVM: Preenche combo de setores ===
      * Chamado quando ViewModel notifica SetoresCarregados
@@ -2142,7 +2274,7 @@ public class RelatorioFrame extends JFrame {
             comboSetor.addItem(setor.getNome());
         }
     }
-    
+
     /**
      * === MVVM: Preenche combo de responsáveis ===
      * Chamado quando ViewModel notifica ResponsaveisCarregados
@@ -2154,7 +2286,7 @@ public class RelatorioFrame extends JFrame {
             comboResponsavel.addItem(resp.getNome());
         }
     }
-    
+
     /**
      * === MVVM: Preenche combo de salas ===
      * Chamado quando ViewModel notifica SalasCarregadas
@@ -2176,9 +2308,10 @@ public class RelatorioFrame extends JFrame {
 
         // Determinar se é um relatório básico ou avançado
         boolean isRelatorioBasico = tipoSelecionado.equals("Itens Encontrados") ||
-                                   tipoSelecionado.equals("Itens Não Encontrados") ||
-                                   tipoSelecionado.equals("Itens Sem Plaqueta de Patrimônio");
-        
+                tipoSelecionado.equals("Itens Não Encontrados") ||
+                tipoSelecionado.equals("Itens Não Coletados") ||
+                tipoSelecionado.equals("Itens Sem Plaqueta de Patrimônio");
+
         // Habilitar/desabilitar filtros baseado no tipo de relatório
         boolean habilitarSetor = !tipoSelecionado.contains("Geral") && !tipoSelecionado.contains("Estatísticas")
                 || tipoSelecionado.contains("Avançado por Setor") || tipoSelecionado.contains("Consolidado");
@@ -2192,22 +2325,22 @@ public class RelatorioFrame extends JFrame {
         boolean habilitarDatas = tipoSelecionado.contains("Avançado") || tipoSelecionado.contains("Consolidado");
         spinnerDataInicio.setEnabled(!isRelatorioBasico);
         spinnerDataFim.setEnabled(!isRelatorioBasico);
-        
+
         // Ocultar/mostrar componentes avançados para relatórios básicos
-         if (isRelatorioBasico) {
-             // Desabilitar filtros avançados para relatórios básicos
-             checkFiltrosAvancados.setEnabled(false);
-             checkFiltrosAvancados.setSelected(false);
-             // Desabilitar manualmente os filtros avançados
-             spinnerValorMinimo.setEnabled(false);
-             spinnerValorMaximo.setEnabled(false);
-             comboSala.setEnabled(false);
-             comboEstadoConservacao.setEnabled(false);
-             comboOperadorLogico.setEnabled(false);
-             checkExcluirSemValor.setEnabled(false);
-         } else {
-             checkFiltrosAvancados.setEnabled(true);
-         }
+        if (isRelatorioBasico) {
+            // Desabilitar filtros avançados para relatórios básicos
+            checkFiltrosAvancados.setEnabled(false);
+            checkFiltrosAvancados.setSelected(false);
+            // Desabilitar manualmente os filtros avançados
+            spinnerValorMinimo.setEnabled(false);
+            spinnerValorMaximo.setEnabled(false);
+            comboSala.setEnabled(false);
+            comboEstadoConservacao.setEnabled(false);
+            comboOperadorLogico.setEnabled(false);
+            checkExcluirSemValor.setEnabled(false);
+        } else {
+            checkFiltrosAvancados.setEnabled(true);
+        }
 
         // Destacar campos obrigatórios para relatórios avançados
         if (habilitarDatas) {
@@ -2224,8 +2357,8 @@ public class RelatorioFrame extends JFrame {
 
         // Destacar campo de inventário se necessário
         boolean precisaInventario = !tipoSelecionado.equals("Relatório Geral de Patrimônio") &&
-                                   !tipoSelecionado.equals("Relatório por Responsável");
-        
+                !tipoSelecionado.equals("Relatório por Responsável");
+
         if (precisaInventario) {
             comboInventario.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createLineBorder(new Color(220, 53, 69), 2),
@@ -2240,7 +2373,7 @@ public class RelatorioFrame extends JFrame {
         // Verificar se há inventário selecionado para relatórios que precisam
         int idInventarioSelecionado = obterIdInventarioSelecionado();
         boolean temInventarioSelecionado = idInventarioSelecionado != -1;
-        
+
         switch (tipoSelecionado) {
             case "Itens Encontrados":
                 if (temInventarioSelecionado) {
@@ -2254,6 +2387,13 @@ public class RelatorioFrame extends JFrame {
                     labelStatus.setText("📋 Relatório de itens não encontrados - Inventário selecionado");
                 } else {
                     labelStatus.setText("📋 Relatório de itens não encontrados - REQUER INVENTÁRIO SELECIONADO");
+                }
+                break;
+            case "Itens Não Coletados":
+                if (temInventarioSelecionado) {
+                    labelStatus.setText("📋 Relatório de itens não coletados - Inventário selecionado");
+                } else {
+                    labelStatus.setText("📋 Relatório de itens não coletados - REQUER INVENTÁRIO SELECIONADO");
                 }
                 break;
             case "Itens Sem Plaqueta de Patrimônio":
@@ -2288,12 +2428,12 @@ public class RelatorioFrame extends JFrame {
             default:
                 labelStatus.setText("Pronto para gerar relatório");
         }
-        
+
         // Verificar se há inventários disponíveis para relatórios que precisam
         if (precisaInventario) {
-            boolean temInventarios = comboInventario.getItemCount() > 0 && 
-                                   !comboInventario.getItemAt(0).contains("Nenhum inventário disponível");
-            
+            boolean temInventarios = comboInventario.getItemCount() > 0 &&
+                    !comboInventario.getItemAt(0).contains("Nenhum inventário disponível");
+
             if (!temInventarios) {
                 labelStatus.setText("⚠️ ATENÇÃO: Não há inventários disponíveis. Crie um inventário primeiro.");
                 btnGerar.setEnabled(false);
@@ -2305,10 +2445,9 @@ public class RelatorioFrame extends JFrame {
         }
     }
 
-
-
     /**
-     * Exporta o relatório atualmente exibido para Excel - VERSÃO SIMPLIFICADA SEM THREADS
+     * Exporta o relatório atualmente exibido para Excel - VERSÃO SIMPLIFICADA SEM
+     * THREADS
      * Prioridade máxima: gerar arquivo .xlsx com sucesso
      */
     private void exportarRelatorioAtual() {
@@ -2317,7 +2456,7 @@ public class RelatorioFrame extends JFrame {
 
             // Verificar dados na tabela
             int linhasTabela = tabelaPreview.getRowCount();
-            
+
             if (linhasTabela == 0) {
                 JOptionPane.showMessageDialog(this,
                         "Gere um relatório primeiro antes de exportar.\n\n" +
@@ -2420,7 +2559,8 @@ public class RelatorioFrame extends JFrame {
     }
 
     /**
-     * Exporta dados da tabela - VERSÃO SIMPLIFICADA COM DETECÇÃO DE ExceptionInInitializerError
+     * Exporta dados da tabela - VERSÃO SIMPLIFICADA COM DETECÇÃO DE
+     * ExceptionInInitializerError
      * Prioridade máxima: gerar arquivo .xlsx OU CSV se Apache POI falhar
      */
     private boolean exportarDadosTabelaOtimizado(String tipoRelatorio) {
@@ -2431,7 +2571,8 @@ public class RelatorioFrame extends JFrame {
             List<Map<String, Object>> dadosPreparados = prepararDadosTabela();
 
             if (dadosPreparados.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Não há dados para exportar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Não há dados para exportar.", "Aviso",
+                        JOptionPane.WARNING_MESSAGE);
                 return false;
             }
 
@@ -2445,46 +2586,50 @@ public class RelatorioFrame extends JFrame {
 
             // Escolher onde salvar
             JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Arquivos Excel (*.xlsx)", "xlsx"));
+            fileChooser.setFileFilter(
+                    new javax.swing.filechooser.FileNameExtensionFilter("Arquivos Excel (*.xlsx)", "xlsx"));
             fileChooser.setSelectedFile(new java.io.File(nomeArquivo + ".xlsx"));
-            
+
             if (fileChooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
                 labelStatus.setText("Cancelado");
                 return false;
             }
-            
+
             String caminhoArquivo = fileChooser.getSelectedFile().getAbsolutePath();
             if (!caminhoArquivo.toLowerCase().endsWith(".xlsx")) {
                 caminhoArquivo += ".xlsx";
             }
-            
+
             System.out.println("📁 Salvando em: " + caminhoArquivo);
 
             // Tentar exportar com Apache POI
             try {
                 return exportarComApachePOI(dadosPreparados, colunas, chaves, tituloRelatorio, caminhoArquivo);
-                
+
             } catch (ExceptionInInitializerError initError) {
                 // CAPTURA ESPECÍFICA DO ExceptionInInitializerError
                 System.err.println("❌ ExceptionInInitializerError detectado!");
                 System.err.println("Causa: Problema na inicialização do Apache POI");
                 initError.printStackTrace();
-                
+
                 // Fallback automático para CSV
                 System.out.println("🔄 Usando fallback CSV...");
-                return exportarComCSVFallback(dadosPreparados, colunas, chaves, tituloRelatorio, caminhoArquivo, initError);
-                
+                return exportarComCSVFallback(dadosPreparados, colunas, chaves, tituloRelatorio, caminhoArquivo,
+                        initError);
+
             } catch (NoClassDefFoundError classError) {
                 // Classe não encontrada
                 System.err.println("❌ NoClassDefFoundError: " + classError.getMessage());
                 classError.printStackTrace();
-                return exportarComCSVFallback(dadosPreparados, colunas, chaves, tituloRelatorio, caminhoArquivo, classError);
-                
+                return exportarComCSVFallback(dadosPreparados, colunas, chaves, tituloRelatorio, caminhoArquivo,
+                        classError);
+
             } catch (Exception poiError) {
                 // Outros erros do Apache POI
                 System.err.println("❌ Apache POI falhou: " + poiError.getMessage());
                 poiError.printStackTrace();
-                return exportarComCSVFallback(dadosPreparados, colunas, chaves, tituloRelatorio, caminhoArquivo, poiError);
+                return exportarComCSVFallback(dadosPreparados, colunas, chaves, tituloRelatorio, caminhoArquivo,
+                        poiError);
             }
 
         } catch (Exception e) {
@@ -2495,23 +2640,21 @@ public class RelatorioFrame extends JFrame {
             return false;
         }
     }
-    
 
-    
     /**
      * Exporta usando Apache POI - VERSÃO PROFISSIONAL COM DESIGN ATRATIVO
      * Design moderno e profissional para relatórios Excel
      */
-    private boolean exportarComApachePOI(List<Map<String, Object>> dados, String[] colunas, String[] chaves, 
-                                         String titulo, String caminhoArquivo) throws Exception {
-        
+    private boolean exportarComApachePOI(List<Map<String, Object>> dados, String[] colunas, String[] chaves,
+            String titulo, String caminhoArquivo) throws Exception {
+
         org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = null;
         java.io.FileOutputStream fileOut = null;
-        
+
         try {
             System.out.println("=== EXPORTANDO XLSX PROFISSIONAL ===");
             labelStatus.setText("Criando Excel profissional...");
-            
+
             // Criar workbook
             try {
                 workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook();
@@ -2519,11 +2662,11 @@ public class RelatorioFrame extends JFrame {
                 System.err.println("❌ ExceptionInInitializerError!");
                 throw initError;
             }
-            
+
             org.apache.poi.ss.usermodel.Sheet sheet = workbook.createSheet("Relatório de Patrimônio");
-            
+
             // ===== ESTILOS PROFISSIONAIS =====
-            
+
             // Título
             org.apache.poi.ss.usermodel.CellStyle tituloStyle = workbook.createCellStyle();
             org.apache.poi.ss.usermodel.Font tituloFont = workbook.createFont();
@@ -2535,7 +2678,7 @@ public class RelatorioFrame extends JFrame {
             tituloStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
             tituloStyle.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER);
             tituloStyle.setVerticalAlignment(org.apache.poi.ss.usermodel.VerticalAlignment.CENTER);
-            
+
             // Cabeçalho
             org.apache.poi.ss.usermodel.CellStyle headerStyle = workbook.createCellStyle();
             org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
@@ -2552,7 +2695,7 @@ public class RelatorioFrame extends JFrame {
             headerStyle.setBorderLeft(org.apache.poi.ss.usermodel.BorderStyle.THIN);
             headerStyle.setBorderRight(org.apache.poi.ss.usermodel.BorderStyle.THIN);
             headerStyle.setWrapText(true);
-            
+
             // Dados (linhas pares)
             org.apache.poi.ss.usermodel.CellStyle dadosStyle = workbook.createCellStyle();
             dadosStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
@@ -2560,13 +2703,14 @@ public class RelatorioFrame extends JFrame {
             dadosStyle.setBorderLeft(org.apache.poi.ss.usermodel.BorderStyle.THIN);
             dadosStyle.setBorderRight(org.apache.poi.ss.usermodel.BorderStyle.THIN);
             dadosStyle.setVerticalAlignment(org.apache.poi.ss.usermodel.VerticalAlignment.CENTER);
-            
+
             // Dados alternados (linhas ímpares)
             org.apache.poi.ss.usermodel.CellStyle dadosAlternadoStyle = workbook.createCellStyle();
             dadosAlternadoStyle.cloneStyleFrom(dadosStyle);
-            dadosAlternadoStyle.setFillForegroundColor(org.apache.poi.ss.usermodel.IndexedColors.GREY_25_PERCENT.getIndex());
+            dadosAlternadoStyle
+                    .setFillForegroundColor(org.apache.poi.ss.usermodel.IndexedColors.GREY_25_PERCENT.getIndex());
             dadosAlternadoStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
-            
+
             // Totalizador
             org.apache.poi.ss.usermodel.CellStyle totalStyle = workbook.createCellStyle();
             org.apache.poi.ss.usermodel.Font totalFont = workbook.createFont();
@@ -2577,7 +2721,7 @@ public class RelatorioFrame extends JFrame {
             totalStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
             totalStyle.setBorderTop(org.apache.poi.ss.usermodel.BorderStyle.DOUBLE);
             totalStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.DOUBLE);
-            
+
             // ===== TÍTULO =====
             org.apache.poi.ss.usermodel.Row tituloRow = sheet.createRow(0);
             tituloRow.setHeightInPoints(30);
@@ -2585,70 +2729,71 @@ public class RelatorioFrame extends JFrame {
             tituloCell.setCellValue(titulo);
             tituloCell.setCellStyle(tituloStyle);
             sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(0, 0, 0, colunas.length - 1));
-            
+
             // Linha vazia
             sheet.createRow(1);
-            
+
             // Info
             org.apache.poi.ss.usermodel.Row infoRow = sheet.createRow(2);
             org.apache.poi.ss.usermodel.Cell infoCell = infoRow.createCell(0);
-            infoCell.setCellValue("Data: " + DateFormatUtils.formatDateTimeFull(new Date()) + 
-                                 " | Registros: " + dados.size());
+            infoCell.setCellValue("Data: " + DateFormatUtils.formatDateTimeFull(new Date()) +
+                    " | Registros: " + dados.size());
             sheet.createRow(3);
-            
+
             // ===== CABEÇALHOS =====
             org.apache.poi.ss.usermodel.Row headerRow = sheet.createRow(4);
             headerRow.setHeightInPoints(25);
-            
+
             for (int i = 0; i < colunas.length; i++) {
                 org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
                 cell.setCellValue(colunas[i]);
                 cell.setCellStyle(headerStyle);
             }
-            
+
             // ===== DADOS =====
             labelStatus.setText("Adicionando dados...");
-            
+
             int linhaAtual = 5;
             for (Map<String, Object> dado : dados) {
                 org.apache.poi.ss.usermodel.Row row = sheet.createRow(linhaAtual);
                 row.setHeightInPoints(18);
-                
+
                 boolean linhaImpar = (linhaAtual % 2 != 0);
-                
+
                 for (int i = 0; i < chaves.length; i++) {
                     org.apache.poi.ss.usermodel.Cell cell = row.createCell(i);
                     Object valor = dado.get(chaves[i]);
-                    
+
                     if (valor != null) {
                         String valorStr = valor.toString();
                         valorStr = valorStr.replaceAll("[\\x00-\\x1F\\x7F]", "");
-                        if (valorStr.length() > 32000) valorStr = valorStr.substring(0, 32000);
+                        if (valorStr.length() > 32000)
+                            valorStr = valorStr.substring(0, 32000);
                         cell.setCellValue(valorStr);
                     }
-                    
+
                     cell.setCellStyle(linhaImpar ? dadosAlternadoStyle : dadosStyle);
                 }
-                
+
                 linhaAtual++;
                 if (linhaAtual % 500 == 0) {
                     labelStatus.setText("Linha " + (linhaAtual - 5) + "...");
                 }
             }
-            
+
             // ===== TOTAL =====
             linhaAtual++;
             org.apache.poi.ss.usermodel.Row totalRow = sheet.createRow(linhaAtual);
             totalRow.setHeightInPoints(22);
-            
+
             org.apache.poi.ss.usermodel.Cell totalLabelCell = totalRow.createCell(0);
             totalLabelCell.setCellValue("TOTAL DE REGISTROS:");
             totalLabelCell.setCellStyle(totalStyle);
-            
+
             org.apache.poi.ss.usermodel.Cell totalValueCell = totalRow.createCell(1);
             totalValueCell.setCellValue(dados.size());
             totalValueCell.setCellStyle(totalStyle);
-            
+
             // ===== AJUSTAR LARGURAS =====
             sheet.setColumnWidth(0, 4000);
             sheet.setColumnWidth(1, 8000);
@@ -2658,79 +2803,88 @@ public class RelatorioFrame extends JFrame {
             sheet.setColumnWidth(5, 5000);
             sheet.setColumnWidth(6, 3500);
             sheet.setColumnWidth(7, 4000);
-            
+
             // Congelar painéis
             sheet.createFreezePane(0, 5);
-            
+
             // ===== SALVAR =====
             labelStatus.setText("Salvando...");
             fileOut = new java.io.FileOutputStream(caminhoArquivo);
             workbook.write(fileOut);
             fileOut.flush();
-            
+
             System.out.println("✅ XLSX PROFISSIONAL: " + dados.size() + " linhas");
-            
+
             labelStatus.setText("Concluído!");
             JOptionPane.showMessageDialog(this,
                     "✅ Relatório Excel Profissional criado!\n\n" +
-                    "📁 Local: " + caminhoArquivo + "\n" +
-                    "📊 Registros: " + dados.size() + "\n" +
-                    "🎨 Design profissional com cores e formatação",
+                            "📁 Local: " + caminhoArquivo + "\n" +
+                            "📊 Registros: " + dados.size() + "\n" +
+                            "🎨 Design profissional com cores e formatação",
                     "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-            
+
             return true;
-            
+
         } finally {
             if (fileOut != null) {
-                try { fileOut.close(); } catch (Exception e) { }
+                try {
+                    fileOut.close();
+                } catch (Exception e) {
+                }
             }
             if (workbook != null) {
-                try { workbook.close(); } catch (Exception e) { }
+                try {
+                    workbook.close();
+                } catch (Exception e) {
+                }
             }
         }
     }
-    
+
     /**
      * Fallback para CSV quando Apache POI falha
-     * Aceita qualquer tipo de erro (Throwable) incluindo ExceptionInInitializerError
+     * Aceita qualquer tipo de erro (Throwable) incluindo
+     * ExceptionInInitializerError
      */
     private boolean exportarComCSVFallback(List<Map<String, Object>> dados, String[] colunas, String[] chaves,
-                                          String titulo, String caminhoOriginal, Throwable erroOriginal) {
+            String titulo, String caminhoOriginal, Throwable erroOriginal) {
         try {
             // Alterar extensão para .csv
             String caminhoCSV = caminhoOriginal.replaceAll("\\.[^.]*$", "") + ".csv";
-            
+
             labelStatus.setText("Usando formato CSV alternativo...");
             System.out.println("🔄 Fallback para CSV: " + caminhoCSV);
-            
+
             // Exportar CSV
             java.io.FileWriter writer = new java.io.FileWriter(caminhoCSV);
             java.io.BufferedWriter bw = new java.io.BufferedWriter(writer);
-            
+
             // Escrever cabeçalhos
             for (int i = 0; i < colunas.length; i++) {
                 bw.write("\"" + colunas[i] + "\"");
-                if (i < colunas.length - 1) bw.write(",");
+                if (i < colunas.length - 1)
+                    bw.write(",");
             }
             bw.newLine();
-            
+
             // Escrever dados
             for (Map<String, Object> linha : dados) {
                 for (int i = 0; i < chaves.length; i++) {
                     Object valor = linha.get(chaves[i]);
                     String valorStr = (valor != null) ? valor.toString().replace("\"", "\"\"") : "";
                     bw.write("\"" + valorStr + "\"");
-                    if (i < chaves.length - 1) bw.write(",");
+                    if (i < chaves.length - 1)
+                        bw.write(",");
                 }
                 bw.newLine();
             }
-            
+
             bw.close();
-            
+
             // Diagnóstico do erro
             String tipoErro = erroOriginal.getClass().getSimpleName();
             String causaRaiz = "";
-            
+
             if (erroOriginal instanceof ExceptionInInitializerError) {
                 ExceptionInInitializerError initError = (ExceptionInInitializerError) erroOriginal;
                 Throwable causa = initError.getCause();
@@ -2738,33 +2892,33 @@ public class RelatorioFrame extends JFrame {
                     causaRaiz = "\nCausa raiz: " + causa.getClass().getSimpleName() + " - " + causa.getMessage();
                 }
             }
-            
+
             labelStatus.setText("Arquivo CSV criado com sucesso!");
-            
+
             String mensagemFinal = causaRaiz;
             SwingUtilities.invokeLater(() -> {
                 JOptionPane.showMessageDialog(this,
                         "⚠️ Apache POI não disponível!\n\n" +
-                        "Erro detectado: " + tipoErro + mensagemFinal + "\n\n" +
-                        "✅ SOLUÇÃO AUTOMÁTICA APLICADA:\n" +
-                        "• Arquivo exportado em formato CSV\n" +
-                        "• 100% compatível com Excel\n" +
-                        "• Salvo em: " + caminhoCSV + "\n\n" +
-                        "💡 COMO USAR:\n" +
-                        "1. Abra o arquivo no Excel\n" +
-                        "2. Excel reconhecerá automaticamente o formato\n" +
-                        "3. Todos os dados estarão disponíveis\n\n" +
-                        "📌 NOTA: Este é um problema de dependências do Apache POI,\n" +
-                        "não um erro do sistema. O CSV funciona perfeitamente!",
+                                "Erro detectado: " + tipoErro + mensagemFinal + "\n\n" +
+                                "✅ SOLUÇÃO AUTOMÁTICA APLICADA:\n" +
+                                "• Arquivo exportado em formato CSV\n" +
+                                "• 100% compatível com Excel\n" +
+                                "• Salvo em: " + caminhoCSV + "\n\n" +
+                                "💡 COMO USAR:\n" +
+                                "1. Abra o arquivo no Excel\n" +
+                                "2. Excel reconhecerá automaticamente o formato\n" +
+                                "3. Todos os dados estarão disponíveis\n\n" +
+                                "📌 NOTA: Este é um problema de dependências do Apache POI,\n" +
+                                "não um erro do sistema. O CSV funciona perfeitamente!",
                         "Exportação CSV - Alternativa Funcional",
                         JOptionPane.INFORMATION_MESSAGE);
             });
             return true;
-            
+
         } catch (Exception e) {
             System.err.println("❌ Fallback CSV também falhou: " + e.getMessage());
             e.printStackTrace();
-            
+
             labelStatus.setText("Erro no fallback CSV");
             JOptionPane.showMessageDialog(this,
                     "Erro ao exportar CSV alternativo:\n\n" + e.getMessage(),
@@ -2772,32 +2926,34 @@ public class RelatorioFrame extends JFrame {
             return false;
         }
     }
-    
+
     /**
      * Exporta diretamente como CSV quando Apache POI não está disponível
-     * Método reservado para uso futuro em verificação prévia de disponibilidade do Apache POI
+     * Método reservado para uso futuro em verificação prévia de disponibilidade do
+     * Apache POI
      */
     @SuppressWarnings("unused")
     private boolean exportarComCSVDireto(List<Map<String, Object>> dados, String[] colunas, String[] chaves,
-                                         String titulo, String caminhoOriginal) {
+            String titulo, String caminhoOriginal) {
         try {
             // Alterar extensão para .csv
             String caminhoCSV = caminhoOriginal.replaceAll("\\.[^.]*$", "") + ".csv";
-            
+
             labelStatus.setText("Exportando como CSV...");
             System.out.println("📊 Exportação CSV direta: " + caminhoCSV);
-            
+
             // Exportar CSV
             java.io.FileWriter writer = new java.io.FileWriter(caminhoCSV);
             java.io.BufferedWriter bw = new java.io.BufferedWriter(writer);
-            
+
             // Escrever cabeçalhos
             for (int i = 0; i < colunas.length; i++) {
                 bw.write("\"" + colunas[i] + "\"");
-                if (i < colunas.length - 1) bw.write(",");
+                if (i < colunas.length - 1)
+                    bw.write(",");
             }
             bw.newLine();
-            
+
             // Escrever dados
             int contador = 0;
             for (Map<String, Object> linha : dados) {
@@ -2805,41 +2961,42 @@ public class RelatorioFrame extends JFrame {
                     Object valor = linha.get(chaves[i]);
                     String valorStr = (valor != null) ? valor.toString().replace("\"", "\"\"") : "";
                     bw.write("\"" + valorStr + "\"");
-                    if (i < chaves.length - 1) bw.write(",");
+                    if (i < chaves.length - 1)
+                        bw.write(",");
                 }
                 bw.newLine();
                 contador++;
-                
+
                 if (contador % 100 == 0) {
                     labelStatus.setText("Processando linha " + contador + "...");
                 }
             }
-            
+
             bw.close();
-            
+
             final int totalLinhas = contador; // Tornar final para uso no lambda
             labelStatus.setText("Exportação CSV concluída!");
-            
+
             SwingUtilities.invokeLater(() -> {
                 JOptionPane.showMessageDialog(this,
                         "ℹ️ Apache POI não disponível\n\n" +
-                        "✅ SOLUÇÃO AUTOMÁTICA:\n" +
-                        "• Arquivo exportado em formato CSV\n" +
-                        "• Totalmente compatível com Excel\n" +
-                        "• Salvo em: " + caminhoCSV + "\n" +
-                        "• Linhas: " + totalLinhas + "\n\n" +
-                        "💡 Para usar Excel nativo:\n" +
-                        "1. Reinicie a aplicação\n" +
-                        "2. Verifique as dependências Maven",
+                                "✅ SOLUÇÃO AUTOMÁTICA:\n" +
+                                "• Arquivo exportado em formato CSV\n" +
+                                "• Totalmente compatível com Excel\n" +
+                                "• Salvo em: " + caminhoCSV + "\n" +
+                                "• Linhas: " + totalLinhas + "\n\n" +
+                                "💡 Para usar Excel nativo:\n" +
+                                "1. Reinicie a aplicação\n" +
+                                "2. Verifique as dependências Maven",
                         "Exportação CSV",
                         JOptionPane.INFORMATION_MESSAGE);
             });
             return true;
-            
+
         } catch (Exception e) {
             System.err.println("❌ Exportação CSV direta falhou: " + e.getMessage());
             e.printStackTrace();
-            
+
             labelStatus.setText("Erro na exportação CSV");
             JOptionPane.showMessageDialog(this,
                     "Erro ao exportar CSV:\n\n" + e.getMessage(),
@@ -3529,27 +3686,27 @@ public class RelatorioFrame extends JFrame {
                         // Aplicar cores baseadas no status
                         Color corFundo = Color.WHITE;
                         Color corTexto = Color.BLACK;
-                        
+
                         switch (status) {
                             case "ENCONTRADO":
                             case "FOUND":
                                 corFundo = new Color(212, 237, 218); // Verde claro
-                                corTexto = new Color(21, 87, 36);    // Verde escuro
+                                corTexto = new Color(21, 87, 36); // Verde escuro
                                 break;
                             case "NÃO ENCONTRADO":
                             case "NOT FOUND":
                                 corFundo = new Color(248, 215, 218); // Vermelho claro
-                                corTexto = new Color(114, 28, 36);   // Vermelho escuro
+                                corTexto = new Color(114, 28, 36); // Vermelho escuro
                                 break;
                             case "DANIFICADO":
                             case "DAMAGED":
                                 corFundo = new Color(255, 243, 205); // Amarelo claro
-                                corTexto = new Color(133, 100, 4);   // Amarelo escuro
+                                corTexto = new Color(133, 100, 4); // Amarelo escuro
                                 break;
                             case "NÃO COLETADO":
                             case "NOT COLLECTED":
                                 corFundo = new Color(230, 230, 230); // Cinza claro
-                                corTexto = new Color(73, 80, 87);    // Cinza escuro
+                                corTexto = new Color(73, 80, 87); // Cinza escuro
                                 break;
                             default:
                                 // Linhas alternadas para outros casos
@@ -3560,7 +3717,7 @@ public class RelatorioFrame extends JFrame {
                                 }
                                 break;
                         }
-                        
+
                         c.setBackground(corFundo);
                         c.setForeground(corTexto);
                     }
@@ -3585,8 +3742,3 @@ public class RelatorioFrame extends JFrame {
         }
     }
 }
-
-
-
-
-
