@@ -50,18 +50,29 @@ public class ColetaService {
     
     /**
      * Busca coletas por sala e inventário
+     * Filtra coletas que pertencem a uma sala específica dentro de um inventário
+     * 
+     * @param idSala ID da sala
+     * @param idInventario ID do inventário
+     * @return Lista de coletas da sala no inventário especificado
      */
     public List<Coleta> buscarPorSalaEInventario(int idSala, int idInventario) {
         try {
-            // Buscar todas as coletas do inventário e filtrar por sala
-            List<Coleta> todasColetas = coletaDAO.buscarPorInventario(idInventario);
-            List<Coleta> coletasSala = new ArrayList<>();
-            for (Coleta coleta : todasColetas) {
-                // Filtrar por sala usando localizacaoAtual ou outro campo apropriado
-                // TODO: Ajustar filtro conforme estrutura real
-                coletasSala.add(coleta);
+            // Buscar todas as coletas da sala (através do JOIN com patrimônio)
+            List<Coleta> coletasSala = coletaDAO.buscarColetasPorSala(idSala);
+            
+            // Filtrar apenas as coletas do inventário especificado
+            List<Coleta> coletasFiltradas = new ArrayList<>();
+            for (Coleta coleta : coletasSala) {
+                if (coleta.getIdInventario() == idInventario) {
+                    coletasFiltradas.add(coleta);
+                }
             }
-            return coletasSala;
+            
+            logger.debug("Encontradas {} coletas da sala {} no inventário {}", 
+                    coletasFiltradas.size(), idSala, idInventario);
+            
+            return coletasFiltradas;
         } catch (Exception e) {
             logger.error("Erro ao buscar coletas da sala {} no inventário {}", idSala, idInventario, e);
             return new ArrayList<>();
@@ -123,13 +134,94 @@ public class ColetaService {
     
     /**
      * Verifica se sala já foi coletada
+     * Uma sala é considerada coletada se:
+     * 1. Há pelo menos uma coleta registrada para patrimônios dessa sala no inventário
+     * 2. OU se o status da sala no inventário está como "FINALIZADO"
+     * 
+     * @param idSala ID da sala
+     * @param idInventario ID do inventário
+     * @return true se a sala já foi coletada
      */
     public boolean salaJaColetada(int idSala, int idInventario) {
         try {
-            // TODO: Implementar verificação apropriada
+            // Verifica se há coletas registradas para a sala neste inventário
+            List<Coleta> coletas = buscarPorSalaEInventario(idSala, idInventario);
+            
+            if (!coletas.isEmpty()) {
+                logger.debug("Sala {} já possui {} coletas no inventário {}", 
+                        idSala, coletas.size(), idInventario);
+                return true;
+            }
+            
+            // Verifica o status da sala no inventário através do SalaInventarioDAO
+            try {
+                String status = salaInventarioDAO.buscarStatusSala(idSala, idInventario);
+                
+                if ("FINALIZADO".equals(status) || "COLETADO".equals(status)) {
+                    logger.debug("Sala {} está com status '{}' no inventário {}", 
+                            idSala, status, idInventario);
+                    return true;
+                }
+            } catch (Exception e) {
+                // Se não conseguir verificar o status, considera apenas as coletas
+                logger.debug("Não foi possível verificar status da sala no inventário: {}", e.getMessage());
+            }
+            
+            logger.debug("Sala {} ainda não foi coletada no inventário {}", idSala, idInventario);
             return false;
+            
         } catch (Exception e) {
             logger.error("Erro ao verificar se sala foi coletada: {} - {}", idSala, idInventario, e);
+            // Em caso de erro, retorna false para permitir coleta
+            return false;
+        }
+    }
+    
+    /**
+     * Verifica se sala foi completamente coletada
+     * Compara a quantidade de coletas com a quantidade de patrimônios esperados
+     * 
+     * @param idSala ID da sala
+     * @param idInventario ID do inventário
+     * @return true se todos os patrimônios da sala foram coletados
+     */
+    public boolean salaCompletamenteColetada(int idSala, int idInventario) {
+        try {
+            // Buscar coletas da sala
+            List<Coleta> coletas = buscarPorSalaEInventario(idSala, idInventario);
+            
+            if (coletas.isEmpty()) {
+                return false;
+            }
+            
+            // Buscar total de patrimônios da sala
+            // Assumindo que há um método no DAO para contar patrimônios
+            try {
+                com.inventario.dao.PatrimonioDAO patrimonioDAO = new com.inventario.dao.PatrimonioDAO();
+                int totalPatrimonios = patrimonioDAO.contarPatrimoniosPorSala(idSala);
+                
+                // Contar apenas coletas de patrimônios com etiqueta (não itens sem etiqueta)
+                long coletasComEtiqueta = coletas.stream()
+                        .filter(c -> !c.isSemEtiqueta())
+                        .count();
+                
+                boolean completo = coletasComEtiqueta >= totalPatrimonios;
+                
+                logger.debug("Sala {}: {}/{} patrimônios coletados ({})", 
+                        idSala, coletasComEtiqueta, totalPatrimonios, 
+                        completo ? "COMPLETO" : "INCOMPLETO");
+                
+                return completo;
+                
+            } catch (Exception e) {
+                logger.warn("Não foi possível verificar completude da coleta: {}", e.getMessage());
+                // Se não conseguir verificar, considera que há coletas
+                return !coletas.isEmpty();
+            }
+            
+        } catch (Exception e) {
+            logger.error("Erro ao verificar se sala foi completamente coletada: {} - {}", 
+                    idSala, idInventario, e);
             return false;
         }
     }

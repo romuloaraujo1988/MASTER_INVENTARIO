@@ -32,8 +32,8 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
         return "INSERT INTO TABELA_PATRIMONIO (NUMERO, STATUS, DESCRICAO, ROTULOS, " +
                "ID_RESPONSAVEL, VALOR_AQUISICAO, VALOR_DEPRECIADO, NUMERO_NOTA_FISCAL, " +
                "NUMERO_SERIE, MARCA, MODELO, DATA_ENTRADA, FORNECEDOR, ID_SALA, " +
-               "ESTADO_CONSERVACAO, CATEGORIA) " +
-               "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+               "ESTADO_CONSERVACAO, CATEGORIA, ED) " +
+               "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     }
     
     @Override
@@ -42,7 +42,7 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
                "ROTULOS = ?, ID_RESPONSAVEL = ?, VALOR_AQUISICAO = ?, VALOR_DEPRECIADO = ?, " +
                "NUMERO_NOTA_FISCAL = ?, NUMERO_SERIE = ?, MARCA = ?, MODELO = ?, " +
                "DATA_ENTRADA = ?, FORNECEDOR = ?, ID_SALA = ?, ESTADO_CONSERVACAO = ?, " +
-               "CATEGORIA = ? WHERE ID = ?";
+               "CATEGORIA = ?, ED = ? WHERE ID = ?";
     }
     
     @Override
@@ -77,12 +77,13 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
         
         stmt.setString(15, p.getEstadoConservacao());
         stmt.setString(16, p.getCategoria());
+        stmt.setString(17, p.getEd());
     }
     
     @Override
     protected void setUpdateParameters(PreparedStatement stmt, Patrimonio p) throws SQLException {
         setInsertParameters(stmt, p);
-        stmt.setInt(17, p.getId());
+        stmt.setInt(18, p.getId());
     }
     
     @Override
@@ -107,6 +108,7 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
         p.setIdSala(rs.getInt("ID_SALA"));
         p.setEstadoConservacao(rs.getString("ESTADO_CONSERVACAO"));
         p.setCategoria(rs.getString("CATEGORIA"));
+        p.setEd(rs.getString("ED"));
         
         // Valores padrão
         p.setSituacao("ATIVO");
@@ -260,10 +262,22 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
     }
     
     /**
+     * Conta patrimônios por sala
+     * 
+     * @param idSala ID da sala
+     * @return quantidade de patrimônios na sala
+     */
+    public int contarPatrimoniosPorSala(int idSala) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM TABELA_PATRIMONIO WHERE ID_SALA = ? AND (STATUS IS NULL OR UPPER(STATUS) = 'ATIVO' OR STATUS = '')";
+        Integer count = executeScalar(sql, Integer.class, idSala);
+        return count != null ? count : 0;
+    }
+    
+    /**
      * Conta patrimônios ativos
      */
     public int contarPatrimoniosAtivos() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM TABELA_PATRIMONIO WHERE STATUS = 'ATIVO'";
+        String sql = "SELECT COUNT(*)::INTEGER FROM TABELA_PATRIMONIO WHERE (STATUS IS NULL OR UPPER(STATUS) = 'ATIVO' OR STATUS = '')";
         Integer count = executeScalar(sql, Integer.class);
         return count != null ? count : 0;
     }
@@ -690,6 +704,56 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 Patrimonio patrimonio = mapResultSetToEntity(rs);
+                patrimonios.add(patrimonio);
+            }
+            
+            rs.close();
+            stmt.close();
+            
+        } catch (SQLException e) {
+            throw e;
+        } finally {
+            com.inventario.util.ConnectionManager.closeConnection(conn);
+        }
+        
+        return patrimonios;
+    }
+    
+    /**
+     * Lista patrimônios com paginação (otimizado para mobile)
+     * 
+     * @param page número da página (0-based)
+     * @param size tamanho da página
+     * @return lista de patrimônios da página
+     */
+    public List<Patrimonio> listarComPaginacao(int page, int size) throws SQLException {
+        String sql = "SELECT p.*, " +
+                     "s.NOME as SALA_NOME, " +
+                     "r.NOME as RESPONSAVEL_NOME " +
+                     "FROM TABELA_PATRIMONIO p " +
+                     "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID " +
+                     "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
+                     "WHERE p.STATUS = 'ATIVO' " +
+                     "ORDER BY p.ID " +
+                     "LIMIT ? OFFSET ?";
+        
+        List<Patrimonio> patrimonios = new ArrayList<>();
+        Connection conn = null;
+        
+        try {
+            conn = com.inventario.util.ConnectionManager.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, size);
+            stmt.setInt(2, page * size);
+            
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Patrimonio patrimonio = mapResultSetToEntity(rs);
+                
+                // Adicionar nome da sala e responsável
+                patrimonio.setNomeSala(rs.getString("SALA_NOME"));
+                patrimonio.setNomeResponsavel(rs.getString("RESPONSAVEL_NOME"));
+                
                 patrimonios.add(patrimonio);
             }
             

@@ -439,4 +439,123 @@ public class SalaInventarioDAO {
         
         return salaInventario;
     }
+    
+    /**
+     * Busca todas as salas abertas (não finalizadas) para coleta em um inventário
+     * Retorna salas vinculadas ao inventário que ainda não foram finalizadas
+     * 
+     * @param idInventario ID do inventário
+     * @return Lista de salas abertas para coleta
+     */
+    public List<com.inventario.model.Sala> buscarSalasAbertasParaColeta(int idInventario) {
+        List<com.inventario.model.Sala> salasAbertas = new ArrayList<>();
+        
+        // LEFT JOIN para incluir salas que ainda não têm registro de coleta
+        // Filtra apenas salas que não estão finalizadas (COLETA_FINALIZADA = FALSE ou NULL)
+        String sql = "SELECT DISTINCT s.* FROM TABELA_SALA s " +
+                    "LEFT JOIN TABELA_SALA_INVENTARIO si ON s.ID_SALA = si.ID_SALA AND si.ID_INVENTARIO = ? " +
+                    "WHERE s.ATIVO = TRUE " +
+                    "AND (si.COLETA_FINALIZADA = FALSE OR si.COLETA_FINALIZADA IS NULL) " +
+                    "ORDER BY s.NUMERO_SALA";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idInventario);
+            
+            System.out.println("DEBUG SalaInventarioDAO: Buscando salas abertas para inventário ID: " + idInventario);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                int count = 0;
+                while (rs.next()) {
+                    com.inventario.model.Sala sala = new com.inventario.model.Sala();
+                    sala.setIdSala(rs.getInt("ID_SALA"));
+                    sala.setNumeroSala(rs.getString("NUMERO_SALA"));
+                    sala.setDescricao(rs.getString("DESCRICAO"));
+                    sala.setIdSetor(rs.getInt("ID_SETOR"));
+                    sala.setAtivo(rs.getBoolean("ATIVO"));
+                    
+                    salasAbertas.add(sala);
+                    count++;
+                    System.out.println("DEBUG SalaInventarioDAO: Sala " + count + " - " + sala.getIdentificacaoCompleta());
+                }
+                System.out.println("DEBUG SalaInventarioDAO: Total de salas abertas encontradas: " + count);
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar salas abertas para coleta: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return salasAbertas;
+    }
+    
+    /**
+     * Busca TODAS as salas ativas do sistema (sem filtro de inventário)
+     * Útil quando se quer permitir coleta em qualquer sala, independente de vínculo com inventário
+     * 
+     * @return Lista de todas as salas ativas
+     */
+    public List<com.inventario.model.Sala> buscarTodasSalasAtivas() {
+        List<com.inventario.model.Sala> salas = new ArrayList<>();
+        
+        String sql = "SELECT * FROM TABELA_SALA WHERE ATIVO = TRUE ORDER BY NUMERO_SALA";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            System.out.println("DEBUG SalaInventarioDAO: Buscando TODAS as salas ativas");
+            
+            int count = 0;
+            while (rs.next()) {
+                com.inventario.model.Sala sala = new com.inventario.model.Sala();
+                sala.setIdSala(rs.getInt("ID_SALA"));
+                sala.setNumeroSala(rs.getString("NUMERO_SALA"));
+                sala.setDescricao(rs.getString("DESCRICAO"));
+                sala.setIdSetor(rs.getInt("ID_SETOR"));
+                sala.setAtivo(rs.getBoolean("ATIVO"));
+                
+                salas.add(sala);
+                count++;
+                System.out.println("DEBUG SalaInventarioDAO: Sala " + count + " - " + sala.getIdentificacaoCompleta());
+            }
+            System.out.println("DEBUG SalaInventarioDAO: Total de salas ativas: " + count);
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar todas as salas ativas: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return salas;
+    }
+    
+    /**
+     * Busca o status de coleta de uma sala em um inventário
+     * 
+     * @param idSala ID da sala
+     * @param idInventario ID do inventário
+     * @return Status da coleta ou null se não encontrado
+     */
+    public String buscarStatusSala(int idSala, int idInventario) {
+        String sql = "SELECT STATUS_COLETA FROM TABELA_SALA_INVENTARIO WHERE ID_SALA = ? AND ID_INVENTARIO = ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idSala);
+            stmt.setInt(2, idInventario);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("STATUS_COLETA");
+                }
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar status da sala: " + e.getMessage());
+        }
+        
+        return null;
+    }
 }

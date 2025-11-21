@@ -5,8 +5,10 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
+import java.util.Map;
 import com.inventario.service.InventarioService;
 import com.inventario.service.ColetaService;
+import com.inventario.service.RelatorioService;
 import com.inventario.model.Inventario;
 import com.inventario.offline.OfflineManager;
 import com.inventario.offline.OfflineConfigManager;
@@ -36,9 +38,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
     // Componentes do modo offline
     private JLabel lblOfflineStatus;
     private JButton btnSyncNow;
-    private SyncFrame syncFrame;
     private OfflineManager offlineManager;
-    private OfflineConfigManager configManager;
     private Timer statusUpdateTimer;
     
     public InventarioFrame() {
@@ -492,12 +492,281 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
     private void visualizarInventario() {
         int linhaSelecionada = tabelaInventario.getSelectedRow();
         if (linhaSelecionada >= 0) {
-            // TODO: Abrir tela de detalhes do inventário
-            // Integer id = (Integer) modeloTabela.getValueAt(linhaSelecionada, 0);
-            // InventarioDetalhesFrame detalhes = new InventarioDetalhesFrame(id);
-            // detalhes.setVisible(true);
+            try {
+                Integer id = (Integer) modeloTabela.getValueAt(linhaSelecionada, 0);
+                Inventario inventario = inventarioService.buscarPorId(id);
+                
+                if (inventario != null) {
+                    mostrarDetalhesInventario(inventario);
+                } else {
+                    JOptionPane.showMessageDialog(this, 
+                        "Inventário não encontrado.", 
+                        "Erro", 
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, 
+                    "Erro ao carregar detalhes do inventário: " + e.getMessage(), 
+                    "Erro", 
+                    JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
         } else {
             JOptionPane.showMessageDialog(this, "Selecione um inventário para visualizar.");
+        }
+    }
+    
+    /**
+     * Mostra um diálogo com os detalhes completos do inventário
+     */
+    private void mostrarDetalhesInventario(Inventario inventario) {
+        JDialog dialog = new JDialog(this, "Detalhes do Inventário", true);
+        dialog.setSize(700, 600);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout(10, 10));
+        
+        // Painel principal com padding
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        
+        // Título
+        JLabel titleLabel = new JLabel("📋 " + inventario.getNome());
+        titleLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        mainPanel.add(titleLabel, BorderLayout.NORTH);
+        
+        // Painel de informações
+        JPanel infoPanel = new JPanel(new GridBagLayout());
+        infoPanel.setBorder(BorderFactory.createTitledBorder("Informações Gerais"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 10, 5, 10);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        int row = 0;
+        
+        // ID
+        addDetailRow(infoPanel, gbc, row++, "ID:", String.valueOf(inventario.getId()));
+        
+        // Nome
+        addDetailRow(infoPanel, gbc, row++, "Nome:", inventario.getNome());
+        
+        // Descrição/Observação
+        if (inventario.getObservacao() != null && !inventario.getObservacao().isEmpty()) {
+            addDetailRow(infoPanel, gbc, row++, "Descrição:", inventario.getObservacao());
+        }
+        
+        // Status
+        String statusText = inventario.getStatusInventario();
+        Color statusColor = getStatusColor(statusText);
+        JLabel lblStatus = new JLabel(statusText);
+        lblStatus.setForeground(statusColor);
+        lblStatus.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        addDetailRow(infoPanel, gbc, row++, "Status:", lblStatus);
+        
+        // Datas
+        if (inventario.getDataInicio() != null) {
+            addDetailRow(infoPanel, gbc, row++, "Data Início:", 
+                com.inventario.util.DateFormatUtils.formatDate(inventario.getDataInicio()));
+        }
+        
+        if (inventario.getDataFim() != null) {
+            addDetailRow(infoPanel, gbc, row++, "Data Fim:", 
+                com.inventario.util.DateFormatUtils.formatDate(inventario.getDataFim()));
+        }
+        
+        // Responsável
+        if (inventario.getResponsavelInventario() != null && !inventario.getResponsavelInventario().isEmpty()) {
+            addDetailRow(infoPanel, gbc, row++, "Responsável:", inventario.getResponsavelInventario());
+        }
+        
+        // Progresso
+        int progresso = calcularProgresso(inventario);
+        JProgressBar progressBar = new JProgressBar(0, 100);
+        progressBar.setValue(progresso);
+        progressBar.setStringPainted(true);
+        progressBar.setString(progresso + "%");
+        addDetailRow(infoPanel, gbc, row++, "Progresso:", progressBar);
+        
+        mainPanel.add(infoPanel, BorderLayout.CENTER);
+        
+        // Painel de estatísticas
+        JPanel statsPanel = criarPainelEstatisticas(inventario.getId());
+        mainPanel.add(statsPanel, BorderLayout.SOUTH);
+        
+        // Painel de botões
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        
+        JButton btnEditar = ButtonStyleFactory.createPrimaryButton("Editar");
+        btnEditar.addActionListener(e -> {
+            dialog.dispose();
+            editarInventarioSelecionado(inventario);
+        });
+        
+        JButton btnRelatorio = ButtonStyleFactory.createInfoButton("Gerar Relatório");
+        btnRelatorio.addActionListener(e -> {
+            dialog.dispose();
+            gerarRelatorio();
+        });
+        
+        JButton btnFechar = ButtonStyleFactory.createSecondaryButton("Fechar");
+        btnFechar.addActionListener(e -> dialog.dispose());
+        
+        buttonPanel.add(btnEditar);
+        buttonPanel.add(btnRelatorio);
+        buttonPanel.add(btnFechar);
+        
+        dialog.add(mainPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        
+        dialog.setVisible(true);
+    }
+    
+    /**
+     * Adiciona uma linha de detalhe ao painel
+     */
+    private void addDetailRow(JPanel panel, GridBagConstraints gbc, int row, String label, String value) {
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0.3;
+        JLabel lblLabel = new JLabel(label);
+        lblLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        panel.add(lblLabel, gbc);
+        
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
+        JLabel lblValue = new JLabel(value);
+        lblValue.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
+        panel.add(lblValue, gbc);
+    }
+    
+    /**
+     * Adiciona uma linha de detalhe ao painel com componente customizado
+     */
+    private void addDetailRow(JPanel panel, GridBagConstraints gbc, int row, String label, JComponent component) {
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0.3;
+        JLabel lblLabel = new JLabel(label);
+        lblLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        panel.add(lblLabel, gbc);
+        
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
+        panel.add(component, gbc);
+    }
+    
+    /**
+     * Retorna a cor apropriada para o status
+     */
+    private Color getStatusColor(String status) {
+        if (status == null) return Color.GRAY;
+        
+        switch (status) {
+            case "EM_ANDAMENTO":
+            case "ABERTO":
+                return new Color(46, 204, 113); // Verde
+            case "CONCLUIDO":
+            case "FINALIZADO":
+                return new Color(52, 152, 219); // Azul
+            case "CANCELADO":
+                return new Color(231, 76, 60); // Vermelho
+            case "PLANEJADO":
+                return new Color(241, 196, 15); // Amarelo
+            default:
+                return Color.GRAY;
+        }
+    }
+    
+    /**
+     * Cria painel com estatísticas do inventário
+     */
+    private JPanel criarPainelEstatisticas(Integer idInventario) {
+        JPanel panel = new JPanel(new GridLayout(2, 3, 10, 10));
+        panel.setBorder(BorderFactory.createTitledBorder("Estatísticas"));
+        
+        try {
+            List<com.inventario.model.Coleta> coletas = coletaService.buscarPorInventario(idInventario);
+            
+            // Total de coletas
+            long totalColetas = coletas.size();
+            
+            // Patrimônios únicos coletados
+            long patrimoniosColetados = coletas.stream()
+                .filter(c -> c.getIdPatrimonio() > 0)
+                .map(c -> c.getIdPatrimonio())
+                .distinct()
+                .count();
+            
+            // Itens sem etiqueta
+            long itensSemEtiqueta = coletas.stream()
+                .filter(c -> c.isSemEtiqueta())
+                .count();
+            
+            // Divergências
+            long divergencias = coletas.stream()
+                .filter(c -> c.isDivergencia())
+                .count();
+            
+            // Itens encontrados
+            long itensEncontrados = coletas.stream()
+                .filter(c -> "ENCONTRADO".equalsIgnoreCase(c.getStatusColeta()))
+                .count();
+            
+            // Itens não encontrados
+            long itensNaoEncontrados = coletas.stream()
+                .filter(c -> "NAO_ENCONTRADO".equalsIgnoreCase(c.getStatusColeta()))
+                .count();
+            
+            // Adicionar estatísticas
+            panel.add(criarCardEstatistica("Total de Coletas", String.valueOf(totalColetas), new Color(52, 152, 219)));
+            panel.add(criarCardEstatistica("Patrimônios Coletados", String.valueOf(patrimoniosColetados), new Color(46, 204, 113)));
+            panel.add(criarCardEstatistica("Itens Sem Etiqueta", String.valueOf(itensSemEtiqueta), new Color(241, 196, 15)));
+            panel.add(criarCardEstatistica("Encontrados", String.valueOf(itensEncontrados), new Color(46, 204, 113)));
+            panel.add(criarCardEstatistica("Não Encontrados", String.valueOf(itensNaoEncontrados), new Color(231, 76, 60)));
+            panel.add(criarCardEstatistica("Divergências", String.valueOf(divergencias), new Color(230, 126, 34)));
+            
+        } catch (Exception e) {
+            logger.warning("Erro ao carregar estatísticas: " + e.getMessage());
+            panel.add(new JLabel("Erro ao carregar estatísticas"));
+        }
+        
+        return panel;
+    }
+    
+    /**
+     * Cria um card de estatística
+     */
+    private JPanel criarCardEstatistica(String titulo, String valor, Color cor) {
+        JPanel card = new JPanel(new BorderLayout(5, 5));
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(cor, 2),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        card.setBackground(Color.WHITE);
+        
+        JLabel lblTitulo = new JLabel(titulo, JLabel.CENTER);
+        lblTitulo.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
+        lblTitulo.setForeground(Color.GRAY);
+        
+        JLabel lblValor = new JLabel(valor, JLabel.CENTER);
+        lblValor.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 24));
+        lblValor.setForeground(cor);
+        
+        card.add(lblTitulo, BorderLayout.NORTH);
+        card.add(lblValor, BorderLayout.CENTER);
+        
+        return card;
+    }
+    
+    /**
+     * Edita o inventário selecionado
+     */
+    private void editarInventarioSelecionado(Inventario inventario) {
+        InventarioFormDialog dialog = new InventarioFormDialog(this, inventario);
+        dialog.setVisible(true);
+        if (dialog.isConfirmado()) {
+            carregarInventarios();
         }
     }
     
@@ -537,14 +806,163 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
     private void gerarRelatorio() {
         int linhaSelecionada = tabelaInventario.getSelectedRow();
         if (linhaSelecionada >= 0) {
-            // TODO: Gerar relatório do inventário
-            // Integer id = (Integer) modeloTabela.getValueAt(linhaSelecionada, 0);
-            // RelatorioInventarioDialog relatorio = new RelatorioInventarioDialog(this, id);
-            // relatorio.setVisible(true);
-            JOptionPane.showMessageDialog(this, "Funcionalidade de relatório em desenvolvimento.");
+            try {
+                Integer id = (Integer) modeloTabela.getValueAt(linhaSelecionada, 0);
+                String nomeInventario = (String) modeloTabela.getValueAt(linhaSelecionada, 1);
+                
+                // Criar diálogo de seleção de tipo de relatório
+                String[] opcoes = {
+                    "Itens Encontrados",
+                    "Itens Não Encontrados",
+                    "Itens Não Coletados",
+                    "Itens Sem Etiqueta",
+                    "Divergências",
+                    "Estatísticas Gerais",
+                    "Por Responsável"
+                };
+                
+                String escolha = (String) JOptionPane.showInputDialog(
+                    this,
+                    "Selecione o tipo de relatório para o inventário:\n" + nomeInventario,
+                    "Gerar Relatório",
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    opcoes,
+                    opcoes[0]
+                );
+                
+                if (escolha != null) {
+                    abrirRelatorio(id, nomeInventario, escolha);
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, 
+                    "Erro ao gerar relatório: " + e.getMessage(), 
+                    "Erro", 
+                    JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
         } else {
             JOptionPane.showMessageDialog(this, "Selecione um inventário para gerar o relatório.");
         }
+    }
+    
+    private void abrirRelatorio(Integer idInventario, String nomeInventario, String tipoRelatorio) {
+        try {
+            RelatorioService relatorioService = new RelatorioService();
+            List<Map<String, Object>> dados = null;
+            String tituloRelatorio = "";
+            
+            // Buscar dados conforme o tipo de relatório
+            switch (tipoRelatorio) {
+                case "Itens Encontrados":
+                    dados = relatorioService.gerarRelatorioItensEncontrados(idInventario);
+                    tituloRelatorio = "Itens Encontrados";
+                    break;
+                case "Itens Não Encontrados":
+                    dados = relatorioService.gerarRelatorioItensNaoEncontrados(idInventario);
+                    tituloRelatorio = "Itens Não Encontrados";
+                    break;
+                case "Itens Não Coletados":
+                    dados = relatorioService.gerarRelatorioItensNaoColetados(idInventario);
+                    tituloRelatorio = "Itens Não Coletados";
+                    break;
+                case "Itens Sem Etiqueta":
+                    dados = relatorioService.gerarRelatorioItensSemEtiqueta(idInventario);
+                    tituloRelatorio = "Itens Sem Etiqueta";
+                    break;
+                case "Divergências":
+                    dados = relatorioService.gerarRelatorioDivergencias(idInventario);
+                    tituloRelatorio = "Divergências";
+                    break;
+                case "Estatísticas Gerais":
+                    dados = relatorioService.gerarEstatisticasGerais(idInventario);
+                    tituloRelatorio = "Estatísticas Gerais";
+                    break;
+                case "Por Responsável":
+                    dados = relatorioService.gerarRelatorioPorResponsavel(idInventario);
+                    tituloRelatorio = "Relatório por Responsável";
+                    break;
+            }
+            
+            if (dados != null && !dados.isEmpty()) {
+                // Criar e exibir diálogo com os dados do relatório
+                exibirRelatorioDialog(nomeInventario, tituloRelatorio, dados);
+            } else {
+                JOptionPane.showMessageDialog(this, 
+                    "Nenhum dado encontrado para este relatório.", 
+                    "Relatório Vazio", 
+                    JOptionPane.INFORMATION_MESSAGE);
+            }
+            
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, 
+                "Erro ao gerar relatório: " + e.getMessage(), 
+                "Erro", 
+                JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+    
+    private void exibirRelatorioDialog(String nomeInventario, String tipoRelatorio, List<Map<String, Object>> dados) {
+        JDialog dialog = new JDialog(this, "Relatório: " + tipoRelatorio + " - " + nomeInventario, true);
+        dialog.setSize(1000, 600);
+        dialog.setLocationRelativeTo(this);
+        
+        // Criar tabela com os dados
+        if (dados.isEmpty()) {
+            JLabel label = new JLabel("Nenhum dado encontrado", JLabel.CENTER);
+            dialog.add(label);
+        } else {
+            // Extrair colunas do primeiro registro
+            Map<String, Object> primeiroRegistro = dados.get(0);
+            String[] colunas = primeiroRegistro.keySet().toArray(new String[0]);
+            
+            // Criar modelo de tabela
+            DefaultTableModel modelo = new DefaultTableModel(colunas, 0) {
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            };
+            
+            // Adicionar dados
+            for (Map<String, Object> registro : dados) {
+                Object[] linha = new Object[colunas.length];
+                for (int i = 0; i < colunas.length; i++) {
+                    linha[i] = registro.get(colunas[i]);
+                }
+                modelo.addRow(linha);
+            }
+            
+            JTable tabela = new JTable(modelo);
+            tabela.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+            tabela.setRowHeight(25);
+            
+            JScrollPane scrollPane = new JScrollPane(tabela);
+            
+            // Painel de botões
+            JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            
+            JButton btnExportar = ButtonStyleFactory.createSuccessButton("Exportar Excel");
+            btnExportar.addActionListener(e -> {
+                JOptionPane.showMessageDialog(dialog, 
+                    "Funcionalidade de exportação em desenvolvimento.", 
+                    "Informação", 
+                    JOptionPane.INFORMATION_MESSAGE);
+            });
+            
+            JButton btnFechar = ButtonStyleFactory.createSecondaryButton("Fechar");
+            btnFechar.addActionListener(e -> dialog.dispose());
+            
+            painelBotoes.add(btnExportar);
+            painelBotoes.add(btnFechar);
+            
+            dialog.setLayout(new BorderLayout());
+            dialog.add(scrollPane, BorderLayout.CENTER);
+            dialog.add(painelBotoes, BorderLayout.SOUTH);
+        }
+        
+        dialog.setVisible(true);
     }
     
     private void buscarInventarios() {

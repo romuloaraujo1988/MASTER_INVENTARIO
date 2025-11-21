@@ -436,9 +436,8 @@ public class OfflineDAO {
      * Obtém metadado de sincronização
      * @param chave Chave do metadado
      * @return Valor do metadado ou null se não encontrado
-     * @throws SQLException
      */
-    public String obterMetadado(String chave) throws SQLException {
+    public String obterMetadado(String chave) {
         String sql = "SELECT value FROM sync_metadata WHERE key = ?";
         
         try (Connection conn = sqliteConnection.getConnection();
@@ -455,7 +454,7 @@ public class OfflineDAO {
             
         } catch (SQLException e) {
             LOGGER.log(Level.WARNING, "Erro ao obter metadado", e);
-            throw e;
+            return null;
         }
     }
     
@@ -604,5 +603,223 @@ public class OfflineDAO {
         }
         
         return stats;
+    }
+    
+    // ==================== OPERAÇÕES DE COLETA OFFLINE ====================
+    
+    /**
+     * Salva uma coleta no banco offline (SQLite)
+     * @param coleta Dados da coleta
+     * @return ID gerado
+     * @throws SQLException
+     */
+    public int salvarColetaOffline(Map<String, Object> coleta) throws SQLException {
+        String sql = """
+            INSERT INTO coleta_offline 
+            (id_inventario, id_patrimonio, id_participante, numero_patrimonio,
+             descricao_item_sem_etiqueta, localizacao_encontrada, estado_encontrado,
+             observacoes, data_coleta, sincronizado)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """;
+        
+        try (Connection conn = sqliteConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            
+            stmt.setInt(1, (Integer) coleta.get("id_inventario"));
+            stmt.setObject(2, coleta.get("id_patrimonio"));
+            stmt.setObject(3, coleta.get("id_participante"));
+            stmt.setString(4, (String) coleta.get("numero_patrimonio"));
+            stmt.setString(5, (String) coleta.get("descricao_item_sem_etiqueta"));
+            stmt.setString(6, (String) coleta.get("localizacao_encontrada"));
+            stmt.setString(7, (String) coleta.get("estado_encontrado"));
+            stmt.setString(8, (String) coleta.get("observacoes"));
+            stmt.setTimestamp(9, (Timestamp) coleta.get("data_coleta"));
+            stmt.setInt(10, (Integer) coleta.getOrDefault("sincronizado", 0));
+            
+            int rowsAffected = stmt.executeUpdate();
+            
+            if (rowsAffected > 0) {
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        int id = rs.getInt(1);
+                        LOGGER.info("Coleta salva offline - ID: " + id);
+                        return id;
+                    }
+                }
+            }
+            
+            throw new SQLException("Falha ao salvar coleta offline");
+        }
+    }
+    
+    /**
+     * Busca coletas pendentes de sincronização
+     * @return Lista de coletas pendentes
+     * @throws SQLException
+     */
+    public List<Map<String, Object>> buscarColetasPendentes() throws SQLException {
+        String sql = """
+            SELECT * FROM coleta_offline 
+            WHERE sincronizado = 0
+            ORDER BY data_coleta ASC
+        """;
+        
+        List<Map<String, Object>> coletas = new ArrayList<>();
+        
+        try (Connection conn = sqliteConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                Map<String, Object> coleta = new HashMap<>();
+                coleta.put("id", rs.getInt("id"));
+                coleta.put("id_inventario", rs.getInt("id_inventario"));
+                coleta.put("id_patrimonio", rs.getObject("id_patrimonio"));
+                coleta.put("id_participante", rs.getObject("id_participante"));
+                coleta.put("numero_patrimonio", rs.getString("numero_patrimonio"));
+                coleta.put("descricao_item_sem_etiqueta", rs.getString("descricao_item_sem_etiqueta"));
+                coleta.put("localizacao_encontrada", rs.getString("localizacao_encontrada"));
+                coleta.put("estado_encontrado", rs.getString("estado_encontrado"));
+                coleta.put("observacoes", rs.getString("observacoes"));
+                coleta.put("data_coleta", rs.getTimestamp("data_coleta"));
+                coletas.add(coleta);
+            }
+        }
+        
+        LOGGER.info("Encontradas " + coletas.size() + " coletas pendentes");
+        return coletas;
+    }
+    
+    /**
+     * Marca uma coleta como sincronizada
+     * @param idColeta ID da coleta
+     * @throws SQLException
+     */
+    public void marcarColetaSincronizada(int idColeta) throws SQLException {
+        String sql = """
+            UPDATE coleta_offline 
+            SET sincronizado = 1,
+                data_sincronizacao = CURRENT_TIMESTAMP
+            WHERE id = ?
+        """;
+        
+        try (Connection conn = sqliteConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idColeta);
+            int rowsAffected = stmt.executeUpdate();
+            
+            if (rowsAffected > 0) {
+                LOGGER.info("Coleta marcada como sincronizada - ID: " + idColeta);
+            }
+        }
+    }
+    
+    /**
+     * Verifica se uma coleta já existe
+     * @param idInventario ID do inventário
+     * @param idPatrimonio ID do patrimônio
+     * @return true se existe
+     * @throws SQLException
+     */
+    public boolean coletaExiste(int idInventario, int idPatrimonio) throws SQLException {
+        String sql = """
+            SELECT COUNT(*) FROM coleta_offline 
+            WHERE id_inventario = ? AND id_patrimonio = ?
+        """;
+        
+        try (Connection conn = sqliteConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idInventario);
+            stmt.setInt(2, idPatrimonio);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    // ==================== MÉTODOS PÚBLICOS DE ACESSO ====================
+    
+    /**
+     * Obtém a conexão SQLite para operações diretas
+     * Útil para queries customizadas e operações avançadas
+     * 
+     * @return Conexão SQLite ativa
+     * @throws SQLException Se houver erro ao obter conexão
+     */
+    public Connection getConnection() throws SQLException {
+        return sqliteConnection.getConnection();
+    }
+    
+    /**
+     * Define um metadado do sistema
+     * 
+     * @param key Chave do metadado
+     * @param value Valor do metadado
+     * @return true se atualizado com sucesso
+     */
+    public boolean definirMetadado(String key, String value) {
+        String sql = """
+            INSERT INTO sync_metadata (key, value, updated_at) 
+            VALUES (?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(key) DO UPDATE SET 
+                value = excluded.value,
+                updated_at = CURRENT_TIMESTAMP
+        """;
+        
+        try (Connection conn = sqliteConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, key);
+            stmt.setString(2, value);
+            
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+            
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, "Erro ao definir metadado: " + key, e);
+            return false;
+        }
+    }
+    
+    /**
+     * Atualiza o status de sincronização de uma entidade
+     * 
+     * @param tableName Nome da tabela
+     * @param recordId ID do registro
+     * @param syncStatus Novo status (PENDING, SYNCED, CONFLICT)
+     * @return true se atualizado com sucesso
+     */
+    public boolean atualizarStatusSync(String tableName, int recordId, String syncStatus) {
+        String sql = String.format(
+            "UPDATE %s SET sync_status = ?, last_modified = CURRENT_TIMESTAMP WHERE id = ?",
+            tableName
+        );
+        
+        try (Connection conn = sqliteConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, syncStatus);
+            stmt.setInt(2, recordId);
+            
+            int rowsAffected = stmt.executeUpdate();
+            
+            if (rowsAffected > 0) {
+                LOGGER.fine(String.format("Status atualizado: %s #%d -> %s", tableName, recordId, syncStatus));
+                return true;
+            }
+            
+            return false;
+            
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, "Erro ao atualizar status de sync", e);
+            return false;
+        }
     }
 }
