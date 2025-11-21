@@ -317,7 +317,8 @@ public class MainFrame extends JFrame {
         // Indicador do servidor mobile (apenas para ADMIN)
         if (isAdmin) {
             lblServidorMobile = new JLabel();
-            lblServidorMobile.setFont(new Font("Segoe UI Emoji", Font.BOLD, 12));
+            // Usar fonte que suporta emoticons nativamente
+            lblServidorMobile.setFont(new Font("Segoe UI Symbol", Font.BOLD, 12));
             lblServidorMobile.setOpaque(true);
             lblServidorMobile.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(Color.WHITE, 1),
@@ -512,7 +513,8 @@ public class MainFrame extends JFrame {
 
                 // Desenhar ícone no topo
                 if (icon != null && !icon.isEmpty()) {
-                    g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 24));
+                    // Usar fonte que suporta emoticons nativamente
+                    g2d.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 24));
                     g2d.setColor(Color.WHITE);
                     FontMetrics fmIcon = g2d.getFontMetrics();
                     int iconWidth = fmIcon.stringWidth(icon);
@@ -1817,8 +1819,8 @@ public class MainFrame extends JFrame {
         if (lblServidorMobile == null) return;
         
         SwingUtilities.invokeLater(() -> {
-            // Garantir que a fonte suporte emojis
-            lblServidorMobile.setFont(new Font("Segoe UI Emoji", Font.BOLD, 12));
+            // Garantir que a fonte suporte emojis nativamente
+            lblServidorMobile.setFont(new Font("Segoe UI Symbol", Font.BOLD, 12));
             
             if (servidorMobileAtivo) {
                 lblServidorMobile.setText("📱 Mobile: ONLINE");

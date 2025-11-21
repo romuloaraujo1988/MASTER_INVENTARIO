@@ -4,6 +4,7 @@ com\inventario\siads\test\SiadsLayoutFormatterTest.class
 com\inventario\service\ColetaService.class
 com\inventario\util\PasswordUtil.class
 com\inventario\mobile\server\config\RequestLoggingFilter.class
+com\inventario\test\TestTimestampConversion.class
 com\inventario\view\InventarioFormDialog$4.class
 com\inventario\view\DashboardColetaFrame.class
 com\inventario\view\UsuarioFormDialog.class

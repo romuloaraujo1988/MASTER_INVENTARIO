@@ -338,7 +338,7 @@ public class ColetaFrame_v2 extends JFrame {
         panelInfoItem.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder(
                         BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
-                        "📋 Informações do Item Pesquisado",
+                        "Informações do Item Pesquisado",
                         TitledBorder.LEFT,
                         TitledBorder.TOP,
                         new Font("Segoe UI", Font.BOLD, 14),
@@ -530,7 +530,7 @@ public class ColetaFrame_v2 extends JFrame {
                 BorderFactory.createLineBorder(new Color(52, 152, 219), 2),
                 BorderFactory.createTitledBorder(
                         BorderFactory.createEmptyBorder(5, 10, 5, 10),
-                        "🔍 Buscar Item Similar por Descrição",
+                        "Buscar Item Similar por Descrição",
                         javax.swing.border.TitledBorder.LEFT,
                         javax.swing.border.TitledBorder.TOP,
                         new Font("Segoe UI", Font.BOLD, 13),
@@ -766,7 +766,7 @@ public class ColetaFrame_v2 extends JFrame {
         panelSuperior.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder(
                         BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
-                        "🏢 Local de Coleta e Resumo",
+                        "Local de Coleta e Resumo",
                         TitledBorder.LEFT,
                         TitledBorder.TOP,
                         new Font("Segoe UI", Font.BOLD, 14),
@@ -816,7 +816,7 @@ public class ColetaFrame_v2 extends JFrame {
         panelBusca.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder(
                         BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
-                        "🔍 Busca de Patrimônio",
+                        "Busca de Patrimônio",
                         TitledBorder.LEFT,
                         TitledBorder.TOP,
                         new Font("Segoe UI", Font.BOLD, 14),
@@ -824,7 +824,7 @@ public class ColetaFrame_v2 extends JFrame {
                 BorderFactory.createEmptyBorder(10, 15, 15, 15)));
         panelBusca.setBackground(Color.WHITE);
 
-        JLabel lblBusca = new JLabel("🔍 Buscar patrimônio (número ou código):");
+        JLabel lblBusca = new JLabel("Buscar patrimônio (número ou código):");
         lblBusca.setFont(new Font("Segoe UI", Font.BOLD, 14));
         lblBusca.setForeground(corTexto);
         panelBusca.add(lblBusca);
@@ -832,7 +832,7 @@ public class ColetaFrame_v2 extends JFrame {
         panelBusca.add(btnBuscar);
 
         // Checkbox para modo de coleta automática com leitor
-        chkColetaAutomatica = new JCheckBox("⚡ Coleta Automática (Leitor de Código)");
+        chkColetaAutomatica = new JCheckBox("Coleta Automática (Leitor de Código)");
         chkColetaAutomatica.setFont(new Font("Segoe UI", Font.BOLD, 12));
         chkColetaAutomatica.setForeground(new Color(52, 152, 219));
         chkColetaAutomatica.setBackground(Color.WHITE);
@@ -850,7 +850,7 @@ public class ColetaFrame_v2 extends JFrame {
         panelHistorico.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder(
                         BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
-                        "📊 Histórico de Coleta da Sala",
+                        "Histórico de Coleta da Sala",
                         TitledBorder.LEFT,
                         TitledBorder.TOP,
                         new Font("Segoe UI", Font.BOLD, 14),
@@ -940,7 +940,7 @@ public class ColetaFrame_v2 extends JFrame {
         panelAcoes.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder(
                         BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
-                        "⚡ Ações de Coleta",
+                        "Ações de Coleta",
                         TitledBorder.LEFT,
                         TitledBorder.TOP,
                         new Font("Segoe UI", Font.BOLD, 14),
@@ -962,7 +962,7 @@ public class ColetaFrame_v2 extends JFrame {
         panelSemEtiqueta.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder(
                         BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
-                        "📦 Informações do Item Sem Etiqueta",
+                        "Informações do Item Sem Etiqueta",
                         TitledBorder.LEFT,
                         TitledBorder.TOP,
                         new Font("Segoe UI", Font.BOLD, 12),
@@ -1143,7 +1143,7 @@ public class ColetaFrame_v2 extends JFrame {
         painel.setPreferredSize(new Dimension(0, 110)); // Aumentado para 110
 
         // Título
-        JLabel lblTitulo = new JLabel("🔍 Pesquisar Descrições Existentes");
+        JLabel lblTitulo = new JLabel("Pesquisar Descrições Existentes");
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 12));
         lblTitulo.setForeground(corPrimaria);
         lblTitulo.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
@@ -3821,8 +3821,8 @@ public class ColetaFrame_v2 extends JFrame {
                 int centerY = getHeight() / 2;
 
                 if (!emoji.isEmpty()) {
-                    // Renderizar emoji com fonte especial
-                    g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
+                    // Renderizar emoji com fonte especial que suporta emoticons nativamente
+                    g2d.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 16));
                     FontMetrics fmEmoji = g2d.getFontMetrics();
                     int emojiWidth = fmEmoji.stringWidth(emoji);
 
@@ -3835,7 +3835,7 @@ public class ColetaFrame_v2 extends JFrame {
                     int startX = centerX - (totalWidth / 2);
 
                     // Desenhar emoji
-                    g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
+                    g2d.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 16));
                     g2d.setColor(isEnabled() ? Color.WHITE : new Color(200, 200, 200));
                     g2d.drawString(emoji, startX, centerY + fmEmoji.getAscent() / 2);
 
