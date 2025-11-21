@@ -212,8 +212,21 @@ public class UnifiedAuthService {
      * @param mode Modo de autenticação
      */
     public void setAuthMode(AuthMode mode) {
+        AuthMode previousMode = this.currentMode;
         this.currentMode = mode;
-        LOGGER.info("Modo de autenticação alterado para: " + mode);
+        
+        LOGGER.info("Modo de autenticação alterado de " + previousMode + " para: " + mode);
+        
+        // Se mudou para OFFLINE_ONLY, forçar o OfflineManager
+        if (mode == AuthMode.OFFLINE_ONLY && previousMode != AuthMode.OFFLINE_ONLY) {
+            LOGGER.info("Forçando OfflineManager para modo offline");
+            offlineManager.forceOfflineMode();
+        }
+        // Se saiu do OFFLINE_ONLY, tentar reconectar
+        else if (previousMode == AuthMode.OFFLINE_ONLY && mode != AuthMode.OFFLINE_ONLY) {
+            LOGGER.info("Saindo do modo offline forçado, tentando reconectar");
+            offlineManager.tryReconnect();
+        }
     }
     
     /**
@@ -229,6 +242,11 @@ public class UnifiedAuthService {
      * @return true se offline
      */
     public boolean isOperatingOffline() {
+        // Se o modo está forçado para OFFLINE_ONLY, retornar true
+        if (currentMode == AuthMode.OFFLINE_ONLY) {
+            return true;
+        }
+        // Caso contrário, verificar o estado real do OfflineManager
         return offlineManager.isOperatingOffline();
     }
     

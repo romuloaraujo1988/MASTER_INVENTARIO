@@ -1322,6 +1322,12 @@ public class DataSynchronizer {
                 stmt.setTimestamp(5, new Timestamp(((java.util.Date) dataColeta).getTime()));
             } else if (dataColeta instanceof Timestamp) {
                 stmt.setTimestamp(5, (Timestamp) dataColeta);
+            } else if (dataColeta instanceof String) {
+                try {
+                    stmt.setTimestamp(5, Timestamp.valueOf((String) dataColeta));
+                } catch (IllegalArgumentException e) {
+                    stmt.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
+                }
             } else {
                 stmt.setTimestamp(5, null);
             }
@@ -1329,7 +1335,22 @@ public class DataSynchronizer {
             stmt.setString(6, (String) coleta.get("status"));
             stmt.setString(7, (String) coleta.get("observacoes"));
             stmt.setString(8, (String) coleta.get("localizacao_atual"));
-            stmt.setTimestamp(9, (Timestamp) coleta.get("data_ultima_alteracao"));
+            
+            // Conversão segura para data_ultima_alteracao
+            Object dataUltimaAlteracao = coleta.get("data_ultima_alteracao");
+            if (dataUltimaAlteracao instanceof Timestamp) {
+                stmt.setTimestamp(9, (Timestamp) dataUltimaAlteracao);
+            } else if (dataUltimaAlteracao instanceof java.util.Date) {
+                stmt.setTimestamp(9, new Timestamp(((java.util.Date) dataUltimaAlteracao).getTime()));
+            } else if (dataUltimaAlteracao instanceof String) {
+                try {
+                    stmt.setTimestamp(9, Timestamp.valueOf((String) dataUltimaAlteracao));
+                } catch (IllegalArgumentException e) {
+                    stmt.setTimestamp(9, new Timestamp(System.currentTimeMillis()));
+                }
+            } else {
+                stmt.setTimestamp(9, new Timestamp(System.currentTimeMillis()));
+            }
             
             stmt.executeUpdate();
         }

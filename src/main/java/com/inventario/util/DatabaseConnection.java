@@ -43,12 +43,25 @@ public class DatabaseConnection {
     
     /**
      * Obtém uma conexão com o banco de dados
+     * Respeita o modo offline definido no OfflineManager
      * 
-     * @return Connection ativa com o banco
+     * @return Connection ativa com o banco (PostgreSQL ou SQLite)
      * @throws SQLException se houver erro na conexão
      */
     public static Connection getConnection() throws SQLException {
         try {
+            // Verificar se o sistema está em modo offline
+            com.inventario.offline.OfflineManager offlineManager = com.inventario.offline.OfflineManager.getInstance();
+            
+            if (offlineManager.isOperatingOffline()) {
+                // Modo offline: usar banco SQLite
+                System.out.println("DEBUG DatabaseConnection: Sistema em modo OFFLINE - usando SQLite");
+                return getOfflineConnection();
+            }
+            
+            // Modo online: usar PostgreSQL
+            System.out.println("DEBUG DatabaseConnection: Sistema em modo ONLINE - usando PostgreSQL");
+            
             // Tenta usar a configuração carregada
             if (currentConfig != null && currentConfig.isValid()) {
                 return createConnectionFromConfig(currentConfig);
@@ -71,6 +84,38 @@ public class DatabaseConnection {
         } catch (SQLException e) {
             System.err.println("Erro ao obter conexão com banco de dados: " + e.getMessage());
             throw e;
+        }
+    }
+    
+    /**
+     * Obtém uma conexão com o banco SQLite offline
+     * 
+     * @return Connection ativa com SQLite
+     * @throws SQLException se houver erro na conexão
+     */
+    private static Connection getOfflineConnection() throws SQLException {
+        try {
+            // Carregar driver SQLite se necessário
+            Class.forName("org.sqlite.JDBC");
+            
+            // Caminho do banco SQLite
+            String dbPath = "data/inventario.db";
+            String url = "jdbc:sqlite:" + dbPath;
+            
+            System.out.println("DEBUG DatabaseConnection: Conectando ao SQLite: " + url);
+            
+            Connection conn = DriverManager.getConnection(url);
+            
+            // Habilitar foreign keys no SQLite
+            try (java.sql.Statement stmt = conn.createStatement()) {
+                stmt.execute("PRAGMA foreign_keys = ON");
+            }
+            
+            return conn;
+            
+        } catch (ClassNotFoundException e) {
+            System.err.println("Driver SQLite não encontrado: " + e.getMessage());
+            throw new SQLException("Driver SQLite não disponível", e);
         }
     }
     

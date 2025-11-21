@@ -138,12 +138,44 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
      * Busca patrimônio por número
      */
     public Patrimonio buscarPorNumero(String numeroPatrimonio) throws SQLException {
+        System.out.println("DEBUG PatrimonioDAO: buscarPorNumero() chamado para número: " + numeroPatrimonio);
+        
+        // Verificar qual conexão está sendo usada
+        Connection conn = null;
+        try {
+            conn = com.inventario.util.ConnectionManager.getConnection();
+            String dbUrl = conn.getMetaData().getURL();
+            System.out.println("DEBUG PatrimonioDAO: Usando banco de dados: " + dbUrl);
+            
+            if (dbUrl.contains("jdbc:sqlite")) {
+                System.out.println("DEBUG PatrimonioDAO: *** BUSCA OFFLINE (SQLite) ***");
+            } else if (dbUrl.contains("jdbc:postgresql")) {
+                System.out.println("DEBUG PatrimonioDAO: *** BUSCA ONLINE (PostgreSQL) ***");
+            } else {
+                System.out.println("DEBUG PatrimonioDAO: *** BUSCA EM BANCO DESCONHECIDO ***");
+            }
+        } catch (Exception e) {
+            System.err.println("DEBUG PatrimonioDAO: Erro ao verificar tipo de banco: " + e.getMessage());
+        } finally {
+            if (conn != null) {
+                try {
+                    com.inventario.util.ConnectionManager.closeConnection(conn);
+                } catch (Exception e) {
+                    // Ignorar erro ao fechar
+                }
+            }
+        }
+        
         String sql = "SELECT p.*, r.NOME as nome_responsavel, s.DESCRICAO as nome_sala " +
                     "FROM TABELA_PATRIMONIO p " +
                     "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
                     "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
                     "WHERE p.NUMERO = ?";
-        return executeQuerySingle(sql, numeroPatrimonio);
+        
+        Patrimonio resultado = executeQuerySingle(sql, numeroPatrimonio);
+        System.out.println("DEBUG PatrimonioDAO: Resultado da busca: " + (resultado != null ? "ENCONTRADO" : "NÃO ENCONTRADO"));
+        
+        return resultado;
     }
     
     /**

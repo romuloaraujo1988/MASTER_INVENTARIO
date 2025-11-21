@@ -475,10 +475,6 @@ public class MainFrame extends JFrame {
         return panel;
     }
 
-    private JButton createSimpleButton(String text) {
-        return createSimpleButton(text, null);
-    }
-
     private JButton createSimpleButton(String text, String icon) {
         JButton button = new JButton() {
             private boolean isHovered = false;
@@ -864,18 +860,27 @@ public class MainFrame extends JFrame {
 
     private void abrirColeta() {
         try {
-            System.out.println("DEBUG: Iniciando abertura do ColetaFrame_v2...");
-            System.out.println(
-                    "DEBUG: Usuário logado: " + (usuarioLogado != null ? usuarioLogado.getNomeCompleto() : "null"));
+            System.out.println("===========================================");
+            System.out.println("DEBUG MainFrame: Iniciando abertura do ColetaFrame_v2...");
+            System.out.println("DEBUG MainFrame: Usuário logado: " + 
+                (usuarioLogado != null ? usuarioLogado.getNomeCompleto() + " (" + usuarioLogado.getPerfil() + ")" : "null"));
+            System.out.println("===========================================");
 
+            System.out.println("DEBUG MainFrame: Chamando construtor ColetaFrame_v2...");
             ColetaFrame_v2 coletaFrame = new ColetaFrame_v2(usuarioLogado);
 
-            System.out.println("DEBUG: ColetaFrame_v2 criado com sucesso");
+            System.out.println("DEBUG MainFrame: ColetaFrame_v2 criado com sucesso!");
+            System.out.println("DEBUG MainFrame: Tornando frame visível...");
             coletaFrame.setVisible(true);
-            System.out.println("DEBUG: ColetaFrame_v2 exibido com sucesso");
+            System.out.println("DEBUG MainFrame: ColetaFrame_v2 exibido com sucesso!");
+            System.out.println("===========================================");
 
         } catch (Exception e) {
-            System.err.println("ERRO ao abrir ColetaFrame_v2:");
+            System.err.println("===========================================");
+            System.err.println("ERRO FATAL ao abrir ColetaFrame_v2:");
+            System.err.println("Tipo: " + e.getClass().getName());
+            System.err.println("Mensagem: " + e.getMessage());
+            System.err.println("===========================================");
             e.printStackTrace();
 
             // Mostrar stack trace completo no dialog

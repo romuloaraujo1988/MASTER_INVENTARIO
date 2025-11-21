@@ -117,7 +117,24 @@ public class SalaDAO extends BaseDAO<Sala, Integer> {
         
         sala.setTipoSala(rs.getString("TIPO_SALA"));
         sala.setAtivo(rs.getBoolean("ATIVO"));
-        sala.setDataCadastro(rs.getTimestamp("DATA_CADASTRO"));
+        
+        // DATA_CADASTRO com tratamento robusto de erros
+        try {
+            java.sql.Timestamp dataCadastro = rs.getTimestamp("DATA_CADASTRO");
+            if (dataCadastro != null && !rs.wasNull()) {
+                sala.setDataCadastro(dataCadastro);
+            }
+        } catch (SQLException e) {
+            // Erro ao parsear timestamp - usar data padrão do construtor
+            System.err.println("AVISO: Erro ao parsear DATA_CADASTRO para sala ID " + 
+                             sala.getIdSala() + " - " + e.getMessage());
+            // Sala já tem data padrão do construtor
+        } catch (Exception e) {
+            // Qualquer outro erro de parsing
+            System.err.println("AVISO: Erro inesperado ao processar DATA_CADASTRO para sala ID " + 
+                             sala.getIdSala() + " - " + e.getMessage());
+        }
+        
         sala.setObservacoes(rs.getString("OBSERVACOES"));
         
         // Campo transiente (opcional)

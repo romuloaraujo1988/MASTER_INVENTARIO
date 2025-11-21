@@ -105,6 +105,12 @@ public class JLogin extends JFrame {
         headerPanel.setOpaque(false);
         headerPanel.setBorder(new EmptyBorder(30, 20, 20, 20));
 
+        // Indicador de modo (canto superior esquerdo)
+        lblModoOffline = new JLabel();
+        lblModoOffline.setFont(new Font("Arial", Font.BOLD, 14));
+        lblModoOffline.setHorizontalAlignment(SwingConstants.LEFT);
+        lblModoOffline.setBorder(new EmptyBorder(0, 10, 0, 0));
+        
         // Painel central com título
         JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         centerPanel.setOpaque(false);
@@ -124,15 +130,8 @@ public class JLogin extends JFrame {
 
         centerPanel.add(titleContainer);
         
-        // Indicador de modo offline (canto superior direito)
-        lblModoOffline = new JLabel();
-        lblModoOffline.setFont(new Font("Arial", Font.BOLD, 12));
-        lblModoOffline.setForeground(new Color(255, 193, 7)); // Amarelo
-        lblModoOffline.setHorizontalAlignment(SwingConstants.RIGHT);
-        lblModoOffline.setBorder(new EmptyBorder(0, 0, 0, 10));
-        
+        headerPanel.add(lblModoOffline, BorderLayout.WEST);
         headerPanel.add(centerPanel, BorderLayout.CENTER);
-        headerPanel.add(lblModoOffline, BorderLayout.EAST);
         
         return headerPanel;
     }
@@ -209,6 +208,18 @@ public class JLogin extends JFrame {
         chkModoOffline.setAlignmentX(Component.CENTER_ALIGNMENT);
         chkModoOffline.setBorder(new EmptyBorder(15, 0, 0, 0));
         chkModoOffline.setToolTipText("Marque para fazer login usando apenas dados locais (modo offline)");
+        
+        // Listener para ativar/desativar modo offline quando checkbox é marcado
+        chkModoOffline.addItemListener(e -> {
+            boolean selecionado = e.getStateChange() == ItemEvent.SELECTED;
+            if (selecionado) {
+                // Ativar modo offline
+                ativarModoOffline();
+            } else {
+                // Desativar modo offline (voltar para modo automático)
+                desativarModoOffline();
+            }
+        });
 
         fieldsPanel.add(userLabel);
         fieldsPanel.add(txtUsuario);
@@ -293,12 +304,37 @@ public class JLogin extends JFrame {
         if (lblModoOffline != null && unifiedAuthService != null) {
             boolean modoOffline = unifiedAuthService.isOperatingOffline();
             if (modoOffline) {
-                lblModoOffline.setText("⚠ MODO OFFLINE");
-                lblModoOffline.setVisible(true);
+                lblModoOffline.setText("OFFLINE");
+                lblModoOffline.setForeground(new Color(255, 193, 7)); // Amarelo/Laranja
             } else {
-                lblModoOffline.setText("");
-                lblModoOffline.setVisible(false);
+                lblModoOffline.setText("ONLINE");
+                lblModoOffline.setForeground(new Color(46, 204, 113)); // Verde (SECONDARY_COLOR)
             }
+            lblModoOffline.setVisible(true);
+        }
+    }
+    
+    /**
+     * Ativa o modo offline forçado
+     */
+    private void ativarModoOffline() {
+        if (unifiedAuthService != null) {
+            System.out.println("DEBUG: Ativando modo OFFLINE_ONLY via checkbox");
+            unifiedAuthService.setAuthMode(com.inventario.service.UnifiedAuthService.AuthMode.OFFLINE_ONLY);
+            atualizarIndicadorModoOffline();
+            System.out.println("DEBUG: Modo offline ativado. isOperatingOffline = " + unifiedAuthService.isOperatingOffline());
+        }
+    }
+    
+    /**
+     * Desativa o modo offline forçado (volta para modo automático)
+     */
+    private void desativarModoOffline() {
+        if (unifiedAuthService != null) {
+            System.out.println("DEBUG: Desativando modo offline, voltando para AUTO");
+            unifiedAuthService.setAuthMode(com.inventario.service.UnifiedAuthService.AuthMode.AUTO);
+            atualizarIndicadorModoOffline();
+            System.out.println("DEBUG: Modo AUTO ativado. isOperatingOffline = " + unifiedAuthService.isOperatingOffline());
         }
     }
 
@@ -402,13 +438,18 @@ public class JLogin extends JFrame {
             // Verificar se usuário forçou modo offline
             boolean forcarOffline = chkModoOffline.isSelected();
             
+            // Garantir que o modo está configurado corretamente antes de autenticar
             if (forcarOffline) {
-                // Forçar modo offline
+                System.out.println("DEBUG: Forçando modo OFFLINE_ONLY");
                 unifiedAuthService.setAuthMode(com.inventario.service.UnifiedAuthService.AuthMode.OFFLINE_ONLY);
             } else {
-                // Modo automático (tenta online primeiro)
+                System.out.println("DEBUG: Usando modo AUTO");
                 unifiedAuthService.setAuthMode(com.inventario.service.UnifiedAuthService.AuthMode.AUTO);
             }
+            
+            // Verificar o modo atual antes de autenticar
+            System.out.println("DEBUG: Modo atual antes de autenticar: " + 
+                (unifiedAuthService.isOperatingOffline() ? "OFFLINE" : "ONLINE"));
             
             // Autenticar usando o serviço unificado (online + offline)
             com.inventario.service.UnifiedAuthService.AuthResult resultado = unifiedAuthService.autenticar(usuario, senha);
@@ -417,7 +458,9 @@ public class JLogin extends JFrame {
                 usuarioLogado = resultado.usuario;
                 
                 // Mostrar mensagem indicando se foi offline ou online
-                String modoAuth = resultado.wasOffline ? " (Modo Offline)" : "";
+                String modoAuth = resultado.wasOffline ? " (Modo Offline)" : " (Modo Online)";
+                System.out.println("DEBUG: Login bem-sucedido" + modoAuth);
+                
                 showMessage("Login realizado com sucesso!" + modoAuth + "\nBem-vindo, " + usuarioLogado.getNomeCompleto() + "!",
                         "Sucesso", JOptionPane.INFORMATION_MESSAGE);
 

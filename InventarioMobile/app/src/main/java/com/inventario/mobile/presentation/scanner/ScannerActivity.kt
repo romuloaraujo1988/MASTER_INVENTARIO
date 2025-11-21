@@ -1,4 +1,4 @@
-package com.inventario.mobile.presentation.scanner
+;package com.inventario.mobile.presentation.scanner
 
 import android.app.Activity
 import android.content.Context
