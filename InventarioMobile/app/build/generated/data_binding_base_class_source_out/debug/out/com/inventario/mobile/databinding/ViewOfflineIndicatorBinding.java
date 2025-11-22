@@ -5,12 +5,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.viewbinding.ViewBinding;
+import androidx.viewbinding.ViewBindings;
 import com.inventario.mobile.R;
 import java.lang.NullPointerException;
 import java.lang.Override;
+import java.lang.String;
 
 public final class ViewOfflineIndicatorBinding implements ViewBinding {
   @NonNull
@@ -19,10 +22,19 @@ public final class ViewOfflineIndicatorBinding implements ViewBinding {
   @NonNull
   public final LinearLayout offlineIndicatorBar;
 
+  @NonNull
+  public final TextView tvStatusIcon;
+
+  @NonNull
+  public final TextView tvStatusText;
+
   private ViewOfflineIndicatorBinding(@NonNull LinearLayout rootView,
-      @NonNull LinearLayout offlineIndicatorBar) {
+      @NonNull LinearLayout offlineIndicatorBar, @NonNull TextView tvStatusIcon,
+      @NonNull TextView tvStatusText) {
     this.rootView = rootView;
     this.offlineIndicatorBar = offlineIndicatorBar;
+    this.tvStatusIcon = tvStatusIcon;
+    this.tvStatusText = tvStatusText;
   }
 
   @Override
@@ -48,12 +60,28 @@ public final class ViewOfflineIndicatorBinding implements ViewBinding {
 
   @NonNull
   public static ViewOfflineIndicatorBinding bind(@NonNull View rootView) {
-    if (rootView == null) {
-      throw new NullPointerException("rootView");
+    // The body of this method is generated in a way you would not otherwise write.
+    // This is done to optimize the compiled bytecode for size and performance.
+    int id;
+    missingId: {
+      LinearLayout offlineIndicatorBar = (LinearLayout) rootView;
+
+      id = R.id.tvStatusIcon;
+      TextView tvStatusIcon = ViewBindings.findChildViewById(rootView, id);
+      if (tvStatusIcon == null) {
+        break missingId;
+      }
+
+      id = R.id.tvStatusText;
+      TextView tvStatusText = ViewBindings.findChildViewById(rootView, id);
+      if (tvStatusText == null) {
+        break missingId;
+      }
+
+      return new ViewOfflineIndicatorBinding((LinearLayout) rootView, offlineIndicatorBar,
+          tvStatusIcon, tvStatusText);
     }
-
-    LinearLayout offlineIndicatorBar = (LinearLayout) rootView;
-
-    return new ViewOfflineIndicatorBinding((LinearLayout) rootView, offlineIndicatorBar);
+    String missingId = rootView.getResources().getResourceName(id);
+    throw new NullPointerException("Missing required view with ID: ".concat(missingId));
   }
 }

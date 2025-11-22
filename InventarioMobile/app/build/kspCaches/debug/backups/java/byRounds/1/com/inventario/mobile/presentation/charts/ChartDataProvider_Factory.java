@@ -1,7 +1,6 @@
 package com.inventario.mobile.presentation.charts;
 
-import com.inventario.mobile.data.local.dao.ColetaDao;
-import com.inventario.mobile.data.local.dao.PatrimonioDao;
+import com.inventario.mobile.domain.repository.DashboardRepository;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
 import dagger.internal.QualifierMetadata;
@@ -23,27 +22,23 @@ import javax.inject.Provider;
     "KotlinInternalInJava"
 })
 public final class ChartDataProvider_Factory implements Factory<ChartDataProvider> {
-  private final Provider<PatrimonioDao> patrimonioDaoProvider;
+  private final Provider<DashboardRepository> dashboardRepositoryProvider;
 
-  private final Provider<ColetaDao> coletaDaoProvider;
-
-  public ChartDataProvider_Factory(Provider<PatrimonioDao> patrimonioDaoProvider,
-      Provider<ColetaDao> coletaDaoProvider) {
-    this.patrimonioDaoProvider = patrimonioDaoProvider;
-    this.coletaDaoProvider = coletaDaoProvider;
+  public ChartDataProvider_Factory(Provider<DashboardRepository> dashboardRepositoryProvider) {
+    this.dashboardRepositoryProvider = dashboardRepositoryProvider;
   }
 
   @Override
   public ChartDataProvider get() {
-    return newInstance(patrimonioDaoProvider.get(), coletaDaoProvider.get());
+    return newInstance(dashboardRepositoryProvider.get());
   }
 
-  public static ChartDataProvider_Factory create(Provider<PatrimonioDao> patrimonioDaoProvider,
-      Provider<ColetaDao> coletaDaoProvider) {
-    return new ChartDataProvider_Factory(patrimonioDaoProvider, coletaDaoProvider);
+  public static ChartDataProvider_Factory create(
+      Provider<DashboardRepository> dashboardRepositoryProvider) {
+    return new ChartDataProvider_Factory(dashboardRepositoryProvider);
   }
 
-  public static ChartDataProvider newInstance(PatrimonioDao patrimonioDao, ColetaDao coletaDao) {
-    return new ChartDataProvider(patrimonioDao, coletaDao);
+  public static ChartDataProvider newInstance(DashboardRepository dashboardRepository) {
+    return new ChartDataProvider(dashboardRepository);
   }
 }

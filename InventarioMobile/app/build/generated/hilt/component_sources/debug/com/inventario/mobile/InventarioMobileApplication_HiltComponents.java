@@ -7,6 +7,7 @@ import com.inventario.mobile.di.DashboardModule;
 import com.inventario.mobile.di.DatabaseModule;
 import com.inventario.mobile.di.MapperModule;
 import com.inventario.mobile.di.RepositoryModule;
+import com.inventario.mobile.di.SyncModule;
 import com.inventario.mobile.di.UtilModule;
 import com.inventario.mobile.presentation.charts.ChartsFragment_GeneratedInjector;
 import com.inventario.mobile.presentation.charts.ChartsViewModel_HiltModules;
@@ -17,24 +18,24 @@ import com.inventario.mobile.presentation.coleta.ItemSemEtiquetaActivity_Generat
 import com.inventario.mobile.presentation.coleta.ItemSemEtiquetaViewModel_HiltModules;
 import com.inventario.mobile.presentation.coleta.ManualCollectionActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.coleta.ManualCollectionViewModel_HiltModules;
-import com.inventario.mobile.presentation.consulta.ConsultaPatrimonioActivity_GeneratedInjector;
-import com.inventario.mobile.presentation.consulta.ConsultaPatrimonioViewModel_HiltModules;
-import com.inventario.mobile.presentation.consulta.DetalhePatrimonioActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.dashboard.DashboardFragment_GeneratedInjector;
 import com.inventario.mobile.presentation.dashboard.DashboardViewModelClean_HiltModules;
 import com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.descricao.DescricaoSelectionViewModelClean_HiltModules;
 import com.inventario.mobile.presentation.main.MainActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.sala.SalaSelectionActivity_GeneratedInjector;
-import com.inventario.mobile.presentation.sala.SalaSelectionPagingActivity_GeneratedInjector;
-import com.inventario.mobile.presentation.sala.SalaSelectionViewModelClean_HiltModules;
-import com.inventario.mobile.presentation.sala.SalaViewModelPaging_HiltModules;
+import com.inventario.mobile.presentation.statistics.ExportFragment_GeneratedInjector;
+import com.inventario.mobile.presentation.statistics.OverviewFragment_GeneratedInjector;
+import com.inventario.mobile.presentation.statistics.RankingsFragment_GeneratedInjector;
+import com.inventario.mobile.presentation.statistics.StatisticsActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.sync.SyncActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.sync.SyncViewModel_HiltModules;
 import com.inventario.mobile.presentation.validation.ValidationExampleFragment_GeneratedInjector;
 import com.inventario.mobile.presentation.validation.ValidationViewModel_HiltModules;
 import com.inventario.mobile.ui.coleta.ColetaActivity_GeneratedInjector;
+import com.inventario.mobile.worker.BackupWorker_HiltModule;
 import com.inventario.mobile.worker.ColetaSyncWorker_HiltModule;
+import com.inventario.mobile.worker.DatabaseBackupWorker_HiltModule;
 import com.inventario.mobile.worker.SyncWorker_HiltModule;
 import dagger.Binds;
 import dagger.Component;
@@ -153,8 +154,10 @@ public final class InventarioMobileApplication_HiltComponents {
           ApiModule.class,
           AppModule.class,
           ApplicationContextModule.class,
+          BackupWorker_HiltModule.class,
           ColetaSyncWorker_HiltModule.class,
           DashboardModule.class,
+          DatabaseBackupWorker_HiltModule.class,
           DatabaseModule.class,
           HiltWrapper_FragmentGetContextFix_FragmentGetContextFixModule.class,
           HiltWrapper_WorkerFactoryModule.class,
@@ -162,6 +165,7 @@ public final class InventarioMobileApplication_HiltComponents {
           ServiceCBuilderModule.class,
           MapperModule.class,
           RepositoryModule.class,
+          SyncModule.class,
           SyncWorker_HiltModule.class,
           UtilModule.class
       }
@@ -189,7 +193,6 @@ public final class InventarioMobileApplication_HiltComponents {
           ChartsViewModel_HiltModules.KeyModule.class,
           ColetaViewModelClean_HiltModules.KeyModule.class,
           CollectionViewViewModelClean_HiltModules.KeyModule.class,
-          ConsultaPatrimonioViewModel_HiltModules.KeyModule.class,
           DashboardViewModelClean_HiltModules.KeyModule.class,
           DescricaoSelectionViewModelClean_HiltModules.KeyModule.class,
           HiltWrapper_ActivityRetainedComponentManager_LifecycleModule.class,
@@ -197,8 +200,6 @@ public final class InventarioMobileApplication_HiltComponents {
           ViewModelCBuilderModule.class,
           ItemSemEtiquetaViewModel_HiltModules.KeyModule.class,
           ManualCollectionViewModel_HiltModules.KeyModule.class,
-          SalaSelectionViewModelClean_HiltModules.KeyModule.class,
-          SalaViewModelPaging_HiltModules.KeyModule.class,
           SyncViewModel_HiltModules.KeyModule.class,
           ValidationViewModel_HiltModules.KeyModule.class
       }
@@ -225,12 +226,10 @@ public final class InventarioMobileApplication_HiltComponents {
   public abstract static class ActivityC implements CollectionViewActivity_GeneratedInjector,
       ItemSemEtiquetaActivity_GeneratedInjector,
       ManualCollectionActivity_GeneratedInjector,
-      ConsultaPatrimonioActivity_GeneratedInjector,
-      DetalhePatrimonioActivity_GeneratedInjector,
       DescricaoSelectionActivity_GeneratedInjector,
       MainActivity_GeneratedInjector,
       SalaSelectionActivity_GeneratedInjector,
-      SalaSelectionPagingActivity_GeneratedInjector,
+      StatisticsActivity_GeneratedInjector,
       SyncActivity_GeneratedInjector,
       ColetaActivity_GeneratedInjector,
       ActivityComponent,
@@ -249,14 +248,11 @@ public final class InventarioMobileApplication_HiltComponents {
           ChartsViewModel_HiltModules.BindsModule.class,
           ColetaViewModelClean_HiltModules.BindsModule.class,
           CollectionViewViewModelClean_HiltModules.BindsModule.class,
-          ConsultaPatrimonioViewModel_HiltModules.BindsModule.class,
           DashboardViewModelClean_HiltModules.BindsModule.class,
           DescricaoSelectionViewModelClean_HiltModules.BindsModule.class,
           HiltWrapper_HiltViewModelFactory_ViewModelModule.class,
           ItemSemEtiquetaViewModel_HiltModules.BindsModule.class,
           ManualCollectionViewModel_HiltModules.BindsModule.class,
-          SalaSelectionViewModelClean_HiltModules.BindsModule.class,
-          SalaViewModelPaging_HiltModules.BindsModule.class,
           SyncViewModel_HiltModules.BindsModule.class,
           ValidationViewModel_HiltModules.BindsModule.class
       }
@@ -286,6 +282,9 @@ public final class InventarioMobileApplication_HiltComponents {
   public abstract static class FragmentC implements ChartsFragment_GeneratedInjector,
       DashboardFragment_GeneratedInjector,
       com.inventario.mobile.presentation.statistics.ChartsFragment_GeneratedInjector,
+      ExportFragment_GeneratedInjector,
+      OverviewFragment_GeneratedInjector,
+      RankingsFragment_GeneratedInjector,
       ValidationExampleFragment_GeneratedInjector,
       FragmentComponent,
       DefaultViewModelFactories.FragmentEntryPoint,

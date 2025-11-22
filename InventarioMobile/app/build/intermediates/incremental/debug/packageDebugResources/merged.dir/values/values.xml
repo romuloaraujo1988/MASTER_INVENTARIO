@@ -217,6 +217,14 @@
     <string name="user_avatar">Avatar do usuário</string>
     <string name="user_profile">Perfil do Usuário</string>
     <string name="view_collections_button">Visualizar Coletas</string>
+    <style name="PinKeypadButton">
+        <item name="android:layout_width">64dp</item>
+        <item name="android:layout_height">64dp</item>
+        <item name="android:layout_margin">8dp</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="backgroundTint">@color/purple_200</item>
+    </style>
     <style name="Theme.InventarioMobile" parent="Theme.Material3.DayNight">
         
         <item name="colorPrimary">@color/purple_500</item>

@@ -31,6 +31,9 @@ class InventarioMobileApplication : Application() {
         // Inicializar sincronização automática
         initializeSyncScheduler()
         
+        // Inicializar observador de conectividade
+        initializeNetworkObserver()
+        
         // Log de inicialização
         android.util.Log.d("InventarioApp", "Application inicializada com sucesso")
     }
@@ -53,6 +56,25 @@ class InventarioMobileApplication : Application() {
             }
         } catch (e: Exception) {
             android.util.Log.e(TAG, "❌ Erro ao iniciar sincronização", e)
+        }
+    }
+    
+    /**
+     * Inicializa o observador de conectividade de rede
+     * Dispara sincronização automática ao reconectar
+     */
+    private fun initializeNetworkObserver() {
+        try {
+            android.util.Log.i(TAG, "🌐 Inicializando observador de conectividade...")
+            
+            val syncManager = com.inventario.mobile.sync.SyncManager.getInstance(this)
+            val networkObserver = com.inventario.mobile.sync.NetworkConnectivityObserver.getInstance(this, syncManager)
+            
+            networkObserver.startObserving()
+            
+            android.util.Log.i(TAG, "✅ Observador de conectividade iniciado")
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "❌ Erro ao iniciar observador de rede", e)
         }
     }
     

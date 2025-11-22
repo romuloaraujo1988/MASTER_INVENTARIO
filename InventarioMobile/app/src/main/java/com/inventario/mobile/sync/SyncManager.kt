@@ -2,40 +2,42 @@ package com.inventario.mobile.sync
 
 import android.content.Context
 import android.util.Log
-import androidx.lifecycle.LiveData
 import androidx.work.*
 import com.inventario.mobile.worker.SyncWorker
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
- * Gerenciador de sincronização em background
- * Agenda e controla sincronização automática de coletas pendentes
+ * Gerenciador de sincronização
+ * Responsável por agendar e controlar sincronizações
  */
-@Singleton
-class SyncManager @Inject constructor(
-    @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context
-) {
+class SyncManager private constructor(private val context: Context) {
+
     companion object {
         private const val TAG = "SyncManager"
-        private const val SYNC_WORK_NAME = "sync_coletas_periodico"
-        private const val SYNC_INTERVAL_MINUTES = 30L // Sincronizar a cada 30 minutos
+        private const val SYNC_WORK_NAME = "periodic_sync"
+        private const val SYNC_INTERVAL_MINUTES = 30L
+
+        @Volatile
+        private var instance: SyncManager? = null
+
+        fun getInstance(context: Context): SyncManager {
+            return instance ?: synchronized(this) {
+                instance ?: SyncManager(context.applicationContext).also { instance = it }
+            }
+        }
     }
-    
-    private val workManager = WorkManager.getInstance(context)
-    
+
     /**
-     * Agenda sincronização periódica em background
+     * Agenda sincronização periódica
      */
     fun schedulePeriodicSync() {
-        Log.d(TAG, "Agendando sincronização periódica (a cada $SYNC_INTERVAL_MINUTES minutos)")
-        
+        Log.d(TAG, "Agendando sincronização periódica...")
+
         val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED) // Apenas com internet
-            .setRequiresBatteryNotLow(true) // Apenas se bateria não estiver baixa
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .setRequiresBatteryNotLow(true)
             .build()
-        
+
         val syncRequest = PeriodicWorkRequestBuilder<SyncWorker>(
             SYNC_INTERVAL_MINUTES,
             TimeUnit.MINUTES
@@ -46,62 +48,42 @@ class SyncManager @Inject constructor(
                 WorkRequest.MIN_BACKOFF_MILLIS,
                 TimeUnit.MILLISECONDS
             )
-            .addTag("sync")
             .build()
-        
-        workManager.enqueueUniquePeriodicWork(
+
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             SYNC_WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP, // Manter se já existir
+            ExistingPeriodicWorkPolicy.KEEP,
             syncRequest
         )
-        
+
         Log.d(TAG, "✓ Sincronização periódica agendada")
     }
-    
+
     /**
      * Cancela sincronização periódica
      */
     fun cancelPeriodicSync() {
-        Log.d(TAG, "Cancelando sincronização periódica")
-        workManager.cancelUniqueWork(SYNC_WORK_NAME)
+        Log.d(TAG, "Cancelando sincronização periódica...")
+        WorkManager.getInstance(context).cancelUniqueWork(SYNC_WORK_NAME)
+        Log.d(TAG, "✓ Sincronização periódica cancelada")
     }
-    
+
     /**
-     * Força sincronização imediata (one-time)
+     * Força sincronização imediata
      */
     fun forceSyncNow() {
-        Log.d(TAG, "Forçando sincronização imediata")
-        
+        Log.d(TAG, "Forçando sincronização imediata...")
+
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
-        
+
         val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
             .setConstraints(constraints)
-            .addTag("sync_manual")
             .build()
-        
-        workManager.enqueueUniqueWork(
-            "sync_manual_${System.currentTimeMillis()}",
-            ExistingWorkPolicy.REPLACE,
-            syncRequest
-        )
-        
+
+        WorkManager.getInstance(context).enqueue(syncRequest)
+
         Log.d(TAG, "✓ Sincronização imediata agendada")
-    }
-    
-    /**
-     * Verifica status da sincronização
-     */
-    fun getSyncStatus(): LiveData<List<WorkInfo>> {
-        return workManager.getWorkInfosByTagLiveData("sync")
-    }
-    
-    /**
-     * Verifica se há sincronização em andamento
-     */
-    suspend fun isSyncing(): Boolean {
-        val workInfos = workManager.getWorkInfosByTag("sync").await()
-        return workInfos.any { it.state == WorkInfo.State.RUNNING }
     }
 }

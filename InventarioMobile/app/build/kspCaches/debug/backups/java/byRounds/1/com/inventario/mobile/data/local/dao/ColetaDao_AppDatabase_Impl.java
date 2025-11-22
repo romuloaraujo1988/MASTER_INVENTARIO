@@ -3,9 +3,11 @@ package com.inventario.mobile.data.local.dao;
 import android.database.Cursor;
 import android.os.CancellationSignal;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.CoroutinesRoom;
 import androidx.room.EntityInsertionAdapter;
 import androidx.room.RoomDatabase;
+import androidx.room.RoomDatabaseKt;
 import androidx.room.RoomSQLiteQuery;
 import androidx.room.SharedSQLiteStatement;
 import androidx.room.util.CursorUtil;
@@ -49,13 +51,15 @@ public final class ColetaDao_AppDatabase_Impl implements ColetaDao {
 
   private final SharedSQLiteStatement __preparedStmtOfLimparSincronizadasAntigas;
 
+  private final SharedSQLiteStatement __preparedStmtOfMarcarPatrimonioColetado;
+
   public ColetaDao_AppDatabase_Impl(@NonNull final RoomDatabase __db) {
     this.__db = __db;
     this.__insertionAdapterOfColetaEntity = new EntityInsertionAdapter<ColetaEntity>(__db) {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR REPLACE INTO `coleta` (`id`,`idPatrimonio`,`numeroPatrimonio`,`idInventario`,`idSala`,`nomeSala`,`idResponsavel`,`nomeResponsavel`,`observacao`,`estadoPatrimonio`,`latitude`,`longitude`,`dataColeta`,`idUsuario`,`nomeUsuario`,`sincronizado`,`tentativasSincronizacao`,`erroSincronizacao`,`servidorId`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        return "INSERT OR REPLACE INTO `coleta` (`id`,`idPatrimonio`,`numeroPatrimonio`,`idInventario`,`idSala`,`nomeSala`,`idResponsavel`,`nomeResponsavel`,`observacao`,`estadoPatrimonio`,`latitude`,`longitude`,`dataColeta`,`idUsuario`,`nomeUsuario`,`sincronizado`,`tentativasSincronizacao`,`erroSincronizacao`,`servidorId`,`tempoColetaSegundos`,`tempoScanSegundos`,`tempoPreenchimentoSegundos`,`metodoColeta`,`horaColeta`,`diaSemana`,`periodoColeta`,`tipoScan`,`tentativasScan`,`errosScan`,`qualidadeEtiqueta`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override
@@ -121,6 +125,53 @@ public final class ColetaDao_AppDatabase_Impl implements ColetaDao {
         } else {
           statement.bindLong(19, entity.getServidorId());
         }
+        if (entity.getTempoColetaSegundos() == null) {
+          statement.bindNull(20);
+        } else {
+          statement.bindLong(20, entity.getTempoColetaSegundos());
+        }
+        if (entity.getTempoScanSegundos() == null) {
+          statement.bindNull(21);
+        } else {
+          statement.bindLong(21, entity.getTempoScanSegundos());
+        }
+        if (entity.getTempoPreenchimentoSegundos() == null) {
+          statement.bindNull(22);
+        } else {
+          statement.bindLong(22, entity.getTempoPreenchimentoSegundos());
+        }
+        if (entity.getMetodoColeta() == null) {
+          statement.bindNull(23);
+        } else {
+          statement.bindString(23, entity.getMetodoColeta());
+        }
+        if (entity.getHoraColeta() == null) {
+          statement.bindNull(24);
+        } else {
+          statement.bindLong(24, entity.getHoraColeta());
+        }
+        if (entity.getDiaSemana() == null) {
+          statement.bindNull(25);
+        } else {
+          statement.bindLong(25, entity.getDiaSemana());
+        }
+        if (entity.getPeriodoColeta() == null) {
+          statement.bindNull(26);
+        } else {
+          statement.bindString(26, entity.getPeriodoColeta());
+        }
+        if (entity.getTipoScan() == null) {
+          statement.bindNull(27);
+        } else {
+          statement.bindString(27, entity.getTipoScan());
+        }
+        statement.bindLong(28, entity.getTentativasScan());
+        statement.bindLong(29, entity.getErrosScan());
+        if (entity.getQualidadeEtiqueta() == null) {
+          statement.bindNull(30);
+        } else {
+          statement.bindString(30, entity.getQualidadeEtiqueta());
+        }
       }
     };
     this.__preparedStmtOfAtualizarSincronizado = new SharedSQLiteStatement(__db) {
@@ -171,6 +222,14 @@ public final class ColetaDao_AppDatabase_Impl implements ColetaDao {
         return _query;
       }
     };
+    this.__preparedStmtOfMarcarPatrimonioColetado = new SharedSQLiteStatement(__db) {
+      @Override
+      @NonNull
+      public String createQuery() {
+        final String _query = "UPDATE patrimonio SET coletado = 1 WHERE id = ?";
+        return _query;
+      }
+    };
   }
 
   @Override
@@ -189,6 +248,12 @@ public final class ColetaDao_AppDatabase_Impl implements ColetaDao {
         }
       }
     }, $completion);
+  }
+
+  @Override
+  public Object registrarColetaComTransacao(final ColetaEntity coleta,
+      final Continuation<? super Long> $completion) {
+    return RoomDatabaseKt.withTransaction(__db, (__cont) -> ColetaDao.DefaultImpls.registrarColetaComTransacao(ColetaDao_AppDatabase_Impl.this, coleta, __cont), $completion);
   }
 
   @Override
@@ -361,6 +426,32 @@ public final class ColetaDao_AppDatabase_Impl implements ColetaDao {
   }
 
   @Override
+  public Object marcarPatrimonioColetado(final int patrimonioId,
+      final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        final SupportSQLiteStatement _stmt = __preparedStmtOfMarcarPatrimonioColetado.acquire();
+        int _argIndex = 1;
+        _stmt.bindLong(_argIndex, patrimonioId);
+        try {
+          __db.beginTransaction();
+          try {
+            _stmt.executeUpdateDelete();
+            __db.setTransactionSuccessful();
+            return Unit.INSTANCE;
+          } finally {
+            __db.endTransaction();
+          }
+        } finally {
+          __preparedStmtOfMarcarPatrimonioColetado.release(_stmt);
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
   public Object buscarPendentes(final Continuation<? super List<ColetaEntity>> $completion) {
     final String _sql = "SELECT * FROM coleta WHERE sincronizado = 0 ORDER BY dataColeta ASC";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
@@ -390,6 +481,17 @@ public final class ColetaDao_AppDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfTentativasSincronizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasSincronizacao");
           final int _cursorIndexOfErroSincronizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "erroSincronizacao");
           final int _cursorIndexOfServidorId = CursorUtil.getColumnIndexOrThrow(_cursor, "servidorId");
+          final int _cursorIndexOfTempoColetaSegundos = CursorUtil.getColumnIndexOrThrow(_cursor, "tempoColetaSegundos");
+          final int _cursorIndexOfTempoScanSegundos = CursorUtil.getColumnIndexOrThrow(_cursor, "tempoScanSegundos");
+          final int _cursorIndexOfTempoPreenchimentoSegundos = CursorUtil.getColumnIndexOrThrow(_cursor, "tempoPreenchimentoSegundos");
+          final int _cursorIndexOfMetodoColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "metodoColeta");
+          final int _cursorIndexOfHoraColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "horaColeta");
+          final int _cursorIndexOfDiaSemana = CursorUtil.getColumnIndexOrThrow(_cursor, "diaSemana");
+          final int _cursorIndexOfPeriodoColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "periodoColeta");
+          final int _cursorIndexOfTipoScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tipoScan");
+          final int _cursorIndexOfTentativasScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasScan");
+          final int _cursorIndexOfErrosScan = CursorUtil.getColumnIndexOrThrow(_cursor, "errosScan");
+          final int _cursorIndexOfQualidadeEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "qualidadeEtiqueta");
           final List<ColetaEntity> _result = new ArrayList<ColetaEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final ColetaEntity _item;
@@ -473,7 +575,65 @@ public final class ColetaDao_AppDatabase_Impl implements ColetaDao {
             } else {
               _tmpServidorId = _cursor.getLong(_cursorIndexOfServidorId);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId);
+            final Integer _tmpTempoColetaSegundos;
+            if (_cursor.isNull(_cursorIndexOfTempoColetaSegundos)) {
+              _tmpTempoColetaSegundos = null;
+            } else {
+              _tmpTempoColetaSegundos = _cursor.getInt(_cursorIndexOfTempoColetaSegundos);
+            }
+            final Integer _tmpTempoScanSegundos;
+            if (_cursor.isNull(_cursorIndexOfTempoScanSegundos)) {
+              _tmpTempoScanSegundos = null;
+            } else {
+              _tmpTempoScanSegundos = _cursor.getInt(_cursorIndexOfTempoScanSegundos);
+            }
+            final Integer _tmpTempoPreenchimentoSegundos;
+            if (_cursor.isNull(_cursorIndexOfTempoPreenchimentoSegundos)) {
+              _tmpTempoPreenchimentoSegundos = null;
+            } else {
+              _tmpTempoPreenchimentoSegundos = _cursor.getInt(_cursorIndexOfTempoPreenchimentoSegundos);
+            }
+            final String _tmpMetodoColeta;
+            if (_cursor.isNull(_cursorIndexOfMetodoColeta)) {
+              _tmpMetodoColeta = null;
+            } else {
+              _tmpMetodoColeta = _cursor.getString(_cursorIndexOfMetodoColeta);
+            }
+            final Integer _tmpHoraColeta;
+            if (_cursor.isNull(_cursorIndexOfHoraColeta)) {
+              _tmpHoraColeta = null;
+            } else {
+              _tmpHoraColeta = _cursor.getInt(_cursorIndexOfHoraColeta);
+            }
+            final Integer _tmpDiaSemana;
+            if (_cursor.isNull(_cursorIndexOfDiaSemana)) {
+              _tmpDiaSemana = null;
+            } else {
+              _tmpDiaSemana = _cursor.getInt(_cursorIndexOfDiaSemana);
+            }
+            final String _tmpPeriodoColeta;
+            if (_cursor.isNull(_cursorIndexOfPeriodoColeta)) {
+              _tmpPeriodoColeta = null;
+            } else {
+              _tmpPeriodoColeta = _cursor.getString(_cursorIndexOfPeriodoColeta);
+            }
+            final String _tmpTipoScan;
+            if (_cursor.isNull(_cursorIndexOfTipoScan)) {
+              _tmpTipoScan = null;
+            } else {
+              _tmpTipoScan = _cursor.getString(_cursorIndexOfTipoScan);
+            }
+            final int _tmpTentativasScan;
+            _tmpTentativasScan = _cursor.getInt(_cursorIndexOfTentativasScan);
+            final int _tmpErrosScan;
+            _tmpErrosScan = _cursor.getInt(_cursorIndexOfErrosScan);
+            final String _tmpQualidadeEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfQualidadeEtiqueta)) {
+              _tmpQualidadeEtiqueta = null;
+            } else {
+              _tmpQualidadeEtiqueta = _cursor.getString(_cursorIndexOfQualidadeEtiqueta);
+            }
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta);
             _result.add(_item);
           }
           return _result;
@@ -514,6 +674,17 @@ public final class ColetaDao_AppDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfTentativasSincronizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasSincronizacao");
           final int _cursorIndexOfErroSincronizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "erroSincronizacao");
           final int _cursorIndexOfServidorId = CursorUtil.getColumnIndexOrThrow(_cursor, "servidorId");
+          final int _cursorIndexOfTempoColetaSegundos = CursorUtil.getColumnIndexOrThrow(_cursor, "tempoColetaSegundos");
+          final int _cursorIndexOfTempoScanSegundos = CursorUtil.getColumnIndexOrThrow(_cursor, "tempoScanSegundos");
+          final int _cursorIndexOfTempoPreenchimentoSegundos = CursorUtil.getColumnIndexOrThrow(_cursor, "tempoPreenchimentoSegundos");
+          final int _cursorIndexOfMetodoColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "metodoColeta");
+          final int _cursorIndexOfHoraColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "horaColeta");
+          final int _cursorIndexOfDiaSemana = CursorUtil.getColumnIndexOrThrow(_cursor, "diaSemana");
+          final int _cursorIndexOfPeriodoColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "periodoColeta");
+          final int _cursorIndexOfTipoScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tipoScan");
+          final int _cursorIndexOfTentativasScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasScan");
+          final int _cursorIndexOfErrosScan = CursorUtil.getColumnIndexOrThrow(_cursor, "errosScan");
+          final int _cursorIndexOfQualidadeEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "qualidadeEtiqueta");
           final List<ColetaEntity> _result = new ArrayList<ColetaEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final ColetaEntity _item;
@@ -597,7 +768,65 @@ public final class ColetaDao_AppDatabase_Impl implements ColetaDao {
             } else {
               _tmpServidorId = _cursor.getLong(_cursorIndexOfServidorId);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId);
+            final Integer _tmpTempoColetaSegundos;
+            if (_cursor.isNull(_cursorIndexOfTempoColetaSegundos)) {
+              _tmpTempoColetaSegundos = null;
+            } else {
+              _tmpTempoColetaSegundos = _cursor.getInt(_cursorIndexOfTempoColetaSegundos);
+            }
+            final Integer _tmpTempoScanSegundos;
+            if (_cursor.isNull(_cursorIndexOfTempoScanSegundos)) {
+              _tmpTempoScanSegundos = null;
+            } else {
+              _tmpTempoScanSegundos = _cursor.getInt(_cursorIndexOfTempoScanSegundos);
+            }
+            final Integer _tmpTempoPreenchimentoSegundos;
+            if (_cursor.isNull(_cursorIndexOfTempoPreenchimentoSegundos)) {
+              _tmpTempoPreenchimentoSegundos = null;
+            } else {
+              _tmpTempoPreenchimentoSegundos = _cursor.getInt(_cursorIndexOfTempoPreenchimentoSegundos);
+            }
+            final String _tmpMetodoColeta;
+            if (_cursor.isNull(_cursorIndexOfMetodoColeta)) {
+              _tmpMetodoColeta = null;
+            } else {
+              _tmpMetodoColeta = _cursor.getString(_cursorIndexOfMetodoColeta);
+            }
+            final Integer _tmpHoraColeta;
+            if (_cursor.isNull(_cursorIndexOfHoraColeta)) {
+              _tmpHoraColeta = null;
+            } else {
+              _tmpHoraColeta = _cursor.getInt(_cursorIndexOfHoraColeta);
+            }
+            final Integer _tmpDiaSemana;
+            if (_cursor.isNull(_cursorIndexOfDiaSemana)) {
+              _tmpDiaSemana = null;
+            } else {
+              _tmpDiaSemana = _cursor.getInt(_cursorIndexOfDiaSemana);
+            }
+            final String _tmpPeriodoColeta;
+            if (_cursor.isNull(_cursorIndexOfPeriodoColeta)) {
+              _tmpPeriodoColeta = null;
+            } else {
+              _tmpPeriodoColeta = _cursor.getString(_cursorIndexOfPeriodoColeta);
+            }
+            final String _tmpTipoScan;
+            if (_cursor.isNull(_cursorIndexOfTipoScan)) {
+              _tmpTipoScan = null;
+            } else {
+              _tmpTipoScan = _cursor.getString(_cursorIndexOfTipoScan);
+            }
+            final int _tmpTentativasScan;
+            _tmpTentativasScan = _cursor.getInt(_cursorIndexOfTentativasScan);
+            final int _tmpErrosScan;
+            _tmpErrosScan = _cursor.getInt(_cursorIndexOfErrosScan);
+            final String _tmpQualidadeEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfQualidadeEtiqueta)) {
+              _tmpQualidadeEtiqueta = null;
+            } else {
+              _tmpQualidadeEtiqueta = _cursor.getString(_cursorIndexOfQualidadeEtiqueta);
+            }
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta);
             _result.add(_item);
           }
           return _result;
@@ -643,6 +872,17 @@ public final class ColetaDao_AppDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfTentativasSincronizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasSincronizacao");
           final int _cursorIndexOfErroSincronizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "erroSincronizacao");
           final int _cursorIndexOfServidorId = CursorUtil.getColumnIndexOrThrow(_cursor, "servidorId");
+          final int _cursorIndexOfTempoColetaSegundos = CursorUtil.getColumnIndexOrThrow(_cursor, "tempoColetaSegundos");
+          final int _cursorIndexOfTempoScanSegundos = CursorUtil.getColumnIndexOrThrow(_cursor, "tempoScanSegundos");
+          final int _cursorIndexOfTempoPreenchimentoSegundos = CursorUtil.getColumnIndexOrThrow(_cursor, "tempoPreenchimentoSegundos");
+          final int _cursorIndexOfMetodoColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "metodoColeta");
+          final int _cursorIndexOfHoraColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "horaColeta");
+          final int _cursorIndexOfDiaSemana = CursorUtil.getColumnIndexOrThrow(_cursor, "diaSemana");
+          final int _cursorIndexOfPeriodoColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "periodoColeta");
+          final int _cursorIndexOfTipoScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tipoScan");
+          final int _cursorIndexOfTentativasScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasScan");
+          final int _cursorIndexOfErrosScan = CursorUtil.getColumnIndexOrThrow(_cursor, "errosScan");
+          final int _cursorIndexOfQualidadeEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "qualidadeEtiqueta");
           final List<ColetaEntity> _result = new ArrayList<ColetaEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final ColetaEntity _item;
@@ -726,7 +966,65 @@ public final class ColetaDao_AppDatabase_Impl implements ColetaDao {
             } else {
               _tmpServidorId = _cursor.getLong(_cursorIndexOfServidorId);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId);
+            final Integer _tmpTempoColetaSegundos;
+            if (_cursor.isNull(_cursorIndexOfTempoColetaSegundos)) {
+              _tmpTempoColetaSegundos = null;
+            } else {
+              _tmpTempoColetaSegundos = _cursor.getInt(_cursorIndexOfTempoColetaSegundos);
+            }
+            final Integer _tmpTempoScanSegundos;
+            if (_cursor.isNull(_cursorIndexOfTempoScanSegundos)) {
+              _tmpTempoScanSegundos = null;
+            } else {
+              _tmpTempoScanSegundos = _cursor.getInt(_cursorIndexOfTempoScanSegundos);
+            }
+            final Integer _tmpTempoPreenchimentoSegundos;
+            if (_cursor.isNull(_cursorIndexOfTempoPreenchimentoSegundos)) {
+              _tmpTempoPreenchimentoSegundos = null;
+            } else {
+              _tmpTempoPreenchimentoSegundos = _cursor.getInt(_cursorIndexOfTempoPreenchimentoSegundos);
+            }
+            final String _tmpMetodoColeta;
+            if (_cursor.isNull(_cursorIndexOfMetodoColeta)) {
+              _tmpMetodoColeta = null;
+            } else {
+              _tmpMetodoColeta = _cursor.getString(_cursorIndexOfMetodoColeta);
+            }
+            final Integer _tmpHoraColeta;
+            if (_cursor.isNull(_cursorIndexOfHoraColeta)) {
+              _tmpHoraColeta = null;
+            } else {
+              _tmpHoraColeta = _cursor.getInt(_cursorIndexOfHoraColeta);
+            }
+            final Integer _tmpDiaSemana;
+            if (_cursor.isNull(_cursorIndexOfDiaSemana)) {
+              _tmpDiaSemana = null;
+            } else {
+              _tmpDiaSemana = _cursor.getInt(_cursorIndexOfDiaSemana);
+            }
+            final String _tmpPeriodoColeta;
+            if (_cursor.isNull(_cursorIndexOfPeriodoColeta)) {
+              _tmpPeriodoColeta = null;
+            } else {
+              _tmpPeriodoColeta = _cursor.getString(_cursorIndexOfPeriodoColeta);
+            }
+            final String _tmpTipoScan;
+            if (_cursor.isNull(_cursorIndexOfTipoScan)) {
+              _tmpTipoScan = null;
+            } else {
+              _tmpTipoScan = _cursor.getString(_cursorIndexOfTipoScan);
+            }
+            final int _tmpTentativasScan;
+            _tmpTentativasScan = _cursor.getInt(_cursorIndexOfTentativasScan);
+            final int _tmpErrosScan;
+            _tmpErrosScan = _cursor.getInt(_cursorIndexOfErrosScan);
+            final String _tmpQualidadeEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfQualidadeEtiqueta)) {
+              _tmpQualidadeEtiqueta = null;
+            } else {
+              _tmpQualidadeEtiqueta = _cursor.getString(_cursorIndexOfQualidadeEtiqueta);
+            }
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta);
             _result.add(_item);
           }
           return _result;
@@ -830,6 +1128,17 @@ public final class ColetaDao_AppDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfTentativasSincronizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasSincronizacao");
           final int _cursorIndexOfErroSincronizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "erroSincronizacao");
           final int _cursorIndexOfServidorId = CursorUtil.getColumnIndexOrThrow(_cursor, "servidorId");
+          final int _cursorIndexOfTempoColetaSegundos = CursorUtil.getColumnIndexOrThrow(_cursor, "tempoColetaSegundos");
+          final int _cursorIndexOfTempoScanSegundos = CursorUtil.getColumnIndexOrThrow(_cursor, "tempoScanSegundos");
+          final int _cursorIndexOfTempoPreenchimentoSegundos = CursorUtil.getColumnIndexOrThrow(_cursor, "tempoPreenchimentoSegundos");
+          final int _cursorIndexOfMetodoColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "metodoColeta");
+          final int _cursorIndexOfHoraColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "horaColeta");
+          final int _cursorIndexOfDiaSemana = CursorUtil.getColumnIndexOrThrow(_cursor, "diaSemana");
+          final int _cursorIndexOfPeriodoColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "periodoColeta");
+          final int _cursorIndexOfTipoScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tipoScan");
+          final int _cursorIndexOfTentativasScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasScan");
+          final int _cursorIndexOfErrosScan = CursorUtil.getColumnIndexOrThrow(_cursor, "errosScan");
+          final int _cursorIndexOfQualidadeEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "qualidadeEtiqueta");
           final List<ColetaEntity> _result = new ArrayList<ColetaEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final ColetaEntity _item;
@@ -913,7 +1222,65 @@ public final class ColetaDao_AppDatabase_Impl implements ColetaDao {
             } else {
               _tmpServidorId = _cursor.getLong(_cursorIndexOfServidorId);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId);
+            final Integer _tmpTempoColetaSegundos;
+            if (_cursor.isNull(_cursorIndexOfTempoColetaSegundos)) {
+              _tmpTempoColetaSegundos = null;
+            } else {
+              _tmpTempoColetaSegundos = _cursor.getInt(_cursorIndexOfTempoColetaSegundos);
+            }
+            final Integer _tmpTempoScanSegundos;
+            if (_cursor.isNull(_cursorIndexOfTempoScanSegundos)) {
+              _tmpTempoScanSegundos = null;
+            } else {
+              _tmpTempoScanSegundos = _cursor.getInt(_cursorIndexOfTempoScanSegundos);
+            }
+            final Integer _tmpTempoPreenchimentoSegundos;
+            if (_cursor.isNull(_cursorIndexOfTempoPreenchimentoSegundos)) {
+              _tmpTempoPreenchimentoSegundos = null;
+            } else {
+              _tmpTempoPreenchimentoSegundos = _cursor.getInt(_cursorIndexOfTempoPreenchimentoSegundos);
+            }
+            final String _tmpMetodoColeta;
+            if (_cursor.isNull(_cursorIndexOfMetodoColeta)) {
+              _tmpMetodoColeta = null;
+            } else {
+              _tmpMetodoColeta = _cursor.getString(_cursorIndexOfMetodoColeta);
+            }
+            final Integer _tmpHoraColeta;
+            if (_cursor.isNull(_cursorIndexOfHoraColeta)) {
+              _tmpHoraColeta = null;
+            } else {
+              _tmpHoraColeta = _cursor.getInt(_cursorIndexOfHoraColeta);
+            }
+            final Integer _tmpDiaSemana;
+            if (_cursor.isNull(_cursorIndexOfDiaSemana)) {
+              _tmpDiaSemana = null;
+            } else {
+              _tmpDiaSemana = _cursor.getInt(_cursorIndexOfDiaSemana);
+            }
+            final String _tmpPeriodoColeta;
+            if (_cursor.isNull(_cursorIndexOfPeriodoColeta)) {
+              _tmpPeriodoColeta = null;
+            } else {
+              _tmpPeriodoColeta = _cursor.getString(_cursorIndexOfPeriodoColeta);
+            }
+            final String _tmpTipoScan;
+            if (_cursor.isNull(_cursorIndexOfTipoScan)) {
+              _tmpTipoScan = null;
+            } else {
+              _tmpTipoScan = _cursor.getString(_cursorIndexOfTipoScan);
+            }
+            final int _tmpTentativasScan;
+            _tmpTentativasScan = _cursor.getInt(_cursorIndexOfTentativasScan);
+            final int _tmpErrosScan;
+            _tmpErrosScan = _cursor.getInt(_cursorIndexOfErrosScan);
+            final String _tmpQualidadeEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfQualidadeEtiqueta)) {
+              _tmpQualidadeEtiqueta = null;
+            } else {
+              _tmpQualidadeEtiqueta = _cursor.getString(_cursorIndexOfQualidadeEtiqueta);
+            }
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta);
             _result.add(_item);
           }
           return _result;
@@ -929,6 +1296,247 @@ public final class ColetaDao_AppDatabase_Impl implements ColetaDao {
   public Object contarTodas(final Continuation<? super Integer> $completion) {
     final String _sql = "SELECT COUNT(*) FROM coleta";
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<Integer>() {
+      @Override
+      @NonNull
+      public Integer call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final Integer _result;
+          if (_cursor.moveToFirst()) {
+            final int _tmp;
+            _tmp = _cursor.getInt(0);
+            _result = _tmp;
+          } else {
+            _result = 0;
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object buscarColetaExistente(final int idPatrimonio, final int idInventario,
+      final Continuation<? super ColetaEntity> $completion) {
+    final String _sql = "\n"
+            + "        SELECT * FROM coleta \n"
+            + "        WHERE idPatrimonio = ? \n"
+            + "        AND idInventario = ?\n"
+            + "        LIMIT 1\n"
+            + "    ";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 2);
+    int _argIndex = 1;
+    _statement.bindLong(_argIndex, idPatrimonio);
+    _argIndex = 2;
+    _statement.bindLong(_argIndex, idInventario);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<ColetaEntity>() {
+      @Override
+      @Nullable
+      public ColetaEntity call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfIdPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "idPatrimonio");
+          final int _cursorIndexOfNumeroPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "numeroPatrimonio");
+          final int _cursorIndexOfIdInventario = CursorUtil.getColumnIndexOrThrow(_cursor, "idInventario");
+          final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
+          final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
+          final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
+          final int _cursorIndexOfNomeResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeResponsavel");
+          final int _cursorIndexOfObservacao = CursorUtil.getColumnIndexOrThrow(_cursor, "observacao");
+          final int _cursorIndexOfEstadoPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "estadoPatrimonio");
+          final int _cursorIndexOfLatitude = CursorUtil.getColumnIndexOrThrow(_cursor, "latitude");
+          final int _cursorIndexOfLongitude = CursorUtil.getColumnIndexOrThrow(_cursor, "longitude");
+          final int _cursorIndexOfDataColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "dataColeta");
+          final int _cursorIndexOfIdUsuario = CursorUtil.getColumnIndexOrThrow(_cursor, "idUsuario");
+          final int _cursorIndexOfNomeUsuario = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeUsuario");
+          final int _cursorIndexOfSincronizado = CursorUtil.getColumnIndexOrThrow(_cursor, "sincronizado");
+          final int _cursorIndexOfTentativasSincronizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasSincronizacao");
+          final int _cursorIndexOfErroSincronizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "erroSincronizacao");
+          final int _cursorIndexOfServidorId = CursorUtil.getColumnIndexOrThrow(_cursor, "servidorId");
+          final int _cursorIndexOfTempoColetaSegundos = CursorUtil.getColumnIndexOrThrow(_cursor, "tempoColetaSegundos");
+          final int _cursorIndexOfTempoScanSegundos = CursorUtil.getColumnIndexOrThrow(_cursor, "tempoScanSegundos");
+          final int _cursorIndexOfTempoPreenchimentoSegundos = CursorUtil.getColumnIndexOrThrow(_cursor, "tempoPreenchimentoSegundos");
+          final int _cursorIndexOfMetodoColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "metodoColeta");
+          final int _cursorIndexOfHoraColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "horaColeta");
+          final int _cursorIndexOfDiaSemana = CursorUtil.getColumnIndexOrThrow(_cursor, "diaSemana");
+          final int _cursorIndexOfPeriodoColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "periodoColeta");
+          final int _cursorIndexOfTipoScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tipoScan");
+          final int _cursorIndexOfTentativasScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasScan");
+          final int _cursorIndexOfErrosScan = CursorUtil.getColumnIndexOrThrow(_cursor, "errosScan");
+          final int _cursorIndexOfQualidadeEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "qualidadeEtiqueta");
+          final ColetaEntity _result;
+          if (_cursor.moveToFirst()) {
+            final long _tmpId;
+            _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final int _tmpIdPatrimonio;
+            _tmpIdPatrimonio = _cursor.getInt(_cursorIndexOfIdPatrimonio);
+            final String _tmpNumeroPatrimonio;
+            _tmpNumeroPatrimonio = _cursor.getString(_cursorIndexOfNumeroPatrimonio);
+            final int _tmpIdInventario;
+            _tmpIdInventario = _cursor.getInt(_cursorIndexOfIdInventario);
+            final Integer _tmpIdSala;
+            if (_cursor.isNull(_cursorIndexOfIdSala)) {
+              _tmpIdSala = null;
+            } else {
+              _tmpIdSala = _cursor.getInt(_cursorIndexOfIdSala);
+            }
+            final String _tmpNomeSala;
+            if (_cursor.isNull(_cursorIndexOfNomeSala)) {
+              _tmpNomeSala = null;
+            } else {
+              _tmpNomeSala = _cursor.getString(_cursorIndexOfNomeSala);
+            }
+            final Integer _tmpIdResponsavel;
+            if (_cursor.isNull(_cursorIndexOfIdResponsavel)) {
+              _tmpIdResponsavel = null;
+            } else {
+              _tmpIdResponsavel = _cursor.getInt(_cursorIndexOfIdResponsavel);
+            }
+            final String _tmpNomeResponsavel;
+            if (_cursor.isNull(_cursorIndexOfNomeResponsavel)) {
+              _tmpNomeResponsavel = null;
+            } else {
+              _tmpNomeResponsavel = _cursor.getString(_cursorIndexOfNomeResponsavel);
+            }
+            final String _tmpObservacao;
+            if (_cursor.isNull(_cursorIndexOfObservacao)) {
+              _tmpObservacao = null;
+            } else {
+              _tmpObservacao = _cursor.getString(_cursorIndexOfObservacao);
+            }
+            final String _tmpEstadoPatrimonio;
+            if (_cursor.isNull(_cursorIndexOfEstadoPatrimonio)) {
+              _tmpEstadoPatrimonio = null;
+            } else {
+              _tmpEstadoPatrimonio = _cursor.getString(_cursorIndexOfEstadoPatrimonio);
+            }
+            final Double _tmpLatitude;
+            if (_cursor.isNull(_cursorIndexOfLatitude)) {
+              _tmpLatitude = null;
+            } else {
+              _tmpLatitude = _cursor.getDouble(_cursorIndexOfLatitude);
+            }
+            final Double _tmpLongitude;
+            if (_cursor.isNull(_cursorIndexOfLongitude)) {
+              _tmpLongitude = null;
+            } else {
+              _tmpLongitude = _cursor.getDouble(_cursorIndexOfLongitude);
+            }
+            final long _tmpDataColeta;
+            _tmpDataColeta = _cursor.getLong(_cursorIndexOfDataColeta);
+            final int _tmpIdUsuario;
+            _tmpIdUsuario = _cursor.getInt(_cursorIndexOfIdUsuario);
+            final String _tmpNomeUsuario;
+            _tmpNomeUsuario = _cursor.getString(_cursorIndexOfNomeUsuario);
+            final boolean _tmpSincronizado;
+            final int _tmp;
+            _tmp = _cursor.getInt(_cursorIndexOfSincronizado);
+            _tmpSincronizado = _tmp != 0;
+            final int _tmpTentativasSincronizacao;
+            _tmpTentativasSincronizacao = _cursor.getInt(_cursorIndexOfTentativasSincronizacao);
+            final String _tmpErroSincronizacao;
+            if (_cursor.isNull(_cursorIndexOfErroSincronizacao)) {
+              _tmpErroSincronizacao = null;
+            } else {
+              _tmpErroSincronizacao = _cursor.getString(_cursorIndexOfErroSincronizacao);
+            }
+            final Long _tmpServidorId;
+            if (_cursor.isNull(_cursorIndexOfServidorId)) {
+              _tmpServidorId = null;
+            } else {
+              _tmpServidorId = _cursor.getLong(_cursorIndexOfServidorId);
+            }
+            final Integer _tmpTempoColetaSegundos;
+            if (_cursor.isNull(_cursorIndexOfTempoColetaSegundos)) {
+              _tmpTempoColetaSegundos = null;
+            } else {
+              _tmpTempoColetaSegundos = _cursor.getInt(_cursorIndexOfTempoColetaSegundos);
+            }
+            final Integer _tmpTempoScanSegundos;
+            if (_cursor.isNull(_cursorIndexOfTempoScanSegundos)) {
+              _tmpTempoScanSegundos = null;
+            } else {
+              _tmpTempoScanSegundos = _cursor.getInt(_cursorIndexOfTempoScanSegundos);
+            }
+            final Integer _tmpTempoPreenchimentoSegundos;
+            if (_cursor.isNull(_cursorIndexOfTempoPreenchimentoSegundos)) {
+              _tmpTempoPreenchimentoSegundos = null;
+            } else {
+              _tmpTempoPreenchimentoSegundos = _cursor.getInt(_cursorIndexOfTempoPreenchimentoSegundos);
+            }
+            final String _tmpMetodoColeta;
+            if (_cursor.isNull(_cursorIndexOfMetodoColeta)) {
+              _tmpMetodoColeta = null;
+            } else {
+              _tmpMetodoColeta = _cursor.getString(_cursorIndexOfMetodoColeta);
+            }
+            final Integer _tmpHoraColeta;
+            if (_cursor.isNull(_cursorIndexOfHoraColeta)) {
+              _tmpHoraColeta = null;
+            } else {
+              _tmpHoraColeta = _cursor.getInt(_cursorIndexOfHoraColeta);
+            }
+            final Integer _tmpDiaSemana;
+            if (_cursor.isNull(_cursorIndexOfDiaSemana)) {
+              _tmpDiaSemana = null;
+            } else {
+              _tmpDiaSemana = _cursor.getInt(_cursorIndexOfDiaSemana);
+            }
+            final String _tmpPeriodoColeta;
+            if (_cursor.isNull(_cursorIndexOfPeriodoColeta)) {
+              _tmpPeriodoColeta = null;
+            } else {
+              _tmpPeriodoColeta = _cursor.getString(_cursorIndexOfPeriodoColeta);
+            }
+            final String _tmpTipoScan;
+            if (_cursor.isNull(_cursorIndexOfTipoScan)) {
+              _tmpTipoScan = null;
+            } else {
+              _tmpTipoScan = _cursor.getString(_cursorIndexOfTipoScan);
+            }
+            final int _tmpTentativasScan;
+            _tmpTentativasScan = _cursor.getInt(_cursorIndexOfTentativasScan);
+            final int _tmpErrosScan;
+            _tmpErrosScan = _cursor.getInt(_cursorIndexOfErrosScan);
+            final String _tmpQualidadeEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfQualidadeEtiqueta)) {
+              _tmpQualidadeEtiqueta = null;
+            } else {
+              _tmpQualidadeEtiqueta = _cursor.getString(_cursorIndexOfQualidadeEtiqueta);
+            }
+            _result = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta);
+          } else {
+            _result = null;
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object contarColetasPatrimonio(final int idPatrimonio, final int idInventario,
+      final Continuation<? super Integer> $completion) {
+    final String _sql = "\n"
+            + "        SELECT COUNT(*) FROM coleta \n"
+            + "        WHERE idPatrimonio = ? \n"
+            + "        AND idInventario = ?\n"
+            + "    ";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 2);
+    int _argIndex = 1;
+    _statement.bindLong(_argIndex, idPatrimonio);
+    _argIndex = 2;
+    _statement.bindLong(_argIndex, idInventario);
     final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
     return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<Integer>() {
       @Override

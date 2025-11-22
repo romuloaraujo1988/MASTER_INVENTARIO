@@ -61,9 +61,9 @@ com.inventario.mobile.app-navigation-fragment-2.7.5-59 C:\Users\Romulo\.gradle\c
 com.inventario.mobile.app-jetified-activity-ktx-1.8.2-60 C:\Users\Romulo\.gradle\caches\transforms-3\f64d9b834201b0edbdfd88f757a908aa\transformed\jetified-activity-ktx-1.8.2\res
 com.inventario.mobile.app-jetified-core-ktx-1.12.0-61 C:\Users\Romulo\.gradle\caches\transforms-3\f91ffed5813194851677097799e068ed\transformed\jetified-core-ktx-1.12.0\res
 com.inventario.mobile.app-jetified-activity-1.8.2-62 C:\Users\Romulo\.gradle\caches\transforms-3\fabf69caa836d6713d596b005fa9cf23\transformed\jetified-activity-1.8.2\res
-com.inventario.mobile.app-resValues-63 D:\MASTER_INVENTARIO\InventarioMobile\app\build\generated\res\resValues\debug
-com.inventario.mobile.app-packageDebugResources-64 D:\MASTER_INVENTARIO\InventarioMobile\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
-com.inventario.mobile.app-packageDebugResources-65 D:\MASTER_INVENTARIO\InventarioMobile\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
-com.inventario.mobile.app-merged_res-66 D:\MASTER_INVENTARIO\InventarioMobile\app\build\intermediates\merged_res\debug
-com.inventario.mobile.app-debug-67 D:\MASTER_INVENTARIO\InventarioMobile\app\src\debug\res
-com.inventario.mobile.app-main-68 D:\MASTER_INVENTARIO\InventarioMobile\app\src\main\res
+com.inventario.mobile.app-resValues-63 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\build\generated\res\resValues\debug
+com.inventario.mobile.app-packageDebugResources-64 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+com.inventario.mobile.app-packageDebugResources-65 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+com.inventario.mobile.app-merged_res-66 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\build\intermediates\merged_res\debug
+com.inventario.mobile.app-debug-67 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\debug\res
+com.inventario.mobile.app-main-68 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\res

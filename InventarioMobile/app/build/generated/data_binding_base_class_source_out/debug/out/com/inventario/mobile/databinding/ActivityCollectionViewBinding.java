@@ -18,6 +18,7 @@ import androidx.viewbinding.ViewBindings;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.inventario.mobile.R;
 import java.lang.NullPointerException;
 import java.lang.Override;
@@ -55,6 +56,9 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
   public final Chip chipSynced;
 
   @NonNull
+  public final FloatingActionButton fabBackToDashboard;
+
+  @NonNull
   public final LinearLayout layoutEmptyState;
 
   @NonNull
@@ -82,10 +86,11 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
       @NonNull MaterialCardView cardHeader, @NonNull MaterialCardView cardSalaFilter,
       @NonNull Chip chipAll, @NonNull Chip chipAllUsers, @NonNull ChipGroup chipGroupFilters,
       @NonNull ChipGroup chipGroupUser, @NonNull Chip chipMyCollections, @NonNull Chip chipPending,
-      @NonNull Chip chipSynced, @NonNull LinearLayout layoutEmptyState,
-      @NonNull LinearLayout layoutFilters, @NonNull ProgressBar progressBar,
-      @NonNull RecyclerView recyclerViewColetas, @NonNull Spinner spinnerSalas,
-      @NonNull Toolbar toolbar, @NonNull TextView tvPendingSync, @NonNull TextView tvTotalColetas) {
+      @NonNull Chip chipSynced, @NonNull FloatingActionButton fabBackToDashboard,
+      @NonNull LinearLayout layoutEmptyState, @NonNull LinearLayout layoutFilters,
+      @NonNull ProgressBar progressBar, @NonNull RecyclerView recyclerViewColetas,
+      @NonNull Spinner spinnerSalas, @NonNull Toolbar toolbar, @NonNull TextView tvPendingSync,
+      @NonNull TextView tvTotalColetas) {
     this.rootView = rootView;
     this.cardHeader = cardHeader;
     this.cardSalaFilter = cardSalaFilter;
@@ -96,6 +101,7 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
     this.chipMyCollections = chipMyCollections;
     this.chipPending = chipPending;
     this.chipSynced = chipSynced;
+    this.fabBackToDashboard = fabBackToDashboard;
     this.layoutEmptyState = layoutEmptyState;
     this.layoutFilters = layoutFilters;
     this.progressBar = progressBar;
@@ -187,6 +193,12 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.fabBackToDashboard;
+      FloatingActionButton fabBackToDashboard = ViewBindings.findChildViewById(rootView, id);
+      if (fabBackToDashboard == null) {
+        break missingId;
+      }
+
       id = R.id.layoutEmptyState;
       LinearLayout layoutEmptyState = ViewBindings.findChildViewById(rootView, id);
       if (layoutEmptyState == null) {
@@ -237,7 +249,7 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
 
       return new ActivityCollectionViewBinding((ConstraintLayout) rootView, cardHeader,
           cardSalaFilter, chipAll, chipAllUsers, chipGroupFilters, chipGroupUser, chipMyCollections,
-          chipPending, chipSynced, layoutEmptyState, layoutFilters, progressBar,
+          chipPending, chipSynced, fabBackToDashboard, layoutEmptyState, layoutFilters, progressBar,
           recyclerViewColetas, spinnerSalas, toolbar, tvPendingSync, tvTotalColetas);
     }
     String missingId = rootView.getResources().getResourceName(id);

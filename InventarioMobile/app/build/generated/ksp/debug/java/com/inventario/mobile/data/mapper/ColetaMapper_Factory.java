@@ -1,6 +1,7 @@
 package com.inventario.mobile.data.mapper;
 
 import com.inventario.mobile.data.local.dao.PatrimonioDao;
+import com.inventario.mobile.utils.PreferencesManager;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
 import dagger.internal.QualifierMetadata;
@@ -24,20 +25,26 @@ import javax.inject.Provider;
 public final class ColetaMapper_Factory implements Factory<ColetaMapper> {
   private final Provider<PatrimonioDao> patrimonioDaoProvider;
 
-  public ColetaMapper_Factory(Provider<PatrimonioDao> patrimonioDaoProvider) {
+  private final Provider<PreferencesManager> preferencesManagerProvider;
+
+  public ColetaMapper_Factory(Provider<PatrimonioDao> patrimonioDaoProvider,
+      Provider<PreferencesManager> preferencesManagerProvider) {
     this.patrimonioDaoProvider = patrimonioDaoProvider;
+    this.preferencesManagerProvider = preferencesManagerProvider;
   }
 
   @Override
   public ColetaMapper get() {
-    return newInstance(patrimonioDaoProvider.get());
+    return newInstance(patrimonioDaoProvider.get(), preferencesManagerProvider.get());
   }
 
-  public static ColetaMapper_Factory create(Provider<PatrimonioDao> patrimonioDaoProvider) {
-    return new ColetaMapper_Factory(patrimonioDaoProvider);
+  public static ColetaMapper_Factory create(Provider<PatrimonioDao> patrimonioDaoProvider,
+      Provider<PreferencesManager> preferencesManagerProvider) {
+    return new ColetaMapper_Factory(patrimonioDaoProvider, preferencesManagerProvider);
   }
 
-  public static ColetaMapper newInstance(PatrimonioDao patrimonioDao) {
-    return new ColetaMapper(patrimonioDao);
+  public static ColetaMapper newInstance(PatrimonioDao patrimonioDao,
+      PreferencesManager preferencesManager) {
+    return new ColetaMapper(patrimonioDao, preferencesManager);
   }
 }

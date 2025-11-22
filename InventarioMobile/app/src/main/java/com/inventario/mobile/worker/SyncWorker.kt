@@ -21,6 +21,8 @@ class SyncWorker @AssistedInject constructor(
     private val sincronizarColetasPendentesUseCase: SincronizarColetasPendentesUseCase
 ) : CoroutineWorker(context, workerParams) {
     
+    private val syncNotificationManager = com.inventario.mobile.sync.SyncNotificationManager(context)
+    
     companion object {
         private const val TAG = "SyncWorker"
         const val WORK_NAME = "sync_coletas_pendentes"
@@ -38,18 +40,47 @@ class SyncWorker @AssistedInject constructor(
                 return Result.retry()
             }
             
-            // 2. Executar sincronização
+            // 2. Buscar quantidade de coletas pendentes
+            val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(applicationContext)
+            val coletaDao = database.coletaDao()
+            val pendentes = coletaDao.contarPendentes()
+            
+            Log.d(TAG, "📊 Coletas pendentes: $pendentes")
+            
+            if (pendentes == 0) {
+                Log.d(TAG, "ℹ️ Nenhuma coleta pendente, finalizando")
+                syncNotificationManager.cancelSyncNotification()
+                return Result.success()
+            }
+            
+            // 3. Mostrar notificação de progresso
+            syncNotificationManager.showSyncInProgress(0, pendentes)
+            
+            // 4. Executar sincronização
             val result = sincronizarColetasPendentesUseCase()
             
             if (result.isSuccess) {
                 val quantidade = result.getOrNull() ?: 0
                 Log.d(TAG, "✓ Sincronização concluída: $quantidade coletas")
                 Log.d(TAG, "═══════════════════════════════════════")
+                
+                // Mostrar notificação de sucesso
+                if (quantidade > 0) {
+                    syncNotificationManager.showSyncSuccess(quantidade)
+                } else {
+                    syncNotificationManager.cancelSyncNotification()
+                }
+                
                 Result.success()
             } else {
                 val error = result.exceptionOrNull()
                 Log.e(TAG, "✗ Erro na sincronização: ${error?.message}", error)
                 Log.d(TAG, "═══════════════════════════════════════")
+                
+                // Mostrar notificação de erro
+                syncNotificationManager.showSyncError(
+                    error?.message ?: "Erro desconhecido"
+                )
                 
                 // Retry em caso de erro de rede
                 if (error?.message?.contains("network", ignoreCase = true) == true ||
@@ -62,6 +93,10 @@ class SyncWorker @AssistedInject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "✗ Exceção na sincronização", e)
             Log.d(TAG, "═══════════════════════════════════════")
+            
+            // Mostrar notificação de erro
+            syncNotificationManager.showSyncError(e.message ?: "Erro desconhecido")
+            
             Result.retry()
         }
     }

@@ -2,6 +2,7 @@ package com.inventario.mobile.di;
 
 import com.inventario.mobile.data.local.dao.PatrimonioDao;
 import com.inventario.mobile.data.mapper.ColetaMapper;
+import com.inventario.mobile.utils.PreferencesManager;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
 import dagger.internal.Preconditions;
@@ -26,21 +27,27 @@ import javax.inject.Provider;
 public final class MapperModule_ProvideColetaMapperFactory implements Factory<ColetaMapper> {
   private final Provider<PatrimonioDao> patrimonioDaoProvider;
 
-  public MapperModule_ProvideColetaMapperFactory(Provider<PatrimonioDao> patrimonioDaoProvider) {
+  private final Provider<PreferencesManager> preferencesManagerProvider;
+
+  public MapperModule_ProvideColetaMapperFactory(Provider<PatrimonioDao> patrimonioDaoProvider,
+      Provider<PreferencesManager> preferencesManagerProvider) {
     this.patrimonioDaoProvider = patrimonioDaoProvider;
+    this.preferencesManagerProvider = preferencesManagerProvider;
   }
 
   @Override
   public ColetaMapper get() {
-    return provideColetaMapper(patrimonioDaoProvider.get());
+    return provideColetaMapper(patrimonioDaoProvider.get(), preferencesManagerProvider.get());
   }
 
   public static MapperModule_ProvideColetaMapperFactory create(
-      Provider<PatrimonioDao> patrimonioDaoProvider) {
-    return new MapperModule_ProvideColetaMapperFactory(patrimonioDaoProvider);
+      Provider<PatrimonioDao> patrimonioDaoProvider,
+      Provider<PreferencesManager> preferencesManagerProvider) {
+    return new MapperModule_ProvideColetaMapperFactory(patrimonioDaoProvider, preferencesManagerProvider);
   }
 
-  public static ColetaMapper provideColetaMapper(PatrimonioDao patrimonioDao) {
-    return Preconditions.checkNotNullFromProvides(MapperModule.INSTANCE.provideColetaMapper(patrimonioDao));
+  public static ColetaMapper provideColetaMapper(PatrimonioDao patrimonioDao,
+      PreferencesManager preferencesManager) {
+    return Preconditions.checkNotNullFromProvides(MapperModule.INSTANCE.provideColetaMapper(patrimonioDao, preferencesManager));
   }
 }

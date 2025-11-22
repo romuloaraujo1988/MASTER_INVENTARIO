@@ -1,6 +1,6 @@
 package com.inventario.mobile.presentation.statistics;
 
-import com.inventario.mobile.data.local.database.AppDatabase;
+import com.inventario.mobile.presentation.charts.ChartDataProvider;
 import com.inventario.mobile.utils.PreferencesManager;
 import dagger.MembersInjector;
 import dagger.internal.DaggerGenerated;
@@ -22,30 +22,32 @@ import javax.inject.Provider;
     "KotlinInternalInJava"
 })
 public final class ChartsFragment_MembersInjector implements MembersInjector<ChartsFragment> {
-  private final Provider<AppDatabase> databaseProvider;
+  private final Provider<ChartDataProvider> chartDataProvider;
 
   private final Provider<PreferencesManager> preferencesManagerProvider;
 
-  public ChartsFragment_MembersInjector(Provider<AppDatabase> databaseProvider,
+  public ChartsFragment_MembersInjector(Provider<ChartDataProvider> chartDataProvider,
       Provider<PreferencesManager> preferencesManagerProvider) {
-    this.databaseProvider = databaseProvider;
+    this.chartDataProvider = chartDataProvider;
     this.preferencesManagerProvider = preferencesManagerProvider;
   }
 
-  public static MembersInjector<ChartsFragment> create(Provider<AppDatabase> databaseProvider,
+  public static MembersInjector<ChartsFragment> create(
+      Provider<ChartDataProvider> chartDataProvider,
       Provider<PreferencesManager> preferencesManagerProvider) {
-    return new ChartsFragment_MembersInjector(databaseProvider, preferencesManagerProvider);
+    return new ChartsFragment_MembersInjector(chartDataProvider, preferencesManagerProvider);
   }
 
   @Override
   public void injectMembers(ChartsFragment instance) {
-    injectDatabase(instance, databaseProvider.get());
+    injectChartDataProvider(instance, chartDataProvider.get());
     injectPreferencesManager(instance, preferencesManagerProvider.get());
   }
 
-  @InjectedFieldSignature("com.inventario.mobile.presentation.statistics.ChartsFragment.database")
-  public static void injectDatabase(ChartsFragment instance, AppDatabase database) {
-    instance.database = database;
+  @InjectedFieldSignature("com.inventario.mobile.presentation.statistics.ChartsFragment.chartDataProvider")
+  public static void injectChartDataProvider(ChartsFragment instance,
+      ChartDataProvider chartDataProvider) {
+    instance.chartDataProvider = chartDataProvider;
   }
 
   @InjectedFieldSignature("com.inventario.mobile.presentation.statistics.ChartsFragment.preferencesManager")

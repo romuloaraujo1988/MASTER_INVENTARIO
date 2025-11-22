@@ -55,23 +55,26 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
       public void createAllTables(@NonNull final SupportSQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS `usuario` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nome` TEXT NOT NULL, `email` TEXT NOT NULL, `senha` TEXT, `ativo` INTEGER NOT NULL, `sincronizado` INTEGER NOT NULL, `dataCriacao` INTEGER NOT NULL, `dataAtualizacao` INTEGER NOT NULL, `servidorId` INTEGER)");
         db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_usuario_email` ON `usuario` (`email`)");
-        db.execSQL("CREATE TABLE IF NOT EXISTS `patrimonio` (`id` INTEGER NOT NULL, `numero` TEXT NOT NULL, `descricao` TEXT NOT NULL, `idSala` INTEGER, `nomeSala` TEXT, `idResponsavel` INTEGER, `nomeResponsavel` TEXT, `status` TEXT NOT NULL, `coletado` INTEGER NOT NULL, `dataUltimaAtualizacao` INTEGER NOT NULL, PRIMARY KEY(`id`))");
+        db.execSQL("CREATE TABLE IF NOT EXISTS `patrimonio` (`id` INTEGER NOT NULL, `numero` TEXT NOT NULL, `numeroPatrimonio` TEXT NOT NULL, `descricao` TEXT NOT NULL, `marca` TEXT, `modelo` TEXT, `numeroSerie` TEXT, `estado` TEXT, `valor` REAL, `setorId` INTEGER, `setorNome` TEXT, `idSala` INTEGER, `nomeSala` TEXT, `salaId` INTEGER, `salaNome` TEXT, `idResponsavel` INTEGER, `nomeResponsavel` TEXT, `responsavelId` INTEGER, `responsavelNome` TEXT, `status` TEXT, `coletado` INTEGER NOT NULL, `dataColeta` INTEGER, `coletadoPor` TEXT, `observacoesColeta` TEXT, `observacoes` TEXT, `dataUltimaAtualizacao` INTEGER NOT NULL, PRIMARY KEY(`id`))");
         db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_patrimonio_numero` ON `patrimonio` (`numero`)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_patrimonio_numeroPatrimonio` ON `patrimonio` (`numeroPatrimonio`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_patrimonio_descricao` ON `patrimonio` (`descricao`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_patrimonio_idSala` ON `patrimonio` (`idSala`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_patrimonio_coletado` ON `patrimonio` (`coletado`)");
-        db.execSQL("CREATE TABLE IF NOT EXISTS `coleta` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `idPatrimonio` INTEGER NOT NULL, `numeroPatrimonio` TEXT NOT NULL, `idInventario` INTEGER NOT NULL, `idSala` INTEGER, `nomeSala` TEXT, `idResponsavel` INTEGER, `nomeResponsavel` TEXT, `observacao` TEXT, `estadoPatrimonio` TEXT, `latitude` REAL, `longitude` REAL, `dataColeta` INTEGER NOT NULL, `idUsuario` INTEGER NOT NULL, `nomeUsuario` TEXT NOT NULL, `sincronizado` INTEGER NOT NULL, `tentativasSincronizacao` INTEGER NOT NULL, `erroSincronizacao` TEXT, `servidorId` INTEGER)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS `coleta` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `idPatrimonio` INTEGER NOT NULL, `numeroPatrimonio` TEXT NOT NULL, `idInventario` INTEGER NOT NULL, `idSala` INTEGER, `nomeSala` TEXT, `idResponsavel` INTEGER, `nomeResponsavel` TEXT, `observacao` TEXT, `estadoPatrimonio` TEXT, `latitude` REAL, `longitude` REAL, `dataColeta` INTEGER NOT NULL, `idUsuario` INTEGER NOT NULL, `nomeUsuario` TEXT NOT NULL, `sincronizado` INTEGER NOT NULL, `tentativasSincronizacao` INTEGER NOT NULL, `erroSincronizacao` TEXT, `servidorId` INTEGER, `tempoColetaSegundos` INTEGER, `tempoScanSegundos` INTEGER, `tempoPreenchimentoSegundos` INTEGER, `metodoColeta` TEXT, `horaColeta` INTEGER, `diaSemana` INTEGER, `periodoColeta` TEXT, `tipoScan` TEXT, `tentativasScan` INTEGER NOT NULL, `errosScan` INTEGER NOT NULL, `qualidadeEtiqueta` TEXT)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_idPatrimonio` ON `coleta` (`idPatrimonio`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_idInventario` ON `coleta` (`idInventario`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_sincronizado` ON `coleta` (`sincronizado`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_dataColeta` ON `coleta` (`dataColeta`)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_metodoColeta` ON `coleta` (`metodoColeta`)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_tipoScan` ON `coleta` (`tipoScan`)");
         db.execSQL("CREATE TABLE IF NOT EXISTS `sala` (`id` INTEGER NOT NULL, `nome` TEXT NOT NULL, `idSetor` INTEGER, `nomeSetor` TEXT, `ativa` INTEGER NOT NULL, `dataUltimaAtualizacao` INTEGER NOT NULL, PRIMARY KEY(`id`))");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_sala_nome` ON `sala` (`nome`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_sala_ativa` ON `sala` (`ativa`)");
         db.execSQL("CREATE TABLE IF NOT EXISTS `setor` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nome` TEXT NOT NULL, `descricao` TEXT, `sincronizado` INTEGER NOT NULL, `dataCriacao` INTEGER NOT NULL, `dataAtualizacao` INTEGER NOT NULL, `servidorId` INTEGER)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_setor_nome` ON `setor` (`nome`)");
         db.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)");
-        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '53818d4b8c3b010a290fda21d753b017')");
+        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '759781ea2c830992cbebc2b30a36f285')");
       }
 
       @Override
@@ -144,20 +147,37 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
                   + " Expected:\n" + _infoUsuario + "\n"
                   + " Found:\n" + _existingUsuario);
         }
-        final HashMap<String, TableInfo.Column> _columnsPatrimonio = new HashMap<String, TableInfo.Column>(10);
+        final HashMap<String, TableInfo.Column> _columnsPatrimonio = new HashMap<String, TableInfo.Column>(26);
         _columnsPatrimonio.put("id", new TableInfo.Column("id", "INTEGER", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsPatrimonio.put("numero", new TableInfo.Column("numero", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("numeroPatrimonio", new TableInfo.Column("numeroPatrimonio", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsPatrimonio.put("descricao", new TableInfo.Column("descricao", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("marca", new TableInfo.Column("marca", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("modelo", new TableInfo.Column("modelo", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("numeroSerie", new TableInfo.Column("numeroSerie", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("estado", new TableInfo.Column("estado", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("valor", new TableInfo.Column("valor", "REAL", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("setorId", new TableInfo.Column("setorId", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("setorNome", new TableInfo.Column("setorNome", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsPatrimonio.put("idSala", new TableInfo.Column("idSala", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsPatrimonio.put("nomeSala", new TableInfo.Column("nomeSala", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("salaId", new TableInfo.Column("salaId", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("salaNome", new TableInfo.Column("salaNome", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsPatrimonio.put("idResponsavel", new TableInfo.Column("idResponsavel", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsPatrimonio.put("nomeResponsavel", new TableInfo.Column("nomeResponsavel", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
-        _columnsPatrimonio.put("status", new TableInfo.Column("status", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("responsavelId", new TableInfo.Column("responsavelId", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("responsavelNome", new TableInfo.Column("responsavelNome", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("status", new TableInfo.Column("status", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsPatrimonio.put("coletado", new TableInfo.Column("coletado", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("dataColeta", new TableInfo.Column("dataColeta", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("coletadoPor", new TableInfo.Column("coletadoPor", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("observacoesColeta", new TableInfo.Column("observacoesColeta", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsPatrimonio.put("observacoes", new TableInfo.Column("observacoes", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsPatrimonio.put("dataUltimaAtualizacao", new TableInfo.Column("dataUltimaAtualizacao", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         final HashSet<TableInfo.ForeignKey> _foreignKeysPatrimonio = new HashSet<TableInfo.ForeignKey>(0);
-        final HashSet<TableInfo.Index> _indicesPatrimonio = new HashSet<TableInfo.Index>(4);
+        final HashSet<TableInfo.Index> _indicesPatrimonio = new HashSet<TableInfo.Index>(5);
         _indicesPatrimonio.add(new TableInfo.Index("index_patrimonio_numero", true, Arrays.asList("numero"), Arrays.asList("ASC")));
+        _indicesPatrimonio.add(new TableInfo.Index("index_patrimonio_numeroPatrimonio", false, Arrays.asList("numeroPatrimonio"), Arrays.asList("ASC")));
         _indicesPatrimonio.add(new TableInfo.Index("index_patrimonio_descricao", false, Arrays.asList("descricao"), Arrays.asList("ASC")));
         _indicesPatrimonio.add(new TableInfo.Index("index_patrimonio_idSala", false, Arrays.asList("idSala"), Arrays.asList("ASC")));
         _indicesPatrimonio.add(new TableInfo.Index("index_patrimonio_coletado", false, Arrays.asList("coletado"), Arrays.asList("ASC")));
@@ -168,7 +188,7 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
                   + " Expected:\n" + _infoPatrimonio + "\n"
                   + " Found:\n" + _existingPatrimonio);
         }
-        final HashMap<String, TableInfo.Column> _columnsColeta = new HashMap<String, TableInfo.Column>(19);
+        final HashMap<String, TableInfo.Column> _columnsColeta = new HashMap<String, TableInfo.Column>(30);
         _columnsColeta.put("id", new TableInfo.Column("id", "INTEGER", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsColeta.put("idPatrimonio", new TableInfo.Column("idPatrimonio", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsColeta.put("numeroPatrimonio", new TableInfo.Column("numeroPatrimonio", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
@@ -188,12 +208,25 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
         _columnsColeta.put("tentativasSincronizacao", new TableInfo.Column("tentativasSincronizacao", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsColeta.put("erroSincronizacao", new TableInfo.Column("erroSincronizacao", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsColeta.put("servidorId", new TableInfo.Column("servidorId", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("tempoColetaSegundos", new TableInfo.Column("tempoColetaSegundos", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("tempoScanSegundos", new TableInfo.Column("tempoScanSegundos", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("tempoPreenchimentoSegundos", new TableInfo.Column("tempoPreenchimentoSegundos", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("metodoColeta", new TableInfo.Column("metodoColeta", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("horaColeta", new TableInfo.Column("horaColeta", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("diaSemana", new TableInfo.Column("diaSemana", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("periodoColeta", new TableInfo.Column("periodoColeta", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("tipoScan", new TableInfo.Column("tipoScan", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("tentativasScan", new TableInfo.Column("tentativasScan", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("errosScan", new TableInfo.Column("errosScan", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("qualidadeEtiqueta", new TableInfo.Column("qualidadeEtiqueta", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         final HashSet<TableInfo.ForeignKey> _foreignKeysColeta = new HashSet<TableInfo.ForeignKey>(0);
-        final HashSet<TableInfo.Index> _indicesColeta = new HashSet<TableInfo.Index>(4);
+        final HashSet<TableInfo.Index> _indicesColeta = new HashSet<TableInfo.Index>(6);
         _indicesColeta.add(new TableInfo.Index("index_coleta_idPatrimonio", false, Arrays.asList("idPatrimonio"), Arrays.asList("ASC")));
         _indicesColeta.add(new TableInfo.Index("index_coleta_idInventario", false, Arrays.asList("idInventario"), Arrays.asList("ASC")));
         _indicesColeta.add(new TableInfo.Index("index_coleta_sincronizado", false, Arrays.asList("sincronizado"), Arrays.asList("ASC")));
         _indicesColeta.add(new TableInfo.Index("index_coleta_dataColeta", false, Arrays.asList("dataColeta"), Arrays.asList("ASC")));
+        _indicesColeta.add(new TableInfo.Index("index_coleta_metodoColeta", false, Arrays.asList("metodoColeta"), Arrays.asList("ASC")));
+        _indicesColeta.add(new TableInfo.Index("index_coleta_tipoScan", false, Arrays.asList("tipoScan"), Arrays.asList("ASC")));
         final TableInfo _infoColeta = new TableInfo("coleta", _columnsColeta, _foreignKeysColeta, _indicesColeta);
         final TableInfo _existingColeta = TableInfo.read(db, "coleta");
         if (!_infoColeta.equals(_existingColeta)) {
@@ -239,7 +272,7 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
         }
         return new RoomOpenHelper.ValidationResult(true, null);
       }
-    }, "53818d4b8c3b010a290fda21d753b017", "e3ad834bdcf6bcb9051794d549628726");
+    }, "759781ea2c830992cbebc2b30a36f285", "0930eb6ab7c066a76280b080e208253a");
     final SupportSQLiteOpenHelper.Configuration _sqliteConfig = SupportSQLiteOpenHelper.Configuration.builder(config.context).name(config.name).callback(_openCallback).build();
     final SupportSQLiteOpenHelper _helper = config.sqliteOpenHelperFactory.create(_sqliteConfig);
     return _helper;

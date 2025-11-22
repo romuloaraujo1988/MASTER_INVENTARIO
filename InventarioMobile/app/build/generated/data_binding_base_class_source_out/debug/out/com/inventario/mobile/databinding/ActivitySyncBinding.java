@@ -63,6 +63,9 @@ public final class ActivitySyncBinding implements ViewBinding {
   public final TextView tvPendentesCount;
 
   @NonNull
+  public final TextView tvResponsaveisCount;
+
+  @NonNull
   public final TextView tvSalasCount;
 
   @NonNull
@@ -75,8 +78,8 @@ public final class ActivitySyncBinding implements ViewBinding {
       @NonNull TextView tvColetadosCount, @NonNull TextView tvLastSyncDate,
       @NonNull TextView tvLastSyncDetails, @NonNull TextView tvLastSyncStatus,
       @NonNull TextView tvNetworkStatus, @NonNull TextView tvPatrimoniosCount,
-      @NonNull TextView tvPendentesCount, @NonNull TextView tvSalasCount,
-      @NonNull TextView tvSyncProgress) {
+      @NonNull TextView tvPendentesCount, @NonNull TextView tvResponsaveisCount,
+      @NonNull TextView tvSalasCount, @NonNull TextView tvSyncProgress) {
     this.rootView = rootView;
     this.btnClearData = btnClearData;
     this.btnRefresh = btnRefresh;
@@ -91,6 +94,7 @@ public final class ActivitySyncBinding implements ViewBinding {
     this.tvNetworkStatus = tvNetworkStatus;
     this.tvPatrimoniosCount = tvPatrimoniosCount;
     this.tvPendentesCount = tvPendentesCount;
+    this.tvResponsaveisCount = tvResponsaveisCount;
     this.tvSalasCount = tvSalasCount;
     this.tvSyncProgress = tvSyncProgress;
   }
@@ -200,6 +204,12 @@ public final class ActivitySyncBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.tvResponsaveisCount;
+      TextView tvResponsaveisCount = ViewBindings.findChildViewById(rootView, id);
+      if (tvResponsaveisCount == null) {
+        break missingId;
+      }
+
       id = R.id.tvSalasCount;
       TextView tvSalasCount = ViewBindings.findChildViewById(rootView, id);
       if (tvSalasCount == null) {
@@ -215,7 +225,7 @@ public final class ActivitySyncBinding implements ViewBinding {
       return new ActivitySyncBinding((CoordinatorLayout) rootView, btnClearData, btnRefresh,
           btnSyncNow, cardLastSync, progressBar, toolbar, tvColetadosCount, tvLastSyncDate,
           tvLastSyncDetails, tvLastSyncStatus, tvNetworkStatus, tvPatrimoniosCount,
-          tvPendentesCount, tvSalasCount, tvSyncProgress);
+          tvPendentesCount, tvResponsaveisCount, tvSalasCount, tvSyncProgress);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

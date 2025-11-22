@@ -33,10 +33,22 @@ public final class ActivityLoginBinding implements ViewBinding {
   public final MaterialButton btnLogin;
 
   @NonNull
+  public final MaterialButton btnOfflineBiometric;
+
+  @NonNull
+  public final MaterialButton btnOfflinePin;
+
+  @NonNull
   public final MaterialCardView cardBiometric;
 
   @NonNull
+  public final MaterialCardView cardOfflineMode;
+
+  @NonNull
   public final View divider;
+
+  @NonNull
+  public final View dividerBiometric;
 
   @NonNull
   public final TextInputEditText etLogin;
@@ -63,13 +75,31 @@ public final class ActivityLoginBinding implements ViewBinding {
   public final TextInputLayout tilServerIp;
 
   @NonNull
+  public final TextView tvBiometricHint;
+
+  @NonNull
   public final TextView tvBiometricType;
 
   @NonNull
   public final TextView tvError;
 
   @NonNull
+  public final TextView tvNoOfflineMethod;
+
+  @NonNull
+  public final TextView tvOfflineMode;
+
+  @NonNull
+  public final TextView tvOfflineModeMessage;
+
+  @NonNull
+  public final TextView tvOfflineUsername;
+
+  @NonNull
   public final TextView tvOrDivider;
+
+  @NonNull
+  public final TextView tvSavedUser;
 
   @NonNull
   public final TextView tvSubtitle;
@@ -81,19 +111,28 @@ public final class ActivityLoginBinding implements ViewBinding {
   public final TextView tvVersion;
 
   private ActivityLoginBinding(@NonNull ScrollView rootView, @NonNull LinearLayout btnBiometric,
-      @NonNull MaterialButton btnLogin, @NonNull MaterialCardView cardBiometric,
-      @NonNull View divider, @NonNull TextInputEditText etLogin,
+      @NonNull MaterialButton btnLogin, @NonNull MaterialButton btnOfflineBiometric,
+      @NonNull MaterialButton btnOfflinePin, @NonNull MaterialCardView cardBiometric,
+      @NonNull MaterialCardView cardOfflineMode, @NonNull View divider,
+      @NonNull View dividerBiometric, @NonNull TextInputEditText etLogin,
       @NonNull TextInputEditText etPassword, @NonNull TextInputEditText etServerIp,
       @NonNull ImageView ivLogo, @NonNull ProgressBar progressBar,
       @NonNull TextInputLayout tilLogin, @NonNull TextInputLayout tilPassword,
-      @NonNull TextInputLayout tilServerIp, @NonNull TextView tvBiometricType,
-      @NonNull TextView tvError, @NonNull TextView tvOrDivider, @NonNull TextView tvSubtitle,
+      @NonNull TextInputLayout tilServerIp, @NonNull TextView tvBiometricHint,
+      @NonNull TextView tvBiometricType, @NonNull TextView tvError,
+      @NonNull TextView tvNoOfflineMethod, @NonNull TextView tvOfflineMode,
+      @NonNull TextView tvOfflineModeMessage, @NonNull TextView tvOfflineUsername,
+      @NonNull TextView tvOrDivider, @NonNull TextView tvSavedUser, @NonNull TextView tvSubtitle,
       @NonNull TextView tvTitle, @NonNull TextView tvVersion) {
     this.rootView = rootView;
     this.btnBiometric = btnBiometric;
     this.btnLogin = btnLogin;
+    this.btnOfflineBiometric = btnOfflineBiometric;
+    this.btnOfflinePin = btnOfflinePin;
     this.cardBiometric = cardBiometric;
+    this.cardOfflineMode = cardOfflineMode;
     this.divider = divider;
+    this.dividerBiometric = dividerBiometric;
     this.etLogin = etLogin;
     this.etPassword = etPassword;
     this.etServerIp = etServerIp;
@@ -102,9 +141,15 @@ public final class ActivityLoginBinding implements ViewBinding {
     this.tilLogin = tilLogin;
     this.tilPassword = tilPassword;
     this.tilServerIp = tilServerIp;
+    this.tvBiometricHint = tvBiometricHint;
     this.tvBiometricType = tvBiometricType;
     this.tvError = tvError;
+    this.tvNoOfflineMethod = tvNoOfflineMethod;
+    this.tvOfflineMode = tvOfflineMode;
+    this.tvOfflineModeMessage = tvOfflineModeMessage;
+    this.tvOfflineUsername = tvOfflineUsername;
     this.tvOrDivider = tvOrDivider;
+    this.tvSavedUser = tvSavedUser;
     this.tvSubtitle = tvSubtitle;
     this.tvTitle = tvTitle;
     this.tvVersion = tvVersion;
@@ -149,15 +194,39 @@ public final class ActivityLoginBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.btnOfflineBiometric;
+      MaterialButton btnOfflineBiometric = ViewBindings.findChildViewById(rootView, id);
+      if (btnOfflineBiometric == null) {
+        break missingId;
+      }
+
+      id = R.id.btnOfflinePin;
+      MaterialButton btnOfflinePin = ViewBindings.findChildViewById(rootView, id);
+      if (btnOfflinePin == null) {
+        break missingId;
+      }
+
       id = R.id.cardBiometric;
       MaterialCardView cardBiometric = ViewBindings.findChildViewById(rootView, id);
       if (cardBiometric == null) {
         break missingId;
       }
 
+      id = R.id.cardOfflineMode;
+      MaterialCardView cardOfflineMode = ViewBindings.findChildViewById(rootView, id);
+      if (cardOfflineMode == null) {
+        break missingId;
+      }
+
       id = R.id.divider;
       View divider = ViewBindings.findChildViewById(rootView, id);
       if (divider == null) {
+        break missingId;
+      }
+
+      id = R.id.dividerBiometric;
+      View dividerBiometric = ViewBindings.findChildViewById(rootView, id);
+      if (dividerBiometric == null) {
         break missingId;
       }
 
@@ -209,6 +278,12 @@ public final class ActivityLoginBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.tvBiometricHint;
+      TextView tvBiometricHint = ViewBindings.findChildViewById(rootView, id);
+      if (tvBiometricHint == null) {
+        break missingId;
+      }
+
       id = R.id.tvBiometricType;
       TextView tvBiometricType = ViewBindings.findChildViewById(rootView, id);
       if (tvBiometricType == null) {
@@ -221,9 +296,39 @@ public final class ActivityLoginBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.tvNoOfflineMethod;
+      TextView tvNoOfflineMethod = ViewBindings.findChildViewById(rootView, id);
+      if (tvNoOfflineMethod == null) {
+        break missingId;
+      }
+
+      id = R.id.tvOfflineMode;
+      TextView tvOfflineMode = ViewBindings.findChildViewById(rootView, id);
+      if (tvOfflineMode == null) {
+        break missingId;
+      }
+
+      id = R.id.tvOfflineModeMessage;
+      TextView tvOfflineModeMessage = ViewBindings.findChildViewById(rootView, id);
+      if (tvOfflineModeMessage == null) {
+        break missingId;
+      }
+
+      id = R.id.tvOfflineUsername;
+      TextView tvOfflineUsername = ViewBindings.findChildViewById(rootView, id);
+      if (tvOfflineUsername == null) {
+        break missingId;
+      }
+
       id = R.id.tvOrDivider;
       TextView tvOrDivider = ViewBindings.findChildViewById(rootView, id);
       if (tvOrDivider == null) {
+        break missingId;
+      }
+
+      id = R.id.tvSavedUser;
+      TextView tvSavedUser = ViewBindings.findChildViewById(rootView, id);
+      if (tvSavedUser == null) {
         break missingId;
       }
 
@@ -245,9 +350,12 @@ public final class ActivityLoginBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ActivityLoginBinding((ScrollView) rootView, btnBiometric, btnLogin, cardBiometric,
-          divider, etLogin, etPassword, etServerIp, ivLogo, progressBar, tilLogin, tilPassword,
-          tilServerIp, tvBiometricType, tvError, tvOrDivider, tvSubtitle, tvTitle, tvVersion);
+      return new ActivityLoginBinding((ScrollView) rootView, btnBiometric, btnLogin,
+          btnOfflineBiometric, btnOfflinePin, cardBiometric, cardOfflineMode, divider,
+          dividerBiometric, etLogin, etPassword, etServerIp, ivLogo, progressBar, tilLogin,
+          tilPassword, tilServerIp, tvBiometricHint, tvBiometricType, tvError, tvNoOfflineMethod,
+          tvOfflineMode, tvOfflineModeMessage, tvOfflineUsername, tvOrDivider, tvSavedUser,
+          tvSubtitle, tvTitle, tvVersion);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));
