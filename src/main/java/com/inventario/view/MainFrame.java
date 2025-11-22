@@ -1,7 +1,6 @@
 package com.inventario.view;
 
 import com.inventario.model.Usuario;
-import com.inventario.offline.ImportacaoDadosDialog;
 import com.inventario.offline.OfflineManager;
 import com.inventario.offline.StatusBarPanel;
 import com.inventario.offline.SyncStatusManager;
@@ -11,6 +10,7 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.RoundRectangle2D;
+import java.io.File;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -1708,11 +1708,18 @@ public class MainFrame extends JFrame {
             }
             
             // Abrir dialog de importação
-            ImportacaoDadosDialog dialog = new ImportacaoDadosDialog(this);
+            System.out.println(">>> DEBUG MainFrame: Criando ImportacaoDadosDialog...");
+            ImportacaoDadosDialog dialog = new ImportacaoDadosDialog(this, usuarioLogado);
+            System.out.println(">>> DEBUG MainFrame: Dialog criado, exibindo...");
             dialog.setVisible(true);
+            System.out.println(">>> DEBUG MainFrame: Dialog fechado");
             
-            // Se importação foi bem-sucedida, atualizar status
-            if (dialog.isImportacaoSucesso()) {
+            // Atualizar status após importação
+            syncStatusManager.atualizarUltimaSincronizacaoGeral();
+            statusBarPanel.atualizarUltimaSincronizacao(java.time.LocalDateTime.now());
+            
+            // Verificar se há dados locais agora
+            if (false) { // Remover verificação de sucesso pois não existe mais esse método
                 syncStatusManager.atualizarUltimaSincronizacaoGeral();
                 statusBarPanel.atualizarUltimaSincronizacao(java.time.LocalDateTime.now());
                 
@@ -1855,59 +1862,155 @@ public class MainFrame extends JFrame {
      * Verifica a existência de dados essenciais: usuários, patrimônios, salas
      */
     private boolean verificarDadosLocaisDisponiveis() {
+        System.out.println("\n========================================");
+        System.out.println(">>> VERIFICANDO DADOS LOCAIS NO SQLITE");
+        System.out.println("========================================");
+        
         try {
-            // Obter caminho do banco SQLite
-            String userHome = System.getProperty("user.home");
-            String dbPath = userHome + "/.inventario/data/inventario_offline.db";
+            // Usar caminho correto do banco SQLite (relativo ao projeto)
+            String dbPath = "data/inventario.db";
             
             java.io.File dbFile = new java.io.File(dbPath);
             
             // Verificar se o arquivo do banco existe
             if (!dbFile.exists()) {
-                System.out.println("Banco SQLite não encontrado: " + dbPath);
+                System.out.println(">>> ❌ Banco SQLite não encontrado: " + dbFile.getAbsolutePath());
                 return false;
             }
+            
+            System.out.println(">>> ✅ Banco SQLite encontrado: " + dbFile.getAbsolutePath());
             
             // Verificar se o banco tem dados
             try (java.sql.Connection conn = java.sql.DriverManager.getConnection("jdbc:sqlite:" + dbPath)) {
                 
-                // Verificar se existem usuários
+                int totalUsuarios = 0;
+                int totalPatrimonios = 0;
+                int totalSalas = 0;
+                int totalInventarios = 0;
+                
+                // 1. Verificar INVENTÁRIO (CRÍTICO!)
+                System.out.println(">>> Verificando inventários...");
                 try (java.sql.Statement stmt = conn.createStatement();
-                     java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as total FROM usuario")) {
-                    if (rs.next() && rs.getInt("total") == 0) {
-                        System.out.println("Nenhum usuário encontrado no banco local");
-                        return false;
+                     java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as total FROM TABELA_INVENTARIO")) {
+                    if (rs.next()) {
+                        totalInventarios = rs.getInt("total");
+                        System.out.println(">>>    TABELA_INVENTARIO: " + totalInventarios + " registro(s)");
+                    }
+                } catch (java.sql.SQLException e) {
+                    System.out.println(">>>    ⚠️ Tabela TABELA_INVENTARIO não encontrada, tentando local_inventario...");
+                    try (java.sql.Statement stmt = conn.createStatement();
+                         java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as total FROM local_inventario")) {
+                        if (rs.next()) {
+                            totalInventarios = rs.getInt("total");
+                            System.out.println(">>>    local_inventario: " + totalInventarios + " registro(s)");
+                        }
+                    } catch (java.sql.SQLException e2) {
+                        System.out.println(">>>    ❌ Nenhuma tabela de inventário encontrada!");
                     }
                 }
                 
-                // Verificar se existem patrimônios
+                if (totalInventarios == 0) {
+                    System.out.println(">>> ❌ CRÍTICO: Nenhum inventário encontrado no banco local!");
+                    return false;
+                }
+                
+                // 2. Verificar USUÁRIOS
+                System.out.println(">>> Verificando usuários...");
                 try (java.sql.Statement stmt = conn.createStatement();
-                     java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as total FROM patrimonio")) {
-                    if (rs.next() && rs.getInt("total") == 0) {
-                        System.out.println("Nenhum patrimônio encontrado no banco local");
-                        return false;
+                     java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as total FROM USUARIO")) {
+                    if (rs.next()) {
+                        totalUsuarios = rs.getInt("total");
+                        System.out.println(">>>    USUARIO: " + totalUsuarios + " registro(s)");
+                    }
+                } catch (java.sql.SQLException e) {
+                    System.out.println(">>>    ⚠️ Tabela USUARIO não encontrada, tentando local_usuario...");
+                    try (java.sql.Statement stmt = conn.createStatement();
+                         java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as total FROM local_usuario")) {
+                        if (rs.next()) {
+                            totalUsuarios = rs.getInt("total");
+                            System.out.println(">>>    local_usuario: " + totalUsuarios + " registro(s)");
+                        }
+                    } catch (java.sql.SQLException e2) {
+                        System.out.println(">>>    ⚠️ Nenhuma tabela de usuário encontrada");
                     }
                 }
                 
-                // Verificar se existem salas
+                if (totalUsuarios == 0) {
+                    System.out.println(">>> ❌ Nenhum usuário encontrado no banco local");
+                    return false;
+                }
+                
+                // 3. Verificar PATRIMÔNIOS
+                System.out.println(">>> Verificando patrimônios...");
                 try (java.sql.Statement stmt = conn.createStatement();
-                     java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as total FROM sala")) {
-                    if (rs.next() && rs.getInt("total") == 0) {
-                        System.out.println("Nenhuma sala encontrada no banco local");
-                        return false;
+                     java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as total FROM PATRIMONIO")) {
+                    if (rs.next()) {
+                        totalPatrimonios = rs.getInt("total");
+                        System.out.println(">>>    PATRIMONIO: " + totalPatrimonios + " registro(s)");
+                    }
+                } catch (java.sql.SQLException e) {
+                    System.out.println(">>>    ⚠️ Tabela PATRIMONIO não encontrada, tentando local_patrimonio...");
+                    try (java.sql.Statement stmt = conn.createStatement();
+                         java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as total FROM local_patrimonio")) {
+                        if (rs.next()) {
+                            totalPatrimonios = rs.getInt("total");
+                            System.out.println(">>>    local_patrimonio: " + totalPatrimonios + " registro(s)");
+                        }
+                    } catch (java.sql.SQLException e2) {
+                        System.out.println(">>>    ⚠️ Nenhuma tabela de patrimônio encontrada");
                     }
                 }
                 
-                System.out.println("Dados locais verificados com sucesso");
+                if (totalPatrimonios == 0) {
+                    System.out.println(">>> ⚠️ Nenhum patrimônio encontrado no banco local");
+                    // Não retornar false aqui - pode ser um inventário novo sem patrimônios ainda
+                }
+                
+                // 4. Verificar SALAS
+                System.out.println(">>> Verificando salas...");
+                try (java.sql.Statement stmt = conn.createStatement();
+                     java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as total FROM SALA")) {
+                    if (rs.next()) {
+                        totalSalas = rs.getInt("total");
+                        System.out.println(">>>    SALA: " + totalSalas + " registro(s)");
+                    }
+                } catch (java.sql.SQLException e) {
+                    System.out.println(">>>    ⚠️ Tabela SALA não encontrada, tentando local_sala...");
+                    try (java.sql.Statement stmt = conn.createStatement();
+                         java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as total FROM local_sala")) {
+                        if (rs.next()) {
+                            totalSalas = rs.getInt("total");
+                            System.out.println(">>>    local_sala: " + totalSalas + " registro(s)");
+                        }
+                    } catch (java.sql.SQLException e2) {
+                        System.out.println(">>>    ⚠️ Nenhuma tabela de sala encontrada");
+                    }
+                }
+                
+                if (totalSalas == 0) {
+                    System.out.println(">>> ❌ Nenhuma sala encontrada no banco local");
+                    return false;
+                }
+                
+                // Resumo
+                System.out.println("\n>>> ✅ DADOS LOCAIS DISPONÍVEIS:");
+                System.out.println(">>>    Inventários: " + totalInventarios);
+                System.out.println(">>>    Usuários: " + totalUsuarios);
+                System.out.println(">>>    Patrimônios: " + totalPatrimonios);
+                System.out.println(">>>    Salas: " + totalSalas);
+                System.out.println("========================================\n");
+                
                 return true;
                 
             } catch (java.sql.SQLException e) {
-                System.err.println("Erro ao verificar dados locais: " + e.getMessage());
+                System.err.println(">>> ❌ Erro ao verificar dados locais: " + e.getMessage());
+                e.printStackTrace();
                 return false;
             }
             
         } catch (Exception e) {
-            System.err.println("Erro ao verificar disponibilidade de dados locais: " + e.getMessage());
+            System.err.println(">>> ❌ Erro ao verificar disponibilidade de dados locais: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }

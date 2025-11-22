@@ -32,33 +32,37 @@ public class OfflineDAO {
      */
     public int salvarPatrimonio(Map<String, Object> patrimonio) throws SQLException {
         String sql = """
-            INSERT INTO local_patrimonio 
+            INSERT OR REPLACE INTO local_patrimonio 
             (id, numero, descricao, descricao_resumida, marca, modelo, numero_serie, 
              situacao, valor, data_aquisicao, id_setor, id_sala, observacoes, sync_status)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
         
         try (Connection conn = sqliteConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             setPatrimonioParameters(stmt, patrimonio);
-            stmt.setString(14, "PENDING");
+            stmt.setString(14, "SYNCED"); // Dados importados já estão sincronizados
             
             int rowsAffected = stmt.executeUpdate();
             
             if (rowsAffected > 0) {
-                try (ResultSet rs = stmt.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        int id = rs.getInt(1);
-                        registrarOperacaoSync("local_patrimonio", id, "INSERT", patrimonio);
-                        return id;
-                    }
+                // Retornar o ID que foi passado no Map
+                Integer id = (Integer) patrimonio.get("id");
+                if (id != null) {
+                    LOGGER.fine("Patrimônio salvo offline - ID: " + id);
+                    return id;
                 }
             }
             
             throw new SQLException("Falha ao inserir patrimônio");
             
         } catch (SQLException e) {
+            System.err.println(">>> ❌ ERRO ao salvar patrimônio no SQLite:");
+            System.err.println(">>>   ID: " + patrimonio.get("id"));
+            System.err.println(">>>   Número: " + patrimonio.get("numero"));
+            System.err.println(">>>   Erro: " + e.getMessage());
+            e.printStackTrace();
             LOGGER.log(Level.SEVERE, "Erro ao salvar patrimônio offline", e);
             throw e;
         }
@@ -173,7 +177,7 @@ public class OfflineDAO {
         """;
         
         try (Connection conn = sqliteConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             setColetaParameters(stmt, coleta);
             stmt.setString(13, "PENDING");
@@ -181,10 +185,13 @@ public class OfflineDAO {
             int rowsAffected = stmt.executeUpdate();
             
             if (rowsAffected > 0) {
-                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                // Para coletas, usar last_insert_rowid() do SQLite
+                try (var stmtId = conn.createStatement();
+                     var rs = stmtId.executeQuery("SELECT last_insert_rowid()")) {
                     if (rs.next()) {
                         int id = rs.getInt(1);
                         registrarOperacaoSync("local_coleta", id, "INSERT", coleta);
+                        LOGGER.fine("Coleta salva offline - ID: " + id);
                         return id;
                     }
                 }
@@ -241,36 +248,35 @@ public class OfflineDAO {
      */
     public int salvarInventario(Map<String, Object> inventario) throws SQLException {
         String sql = """
-            INSERT INTO local_inventario 
-            (nome, descricao, data_inicio, data_fim, status, id_responsavel, observacoes, sync_status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT OR REPLACE INTO local_inventario 
+            (id, nome, descricao, data_inicio, data_fim, status, id_responsavel, observacoes, sync_status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
         
         try (Connection conn = sqliteConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             
-            stmt.setString(1, (String) inventario.get("nome"));
-            stmt.setString(2, (String) inventario.get("descricao"));
+            stmt.setObject(1, inventario.get("id"));
+            stmt.setString(2, (String) inventario.get("nome"));
+            stmt.setString(3, (String) inventario.get("descricao"));
             // Conversão segura para java.sql.Date
             Object dataInicio = inventario.get("data_inicio");
             Object dataFim = inventario.get("data_fim");
             
-            stmt.setDate(3, dataInicio != null ? new java.sql.Date(((java.util.Date) dataInicio).getTime()) : null);
-            stmt.setDate(4, dataFim != null ? new java.sql.Date(((java.util.Date) dataFim).getTime()) : null);
-            stmt.setString(5, (String) inventario.get("status"));
-            stmt.setObject(6, inventario.get("id_responsavel"));
-            stmt.setString(7, (String) inventario.get("observacoes"));
-            stmt.setString(8, "PENDING");
+            stmt.setDate(4, dataInicio != null ? new java.sql.Date(((java.util.Date) dataInicio).getTime()) : null);
+            stmt.setDate(5, dataFim != null ? new java.sql.Date(((java.util.Date) dataFim).getTime()) : null);
+            stmt.setString(6, (String) inventario.get("status"));
+            stmt.setObject(7, inventario.get("id_responsavel"));
+            stmt.setString(8, (String) inventario.get("observacoes"));
+            stmt.setString(9, "SYNCED"); // Dados importados já estão sincronizados
             
             int rowsAffected = stmt.executeUpdate();
             
             if (rowsAffected > 0) {
-                try (ResultSet rs = stmt.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        int id = rs.getInt(1);
-                        registrarOperacaoSync("local_inventario", id, "INSERT", inventario);
-                        return id;
-                    }
+                Integer id = (Integer) inventario.get("id");
+                if (id != null) {
+                    LOGGER.fine("Inventário salvo offline - ID: " + id);
+                    return id;
                 }
             }
             
@@ -427,7 +433,12 @@ public class OfflineDAO {
             stmt.executeUpdate();
             
         } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "Erro ao atualizar metadado", e);
+            // Se a tabela não existir ainda, apenas logar e não lançar exceção
+            if (e.getMessage().contains("no such table") || e.getMessage().contains("no column named")) {
+                LOGGER.fine("Tabela sync_metadata ainda não existe - ignorando atualização de metadado: " + chave);
+                return;
+            }
+            LOGGER.log(Level.WARNING, "Erro ao atualizar metadado: " + chave, e);
             throw e;
         }
     }
@@ -453,7 +464,12 @@ public class OfflineDAO {
             }
             
         } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "Erro ao obter metadado", e);
+            // Se a tabela não existir ainda, retornar null silenciosamente
+            if (e.getMessage().contains("no such table") || e.getMessage().contains("no column named")) {
+                LOGGER.fine("Tabela sync_metadata ainda não existe - retornando null para chave: " + chave);
+                return null;
+            }
+            LOGGER.log(Level.WARNING, "Erro ao obter metadado: " + chave, e);
             return null;
         }
     }
@@ -561,49 +577,7 @@ public class OfflineDAO {
         return json.toString();
     }
     
-    /**
-     * Obtém estatísticas do banco offline
-     * @return Mapa com estatísticas
-     * @throws SQLException
-     */
-    public Map<String, Object> obterEstatisticas() throws SQLException {
-        Map<String, Object> stats = new HashMap<>();
-        
-        try (Connection conn = sqliteConnection.getConnection()) {
-            
-            // Conta registros por tabela
-            String[] tabelas = {"local_patrimonio", "local_coleta", "local_inventario", "local_participante_inventario"};
-            
-            for (String tabela : tabelas) {
-                try (PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM " + tabela);
-                     ResultSet rs = stmt.executeQuery()) {
-                    
-                    if (rs.next()) {
-                        stats.put(tabela + "_count", rs.getInt(1));
-                    }
-                }
-            }
-            
-            // Conta operações pendentes
-            try (PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM sync_control WHERE synced = FALSE");
-                 ResultSet rs = stmt.executeQuery()) {
-                
-                if (rs.next()) {
-                    stats.put("pending_sync_count", rs.getInt(1));
-                }
-            }
-            
-            // Última sincronização
-            String lastSync = obterMetadado("last_sync_timestamp");
-            stats.put("last_sync", lastSync);
-            
-        } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "Erro ao obter estatísticas", e);
-            throw e;
-        }
-        
-        return stats;
-    }
+
     
     // ==================== OPERAÇÕES DE COLETA OFFLINE ====================
     
@@ -614,16 +588,18 @@ public class OfflineDAO {
      * @throws SQLException
      */
     public int salvarColetaOffline(Map<String, Object> coleta) throws SQLException {
+        System.out.println("=== DEBUG TIMESTAMP: OfflineDAO.salvarColetaOffline ===");
+        
         String sql = """
-            INSERT INTO coleta_offline 
+            INSERT INTO local_coleta 
             (id_inventario, id_patrimonio, id_participante, numero_patrimonio,
-             descricao_item_sem_etiqueta, localizacao_encontrada, estado_encontrado,
-             observacoes, data_coleta, sincronizado)
+             descricao_sem_etiqueta, localizacao_encontrada, estado_encontrado,
+             observacoes, data_coleta, sync_status)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
         
         try (Connection conn = sqliteConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setInt(1, (Integer) coleta.get("id_inventario"));
             stmt.setObject(2, coleta.get("id_patrimonio"));
@@ -631,17 +607,63 @@ public class OfflineDAO {
             stmt.setString(4, (String) coleta.get("numero_patrimonio"));
             stmt.setString(5, (String) coleta.get("descricao_item_sem_etiqueta"));
             stmt.setString(6, (String) coleta.get("localizacao_encontrada"));
-            stmt.setString(7, (String) coleta.get("estado_encontrado"));
+            stmt.setString(7, (String) coleta.get("situacao_encontrada")); // ✅ CORRIGIDO - campo correto do SQLite
             stmt.setString(8, (String) coleta.get("observacoes"));
-            stmt.setTimestamp(9, (Timestamp) coleta.get("data_coleta"));
-            stmt.setInt(10, (Integer) coleta.getOrDefault("sincronizado", 0));
+            
+            // DEBUG: Log detalhado do timestamp antes de setar no PreparedStatement
+            Object dataColetaObj = coleta.get("data_coleta");
+            System.out.println("DEBUG TIMESTAMP: Objeto data_coleta do Map: " + dataColetaObj);
+            System.out.println("DEBUG TIMESTAMP: Classe do objeto: " + 
+                (dataColetaObj != null ? dataColetaObj.getClass().getName() : "null"));
+            
+            if (dataColetaObj instanceof Timestamp) {
+                Timestamp ts = (Timestamp) dataColetaObj;
+                System.out.println("DEBUG TIMESTAMP: É um Timestamp válido");
+                System.out.println("DEBUG TIMESTAMP: Timestamp.toString(): " + ts.toString());
+                System.out.println("DEBUG TIMESTAMP: Timestamp.getTime(): " + ts.getTime());
+                System.out.println("DEBUG TIMESTAMP: Timestamp.getNanos(): " + ts.getNanos());
+                
+                stmt.setTimestamp(9, ts);
+                System.out.println("DEBUG TIMESTAMP: Timestamp setado no PreparedStatement (posição 9)");
+            } else {
+                System.err.println("DEBUG TIMESTAMP: ERRO - Objeto não é um Timestamp!");
+                System.err.println("DEBUG TIMESTAMP: Tentando cast forçado...");
+                stmt.setTimestamp(9, (Timestamp) dataColetaObj);
+            }
+            
+            stmt.setString(10, (String) coleta.getOrDefault("sync_status", "PENDING")); // Corrigido
+            
+            System.out.println("DEBUG TIMESTAMP: Executando INSERT no SQLite...");
             
             int rowsAffected = stmt.executeUpdate();
+            System.out.println("DEBUG TIMESTAMP: INSERT executado - Linhas afetadas: " + rowsAffected);
             
             if (rowsAffected > 0) {
-                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                // Usar last_insert_rowid() do SQLite
+                try (var stmtId = conn.createStatement();
+                     var rs = stmtId.executeQuery("SELECT last_insert_rowid()")) {
                     if (rs.next()) {
                         int id = rs.getInt(1);
+                        System.out.println("DEBUG TIMESTAMP: Coleta salva com ID: " + id);
+                        
+                        // DEBUG: Ler de volta o registro para verificar o timestamp
+                        String sqlVerifica = "SELECT data_coleta FROM local_coleta WHERE id = ?";
+                        try (PreparedStatement stmtVerifica = conn.prepareStatement(sqlVerifica)) {
+                            stmtVerifica.setInt(1, id);
+                            try (ResultSet rsVerifica = stmtVerifica.executeQuery()) {
+                                if (rsVerifica.next()) {
+                                    Timestamp tsLido = rsVerifica.getTimestamp("data_coleta");
+                                    System.out.println("DEBUG TIMESTAMP: Timestamp lido do banco: " + tsLido);
+                                    System.out.println("DEBUG TIMESTAMP: Timestamp lido (class): " + 
+                                        (tsLido != null ? tsLido.getClass().getName() : "null"));
+                                    System.out.println("DEBUG TIMESTAMP: Timestamp lido (time): " + 
+                                        (tsLido != null ? tsLido.getTime() : "null"));
+                                }
+                            }
+                        } catch (Exception e) {
+                            System.err.println("DEBUG TIMESTAMP: Erro ao verificar timestamp salvo: " + e.getMessage());
+                        }
+                        
                         LOGGER.info("Coleta salva offline - ID: " + id);
                         return id;
                     }
@@ -649,6 +671,13 @@ public class OfflineDAO {
             }
             
             throw new SQLException("Falha ao salvar coleta offline");
+        } catch (SQLException e) {
+            System.err.println("=== DEBUG TIMESTAMP: SQLException em salvarColetaOffline ===");
+            System.err.println("DEBUG TIMESTAMP: Mensagem: " + e.getMessage());
+            System.err.println("DEBUG TIMESTAMP: SQLState: " + e.getSQLState());
+            System.err.println("DEBUG TIMESTAMP: ErrorCode: " + e.getErrorCode());
+            e.printStackTrace();
+            throw e;
         }
     }
     
@@ -659,8 +688,8 @@ public class OfflineDAO {
      */
     public List<Map<String, Object>> buscarColetasPendentes() throws SQLException {
         String sql = """
-            SELECT * FROM coleta_offline 
-            WHERE sincronizado = 0
+            SELECT * FROM local_coleta 
+            WHERE sync_status = 'PENDING'
             ORDER BY data_coleta ASC
         """;
         
@@ -697,9 +726,9 @@ public class OfflineDAO {
      */
     public void marcarColetaSincronizada(int idColeta) throws SQLException {
         String sql = """
-            UPDATE coleta_offline 
-            SET sincronizado = 1,
-                data_sincronizacao = CURRENT_TIMESTAMP
+            UPDATE local_coleta 
+            SET sync_status = 'SYNCED',
+                last_modified = CURRENT_TIMESTAMP
             WHERE id = ?
         """;
         
@@ -724,7 +753,7 @@ public class OfflineDAO {
      */
     public boolean coletaExiste(int idInventario, int idPatrimonio) throws SQLException {
         String sql = """
-            SELECT COUNT(*) FROM coleta_offline 
+            SELECT COUNT(*) FROM local_coleta 
             WHERE id_inventario = ? AND id_patrimonio = ?
         """;
         
@@ -821,5 +850,330 @@ public class OfflineDAO {
             LOGGER.log(Level.WARNING, "Erro ao atualizar status de sync", e);
             return false;
         }
+    }
+    
+    // ==================== OPERAÇÕES DE SALA ====================
+    
+    /**
+     * Salva uma sala no banco local
+     * @param sala Dados da sala
+     * @return ID gerado
+     * @throws SQLException
+     */
+    public int salvarSala(Map<String, Object> sala) throws SQLException {
+        String sql = """
+            INSERT OR REPLACE INTO local_sala 
+            (id, nome, descricao, bloco, andar, capacidade, tipo, ativa)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """;
+        
+        try (Connection conn = sqliteConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            // Tratamento seguro de valores NULL
+            stmt.setObject(1, sala.get("id"));
+            
+            // Nome (pode ser NULL)
+            Object nome = sala.get("nome");
+            stmt.setString(2, nome != null ? String.valueOf(nome) : null);
+            
+            // Descrição (pode ser NULL)
+            Object descricao = sala.get("descricao");
+            stmt.setString(3, descricao != null ? String.valueOf(descricao) : null);
+            
+            // Bloco (pode ser NULL)
+            Object bloco = sala.get("bloco");
+            stmt.setString(4, bloco != null ? String.valueOf(bloco) : null);
+            
+            // Andar (pode ser NULL)
+            Object andar = sala.get("andar");
+            stmt.setString(5, andar != null ? String.valueOf(andar) : null);
+            
+            // Capacidade (pode ser NULL)
+            stmt.setObject(6, sala.get("capacidade"));
+            
+            // Tipo (pode ser NULL)
+            Object tipo = sala.get("tipo");
+            stmt.setString(7, tipo != null ? String.valueOf(tipo) : null);
+            
+            // Ativa (padrão true se NULL)
+            Object ativa = sala.get("ativa");
+            if (ativa instanceof Boolean) {
+                stmt.setBoolean(8, (Boolean) ativa);
+            } else {
+                stmt.setBoolean(8, true); // Padrão: ativa
+            }
+            
+            int rowsAffected = stmt.executeUpdate();
+            
+            if (rowsAffected > 0) {
+                LOGGER.fine("Sala salva offline - ID: " + sala.get("id"));
+                return (Integer) sala.get("id");
+            }
+            
+            throw new SQLException("Falha ao salvar sala offline");
+            
+        } catch (SQLException e) {
+            System.err.println(">>> ❌ ERRO ao salvar sala no SQLite:");
+            System.err.println(">>>   ID: " + sala.get("id"));
+            System.err.println(">>>   Nome: " + sala.get("nome"));
+            System.err.println(">>>   Descrição: " + sala.get("descricao"));
+            System.err.println(">>>   Bloco: " + sala.get("bloco"));
+            System.err.println(">>>   Andar: " + sala.get("andar"));
+            System.err.println(">>>   Tipo: " + sala.get("tipo"));
+            System.err.println(">>>   Erro: " + e.getMessage());
+            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Erro ao salvar sala offline", e);
+            throw e;
+        }
+    }
+    
+    /**
+     * Lista todas as salas
+     * @return Lista de salas
+     * @throws SQLException
+     */
+    public List<Map<String, Object>> listarSalas() throws SQLException {
+        String sql = "SELECT * FROM local_sala WHERE ativa = 1 ORDER BY nome";
+        
+        try (Connection conn = sqliteConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            return resultSetToMapList(rs);
+            
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Erro ao listar salas offline", e);
+            throw e;
+        }
+    }
+    
+    // ==================== OPERAÇÕES DE RESPONSÁVEL ====================
+    
+    /**
+     * Salva um responsável no banco local
+     * @param responsavel Dados do responsável
+     * @return ID gerado
+     * @throws SQLException
+     */
+    public int salvarResponsavel(Map<String, Object> responsavel) throws SQLException {
+        String sql = """
+            INSERT OR REPLACE INTO local_responsavel 
+            (id, nome, cpf, matricula, email, telefone, cargo, setor, ativo)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """;
+        
+        try (Connection conn = sqliteConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setObject(1, responsavel.get("id"));
+            stmt.setString(2, (String) responsavel.get("nome"));
+            stmt.setString(3, (String) responsavel.get("cpf"));
+            stmt.setString(4, (String) responsavel.get("matricula"));
+            stmt.setString(5, (String) responsavel.get("email"));
+            stmt.setString(6, (String) responsavel.get("telefone"));
+            stmt.setString(7, (String) responsavel.get("cargo"));
+            stmt.setString(8, (String) responsavel.get("setor"));
+            stmt.setBoolean(9, (Boolean) responsavel.getOrDefault("ativo", true));
+            
+            int rowsAffected = stmt.executeUpdate();
+            
+            if (rowsAffected > 0) {
+                LOGGER.fine("Responsável salvo offline - ID: " + responsavel.get("id"));
+                return (Integer) responsavel.get("id");
+            }
+            
+            throw new SQLException("Falha ao salvar responsável offline");
+            
+        } catch (SQLException e) {
+            System.err.println(">>> ❌ ERRO ao salvar responsável no SQLite:");
+            System.err.println(">>>   ID: " + responsavel.get("id"));
+            System.err.println(">>>   Nome: " + responsavel.get("nome"));
+            System.err.println(">>>   Erro: " + e.getMessage());
+            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Erro ao salvar responsável offline", e);
+            throw e;
+        }
+    }
+    
+    /**
+     * Lista todos os responsáveis
+     * @return Lista de responsáveis
+     * @throws SQLException
+     */
+    public List<Map<String, Object>> listarResponsaveis() throws SQLException {
+        String sql = "SELECT * FROM local_responsavel WHERE ativo = 1 ORDER BY nome";
+        
+        try (Connection conn = sqliteConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            return resultSetToMapList(rs);
+            
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Erro ao listar responsáveis offline", e);
+            throw e;
+        }
+    }
+    
+    // ==================== OPERAÇÕES DE USUÁRIO ====================
+    
+    /**
+     * Salva um usuário no banco local (para login offline)
+     * @param usuario Dados do usuário
+     * @return ID gerado
+     * @throws SQLException
+     */
+    public int salvarUsuario(Map<String, Object> usuario) throws SQLException {
+        String sql = """
+            INSERT OR REPLACE INTO local_usuario 
+            (id, login, senha_hash, nome_completo, email, perfil, ativo)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """;
+        
+        try (Connection conn = sqliteConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setObject(1, usuario.get("id"));
+            stmt.setString(2, (String) usuario.get("login"));
+            stmt.setString(3, (String) usuario.get("senha_hash"));
+            // ✅ CORRIGIDO: Aceita tanto "nome" quanto "nome_completo"
+            String nomeCompleto = (String) usuario.get("nome_completo");
+            if (nomeCompleto == null) {
+                nomeCompleto = (String) usuario.get("nome"); // Fallback para compatibilidade
+            }
+            stmt.setString(4, nomeCompleto);
+            stmt.setString(5, (String) usuario.get("email"));
+            stmt.setString(6, (String) usuario.get("perfil"));
+            stmt.setBoolean(7, (Boolean) usuario.getOrDefault("ativo", true));
+            
+            int rowsAffected = stmt.executeUpdate();
+            
+            if (rowsAffected > 0) {
+                System.out.println(">>> ✅ Usuário salvo no SQLite - ID: " + usuario.get("id") + ", Login: " + usuario.get("login"));
+                LOGGER.fine("Usuário salvo offline - ID: " + usuario.get("id"));
+                return (Integer) usuario.get("id");
+            }
+            
+            throw new SQLException("Falha ao salvar usuário offline");
+            
+        } catch (SQLException e) {
+            System.err.println(">>> ❌ ERRO ao salvar usuário no SQLite: " + e.getMessage());
+            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Erro ao salvar usuário offline", e);
+            throw e;
+        }
+    }
+    
+    /**
+     * Busca usuário por login (para autenticação offline)
+     * @param login Login do usuário
+     * @return Dados do usuário ou null se não encontrado
+     * @throws SQLException
+     */
+    public Map<String, Object> buscarUsuarioPorLogin(String login) throws SQLException {
+        String sql = "SELECT * FROM local_usuario WHERE login = ? AND ativo = 1";
+        
+        try (Connection conn = sqliteConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, login);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Map<String, Object> usuario = new HashMap<>();
+                    usuario.put("id", rs.getInt("id"));
+                    usuario.put("login", rs.getString("login"));
+                    usuario.put("senha_hash", rs.getString("senha_hash"));
+                    usuario.put("nome", rs.getString("nome"));
+                    usuario.put("email", rs.getString("email"));
+                    usuario.put("perfil", rs.getString("perfil"));
+                    usuario.put("ativo", rs.getBoolean("ativo"));
+                    return usuario;
+                }
+                return null;
+            }
+            
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Erro ao buscar usuário offline", e);
+            throw e;
+        }
+    }
+    
+    // ==================== ESTATÍSTICAS ====================
+    
+    /**
+     * Obtém estatísticas do banco offline
+     * @return Mapa com estatísticas
+     */
+    public Map<String, Object> obterEstatisticas() {
+        Map<String, Object> stats = new HashMap<>();
+        
+        try (Connection conn = sqliteConnection.getConnection()) {
+            
+            // Contar patrimônios
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM local_patrimonio")) {
+                if (rs.next()) {
+                    stats.put("total_patrimonios", rs.getInt(1));
+                }
+            }
+            
+            // Contar salas
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM local_sala")) {
+                if (rs.next()) {
+                    stats.put("total_salas", rs.getInt(1));
+                }
+            }
+            
+            // Contar responsáveis
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM local_responsavel")) {
+                if (rs.next()) {
+                    stats.put("total_responsaveis", rs.getInt(1));
+                }
+            }
+            
+            // Contar usuários
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM local_usuario")) {
+                if (rs.next()) {
+                    stats.put("total_usuarios", rs.getInt(1));
+                }
+            }
+            
+            // Contar coletas
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM local_coleta")) {
+                if (rs.next()) {
+                    stats.put("total_coletas", rs.getInt(1));
+                }
+            }
+            
+            // Contar coletas pendentes de sincronização
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM local_coleta WHERE sync_status = 'PENDING'")) {
+                if (rs.next()) {
+                    stats.put("coletas_pendentes", rs.getInt(1));
+                }
+            }
+            
+            // Contar inventários
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM local_inventario")) {
+                if (rs.next()) {
+                    stats.put("total_inventarios", rs.getInt(1));
+                }
+            }
+            
+            LOGGER.fine("Estatísticas obtidas: " + stats);
+            
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, "Erro ao obter estatísticas", e);
+            stats.put("error", e.getMessage());
+        }
+        
+        return stats;
     }
 }

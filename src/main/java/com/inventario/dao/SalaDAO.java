@@ -194,6 +194,18 @@ public class SalaDAO extends BaseDAO<Sala, Integer> {
     }
     
     /**
+     * Lista TODAS as salas (ativas e inativas) com join de setor
+     * Usado para importação/sincronização offline
+     */
+    public List<Sala> listarTodasSalas() throws SQLException {
+        String sql = "SELECT s.*, st.NOME as NOME_SETOR " +
+                    "FROM TABELA_SALA s " +
+                    "LEFT JOIN TABELA_SETOR st ON s.ID_SETOR = st.ID " +
+                    "ORDER BY s.NUMERO_SALA, s.DESCRICAO";
+        return executeQuery(sql);
+    }
+    
+    /**
      * Busca salas por filtro (número, descrição, bloco ou setor)
      */
     public List<Sala> buscarSalasPorFiltro(String filtro) throws SQLException {

@@ -1,0 +1,71 @@
+-- Script para verificar status de finalização das salas
+-- Execute este script no PostgreSQL para diagnosticar o problema
+
+-- 1. Total de salas ativas
+SELECT 
+    'Total de salas ativas' as descricao,
+    COUNT(*) as quantidade
+FROM TABELA_SALA 
+WHERE ATIVO = TRUE;
+
+-- 2. Salas vinculadas ao inventário ativo
+SELECT 
+    'Salas vinculadas ao inventário' as descricao,
+    COUNT(DISTINCT si.ID_SALA) as quantidade
+FROM TABELA_SALA_INVENTARIO si
+INNER JOIN TABELA_INVENTARIO i ON si.ID_INVENTARIO = i.ID_INVENTARIO
+WHERE i.STATUS = 'EM_ANDAMENTO';
+
+-- 3. Salas finalizadas no inventário ativo
+SELECT 
+    'Salas FINALIZADAS' as descricao,
+    COUNT(DISTINCT si.ID_SALA) as quantidade
+FROM TABELA_SALA_INVENTARIO si
+INNER JOIN TABELA_INVENTARIO i ON si.ID_INVENTARIO = i.ID_INVENTARIO
+WHERE i.STATUS = 'EM_ANDAMENTO'
+AND si.COLETA_FINALIZADA = TRUE;
+
+-- 4. Salas abertas (não finalizadas) no inventário ativo
+SELECT 
+    'Salas ABERTAS (não finalizadas)' as descricao,
+    COUNT(DISTINCT si.ID_SALA) as quantidade
+FROM TABELA_SALA_INVENTARIO si
+INNER JOIN TABELA_INVENTARIO i ON si.ID_INVENTARIO = i.ID_INVENTARIO
+WHERE i.STATUS = 'EM_ANDAMENTO'
+AND (si.COLETA_FINALIZADA = FALSE OR si.COLETA_FINALIZADA IS NULL);
+
+-- 5. Detalhes das salas finalizadas
+SELECT 
+    s.NUMERO_SALA,
+    s.DESCRICAO as NOME_SALA,
+    si.COLETA_FINALIZADA,
+    si.DATA_FINALIZACAO,
+    si.TOTAL_ITENS_COLETADOS,
+    u.NOME_COMPLETO as FINALIZADO_POR
+FROM TABELA_SALA s
+INNER JOIN TABELA_SALA_INVENTARIO si ON s.ID_SALA = si.ID_SALA
+INNER JOIN TABELA_INVENTARIO i ON si.ID_INVENTARIO = i.ID_INVENTARIO
+LEFT JOIN TABELA_USUARIO u ON si.ID_PARTICIPANTE_FINALIZOU = u.ID_USUARIO
+WHERE i.STATUS = 'EM_ANDAMENTO'
+AND si.COLETA_FINALIZADA = TRUE
+ORDER BY si.DATA_FINALIZACAO DESC;
+
+-- 6. Resumo geral
+SELECT 
+    CASE 
+        WHEN si.COLETA_FINALIZADA = TRUE THEN 'FINALIZADA'
+        WHEN si.COLETA_FINALIZADA = FALSE THEN 'ABERTA'
+        ELSE 'NÃO VINCULADA'
+    END as status,
+    COUNT(*) as quantidade
+FROM TABELA_SALA s
+LEFT JOIN TABELA_SALA_INVENTARIO si ON s.ID_SALA = si.ID_SALA 
+    AND si.ID_INVENTARIO = (SELECT ID_INVENTARIO FROM TABELA_INVENTARIO WHERE STATUS = 'EM_ANDAMENTO' LIMIT 1)
+WHERE s.ATIVO = TRUE
+GROUP BY 
+    CASE 
+        WHEN si.COLETA_FINALIZADA = TRUE THEN 'FINALIZADA'
+        WHEN si.COLETA_FINALIZADA = FALSE THEN 'ABERTA'
+        ELSE 'NÃO VINCULADA'
+    END
+ORDER BY status;

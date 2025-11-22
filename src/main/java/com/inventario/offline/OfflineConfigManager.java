@@ -19,7 +19,7 @@ public class OfflineConfigManager {
     private static final String CONFIG_FILE = "/offline.properties";
     
     // Configurações padrão
-    private static final String DEFAULT_DATABASE_PATH = "./data/inventario_offline.db";
+    private static final String DEFAULT_DATABASE_PATH = "./data/inventario.db";
     private static final int DEFAULT_SYNC_INTERVAL = 5;
     private static final int DEFAULT_CONNECTIVITY_CHECK_INTERVAL = 30;
     private static final String DEFAULT_CONFLICT_RESOLUTION = "TIMESTAMP_WINS";

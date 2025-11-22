@@ -18,8 +18,8 @@ public class UnifiedAuthService {
     private static final Logger LOGGER = Logger.getLogger(UnifiedAuthService.class.getName());
     
     private final AutenticacaoServiceDB onlineAuthService;
-    private final OfflineAuthService offlineAuthService;
-    private final OfflineManager offlineManager;
+    private OfflineAuthService offlineAuthService; // Não final - será criado sob demanda
+    private OfflineManager offlineManager; // Não final - será obtido sob demanda
     
     // Modo de operação
     private AuthMode currentMode = AuthMode.AUTO;
@@ -60,18 +60,12 @@ public class UnifiedAuthService {
     
     public UnifiedAuthService() {
         this.onlineAuthService = new AutenticacaoServiceDB();
-        this.offlineAuthService = new OfflineAuthService();
-        this.offlineManager = OfflineManager.getInstance();
+        this.offlineAuthService = null; // Será criado sob demanda
+        this.offlineManager = null; // Será obtido sob demanda
         
-        // Inicializar sistema offline se necessário
-        try {
-            if (!offlineManager.getCurrentState().equals(OfflineManager.OfflineState.ONLINE) &&
-                !offlineManager.getCurrentState().equals(OfflineManager.OfflineState.OFFLINE)) {
-                offlineManager.initialize();
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Erro ao inicializar sistema offline", e);
-        }
+        // NÃO obter OfflineManager aqui!
+        // Será obtido apenas quando necessário (modo offline)
+        LOGGER.info("UnifiedAuthService criado - Todos os componentes offline serão inicializados sob demanda");
     }
     
     /**
@@ -105,16 +99,10 @@ public class UnifiedAuthService {
      * @return Resultado da autenticação
      */
     private AuthResult autenticarAuto(String login, String senha) {
-        // Verificar estado do sistema offline
-        OfflineManager.OfflineState state = offlineManager.getCurrentState();
+        // Tentar autenticação online primeiro (sem verificar offline)
+        // Offline só será usado se explicitamente solicitado via OFFLINE_ONLY
         
-        // Se está offline ou modo offline forçado, usar autenticação offline
-        if (state == OfflineManager.OfflineState.OFFLINE || offlineManager.isForcedOffline()) {
-            LOGGER.info("Sistema em modo offline, usando autenticação local");
-            return autenticarOffline(login, senha);
-        }
-        
-        // Tentar autenticação online primeiro
+        // Tentar autenticação online
         try {
             LOGGER.info("Tentando autenticação online para: " + login);
             Usuario usuario = onlineAuthService.autenticar(login, senha);
@@ -128,15 +116,15 @@ public class UnifiedAuthService {
                 
                 return AuthResult.success(usuario, false);
             } else {
-                // Autenticação online falhou
-                LOGGER.info("Autenticação online falhou, tentando offline: " + login);
-                return autenticarOffline(login, senha);
+                // Autenticação online falhou - NÃO tentar offline no modo AUTO
+                LOGGER.info("Autenticação online falhou: credenciais incorretas");
+                return AuthResult.failure("Usuário ou senha incorretos");
             }
             
         } catch (Exception e) {
-            // Erro na autenticação online, tentar offline
-            LOGGER.log(Level.WARNING, "Erro na autenticação online, tentando offline", e);
-            return autenticarOffline(login, senha);
+            // Erro na autenticação online - NÃO tentar offline no modo AUTO
+            LOGGER.log(Level.SEVERE, "Erro na autenticação online", e);
+            return AuthResult.failure("Erro ao conectar com o servidor: " + e.getMessage());
         }
     }
     
@@ -176,6 +164,12 @@ public class UnifiedAuthService {
      */
     private AuthResult autenticarOffline(String login, String senha) {
         try {
+            // Criar OfflineAuthService se ainda não foi criado
+            ensureOfflineAuthServiceCreated();
+            
+            // Inicializar OfflineManager se ainda não foi inicializado
+            ensureOfflineManagerInitialized();
+            
             LOGGER.info("Autenticação offline para: " + login);
             Usuario usuario = offlineAuthService.autenticarOffline(login, senha);
             
@@ -198,12 +192,61 @@ public class UnifiedAuthService {
      */
     private void sincronizarUsuarioParaOffline(Usuario usuario) {
         try {
+            // Criar OfflineAuthService se ainda não foi criado
+            ensureOfflineAuthServiceCreated();
+            
             boolean sincronizado = offlineAuthService.sincronizarUsuario(usuario);
             if (sincronizado) {
                 LOGGER.info("Usuário sincronizado para banco offline: " + usuario.getLogin());
             }
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Erro ao sincronizar usuário para offline", e);
+        }
+    }
+    
+    /**
+     * Garante que o OfflineAuthService está criado
+     * Inicialização lazy - só cria quando realmente necessário
+     */
+    private void ensureOfflineAuthServiceCreated() {
+        if (offlineAuthService == null) {
+            LOGGER.info("Criando OfflineAuthService sob demanda...");
+            offlineAuthService = new OfflineAuthService();
+            LOGGER.info("OfflineAuthService criado com sucesso");
+        }
+    }
+    
+    /**
+     * Garante que o OfflineManager está obtido
+     * Inicialização lazy - só obtém quando realmente necessário
+     */
+    private void ensureOfflineManagerObtained() {
+        if (offlineManager == null) {
+            LOGGER.info("Obtendo OfflineManager sob demanda...");
+            offlineManager = OfflineManager.getInstance();
+            LOGGER.info("OfflineManager obtido com sucesso");
+        }
+    }
+    
+    /**
+     * Garante que o OfflineManager está inicializado
+     * Inicialização lazy - só inicializa quando realmente necessário
+     */
+    private void ensureOfflineManagerInitialized() {
+        try {
+            // Primeiro garantir que foi obtido
+            ensureOfflineManagerObtained();
+            
+            OfflineManager.OfflineState state = offlineManager.getCurrentState();
+            
+            // Se está inicializando ou em erro, tentar inicializar
+            if (state == OfflineManager.OfflineState.INITIALIZING || state == OfflineManager.OfflineState.ERROR) {
+                LOGGER.info("Inicializando OfflineManager sob demanda (estado atual: " + state + ")...");
+                offlineManager.initialize();
+                LOGGER.info("OfflineManager inicializado com sucesso");
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Erro ao inicializar OfflineManager", e);
         }
     }
     
@@ -220,6 +263,7 @@ public class UnifiedAuthService {
         // Se mudou para OFFLINE_ONLY, forçar o OfflineManager
         if (mode == AuthMode.OFFLINE_ONLY && previousMode != AuthMode.OFFLINE_ONLY) {
             LOGGER.info("Forçando OfflineManager para modo offline");
+            ensureOfflineManagerInitialized(); // Garantir que está inicializado
             offlineManager.forceOfflineMode();
         }
         // Se saiu do OFFLINE_ONLY, tentar reconectar
@@ -246,7 +290,10 @@ public class UnifiedAuthService {
         if (currentMode == AuthMode.OFFLINE_ONLY) {
             return true;
         }
-        // Caso contrário, verificar o estado real do OfflineManager
+        // Caso contrário, verificar o estado real do OfflineManager (se existir)
+        if (offlineManager == null) {
+            return false; // Se não foi criado ainda, não está offline
+        }
         return offlineManager.isOperatingOffline();
     }
     
@@ -254,6 +301,7 @@ public class UnifiedAuthService {
      * Força o sistema para modo offline
      */
     public void forceOfflineMode() {
+        ensureOfflineManagerObtained();
         offlineManager.forceOfflineMode();
         setAuthMode(AuthMode.OFFLINE_ONLY);
         LOGGER.info("Sistema forçado para modo offline");
@@ -264,6 +312,7 @@ public class UnifiedAuthService {
      * @return true se conseguiu reconectar
      */
     public boolean tryReconnect() {
+        ensureOfflineManagerObtained();
         boolean reconnected = offlineManager.tryReconnect();
         if (reconnected) {
             setAuthMode(AuthMode.AUTO);
@@ -283,12 +332,9 @@ public class UnifiedAuthService {
             LOGGER.log(Level.WARNING, "Erro ao criar admin no banco online", e);
         }
         
-        // Criar no banco offline
-        try {
-            offlineAuthService.criarUsuarioAdminPadrao();
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Erro ao criar admin no banco offline", e);
-        }
+        // Criar no banco offline (NÃO criar automaticamente - apenas se offline estiver ativo)
+        // O admin offline será criado quando o usuário importar dados ou forçar modo offline
+        LOGGER.info("Admin offline será criado quando necessário (importação ou modo offline)");
     }
     
     /**
@@ -296,7 +342,14 @@ public class UnifiedAuthService {
      * @return true se existem usuários
      */
     public boolean existemUsuariosOffline() {
-        return offlineAuthService.existemUsuarios();
+        try {
+            // Criar OfflineAuthService se ainda não foi criado
+            ensureOfflineAuthServiceCreated();
+            return offlineAuthService.existemUsuarios();
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Erro ao verificar usuários offline", e);
+            return false;
+        }
     }
     
     /**

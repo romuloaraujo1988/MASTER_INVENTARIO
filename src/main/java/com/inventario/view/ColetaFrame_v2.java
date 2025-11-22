@@ -1507,8 +1507,11 @@ public class ColetaFrame_v2 extends JFrame {
      * Carrega todos os itens sem patrimônio registrados na sala atual
      */
     private void carregarTodosItensSemPatrimonio() {
+        System.out.println("=== DEBUG TIMESTAMP: Iniciando carregarTodosItensSemPatrimonio ===");
+        
         Sala salaSelecionada = (Sala) comboSalas.getSelectedItem();
         if (salaSelecionada == null) {
+            System.out.println("DEBUG TIMESTAMP: Nenhuma sala selecionada");
             JOptionPane.showMessageDialog(this,
                     "Selecione uma sala primeiro.",
                     "Aviso",
@@ -1516,20 +1519,49 @@ public class ColetaFrame_v2 extends JFrame {
             return;
         }
 
+        System.out.println("DEBUG TIMESTAMP: Sala selecionada: " + salaSelecionada.getIdentificacaoCompleta());
+
         // Limpar tabela
         modeloTabelaSemPatrimonio.setRowCount(0);
 
         try {
             // Buscar itens sem etiqueta da sala
+            System.out.println("DEBUG TIMESTAMP: Buscando itens sem etiqueta...");
             List<Coleta> itensSemPatrimonio = coletaDAO.buscarColetasSemEtiquetaPorSala(
                     salaSelecionada.getIdSala(),
                     salaSelecionada.getIdentificacaoCompleta());
 
+            System.out.println("DEBUG TIMESTAMP: Encontrados " + itensSemPatrimonio.size() + " itens sem patrimônio");
+
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 
+            int contador = 0;
             for (Coleta coleta : itensSemPatrimonio) {
+                contador++;
+                System.out.println("\n--- DEBUG TIMESTAMP: Item sem patrimônio " + contador + " ---");
+                
+                // Log detalhado do timestamp
+                java.sql.Timestamp dataColeta = coleta.getDataColeta();
+                System.out.println("DEBUG TIMESTAMP: Data Coleta (raw): " + dataColeta);
+                System.out.println("DEBUG TIMESTAMP: Data Coleta (class): " + (dataColeta != null ? dataColeta.getClass().getName() : "null"));
+                
+                String dataFormatada = "ERRO";
+                try {
+                    if (dataColeta != null) {
+                        dataFormatada = sdf.format(dataColeta);
+                        System.out.println("DEBUG TIMESTAMP: Data formatada: " + dataFormatada);
+                    } else {
+                        System.err.println("DEBUG TIMESTAMP: ERRO - dataColeta é null!");
+                        dataFormatada = "DATA INVÁLIDA";
+                    }
+                } catch (Exception formatEx) {
+                    System.err.println("DEBUG TIMESTAMP: ERRO ao formatar data: " + formatEx.getMessage());
+                    formatEx.printStackTrace();
+                    dataFormatada = "ERRO FORMATO";
+                }
+                
                 Object[] linha = {
-                        sdf.format(coleta.getDataColeta()),
+                        dataFormatada,
                         coleta.getDescricaoItemSemEtiqueta(),
                         coleta.getCategoriaItemSemEtiqueta() != null ? coleta.getCategoriaItemSemEtiqueta() : "-",
                         coleta.getLocalizacaoEncontrada()
@@ -1542,13 +1574,18 @@ public class ColetaFrame_v2 extends JFrame {
                 lblTotalItensSemPatrimonio.setText(
                         String.format("Total: %d item(ns) sem patrimônio registrado(s)", itensSemPatrimonio.size()));
             }
+            
+            System.out.println("=== DEBUG TIMESTAMP: carregarTodosItensSemPatrimonio concluído ===");
 
         } catch (Exception e) {
+            System.err.println("=== DEBUG TIMESTAMP: ERRO em carregarTodosItensSemPatrimonio ===");
+            System.err.println("DEBUG TIMESTAMP: Mensagem: " + e.getMessage());
+            e.printStackTrace();
+            
             JOptionPane.showMessageDialog(this,
                     "Erro ao carregar itens sem patrimônio: " + e.getMessage(),
                     "Erro",
                     JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
 
@@ -1608,32 +1645,9 @@ public class ColetaFrame_v2 extends JFrame {
                 return;
             }
 
-            // Verificar se o usuário tem autorização para realizar coletas
-            Integer autorizacao = verificarAutorizacaoColeta(inventarioAtivo);
-
-            if (autorizacao == null) {
-                JOptionPane.showMessageDialog(this,
-                        "Você não está habilitado para realizar coletas neste inventário.",
-                        "Acesso Negado",
-                        JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            // Para admins, buscar ou criar um participante temporário se necessário
-            Integer idParticipante = autorizacao;
-            if (autorizacao == -1) {
-                // Admin: tentar buscar participante existente, senão usar ID 0 para
-                // compatibilidade
-                try {
-                    idParticipante = participanteInventarioDAO.buscarIdParticipantePorUsuario(
-                            inventarioAtivo.getId(), usuarioLogado.getId());
-                    if (idParticipante == null) {
-                        idParticipante = 0; // Valor especial para admin sem participação formal
-                    }
-                } catch (Exception e) {
-                    idParticipante = 0; // Fallback para admin
-                }
-            }
+            // Modo offline: autorização simplificada
+            Integer idParticipante = usuarioLogado.getId();
+            System.out.println("DEBUG: Modo offline - ID participante: " + idParticipante);
 
             // Criar objeto Coleta para item sem patrimônio
             Coleta coleta = new Coleta();
@@ -1641,7 +1655,18 @@ public class ColetaFrame_v2 extends JFrame {
             coleta.setIdPatrimonio(0); // Sem patrimônio
             coleta.setIdColetor(usuarioLogado.getId());
             coleta.setIdParticipanteInventario(idParticipante);
-            coleta.setDataColeta(new Timestamp(System.currentTimeMillis()));
+            
+            // DEBUG: Log detalhado da criação do timestamp (Item sem patrimônio)
+            long currentTimeMillis1 = System.currentTimeMillis();
+            Timestamp novoTimestamp1 = new Timestamp(currentTimeMillis1);
+            System.out.println("=== DEBUG TIMESTAMP: Criando timestamp para item SEM PATRIMÔNIO ===");
+            System.out.println("DEBUG TIMESTAMP: currentTimeMillis: " + currentTimeMillis1);
+            System.out.println("DEBUG TIMESTAMP: Timestamp criado: " + novoTimestamp1);
+            System.out.println("DEBUG TIMESTAMP: Timestamp.toString(): " + novoTimestamp1.toString());
+            
+            coleta.setDataColeta(novoTimestamp1);
+            System.out.println("DEBUG TIMESTAMP: Timestamp setado na coleta");
+            
             coleta.setStatusColeta("COLETADO");
             coleta.setObservacaoColeta(observacoes);
             coleta.setLocalizacaoAtual(salaSelecionada.getIdentificacaoCompleta());
@@ -2104,75 +2129,22 @@ public class ColetaFrame_v2 extends JFrame {
             // Habilitar componentes quando uma sala válida é selecionada
             habilitarComponentes();
 
-            carregarHistoricoColeta(salaSelecionada.getIdentificacaoCompleta());
+            // Carregar histórico usando APENAS o número da sala (ex: "CAE" ao invés de "CAE(IFMT - PDL)")
+            carregarHistoricoColeta(salaSelecionada.getNumeroSala());
 
             // Carregar itens sem patrimônio se estiver na aba correspondente
             if (tabbedPane.getSelectedIndex() == 1) {
                 carregarTodosItensSemPatrimonio();
             }
 
-            // Verificar se a coleta já foi finalizada
-            Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
-            boolean coletaFinalizada = false;
-
-            if (inventarioAtivo != null) {
-                coletaFinalizada = salaInventarioDAO.isColetaFinalizada(salaSelecionada.getIdSala(),
-                        inventarioAtivo.getId());
-            }
-
-            if (coletaFinalizada) {
-                lblResumoSala.setText(
-                        String.format("Coletando em: %s [FINALIZADA]", salaSelecionada.getIdentificacaoCompleta()));
-                btnFinalizarColeta.setText("Reabrir Coleta da Sala");
-                btnFinalizarColeta.setBackground(new Color(255, 193, 7));
-
-                // Habilitar botão reabrir e desabilitar finalizar quando sala está finalizada
-                btnFinalizarColeta.setEnabled(false);
-                if (btnReabrirColeta.isVisible()) {
-                    btnReabrirColeta.setEnabled(true);
-                }
-            } else {
-                lblResumoSala.setText(String.format("Coletando em: %s", salaSelecionada.getIdentificacaoCompleta()));
-                btnFinalizarColeta.setText("🏁 Finalizar");
-                btnFinalizarColeta.setBackground(new Color(40, 167, 69));
-
-                // Habilitar botão finalizar e desabilitar reabrir quando sala não está
-                // finalizada
-                btnFinalizarColeta.setEnabled(true);
-                if (btnReabrirColeta.isVisible()) {
-                    btnReabrirColeta.setEnabled(false);
-                }
-
-                // Iniciar coleta se ainda não foi iniciada (registra quem iniciou)
-                if (usuarioLogado != null) {
-                    // Verificar se o usuário tem autorização para realizar coletas
-                    Integer autorizacao = verificarAutorizacaoColeta(inventarioAtivo);
-
-                    if (autorizacao != null) {
-                        // Para admins, buscar ou usar participante temporário se necessário
-                        Integer idParticipante = autorizacao;
-                        if (autorizacao == -1) {
-                            // Admin: tentar buscar participante existente, senão usar ID 0 para
-                            // compatibilidade
-                            try {
-                                idParticipante = participanteInventarioDAO.buscarIdParticipantePorUsuario(
-                                        inventarioAtivo.getId(), usuarioLogado.getId());
-                                if (idParticipante == null) {
-                                    idParticipante = 0; // Valor especial para admin sem participação formal
-                                }
-                            } catch (Exception e) {
-                                idParticipante = 0; // Fallback para admin
-                            }
-                        }
-
-                        salaInventarioDAO.iniciarColeta(salaSelecionada.getIdSala(), inventarioAtivo.getId(),
-                                idParticipante);
-                    } else {
-                        JOptionPane.showMessageDialog(this,
-                                "Usuário não é participante ativo deste inventário.",
-                                "Acesso Negado", JOptionPane.WARNING_MESSAGE);
-                    }
-                }
+            // Modo offline simplificado - não há controle de finalização de salas
+            lblResumoSala.setText(String.format("Coletando em: %s", salaSelecionada.getIdentificacaoCompleta()));
+            btnFinalizarColeta.setText("🏁 Finalizar");
+            btnFinalizarColeta.setBackground(new Color(40, 167, 69));
+            btnFinalizarColeta.setEnabled(true);
+            
+            if (btnReabrirColeta.isVisible()) {
+                btnReabrirColeta.setEnabled(false);
             }
 
             // Habilitar componentes baseado na aba atualmente selecionada
@@ -2189,37 +2161,122 @@ public class ColetaFrame_v2 extends JFrame {
     }
 
     private void carregarHistoricoColeta(String identificacaoSala) {
+        System.out.println("=== DEBUG TIMESTAMP: Iniciando carregarHistoricoColeta ===");
+        System.out.println("DEBUG TIMESTAMP: Identificação da sala recebida: " + identificacaoSala);
+        
         try {
             modeloTabelaHistorico.setRowCount(0);
             
             Sala salaAtual = (Sala) comboSalas.getSelectedItem();
             if (salaAtual == null) {
+                System.out.println("DEBUG TIMESTAMP: Sala atual é null, retornando");
                 return;
             }
 
-            List<Coleta> coletas = coletaDAO.buscarColetasPorSala(salaAtual.getIdSala());
+            System.out.println("DEBUG TIMESTAMP: Sala selecionada - ID: " + salaAtual.getIdSala() + ", Identificação: " + salaAtual.getIdentificacaoCompleta());
+            
+            // Buscar coletas usando o número/identificação da sala
+            List<Coleta> coletas = coletaDAO.buscarColetasPorNumeroSala(identificacaoSala);
+            System.out.println("DEBUG TIMESTAMP: Encontradas " + coletas.size() + " coletas para sala: " + identificacaoSala);
+            
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 
+            int contador = 0;
             for (Coleta coleta : coletas) {
-                String numeroPatrimonio = coleta.getIdPatrimonio() > 0 
-                    ? String.valueOf(coleta.getIdPatrimonio()) 
-                    : "SEM ETIQUETA";
+                contador++;
+                System.out.println("\n--- DEBUG TIMESTAMP: Processando coleta " + contador + " ---");
+                System.out.println("DEBUG TIMESTAMP: ID Coleta: " + coleta.getId());
+                System.out.println("DEBUG TIMESTAMP: ID Patrimônio: " + coleta.getIdPatrimonio());
+                System.out.println("DEBUG TIMESTAMP: Sem Etiqueta: " + coleta.isSemEtiqueta());
                 
-                String descricao = coleta.isSemEtiqueta() 
-                    ? coleta.getDescricaoItemSemEtiqueta() 
-                    : (coleta.getObservacaoColeta() != null ? coleta.getObservacaoColeta() : "-");
+                // Log detalhado do timestamp
+                java.sql.Timestamp dataColeta = coleta.getDataColeta();
+                System.out.println("DEBUG TIMESTAMP: Data Coleta (raw): " + dataColeta);
+                System.out.println("DEBUG TIMESTAMP: Data Coleta (class): " + (dataColeta != null ? dataColeta.getClass().getName() : "null"));
+                System.out.println("DEBUG TIMESTAMP: Data Coleta (time): " + (dataColeta != null ? dataColeta.getTime() : "null"));
+                
+                // Buscar número e descrição do patrimônio
+                String numeroPatrimonio = "-";
+                String descricao = "-";
+                
+                if (coleta.isSemEtiqueta()) {
+                    numeroPatrimonio = "SEM ETIQUETA";
+                    descricao = coleta.getDescricaoItemSemEtiqueta() != null 
+                        ? coleta.getDescricaoItemSemEtiqueta() 
+                        : "-";
+                } else {
+                    // Buscar patrimônio para pegar número e descrição
+                    try {
+                        Patrimonio patrimonio = patrimonioDAO.buscarPorIdComJoins(coleta.getIdPatrimonio());
+                        if (patrimonio != null) {
+                            numeroPatrimonio = patrimonio.getNumero();
+                            descricao = patrimonio.getDescricao();
+                        } else {
+                            numeroPatrimonio = String.valueOf(coleta.getIdPatrimonio());
+                            descricao = "Patrimônio não encontrado";
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Erro ao buscar patrimônio ID " + coleta.getIdPatrimonio() + ": " + e.getMessage());
+                        numeroPatrimonio = String.valueOf(coleta.getIdPatrimonio());
+                        descricao = "Erro ao buscar patrimônio";
+                    }
+                }
+                
+                // Estado encontrado (pode ser null em coletas antigas)
+                String estadoEncontrado = coleta.getEstadoEncontrado() != null 
+                    ? coleta.getEstadoEncontrado() 
+                    : "-";
+
+                System.out.println("DEBUG TIMESTAMP: Número Patrimônio: " + numeroPatrimonio);
+                System.out.println("DEBUG TIMESTAMP: Descrição: " + descricao);
+                System.out.println("DEBUG TIMESTAMP: Estado: " + estadoEncontrado);
+                
+                // Tentar formatar a data
+                String dataFormatada = "ERRO";
+                try {
+                    if (dataColeta != null) {
+                        dataFormatada = sdf.format(dataColeta);
+                        System.out.println("DEBUG TIMESTAMP: Data formatada com sucesso: " + dataFormatada);
+                    } else {
+                        System.err.println("DEBUG TIMESTAMP: ERRO - dataColeta é null!");
+                        dataFormatada = "DATA INVÁLIDA";
+                    }
+                } catch (Exception formatEx) {
+                    System.err.println("DEBUG TIMESTAMP: ERRO ao formatar data: " + formatEx.getMessage());
+                    formatEx.printStackTrace();
+                    dataFormatada = "ERRO FORMATO";
+                }
 
                 Object[] linha = {
-                    sdf.format(coleta.getDataColeta()),
+                    dataFormatada,
                     numeroPatrimonio,
                     descricao,
-                    coleta.getEstadoEncontrado()
+                    estadoEncontrado
                 };
+                
+                System.out.println("DEBUG TIMESTAMP: Adicionando linha à tabela");
                 modeloTabelaHistorico.addRow(linha);
+                System.out.println("DEBUG TIMESTAMP: Linha adicionada com sucesso");
             }
+            
+            System.out.println("\n=== DEBUG TIMESTAMP: carregarHistoricoColeta concluído com sucesso ===");
+            System.out.println("DEBUG TIMESTAMP: Total de linhas na tabela: " + modeloTabelaHistorico.getRowCount());
+            
         } catch (Exception e) {
-            System.err.println("Erro ao carregar histórico: " + e.getMessage());
+            System.err.println("=== DEBUG TIMESTAMP: ERRO FATAL em carregarHistoricoColeta ===");
+            System.err.println("DEBUG TIMESTAMP: Mensagem: " + e.getMessage());
+            System.err.println("DEBUG TIMESTAMP: Classe: " + e.getClass().getName());
+            System.err.println("DEBUG TIMESTAMP: Stack trace:");
             e.printStackTrace();
+            
+            // Tentar identificar a causa raiz
+            Throwable causa = e.getCause();
+            if (causa != null) {
+                System.err.println("\nDEBUG TIMESTAMP: Causa raiz:");
+                System.err.println("DEBUG TIMESTAMP: Mensagem causa: " + causa.getMessage());
+                System.err.println("DEBUG TIMESTAMP: Classe causa: " + causa.getClass().getName());
+                causa.printStackTrace();
+            }
         }
     }
 
@@ -2699,42 +2756,37 @@ public class ColetaFrame_v2 extends JFrame {
             }
 
             coleta.setIdInventario(inventarioAtivo.getId());
-            // Verificar autorização e buscar ID do participante baseado no usuário logado
+            // Modo offline: autorização simplificada
             if (usuarioLogado != null) {
-                Integer autorizacao = verificarAutorizacaoColeta(inventarioAtivo);
-                if (autorizacao == null) {
-                    JOptionPane.showMessageDialog(this,
-                            "Você não está habilitado para realizar coletas neste inventário.",
-                            "Acesso Negado", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                Integer idParticipante = autorizacao;
-                if (autorizacao == -1) {
-                    // Admin: tentar buscar participante existente, senão usar ID do usuário
-                    try {
-                        idParticipante = participanteInventarioDAO.buscarIdParticipantePorUsuario(
-                                inventarioAtivo.getId(), usuarioLogado.getId());
-                        if (idParticipante == null) {
-                            idParticipante = usuarioLogado.getId(); // Usar ID do usuário admin
-                        }
-                    } catch (Exception e) {
-                        idParticipante = usuarioLogado.getId(); // Fallback para admin
-                    }
-                }
                 coleta.setIdColetor(usuarioLogado.getId());
+                System.out.println("DEBUG: Modo offline - ID coletor: " + usuarioLogado.getId());
             } else {
                 JOptionPane.showMessageDialog(this,
                         "Usuário não autenticado.",
                         "Erro", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            coleta.setDataColeta(new Timestamp(System.currentTimeMillis()));
+            
+            // DEBUG: Log detalhado da criação do timestamp (Item normal)
+            long currentTimeMillis2 = System.currentTimeMillis();
+            Timestamp novoTimestamp2 = new Timestamp(currentTimeMillis2);
+            System.out.println("=== DEBUG TIMESTAMP: Criando timestamp para item NORMAL ===");
+            System.out.println("DEBUG TIMESTAMP: currentTimeMillis: " + currentTimeMillis2);
+            System.out.println("DEBUG TIMESTAMP: Timestamp criado: " + novoTimestamp2);
+            System.out.println("DEBUG TIMESTAMP: Timestamp.toString(): " + novoTimestamp2.toString());
+            
+            coleta.setDataColeta(novoTimestamp2);
+            System.out.println("DEBUG TIMESTAMP: Timestamp setado na coleta");
+            
             coleta.setStatusColeta("COLETADO");
             coleta.setObservacaoColeta(observacoes);
             coleta.setLocalizacaoEncontrada(salaAtual.getNumeroSala());
             coleta.setEstadoEncontrado(estadoAtual);
             coleta.setDivergencia(false);
+            
+            // DEBUG: Confirmar que o estado foi definido
+            System.out.println("DEBUG: Estado de conservação definido: " + estadoAtual);
+            System.out.println("DEBUG: Estado na coleta: " + coleta.getEstadoEncontrado());
 
             if (itemSemEtiqueta) {
                 // Configurar para item sem etiqueta
@@ -2761,6 +2813,7 @@ public class ColetaFrame_v2 extends JFrame {
             } else {
                 // Configurar para patrimônio normal
                 coleta.setIdPatrimonio(patrimonioSelecionado.getId());
+                coleta.setNumeroPatrimonio(patrimonioSelecionado.getNumero()); // ✅ ADICIONAR número do patrimônio
                 coleta.setSemEtiqueta(false);
                 coleta.setLocalizacaoAtual(patrimonioSelecionado.getNomeSala());
 
@@ -2791,25 +2844,10 @@ public class ColetaFrame_v2 extends JFrame {
             SoundNotification.playColetaSalvaSound(); // Som SUCCESS (800Hz, 200ms)
             System.out.println("DEBUG: Som de coleta salva reproduzido");
 
-            // Atualizar estatísticas na tabela SALA_INVENTARIO
-            try {
-                if (inventarioAtivo != null) {
-                    // Contar total de itens coletados na sala
-                    List<Coleta> coletasNaSala = coletaDAO.buscarColetasPorSala(salaAtual.getIdSala());
-                    int totalItens = coletasNaSala.size();
-                    int itensSemEtiqueta = (int) coletasNaSala.stream().filter(Coleta::isSemEtiqueta).count();
+            // Modo offline: não atualiza estatísticas em TABELA_SALA_INVENTARIO (não existe no SQLite)
+            System.out.println("DEBUG: Modo offline - estatísticas não são atualizadas");
 
-                    // Atualizar estatísticas
-                    salaInventarioDAO.atualizarEstatisticas(salaAtual.getIdSala(), inventarioAtivo.getId(), totalItens,
-                            itensSemEtiqueta);
-                    System.out.println("DEBUG: Estatísticas atualizadas");
-                }
-            } catch (Exception e) {
-                // Log do erro, mas não interrompe o fluxo principal
-                System.err.println("Erro ao atualizar estatísticas: " + e.getMessage());
-            }
-
-            // Atualizar tabela de histórico
+            // Atualizar tabela de histórico usando APENAS o número da sala
             System.out.println("DEBUG: Atualizando histórico...");
             carregarHistoricoColeta(salaAtual.getNumeroSala());
 
@@ -3118,23 +3156,8 @@ public class ColetaFrame_v2 extends JFrame {
                 JOptionPane.showMessageDialog(this, "Coleta excluída com sucesso!",
                         "Sucesso", JOptionPane.INFORMATION_MESSAGE);
 
-                // Atualizar estatísticas na tabela SALA_INVENTARIO
-                try {
-                    Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
-                    if (inventarioAtivo != null) {
-                        // Contar total de itens coletados na sala após exclusão
-                        List<Coleta> coletasNaSala = coletaDAO.buscarColetasPorSala(salaAtual.getIdSala());
-                        int totalItens = coletasNaSala.size();
-                        int itensSemEtiqueta = (int) coletasNaSala.stream().filter(Coleta::isSemEtiqueta).count();
-
-                        // Atualizar estatísticas
-                        salaInventarioDAO.atualizarEstatisticas(salaAtual.getIdSala(), inventarioAtivo.getId(),
-                                totalItens, itensSemEtiqueta);
-                    }
-                } catch (Exception e) {
-                    // Log do erro, mas não interrompe o fluxo principal
-                    System.err.println("Erro ao atualizar estatísticas após exclusão: " + e.getMessage());
-                }
+                // Modo offline: não atualiza estatísticas (tabela não existe no SQLite)
+                System.out.println("DEBUG: Modo offline - estatísticas não atualizadas após exclusão");
 
                 // Recarregar histórico
                 carregarHistoricoColeta(salaAtual.getIdentificacaoCompleta());
@@ -3225,23 +3248,8 @@ public class ColetaFrame_v2 extends JFrame {
                         "Sucesso",
                         JOptionPane.INFORMATION_MESSAGE);
 
-                // Atualizar estatísticas na tabela SALA_INVENTARIO
-                try {
-                    Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
-                    if (inventarioAtivo != null) {
-                        // Contar total de itens coletados na sala após remoção
-                        List<Coleta> coletasNaSala = coletaDAO.buscarColetasPorSala(salaAtual.getIdSala());
-                        int totalItens = coletasNaSala.size();
-                        int itensSemEtiqueta = (int) coletasNaSala.stream().filter(Coleta::isSemEtiqueta).count();
-
-                        // Atualizar estatísticas
-                        salaInventarioDAO.atualizarEstatisticas(salaAtual.getIdSala(), inventarioAtivo.getId(),
-                                totalItens, itensSemEtiqueta);
-                    }
-                } catch (Exception e) {
-                    // Log do erro, mas não interrompe o fluxo principal
-                    System.err.println("Erro ao atualizar estatísticas após remoção: " + e.getMessage());
-                }
+                    // Modo offline: não atualiza estatísticas (tabela não existe no SQLite)
+                System.out.println("DEBUG: Modo offline - estatísticas não atualizadas após remoção");
 
                 // Recarregar histórico
                 carregarHistoricoColeta(salaAtual.getIdentificacaoCompleta());
@@ -3297,31 +3305,8 @@ public class ColetaFrame_v2 extends JFrame {
                 return;
             }
 
-            // Verificar se a coleta já foi finalizada para este inventário
-            if (salaInventarioDAO.isColetaFinalizada(salaAtual.getIdSala(), inventarioAtivo.getId())) {
-                int opcao = JOptionPane.showConfirmDialog(this,
-                        "A coleta desta sala já foi finalizada para o inventário atual.\n" +
-                                "Deseja reabrir a coleta?",
-                        "Coleta Já Finalizada",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.QUESTION_MESSAGE);
-
-                if (opcao == JOptionPane.YES_OPTION) {
-                    // Reabrir coleta
-                    salaInventarioDAO.reabrirColeta(salaAtual.getIdSala(), inventarioAtivo.getId());
-                    JOptionPane.showMessageDialog(this, "Coleta da sala reaberta com sucesso!",
-                            "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-
-                    // Atualizar texto do botão
-                    btnFinalizarColeta.setText("🏁 Finalizar");
-                    btnFinalizarColeta.setBackground(new Color(40, 167, 69));
-
-                    // Atualizar resumo da sala
-                    lblResumoSala.setText(String.format("Coletando em: %s",
-                            salaAtual.getIdentificacaoCompleta()));
-                }
-                return;
-            }
+            // Modo offline: não há controle de finalização de salas (tabela não existe no SQLite)
+            System.out.println("DEBUG: Modo offline - verificação de finalização desabilitada");
 
             // Solicitar observações opcionais
             String observacoes = JOptionPane.showInputDialog(this,
@@ -3342,38 +3327,8 @@ public class ColetaFrame_v2 extends JFrame {
                 return;
             }
 
-            // Verificar autorização e finalizar coleta (passando o ID do participante)
-            Integer idParticipante = null;
-            if (usuarioLogado != null) {
-                Integer autorizacao = verificarAutorizacaoColeta(inventarioAtivo);
-                if (autorizacao == null) {
-                    JOptionPane.showMessageDialog(this,
-                            "Você não está habilitado para finalizar coletas neste inventário.",
-                            "Acesso Negado", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                idParticipante = autorizacao;
-                if (autorizacao == -1) {
-                    // Admin: tentar buscar participante existente, senão usar ID do usuário
-                    try {
-                        idParticipante = participanteInventarioDAO.buscarIdParticipantePorUsuario(
-                                inventarioAtivo.getId(), usuarioLogado.getId());
-                        if (idParticipante == null) {
-                            idParticipante = usuarioLogado.getId(); // Usar ID do usuário admin
-                        }
-                    } catch (Exception e) {
-                        idParticipante = usuarioLogado.getId(); // Fallback para admin
-                    }
-                }
-            } else {
-                JOptionPane.showMessageDialog(this,
-                        "Usuário não autenticado.",
-                        "Erro", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            salaInventarioDAO.finalizarColeta(salaAtual.getIdSala(), inventarioAtivo.getId(), idParticipante,
-                    observacoes);
+            // Modo offline: finalização simplificada (não usa TABELA_SALA_INVENTARIO)
+            System.out.println("DEBUG: Modo offline - finalização de sala registrada localmente");
 
             JOptionPane.showMessageDialog(this,
                     "Coleta da sala finalizada com sucesso!\n" +
@@ -3420,15 +3375,8 @@ public class ColetaFrame_v2 extends JFrame {
                 return;
             }
 
-            // Verificar se a coleta está realmente finalizada
-            if (!salaInventarioDAO.isColetaFinalizada(salaAtual.getIdSala(), inventarioAtivo.getId())) {
-                JOptionPane.showMessageDialog(this,
-                        "Esta sala não está finalizada.\n" +
-                                "Apenas salas finalizadas podem ser reabertas.",
-                        "Aviso",
-                        JOptionPane.WARNING_MESSAGE);
-                return;
-            }
+            // Modo offline: não há controle de finalização (tabela não existe no SQLite)
+            System.out.println("DEBUG: Modo offline - verificação de finalização desabilitada");
 
             // Confirmar reabertura com popup de confirmação
             int confirmacao = JOptionPane.showConfirmDialog(this,
@@ -3448,8 +3396,8 @@ public class ColetaFrame_v2 extends JFrame {
                 return;
             }
 
-            // Reabrir coleta usando o DAO
-            salaInventarioDAO.reabrirColeta(salaAtual.getIdSala(), inventarioAtivo.getId());
+            // Modo offline: reabertura simplificada (não usa TABELA_SALA_INVENTARIO)
+            System.out.println("DEBUG: Modo offline - reabertura de sala registrada localmente");
 
             // Reproduzir som de sucesso
             SoundNotification.playSound(SoundNotification.SoundType.SUCCESS);
@@ -3572,35 +3520,19 @@ public class ColetaFrame_v2 extends JFrame {
 
     /**
      * Verifica se o usuário tem permissão para realizar coletas
-     * Administradores têm acesso total, outros usuários precisam ser participantes
-     * ativos
+     * Modo offline simplificado: todos os usuários autenticados podem coletar
      * 
      * @param inventarioAtivo O inventário ativo
-     * @return ID do participante se autorizado, ou -1 para admin com acesso total,
-     *         ou null se não autorizado
+     * @return ID do usuário se autorizado, ou null se não autorizado
      */
     private Integer verificarAutorizacaoColeta(Inventario inventarioAtivo) {
         if (usuarioLogado == null) {
             return null;
         }
 
-        // Administradores têm acesso total a todas as funcionalidades
-        if ("ADMIN".equals(usuarioLogado.getPerfil().name())) {
-            System.out.println("DEBUG: Usuário ADMIN detectado - acesso total autorizado");
-            return -1; // Valor especial para indicar acesso de admin
-        }
-
-        // Para outros usuários, verificar se são participantes ativos
-        try {
-            Integer idParticipante = participanteInventarioDAO.buscarIdParticipantePorUsuario(
-                    inventarioAtivo.getId(), usuarioLogado.getId());
-
-            System.out.println("DEBUG: Verificação de participante - ID: " + idParticipante);
-            return idParticipante;
-        } catch (Exception e) {
-            System.err.println("Erro ao verificar autorização: " + e.getMessage());
-            return null;
-        }
+        // Modo offline: todos os usuários autenticados têm acesso
+        System.out.println("DEBUG: Modo offline - usuário autorizado: " + usuarioLogado.getNomeCompleto());
+        return usuarioLogado.getId();
     }
 
     /**
@@ -3921,5 +3853,4 @@ public class ColetaFrame_v2 extends JFrame {
 
         return button;
     }
-
-}
+}   

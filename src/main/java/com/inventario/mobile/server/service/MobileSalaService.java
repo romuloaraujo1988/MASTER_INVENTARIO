@@ -34,7 +34,7 @@ public class MobileSalaService {
         
         long startTime = System.currentTimeMillis();
         
-        // Query otimizada com JOIN - busca TODAS as salas de uma vez
+        // Query otimizada usando TABELA_SALA - busca TODAS as salas de uma vez
         String sql = "SELECT DISTINCT " +
                     "    s.ID_SALA, " +
                     "    s.NUMERO_SALA, " +
@@ -43,15 +43,7 @@ public class MobileSalaService {
                     "    s.BLOCO, " +
                     "    s.ATIVO " +
                     "FROM TABELA_SALA s " +
-                    "LEFT JOIN TABELA_SALA_INVENTARIO si ON s.ID_SALA = si.ID_SALA " +
-                    "    AND si.ID_INVENTARIO = ( " +
-                    "        SELECT ID FROM TABELA_INVENTARIO " +
-                    "        WHERE STATUS_INVENTARIO = 'EM_ANDAMENTO' " +
-                    "        ORDER BY DATA_INICIO DESC " +
-                    "        LIMIT 1 " +
-                    "    ) " +
                     "WHERE s.ATIVO = true " +
-                    "    AND (si.STATUS_COLETA IS NULL OR si.STATUS_COLETA != 'FINALIZADA') " +
                     "ORDER BY s.NUMERO_SALA, s.DESCRICAO";
         
         List<MobileSalaDTO> dtos = new ArrayList<>();
@@ -100,7 +92,7 @@ public class MobileSalaService {
         
         long startTime = System.currentTimeMillis();
         
-        // Query otimizada com JOIN e paginação no banco (1 única query!)
+        // Query otimizada usando TABELA_SALA com paginação no banco (1 única query!)
         String sql = "SELECT DISTINCT " +
                     "    s.ID_SALA, " +
                     "    s.NUMERO_SALA, " +
@@ -109,15 +101,7 @@ public class MobileSalaService {
                     "    s.BLOCO, " +
                     "    s.ATIVO " +
                     "FROM TABELA_SALA s " +
-                    "LEFT JOIN TABELA_SALA_INVENTARIO si ON s.ID_SALA = si.ID_SALA " +
-                    "    AND si.ID_INVENTARIO = ( " +
-                    "        SELECT ID FROM TABELA_INVENTARIO " +
-                    "        WHERE STATUS_INVENTARIO = 'EM_ANDAMENTO' " +
-                    "        ORDER BY DATA_INICIO DESC " +
-                    "        LIMIT 1 " +
-                    "    ) " +
                     "WHERE s.ATIVO = true " +
-                    "    AND (si.STATUS_COLETA IS NULL OR si.STATUS_COLETA != 'FINALIZADA') " +
                     "ORDER BY s.NUMERO_SALA, s.DESCRICAO " +
                     "LIMIT ? OFFSET ?";
         
@@ -164,15 +148,7 @@ public class MobileSalaService {
     public int contarSalasAtivas() throws SQLException {
         String sql = "SELECT COUNT(DISTINCT s.ID_SALA) " +
                     "FROM TABELA_SALA s " +
-                    "LEFT JOIN TABELA_SALA_INVENTARIO si ON s.ID_SALA = si.ID_SALA " +
-                    "    AND si.ID_INVENTARIO = ( " +
-                    "        SELECT ID FROM TABELA_INVENTARIO " +
-                    "        WHERE STATUS_INVENTARIO = 'EM_ANDAMENTO' " +
-                    "        ORDER BY DATA_INICIO DESC " +
-                    "        LIMIT 1 " +
-                    "    ) " +
-                    "WHERE s.ATIVO = true " +
-                    "    AND (si.STATUS_COLETA IS NULL OR si.STATUS_COLETA != 'FINALIZADA')";
+                    "WHERE s.ATIVO = true";
         
         try (java.sql.Connection conn = com.inventario.util.DatabaseConnection.getConnection();
              java.sql.PreparedStatement stmt = conn.prepareStatement(sql);
@@ -188,16 +164,22 @@ public class MobileSalaService {
     
     /**
      * Verifica se uma sala está finalizada em um inventário
+     * Lógica: Uma sala está finalizada se todos os patrimônios dela foram coletados
      */
     private boolean isSalaFinalizada(Integer idInventario, Integer idSala) {
-        String sql = "SELECT COUNT(*) FROM TABELA_SALA_INVENTARIO " +
-                    "WHERE ID_INVENTARIO = ? AND ID_SALA = ? AND STATUS_COLETA = 'FINALIZADA'";
+        // Verificar se todos os patrimônios da sala foram coletados neste inventário
+        String sql = "SELECT " +
+                    "    (SELECT COUNT(*) FROM TABELA_PATRIMONIO WHERE ID_SALA = ?) as total_patrimonios, " +
+                    "    (SELECT COUNT(DISTINCT ID_PATRIMONIO) FROM TABELA_COLETA " +
+                    "     WHERE ID_INVENTARIO = ? AND ID_PATRIMONIO IN " +
+                    "         (SELECT ID FROM TABELA_PATRIMONIO WHERE ID_SALA = ?)) as patrimonios_coletados";
         
         try (java.sql.Connection conn = com.inventario.util.DatabaseConnection.getConnection();
              java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
             
-            stmt.setInt(1, idInventario);
-            stmt.setInt(2, idSala);
+            stmt.setInt(1, idSala);
+            stmt.setInt(2, idInventario);
+            stmt.setInt(3, idSala);
             
             try (java.sql.ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {

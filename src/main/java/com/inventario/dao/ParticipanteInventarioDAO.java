@@ -20,6 +20,23 @@ import java.util.List;
 public class ParticipanteInventarioDAO {
     
     /**
+     * Detecta se está usando SQLite
+     */
+    private boolean isSQLite() throws SQLException {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String dbUrl = conn.getMetaData().getURL();
+            return dbUrl != null && dbUrl.contains("jdbc:sqlite");
+        }
+    }
+    
+    /**
+     * Retorna o nome correto da tabela baseado no banco
+     */
+    private String getTableName() throws SQLException {
+        return isSQLite() ? "local_participante_inventario" : "TABELA_PARTICIPANTE_INVENTARIO";
+    }
+    
+    /**
      * Adiciona um participante ao inventário
      * Valida se o usuário existe e se não é já participante ativo
      * Se existe um registro inativo, reativa-o em vez de criar novo

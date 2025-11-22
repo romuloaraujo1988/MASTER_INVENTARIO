@@ -1,0 +1,295 @@
+-- ==================================================================================
+-- Script Combinado: Criar Estrutura + Corrigir Timestamps
+-- Sistema de Inventário de Patrimônio
+-- Data: 21/11/2025
+-- ==================================================================================
+
+-- ==================== CRIAR TABELAS PRINCIPAIS (se não existirem) ====================
+
+-- Tabela TABELA_INVENTARIO
+CREATE TABLE IF NOT EXISTS TABELA_INVENTARIO (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    NOME TEXT NOT NULL,
+    ANO INTEGER,
+    DATA_INICIO TEXT NOT NULL,
+    DATA_FIM TEXT,
+    OBSERVACAO TEXT,
+    STATUS_INVENTARIO TEXT DEFAULT 'PLANEJADO',
+    RESPONSAVEL_INVENTARIO TEXT,
+    TOTAL_PATRIMONIOS INTEGER DEFAULT 0,
+    PATRIMONIOS_COLETADOS INTEGER DEFAULT 0,
+    PERCENTUAL_CONCLUSAO DECIMAL(5,2) DEFAULT 0.00,
+    DATA_CRIACAO TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')),
+    DATA_ULTIMA_ATUALIZACAO TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime'))
+);
+
+-- Tabela SALA
+CREATE TABLE IF NOT EXISTS SALA (
+    ID_SALA INTEGER PRIMARY KEY AUTOINCREMENT,
+    NUMERO_SALA TEXT NOT NULL,
+    NOME_SALA TEXT,
+    ANDAR TEXT,
+    BLOCO TEXT,
+    CAPACIDADE INTEGER,
+    TIPO_SALA TEXT,
+    ATIVA BOOLEAN DEFAULT TRUE,
+    DATA_CADASTRO TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime'))
+);
+
+-- Tabela PATRIMONIO
+CREATE TABLE IF NOT EXISTS PATRIMONIO (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    NUMERO TEXT NOT NULL UNIQUE,
+    DESCRICAO TEXT,
+    DESCRICAO_RESUMIDA TEXT,
+    MARCA TEXT,
+    MODELO TEXT,
+    NUMERO_SERIE TEXT,
+    ESTADO_CONSERVACAO TEXT,
+    VALOR_AQUISICAO DECIMAL(15,2),
+    DATA_AQUISICAO DATE,
+    STATUS TEXT DEFAULT 'ATIVO',
+    OBSERVACOES TEXT,
+    ID_RESPONSAVEL INTEGER,
+    ID_SALA INTEGER,
+    NOME_SALA TEXT,
+    DATA_CADASTRO TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime'))
+);
+
+-- Tabela RESPONSAVEL
+CREATE TABLE IF NOT EXISTS RESPONSAVEL (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    NOME TEXT NOT NULL,
+    CPF TEXT,
+    MATRICULA TEXT,
+    EMAIL TEXT,
+    TELEFONE TEXT,
+    CARGO TEXT,
+    SETOR TEXT,
+    ATIVO BOOLEAN DEFAULT TRUE,
+    DATA_CADASTRO TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime'))
+);
+
+-- Tabela COLETA
+CREATE TABLE IF NOT EXISTS COLETA (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    ID_INVENTARIO INTEGER NOT NULL,
+    ID_PATRIMONIO INTEGER,
+    ID_COLETOR INTEGER,
+    ID_PARTICIPANTE_INVENTARIO INTEGER,
+    DATA_COLETA TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%S.%f', 'now', 'localtime')),
+    STATUS_COLETA TEXT DEFAULT 'COLETADO',
+    OBSERVACAO_COLETA TEXT,
+    LOCALIZACAO_ATUAL TEXT,
+    LOCALIZACAO_ENCONTRADA TEXT,
+    ESTADO_ENCONTRADO TEXT,
+    DIVERGENCIA BOOLEAN DEFAULT FALSE,
+    MOTIVO_DIVERGENCIA TEXT,
+    SEM_ETIQUETA BOOLEAN DEFAULT FALSE,
+    DESCRICAO_ITEM_SEM_ETIQUETA TEXT,
+    CATEGORIA_ITEM_SEM_ETIQUETA TEXT,
+    NUMERO_PATRIMONIO TEXT,
+    DESCRICAO_PATRIMONIO TEXT
+);
+
+-- Tabela SALA_INVENTARIO
+CREATE TABLE IF NOT EXISTS SALA_INVENTARIO (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    ID_SALA INTEGER NOT NULL,
+    ID_INVENTARIO INTEGER NOT NULL,
+    STATUS TEXT DEFAULT 'ABERTA' CHECK(STATUS IN ('ABERTA', 'FINALIZADA', 'CANCELADA')),
+    DATA_INICIO TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')),
+    DATA_FIM TEXT,
+    ID_PARTICIPANTE_INICIOU INTEGER,
+    ID_PARTICIPANTE_FINALIZOU INTEGER,
+    TOTAL_ITENS INTEGER DEFAULT 0,
+    ITENS_SEM_ETIQUETA INTEGER DEFAULT 0,
+    OBSERVACOES TEXT,
+    COLETA_FINALIZADA BOOLEAN DEFAULT FALSE,
+    DATA_INICIO_COLETA TEXT,
+    DATA_FINALIZACAO_COLETA TEXT,
+    OBSERVACOES_FINALIZACAO TEXT,
+    TOTAL_ITENS_COLETADOS INTEGER DEFAULT 0,
+    TOTAL_ITENS_SEM_ETIQUETA INTEGER DEFAULT 0,
+    PERCENTUAL_CONCLUSAO DECIMAL(5,2) DEFAULT 0.00,
+    STATUS_COLETA TEXT DEFAULT 'ABERTA',
+    UNIQUE(ID_SALA, ID_INVENTARIO)
+);
+
+-- Tabela PARTICIPANTE_INVENTARIO
+CREATE TABLE IF NOT EXISTS PARTICIPANTE_INVENTARIO (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    ID_INVENTARIO INTEGER NOT NULL,
+    ID_USUARIO INTEGER NOT NULL,
+    NOME_PARTICIPANTE TEXT,
+    EMAIL TEXT,
+    PERFIL TEXT,
+    ATIVO BOOLEAN DEFAULT TRUE,
+    DATA_INCLUSAO TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')),
+    UNIQUE(ID_INVENTARIO, ID_USUARIO)
+);
+
+-- Tabela USUARIO
+CREATE TABLE IF NOT EXISTS USUARIO (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    LOGIN TEXT NOT NULL UNIQUE,
+    SENHA TEXT NOT NULL,
+    NOME_COMPLETO TEXT NOT NULL,
+    EMAIL TEXT,
+    PERFIL TEXT DEFAULT 'COLETOR',
+    ATIVO BOOLEAN DEFAULT TRUE,
+    DATA_CADASTRO TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')),
+    ULTIMO_ACESSO TEXT
+);
+
+-- ==================== CRIAR ÍNDICES ====================
+
+CREATE INDEX IF NOT EXISTS idx_inventario_status ON TABELA_INVENTARIO(STATUS_INVENTARIO);
+CREATE INDEX IF NOT EXISTS idx_inventario_data_inicio ON TABELA_INVENTARIO(DATA_INICIO);
+
+CREATE INDEX IF NOT EXISTS idx_sala_numero ON SALA(NUMERO_SALA);
+CREATE INDEX IF NOT EXISTS idx_sala_ativa ON SALA(ATIVA);
+
+CREATE INDEX IF NOT EXISTS idx_patrimonio_numero ON PATRIMONIO(NUMERO);
+CREATE INDEX IF NOT EXISTS idx_patrimonio_status ON PATRIMONIO(STATUS);
+CREATE INDEX IF NOT EXISTS idx_patrimonio_sala ON PATRIMONIO(ID_SALA);
+CREATE INDEX IF NOT EXISTS idx_patrimonio_responsavel ON PATRIMONIO(ID_RESPONSAVEL);
+
+CREATE INDEX IF NOT EXISTS idx_responsavel_nome ON RESPONSAVEL(NOME);
+CREATE INDEX IF NOT EXISTS idx_responsavel_ativo ON RESPONSAVEL(ATIVO);
+
+CREATE INDEX IF NOT EXISTS idx_coleta_inventario ON COLETA(ID_INVENTARIO);
+CREATE INDEX IF NOT EXISTS idx_coleta_patrimonio ON COLETA(ID_PATRIMONIO);
+CREATE INDEX IF NOT EXISTS idx_coleta_data ON COLETA(DATA_COLETA);
+CREATE INDEX IF NOT EXISTS idx_coleta_sem_etiqueta ON COLETA(SEM_ETIQUETA);
+CREATE INDEX IF NOT EXISTS idx_coleta_localizacao ON COLETA(LOCALIZACAO_ENCONTRADA);
+
+CREATE INDEX IF NOT EXISTS idx_sala_inventario_sala ON SALA_INVENTARIO(ID_SALA);
+CREATE INDEX IF NOT EXISTS idx_sala_inventario_inventario ON SALA_INVENTARIO(ID_INVENTARIO);
+CREATE INDEX IF NOT EXISTS idx_sala_inventario_status ON SALA_INVENTARIO(STATUS);
+CREATE INDEX IF NOT EXISTS idx_sala_inventario_coleta_finalizada ON SALA_INVENTARIO(COLETA_FINALIZADA);
+
+CREATE INDEX IF NOT EXISTS idx_participante_inventario_inventario ON PARTICIPANTE_INVENTARIO(ID_INVENTARIO);
+CREATE INDEX IF NOT EXISTS idx_participante_inventario_usuario ON PARTICIPANTE_INVENTARIO(ID_USUARIO);
+CREATE INDEX IF NOT EXISTS idx_participante_inventario_ativo ON PARTICIPANTE_INVENTARIO(ATIVO);
+
+CREATE INDEX IF NOT EXISTS idx_usuario_login ON USUARIO(LOGIN);
+CREATE INDEX IF NOT EXISTS idx_usuario_ativo ON USUARIO(ATIVO);
+
+-- ==================== TRIGGERS PARA FORMATO CORRETO ====================
+
+-- Trigger para SALA_INVENTARIO - INSERT
+CREATE TRIGGER IF NOT EXISTS trg_sala_inventario_insert_format
+AFTER INSERT ON SALA_INVENTARIO
+FOR EACH ROW
+WHEN NEW.DATA_INICIO IS NOT NULL AND NEW.DATA_INICIO NOT LIKE '____-__-__ __:__:__'
+BEGIN
+    UPDATE SALA_INVENTARIO 
+    SET DATA_INICIO = strftime('%Y-%m-%d %H:%M:%S', NEW.DATA_INICIO)
+    WHERE ID = NEW.ID;
+END;
+
+-- Trigger para SALA_INVENTARIO - UPDATE
+CREATE TRIGGER IF NOT EXISTS trg_sala_inventario_update_format
+AFTER UPDATE ON SALA_INVENTARIO
+FOR EACH ROW
+WHEN NEW.DATA_FIM IS NOT NULL AND NEW.DATA_FIM NOT LIKE '____-__-__ __:__:__'
+BEGIN
+    UPDATE SALA_INVENTARIO 
+    SET DATA_FIM = strftime('%Y-%m-%d %H:%M:%S', NEW.DATA_FIM)
+    WHERE ID = NEW.ID;
+END;
+
+-- Trigger para COLETA - INSERT
+CREATE TRIGGER IF NOT EXISTS trg_coleta_insert_format
+AFTER INSERT ON COLETA
+FOR EACH ROW
+WHEN NEW.DATA_COLETA IS NOT NULL AND NEW.DATA_COLETA NOT LIKE '____-__-__ __:__:__.__'
+BEGIN
+    UPDATE COLETA 
+    SET DATA_COLETA = strftime('%Y-%m-%d %H:%M:%S.%f', NEW.DATA_COLETA)
+    WHERE ID = NEW.ID;
+END;
+
+-- ==================== VIEW DE VALIDAÇÃO ====================
+
+CREATE VIEW IF NOT EXISTS v_timestamp_validation AS
+SELECT 
+    'SALA_INVENTARIO' as tabela,
+    ID as registro_id,
+    DATA_INICIO as timestamp_value,
+    CASE 
+        WHEN DATA_INICIO LIKE '____-__-__ __:__:__' THEN 'OK'
+        ELSE 'FORMATO_INVALIDO'
+    END as status_formato
+FROM SALA_INVENTARIO
+WHERE DATA_INICIO IS NOT NULL
+
+UNION ALL
+
+SELECT 
+    'COLETA' as tabela,
+    ID as registro_id,
+    DATA_COLETA as timestamp_value,
+    CASE 
+        WHEN DATA_COLETA LIKE '____-__-__ __:__:__.__' THEN 'OK'
+        ELSE 'FORMATO_INVALIDO'
+    END as status_formato
+FROM COLETA
+WHERE DATA_COLETA IS NOT NULL;
+
+-- ==================== DADOS INICIAIS ====================
+
+-- Inserir usuário admin padrão (senha: admin123)
+INSERT OR IGNORE INTO USUARIO (ID, LOGIN, SENHA, NOME_COMPLETO, EMAIL, PERFIL, ATIVO) 
+VALUES (1, 'admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 
+        'Administrador do Sistema', 'admin@ifmt.edu.br', 'ADMIN', 1);
+
+-- Inserir inventário padrão para teste offline
+INSERT OR IGNORE INTO TABELA_INVENTARIO (ID, NOME, ANO, DATA_INICIO, STATUS_INVENTARIO, RESPONSAVEL_INVENTARIO, PERCENTUAL_CONCLUSAO)
+VALUES (1, 'Inventário Offline 2024', 2024, strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime'), 'EM_ANDAMENTO', 'Administrador', 0.00);
+
+-- Inserir salas de exemplo
+INSERT OR IGNORE INTO SALA (ID_SALA, NUMERO_SALA, NOME_SALA, ANDAR, BLOCO, ATIVA) VALUES
+(1, '101', 'Sala de Aula 101', '1º Andar', 'Bloco A', 1),
+(2, '102', 'Sala de Aula 102', '1º Andar', 'Bloco A', 1),
+(3, '201', 'Laboratório de Informática', '2º Andar', 'Bloco B', 1);
+
+-- Inserir responsáveis de exemplo
+INSERT OR IGNORE INTO RESPONSAVEL (ID, NOME, CARGO, SETOR, ATIVO) VALUES
+(1, 'João Silva', 'Professor', 'Departamento de TI', 1),
+(2, 'Maria Santos', 'Coordenadora', 'Administração', 1);
+
+-- Inserir patrimônios de exemplo
+INSERT OR IGNORE INTO PATRIMONIO (ID, NUMERO, DESCRICAO, ESTADO_CONSERVACAO, STATUS, ID_SALA, NOME_SALA) VALUES
+(1, '000001', 'Cadeira Giratória', 'BOM', 'ATIVO', 1, '101'),
+(2, '000002', 'Mesa de Escritório', 'BOM', 'ATIVO', 1, '101'),
+(3, '000003', 'Computador Desktop', 'BOM', 'ATIVO', 3, '201'),
+(4, '000004', 'Projetor Multimídia', 'BOM', 'ATIVO', 2, '102'),
+(5, '000005', 'Quadro Branco', 'BOM', 'ATIVO', 1, '101');
+
+-- Vincular salas ao inventário
+INSERT OR IGNORE INTO SALA_INVENTARIO (ID_SALA, ID_INVENTARIO, STATUS) VALUES
+(1, 1, 'ABERTA'),
+(2, 1, 'ABERTA'),
+(3, 1, 'ABERTA');
+
+-- Adicionar admin como participante do inventário
+INSERT OR IGNORE INTO PARTICIPANTE_INVENTARIO (ID_INVENTARIO, ID_USUARIO, NOME_PARTICIPANTE, EMAIL, PERFIL, ATIVO)
+VALUES (1, 1, 'Administrador do Sistema', 'admin@ifmt.edu.br', 'ADMIN', 1);
+
+-- ==================== LOG DE EXECUÇÃO ====================
+
+-- Atualizar tabela offline_logs se existir (ajustado para estrutura existente)
+INSERT OR IGNORE INTO offline_logs (level, message, details) 
+SELECT 
+    'INFO',
+    'Estrutura SQLite criada e timestamps corrigidos com sucesso',
+    'Tabelas criadas com formato de timestamp compatível com Java'
+WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type='table' AND name='offline_logs');
+
+-- ==================== VERIFICAÇÃO FINAL ====================
+
+-- Consultar registros com formato inválido
+SELECT 'Verificacao de timestamps:' as info;
+SELECT COUNT(*) as total_invalidos FROM v_timestamp_validation WHERE status_formato = 'FORMATO_INVALIDO';

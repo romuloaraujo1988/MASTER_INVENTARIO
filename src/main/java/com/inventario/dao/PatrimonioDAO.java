@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
@@ -90,25 +91,207 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
     protected Patrimonio mapResultSetToEntity(ResultSet rs) throws SQLException {
         Patrimonio p = new Patrimonio();
         
-        p.setId(rs.getInt("ID"));
-        p.setNumero(rs.getString("NUMERO"));
-        p.setStatus(rs.getString("STATUS"));
-        p.setDescricao(rs.getString("DESCRICAO"));
-        p.setRotulos(rs.getString("ROTULOS"));
-        p.setIdResponsavel(rs.getInt("ID_RESPONSAVEL"));
-        p.setValorAquisicao(rs.getBigDecimal("VALOR_AQUISICAO"));
-        p.setValorDepreciado(rs.getBigDecimal("VALOR_DEPRECIADO"));
-        p.setNumeroNotaFiscal(rs.getString("NUMERO_NOTA_FISCAL"));
-        p.setNumeroSerie(rs.getString("NUMERO_SERIE"));
-        p.setMarca(rs.getString("MARCA"));
-        p.setModelo(rs.getString("MODELO"));
-        p.setDataEntrada(rs.getDate("DATA_ENTRADA"));
-        p.setDataCarga(rs.getTimestamp("DATA_CARGA"));
-        p.setFornecedor(rs.getString("FORNECEDOR"));
-        p.setIdSala(rs.getInt("ID_SALA"));
-        p.setEstadoConservacao(rs.getString("ESTADO_CONSERVACAO"));
-        p.setCategoria(rs.getString("CATEGORIA"));
-        p.setEd(rs.getString("ED"));
+        // ID: compatível em ambos (minúsculo)
+        try {
+            p.setId(rs.getInt("ID"));
+        } catch (SQLException e) {
+            p.setId(rs.getInt("id"));
+        }
+        
+        // NUMERO: PostgreSQL usa NUMERO, SQLite usa numero
+        try {
+            p.setNumero(rs.getString("NUMERO"));
+        } catch (SQLException e) {
+            p.setNumero(rs.getString("numero"));
+        }
+        
+        // STATUS: PostgreSQL usa STATUS, SQLite usa situacao
+        try {
+            p.setStatus(rs.getString("STATUS"));
+        } catch (SQLException e) {
+            try {
+                p.setStatus(rs.getString("situacao"));
+            } catch (SQLException e2) {
+                p.setStatus("ATIVO"); // Valor padrão
+            }
+        }
+        
+        // DESCRICAO: PostgreSQL usa DESCRICAO, SQLite usa descricao
+        try {
+            p.setDescricao(rs.getString("DESCRICAO"));
+        } catch (SQLException e) {
+            p.setDescricao(rs.getString("descricao"));
+        }
+        
+        // ROTULOS: compatível em ambos
+        try {
+            p.setRotulos(rs.getString("ROTULOS"));
+        } catch (SQLException e) {
+            try {
+                p.setRotulos(rs.getString("rotulos"));
+            } catch (SQLException e2) {
+                p.setRotulos(null);
+            }
+        }
+        
+        // ID_RESPONSAVEL: compatível em ambos
+        try {
+            p.setIdResponsavel(rs.getInt("ID_RESPONSAVEL"));
+        } catch (SQLException e) {
+            try {
+                p.setIdResponsavel(rs.getInt("id_responsavel"));
+            } catch (SQLException e2) {
+                p.setIdResponsavel(0);
+            }
+        }
+        
+        // VALOR_AQUISICAO: PostgreSQL usa VALOR_AQUISICAO, SQLite usa valor
+        try {
+            p.setValorAquisicao(rs.getBigDecimal("VALOR_AQUISICAO"));
+        } catch (SQLException e) {
+            try {
+                p.setValorAquisicao(rs.getBigDecimal("valor"));
+            } catch (SQLException e2) {
+                p.setValorAquisicao(null);
+            }
+        }
+        
+        // VALOR_DEPRECIADO: compatível em ambos
+        try {
+            p.setValorDepreciado(rs.getBigDecimal("VALOR_DEPRECIADO"));
+        } catch (SQLException e) {
+            try {
+                p.setValorDepreciado(rs.getBigDecimal("valor_depreciado"));
+            } catch (SQLException e2) {
+                p.setValorDepreciado(null);
+            }
+        }
+        
+        // NUMERO_NOTA_FISCAL: compatível em ambos
+        try {
+            p.setNumeroNotaFiscal(rs.getString("NUMERO_NOTA_FISCAL"));
+        } catch (SQLException e) {
+            try {
+                p.setNumeroNotaFiscal(rs.getString("numero_nota_fiscal"));
+            } catch (SQLException e2) {
+                p.setNumeroNotaFiscal(null);
+            }
+        }
+        
+        // NUMERO_SERIE: compatível em ambos
+        try {
+            p.setNumeroSerie(rs.getString("NUMERO_SERIE"));
+        } catch (SQLException e) {
+            try {
+                p.setNumeroSerie(rs.getString("numero_serie"));
+            } catch (SQLException e2) {
+                p.setNumeroSerie(null);
+            }
+        }
+        
+        // MARCA: compatível em ambos
+        try {
+            p.setMarca(rs.getString("MARCA"));
+        } catch (SQLException e) {
+            try {
+                p.setMarca(rs.getString("marca"));
+            } catch (SQLException e2) {
+                p.setMarca(null);
+            }
+        }
+        
+        // MODELO: compatível em ambos
+        try {
+            p.setModelo(rs.getString("MODELO"));
+        } catch (SQLException e) {
+            try {
+                p.setModelo(rs.getString("modelo"));
+            } catch (SQLException e2) {
+                p.setModelo(null);
+            }
+        }
+        
+        // Tratamento robusto para DATA_ENTRADA (compatibilidade SQLite)
+        try {
+            Timestamp tsEntrada = rs.getTimestamp("DATA_ENTRADA");
+            if (tsEntrada != null) {
+                p.setDataEntrada(new java.sql.Date(tsEntrada.getTime()));
+            }
+        } catch (SQLException e) {
+            // Fallback: tentar como Date direto
+            try {
+                p.setDataEntrada(rs.getDate("DATA_ENTRADA"));
+            } catch (SQLException e2) {
+                // Ignorar se não conseguir ler
+                System.err.println("DEBUG: Não foi possível ler DATA_ENTRADA: " + e2.getMessage());
+            }
+        }
+        
+        // DATA_CARGA: compatível em ambos
+        try {
+            p.setDataCarga(rs.getTimestamp("DATA_CARGA"));
+        } catch (SQLException e) {
+            try {
+                p.setDataCarga(rs.getTimestamp("data_carga"));
+            } catch (SQLException e2) {
+                p.setDataCarga(null);
+            }
+        }
+        
+        // FORNECEDOR: compatível em ambos
+        try {
+            p.setFornecedor(rs.getString("FORNECEDOR"));
+        } catch (SQLException e) {
+            try {
+                p.setFornecedor(rs.getString("fornecedor"));
+            } catch (SQLException e2) {
+                p.setFornecedor(null);
+            }
+        }
+        
+        // ID_SALA: compatível em ambos
+        try {
+            p.setIdSala(rs.getInt("ID_SALA"));
+        } catch (SQLException e) {
+            try {
+                p.setIdSala(rs.getInt("id_sala"));
+            } catch (SQLException e2) {
+                p.setIdSala(0);
+            }
+        }
+        
+        // ESTADO_CONSERVACAO: compatível em ambos
+        try {
+            p.setEstadoConservacao(rs.getString("ESTADO_CONSERVACAO"));
+        } catch (SQLException e) {
+            try {
+                p.setEstadoConservacao(rs.getString("estado_conservacao"));
+            } catch (SQLException e2) {
+                p.setEstadoConservacao(null);
+            }
+        }
+        
+        // CATEGORIA: compatível em ambos
+        try {
+            p.setCategoria(rs.getString("CATEGORIA"));
+        } catch (SQLException e) {
+            try {
+                p.setCategoria(rs.getString("categoria"));
+            } catch (SQLException e2) {
+                p.setCategoria(null);
+            }
+        }
+        
+        // ED: compatível em ambos
+        try {
+            p.setEd(rs.getString("ED"));
+        } catch (SQLException e) {
+            try {
+                p.setEd(rs.getString("ed"));
+            } catch (SQLException e2) {
+                p.setEd(null);
+            }
+        }
         
         // Valores padrão
         p.setSituacao("ATIVO");
@@ -140,14 +323,17 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
     public Patrimonio buscarPorNumero(String numeroPatrimonio) throws SQLException {
         System.out.println("DEBUG PatrimonioDAO: buscarPorNumero() chamado para número: " + numeroPatrimonio);
         
-        // Verificar qual conexão está sendo usada
+        // Detectar tipo de banco e usar tabelas corretas
         Connection conn = null;
+        boolean isSQLite = false;
         try {
             conn = com.inventario.util.ConnectionManager.getConnection();
             String dbUrl = conn.getMetaData().getURL();
             System.out.println("DEBUG PatrimonioDAO: Usando banco de dados: " + dbUrl);
             
-            if (dbUrl.contains("jdbc:sqlite")) {
+            isSQLite = dbUrl.contains("jdbc:sqlite");
+            
+            if (isSQLite) {
                 System.out.println("DEBUG PatrimonioDAO: *** BUSCA OFFLINE (SQLite) ***");
             } else if (dbUrl.contains("jdbc:postgresql")) {
                 System.out.println("DEBUG PatrimonioDAO: *** BUSCA ONLINE (PostgreSQL) ***");
@@ -166,11 +352,22 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
             }
         }
         
-        String sql = "SELECT p.*, r.NOME as nome_responsavel, s.DESCRICAO as nome_sala " +
-                    "FROM TABELA_PATRIMONIO p " +
-                    "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
-                    "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
-                    "WHERE p.NUMERO = ?";
+        // Usar tabelas corretas baseado no tipo de banco
+        String sql;
+        if (isSQLite) {
+            // SQLite: usar tabelas local_* (sem responsavel pois não há FK na tabela)
+            sql = "SELECT p.*, s.nome as nome_sala, NULL as nome_responsavel " +
+                  "FROM local_patrimonio p " +
+                  "LEFT JOIN local_sala s ON p.id_sala = s.id " +
+                  "WHERE p.numero = ?";
+        } else {
+            // PostgreSQL: usar TABELA_*
+            sql = "SELECT p.*, r.NOME as nome_responsavel, s.DESCRICAO as nome_sala " +
+                  "FROM TABELA_PATRIMONIO p " +
+                  "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
+                  "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
+                  "WHERE p.NUMERO = ?";
+        }
         
         Patrimonio resultado = executeQuerySingle(sql, numeroPatrimonio);
         System.out.println("DEBUG PatrimonioDAO: Resultado da busca: " + (resultado != null ? "ENCONTRADO" : "NÃO ENCONTRADO"));
@@ -340,11 +537,33 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
      * Busca por ID com joins
      */
     public Patrimonio buscarPorIdComJoins(int id) throws SQLException {
-        String sql = "SELECT p.*, r.NOME as nome_responsavel, s.DESCRICAO as nome_sala " +
-                    "FROM TABELA_PATRIMONIO p " +
-                    "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
-                    "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
-                    "WHERE p.ID = ?";
+        // Detectar tipo de banco
+        Connection conn = null;
+        boolean isSQLite = false;
+        
+        try {
+            conn = com.inventario.util.ConnectionManager.getConnection();
+            String dbUrl = conn.getMetaData().getURL();
+            isSQLite = dbUrl.contains("jdbc:sqlite");
+        } catch (Exception e) {
+            // Fallback para PostgreSQL
+        }
+        
+        String sql;
+        if (isSQLite) {
+            // SQLite: usar tabelas local_* (sem responsavel pois não há FK na tabela)
+            sql = "SELECT p.*, s.nome as nome_sala, NULL as nome_responsavel " +
+                  "FROM local_patrimonio p " +
+                  "LEFT JOIN local_sala s ON p.id_sala = s.id " +
+                  "WHERE p.id = ?";
+        } else {
+            // PostgreSQL: usar TABELA_*
+            sql = "SELECT p.*, r.NOME as nome_responsavel, s.DESCRICAO as nome_sala " +
+                  "FROM TABELA_PATRIMONIO p " +
+                  "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
+                  "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
+                  "WHERE p.ID = ?";
+        }
         
         return executeQuerySingle(sql, id);
     }

@@ -1,69 +1,70 @@
 @echo off
-chcp 65001 > nul
+REM Script para testar conexão com PostgreSQL
+REM Sistema de Inventário IFMT
+
 echo ========================================
-echo   Teste de Conexão PostgreSQL
+echo TESTE DE CONEXAO POSTGRESQL
 echo ========================================
 echo.
 
-REM Configurações (ajuste conforme necessário)
-set PGHOST=localhost
-set PGPORT=5432
-set PGDATABASE=sispatrimonio
-set PGUSER=postgres
-
-echo Configuração:
-echo   Host: %PGHOST%
-echo   Porta: %PGPORT%
-echo   Banco: %PGDATABASE%
-echo   Usuário: %PGUSER%
-echo.
-
-REM Verificar se psql está instalado
-where psql >nul 2>&1
-if %ERRORLEVEL% NEQ 0 (
-    echo ❌ ERRO: psql não encontrado no PATH
+REM Verificar se PostgreSQL está rodando
+echo Verificando se PostgreSQL esta rodando...
+netstat -an | findstr ":5432" >nul
+if %errorlevel% equ 0 (
+    echo [OK] PostgreSQL esta rodando na porta 5432
+) else (
+    echo [ERRO] PostgreSQL NAO esta rodando na porta 5432
     echo.
-    echo Adicione o PostgreSQL ao PATH ou execute este script
-    echo da pasta bin do PostgreSQL.
-    echo.
-    echo Exemplo: C:\Program Files\PostgreSQL\15\bin\
-    echo.
+    echo Execute: net start postgresql-x64-12
     pause
     exit /b 1
 )
 
-echo ✓ psql encontrado
+echo.
+echo Testando conexao com o banco...
 echo.
 
-REM Testar conexão
-echo Testando conexão...
-echo.
-
-psql -h %PGHOST% -p %PGPORT% -U %PGUSER% -d %PGDATABASE% -c "SELECT version();"
-
-if %ERRORLEVEL% EQU 0 (
+REM Tentar conectar ao banco
+psql -h localhost -U inventario -d sispatrimonio -c "SELECT COUNT(*) as total_patrimonios FROM TABELA_PATRIMONIO;" 2>nul
+if %errorlevel% equ 0 (
     echo.
-    echo ========================================
-    echo   ✓ CONEXÃO BEM-SUCEDIDA!
-    echo ========================================
+    echo [OK] Conexao com PostgreSQL funcionando!
     echo.
-    echo O PostgreSQL está acessível e funcionando.
-    echo Você pode usar estas configurações no sistema.
+    
+    echo Contando registros no PostgreSQL...
+    echo.
+    
+    echo Patrimonios:
+    psql -h localhost -U inventario -d sispatrimonio -c "SELECT COUNT(*) FROM TABELA_PATRIMONIO;" -t
+    
+    echo.
+    echo Salas:
+    psql -h localhost -U inventario -d sispatrimonio -c "SELECT COUNT(*) FROM TABELA_SALA;" -t
+    
+    echo.
+    echo Responsaveis:
+    psql -h localhost -U inventario -d sispatrimonio -c "SELECT COUNT(*) FROM TABELA_RESPONSAVEL;" -t
+    
+    echo.
+    echo Usuarios:
+    psql -h localhost -U inventario -d sispatrimonio -c "SELECT COUNT(*) FROM TABELA_USUARIO;" -t
+    
+    echo.
+    echo Inventarios:
+    psql -h localhost -U inventario -d sispatrimonio -c "SELECT COUNT(*) FROM TABELA_INVENTARIO;" -t
+    
 ) else (
+    echo [ERRO] Nao foi possivel conectar ao PostgreSQL
     echo.
-    echo ========================================
-    echo   ❌ FALHA NA CONEXÃO
-    echo ========================================
-    echo.
-    echo Possíveis causas:
-    echo   • PostgreSQL não está rodando
-    echo   • Usuário ou senha incorretos
-    echo   • Banco de dados não existe
-    echo   • Firewall bloqueando a porta
-    echo   • Configuração pg_hba.conf incorreta
-    echo.
-    echo Consulte: GUIA_CONFIGURACAO_POSTGRESQL_REMOTO.md
+    echo Verifique:
+    echo 1. PostgreSQL esta rodando?
+    echo 2. Usuario 'inventario' existe?
+    echo 3. Banco 'sispatrimonio' existe?
+    echo 4. Senha esta correta?
 )
 
 echo.
+echo ========================================
+echo TESTE CONCLUIDO
+echo ========================================
 pause

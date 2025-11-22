@@ -240,7 +240,10 @@ public class ImportacaoDadosDialog extends JDialog {
 
     
     private void iniciarImportacao() {
+        System.out.println(">>> DEBUG: iniciarImportacao() CHAMADO!");
+        
         if (importacaoEmAndamento) {
+            System.out.println(">>> DEBUG: Importação já em andamento, retornando...");
             return;
         }
         
@@ -253,13 +256,20 @@ public class ImportacaoDadosDialog extends JDialog {
         lblStatus.setForeground(PRIMARY_COLOR);
         addLog("=== Iniciando importação de dados ===");
         
+        System.out.println(">>> DEBUG: Criando SwingWorker para importação...");
+        
         // Executar importação em thread separada
         importWorker = new SwingWorker<ImportResult, Void>() {
             @Override
             protected ImportResult doInBackground() throws Exception {
-                return importService.importarTodosDados(new ProgressListener() {
+                System.out.println(">>> DEBUG: SwingWorker.doInBackground() INICIADO!");
+                System.out.println(">>> DEBUG: Chamando importService.importarTodosDados()...");
+                
+                ImportResult result = importService.importarTodosDados(new ProgressListener() {
                     @Override
                     public void onProgress(String message, int progress) {
+                        System.out.println(">>> DEBUG: onProgress() - " + message + " (" + progress + "%)");
+                        
                         // Verificar se foi cancelado
                         if (isCancelled()) {
                             throw new RuntimeException(new InterruptedException("Importação cancelada pelo usuário"));
@@ -274,27 +284,48 @@ public class ImportacaoDadosDialog extends JDialog {
                     
                     @Override
                     public void onError(String error) {
+                        System.err.println(">>> DEBUG: onError() - " + error);
                         SwingUtilities.invokeLater(() -> {
                             addLog("ERRO: " + error);
                         });
                     }
                 });
+                
+                System.out.println(">>> DEBUG: importService.importarTodosDados() RETORNOU!");
+                System.out.println(">>> DEBUG: Resultado - Success: " + result.success);
+                if (result.success) {
+                    System.out.println(">>> DEBUG: Patrimônios: " + result.patrimonios);
+                    System.out.println(">>> DEBUG: Salas: " + result.salas);
+                    System.out.println(">>> DEBUG: Responsáveis: " + result.responsaveis);
+                }
+                
+                return result;
             }
             
             @Override
             protected void done() {
+                System.out.println(">>> DEBUG: SwingWorker.done() CHAMADO!");
+                
                 try {
                     if (isCancelled()) {
+                        System.out.println(">>> DEBUG: Importação foi cancelada");
                         finalizarCancelamento();
                     } else {
+                        System.out.println(">>> DEBUG: Obtendo resultado...");
                         ImportResult result = get();
+                        System.out.println(">>> DEBUG: Finalizando importação...");
                         finalizarImportacao(result);
                     }
                 } catch (java.util.concurrent.CancellationException e) {
+                    System.err.println(">>> DEBUG: CancellationException - " + e.getMessage());
                     finalizarCancelamento();
                 } catch (InterruptedException e) {
+                    System.err.println(">>> DEBUG: InterruptedException - " + e.getMessage());
                     finalizarCancelamento();
                 } catch (java.util.concurrent.ExecutionException e) {
+                    System.err.println(">>> DEBUG: ExecutionException - " + e.getMessage());
+                    e.printStackTrace();
+                    
                     // Verificar se foi cancelamento encapsulado
                     Throwable cause = e.getCause();
                     if (cause instanceof RuntimeException && 
@@ -304,12 +335,16 @@ public class ImportacaoDadosDialog extends JDialog {
                         finalizarComErro(e);
                     }
                 } catch (Exception e) {
+                    System.err.println(">>> DEBUG: Exception genérica - " + e.getMessage());
+                    e.printStackTrace();
                     finalizarComErro(e);
                 }
             }
         };
         
+        System.out.println(">>> DEBUG: Executando SwingWorker...");
         importWorker.execute();
+        System.out.println(">>> DEBUG: SwingWorker.execute() chamado!");
     }
 
     
@@ -364,6 +399,10 @@ public class ImportacaoDadosDialog extends JDialog {
         btnFechar.setEnabled(true);
         
         if (result.success) {
+            // Verificar se os dados realmente foram salvos no SQLite
+            addLog("=== Verificando dados no banco SQLite ===");
+            verificarDadosImportados(result);
+            
             lblStatus.setText("✅ Importação concluída com sucesso!");
             lblStatus.setForeground(SUCCESS_COLOR);
             progressBar.setValue(100);
@@ -389,6 +428,75 @@ public class ImportacaoDadosDialog extends JDialog {
                 "Erro ao importar dados:\n" + result.errorMessage,
                 "Erro na Importação",
                 JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    /**
+     * Verifica se os dados foram realmente salvos no banco SQLite
+     */
+    private void verificarDadosImportados(ImportResult result) {
+        try {
+            java.sql.Connection conn = com.inventario.offline.SQLiteConnection.getInstance().getConnection();
+            
+            // Verificar patrimônios
+            try (java.sql.Statement stmt = conn.createStatement();
+                 java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM local_patrimonio")) {
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    addLog("✅ Patrimônios no SQLite: " + count);
+                    if (count != result.patrimonios) {
+                        addLog("⚠️ AVISO: Esperado " + result.patrimonios + " mas encontrado " + count);
+                    }
+                }
+            }
+            
+            // Verificar salas
+            try (java.sql.Statement stmt = conn.createStatement();
+                 java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM local_sala")) {
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    addLog("✅ Salas no SQLite: " + count);
+                    if (count != result.salas) {
+                        addLog("⚠️ AVISO: Esperado " + result.salas + " mas encontrado " + count);
+                    }
+                }
+            }
+            
+            // Verificar responsáveis
+            try (java.sql.Statement stmt = conn.createStatement();
+                 java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM local_responsavel")) {
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    addLog("✅ Responsáveis no SQLite: " + count);
+                    if (count != result.responsaveis) {
+                        addLog("⚠️ AVISO: Esperado " + result.responsaveis + " mas encontrado " + count);
+                    }
+                }
+            }
+            
+            // Verificar tabelas de compatibilidade
+            try (java.sql.Statement stmt = conn.createStatement();
+                 java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM TABELA_INVENTARIO")) {
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    addLog("✅ Inventários (TABELA_INVENTARIO): " + count);
+                }
+            } catch (Exception e) {
+                addLog("⚠️ Tabela TABELA_INVENTARIO não encontrada: " + e.getMessage());
+            }
+            
+            try (java.sql.Statement stmt = conn.createStatement();
+                 java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM SALA")) {
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    addLog("✅ Salas (SALA): " + count);
+                }
+            } catch (Exception e) {
+                addLog("⚠️ Tabela SALA não encontrada: " + e.getMessage());
+            }
+            
+        } catch (Exception e) {
+            addLog("⚠️ Erro ao verificar dados: " + e.getMessage());
         }
     }
     

@@ -19,7 +19,7 @@ public class SQLiteConnection {
     private static final Logger LOGGER = Logger.getLogger(SQLiteConnection.class.getName());
     private static SQLiteConnection instance;
     
-    private static final String DEFAULT_DB_PATH = "./data/inventario_offline.db";
+    private static final String DEFAULT_DB_PATH = "./data/inventario.db";
     private static final String JDBC_URL_PREFIX = "jdbc:sqlite:";
     
     private String dbPath;
@@ -129,23 +129,45 @@ public class SQLiteConnection {
      * @throws SQLException
      */
     public void initializeDatabase() throws SQLException {
+        System.out.println("========================================");
+        System.out.println("=== INICIALIZANDO BANCO SQLITE ===");
+        System.out.println("========================================");
         LOGGER.info("Inicializando banco de dados SQLite");
         
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
             
+            System.out.println(">>> Criando tabelas do sistema...");
             // Cria tabelas do sistema offline
             createSystemTables(stmt);
+            System.out.println(">>> ✅ Tabelas do sistema criadas");
             
+            System.out.println(">>> Criando tabelas espelho...");
             // Cria tabelas espelho das entidades principais
             createMirrorTables(stmt);
+            System.out.println(">>> ✅ Tabelas espelho criadas");
             
+            System.out.println(">>> Criando tabelas de compatibilidade...");
+            // Cria tabelas de compatibilidade (para sistema desktop)
+            createCompatibilityTables(stmt);
+            System.out.println(">>> ✅ Tabelas de compatibilidade criadas");
+            
+            System.out.println(">>> Criando índices...");
             // Cria índices para otimização
             createIndexes(stmt);
+            System.out.println(">>> ✅ Índices criados");
             
+            System.out.println("========================================");
+            System.out.println("=== BANCO SQLITE INICIALIZADO ===");
+            System.out.println("========================================");
             LOGGER.info("Banco de dados SQLite inicializado com sucesso");
             
         } catch (SQLException e) {
+            System.err.println("========================================");
+            System.err.println("=== ERRO AO INICIALIZAR SQLITE ===");
+            System.err.println("========================================");
+            System.err.println("Erro: " + e.getMessage());
+            e.printStackTrace();
             LOGGER.log(Level.SEVERE, "Erro ao inicializar banco SQLite", e);
             throw e;
         }
@@ -157,7 +179,7 @@ public class SQLiteConnection {
      * @throws SQLException
      */
     private void createSystemTables(Statement stmt) throws SQLException {
-        
+        System.out.println("  - Criando sync_control...");
         // Tabela de controle de sincronização
         stmt.execute("""
             CREATE TABLE IF NOT EXISTS sync_control (
@@ -173,6 +195,7 @@ public class SQLiteConnection {
             )
         """);
         
+        System.out.println("  - Criando sync_metadata...");
         // Tabela de metadados de sincronização
         stmt.execute("""
             CREATE TABLE IF NOT EXISTS sync_metadata (
@@ -182,6 +205,7 @@ public class SQLiteConnection {
             )
         """);
         
+        System.out.println("  - Criando offline_logs...");
         // Tabela de logs offline
         stmt.execute("""
             CREATE TABLE IF NOT EXISTS offline_logs (
@@ -193,6 +217,7 @@ public class SQLiteConnection {
             )
         """);
         
+        System.out.println("  - Inserindo metadados iniciais...");
         // Insere metadados iniciais
         stmt.execute("""
             INSERT OR IGNORE INTO sync_metadata (key, value) VALUES 
@@ -210,6 +235,7 @@ public class SQLiteConnection {
      */
     private void createMirrorTables(Statement stmt) throws SQLException {
         
+        System.out.println("  - Criando local_usuario...");
         // Tabela local de usuários (CRÍTICA PARA LOGIN OFFLINE)
         stmt.execute("""
             CREATE TABLE IF NOT EXISTS local_usuario (
@@ -231,6 +257,7 @@ public class SQLiteConnection {
             )
         """);
         
+        System.out.println("  - Criando local_patrimonio...");
         // Tabela local de patrimônios
         stmt.execute("""
             CREATE TABLE IF NOT EXISTS local_patrimonio (
@@ -253,6 +280,7 @@ public class SQLiteConnection {
             )
         """);
         
+        System.out.println("  - Criando local_coleta...");
         // Tabela local de coletas
         stmt.execute("""
             CREATE TABLE IF NOT EXISTS local_coleta (
@@ -275,6 +303,7 @@ public class SQLiteConnection {
             )
         """);
         
+        System.out.println("  - Criando local_inventario...");
         // Tabela local de inventários
         stmt.execute("""
             CREATE TABLE IF NOT EXISTS local_inventario (
@@ -292,21 +321,88 @@ public class SQLiteConnection {
             )
         """);
         
-        // Tabela local de participantes
+        System.out.println("  - Criando local_sala...");
+        // Tabela local de salas
         stmt.execute("""
-            CREATE TABLE IF NOT EXISTS local_participante_inventario (
+            CREATE TABLE IF NOT EXISTS local_sala (
                 id INTEGER PRIMARY KEY,
-                id_inventario INTEGER,
-                id_usuario INTEGER,
-                nome_participante TEXT,
-                email TEXT,
-                perfil TEXT,
-                ativo BOOLEAN DEFAULT TRUE,
-                sync_status TEXT DEFAULT 'PENDING',
+                nome TEXT,
+                descricao TEXT,
+                bloco TEXT,
+                andar TEXT,
+                capacidade INTEGER,
+                tipo TEXT,
+                ativa BOOLEAN DEFAULT TRUE,
+                sync_status TEXT DEFAULT 'SYNCED',
                 last_modified DATETIME DEFAULT CURRENT_TIMESTAMP,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         """);
+        
+        System.out.println("  - Criando local_responsavel...");
+        // Tabela local de responsáveis
+        stmt.execute("""
+            CREATE TABLE IF NOT EXISTS local_responsavel (
+                id INTEGER PRIMARY KEY,
+                nome TEXT NOT NULL,
+                cpf TEXT,
+                matricula TEXT,
+                email TEXT,
+                telefone TEXT,
+                cargo TEXT,
+                setor TEXT,
+                ativo BOOLEAN DEFAULT TRUE,
+                sync_status TEXT DEFAULT 'SYNCED',
+                last_modified DATETIME DEFAULT CURRENT_TIMESTAMP,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """);
+    }
+    
+    /**
+     * Cria tabelas de compatibilidade para o sistema desktop
+     * @param stmt Statement para execução
+     * @throws SQLException
+     */
+    private void createCompatibilityTables(Statement stmt) throws SQLException {
+        
+        System.out.println("  - Criando TABELA_INVENTARIO...");
+        // Tabela TABELA_INVENTARIO (compatibilidade com InventarioDAO)
+        stmt.execute("""
+            CREATE TABLE IF NOT EXISTS TABELA_INVENTARIO (
+                ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                NOME TEXT NOT NULL,
+                ANO INTEGER,
+                DATA_INICIO DATE NOT NULL,
+                DATA_FIM DATE,
+                OBSERVACAO TEXT,
+                STATUS_INVENTARIO TEXT DEFAULT 'PLANEJADO',
+                RESPONSAVEL_INVENTARIO TEXT,
+                TOTAL_PATRIMONIOS INTEGER DEFAULT 0,
+                PATRIMONIOS_COLETADOS INTEGER DEFAULT 0,
+                PERCENTUAL_CONCLUSAO DECIMAL(5,2) DEFAULT 0.00,
+                DATA_CRIACAO DATETIME DEFAULT CURRENT_TIMESTAMP,
+                DATA_ULTIMA_ATUALIZACAO DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """);
+        
+        System.out.println("  - Criando SALA...");
+        // Tabela SALA (compatibilidade com SalaDAO)
+        stmt.execute("""
+            CREATE TABLE IF NOT EXISTS SALA (
+                ID_SALA INTEGER PRIMARY KEY AUTOINCREMENT,
+                NUMERO_SALA TEXT NOT NULL,
+                NOME_SALA TEXT,
+                ANDAR TEXT,
+                BLOCO TEXT,
+                CAPACIDADE INTEGER,
+                TIPO_SALA TEXT,
+                ATIVA BOOLEAN DEFAULT TRUE,
+                DATA_CADASTRO DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """);
+        
+        LOGGER.info("Tabelas de compatibilidade criadas com sucesso");
     }
     
     /**
@@ -336,6 +432,16 @@ public class SQLiteConnection {
         
         stmt.execute("CREATE INDEX IF NOT EXISTS idx_local_inventario_status ON local_inventario(status)");
         stmt.execute("CREATE INDEX IF NOT EXISTS idx_local_inventario_sync ON local_inventario(sync_status)");
+        
+        // Índices para tabela de salas
+        stmt.execute("CREATE INDEX IF NOT EXISTS idx_local_sala_nome ON local_sala(nome)");
+        stmt.execute("CREATE INDEX IF NOT EXISTS idx_local_sala_ativa ON local_sala(ativa)");
+        stmt.execute("CREATE INDEX IF NOT EXISTS idx_local_sala_sync ON local_sala(sync_status)");
+        
+        // Índices para tabela de responsáveis
+        stmt.execute("CREATE INDEX IF NOT EXISTS idx_local_responsavel_nome ON local_responsavel(nome)");
+        stmt.execute("CREATE INDEX IF NOT EXISTS idx_local_responsavel_ativo ON local_responsavel(ativo)");
+        stmt.execute("CREATE INDEX IF NOT EXISTS idx_local_responsavel_sync ON local_responsavel(sync_status)");
     }
     
     /**

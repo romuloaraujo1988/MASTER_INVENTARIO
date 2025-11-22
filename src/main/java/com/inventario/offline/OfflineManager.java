@@ -151,6 +151,64 @@ public class OfflineManager {
     }
     
     /**
+     * Verifica conectividade com o banco de dados
+     * Testa tanto PostgreSQL quanto SQLite
+     * @return true se conseguir conectar com pelo menos um banco
+     */
+    private boolean checkDatabaseConnectivity() {
+        try {
+            // Primeiro tenta verificar se há dados locais no SQLite
+            // Isso indica que o sistema pode operar offline
+            if (hasLocalData()) {
+                LOGGER.info("Dados locais encontrados - sistema pode operar offline");
+                return true;
+            }
+            
+            // Se não há dados locais, verifica conectividade com PostgreSQL
+            boolean pgConnected = connectivityManager.checkDatabaseConnection();
+            if (pgConnected) {
+                LOGGER.info("Conectividade com banco de dados confirmada");
+                return true;
+            }
+            
+            LOGGER.warning("Sem conectividade com banco de dados e sem dados locais");
+            return false;
+            
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Erro ao verificar conectividade do banco", e);
+            return false;
+        }
+    }
+    
+    /**
+     * Verifica se há dados locais disponíveis no SQLite
+     * @return true se há dados suficientes para operar offline
+     */
+    private boolean hasLocalData() {
+        try {
+            // Verifica se há pelo menos alguns registros nas tabelas principais
+            Map<String, Object> stats = offlineDAO.obterEstatisticas();
+            
+            // Considera que há dados se tiver pelo menos patrimônios ou usuários
+            int patrimonios = (int) stats.getOrDefault("total_patrimonios", 0);
+            int usuarios = (int) stats.getOrDefault("total_usuarios", 0);
+            
+            boolean hasData = patrimonios > 0 || usuarios > 0;
+            
+            if (hasData) {
+                LOGGER.info(String.format("Dados locais disponíveis: %d patrimônios, %d usuários", 
+                    patrimonios, usuarios));
+            }
+            
+            return hasData;
+            
+        } catch (Exception e) {
+            LOGGER.log(Level.FINE, "Erro ao verificar dados locais (pode ser primeira execução)", e);
+            return false;
+        }
+    }
+    
+    /**
      * Configura listener de conectividade
      */
     private void setupConnectivityListener() {
@@ -289,6 +347,19 @@ public class OfflineManager {
     }
     
     /**
+     * Verifica se o modo offline foi forçado manualmente
+     * @return true se foi forçado
+     */
+    public boolean isForcedOffline() {
+        try {
+            String forced = offlineDAO.obterMetadado("forced_offline_mode");
+            return "true".equals(forced);
+        } catch (Exception e) {
+            return false; // Se não conseguir ler, assumir que não está forçado
+        }
+    }
+    
+    /**
      * Obtém o estado atual
      * @return Estado atual
      */
@@ -305,25 +376,32 @@ public class OfflineManager {
         
         try {
             // Para sincronização automática se estiver ativa
-            dataSynchronizer.stopAutoSync();
+            try {
+                dataSynchronizer.stopAutoSync();
+            } catch (Exception e) {
+                LOGGER.log(Level.FINE, "Erro ao parar sincronização (pode não estar ativa)", e);
+            }
             
             // Define estado como offline
             setState(OfflineState.OFFLINE);
             
             // Habilita modo offline se não estiver habilitado
             if (!offlineModeEnabled) {
-                enableOfflineMode();
+                offlineModeEnabled = true; // Não chamar enableOfflineMode() para evitar tentar sincronizar
             }
             
-            // Salva configuração de modo forçado
-            offlineDAO.atualizarMetadado("forced_offline_mode", "true");
+            // Salva configuração de modo forçado (tolerante a falhas)
+            try {
+                offlineDAO.atualizarMetadado("forced_offline_mode", "true");
+            } catch (Exception e) {
+                LOGGER.log(Level.FINE, "Erro ao salvar metadado (banco pode não estar pronto)", e);
+            }
             
             LOGGER.info("Sistema forçado para modo offline com sucesso");
             
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erro ao forçar modo offline", e);
-            setState(OfflineState.ERROR);
-            throw new RuntimeException("Falha ao forçar modo offline", e);
+            LOGGER.log(Level.WARNING, "Erro ao forçar modo offline", e);
+            setState(OfflineState.OFFLINE); // Mesmo com erro, forçar offline
         }
     }
     
@@ -383,20 +461,6 @@ public class OfflineManager {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erro ao tentar reconectar", e);
             setState(OfflineState.ERROR);
-            return false;
-        }
-    }
-    
-    /**
-     * Verifica se o modo offline foi forçado manualmente
-     * @return true se foi forçado
-     */
-    public boolean isForcedOffline() {
-        try {
-            String forced = offlineDAO.obterMetadado("forced_offline_mode");
-            return "true".equals(forced);
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Erro ao verificar modo forçado", e);
             return false;
         }
     }
@@ -699,28 +763,7 @@ public class OfflineManager {
         return info.toString();
     }
     
-    /**
-     * Verifica conectividade com o banco de dados
-     * @return true se conectado ao banco
-     */
-    private boolean checkDatabaseConnectivity() {
-        try {
-            // Usa o ConnectivityManager atualizado para testar conectividade do banco
-            ConnectivityManager connManager = ConnectivityManager.getInstance();
-            boolean dbConnected = connManager.checkDatabaseConnection();
-            
-            if (dbConnected) {
-                LOGGER.info("Conectividade com banco de dados confirmada");
-                return true;
-            } else {
-                LOGGER.warning("Falha na conectividade com banco de dados");
-                return false;
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Erro ao verificar conectividade do banco: " + e.getMessage(), e);
-            return false;
-        }
-    }
+
     
     /**
      * Força transição para estado ONLINE quando conectividade for detectada

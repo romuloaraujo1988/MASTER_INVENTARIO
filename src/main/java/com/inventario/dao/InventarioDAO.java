@@ -1,6 +1,7 @@
 package com.inventario.dao;
 
 import com.inventario.model.Inventario;
+import com.inventario.util.DatabaseConnection;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
@@ -23,11 +24,32 @@ import java.util.List;
 @Repository
 public class InventarioDAO extends BaseDAO<Inventario, Integer> {
     
+    /**
+     * Detecta se está usando SQLite
+     */
+    private boolean isSQLite() throws SQLException {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String dbUrl = conn.getMetaData().getURL();
+            return dbUrl != null && dbUrl.contains("jdbc:sqlite");
+        }
+    }
+    
+    /**
+     * Retorna o nome correto da tabela de inventário baseado no banco
+     */
+    private String getInventarioTableName() throws SQLException {
+        return isSQLite() ? "local_inventario" : "TABELA_INVENTARIO";
+    }
+    
     // ==================== MÉTODOS ABSTRATOS IMPLEMENTADOS ====================
     
     @Override
     protected String getTableName() {
-        return "TABELA_INVENTARIO";
+        try {
+            return getInventarioTableName();
+        } catch (SQLException e) {
+            return "TABELA_INVENTARIO"; // Fallback
+        }
     }
     
     @Override
@@ -60,12 +82,83 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
     
     @Override
     protected Inventario mapResultSetToEntity(ResultSet rs) throws SQLException {
+        System.out.println("=== DEBUG TIMESTAMP: InventarioDAO.mapResultSetToEntity ===");
+        
         Inventario inventario = new Inventario();
         
         inventario.setId(rs.getInt("ID"));
         inventario.setNome(rs.getString("NOME"));
-        inventario.setDataInicio(rs.getDate("DATA_INICIO"));
-        inventario.setDataFim(rs.getDate("DATA_FIM"));
+        
+        // DEBUG: Tentar ler DATA_INICIO com tratamento robusto
+        try {
+            System.out.println("DEBUG TIMESTAMP: Lendo DATA_INICIO...");
+            
+            // Tentar como Timestamp primeiro (mais robusto para SQLite)
+            try {
+                Timestamp tsInicio = rs.getTimestamp("DATA_INICIO");
+                if (tsInicio != null) {
+                    inventario.setDataInicio(new java.sql.Date(tsInicio.getTime()));
+                    System.out.println("DEBUG TIMESTAMP: DATA_INICIO lida como Timestamp: " + tsInicio);
+                } else {
+                    System.out.println("DEBUG TIMESTAMP: DATA_INICIO é null");
+                }
+            } catch (SQLException e1) {
+                System.out.println("DEBUG TIMESTAMP: Falha ao ler como Timestamp, tentando como String...");
+                // Se falhar, tentar ler como String e parsear
+                String dataStr = rs.getString("DATA_INICIO");
+                System.out.println("DEBUG TIMESTAMP: DATA_INICIO como String: " + dataStr);
+                
+                if (dataStr != null && !dataStr.isEmpty()) {
+                    try {
+                        // Tentar parsear diferentes formatos
+                        java.sql.Date data = parseDataFromString(dataStr);
+                        inventario.setDataInicio(data);
+                        System.out.println("DEBUG TIMESTAMP: DATA_INICIO parseada: " + data);
+                    } catch (Exception e2) {
+                        System.err.println("DEBUG TIMESTAMP: ERRO ao parsear DATA_INICIO: " + e2.getMessage());
+                        // Usar data atual como fallback
+                        inventario.setDataInicio(new java.sql.Date(System.currentTimeMillis()));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("DEBUG TIMESTAMP: ERRO FATAL ao ler DATA_INICIO: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        // DEBUG: Tentar ler DATA_FIM com tratamento robusto
+        try {
+            System.out.println("DEBUG TIMESTAMP: Lendo DATA_FIM...");
+            
+            try {
+                Timestamp tsFim = rs.getTimestamp("DATA_FIM");
+                if (tsFim != null) {
+                    inventario.setDataFim(new java.sql.Date(tsFim.getTime()));
+                    System.out.println("DEBUG TIMESTAMP: DATA_FIM lida como Timestamp: " + tsFim);
+                } else {
+                    System.out.println("DEBUG TIMESTAMP: DATA_FIM é null");
+                }
+            } catch (SQLException e1) {
+                System.out.println("DEBUG TIMESTAMP: Falha ao ler como Timestamp, tentando como String...");
+                String dataStr = rs.getString("DATA_FIM");
+                System.out.println("DEBUG TIMESTAMP: DATA_FIM como String: " + dataStr);
+                
+                if (dataStr != null && !dataStr.isEmpty()) {
+                    try {
+                        java.sql.Date data = parseDataFromString(dataStr);
+                        inventario.setDataFim(data);
+                        System.out.println("DEBUG TIMESTAMP: DATA_FIM parseada: " + data);
+                    } catch (Exception e2) {
+                        System.err.println("DEBUG TIMESTAMP: ERRO ao parsear DATA_FIM: " + e2.getMessage());
+                        inventario.setDataFim(new java.sql.Date(System.currentTimeMillis()));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("DEBUG TIMESTAMP: ERRO FATAL ao ler DATA_FIM: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
         inventario.setStatusInventario(rs.getString("STATUS_INVENTARIO"));
         inventario.setResponsavelInventario(rs.getString("RESPONSAVEL_INVENTARIO"));
         inventario.setPercentualConclusao(rs.getBigDecimal("PERCENTUAL_CONCLUSAO"));
@@ -303,5 +396,49 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
             System.err.println("Erro ao buscar inventário por status: " + e.getMessage());
             return null;
         }
+    }
+    
+    /**
+     * Método auxiliar para parsear data de String em diferentes formatos
+     * Necessário para compatibilidade com SQLite que pode retornar timestamps em formatos variados
+     */
+    private java.sql.Date parseDataFromString(String dataStr) throws Exception {
+        if (dataStr == null || dataStr.trim().isEmpty()) {
+            return null;
+        }
+        
+        System.out.println("DEBUG TIMESTAMP: Tentando parsear data: " + dataStr);
+        
+        // Tentar diferentes formatos comuns
+        String[] formatos = {
+            "yyyy-MM-dd HH:mm:ss.SSS",
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd",
+            "dd/MM/yyyy HH:mm:ss",
+            "dd/MM/yyyy"
+        };
+        
+        for (String formato : formatos) {
+            try {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(formato);
+                sdf.setLenient(false);
+                java.util.Date parsed = sdf.parse(dataStr);
+                System.out.println("DEBUG TIMESTAMP: Data parseada com formato: " + formato);
+                return new java.sql.Date(parsed.getTime());
+            } catch (Exception e) {
+                // Tentar próximo formato
+            }
+        }
+        
+        // Se nenhum formato funcionou, tentar parsear como long (milissegundos)
+        try {
+            long millis = Long.parseLong(dataStr);
+            System.out.println("DEBUG TIMESTAMP: Data parseada como milissegundos: " + millis);
+            return new java.sql.Date(millis);
+        } catch (NumberFormatException e) {
+            // Não é um número
+        }
+        
+        throw new Exception("Não foi possível parsear a data: " + dataStr);
     }
 }

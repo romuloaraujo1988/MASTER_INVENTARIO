@@ -107,7 +107,6 @@ com\inventario\mobile\server\dto\MobileOfflineDataDTO$PatrimonioOfflineDTO.class
 com\inventario\mobile\server\dto\MobileOfflineDataDTO$MetadataDTO.class
 com\inventario\view\MobileServerPanel.class
 com\inventario\config\CacheConfig.class
-com\inventario\offline\ImportacaoDadosDialog.class
 com\inventario\util\notification\ToastNotification$Type.class
 com\inventario\dto\mobile\LoginResponse.class
 com\inventario\siads\view\SiadsExportDialog$3.class
@@ -157,6 +156,7 @@ com\inventario\view\components\PaginationPanelTest.class
 com\inventario\dao\SetorDAO$SetorComEstatisticas.class
 com\inventario\view\CampusFormDialog$1.class
 com\inventario\mobile\server\controller\MobileAuthController.class
+com\inventario\service\DataImportServiceTest$1.class
 com\inventario\util\DatabaseTestQuery.class
 com\inventario\offline\SyncStatusManager$SyncStatusListener.class
 com\inventario\mobile\server\controller\MobileDescricaoController.class
@@ -191,6 +191,7 @@ com\inventario\security\JwtUtil.class
 com\inventario\view\RelatorioFrame$4.class
 com\inventario\view\StatusSalasFrame$StatusRenderer.class
 com\inventario\mobile\server\dto\MobileLoginRequest.class
+com\inventario\service\DataImportServiceTest.class
 com\inventario\service\PatrimonioService.class
 com\inventario\util\ConfiguracaoBancoUtil.class
 com\inventario\model\Coleta.class
@@ -253,7 +254,6 @@ com\inventario\util\notification\ToastNotification$2.class
 com\inventario\util\ImportacaoCSV.class
 com\inventario\model\StatusDispositivo.class
 com\inventario\util\DateFormatUtils.class
-com\inventario\offline\ImportacaoDadosDialog$1.class
 com\inventario\presentation\state\RelatorioState$Error.class
 com\inventario\util\notification\NotificationManager.class
 com\inventario\util\DialogUtils.class
@@ -310,6 +310,7 @@ com\inventario\repository\ColetaRepository.class
 com\inventario\presentation\state\RelatorioState$Loading.class
 com\inventario\view\RelatorioDivergenciasFrame$TipoDivergenciaRenderer.class
 com\inventario\view\ui\ModernComboBox$ModernComboBoxUI$2.class
+com\inventario\test\TestSalaImport.class
 com\inventario\dao\ResponsavelDAO.class
 com\inventario\util\notification\NotificationManager$1.class
 com\inventario\view\RelatorioDivergenciasFrame.class
@@ -402,6 +403,7 @@ com\inventario\service\MobileServerManager.class
 com\inventario\view\CampusManagementFrame$2.class
 com\inventario\test\TesteAutorizacaoColeta.class
 com\inventario\offline\SyncFrame.class
+com\inventario\offline\SyncPostgresToSQLiteV2.class
 com\inventario\util\ImportacaoCSV$RelatorioImportacao.class
 com\inventario\view\InventarioFrame$2.class
 com\inventario\view\SalaFormDialog$1.class

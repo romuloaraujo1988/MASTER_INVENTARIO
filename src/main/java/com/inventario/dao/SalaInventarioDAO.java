@@ -11,14 +11,35 @@ import java.math.BigDecimal;
 
 /**
  * DAO para gerenciar operações da tabela SALA_INVENTARIO
+ * IMPORTANTE: A maioria dos métodos só funciona no PostgreSQL
  */
 @Repository
 public class SalaInventarioDAO {
     
     /**
+     * Verifica se está usando SQLite (modo offline)
+     * @param conn Conexão ativa
+     * @return true se for SQLite, false se for PostgreSQL
+     */
+    private boolean isSQLite(Connection conn) throws SQLException {
+        String dbType = conn.getMetaData().getDatabaseProductName().toLowerCase();
+        return dbType.contains("sqlite");
+    }
+    
+    /**
      * Cria ou atualiza um registro de sala-inventário
+     * NOTA: Não funciona em modo offline (SQLite)
      */
     public boolean salvar(SalaInventario salaInventario) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            if (isSQLite(conn)) {
+                System.out.println("SQLite detectado: salvar() não disponível em modo offline");
+                return false;
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao verificar tipo de banco: " + e.getMessage());
+            return false;
+        }
         if (salaInventario.getIdSalaInventario() == null) {
             // Verifica se já existe um registro com a mesma sala e inventário
             SalaInventario existente = buscarPorSalaEInventario(
@@ -148,8 +169,19 @@ public class SalaInventarioDAO {
     
     /**
      * Busca um registro de sala-inventário por ID da sala e ID do inventário
+     * NOTA: Não funciona em modo offline (SQLite)
      */
     public SalaInventario buscarPorSalaEInventario(Integer idSala, Integer idInventario) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            if (isSQLite(conn)) {
+                System.out.println("SQLite detectado: buscarPorSalaEInventario() não disponível em modo offline");
+                return null;
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao verificar tipo de banco: " + e.getMessage());
+            return null;
+        }
+        
         String sql = "SELECT * FROM TABELA_SALA_INVENTARIO WHERE ID_SALA = ? AND ID_INVENTARIO = ?";
         
         try (Connection conn = DatabaseConnection.getConnection();
@@ -273,8 +305,19 @@ public class SalaInventarioDAO {
     
     /**
      * Finaliza a coleta de uma sala
+     * NOTA: Não funciona em modo offline (SQLite)
      */
     public boolean finalizarColeta(Integer idSala, Integer idInventario, Integer idParticipante, String observacoes) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            if (isSQLite(conn)) {
+                System.out.println("SQLite detectado: finalizarColeta() não disponível em modo offline");
+                return true; // Em modo offline, retornar sucesso sem fazer nada
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao verificar tipo de banco: " + e.getMessage());
+            return false;
+        }
+        
         SalaInventario salaInventario = buscarPorSalaEInventario(idSala, idInventario);
         
         if (salaInventario == null) {
@@ -289,8 +332,19 @@ public class SalaInventarioDAO {
     
     /**
      * Reabre a coleta de uma sala
+     * NOTA: Não funciona em modo offline (SQLite)
      */
     public boolean reabrirColeta(Integer idSala, Integer idInventario) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            if (isSQLite(conn)) {
+                System.out.println("SQLite detectado: reabrirColeta() não disponível em modo offline");
+                return true; // Em modo offline, retornar sucesso sem fazer nada
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao verificar tipo de banco: " + e.getMessage());
+            return false;
+        }
+        
         SalaInventario salaInventario = buscarPorSalaEInventario(idSala, idInventario);
         
         if (salaInventario != null) {
@@ -303,16 +357,38 @@ public class SalaInventarioDAO {
     
     /**
      * Verifica se a coleta de uma sala está finalizada
+     * NOTA: Não funciona em modo offline (SQLite)
      */
     public boolean isColetaFinalizada(Integer idSala, Integer idInventario) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            if (isSQLite(conn)) {
+                System.out.println("SQLite detectado: isColetaFinalizada() não disponível em modo offline");
+                return false; // Em modo offline, considerar que nenhuma sala está finalizada
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao verificar tipo de banco: " + e.getMessage());
+            return false;
+        }
+        
         SalaInventario salaInventario = buscarPorSalaEInventario(idSala, idInventario);
         return salaInventario != null && salaInventario.isColetaFinalizada();
     }
     
     /**
      * Inicia a coleta de uma sala
+     * NOTA: Não funciona em modo offline (SQLite)
      */
     public boolean iniciarColeta(Integer idSala, Integer idInventario, Integer idParticipante) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            if (isSQLite(conn)) {
+                System.out.println("SQLite detectado: iniciarColeta() não disponível em modo offline");
+                return true; // Em modo offline, retornar sucesso sem fazer nada
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao verificar tipo de banco: " + e.getMessage());
+            return false;
+        }
+        
         SalaInventario salaInventario = buscarPorSalaEInventario(idSala, idInventario);
         
         if (salaInventario == null) {
@@ -327,8 +403,19 @@ public class SalaInventarioDAO {
     
     /**
      * Atualiza as estatísticas de coleta de uma sala
+     * NOTA: Não funciona em modo offline (SQLite)
      */
     public boolean atualizarEstatisticas(Integer idSala, Integer idInventario, Integer totalItens, Integer itensSemEtiqueta) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            if (isSQLite(conn)) {
+                System.out.println("SQLite detectado: atualizarEstatisticas() não disponível em modo offline");
+                return true; // Em modo offline, retornar sucesso sem fazer nada
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao verificar tipo de banco: " + e.getMessage());
+            return false;
+        }
+        
         SalaInventario salaInventario = buscarPorSalaEInventario(idSala, idInventario);
         
         if (salaInventario == null) {
@@ -413,11 +500,21 @@ public class SalaInventarioDAO {
             
             salaInventario.setColetaFinalizada(rs.getBoolean("COLETA_FINALIZADA"));
             
-            // Tratamento robusto de timestamps
+            // Tratamento robusto de timestamps para SQLite e PostgreSQL
             try {
-                Timestamp dataInicio = rs.getTimestamp("DATA_INICIO_COLETA");
-                if (dataInicio != null && !rs.wasNull()) {
-                    salaInventario.setDataInicioColeta(dataInicio.toLocalDateTime());
+                Object dataInicioObj = rs.getObject("DATA_INICIO_COLETA");
+                if (dataInicioObj != null) {
+                    if (dataInicioObj instanceof String) {
+                        // SQLite: converter String para Timestamp
+                        Timestamp dataInicio = Timestamp.valueOf((String) dataInicioObj);
+                        salaInventario.setDataInicioColeta(dataInicio.toLocalDateTime());
+                    } else {
+                        // PostgreSQL: já é Timestamp
+                        Timestamp dataInicio = rs.getTimestamp("DATA_INICIO_COLETA");
+                        if (dataInicio != null && !rs.wasNull()) {
+                            salaInventario.setDataInicioColeta(dataInicio.toLocalDateTime());
+                        }
+                    }
                 }
             } catch (Exception e) {
                 System.err.println("Aviso: Erro ao parsear DATA_INICIO_COLETA - " + e.getMessage());
@@ -425,9 +522,19 @@ public class SalaInventarioDAO {
             }
             
             try {
-                Timestamp dataFinalizacao = rs.getTimestamp("DATA_FINALIZACAO_COLETA");
-                if (dataFinalizacao != null && !rs.wasNull()) {
-                    salaInventario.setDataFinalizacaoColeta(dataFinalizacao.toLocalDateTime());
+                Object dataFinalizacaoObj = rs.getObject("DATA_FINALIZACAO_COLETA");
+                if (dataFinalizacaoObj != null) {
+                    if (dataFinalizacaoObj instanceof String) {
+                        // SQLite: converter String para Timestamp
+                        Timestamp dataFinalizacao = Timestamp.valueOf((String) dataFinalizacaoObj);
+                        salaInventario.setDataFinalizacaoColeta(dataFinalizacao.toLocalDateTime());
+                    } else {
+                        // PostgreSQL: já é Timestamp
+                        Timestamp dataFinalizacao = rs.getTimestamp("DATA_FINALIZACAO_COLETA");
+                        if (dataFinalizacao != null && !rs.wasNull()) {
+                            salaInventario.setDataFinalizacaoColeta(dataFinalizacao.toLocalDateTime());
+                        }
+                    }
                 }
             } catch (Exception e) {
                 System.err.println("Aviso: Erro ao parsear DATA_FINALIZACAO_COLETA - " + e.getMessage());
@@ -449,18 +556,38 @@ public class SalaInventarioDAO {
             
             // Tentar ler colunas de auditoria se existirem (com tratamento de erro)
             try {
-                Timestamp dataCadastro = rs.getTimestamp("data_criacao");
-                if (dataCadastro != null && !rs.wasNull()) {
-                    salaInventario.setDataCadastro(dataCadastro.toLocalDateTime());
+                Object dataCadastroObj = rs.getObject("data_criacao");
+                if (dataCadastroObj != null) {
+                    if (dataCadastroObj instanceof String) {
+                        // SQLite: converter String para Timestamp
+                        Timestamp dataCadastro = Timestamp.valueOf((String) dataCadastroObj);
+                        salaInventario.setDataCadastro(dataCadastro.toLocalDateTime());
+                    } else {
+                        // PostgreSQL: já é Timestamp
+                        Timestamp dataCadastro = rs.getTimestamp("data_criacao");
+                        if (dataCadastro != null && !rs.wasNull()) {
+                            salaInventario.setDataCadastro(dataCadastro.toLocalDateTime());
+                        }
+                    }
                 }
             } catch (Exception e) {
                 // Coluna data_criacao não existe ou erro de parsing - ignorar silenciosamente
             }
             
             try {
-                Timestamp dataAtualizacao = rs.getTimestamp("data_atualizacao");
-                if (dataAtualizacao != null && !rs.wasNull()) {
-                    salaInventario.setDataUltimaAtualizacao(dataAtualizacao.toLocalDateTime());
+                Object dataAtualizacaoObj = rs.getObject("data_atualizacao");
+                if (dataAtualizacaoObj != null) {
+                    if (dataAtualizacaoObj instanceof String) {
+                        // SQLite: converter String para Timestamp
+                        Timestamp dataAtualizacao = Timestamp.valueOf((String) dataAtualizacaoObj);
+                        salaInventario.setDataUltimaAtualizacao(dataAtualizacao.toLocalDateTime());
+                    } else {
+                        // PostgreSQL: já é Timestamp
+                        Timestamp dataAtualizacao = rs.getTimestamp("data_atualizacao");
+                        if (dataAtualizacao != null && !rs.wasNull()) {
+                            salaInventario.setDataUltimaAtualizacao(dataAtualizacao.toLocalDateTime());
+                        }
+                    }
                 }
             } catch (Exception e) {
                 // Coluna data_atualizacao não existe ou erro de parsing - ignorar silenciosamente
@@ -508,12 +635,12 @@ public class SalaInventarioDAO {
                      "ORDER BY s.NUMERO_SALA";
             } else {
                 // PostgreSQL: tabela TABELA_SALA, campo ATIVO, com TABELA_SALA_INVENTARIO
+                // ALTERADO: Removido filtro de COLETA_FINALIZADA para mostrar TODAS as salas ativas
                 sql = "SELECT DISTINCT s.ID_SALA, s.NUMERO_SALA, s.DESCRICAO, s.ID_SETOR, s.ATIVO, " +
                      "CAST(NULL AS TIMESTAMP) AS DATA_CADASTRO " +
                      "FROM TABELA_SALA s " +
                      "LEFT JOIN TABELA_SALA_INVENTARIO si ON s.ID_SALA = si.ID_SALA AND si.ID_INVENTARIO = ? " +
                      "WHERE s.ATIVO = TRUE " +
-                     "AND (si.COLETA_FINALIZADA = FALSE OR si.COLETA_FINALIZADA IS NULL) " +
                      "ORDER BY s.NUMERO_SALA";
             }
             
@@ -659,17 +786,28 @@ public class SalaInventarioDAO {
      * @return Status da coleta ou null se não encontrado
      */
     public String buscarStatusSala(int idSala, int idInventario) {
-        String sql = "SELECT STATUS_COLETA FROM TABELA_SALA_INVENTARIO WHERE ID_SALA = ? AND ID_INVENTARIO = ?";
-        
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            // Detectar tipo de banco
+            String dbType = conn.getMetaData().getDatabaseProductName().toLowerCase();
+            boolean isSQLite = dbType.contains("sqlite");
             
-            stmt.setInt(1, idSala);
-            stmt.setInt(2, idInventario);
+            if (isSQLite) {
+                // SQLite não tem TABELA_SALA_INVENTARIO, retornar null
+                System.out.println("SQLite detectado: buscarStatusSala() não disponível em modo offline");
+                return null;
+            }
             
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getString("STATUS_COLETA");
+            // PostgreSQL: usar TABELA_SALA_INVENTARIO
+            String sql = "SELECT STATUS_COLETA FROM TABELA_SALA_INVENTARIO WHERE ID_SALA = ? AND ID_INVENTARIO = ?";
+            
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, idSala);
+                stmt.setInt(2, idInventario);
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getString("STATUS_COLETA");
+                    }
                 }
             }
             
@@ -745,7 +883,7 @@ public class SalaInventarioDAO {
                 throw e;
             }
             
-            // DATA_CADASTRO - tratamento ULTRA seguro - NÃO DEVE CAUSAR ERRO
+            // DATA_CADASTRO - tratamento ULTRA seguro para SQLite e PostgreSQL
             System.out.println("  Tentando ler DATA_CADASTRO...");
             try {
                 // Tentar ler como Object primeiro para ver o tipo
@@ -754,10 +892,26 @@ public class SalaInventarioDAO {
                     " (tipo: " + (dataCadastroObj != null ? dataCadastroObj.getClass().getName() : "null") + ")");
                 
                 if (dataCadastroObj != null) {
-                    // Tentar converter para Timestamp
-                    Timestamp dataCadastro = rs.getTimestamp("DATA_CADASTRO");
-                    sala.setDataCadastro(dataCadastro);
-                    System.out.println("  ✓ DATA_CADASTRO convertido para Timestamp");
+                    // Verificar se é String (SQLite) ou Timestamp (PostgreSQL)
+                    if (dataCadastroObj instanceof String) {
+                        // SQLite retorna TEXT - converter para Timestamp
+                        String dataStr = (String) dataCadastroObj;
+                        System.out.println("  DATA_CADASTRO é String (SQLite): " + dataStr);
+                        try {
+                            // Formato esperado: 'YYYY-MM-DD HH:MM:SS'
+                            Timestamp dataCadastro = Timestamp.valueOf(dataStr);
+                            sala.setDataCadastro(dataCadastro);
+                            System.out.println("  ✓ DATA_CADASTRO convertido de String para Timestamp");
+                        } catch (IllegalArgumentException e) {
+                            System.err.println("  ⚠ Formato de data inválido: " + dataStr);
+                            System.err.println("     Usando data padrão do construtor");
+                        }
+                    } else {
+                        // PostgreSQL retorna Timestamp diretamente
+                        Timestamp dataCadastro = rs.getTimestamp("DATA_CADASTRO");
+                        sala.setDataCadastro(dataCadastro);
+                        System.out.println("  ✓ DATA_CADASTRO lido como Timestamp (PostgreSQL)");
+                    }
                 } else {
                     System.out.println("  ✓ DATA_CADASTRO é NULL - usando data padrão do construtor");
                 }
@@ -860,11 +1014,21 @@ public class SalaInventarioDAO {
                 // Coluna OBSERVACOES não existe - ignorar
             }
             
-            // Timestamp - tratamento especial para evitar erros de parsing
+            // Timestamp - tratamento especial para SQLite e PostgreSQL
             try {
-                Timestamp dataCadastro = rs.getTimestamp("DATA_CADASTRO");
-                if (dataCadastro != null && !rs.wasNull()) {
-                    sala.setDataCadastro(dataCadastro);
+                Object dataCadastroObj = rs.getObject("DATA_CADASTRO");
+                if (dataCadastroObj != null) {
+                    if (dataCadastroObj instanceof String) {
+                        // SQLite: converter String para Timestamp
+                        Timestamp dataCadastro = Timestamp.valueOf((String) dataCadastroObj);
+                        sala.setDataCadastro(dataCadastro);
+                    } else {
+                        // PostgreSQL: já é Timestamp
+                        Timestamp dataCadastro = rs.getTimestamp("DATA_CADASTRO");
+                        if (dataCadastro != null && !rs.wasNull()) {
+                            sala.setDataCadastro(dataCadastro);
+                        }
+                    }
                 }
             } catch (Exception e) {
                 // Coluna DATA_CADASTRO não existe ou erro de parsing - ignorar

@@ -50,6 +50,14 @@ public class ColetaOfflineService {
     public int salvarColeta(Coleta coleta) throws SQLException {
         LOGGER.info("Salvando coleta - Modo: " +
                 (offlineManager.isOperatingOffline() ? "OFFLINE" : "ONLINE"));
+        
+        // DEBUG: Log detalhado do timestamp recebido
+        System.out.println("=== DEBUG TIMESTAMP: ColetaOfflineService.salvarColeta ===");
+        System.out.println("DEBUG TIMESTAMP: Data Coleta recebida: " + coleta.getDataColeta());
+        System.out.println("DEBUG TIMESTAMP: Data Coleta (class): " + 
+            (coleta.getDataColeta() != null ? coleta.getDataColeta().getClass().getName() : "null"));
+        System.out.println("DEBUG TIMESTAMP: Data Coleta (time): " + 
+            (coleta.getDataColeta() != null ? coleta.getDataColeta().getTime() : "null"));
 
         try {
             if (offlineManager.isOperatingOffline()) {
@@ -86,7 +94,7 @@ public class ColetaOfflineService {
         try {
             Map<String, Object> coletaMap = coletaToMap(coleta);
             coletaMap.put("sincronizado", 1); // Já está sincronizado
-            offlineDAO.salvarColetaOffline(coletaMap);
+            offlineDAO.salvarColeta(coletaMap);
 
             LOGGER.info("Coleta salva online com sucesso - ID: " + idColeta);
         } catch (Exception e) {
@@ -106,7 +114,7 @@ public class ColetaOfflineService {
         Map<String, Object> coletaMap = coletaToMap(coleta);
         coletaMap.put("sincronizado", 0); // Pendente de sincronização
 
-        int idColeta = offlineDAO.salvarColetaOffline(coletaMap);
+        int idColeta = offlineDAO.salvarColeta(coletaMap);
 
         // Atualizar contador de pendentes
         syncStatusManager.adicionarItensPendentes("coletas", 1);
@@ -239,16 +247,44 @@ public class ColetaOfflineService {
      * Converte Coleta para Map
      */
     private Map<String, Object> coletaToMap(Coleta coleta) {
+        System.out.println("=== DEBUG TIMESTAMP: coletaToMap ===");
+        System.out.println("DEBUG: Estado Encontrado: " + coleta.getEstadoEncontrado());
+        
         Map<String, Object> map = new HashMap<>();
         map.put("id_inventario", coleta.getIdInventario());
         map.put("id_patrimonio", coleta.getIdPatrimonio());
         map.put("id_participante", coleta.getIdParticipanteInventario());
         map.put("numero_patrimonio", coleta.getNumeroPatrimonio());
-        map.put("descricao_item_sem_etiqueta", coleta.getDescricaoItemSemEtiqueta());
+        map.put("descricao_sem_etiqueta", coleta.getDescricaoItemSemEtiqueta());
         map.put("localizacao_encontrada", coleta.getLocalizacaoEncontrada());
-        map.put("estado_encontrado", coleta.getEstadoEncontrado());
+        map.put("localizacao_atual", coleta.getLocalizacaoAtual());
+        
+        // ✅ CORREÇÃO: Garantir que o estado de conservação seja salvo corretamente
+        String estadoEncontrado = coleta.getEstadoEncontrado();
+        if (estadoEncontrado == null || estadoEncontrado.trim().isEmpty()) {
+            estadoEncontrado = "BOM"; // Valor padrão se não informado
+        }
+        map.put("situacao_encontrada", estadoEncontrado); // SQLite usa situacao_encontrada
+        System.out.println("DEBUG: situacao_encontrada mapeada: " + estadoEncontrado);
+        
         map.put("observacoes", coleta.getObservacaoColeta());
-        map.put("data_coleta", coleta.getDataColeta());
+        map.put("foto_patrimonio", coleta.getFotoPatrimonio());
+        map.put("sem_etiqueta", coleta.isSemEtiqueta());
+        
+        // DEBUG: Log detalhado do timestamp antes de colocar no map
+        java.sql.Timestamp dataColeta = coleta.getDataColeta();
+        System.out.println("DEBUG TIMESTAMP: Data Coleta antes do map.put: " + dataColeta);
+        System.out.println("DEBUG TIMESTAMP: Data Coleta (class): " + 
+            (dataColeta != null ? dataColeta.getClass().getName() : "null"));
+        System.out.println("DEBUG TIMESTAMP: Data Coleta (time): " + 
+            (dataColeta != null ? dataColeta.getTime() : "null"));
+        
+        map.put("data_coleta", dataColeta);
+        
+        System.out.println("DEBUG TIMESTAMP: Valor no map após put: " + map.get("data_coleta"));
+        System.out.println("DEBUG TIMESTAMP: Classe no map: " + 
+            (map.get("data_coleta") != null ? map.get("data_coleta").getClass().getName() : "null"));
+        
         return map;
     }
 
@@ -267,10 +303,13 @@ public class ColetaOfflineService {
             coleta.setIdParticipanteInventario(((Number) map.get("id_participante")).intValue());
 
         coleta.setNumeroPatrimonio((String) map.get("numero_patrimonio"));
-        coleta.setDescricaoItemSemEtiqueta((String) map.get("descricao_item_sem_etiqueta"));
+        coleta.setDescricaoItemSemEtiqueta((String) map.get("descricao_sem_etiqueta"));
         coleta.setLocalizacaoEncontrada((String) map.get("localizacao_encontrada"));
-        coleta.setEstadoEncontrado((String) map.get("estado_encontrado"));
+        coleta.setLocalizacaoAtual((String) map.get("localizacao_atual"));
+        coleta.setEstadoEncontrado((String) map.get("situacao_encontrada")); // SQLite usa situacao_encontrada
         coleta.setObservacaoColeta((String) map.get("observacoes"));
+        coleta.setFotoPatrimonio((String) map.get("foto_patrimonio"));
+        coleta.setSemEtiqueta((Boolean) map.getOrDefault("sem_etiqueta", false));
 
         // Conversão segura de data
         Object dataObj = map.get("data_coleta");
