@@ -207,14 +207,12 @@ class DashboardRepositoryImpl @Inject constructor(
             val invId = inventarioId ?: preferencesManager.getInventarioAtivoId() ?: 0
             
             dashboardDao.observarTotalColetas(invId).collect { totalColetasLocais ->
-                Log.d(TAG, "💾 Total de coletas locais (todas): $totalColetasLocais")
+                Log.d(TAG, "💾 Total de coletas locais NÃO sincronizadas: $totalColetasLocais")
                 
                 // 3. Calcular estatísticas híbridas
                 // IMPORTANTE: O servidor já retorna o total de coletas sincronizadas
-                // Então somamos apenas as coletas locais que ainda não foram sincronizadas
-                
-                // Por enquanto, vamos somar todas as coletas locais
-                // TODO: Filtrar apenas coletas não sincronizadas quando implementarmos o campo 'sincronizado'
+                // O DAO agora filtra apenas coletas NÃO sincronizadas (sincronizado = 0 ou NULL)
+                // Então somamos: Servidor (sincronizadas) + Locais (não sincronizadas) = Total Real
                 val totalColetadosAtualizado = serverStats.totalColetados + totalColetasLocais
                 val totalPendentesAtualizado = serverStats.totalPatrimonios - totalColetadosAtualizado
                 val percentualAtualizado = if (serverStats.totalPatrimonios > 0) {

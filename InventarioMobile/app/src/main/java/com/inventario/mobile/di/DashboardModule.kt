@@ -30,14 +30,16 @@ object DashboardModule {
     /**
      * Provê implementação do DashboardRepository
      * v2.4: Adicionado dashboardDao para Room Flow reativo
+     * v2.5: Adicionado preferencesManager para inventário ativo
      */
     @Provides
     @Singleton
     fun provideDashboardRepository(
         apiService: ApiService,
         mapper: DashboardMapper,
-        dashboardDao: com.inventario.mobile.data.local.dao.DashboardDao
+        dashboardDao: com.inventario.mobile.data.local.dao.DashboardDao,
+        preferencesManager: com.inventario.mobile.utils.PreferencesManager
     ): DashboardRepository {
-        return DashboardRepositoryImpl(apiService, mapper, dashboardDao)
+        return DashboardRepositoryImpl(apiService, mapper, dashboardDao, preferencesManager)
     }
 }

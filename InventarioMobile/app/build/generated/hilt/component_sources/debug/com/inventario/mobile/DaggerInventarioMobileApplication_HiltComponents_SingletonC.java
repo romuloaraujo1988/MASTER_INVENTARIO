@@ -868,7 +868,7 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
     }
 
     private DashboardRepositoryImpl dashboardRepositoryImpl() {
-      return new DashboardRepositoryImpl(singletonCImpl.provideApiServiceProvider.get(), singletonCImpl.provideDashboardMapperProvider.get(), singletonCImpl.dashboardDao());
+      return new DashboardRepositoryImpl(singletonCImpl.provideApiServiceProvider.get(), singletonCImpl.provideDashboardMapperProvider.get(), singletonCImpl.dashboardDao(), singletonCImpl.providePreferencesManagerProvider.get());
     }
 
     private BuscarDescricoesNaoColetadasUseCase buscarDescricoesNaoColetadasUseCase() {
@@ -1342,7 +1342,7 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
           return (T) new ChartDataProvider(singletonCImpl.provideDashboardRepositoryProvider.get());
 
           case 25: // com.inventario.mobile.domain.repository.DashboardRepository 
-          return (T) DashboardModule_ProvideDashboardRepositoryFactory.provideDashboardRepository(singletonCImpl.provideApiServiceProvider.get(), singletonCImpl.provideDashboardMapperProvider.get(), singletonCImpl.dashboardDao());
+          return (T) DashboardModule_ProvideDashboardRepositoryFactory.provideDashboardRepository(singletonCImpl.provideApiServiceProvider.get(), singletonCImpl.provideDashboardMapperProvider.get(), singletonCImpl.dashboardDao(), singletonCImpl.providePreferencesManagerProvider.get());
 
           case 26: // com.inventario.mobile.data.remote.api.ApiService 
           return (T) ApiModule_ProvideApiServiceFactory.provideApiService(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));

@@ -73,11 +73,11 @@ interface DashboardDao {
     fun observarTotalPatrimonios(): Flow<Int>
     
     /**
-     * 🔄 Observa total de coletas LOCAIS em tempo real
-     * v2.5: Conta apenas coletas NÃO sincronizadas (que ainda estão no banco local)
-     * Coletas sincronizadas são apagadas automaticamente para liberar espaço
+     * 🔄 Observa total de coletas LOCAIS NÃO SINCRONIZADAS em tempo real
+     * v2.5: Conta apenas coletas NÃO sincronizadas (sincronizado = 0 ou NULL)
+     * Isso evita duplicação com as coletas já contadas pelo servidor
      */
-    @Query("SELECT COUNT(*) FROM coleta WHERE idInventario = :inventarioId")
+    @Query("SELECT COUNT(*) FROM coleta WHERE idInventario = :inventarioId AND (sincronizado = 0 OR sincronizado IS NULL)")
     fun observarTotalColetas(inventarioId: Int): Flow<Int>
     
     /**

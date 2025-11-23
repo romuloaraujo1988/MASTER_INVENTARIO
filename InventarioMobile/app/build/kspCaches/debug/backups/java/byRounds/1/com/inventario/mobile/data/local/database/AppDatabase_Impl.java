@@ -12,17 +12,17 @@ import androidx.room.util.TableInfo;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.sqlite.db.SupportSQLiteOpenHelper;
 import com.inventario.mobile.data.local.dao.ColetaDao;
-import com.inventario.mobile.data.local.dao.ColetaDao_AppDatabase_Impl;
+import com.inventario.mobile.data.local.dao.ColetaDao_Impl;
 import com.inventario.mobile.data.local.dao.DashboardDao;
 import com.inventario.mobile.data.local.dao.DashboardDao_Impl;
 import com.inventario.mobile.data.local.dao.LogColetaDao;
 import com.inventario.mobile.data.local.dao.LogColetaDao_Impl;
 import com.inventario.mobile.data.local.dao.PatrimonioDao;
-import com.inventario.mobile.data.local.dao.PatrimonioDao_AppDatabase_Impl;
+import com.inventario.mobile.data.local.dao.PatrimonioDao_Impl;
 import com.inventario.mobile.data.local.dao.ResponsavelDao;
 import com.inventario.mobile.data.local.dao.ResponsavelDao_Impl;
 import com.inventario.mobile.data.local.dao.SalaDao;
-import com.inventario.mobile.data.local.dao.SalaDao_AppDatabase_Impl;
+import com.inventario.mobile.data.local.dao.SalaDao_Impl;
 import com.inventario.mobile.data.local.dao.SincronizacaoDao;
 import com.inventario.mobile.data.local.dao.SincronizacaoDao_Impl;
 import com.inventario.mobile.data.local.dao.SyncLogDao;
@@ -373,10 +373,10 @@ public final class AppDatabase_Impl extends AppDatabase {
   @NonNull
   protected Map<Class<?>, List<Class<?>>> getRequiredTypeConverters() {
     final HashMap<Class<?>, List<Class<?>>> _typeConvertersMap = new HashMap<Class<?>, List<Class<?>>>();
-    _typeConvertersMap.put(PatrimonioDao.class, PatrimonioDao_AppDatabase_Impl.getRequiredConverters());
-    _typeConvertersMap.put(SalaDao.class, SalaDao_AppDatabase_Impl.getRequiredConverters());
+    _typeConvertersMap.put(PatrimonioDao.class, PatrimonioDao_Impl.getRequiredConverters());
+    _typeConvertersMap.put(SalaDao.class, SalaDao_Impl.getRequiredConverters());
     _typeConvertersMap.put(ResponsavelDao.class, ResponsavelDao_Impl.getRequiredConverters());
-    _typeConvertersMap.put(ColetaDao.class, ColetaDao_AppDatabase_Impl.getRequiredConverters());
+    _typeConvertersMap.put(ColetaDao.class, ColetaDao_Impl.getRequiredConverters());
     _typeConvertersMap.put(SincronizacaoDao.class, SincronizacaoDao_Impl.getRequiredConverters());
     _typeConvertersMap.put(SyncLogDao.class, SyncLogDao_Impl.getRequiredConverters());
     _typeConvertersMap.put(LogColetaDao.class, LogColetaDao_Impl.getRequiredConverters());
@@ -406,7 +406,7 @@ public final class AppDatabase_Impl extends AppDatabase {
     } else {
       synchronized(this) {
         if(_patrimonioDao == null) {
-          _patrimonioDao = new PatrimonioDao_AppDatabase_Impl(this);
+          _patrimonioDao = new PatrimonioDao_Impl(this);
         }
         return _patrimonioDao;
       }
@@ -420,7 +420,7 @@ public final class AppDatabase_Impl extends AppDatabase {
     } else {
       synchronized(this) {
         if(_salaDao == null) {
-          _salaDao = new SalaDao_AppDatabase_Impl(this);
+          _salaDao = new SalaDao_Impl(this);
         }
         return _salaDao;
       }
@@ -448,7 +448,7 @@ public final class AppDatabase_Impl extends AppDatabase {
     } else {
       synchronized(this) {
         if(_coletaDao == null) {
-          _coletaDao = new ColetaDao_AppDatabase_Impl(this);
+          _coletaDao = new ColetaDao_Impl(this);
         }
         return _coletaDao;
       }

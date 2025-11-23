@@ -4,6 +4,7 @@ import com.inventario.mobile.data.local.dao.DashboardDao;
 import com.inventario.mobile.data.mapper.DashboardMapper;
 import com.inventario.mobile.data.remote.api.ApiService;
 import com.inventario.mobile.domain.repository.DashboardRepository;
+import com.inventario.mobile.utils.PreferencesManager;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
 import dagger.internal.Preconditions;
@@ -32,26 +33,31 @@ public final class DashboardModule_ProvideDashboardRepositoryFactory implements 
 
   private final Provider<DashboardDao> dashboardDaoProvider;
 
+  private final Provider<PreferencesManager> preferencesManagerProvider;
+
   public DashboardModule_ProvideDashboardRepositoryFactory(Provider<ApiService> apiServiceProvider,
-      Provider<DashboardMapper> mapperProvider, Provider<DashboardDao> dashboardDaoProvider) {
+      Provider<DashboardMapper> mapperProvider, Provider<DashboardDao> dashboardDaoProvider,
+      Provider<PreferencesManager> preferencesManagerProvider) {
     this.apiServiceProvider = apiServiceProvider;
     this.mapperProvider = mapperProvider;
     this.dashboardDaoProvider = dashboardDaoProvider;
+    this.preferencesManagerProvider = preferencesManagerProvider;
   }
 
   @Override
   public DashboardRepository get() {
-    return provideDashboardRepository(apiServiceProvider.get(), mapperProvider.get(), dashboardDaoProvider.get());
+    return provideDashboardRepository(apiServiceProvider.get(), mapperProvider.get(), dashboardDaoProvider.get(), preferencesManagerProvider.get());
   }
 
   public static DashboardModule_ProvideDashboardRepositoryFactory create(
       Provider<ApiService> apiServiceProvider, Provider<DashboardMapper> mapperProvider,
-      Provider<DashboardDao> dashboardDaoProvider) {
-    return new DashboardModule_ProvideDashboardRepositoryFactory(apiServiceProvider, mapperProvider, dashboardDaoProvider);
+      Provider<DashboardDao> dashboardDaoProvider,
+      Provider<PreferencesManager> preferencesManagerProvider) {
+    return new DashboardModule_ProvideDashboardRepositoryFactory(apiServiceProvider, mapperProvider, dashboardDaoProvider, preferencesManagerProvider);
   }
 
   public static DashboardRepository provideDashboardRepository(ApiService apiService,
-      DashboardMapper mapper, DashboardDao dashboardDao) {
-    return Preconditions.checkNotNullFromProvides(DashboardModule.INSTANCE.provideDashboardRepository(apiService, mapper, dashboardDao));
+      DashboardMapper mapper, DashboardDao dashboardDao, PreferencesManager preferencesManager) {
+    return Preconditions.checkNotNullFromProvides(DashboardModule.INSTANCE.provideDashboardRepository(apiService, mapper, dashboardDao, preferencesManager));
   }
 }

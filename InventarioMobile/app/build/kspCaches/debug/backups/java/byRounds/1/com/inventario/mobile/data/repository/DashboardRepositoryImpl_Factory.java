@@ -3,6 +3,7 @@ package com.inventario.mobile.data.repository;
 import com.inventario.mobile.data.local.dao.DashboardDao;
 import com.inventario.mobile.data.mapper.DashboardMapper;
 import com.inventario.mobile.data.remote.api.ApiService;
+import com.inventario.mobile.utils.PreferencesManager;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
 import dagger.internal.QualifierMetadata;
@@ -30,25 +31,30 @@ public final class DashboardRepositoryImpl_Factory implements Factory<DashboardR
 
   private final Provider<DashboardDao> dashboardDaoProvider;
 
+  private final Provider<PreferencesManager> preferencesManagerProvider;
+
   public DashboardRepositoryImpl_Factory(Provider<ApiService> apiServiceProvider,
-      Provider<DashboardMapper> mapperProvider, Provider<DashboardDao> dashboardDaoProvider) {
+      Provider<DashboardMapper> mapperProvider, Provider<DashboardDao> dashboardDaoProvider,
+      Provider<PreferencesManager> preferencesManagerProvider) {
     this.apiServiceProvider = apiServiceProvider;
     this.mapperProvider = mapperProvider;
     this.dashboardDaoProvider = dashboardDaoProvider;
+    this.preferencesManagerProvider = preferencesManagerProvider;
   }
 
   @Override
   public DashboardRepositoryImpl get() {
-    return newInstance(apiServiceProvider.get(), mapperProvider.get(), dashboardDaoProvider.get());
+    return newInstance(apiServiceProvider.get(), mapperProvider.get(), dashboardDaoProvider.get(), preferencesManagerProvider.get());
   }
 
   public static DashboardRepositoryImpl_Factory create(Provider<ApiService> apiServiceProvider,
-      Provider<DashboardMapper> mapperProvider, Provider<DashboardDao> dashboardDaoProvider) {
-    return new DashboardRepositoryImpl_Factory(apiServiceProvider, mapperProvider, dashboardDaoProvider);
+      Provider<DashboardMapper> mapperProvider, Provider<DashboardDao> dashboardDaoProvider,
+      Provider<PreferencesManager> preferencesManagerProvider) {
+    return new DashboardRepositoryImpl_Factory(apiServiceProvider, mapperProvider, dashboardDaoProvider, preferencesManagerProvider);
   }
 
   public static DashboardRepositoryImpl newInstance(ApiService apiService, DashboardMapper mapper,
-      DashboardDao dashboardDao) {
-    return new DashboardRepositoryImpl(apiService, mapper, dashboardDao);
+      DashboardDao dashboardDao, PreferencesManager preferencesManager) {
+    return new DashboardRepositoryImpl(apiService, mapper, dashboardDao, preferencesManager);
   }
 }
