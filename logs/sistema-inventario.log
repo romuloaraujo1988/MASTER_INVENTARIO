@@ -51,3 +51,4 @@
 2025-11-23 03:43:39.271 [SwingWorker-pool-3-thread-5] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active
 2025-11-23 03:43:49.271 [SwingWorker-pool-3-thread-6] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active
 2025-11-23 03:43:59.270 [SwingWorker-pool-3-thread-7] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active
+2025-11-23 12:16:13.224 [SwingWorker-pool-3-thread-1] ERROR com.inventario.util.MobileApiClient - Erro ao testar conexão: Connection refused: getsockopt

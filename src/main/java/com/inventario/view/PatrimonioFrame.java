@@ -10,14 +10,6 @@ import com.inventario.dao.PatrimonioDAO;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Optional;
-import java.awt.Insets;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.FlowLayout;
-import java.awt.Dimension;
-import java.awt.Color;
-import java.awt.Font;
-import com.inventario.view.ui.ButtonStyleFactory;
 
 /**
  * Tela principal para gerenciamento de patrimônios
@@ -55,17 +47,29 @@ public class PatrimonioFrame extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
         
+        // Definir ícone da janela
+        setIconImages(com.inventario.util.IconManager.getAppIconImages());
+        
         // Painel superior principal com layout vertical
         JPanel painelSuperior = new JPanel();
         painelSuperior.setLayout(new BoxLayout(painelSuperior, BoxLayout.Y_AXIS));
         painelSuperior.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        painelSuperior.setBackground(new Color(236, 240, 241));
         
         // Painel de busca modernizado
         JPanel painelBusca = new JPanel();
         painelBusca.setLayout(new GridBagLayout());
+        painelBusca.setBackground(Color.WHITE);
         painelBusca.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Busca de Patrimônios"),
-            BorderFactory.createEmptyBorder(5, 5, 5, 5)
+            BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(52, 152, 219), 2),
+                "🔍 Busca de Patrimônios",
+                javax.swing.border.TitledBorder.LEFT,
+                javax.swing.border.TitledBorder.TOP,
+                new Font("Segoe UI Symbol", Font.BOLD, 13),
+                new Color(52, 152, 219)
+            ),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
         
         GridBagConstraints gbc = new GridBagConstraints();
@@ -74,11 +78,14 @@ public class PatrimonioFrame extends JFrame {
         
         // Linha 1: Label e ComboBox
         gbc.gridx = 0; gbc.gridy = 0;
-        painelBusca.add(new JLabel("Buscar por:"), gbc);
+        JLabel lblBuscarPor = new JLabel("Buscar por:");
+        lblBuscarPor.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        painelBusca.add(lblBuscarPor, gbc);
         
         gbc.gridx = 1;
         comboTipoBusca = new JComboBox<>(new String[]{"Número", "Descrição", "Responsável", "Sala", "Todos os campos"});
-        comboTipoBusca.setPreferredSize(new Dimension(150, 30));
+        comboTipoBusca.setPreferredSize(new Dimension(150, 32));
+        comboTipoBusca.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         painelBusca.add(comboTipoBusca, gbc);
         
         // Linha 1: Campo de busca
@@ -86,40 +93,53 @@ public class PatrimonioFrame extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         campoBusca = new JTextField();
-        campoBusca.setPreferredSize(new Dimension(250, 30));
+        campoBusca.setPreferredSize(new Dimension(250, 32));
+        campoBusca.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         campoBusca.setToolTipText("Digite o termo para buscar");
+        campoBusca.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(189, 195, 199)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
         painelBusca.add(campoBusca, gbc);
         
         // Linha 1: Botões de busca
         gbc.gridx = 3; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
-        btnBuscar = ButtonStyleFactory.createPrimaryButton("Buscar");
-        btnBuscar.setPreferredSize(new Dimension(100, 30));
+        btnBuscar = createModernButton("🔍 Buscar", new Color(52, 152, 219));
+        btnBuscar.setPreferredSize(new Dimension(120, 32));
         painelBusca.add(btnBuscar, gbc);
         
         gbc.gridx = 4;
-        btnCarregarTodos = ButtonStyleFactory.createSuccessButton("Carregar Todos");
-        btnCarregarTodos.setPreferredSize(new Dimension(140, 30));
+        btnCarregarTodos = createModernButton("📋 Carregar Todos", new Color(46, 204, 113));
+        btnCarregarTodos.setPreferredSize(new Dimension(160, 32));
         painelBusca.add(btnCarregarTodos, gbc);
         
         // Painel de ações modernizado
-        JPanel painelAcoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JPanel painelAcoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        painelAcoes.setBackground(Color.WHITE);
         painelAcoes.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Ações"),
-            BorderFactory.createEmptyBorder(5, 5, 5, 5)
+            BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(155, 89, 182), 2),
+                "⚙️ Ações",
+                javax.swing.border.TitledBorder.LEFT,
+                javax.swing.border.TitledBorder.TOP,
+                new Font("Segoe UI Symbol", Font.BOLD, 13),
+                new Color(155, 89, 182)
+            ),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
         
-        // Botões de ação com cores e ícones
-        btnNovo = ButtonStyleFactory.createSuccessButton("Novo");
-        btnNovo.setPreferredSize(new Dimension(150, 35));
+        // Botões de ação com emoticons e cores
+        btnNovo = createModernButton("➕ Novo Patrimônio", new Color(46, 204, 113));
+        btnNovo.setPreferredSize(new Dimension(180, 38));
         
-        btnEditar = ButtonStyleFactory.createWarningButton("Alterar");
-        btnEditar.setPreferredSize(new Dimension(100, 35));
+        btnEditar = createModernButton("✏️ Editar", new Color(241, 196, 15));
+        btnEditar.setPreferredSize(new Dimension(120, 38));
         
-        btnExcluir = ButtonStyleFactory.createDangerButton("Excluir");
-        btnExcluir.setPreferredSize(new Dimension(100, 35));
+        btnExcluir = createModernButton("🗑️ Excluir", new Color(231, 76, 60));
+        btnExcluir.setPreferredSize(new Dimension(120, 38));
         
-        btnImportar = ButtonStyleFactory.createInfoButton("Importar CSV");
-        btnImportar.setPreferredSize(new Dimension(130, 35));
+        btnImportar = createModernButton("📥 Importar CSV", new Color(52, 152, 219));
+        btnImportar.setPreferredSize(new Dimension(150, 38));
         
         painelAcoes.add(btnNovo);
         painelAcoes.add(btnEditar);
@@ -144,24 +164,63 @@ public class PatrimonioFrame extends JFrame {
         
         tabelaPatrimonio = new JTable(modeloTabela);
         tabelaPatrimonio.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tabelaPatrimonio.setRowHeight(25);
-        tabelaPatrimonio.setGridColor(new Color(230, 230, 230));
-        tabelaPatrimonio.setSelectionBackground(new Color(184, 207, 229));
-        tabelaPatrimonio.getTableHeader().setBackground(new Color(70, 130, 180));
+        tabelaPatrimonio.setRowHeight(28);
+        tabelaPatrimonio.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tabelaPatrimonio.setGridColor(new Color(224, 224, 224));
+        tabelaPatrimonio.setSelectionBackground(new Color(52, 152, 219));
+        tabelaPatrimonio.setSelectionForeground(Color.WHITE);
+        tabelaPatrimonio.setShowGrid(true);
+        tabelaPatrimonio.setIntercellSpacing(new Dimension(1, 1));
+        
+        // Cabeçalho da tabela com estilo moderno
+        tabelaPatrimonio.getTableHeader().setBackground(new Color(44, 62, 80));
         tabelaPatrimonio.getTableHeader().setForeground(Color.WHITE);
-        tabelaPatrimonio.getTableHeader().setFont(tabelaPatrimonio.getTableHeader().getFont().deriveFont(Font.BOLD));
+        tabelaPatrimonio.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        tabelaPatrimonio.getTableHeader().setPreferredSize(new Dimension(0, 35));
+        tabelaPatrimonio.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(52, 152, 219)));
+        
+        // Renderizador customizado para linhas alternadas
+        tabelaPatrimonio.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, 
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                
+                if (!isSelected) {
+                    if (row % 2 == 0) {
+                        c.setBackground(Color.WHITE);
+                    } else {
+                        c.setBackground(new Color(245, 245, 245));
+                    }
+                    c.setForeground(new Color(44, 62, 80));
+                } else {
+                    c.setBackground(new Color(52, 152, 219));
+                    c.setForeground(Color.WHITE);
+                }
+                
+                setBorder(BorderFactory.createEmptyBorder(5, 8, 5, 8));
+                return c;
+            }
+        });
         
         JScrollPane scrollPane = new JScrollPane(tabelaPatrimonio);
         scrollPane.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createEmptyBorder(10, 10, 10, 10),
-            BorderFactory.createLoweredBevelBorder()
+            BorderFactory.createEmptyBorder(0, 10, 10, 10),
+            BorderFactory.createLineBorder(new Color(189, 195, 199), 1)
         ));
+        scrollPane.getViewport().setBackground(Color.WHITE);
         add(scrollPane, BorderLayout.CENTER);
         
-        // Painel de status
-        JPanel painelStatus = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        painelStatus.setBorder(BorderFactory.createEtchedBorder());
-        painelStatus.add(new JLabel("Dica: Use Ctrl+F para busca rápida ou clique duas vezes em um item para editar"));
+        // Painel de status modernizado
+        JPanel painelStatus = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 8));
+        painelStatus.setBackground(new Color(44, 62, 80));
+        painelStatus.setBorder(BorderFactory.createMatteBorder(2, 0, 0, 0, new Color(52, 152, 219)));
+        
+        JLabel lblDica = new JLabel("💡 Dica: Clique duas vezes em um item para editar");
+        lblDica.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 11));
+        lblDica.setForeground(new Color(236, 240, 241));
+        painelStatus.add(lblDica);
+        
         add(painelStatus, BorderLayout.SOUTH);
         
         // Configurar eventos
@@ -170,6 +229,93 @@ public class PatrimonioFrame extends JFrame {
         setSize(1200, 700);
         setLocationRelativeTo(null);
         setMinimumSize(new Dimension(1000, 600));
+    }
+    
+    /**
+     * Cria um botão moderno com emoticon, gradiente e efeito hover
+     */
+    private JButton createModernButton(String texto, Color corBase) {
+        JButton button = new JButton() {
+            private boolean isHovered = false;
+
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // Cor de fundo com gradiente
+                Color topColor = isHovered ? corBase.brighter() : corBase;
+                Color bottomColor = isHovered ? corBase : corBase.darker();
+
+                java.awt.GradientPaint gradient = new java.awt.GradientPaint(
+                        0, 0, topColor,
+                        0, getHeight(), bottomColor);
+                g2d.setPaint(gradient);
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+
+                // Borda sutil
+                g2d.setColor(new Color(255, 255, 255, 80));
+                g2d.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+
+                g2d.dispose();
+
+                // Desenhar texto com emoticon
+                g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+
+                // Usar fonte que suporta emoticons
+                g2d.setFont(new Font("Segoe UI Symbol", Font.BOLD, 13));
+                g2d.setColor(Color.WHITE);
+                
+                FontMetrics fm = g2d.getFontMetrics();
+                int textWidth = fm.stringWidth(texto);
+                int textX = (getWidth() - textWidth) / 2;
+                int textY = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
+                
+                // Sombra do texto
+                g2d.setColor(new Color(0, 0, 0, 100));
+                g2d.drawString(texto, textX + 1, textY + 1);
+                
+                // Texto principal
+                g2d.setColor(Color.WHITE);
+                g2d.drawString(texto, textX, textY);
+
+                g2d.dispose();
+            }
+        };
+
+        button.setContentAreaFilled(false);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        // Efeito hover
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                try {
+                    java.lang.reflect.Field field = button.getClass().getDeclaredField("isHovered");
+                    field.setAccessible(true);
+                    field.set(button, true);
+                    button.repaint();
+                } catch (Exception e) {
+                    // Fallback silencioso
+                }
+            }
+
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                try {
+                    java.lang.reflect.Field field = button.getClass().getDeclaredField("isHovered");
+                    field.setAccessible(true);
+                    field.set(button, false);
+                    button.repaint();
+                } catch (Exception e) {
+                    // Fallback silencioso
+                }
+            }
+        });
+        
+        return button;
     }
     
     private void configurarEventos() {
@@ -189,6 +335,16 @@ public class PatrimonioFrame extends JFrame {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 if (campoBusca.getText().trim().isEmpty()) {
                     modeloTabela.setRowCount(0);
+                }
+            }
+        });
+        
+        // Duplo clique para editar
+        tabelaPatrimonio.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                if (evt.getClickCount() == 2) {
+                    editarPatrimonio();
                 }
             }
         });

@@ -88,6 +88,7 @@ public class RelatorioFrame extends JFrame {
     private JTextArea areaResumo;
 
     private JButton btnGerar, btnExportar, btnImprimir, btnLimpar;
+    private JButton btnExportarAtual, btnExportarGeral, btnExportarEstatisticas;
     private JProgressBar progressBar;
     private JLabel labelStatus;
 
@@ -176,6 +177,9 @@ public class RelatorioFrame extends JFrame {
             btnGerar.setEnabled(true);
             btnExportar.setEnabled(true);
             btnImprimir.setEnabled(true);
+            btnExportarAtual.setEnabled(true);
+            btnExportarGeral.setEnabled(true);
+            btnExportarEstatisticas.setEnabled(true);
 
             List<Map<String, Object>> dados = success.getDados();
             if (dados.isEmpty()) {
@@ -851,10 +855,11 @@ public class RelatorioFrame extends JFrame {
 
         btnGerar = ButtonStyleFactory.createPrimaryButton("📊 Gerar Relatório");
         btnGerar.setPreferredSize(new Dimension(160, 40));
-        btnGerar.setFont(new Font("Segoe UI Emoji", Font.BOLD, 12));
+        btnGerar.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 11));
 
         btnLimpar = ButtonStyleFactory.createWarningButton("🗑️ Limpar");
         btnLimpar.setPreferredSize(new Dimension(120, 40));
+        btnLimpar.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 11));
 
         painelAcoesPrincipais.add(btnGerar);
         painelAcoesPrincipais.add(btnLimpar);
@@ -872,17 +877,23 @@ public class RelatorioFrame extends JFrame {
         btnExportar = ButtonStyleFactory.createSecondaryButton("📄 PDF");
         btnExportar.setEnabled(false);
         btnExportar.setPreferredSize(new Dimension(100, 35));
+        btnExportar.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 10));
 
         btnImprimir = ButtonStyleFactory.createSecondaryButton("🖨️ Imprimir");
         btnImprimir.setEnabled(false);
         btnImprimir.setPreferredSize(new Dimension(110, 35));
+        btnImprimir.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 10));
 
-        JButton btnExportarAtual = ButtonStyleFactory.createInfoButton("📊 Excel Atual");
+        btnExportarAtual = ButtonStyleFactory.createInfoButton("📊 Excel Atual");
         btnExportarAtual.setPreferredSize(new Dimension(120, 35));
+        btnExportarAtual.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 10));
+        btnExportarAtual.setEnabled(false); // Inicialmente desabilitado
         btnExportarAtual.addActionListener(e -> exportarRelatorioAtual());
 
-        JButton btnExportarGeral = ButtonStyleFactory.createInfoButton("📋 Excel Geral");
+        btnExportarGeral = ButtonStyleFactory.createInfoButton("📋 Excel Geral");
         btnExportarGeral.setPreferredSize(new Dimension(120, 35));
+        btnExportarGeral.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 10));
+        btnExportarGeral.setEnabled(false); // Inicialmente desabilitado
         btnExportarGeral.addActionListener(e -> exportarRelatorioGeral());
 
         painelExportacao.add(btnExportar);
@@ -901,8 +912,10 @@ public class RelatorioFrame extends JFrame {
                 new Font(Font.SANS_SERIF, Font.BOLD, 11),
                 new Color(150, 0, 150)));
 
-        JButton btnExportarEstatisticas = ButtonStyleFactory.createInfoButton("📈 Estatísticas");
+        btnExportarEstatisticas = ButtonStyleFactory.createInfoButton("📈 Estatísticas");
         btnExportarEstatisticas.setPreferredSize(new Dimension(130, 40));
+        btnExportarEstatisticas.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 10));
+        btnExportarEstatisticas.setEnabled(false); // Inicialmente desabilitado
         btnExportarEstatisticas.addActionListener(e -> exportarEstatisticas());
 
         painelEstatisticas.add(btnExportarEstatisticas);
@@ -2220,6 +2233,9 @@ public class RelatorioFrame extends JFrame {
                 "Nenhum relatório gerado ainda.\n\nSelecione os filtros e clique em 'Gerar Relatório' para visualizar o resumo.");
         btnExportar.setEnabled(false);
         btnImprimir.setEnabled(false);
+        btnExportarAtual.setEnabled(false);
+        btnExportarGeral.setEnabled(false);
+        btnExportarEstatisticas.setEnabled(false);
         labelStatus.setText("Relatório limpo");
 
         // === MVVM: Limpar estado do ViewModel ===

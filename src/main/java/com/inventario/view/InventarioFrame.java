@@ -56,7 +56,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
     }
     
     private void initComponents() {
-        setTitle("Gerenciamento de Inventários - Sistema IFMT");
+        setTitle("📋 Gerenciamento de Inventários - Sistema IFMT");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
         
@@ -67,106 +67,107 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
         criarBarraMenu();
         
         // Painel superior com design melhorado
-        JPanel painelSuperior = new JPanel(new BorderLayout());
+        JPanel painelSuperior = new JPanel(new BorderLayout(10, 10));
         painelSuperior.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        painelSuperior.setBackground(new Color(236, 240, 241));
         
-        // Painel de busca com indicador offline
-        JPanel painelBusca = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        painelBusca.add(new JLabel("Buscar:"));
+        // Painel de busca modernizado
+        JPanel painelBusca = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        painelBusca.setBackground(Color.WHITE);
+        painelBusca.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(52, 152, 219), 2),
+            BorderFactory.createEmptyBorder(8, 10, 8, 10)
+        ));
+        
+        JLabel lblBuscar = new JLabel("🔍 Buscar:");
+        lblBuscar.setFont(new Font("Segoe UI Symbol", Font.BOLD, 12));
+        painelBusca.add(lblBuscar);
+        
         campoBusca = new JTextField(25);
-        campoBusca.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
+        campoBusca.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        campoBusca.setPreferredSize(new Dimension(250, 32));
+        campoBusca.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(189, 195, 199)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
         painelBusca.add(campoBusca);
-        btnBuscar = ButtonStyleFactory.createSecondaryButton("Buscar");
+        
+        btnBuscar = createModernButton("🔍 Buscar", new Color(52, 152, 219), 11);
+        btnBuscar.setPreferredSize(new Dimension(100, 32));
         painelBusca.add(btnBuscar);
         
         // Adicionar indicador de status offline
-        painelBusca.add(Box.createHorizontalStrut(20));
-        lblOfflineStatus = new JLabel("Verificando...");
-        lblOfflineStatus.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        painelBusca.add(Box.createHorizontalStrut(15));
+        lblOfflineStatus = new JLabel("🔄 Verificando...");
+        lblOfflineStatus.setFont(new Font("Segoe UI Symbol", Font.BOLD, 10));
         lblOfflineStatus.setToolTipText("Status da conexão offline");
         painelBusca.add(lblOfflineStatus);
         
         // Botão de sincronização rápida
-        btnSyncNow = ButtonStyleFactory.createWarningButton("Sync");
-        btnSyncNow.setPreferredSize(new Dimension(60, 25));
+        btnSyncNow = createModernButton("🔄 Sync", new Color(241, 196, 15), 11);
+        btnSyncNow.setPreferredSize(new Dimension(85, 32));
         btnSyncNow.setToolTipText("Sincronização rápida");
         painelBusca.add(btnSyncNow);
         
-        // Painel de ações principais com layout em grade para melhor organização
-        JPanel painelAcoes = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 4, 5, 4);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        // Painel de ações modernizado
+        JPanel painelAcoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        painelAcoes.setBackground(Color.WHITE);
+        painelAcoes.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(155, 89, 182), 2),
+                "⚙️ Ações",
+                javax.swing.border.TitledBorder.LEFT,
+                javax.swing.border.TitledBorder.TOP,
+                new Font("Segoe UI Symbol", Font.BOLD, 13),
+                new Color(155, 89, 182)
+            ),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
         
-        // Botões principais com cores
-        btnNovo = ButtonStyleFactory.createSuccessButton("Novo");
-        btnNovo.setPreferredSize(new Dimension(100, 35));
+        // Botões principais com emoticons (tamanhos reduzidos)
+        btnNovo = createModernButton("➕ Novo", new Color(46, 204, 113), 11);
+        btnNovo.setPreferredSize(new Dimension(100, 32));
         
-        btnEditar = ButtonStyleFactory.createPrimaryButton("Editar");
-        btnEditar.setPreferredSize(new Dimension(100, 35));
+        btnEditar = createModernButton("✏️ Editar", new Color(241, 196, 15), 11);
+        btnEditar.setPreferredSize(new Dimension(100, 32));
         
-        btnVisualizar = ButtonStyleFactory.createInfoButton("Visualizar");
-        btnVisualizar.setPreferredSize(new Dimension(100, 35));
+        btnVisualizar = createModernButton("👁️ Ver", new Color(52, 152, 219), 11);
+        btnVisualizar.setPreferredSize(new Dimension(90, 32));
         
-        btnExcluir = ButtonStyleFactory.createDangerButton("Excluir");
-        btnExcluir.setPreferredSize(new Dimension(100, 35));
-        
-        // Separador visual
-        JSeparator separador1 = new JSeparator(SwingConstants.VERTICAL);
-        separador1.setPreferredSize(new Dimension(2, 30));
+        btnExcluir = createModernButton("🗑️ Excluir", new Color(231, 76, 60), 11);
+        btnExcluir.setPreferredSize(new Dimension(100, 32));
         
         // Botões de controle de status
-        btnAbrir = ButtonStyleFactory.createSuccessButton("Abrir");
-        btnAbrir.setPreferredSize(new Dimension(100, 35));
+        btnAbrir = createModernButton("🔓 Abrir", new Color(46, 204, 113), 11);
+        btnAbrir.setPreferredSize(new Dimension(95, 32));
         
-        btnCancelar = ButtonStyleFactory.createWarningButton("Cancelar");
-        btnCancelar.setPreferredSize(new Dimension(100, 35));
-        
-        // Separador visual
-        JSeparator separador2 = new JSeparator(SwingConstants.VERTICAL);
-        separador2.setPreferredSize(new Dimension(2, 30));
+        btnCancelar = createModernButton("❌ Cancelar", new Color(230, 126, 34), 11);
+        btnCancelar.setPreferredSize(new Dimension(115, 32));
         
         // Botões de relatório e finalização
-        btnFinalizar = ButtonStyleFactory.createPrimaryButton("Finalizar");
-        btnFinalizar.setPreferredSize(new Dimension(100, 35));
+        btnFinalizar = createModernButton("✅ Finalizar", new Color(52, 152, 219), 11);
+        btnFinalizar.setPreferredSize(new Dimension(110, 32));
         
-        btnRelatorio = ButtonStyleFactory.createInfoButton("Relatório");
-        btnRelatorio.setPreferredSize(new Dimension(100, 35));
+        btnRelatorio = createModernButton("📊 Relatório", new Color(155, 89, 182), 11);
+        btnRelatorio.setPreferredSize(new Dimension(115, 32));
         
-        // Adicionar botões ao painel de ações usando GridBagLayout
-        // Primeira linha de botões
-        gbc.gridx = 0; gbc.gridy = 0;
-        painelAcoes.add(btnNovo, gbc);
-        
-        gbc.gridx = 1; gbc.gridy = 0;
-        painelAcoes.add(btnEditar, gbc);
-        
-        gbc.gridx = 2; gbc.gridy = 0;
-        painelAcoes.add(btnVisualizar, gbc);
-        
-        gbc.gridx = 3; gbc.gridy = 0;
-        painelAcoes.add(btnExcluir, gbc);
-        
-        gbc.gridx = 4; gbc.gridy = 0;
-        painelAcoes.add(btnAbrir, gbc);
-        
-        gbc.gridx = 5; gbc.gridy = 0;
-        painelAcoes.add(btnCancelar, gbc);
-        
-        // Segunda linha de botões
-        gbc.gridx = 0; gbc.gridy = 1;
-        painelAcoes.add(btnFinalizar, gbc);
-        
-        gbc.gridx = 1; gbc.gridy = 1;
-        painelAcoes.add(btnRelatorio, gbc);
+        // Adicionar botões ao painel
+        painelAcoes.add(btnNovo);
+        painelAcoes.add(btnEditar);
+        painelAcoes.add(btnVisualizar);
+        painelAcoes.add(btnExcluir);
+        painelAcoes.add(btnAbrir);
+        painelAcoes.add(btnCancelar);
+        painelAcoes.add(btnFinalizar);
+        painelAcoes.add(btnRelatorio);
         
         // Organizar painéis
-        painelSuperior.add(painelBusca, BorderLayout.WEST);
+        painelSuperior.add(painelBusca, BorderLayout.NORTH);
         painelSuperior.add(painelAcoes, BorderLayout.CENTER);
         
         add(painelSuperior, BorderLayout.NORTH);
         
-        // Tabela central
+        // Tabela central modernizada
         String[] colunas = {"ID", "Descrição", "Data Início", "Data Fim", "Status", "Responsável", "Progresso"};
         modeloTabela = new DefaultTableModel(colunas, 0) {
             @Override
@@ -177,43 +178,168 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
         
         tabelaInventario = new JTable(modeloTabela);
         tabelaInventario.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tabelaInventario.setRowHeight(25);
-        tabelaInventario.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
-        tabelaInventario.getTableHeader().setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
-        tabelaInventario.getTableHeader().setBackground(new Color(240, 240, 240));
-        tabelaInventario.setGridColor(new Color(220, 220, 220));
-        tabelaInventario.setSelectionBackground(new Color(184, 207, 229));
+        tabelaInventario.setRowHeight(28);
+        tabelaInventario.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tabelaInventario.setGridColor(new Color(224, 224, 224));
+        tabelaInventario.setSelectionBackground(new Color(52, 152, 219));
+        tabelaInventario.setSelectionForeground(Color.WHITE);
+        tabelaInventario.setShowGrid(true);
+        tabelaInventario.setIntercellSpacing(new Dimension(1, 1));
+        
+        // Cabeçalho da tabela com estilo moderno
+        tabelaInventario.getTableHeader().setBackground(new Color(44, 62, 80));
+        tabelaInventario.getTableHeader().setForeground(Color.WHITE);
+        tabelaInventario.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        tabelaInventario.getTableHeader().setPreferredSize(new Dimension(0, 35));
+        tabelaInventario.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(52, 152, 219)));
+        
+        // Renderizador customizado para linhas alternadas
+        tabelaInventario.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, 
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                
+                if (!isSelected) {
+                    if (row % 2 == 0) {
+                        c.setBackground(Color.WHITE);
+                    } else {
+                        c.setBackground(new Color(245, 245, 245));
+                    }
+                    c.setForeground(new Color(44, 62, 80));
+                } else {
+                    c.setBackground(new Color(52, 152, 219));
+                    c.setForeground(Color.WHITE);
+                }
+                
+                setBorder(BorderFactory.createEmptyBorder(5, 8, 5, 8));
+                return c;
+            }
+        });
         
         JScrollPane scrollPane = new JScrollPane(tabelaInventario);
-        scrollPane.setBorder(BorderFactory.createTitledBorder("Lista de Inventários"));
+        scrollPane.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createEmptyBorder(0, 10, 10, 10),
+            BorderFactory.createLineBorder(new Color(189, 195, 199), 1)
+        ));
+        scrollPane.getViewport().setBackground(Color.WHITE);
         add(scrollPane, BorderLayout.CENTER);
         
-        // Painel inferior com informações melhorado
-        JPanel painelInferior = new JPanel(new BorderLayout());
-        painelInferior.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
+        // Painel inferior modernizado
+        JPanel painelInferior = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 8));
+        painelInferior.setBackground(new Color(44, 62, 80));
+        painelInferior.setBorder(BorderFactory.createMatteBorder(2, 0, 0, 0, new Color(52, 152, 219)));
         
-        JPanel painelEstatisticas = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        painelEstatisticas.add(new JLabel("Total: 0"));
-        painelEstatisticas.add(Box.createHorizontalStrut(20));
-        painelEstatisticas.add(new JLabel("Em andamento: 0"));
-        painelEstatisticas.add(Box.createHorizontalStrut(20));
-        painelEstatisticas.add(new JLabel("Finalizados: 0"));
-        painelEstatisticas.add(Box.createHorizontalStrut(20));
-        painelEstatisticas.add(new JLabel("Cancelados: 0"));
+        JLabel lblDica = new JLabel("💡 Dica: Clique duas vezes em um item para visualizar detalhes");
+        lblDica.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 11));
+        lblDica.setForeground(new Color(236, 240, 241));
+        painelInferior.add(lblDica);
         
-        JLabel labelStatus = new JLabel("Sistema pronto");
-        labelStatus.setFont(new Font(Font.SANS_SERIF, Font.ITALIC, 11));
-        labelStatus.setForeground(new Color(100, 100, 100));
-        
-        painelInferior.add(painelEstatisticas, BorderLayout.WEST);
-        painelInferior.add(labelStatus, BorderLayout.EAST);
         add(painelInferior, BorderLayout.SOUTH);
         
         // Configurar eventos
         configurarEventos();
         
-        setSize(1200, 600);
+        // Duplo clique para visualizar
+        tabelaInventario.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                if (evt.getClickCount() == 2) {
+                    visualizarInventario();
+                }
+            }
+        });
+        
+        setSize(1200, 700);
         setLocationRelativeTo(null);
+        setMinimumSize(new Dimension(1000, 600));
+    }
+    
+    /**
+     * Cria um botão moderno com emoticon, gradiente e efeito hover
+     */
+    private JButton createModernButton(String texto, Color corBase, int fontSize) {
+        JButton button = new JButton() {
+            private boolean isHovered = false;
+
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // Cor de fundo com gradiente
+                Color topColor = isHovered ? corBase.brighter() : corBase;
+                Color bottomColor = isHovered ? corBase : corBase.darker();
+
+                java.awt.GradientPaint gradient = new java.awt.GradientPaint(
+                        0, 0, topColor,
+                        0, getHeight(), bottomColor);
+                g2d.setPaint(gradient);
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+
+                // Borda sutil
+                g2d.setColor(new Color(255, 255, 255, 80));
+                g2d.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+
+                g2d.dispose();
+
+                // Desenhar texto com emoticon
+                g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+
+                // Usar fonte que suporta emoticons com tamanho customizado
+                g2d.setFont(new Font("Segoe UI Symbol", Font.BOLD, fontSize));
+                g2d.setColor(Color.WHITE);
+                
+                FontMetrics fm = g2d.getFontMetrics();
+                int textWidth = fm.stringWidth(texto);
+                int textX = (getWidth() - textWidth) / 2;
+                int textY = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
+                
+                // Sombra do texto
+                g2d.setColor(new Color(0, 0, 0, 100));
+                g2d.drawString(texto, textX + 1, textY + 1);
+                
+                // Texto principal
+                g2d.setColor(Color.WHITE);
+                g2d.drawString(texto, textX, textY);
+
+                g2d.dispose();
+            }
+        };
+
+        button.setContentAreaFilled(false);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        // Efeito hover
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                try {
+                    java.lang.reflect.Field field = button.getClass().getDeclaredField("isHovered");
+                    field.setAccessible(true);
+                    field.set(button, true);
+                    button.repaint();
+                } catch (Exception e) {
+                    // Fallback silencioso
+                }
+            }
+
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                try {
+                    java.lang.reflect.Field field = button.getClass().getDeclaredField("isHovered");
+                    field.setAccessible(true);
+                    field.set(button, false);
+                    button.repaint();
+                } catch (Exception e) {
+                    // Fallback silencioso
+                }
+            }
+        });
+        
+        return button;
     }
     
     private void criarBarraMenu() {
@@ -1703,6 +1829,13 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                 JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
+    }
+    
+    /**
+     * Abre o painel de gerenciamento do servidor mobile
+     */
+    private void abrirPainelServidorMobile() {
+        MobileServerPanel.showDialog(this);
     }
     
     // Implementação da interface ConnectivityListener

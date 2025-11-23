@@ -146,6 +146,7 @@ public class ColetaFrame_v2 extends JFrame {
     private StringBuilder bufferCodigoBarras = new StringBuilder();
     private List<Sala> todasSalas = new ArrayList<>();
     private Usuario usuarioLogado; // Usuário logado para verificar permissões
+    private JFrame mainFrame; // Referência ao MainFrame para ocultar/mostrar
 
     // Lista de componentes que devem ser desabilitados até a seleção da sala
     private java.util.List<Component> componentesParaDesabilitar = new ArrayList<>();
@@ -155,11 +156,16 @@ public class ColetaFrame_v2 extends JFrame {
     private boolean modoColetaAutomatica = false;
 
     public ColetaFrame_v2() {
-        this(null); // Chama o construtor com usuário null para compatibilidade
+        this(null, null); // Chama o construtor com usuário e mainFrame null para compatibilidade
     }
 
     public ColetaFrame_v2(Usuario usuarioLogado) {
+        this(usuarioLogado, null); // Chama o construtor com mainFrame null
+    }
+
+    public ColetaFrame_v2(Usuario usuarioLogado, JFrame mainFrame) {
         this.usuarioLogado = usuarioLogado;
+        this.mainFrame = mainFrame;
 
         // Debug: verificar se o usuário foi passado corretamente
         System.out.println("DEBUG: Usuario logado no ColetaFrame_v2: " +
@@ -248,6 +254,23 @@ public class ColetaFrame_v2 extends JFrame {
             setLocationRelativeTo(null);
 
             System.out.println("DEBUG: ColetaFrame_v2 inicializado com sucesso!");
+
+            // Ocultar MainFrame se foi fornecido
+            if (mainFrame != null) {
+                mainFrame.setVisible(false);
+                System.out.println("DEBUG: MainFrame ocultado para foco na coleta");
+            }
+
+            // Adicionar listener para mostrar MainFrame quando fechar
+            addWindowListener(new java.awt.event.WindowAdapter() {
+                @Override
+                public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                    if (mainFrame != null) {
+                        mainFrame.setVisible(true);
+                        System.out.println("DEBUG: MainFrame restaurado após fechar ColetaFrame");
+                    }
+                }
+            });
 
         } catch (Exception e) {
             System.err.println("ERRO durante inicialização do ColetaFrame_v2:");
@@ -564,8 +587,9 @@ public class ColetaFrame_v2 extends JFrame {
         lblInstrucao.setFont(new Font(Font.SANS_SERIF, Font.ITALIC, 10));
         panelBuscaDescricao.add(lblInstrucao, BorderLayout.SOUTH);
 
-        // Botão coletar com design moderno
+        // Botão coletar com design moderno - DESTAQUE MAIOR
         btnColetar = createStyledButton("✅ Registrar", new Color(46, 204, 113));
+        btnColetar.setPreferredSize(new Dimension(180, 40)); // Aumentado de 120x35 para 180x40
         btnColetar.setEnabled(false);
         btnColetar.setToolTipText("Clique para registrar o item encontrado ou pressione F4");
 
@@ -589,6 +613,7 @@ public class ColetaFrame_v2 extends JFrame {
 
         // Controle de visibilidade baseado no perfil do usuário
         // Apenas administradores e supervisores podem remover itens
+        // Perfil CONSULTA não pode realizar nenhuma ação de modificação
         boolean podeRemover = usuarioLogado != null &&
                 ("ADMIN".equals(usuarioLogado.getPerfil().name()) ||
                         "SUPERVISOR".equals(usuarioLogado.getPerfil().name()));
@@ -596,6 +621,16 @@ public class ColetaFrame_v2 extends JFrame {
                 (usuarioLogado != null ? usuarioLogado.getNomeCompleto() + " (" + usuarioLogado.getPerfil() + ")"
                         : "null"));
         btnRemoverItem.setVisible(podeRemover);
+        
+        // Verificar se é perfil CONSULTA para desabilitar botões de ação
+        boolean isPerfilConsulta = usuarioLogado != null && 
+                "CONSULTA".equals(usuarioLogado.getPerfil().name());
+        if (isPerfilConsulta) {
+            btnColetar.setEnabled(false);
+            btnFinalizarColeta.setEnabled(false);
+            btnRemoverItem.setEnabled(false);
+            System.out.println("DEBUG: Perfil CONSULTA detectado - botões de ação desabilitados");
+        }
 
         // Botão para finalizar coleta na sala com design moderno
         btnFinalizarColeta = createStyledButton("🏁 Finalizar", new Color(40, 167, 69));
@@ -606,8 +641,9 @@ public class ColetaFrame_v2 extends JFrame {
         btnReabrirColeta = createStyledButton("⚠️ Reabrir", new Color(255, 193, 7));
         btnReabrirColeta.setPreferredSize(new Dimension(140, 35));
         btnReabrirColeta.setEnabled(false);
-        btnReabrirColeta.setToolTipText("Reabrir uma sala finalizada para permitir novas coletas");
+        btnReabrirColeta.setToolTipText("Reabrir uma sala finalizada para permitir novas coletas (Admin/Supervisor)");
         // Controlar visibilidade baseado no perfil do usuário
+        // Apenas ADMIN e SUPERVISOR podem reabrir salas
         boolean podeReabrir = usuarioLogado != null &&
                 ("ADMIN".equals(usuarioLogado.getPerfil().name()) ||
                         "SUPERVISOR".equals(usuarioLogado.getPerfil().name()));
@@ -947,7 +983,7 @@ public class ColetaFrame_v2 extends JFrame {
                         corTexto),
                 BorderFactory.createEmptyBorder(10, 15, 15, 15)));
         panelAcoes.setBackground(Color.WHITE);
-        panelAcoes.setPreferredSize(new Dimension(0, 280)); // Aumentar altura para mostrar botão completo
+        panelAcoes.setPreferredSize(new Dimension(0, 300)); // Aumentado de 280 para 300 para acomodar botão maior
 
         panelFormulario = new JPanel(new GridBagLayout());
         panelFormulario.setBackground(Color.WHITE);

@@ -869,7 +869,7 @@ public class MainFrame extends JFrame {
             System.out.println("===========================================");
 
             System.out.println("DEBUG MainFrame: Chamando construtor ColetaFrame_v2...");
-            ColetaFrame_v2 coletaFrame = new ColetaFrame_v2(usuarioLogado);
+            ColetaFrame_v2 coletaFrame = new ColetaFrame_v2(usuarioLogado, this);
 
             System.out.println("DEBUG MainFrame: ColetaFrame_v2 criado com sucesso!");
             System.out.println("DEBUG MainFrame: Tornando frame visível...");

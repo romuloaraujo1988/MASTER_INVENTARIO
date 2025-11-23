@@ -492,7 +492,8 @@ public class JLogin extends JFrame {
                 if (usuarioLogado.isColetor()) {
                     // Redirecionar coletores diretamente para o frame de coleta
                     try {
-                        ColetaFrame_v2 coletaFrame = new ColetaFrame_v2(usuarioLogado);
+                        // Coletores não precisam do MainFrame, então passamos null
+                        ColetaFrame_v2 coletaFrame = new ColetaFrame_v2(usuarioLogado, null);
                         coletaFrame.setVisible(true);
                     } catch (Exception e) {
                         System.err.println("Erro ao abrir o frame de coleta: " + e.getMessage());

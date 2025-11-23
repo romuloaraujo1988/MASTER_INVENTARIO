@@ -58,8 +58,7 @@ public class MobileMonitorFrameV2 extends JFrame {
         
         setTitle("Monitor de Dispositivos Mobile (Tempo Real) - Sistema de Inventário");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(1400, 750);
-        setLocationRelativeTo(null);
+        setExtendedState(JFrame.MAXIMIZED_BOTH); // Abrir maximizado
         
         // Testar conexão e carregar dados iniciais
         testarConexaoECarregarDados();
