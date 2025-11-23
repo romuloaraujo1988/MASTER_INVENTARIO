@@ -10,8 +10,16 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
+ * Interface para notificar quando token expirou e não pode ser renovado
+ */
+interface TokenExpiredListener {
+    fun onTokenExpired()
+}
+
+/**
  * Interceptor para renovação automática de token
  * Intercepta requisições com erro 401 e tenta renovar o token automaticamente
+ * Se renovação falhar, notifica listener para fazer logout
  */
 @Singleton
 class RefreshTokenInterceptor @Inject constructor(
@@ -22,6 +30,12 @@ class RefreshTokenInterceptor @Inject constructor(
         private const val TAG = "RefreshTokenInterceptor"
         private const val MAX_RETRY_ATTEMPTS = 1
     }
+    
+    /**
+     * Listener para notificar quando token expirou
+     * Será chamado quando renovação falhar
+     */
+    var tokenExpiredListener: TokenExpiredListener? = null
     
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
@@ -70,7 +84,9 @@ class RefreshTokenInterceptor @Inject constructor(
             val refreshToken = preferencesManager.getRefreshToken()
             
             if (refreshToken.isNullOrEmpty()) {
-                Log.e(TAG, "Refresh token não encontrado")
+                Log.e(TAG, "❌ Refresh token não encontrado")
+                // Notificar que token expirou
+                tokenExpiredListener?.onTokenExpired()
                 return false
             }
             
@@ -103,14 +119,18 @@ class RefreshTokenInterceptor @Inject constructor(
                     }
                 }
             } else {
-                Log.e(TAG, "Falha ao renovar token: ${refreshResponse.code}")
+                Log.e(TAG, "❌ Falha ao renovar token: ${refreshResponse.code}")
+                // Notificar que token expirou (não pode ser renovado)
+                tokenExpiredListener?.onTokenExpired()
             }
             
             refreshResponse.close()
             false
             
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao renovar token", e)
+            Log.e(TAG, "❌ Erro ao renovar token", e)
+            // Notificar que token expirou (erro na renovação)
+            tokenExpiredListener?.onTokenExpired()
             false
         }
     }

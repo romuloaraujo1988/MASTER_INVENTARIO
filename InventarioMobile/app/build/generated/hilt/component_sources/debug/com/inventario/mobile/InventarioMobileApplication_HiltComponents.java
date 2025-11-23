@@ -35,6 +35,7 @@ import com.inventario.mobile.presentation.sync.SyncActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.sync.SyncViewModel_HiltModules;
 import com.inventario.mobile.presentation.validation.ValidationExampleFragment_GeneratedInjector;
 import com.inventario.mobile.presentation.validation.ValidationViewModel_HiltModules;
+import com.inventario.mobile.ui.base.BaseActivity_GeneratedInjector;
 import com.inventario.mobile.ui.base.BaseOfflineActivity_GeneratedInjector;
 import com.inventario.mobile.ui.coleta.ColetaActivity_GeneratedInjector;
 import com.inventario.mobile.ui.splash.SplashActivity_GeneratedInjector;
@@ -239,6 +240,7 @@ public final class InventarioMobileApplication_HiltComponents {
       ScannerActivity_GeneratedInjector,
       StatisticsActivity_GeneratedInjector,
       SyncActivity_GeneratedInjector,
+      BaseActivity_GeneratedInjector,
       BaseOfflineActivity_GeneratedInjector,
       ColetaActivity_GeneratedInjector,
       SplashActivity_GeneratedInjector,

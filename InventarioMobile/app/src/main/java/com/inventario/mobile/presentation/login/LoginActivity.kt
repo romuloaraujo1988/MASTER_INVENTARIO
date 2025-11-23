@@ -73,6 +73,18 @@ class LoginActivity : AppCompatActivity() {
         } catch (e: Exception) {
             binding.tvVersion.text = "v${BuildConfig.VERSION_NAME}"
         }
+        
+        // ✅ VERIFICAR SE HÁ MENSAGEM DE LOGOUT (sessão expirada)
+        val logoutMessage = intent.getStringExtra("LOGOUT_MESSAGE")
+        if (logoutMessage != null) {
+            android.util.Log.d("LoginActivity", "Mensagem de logout recebida: $logoutMessage")
+            // Mostrar mensagem ao usuário
+            com.google.android.material.snackbar.Snackbar.make(
+                binding.root,
+                logoutMessage,
+                com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+            ).show()
+        }
 
         // Configurar listeners dos campos de texto
         binding.etServerIp.addTextChangedListener { editable: android.text.Editable? ->

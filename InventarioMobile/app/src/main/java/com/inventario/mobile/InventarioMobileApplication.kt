@@ -1,8 +1,12 @@
 package com.inventario.mobile
 
 import android.app.Application
+import android.util.Log
 import androidx.work.Configuration
 import androidx.work.WorkManager
+import com.inventario.mobile.network.RefreshTokenInterceptor
+import com.inventario.mobile.network.TokenExpiredListener
+import com.inventario.mobile.utils.SessionManager
 import com.jakewharton.threetenabp.AndroidThreeTen
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -15,15 +19,27 @@ import javax.inject.Inject
  * 
  * IMPORTANTE: Implementa Configuration.Provider para configurar WorkManager com Hilt
  * Isso permite que Workers usem @HiltWorker e @AssistedInject
+ * 
+ * v2.1: Implementa TokenExpiredListener para logout automático quando token expira
  */
 @HiltAndroidApp
-class InventarioMobileApplication : Application(), Configuration.Provider {
+class InventarioMobileApplication : Application(), Configuration.Provider, TokenExpiredListener {
     
     @Inject
     lateinit var workerFactory: androidx.hilt.work.HiltWorkerFactory
+    
+    @Inject
+    lateinit var sessionManager: SessionManager
+    
+    @Inject
+    lateinit var refreshTokenInterceptor: RefreshTokenInterceptor
 
     override fun onCreate() {
         super.onCreate()
+        
+        Log.d(TAG, "═══════════════════════════════════")
+        Log.d(TAG, "Inventário Mobile App iniciando...")
+        Log.d(TAG, "═══════════════════════════════════")
         
         // Inicializar ThreeTenABP para manipulação de datas
         AndroidThreeTen.init(this)
@@ -35,6 +51,10 @@ class InventarioMobileApplication : Application(), Configuration.Provider {
         com.inventario.mobile.utils.FeatureFlags.init(this)
         com.inventario.mobile.utils.FeatureFlags.printStatus()
         
+        // ✅ REGISTRAR LISTENER DE TOKEN EXPIRADO
+        refreshTokenInterceptor.tokenExpiredListener = this
+        Log.d(TAG, "✓ TokenExpiredListener registrado")
+        
         // Inicializar sincronização automática
         initializeSyncScheduler()
         
@@ -42,7 +62,24 @@ class InventarioMobileApplication : Application(), Configuration.Provider {
         initializeNetworkObserver()
         
         // Log de inicialização
-        android.util.Log.d("InventarioApp", "Application inicializada com sucesso")
+        Log.d(TAG, "✓ Application inicializada com sucesso")
+        Log.d(TAG, "═══════════════════════════════════")
+    }
+    
+    /**
+     * Callback chamado quando token expira e não pode ser renovado
+     * Faz logout automático e redireciona para tela de login
+     */
+    override fun onTokenExpired() {
+        Log.w(TAG, "═══════════════════════════════════")
+        Log.w(TAG, "⚠️ TOKEN EXPIRADO!")
+        Log.w(TAG, "Fazendo logout automático...")
+        Log.w(TAG, "═══════════════════════════════════")
+        
+        sessionManager.logout(
+            showMessage = true,
+            message = "Sua sessão expirou. Por favor, faça login novamente."
+        )
     }
     
     /**

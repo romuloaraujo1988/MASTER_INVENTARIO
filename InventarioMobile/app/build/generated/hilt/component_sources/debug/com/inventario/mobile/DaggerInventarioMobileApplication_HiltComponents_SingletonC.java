@@ -100,6 +100,7 @@ import com.inventario.mobile.network.ConnectionStateManager;
 import com.inventario.mobile.network.DeviceInfoInterceptor;
 import com.inventario.mobile.network.NetworkQualityMonitor;
 import com.inventario.mobile.network.OfflineFallbackInterceptor;
+import com.inventario.mobile.network.RefreshTokenInterceptor;
 import com.inventario.mobile.presentation.charts.ChartDataProvider;
 import com.inventario.mobile.presentation.charts.ChartsFragment;
 import com.inventario.mobile.presentation.charts.ChartsViewModel;
@@ -139,6 +140,8 @@ import com.inventario.mobile.presentation.validation.ValidationViewModel;
 import com.inventario.mobile.presentation.validation.ValidationViewModel_HiltModules_KeyModule_ProvideFactory;
 import com.inventario.mobile.sync.SyncManager;
 import com.inventario.mobile.sync.SyncScheduler;
+import com.inventario.mobile.ui.base.BaseActivity;
+import com.inventario.mobile.ui.base.BaseActivity_MembersInjector;
 import com.inventario.mobile.ui.base.BaseOfflineActivity;
 import com.inventario.mobile.ui.base.BaseOfflineActivity_MembersInjector;
 import com.inventario.mobile.ui.base.BaseOfflineFragment_MembersInjector;
@@ -149,6 +152,7 @@ import com.inventario.mobile.util.NetworkChecker;
 import com.inventario.mobile.utils.NetworkMonitor;
 import com.inventario.mobile.utils.OfflineNotificationManager;
 import com.inventario.mobile.utils.PreferencesManager;
+import com.inventario.mobile.utils.SessionManager;
 import com.inventario.mobile.worker.BackupWorker;
 import com.inventario.mobile.worker.BackupWorker_AssistedFactory;
 import com.inventario.mobile.worker.ColetaSyncWorker;
@@ -682,6 +686,11 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
     }
 
     @Override
+    public void injectBaseActivity(BaseActivity baseActivity) {
+      injectBaseActivity2(baseActivity);
+    }
+
+    @Override
     public void injectBaseOfflineActivity(BaseOfflineActivity baseOfflineActivity) {
       injectBaseOfflineActivity2(baseOfflineActivity);
     }
@@ -739,6 +748,12 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
     @CanIgnoreReturnValue
     private ScannerActivity injectScannerActivity2(ScannerActivity instance) {
       ScannerActivity_MembersInjector.injectRegistrarColetaUseCase(instance, provideRegistrarColetaUseCaseProvider.get());
+      return instance;
+    }
+
+    @CanIgnoreReturnValue
+    private BaseActivity injectBaseActivity2(BaseActivity instance) {
+      BaseActivity_MembersInjector.injectSessionManager(instance, singletonCImpl.sessionManagerProvider.get());
       return instance;
     }
 
@@ -1079,6 +1094,10 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
 
     private Provider<SyncWorker_AssistedFactory> syncWorker_AssistedFactoryProvider;
 
+    private Provider<SessionManager> sessionManagerProvider;
+
+    private Provider<RefreshTokenInterceptor> refreshTokenInterceptorProvider;
+
     private Provider<ConnectionStateManager> connectionStateManagerProvider;
 
     private Provider<NetworkMonitor> provideNetworkMonitorProvider;
@@ -1183,25 +1202,27 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
       this.databaseBackupManagerProvider = DoubleCheck.provider(new SwitchingProvider<DatabaseBackupManager>(singletonCImpl, 19));
       this.databaseBackupWorker_AssistedFactoryProvider = SingleCheck.provider(new SwitchingProvider<DatabaseBackupWorker_AssistedFactory>(singletonCImpl, 18));
       this.syncWorker_AssistedFactoryProvider = SingleCheck.provider(new SwitchingProvider<SyncWorker_AssistedFactory>(singletonCImpl, 20));
-      this.connectionStateManagerProvider = DoubleCheck.provider(new SwitchingProvider<ConnectionStateManager>(singletonCImpl, 21));
-      this.provideNetworkMonitorProvider = DoubleCheck.provider(new SwitchingProvider<NetworkMonitor>(singletonCImpl, 22));
-      this.tokenManagerProvider = DoubleCheck.provider(new SwitchingProvider<TokenManager>(singletonCImpl, 23));
-      this.provideApiServiceProvider = DoubleCheck.provider(new SwitchingProvider<ApiService>(singletonCImpl, 26));
-      this.provideDashboardMapperProvider = DoubleCheck.provider(new SwitchingProvider<DashboardMapper>(singletonCImpl, 27));
-      this.provideDashboardRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<DashboardRepository>(singletonCImpl, 25));
-      this.chartDataProvider = DoubleCheck.provider(new SwitchingProvider<ChartDataProvider>(singletonCImpl, 24));
-      this.providePatrimonioApiLegacyProvider = DoubleCheck.provider(new SwitchingProvider<com.inventario.mobile.api.PatrimonioApi>(singletonCImpl, 31));
-      this.provideSalaApiProvider = DoubleCheck.provider(new SwitchingProvider<SalaApi>(singletonCImpl, 32));
-      this.dataSourceStrategyFactoryProvider = DoubleCheck.provider(new SwitchingProvider<DataSourceStrategyFactory>(singletonCImpl, 30));
-      this.patrimonioRepositoryImplProvider = DoubleCheck.provider(new SwitchingProvider<PatrimonioRepositoryImpl>(singletonCImpl, 29));
-      this.patrimonioRepositoryAdapterProvider = DoubleCheck.provider(new SwitchingProvider<PatrimonioRepositoryAdapter>(singletonCImpl, 28));
-      this.provideLocalDataManagerProvider = DoubleCheck.provider(new SwitchingProvider<LocalDataManager>(singletonCImpl, 33));
-      this.syncSchedulerProvider = DoubleCheck.provider(new SwitchingProvider<SyncScheduler>(singletonCImpl, 34));
-      this.provideNetworkCheckerProvider = DoubleCheck.provider(new SwitchingProvider<NetworkChecker>(singletonCImpl, 35));
-      this.provideInventarioRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<InventarioRepository>(singletonCImpl, 36));
-      this.provideOfflineSyncApiProvider = DoubleCheck.provider(new SwitchingProvider<OfflineSyncApi>(singletonCImpl, 38));
-      this.syncRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<SyncRepository>(singletonCImpl, 37));
-      this.provideSyncManagerProvider = DoubleCheck.provider(new SwitchingProvider<SyncManager>(singletonCImpl, 39));
+      this.sessionManagerProvider = DoubleCheck.provider(new SwitchingProvider<SessionManager>(singletonCImpl, 21));
+      this.refreshTokenInterceptorProvider = DoubleCheck.provider(new SwitchingProvider<RefreshTokenInterceptor>(singletonCImpl, 22));
+      this.connectionStateManagerProvider = DoubleCheck.provider(new SwitchingProvider<ConnectionStateManager>(singletonCImpl, 23));
+      this.provideNetworkMonitorProvider = DoubleCheck.provider(new SwitchingProvider<NetworkMonitor>(singletonCImpl, 24));
+      this.tokenManagerProvider = DoubleCheck.provider(new SwitchingProvider<TokenManager>(singletonCImpl, 25));
+      this.provideApiServiceProvider = DoubleCheck.provider(new SwitchingProvider<ApiService>(singletonCImpl, 28));
+      this.provideDashboardMapperProvider = DoubleCheck.provider(new SwitchingProvider<DashboardMapper>(singletonCImpl, 29));
+      this.provideDashboardRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<DashboardRepository>(singletonCImpl, 27));
+      this.chartDataProvider = DoubleCheck.provider(new SwitchingProvider<ChartDataProvider>(singletonCImpl, 26));
+      this.providePatrimonioApiLegacyProvider = DoubleCheck.provider(new SwitchingProvider<com.inventario.mobile.api.PatrimonioApi>(singletonCImpl, 33));
+      this.provideSalaApiProvider = DoubleCheck.provider(new SwitchingProvider<SalaApi>(singletonCImpl, 34));
+      this.dataSourceStrategyFactoryProvider = DoubleCheck.provider(new SwitchingProvider<DataSourceStrategyFactory>(singletonCImpl, 32));
+      this.patrimonioRepositoryImplProvider = DoubleCheck.provider(new SwitchingProvider<PatrimonioRepositoryImpl>(singletonCImpl, 31));
+      this.patrimonioRepositoryAdapterProvider = DoubleCheck.provider(new SwitchingProvider<PatrimonioRepositoryAdapter>(singletonCImpl, 30));
+      this.provideLocalDataManagerProvider = DoubleCheck.provider(new SwitchingProvider<LocalDataManager>(singletonCImpl, 35));
+      this.syncSchedulerProvider = DoubleCheck.provider(new SwitchingProvider<SyncScheduler>(singletonCImpl, 36));
+      this.provideNetworkCheckerProvider = DoubleCheck.provider(new SwitchingProvider<NetworkChecker>(singletonCImpl, 37));
+      this.provideInventarioRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<InventarioRepository>(singletonCImpl, 38));
+      this.provideOfflineSyncApiProvider = DoubleCheck.provider(new SwitchingProvider<OfflineSyncApi>(singletonCImpl, 40));
+      this.syncRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<SyncRepository>(singletonCImpl, 39));
+      this.provideSyncManagerProvider = DoubleCheck.provider(new SwitchingProvider<SyncManager>(singletonCImpl, 41));
     }
 
     @Override
@@ -1229,6 +1250,8 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
     private InventarioMobileApplication injectInventarioMobileApplication2(
         InventarioMobileApplication instance) {
       InventarioMobileApplication_MembersInjector.injectWorkerFactory(instance, hiltWorkerFactory());
+      InventarioMobileApplication_MembersInjector.injectSessionManager(instance, sessionManagerProvider.get());
+      InventarioMobileApplication_MembersInjector.injectRefreshTokenInterceptor(instance, refreshTokenInterceptorProvider.get());
       return instance;
     }
 
@@ -1329,61 +1352,67 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
             }
           };
 
-          case 21: // com.inventario.mobile.network.ConnectionStateManager 
+          case 21: // com.inventario.mobile.utils.SessionManager 
+          return (T) new SessionManager(singletonCImpl.providePreferencesManagerProvider.get(), ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
+
+          case 22: // com.inventario.mobile.network.RefreshTokenInterceptor 
+          return (T) new RefreshTokenInterceptor(singletonCImpl.providePreferencesManagerProvider.get());
+
+          case 23: // com.inventario.mobile.network.ConnectionStateManager 
           return (T) new ConnectionStateManager(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule), singletonCImpl.providePreferencesManagerProvider.get());
 
-          case 22: // com.inventario.mobile.utils.NetworkMonitor 
+          case 24: // com.inventario.mobile.utils.NetworkMonitor 
           return (T) NotificationModule_ProvideNetworkMonitorFactory.provideNetworkMonitor(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
 
-          case 23: // com.inventario.mobile.auth.TokenManager 
+          case 25: // com.inventario.mobile.auth.TokenManager 
           return (T) new TokenManager(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule), singletonCImpl.providePreferencesManagerProvider.get());
 
-          case 24: // com.inventario.mobile.presentation.charts.ChartDataProvider 
+          case 26: // com.inventario.mobile.presentation.charts.ChartDataProvider 
           return (T) new ChartDataProvider(singletonCImpl.provideDashboardRepositoryProvider.get());
 
-          case 25: // com.inventario.mobile.domain.repository.DashboardRepository 
+          case 27: // com.inventario.mobile.domain.repository.DashboardRepository 
           return (T) DashboardModule_ProvideDashboardRepositoryFactory.provideDashboardRepository(singletonCImpl.provideApiServiceProvider.get(), singletonCImpl.provideDashboardMapperProvider.get(), singletonCImpl.dashboardDao(), singletonCImpl.providePreferencesManagerProvider.get());
 
-          case 26: // com.inventario.mobile.data.remote.api.ApiService 
+          case 28: // com.inventario.mobile.data.remote.api.ApiService 
           return (T) ApiModule_ProvideApiServiceFactory.provideApiService(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
 
-          case 27: // com.inventario.mobile.data.mapper.DashboardMapper 
+          case 29: // com.inventario.mobile.data.mapper.DashboardMapper 
           return (T) DashboardModule_ProvideDashboardMapperFactory.provideDashboardMapper();
 
-          case 28: // com.inventario.mobile.data.repository.PatrimonioRepositoryAdapter 
+          case 30: // com.inventario.mobile.data.repository.PatrimonioRepositoryAdapter 
           return (T) new PatrimonioRepositoryAdapter(singletonCImpl.patrimonioRepositoryImplProvider.get());
 
-          case 29: // com.inventario.mobile.data.repository.PatrimonioRepositoryImpl 
+          case 31: // com.inventario.mobile.data.repository.PatrimonioRepositoryImpl 
           return (T) new PatrimonioRepositoryImpl(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule), singletonCImpl.dataSourceStrategyFactoryProvider.get());
 
-          case 30: // com.inventario.mobile.data.strategy.DataSourceStrategyFactory 
+          case 32: // com.inventario.mobile.data.strategy.DataSourceStrategyFactory 
           return (T) new DataSourceStrategyFactory(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule), singletonCImpl.providePatrimonioApiLegacyProvider.get(), singletonCImpl.provideSalaApiProvider.get(), singletonCImpl.patrimonioDao(), singletonCImpl.salaDao());
 
-          case 31: // com.inventario.mobile.api.PatrimonioApi 
+          case 33: // com.inventario.mobile.api.PatrimonioApi 
           return (T) ApiModule_ProvidePatrimonioApiLegacyFactory.providePatrimonioApiLegacy(singletonCImpl.provideRetrofitProvider.get());
 
-          case 32: // com.inventario.mobile.api.SalaApi 
+          case 34: // com.inventario.mobile.api.SalaApi 
           return (T) ApiModule_ProvideSalaApiFactory.provideSalaApi(singletonCImpl.provideRetrofitProvider.get());
 
-          case 33: // com.inventario.mobile.data.local.LocalDataManager 
+          case 35: // com.inventario.mobile.data.local.LocalDataManager 
           return (T) DatabaseModule_ProvideLocalDataManagerFactory.provideLocalDataManager(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
 
-          case 34: // com.inventario.mobile.sync.SyncScheduler 
+          case 36: // com.inventario.mobile.sync.SyncScheduler 
           return (T) new SyncScheduler(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule), singletonCImpl.providePreferencesManagerProvider.get());
 
-          case 35: // com.inventario.mobile.util.NetworkChecker 
+          case 37: // com.inventario.mobile.util.NetworkChecker 
           return (T) UtilModule_ProvideNetworkCheckerFactory.provideNetworkChecker(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
 
-          case 36: // com.inventario.mobile.data.repository.InventarioRepository 
+          case 38: // com.inventario.mobile.data.repository.InventarioRepository 
           return (T) RepositoryModule_Companion_ProvideInventarioRepositoryFactory.provideInventarioRepository(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule), singletonCImpl.provideApiServiceProvider.get());
 
-          case 37: // com.inventario.mobile.data.repository.SyncRepository 
+          case 39: // com.inventario.mobile.data.repository.SyncRepository 
           return (T) new SyncRepository(singletonCImpl.patrimonioDao(), singletonCImpl.salaDao(), singletonCImpl.responsavelDao(), singletonCImpl.coletaDao(), singletonCImpl.providePatrimonioApiLegacyProvider.get(), singletonCImpl.provideSalaApiProvider.get(), singletonCImpl.provideColetaApiProvider.get(), singletonCImpl.provideApiServiceProvider.get(), singletonCImpl.provideOfflineSyncApiProvider.get());
 
-          case 38: // com.inventario.mobile.data.remote.api.OfflineSyncApi 
+          case 40: // com.inventario.mobile.data.remote.api.OfflineSyncApi 
           return (T) ApiModule_ProvideOfflineSyncApiFactory.provideOfflineSyncApi(singletonCImpl.provideRetrofitProvider.get());
 
-          case 39: // com.inventario.mobile.sync.SyncManager 
+          case 41: // com.inventario.mobile.sync.SyncManager 
           return (T) SyncModule_ProvideSyncManagerFactory.provideSyncManager(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
 
           default: throw new AssertionError(id);

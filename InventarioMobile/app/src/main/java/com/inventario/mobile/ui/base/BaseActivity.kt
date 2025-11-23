@@ -1,78 +1,64 @@
 package com.inventario.mobile.ui.base
 
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import com.inventario.mobile.util.NetworkUtils
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import com.inventario.mobile.utils.SessionManager
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
- * Activity base que fornece funcionalidades comuns:
- * - Observação de conectividade
- * - Métodos utilitários
+ * Activity base com verificação automática de sessão
+ * Todas as activities protegidas devem herdar desta classe
  * 
- * Uso:
- * ```kotlin
- * class MinhaActivity : BaseActivity() {
- *     override fun onCreate(savedInstanceState: Bundle?) {
- *         super.onCreate(savedInstanceState)
- *         setContentView(R.layout.activity_minha)
- *     }
- * }
- * ```
+ * @author Sistema de Inventário
+ * @version 1.0.0
  */
+@AndroidEntryPoint
 abstract class BaseActivity : AppCompatActivity() {
-
-    private var isObservingNetwork = false
-
+    
+    companion object {
+        private const val TAG = "BaseActivity"
+    }
+    
+    @Inject
+    lateinit var sessionManager: SessionManager
+    
+    /**
+     * Define se esta activity requer autenticação
+     * Override para false em activities públicas (ex: LoginActivity)
+     */
+    protected open val requiresAuthentication: Boolean = true
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Inicializar observação de rede
-        startNetworkObservation()
+        if (requiresAuthentication) {
+            Log.d(TAG, "Verificando sessão em ${this::class.simpleName}...")
+            checkSession()
+        }
     }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        isObservingNetwork = false
-    }
-
-    /**
-     * Inicia observação de mudanças de rede
-     */
-    private fun startNetworkObservation() {
-        if (isObservingNetwork) return
+    
+    override fun onResume() {
+        super.onResume()
         
-        isObservingNetwork = true
-        
-        NetworkUtils.observeNetworkConnectivity(this)
-            .onEach { isConnected ->
-                onNetworkStatusChanged(isConnected)
-            }
-            .launchIn(lifecycleScope)
+        if (requiresAuthentication) {
+            Log.d(TAG, "Verificando sessão (onResume) em ${this::class.simpleName}...")
+            checkSession()
+        }
     }
-
+    
     /**
-     * Callback chamado quando status de rede muda
-     * Pode ser sobrescrito por subclasses
+     * Verifica se sessão ainda é válida
+     * Se inválida, faz logout automático
      */
-    protected open fun onNetworkStatusChanged(isConnected: Boolean) {
-        // Implementação padrão vazia
-        // Subclasses podem sobrescrever para reagir a mudanças
-    }
-
-    /**
-     * Verifica se está online
-     */
-    protected fun isOnline(): Boolean {
-        return NetworkUtils.isNetworkAvailable(this)
-    }
-
-    /**
-     * Verifica se está offline
-     */
-    protected fun isOffline(): Boolean {
-        return !isOnline()
+    private fun checkSession() {
+        if (!sessionManager.isSessionValid()) {
+            Log.w(TAG, "⚠️ Sessão inválida detectada em ${this::class.simpleName}")
+            sessionManager.logout(
+                showMessage = true,
+                message = "Sua sessão expirou. Por favor, faça login novamente."
+            )
+        }
     }
 }
