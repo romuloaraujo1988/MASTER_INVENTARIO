@@ -799,7 +799,7 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
       public T get() {
         switch (id) {
           case 0: // com.inventario.mobile.domain.usecase.RegistrarColetaUseCase 
-          return (T) UseCaseModule_ProvideRegistrarColetaUseCaseFactory.provideRegistrarColetaUseCase(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
+          return (T) UseCaseModule_ProvideRegistrarColetaUseCaseFactory.provideRegistrarColetaUseCase(singletonCImpl.coletaRepositoryImplProvider.get(), singletonCImpl.patrimonioRepositoryAdapterProvider.get(), ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
 
           default: throw new AssertionError(id);
         }
@@ -1102,16 +1102,6 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
 
     private Provider<NetworkMonitor> provideNetworkMonitorProvider;
 
-    private Provider<TokenManager> tokenManagerProvider;
-
-    private Provider<ApiService> provideApiServiceProvider;
-
-    private Provider<DashboardMapper> provideDashboardMapperProvider;
-
-    private Provider<DashboardRepository> provideDashboardRepositoryProvider;
-
-    private Provider<ChartDataProvider> chartDataProvider;
-
     private Provider<com.inventario.mobile.api.PatrimonioApi> providePatrimonioApiLegacyProvider;
 
     private Provider<SalaApi> provideSalaApiProvider;
@@ -1121,6 +1111,16 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
     private Provider<PatrimonioRepositoryImpl> patrimonioRepositoryImplProvider;
 
     private Provider<PatrimonioRepositoryAdapter> patrimonioRepositoryAdapterProvider;
+
+    private Provider<TokenManager> tokenManagerProvider;
+
+    private Provider<ApiService> provideApiServiceProvider;
+
+    private Provider<DashboardMapper> provideDashboardMapperProvider;
+
+    private Provider<DashboardRepository> provideDashboardRepositoryProvider;
+
+    private Provider<ChartDataProvider> chartDataProvider;
 
     private Provider<LocalDataManager> provideLocalDataManagerProvider;
 
@@ -1167,12 +1167,12 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
       return WorkerFactoryModule_ProvideFactoryFactory.provideFactory(mapOfStringAndProviderOfWorkerAssistedFactoryOf());
     }
 
-    private DashboardDao dashboardDao() {
-      return DatabaseModule_ProvideDashboardDaoFactory.provideDashboardDao(provideAppDatabaseProvider.get());
-    }
-
     private SalaDao salaDao() {
       return DatabaseModule_ProvideSalaDaoFactory.provideSalaDao(provideAppDatabaseProvider.get());
+    }
+
+    private DashboardDao dashboardDao() {
+      return DatabaseModule_ProvideDashboardDaoFactory.provideDashboardDao(provideAppDatabaseProvider.get());
     }
 
     private ResponsavelDao responsavelDao() {
@@ -1206,16 +1206,16 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
       this.refreshTokenInterceptorProvider = DoubleCheck.provider(new SwitchingProvider<RefreshTokenInterceptor>(singletonCImpl, 22));
       this.connectionStateManagerProvider = DoubleCheck.provider(new SwitchingProvider<ConnectionStateManager>(singletonCImpl, 23));
       this.provideNetworkMonitorProvider = DoubleCheck.provider(new SwitchingProvider<NetworkMonitor>(singletonCImpl, 24));
-      this.tokenManagerProvider = DoubleCheck.provider(new SwitchingProvider<TokenManager>(singletonCImpl, 25));
-      this.provideApiServiceProvider = DoubleCheck.provider(new SwitchingProvider<ApiService>(singletonCImpl, 28));
-      this.provideDashboardMapperProvider = DoubleCheck.provider(new SwitchingProvider<DashboardMapper>(singletonCImpl, 29));
-      this.provideDashboardRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<DashboardRepository>(singletonCImpl, 27));
-      this.chartDataProvider = DoubleCheck.provider(new SwitchingProvider<ChartDataProvider>(singletonCImpl, 26));
-      this.providePatrimonioApiLegacyProvider = DoubleCheck.provider(new SwitchingProvider<com.inventario.mobile.api.PatrimonioApi>(singletonCImpl, 33));
-      this.provideSalaApiProvider = DoubleCheck.provider(new SwitchingProvider<SalaApi>(singletonCImpl, 34));
-      this.dataSourceStrategyFactoryProvider = DoubleCheck.provider(new SwitchingProvider<DataSourceStrategyFactory>(singletonCImpl, 32));
-      this.patrimonioRepositoryImplProvider = DoubleCheck.provider(new SwitchingProvider<PatrimonioRepositoryImpl>(singletonCImpl, 31));
-      this.patrimonioRepositoryAdapterProvider = DoubleCheck.provider(new SwitchingProvider<PatrimonioRepositoryAdapter>(singletonCImpl, 30));
+      this.providePatrimonioApiLegacyProvider = DoubleCheck.provider(new SwitchingProvider<com.inventario.mobile.api.PatrimonioApi>(singletonCImpl, 28));
+      this.provideSalaApiProvider = DoubleCheck.provider(new SwitchingProvider<SalaApi>(singletonCImpl, 29));
+      this.dataSourceStrategyFactoryProvider = DoubleCheck.provider(new SwitchingProvider<DataSourceStrategyFactory>(singletonCImpl, 27));
+      this.patrimonioRepositoryImplProvider = DoubleCheck.provider(new SwitchingProvider<PatrimonioRepositoryImpl>(singletonCImpl, 26));
+      this.patrimonioRepositoryAdapterProvider = DoubleCheck.provider(new SwitchingProvider<PatrimonioRepositoryAdapter>(singletonCImpl, 25));
+      this.tokenManagerProvider = DoubleCheck.provider(new SwitchingProvider<TokenManager>(singletonCImpl, 30));
+      this.provideApiServiceProvider = DoubleCheck.provider(new SwitchingProvider<ApiService>(singletonCImpl, 33));
+      this.provideDashboardMapperProvider = DoubleCheck.provider(new SwitchingProvider<DashboardMapper>(singletonCImpl, 34));
+      this.provideDashboardRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<DashboardRepository>(singletonCImpl, 32));
+      this.chartDataProvider = DoubleCheck.provider(new SwitchingProvider<ChartDataProvider>(singletonCImpl, 31));
       this.provideLocalDataManagerProvider = DoubleCheck.provider(new SwitchingProvider<LocalDataManager>(singletonCImpl, 35));
       this.syncSchedulerProvider = DoubleCheck.provider(new SwitchingProvider<SyncScheduler>(singletonCImpl, 36));
       this.provideNetworkCheckerProvider = DoubleCheck.provider(new SwitchingProvider<NetworkChecker>(singletonCImpl, 37));
@@ -1364,35 +1364,35 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
           case 24: // com.inventario.mobile.utils.NetworkMonitor 
           return (T) NotificationModule_ProvideNetworkMonitorFactory.provideNetworkMonitor(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
 
-          case 25: // com.inventario.mobile.auth.TokenManager 
-          return (T) new TokenManager(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule), singletonCImpl.providePreferencesManagerProvider.get());
-
-          case 26: // com.inventario.mobile.presentation.charts.ChartDataProvider 
-          return (T) new ChartDataProvider(singletonCImpl.provideDashboardRepositoryProvider.get());
-
-          case 27: // com.inventario.mobile.domain.repository.DashboardRepository 
-          return (T) DashboardModule_ProvideDashboardRepositoryFactory.provideDashboardRepository(singletonCImpl.provideApiServiceProvider.get(), singletonCImpl.provideDashboardMapperProvider.get(), singletonCImpl.dashboardDao(), singletonCImpl.providePreferencesManagerProvider.get());
-
-          case 28: // com.inventario.mobile.data.remote.api.ApiService 
-          return (T) ApiModule_ProvideApiServiceFactory.provideApiService(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
-
-          case 29: // com.inventario.mobile.data.mapper.DashboardMapper 
-          return (T) DashboardModule_ProvideDashboardMapperFactory.provideDashboardMapper();
-
-          case 30: // com.inventario.mobile.data.repository.PatrimonioRepositoryAdapter 
+          case 25: // com.inventario.mobile.data.repository.PatrimonioRepositoryAdapter 
           return (T) new PatrimonioRepositoryAdapter(singletonCImpl.patrimonioRepositoryImplProvider.get());
 
-          case 31: // com.inventario.mobile.data.repository.PatrimonioRepositoryImpl 
+          case 26: // com.inventario.mobile.data.repository.PatrimonioRepositoryImpl 
           return (T) new PatrimonioRepositoryImpl(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule), singletonCImpl.dataSourceStrategyFactoryProvider.get());
 
-          case 32: // com.inventario.mobile.data.strategy.DataSourceStrategyFactory 
+          case 27: // com.inventario.mobile.data.strategy.DataSourceStrategyFactory 
           return (T) new DataSourceStrategyFactory(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule), singletonCImpl.providePatrimonioApiLegacyProvider.get(), singletonCImpl.provideSalaApiProvider.get(), singletonCImpl.patrimonioDao(), singletonCImpl.salaDao());
 
-          case 33: // com.inventario.mobile.api.PatrimonioApi 
+          case 28: // com.inventario.mobile.api.PatrimonioApi 
           return (T) ApiModule_ProvidePatrimonioApiLegacyFactory.providePatrimonioApiLegacy(singletonCImpl.provideRetrofitProvider.get());
 
-          case 34: // com.inventario.mobile.api.SalaApi 
+          case 29: // com.inventario.mobile.api.SalaApi 
           return (T) ApiModule_ProvideSalaApiFactory.provideSalaApi(singletonCImpl.provideRetrofitProvider.get());
+
+          case 30: // com.inventario.mobile.auth.TokenManager 
+          return (T) new TokenManager(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule), singletonCImpl.providePreferencesManagerProvider.get());
+
+          case 31: // com.inventario.mobile.presentation.charts.ChartDataProvider 
+          return (T) new ChartDataProvider(singletonCImpl.provideDashboardRepositoryProvider.get());
+
+          case 32: // com.inventario.mobile.domain.repository.DashboardRepository 
+          return (T) DashboardModule_ProvideDashboardRepositoryFactory.provideDashboardRepository(singletonCImpl.provideApiServiceProvider.get(), singletonCImpl.provideDashboardMapperProvider.get(), singletonCImpl.dashboardDao(), singletonCImpl.providePreferencesManagerProvider.get());
+
+          case 33: // com.inventario.mobile.data.remote.api.ApiService 
+          return (T) ApiModule_ProvideApiServiceFactory.provideApiService(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
+
+          case 34: // com.inventario.mobile.data.mapper.DashboardMapper 
+          return (T) DashboardModule_ProvideDashboardMapperFactory.provideDashboardMapper();
 
           case 35: // com.inventario.mobile.data.local.LocalDataManager 
           return (T) DatabaseModule_ProvideLocalDataManagerFactory.provideLocalDataManager(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));

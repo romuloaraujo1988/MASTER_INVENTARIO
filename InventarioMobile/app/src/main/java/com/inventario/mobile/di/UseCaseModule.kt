@@ -2,7 +2,6 @@ package com.inventario.mobile.di
 
 import android.content.Context
 import com.inventario.mobile.data.local.LocalDataManager
-import com.inventario.mobile.data.repository.InventarioRepository
 import com.inventario.mobile.domain.repository.ColetaRepository
 import com.inventario.mobile.domain.repository.PatrimonioRepository
 import com.inventario.mobile.domain.usecase.RegistrarColetaUseCase
@@ -25,24 +24,20 @@ object UseCaseModule {
     /**
      * Fornece RegistrarColetaUseCase
      * 
-     * Usa InventarioRepository como implementação temporária de ColetaRepository e PatrimonioRepository
-     * até que a migração completa para Clean Architecture seja concluída
+     * Usa os repositórios injetados pelo Hilt (ColetaRepositoryImpl e PatrimonioRepositoryAdapter)
      */
     @Provides
     @ActivityScoped
     fun provideRegistrarColetaUseCase(
+        coletaRepository: ColetaRepository,
+        patrimonioRepository: PatrimonioRepository,
         @ApplicationContext context: Context
     ): RegistrarColetaUseCase {
-        // Obter dependências necessárias
         val localDataManager = LocalDataManager.getInstance(context)
-        val apiService = com.inventario.mobile.di.NetworkModule.getApiService(context)
-        val inventarioRepository = InventarioRepository.getInstance(context, apiService)
         
-        // InventarioRepository implementa tanto ColetaRepository quanto PatrimonioRepository
-        // (temporário até migração completa)
         return RegistrarColetaUseCase(
-            coletaRepository = inventarioRepository as ColetaRepository,
-            patrimonioRepository = inventarioRepository as PatrimonioRepository,
+            coletaRepository = coletaRepository,
+            patrimonioRepository = patrimonioRepository,
             localDataManager = localDataManager
         )
     }

@@ -52,15 +52,8 @@ class ScannerActivity : AppCompatActivity() {
     // Launcher para solicitar permissão de câmera
     private val requestCameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        android.util.Log.d("ScannerActivity", "Permissão de câmera: $isGranted")
-        if (isGranted) {
-            Toast.makeText(this, "Permissão concedida!", Toast.LENGTH_SHORT).show()
-            initializeScanner()
-        } else {
-            Toast.makeText(this, "Permissão de câmera negada. Não é possível escanear códigos.", Toast.LENGTH_LONG).show()
-            finish()
-        }
+    ) { isGranted: Boolean ->
+        handleCameraPermissionResult(isGranted)
     }
     
     // Launcher moderno para scanner (substitui IntentIntegrator deprecated)
@@ -175,6 +168,63 @@ class ScannerActivity : AppCompatActivity() {
         }
     }
     
+    private fun handleCameraPermissionResult(isGranted: Boolean) {
+        android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
+        android.util.Log.d("ScannerActivity", "Resultado da permissão de câmera: $isGranted")
+        android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
+        
+        // Reset flag antes de processar resultado
+        isInitializing = false
+        
+        if (isGranted) {
+            android.util.Log.d("ScannerActivity", "✅ Permissão concedida, inicializando scanner...")
+            Toast.makeText(this, "Permissão concedida!", Toast.LENGTH_SHORT).show()
+            
+            // Aguardar um pouco para garantir que o sistema processou a permissão
+            Handler(Looper.getMainLooper()).postDelayed({
+                try {
+                    initializeScanner()
+                } catch (e: Exception) {
+                    android.util.Log.e("ScannerActivity", "Erro ao inicializar scanner após permissão", e)
+                    showError("Erro ao inicializar câmera: ${e.message}")
+                    finish()
+                }
+            }, 300) // 300ms de delay
+            
+        } else {
+            android.util.Log.w("ScannerActivity", "❌ Permissão de câmera negada pelo usuário")
+            
+            // Verificar se deve mostrar rationale novamente
+            if (shouldShowRequestPermissionRationale(android.Manifest.permission.CAMERA)) {
+                // Usuário negou mas não marcou "Não perguntar novamente"
+                androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("Permissão Necessária")
+                    .setMessage("A câmera é essencial para escanear códigos QR. Sem ela, não é possível usar esta funcionalidade.\n\nDeseja tentar novamente?")
+                    .setPositiveButton("Tentar Novamente") { _, _ ->
+                        requestCameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                    }
+                    .setNegativeButton("Cancelar") { _, _ ->
+                        finish()
+                    }
+                    .setCancelable(false)
+                    .show()
+            } else {
+                // Usuário marcou "Não perguntar novamente" ou negou permanentemente
+                androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("Permissão Negada")
+                    .setMessage("A permissão de câmera foi negada permanentemente.\n\nPara usar o scanner, você precisa habilitar a permissão manualmente nas configurações do aplicativo.")
+                    .setPositiveButton("Abrir Configurações") { _, _ ->
+                        openAppSettings()
+                    }
+                    .setNegativeButton("Fechar") { _, _ ->
+                        finish()
+                    }
+                    .setCancelable(false)
+                    .show()
+            }
+        }
+    }
+    
     private fun checkAndRequestPermissions() {
         android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
         android.util.Log.d("ScannerActivity", "VERIFICANDO PERMISSÃO DE CÂMERA (Android 14+)")
@@ -182,24 +232,62 @@ class ScannerActivity : AppCompatActivity() {
         
         // Verificar se já tem permissão
         if (android14CameraHelper.checkCameraPermissions()) {
-            android.util.Log.d("ScannerActivity", "Permissão já concedida, inicializando scanner")
-            initializeScanner()
-        } else {
-            // Mostrar rationale e solicitar permissão
-            androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Permissão de Câmera Necessária")
-                .setMessage("Este aplicativo precisa acessar a câmera para escanear códigos QR dos patrimônios.")
-                .setPositiveButton("Permitir") { _, _ ->
-                    android.util.Log.d("ScannerActivity", "Usuário aceitou o rationale, solicitando permissão")
-                    requestCameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
-                }
-                .setNegativeButton("Cancelar") { _, _ ->
-                    android.util.Log.w("ScannerActivity", "Usuário negou o rationale")
-                    Toast.makeText(this, "Não é possível escanear sem permissão de câmera", Toast.LENGTH_LONG).show()
+            android.util.Log.d("ScannerActivity", "✅ Permissão já concedida, inicializando scanner")
+            
+            // Aguardar um pouco para garantir que a UI está pronta
+            Handler(Looper.getMainLooper()).postDelayed({
+                try {
+                    initializeScanner()
+                } catch (e: Exception) {
+                    android.util.Log.e("ScannerActivity", "Erro ao inicializar scanner", e)
+                    showError("Erro ao inicializar câmera: ${e.message}")
                     finish()
                 }
-                .setCancelable(false)
-                .show()
+            }, 200)
+            
+        } else {
+            android.util.Log.d("ScannerActivity", "⚠️ Permissão não concedida, solicitando...")
+            
+            // Verificar se deve mostrar rationale
+            if (shouldShowRequestPermissionRationale(android.Manifest.permission.CAMERA)) {
+                // Mostrar explicação antes de solicitar
+                androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("Permissão de Câmera Necessária")
+                    .setMessage("Este aplicativo precisa acessar a câmera para escanear códigos QR dos patrimônios.\n\nSem esta permissão, não será possível usar o scanner.")
+                    .setPositiveButton("Permitir") { _, _ ->
+                        android.util.Log.d("ScannerActivity", "Usuário aceitou o rationale, solicitando permissão")
+                        requestCameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                    }
+                    .setNegativeButton("Cancelar") { _, _ ->
+                        android.util.Log.w("ScannerActivity", "Usuário negou o rationale")
+                        Toast.makeText(this, "Não é possível escanear sem permissão de câmera", Toast.LENGTH_LONG).show()
+                        finish()
+                    }
+                    .setCancelable(false)
+                    .show()
+            } else {
+                // Primeira vez solicitando, pedir diretamente
+                android.util.Log.d("ScannerActivity", "Primeira solicitação de permissão")
+                requestCameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+            }
+        }
+    }
+    
+    /**
+     * Abre as configurações do aplicativo para o usuário habilitar permissões manualmente
+     */
+    private fun openAppSettings() {
+        try {
+            val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = android.net.Uri.fromParts("package", packageName, null)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
+            finish()
+        } catch (e: Exception) {
+            android.util.Log.e("ScannerActivity", "Erro ao abrir configurações", e)
+            Toast.makeText(this, "Não foi possível abrir as configurações", Toast.LENGTH_SHORT).show()
+            finish()
         }
     }
     
@@ -433,7 +521,7 @@ class ScannerActivity : AppCompatActivity() {
     
     private fun initializeScanner() {
         if (isInitializing) {
-            android.util.Log.w("ScannerActivity", "Scanner já está sendo inicializado, ignorando...")
+            android.util.Log.w("ScannerActivity", "⚠️ Scanner já está sendo inicializado, ignorando...")
             return
         }
         
@@ -443,24 +531,31 @@ class ScannerActivity : AppCompatActivity() {
         
         isInitializing = true
         
+        // Atualizar UI
+        binding.textStatus.text = "Inicializando câmera..."
+        binding.progressBar.visibility = View.VISIBLE
+        
         // Usar o Android14CameraHelper para verificações
         if (!android14CameraHelper.checkCameraPermissions()) {
-            android.util.Log.e("ScannerActivity", "ERRO: Permissões de câmera não concedidas!")
+            android.util.Log.e("ScannerActivity", "❌ ERRO: Permissões de câmera não concedidas!")
             showError("Permissões de câmera não concedidas")
             isInitializing = false
+            binding.progressBar.visibility = View.GONE
+            finish()
             return
         }
         
         // Verificar se a câmera está disponível usando o helper
         if (!android14CameraHelper.validateCameraSupport()) {
-            android.util.Log.e("ScannerActivity", "ERRO: Câmera não está disponível!")
+            android.util.Log.e("ScannerActivity", "❌ ERRO: Câmera não está disponível!")
             
             // Executar diagnóstico detalhado
             val diagnosticInfo = performCameraDiagnostic()
             android.util.Log.e("ScannerActivity", "Diagnóstico da câmera:\n$diagnosticInfo")
             
-            showCameraDiagnosticDialog(diagnosticInfo)
             isInitializing = false
+            binding.progressBar.visibility = View.GONE
+            showCameraDiagnosticDialog(diagnosticInfo)
             return
         }
         
@@ -489,17 +584,23 @@ class ScannerActivity : AppCompatActivity() {
             }
             
             android.util.Log.d("ScannerActivity", "Iniciando scanner com ScanContract...")
+            binding.progressBar.visibility = View.GONE
+            binding.textStatus.text = "Abrindo câmera..."
+            
             barcodeLauncher.launch(options)
-            android.util.Log.d("ScannerActivity", "Scanner iniciado com sucesso!")
+            android.util.Log.d("ScannerActivity", "✅ Scanner iniciado com sucesso!")
             
         } catch (e: Exception) {
-            android.util.Log.e("ScannerActivity", "ERRO ao inicializar scanner", e)
+            android.util.Log.e("ScannerActivity", "❌ ERRO ao inicializar scanner", e)
+            android.util.Log.e("ScannerActivity", "Tipo: ${e.javaClass.simpleName}, Mensagem: ${e.message}")
+            
             isInitializing = false
+            binding.progressBar.visibility = View.GONE
             
             // Tentar novamente se não excedeu o limite
             if (retryCount < maxRetries) {
                 retryCount++
-                android.util.Log.w("ScannerActivity", "Tentativa $retryCount de $maxRetries...")
+                android.util.Log.w("ScannerActivity", "⚠️ Tentativa $retryCount de $maxRetries...")
                 
                 // Aguardar um pouco antes de tentar novamente
                 binding.textStatus.text = "Tentando novamente... ($retryCount/$maxRetries)"
@@ -509,6 +610,7 @@ class ScannerActivity : AppCompatActivity() {
                 }, 2000) // Aguardar 2 segundos
                 
             } else {
+                android.util.Log.e("ScannerActivity", "❌ Máximo de tentativas excedido")
                 showCameraErrorDialog(e)
             }
         }
@@ -693,6 +795,31 @@ class ScannerActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         NavigationHelper.goBack(this)
         return true
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        
+        android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
+        android.util.Log.d("ScannerActivity", "onResume() chamado")
+        android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
+        
+        // Verificar se voltou das configurações com permissão concedida
+        if (!isInitializing && android14CameraHelper.checkCameraPermissions()) {
+            android.util.Log.d("ScannerActivity", "✅ Permissão detectada no onResume, verificando se precisa inicializar scanner")
+            
+            // Se não há resultado de scan ainda, inicializar
+            if (currentScanResult == null) {
+                android.util.Log.d("ScannerActivity", "Nenhum resultado de scan, inicializando scanner...")
+                Handler(Looper.getMainLooper()).postDelayed({
+                    try {
+                        initializeScanner()
+                    } catch (e: Exception) {
+                        android.util.Log.e("ScannerActivity", "Erro ao inicializar scanner no onResume", e)
+                    }
+                }, 300)
+            }
+        }
     }
     
     @Deprecated("Deprecated in Java")
