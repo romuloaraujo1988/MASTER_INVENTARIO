@@ -6,8 +6,10 @@ import com.inventario.mobile.di.AppModule;
 import com.inventario.mobile.di.DashboardModule;
 import com.inventario.mobile.di.DatabaseModule;
 import com.inventario.mobile.di.MapperModule;
+import com.inventario.mobile.di.NotificationModule;
 import com.inventario.mobile.di.RepositoryModule;
 import com.inventario.mobile.di.SyncModule;
+import com.inventario.mobile.di.UseCaseModule;
 import com.inventario.mobile.di.UtilModule;
 import com.inventario.mobile.presentation.charts.ChartsFragment_GeneratedInjector;
 import com.inventario.mobile.presentation.charts.ChartsViewModel_HiltModules;
@@ -24,6 +26,7 @@ import com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity_G
 import com.inventario.mobile.presentation.descricao.DescricaoSelectionViewModelClean_HiltModules;
 import com.inventario.mobile.presentation.main.MainActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.sala.SalaSelectionActivity_GeneratedInjector;
+import com.inventario.mobile.presentation.scanner.ScannerActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.statistics.ExportFragment_GeneratedInjector;
 import com.inventario.mobile.presentation.statistics.OverviewFragment_GeneratedInjector;
 import com.inventario.mobile.presentation.statistics.RankingsFragment_GeneratedInjector;
@@ -32,7 +35,9 @@ import com.inventario.mobile.presentation.sync.SyncActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.sync.SyncViewModel_HiltModules;
 import com.inventario.mobile.presentation.validation.ValidationExampleFragment_GeneratedInjector;
 import com.inventario.mobile.presentation.validation.ValidationViewModel_HiltModules;
+import com.inventario.mobile.ui.base.BaseOfflineActivity_GeneratedInjector;
 import com.inventario.mobile.ui.coleta.ColetaActivity_GeneratedInjector;
+import com.inventario.mobile.ui.splash.SplashActivity_GeneratedInjector;
 import com.inventario.mobile.worker.BackupWorker_HiltModule;
 import com.inventario.mobile.worker.ColetaSyncWorker_HiltModule;
 import com.inventario.mobile.worker.DatabaseBackupWorker_HiltModule;
@@ -164,6 +169,7 @@ public final class InventarioMobileApplication_HiltComponents {
           ActivityRetainedCBuilderModule.class,
           ServiceCBuilderModule.class,
           MapperModule.class,
+          NotificationModule.class,
           RepositoryModule.class,
           SyncModule.class,
           SyncWorker_HiltModule.class,
@@ -219,7 +225,8 @@ public final class InventarioMobileApplication_HiltComponents {
           HiltWrapper_ActivityModule.class,
           HiltWrapper_DefaultViewModelFactories_ActivityModule.class,
           FragmentCBuilderModule.class,
-          ViewCBuilderModule.class
+          ViewCBuilderModule.class,
+          UseCaseModule.class
       }
   )
   @ActivityScoped
@@ -229,9 +236,12 @@ public final class InventarioMobileApplication_HiltComponents {
       DescricaoSelectionActivity_GeneratedInjector,
       MainActivity_GeneratedInjector,
       SalaSelectionActivity_GeneratedInjector,
+      ScannerActivity_GeneratedInjector,
       StatisticsActivity_GeneratedInjector,
       SyncActivity_GeneratedInjector,
+      BaseOfflineActivity_GeneratedInjector,
       ColetaActivity_GeneratedInjector,
+      SplashActivity_GeneratedInjector,
       ActivityComponent,
       DefaultViewModelFactories.ActivityEntryPoint,
       HiltWrapper_HiltViewModelFactory_ActivityCreatorEntryPoint,

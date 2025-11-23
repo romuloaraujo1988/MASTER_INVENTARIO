@@ -208,4 +208,66 @@ class PatrimonioRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+    
+    /**
+     * Busca patrimônio por número
+     * Usa estratégia apropriada automaticamente (offline-first)
+     */
+    suspend fun buscarPorNumero(numero: String): Patrimonio? {
+        return try {
+            Log.d(TAG, "Buscando patrimônio por número: $numero")
+            
+            val strategy = strategyFactory.getStrategy()
+            _currentDataSource.value = strategy.getSourceType()
+            
+            Log.d(TAG, "Fonte de dados: ${strategy.getSourceType()}")
+            
+            val result = strategy.getPatrimonioPorNumero(numero)
+            
+            if (result.isSuccess) {
+                val patrimonio = result.getOrNull()
+                Log.d(TAG, "✓ Patrimônio encontrado: ${patrimonio?.descricao}")
+                patrimonio
+            } else {
+                Log.w(TAG, "✗ Patrimônio não encontrado")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao buscar patrimônio", e)
+            null
+        }
+    }
+    
+    /**
+     * Busca patrimônio APENAS no banco local (offline)
+     * Usado como fallback quando servidor está inacessível
+     */
+    suspend fun buscarPorNumeroLocal(numero: String): Patrimonio? {
+        return try {
+            Log.d(TAG, "Buscando patrimônio LOCALMENTE: $numero")
+            
+            // Forçar uso da estratégia local
+            val localStrategy = strategyFactory.getLocalStrategy()
+            _currentDataSource.value = DataSourceType.LOCAL
+            
+            if (!localStrategy.isAvailable()) {
+                Log.w(TAG, "⚠️ Banco local não disponível ou vazio")
+                return null
+            }
+            
+            val result = localStrategy.getPatrimonioPorNumero(numero)
+            
+            if (result.isSuccess) {
+                val patrimonio = result.getOrNull()
+                Log.d(TAG, "✓ Patrimônio encontrado no banco local: ${patrimonio?.descricao}")
+                patrimonio
+            } else {
+                Log.w(TAG, "✗ Patrimônio não encontrado no banco local")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao buscar patrimônio localmente", e)
+            null
+        }
+    }
 }

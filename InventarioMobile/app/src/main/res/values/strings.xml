@@ -172,5 +172,12 @@
     <!-- Navigation Drawer -->
     <string name="navigation_drawer_open">Abrir menu</string>
     <string name="navigation_drawer_close">Fechar menu</string>
+    
+    <!-- Modo Offline -->
+    <string name="offline">OFFLINE</string>
+    <string name="online">ONLINE</string>
+    <string name="offline_mode">Modo Offline</string>
+    <string name="offline_mode_active">Operando em modo offline</string>
+    <string name="online_mode_active">Conectado ao servidor</string>
 
 </resources>

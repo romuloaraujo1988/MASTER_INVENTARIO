@@ -1,0 +1,115 @@
+package com.inventario.mobile.network
+
+import android.content.Context
+import android.util.Log
+import com.inventario.mobile.utils.OfflineNotificationManager
+import com.inventario.mobile.utils.PreferencesManager
+import okhttp3.Interceptor
+import okhttp3.Response
+import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import javax.inject.Inject
+
+/**
+ * Interceptor que detecta falhas de conexão e ativa automaticamente o modo offline
+ * 
+ * Funcionalidades:
+ * - Detecta erros de rede (timeout, host não encontrado, etc)
+ * - Ativa modo offline forçado automaticamente
+ * - Registra tentativas de conexão
+ * - Permite retry automático quando conexão voltar
+ * - Notifica usuário via notificações
+ */
+class OfflineFallbackInterceptor @Inject constructor(
+    private val context: Context,
+    private val preferencesManager: PreferencesManager,
+    private val notificationManager: OfflineNotificationManager
+) : Interceptor {
+
+    companion object {
+        private const val TAG = "OfflineFallbackInterceptor"
+        private const val MAX_CONSECUTIVE_FAILURES = 3
+        private var consecutiveFailures = 0
+    }
+    
+
+
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val request = chain.request()
+        
+        return try {
+            // Tentar fazer a requisição
+            val response = chain.proceed(request)
+            
+            // Se sucesso, resetar contador de falhas
+            if (response.isSuccessful) {
+                if (consecutiveFailures > 0) {
+                    Log.d(TAG, "✓ Conexão restaurada após $consecutiveFailures falhas")
+                    consecutiveFailures = 0
+                    
+                    // Desativar modo offline forçado se estava ativo
+                    if (preferencesManager.isForceOfflineMode()) {
+                        Log.d(TAG, "Desativando modo offline forçado - conexão restaurada")
+                        preferencesManager.setForceOfflineMode(false)
+                    }
+                }
+            }
+            
+            response
+            
+        } catch (e: Exception) {
+            // Detectar tipo de erro de rede
+            val isNetworkError = when (e) {
+                is UnknownHostException -> true  // Servidor não encontrado
+                is SocketTimeoutException -> true  // Timeout
+                is IOException -> true  // Erro de I/O genérico
+                else -> false
+            }
+            
+            if (isNetworkError) {
+                consecutiveFailures++
+                
+                Log.w(TAG, "═══════════════════════════════════════")
+                Log.w(TAG, "FALHA DE CONEXÃO DETECTADA")
+                Log.w(TAG, "═══════════════════════════════════════")
+                Log.w(TAG, "URL: ${request.url}")
+                Log.w(TAG, "Erro: ${e.javaClass.simpleName}")
+                Log.w(TAG, "Mensagem: ${e.message}")
+                Log.w(TAG, "Falhas consecutivas: $consecutiveFailures")
+                
+                // Se atingiu o limite de falhas, ativar modo offline forçado
+                if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                    if (!preferencesManager.isForceOfflineMode()) {
+                        Log.w(TAG, "⚠️ ATIVANDO MODO OFFLINE FORÇADO")
+                        Log.w(TAG, "Motivo: $MAX_CONSECUTIVE_FAILURES falhas consecutivas")
+                        preferencesManager.setForceOfflineMode(true)
+                        
+                        // Notificar usuário via notificação
+                        notificationManager.showOfflineModeNotification(hasLocalData = true)
+                    }
+                }
+                
+                Log.w(TAG, "═══════════════════════════════════════")
+            }
+            
+            // Re-lançar exceção para que seja tratada normalmente
+            throw e
+        }
+    }
+    
+
+    
+    /**
+     * Reseta contador de falhas manualmente
+     */
+    fun resetFailureCount() {
+        consecutiveFailures = 0
+        Log.d(TAG, "Contador de falhas resetado")
+    }
+    
+    /**
+     * Obtém número de falhas consecutivas
+     */
+    fun getConsecutiveFailures(): Int = consecutiveFailures
+}

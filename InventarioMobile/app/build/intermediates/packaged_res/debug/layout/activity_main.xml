@@ -24,7 +24,44 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 android:background="@color/primary"
-                app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+                
+                <!-- Indicador de Modo Offline -->
+                <LinearLayout
+                    android:id="@+id/offline_indicator"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginEnd="16dp"
+                    android:orientation="horizontal"
+                    android:padding="8dp"
+                    android:background="@drawable/offline_indicator_background"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+                    
+                    <ImageView
+                        android:id="@+id/offline_icon"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_offline"
+                        android:layout_gravity="center_vertical"
+                        android:contentDescription="@string/offline_mode"
+                        app:tint="@android:color/white" />
+                    
+                    <TextView
+                        android:id="@+id/offline_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="@string/offline"
+                        android:textColor="@android:color/white"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_gravity="center_vertical" />
+                    
+                </LinearLayout>
+                
+            </androidx.appcompat.widget.Toolbar>
 
         </com.google.android.material.appbar.AppBarLayout>
 

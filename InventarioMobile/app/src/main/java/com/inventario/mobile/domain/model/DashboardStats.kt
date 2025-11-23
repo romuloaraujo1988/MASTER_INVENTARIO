@@ -13,7 +13,12 @@ data class DashboardStats(
     val divergencias: Int = 0,
     val valorTotal: Double = 0.0,
     val inventarioId: Int? = null,
-    val inventarioNome: String? = null
+    val inventarioNome: String? = null,
+    val coletasHoje: Int = 0,
+    val coletasSemana: Int = 0,
+    val coletasMes: Int = 0,
+    val tempoMedioColeta: Double = 0.0,
+    val isOfflineData: Boolean = false  // Flag indicando se são dados offline/locais
 ) {
     /**
      * Verifica se o inventário está completo

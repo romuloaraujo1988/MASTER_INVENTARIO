@@ -14,15 +14,21 @@ import com.inventario.mobile.utils.PreferencesManager
 // import com.inventario.mobile.data.local.database.InventarioDatabase
 // import com.inventario.mobile.utils.DatabaseInitializer
 import kotlinx.coroutines.launch
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class SplashActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySplashBinding
     private lateinit var preferencesManager: PreferencesManager
+    
+    @Inject
+    lateinit var tokenManager: com.inventario.mobile.auth.TokenManager
 
     companion object {
         private const val TAG = "SplashActivity"
-        private const val SPLASH_DELAY = 2000L // 2 segundos
+        private const val SPLASH_DELAY = 5000L // 5 segundos
         private const val INITIALIZE_DATABASE = false // Desabilitado para evitar problemas de navegação
     }
 
@@ -51,11 +57,13 @@ class SplashActivity : AppCompatActivity() {
             if (INITIALIZE_DATABASE) {
                 // initializeDatabase() // Commented out for minimal version
             } else {
-                // Aguardar e navegar para a próxima tela
-                Handler(Looper.getMainLooper()).postDelayed({
+                // ✅ Aguardar e navegar para a próxima tela usando coroutine
+                lifecycleScope.launch {
+                    kotlinx.coroutines.delay(SPLASH_DELAY)
+                    // Verificar se ainda está ativa antes de navegar
                     Log.d(TAG, "onCreate: Executando navegação após delay")
                     navigateToNextScreen()
-                }, SPLASH_DELAY)
+                }
             }
             
             Log.d(TAG, "onCreate: Configuração completa")
@@ -114,36 +122,63 @@ class SplashActivity : AppCompatActivity() {
     */
 
     private fun navigateToNextScreen() {
-        try {
-            Log.d(TAG, "navigateToNextScreen: Iniciando navegação")
-            
-            val isLoggedIn = preferencesManager.isLoggedIn()
-            Log.d(TAG, "navigateToNextScreen: isLoggedIn = $isLoggedIn")
-            
-            val intent = if (isLoggedIn) {
-                Log.d(TAG, "navigateToNextScreen: Navegando para MainActivity")
-                Intent(this, MainActivity::class.java)
-            } else {
-                Log.d(TAG, "navigateToNextScreen: Navegando para LoginActivity")
-                Intent(this, LoginActivity::class.java)
+        // Executar navegação em coroutine para evitar ANR
+        lifecycleScope.launch {
+            try {
+                Log.d(TAG, "navigateToNextScreen: Iniciando navegação")
+                
+                val isLoggedIn = preferencesManager.isLoggedIn()
+                Log.d(TAG, "navigateToNextScreen: isLoggedIn = $isLoggedIn")
+                
+                val intent = if (isLoggedIn) {
+                    // ✅ Verificar se token é válido (em background)
+                    val isTokenValid = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        tokenManager.isTokenValid()
+                    }
+                    
+                    val canRefresh = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        tokenManager.canRefreshToken()
+                    }
+                    
+                    if (isTokenValid) {
+                        Log.d(TAG, "✓ Token válido, navegando para MainActivity")
+                        Intent(this@SplashActivity, MainActivity::class.java)
+                    } else if (canRefresh) {
+                        Log.d(TAG, "⚠️ Token expirado mas pode renovar, navegando para MainActivity")
+                        // Token será renovado automaticamente pelo RefreshTokenInterceptor
+                        Intent(this@SplashActivity, MainActivity::class.java)
+                    } else {
+                        Log.d(TAG, "❌ Token inválido e não pode renovar, navegando para LoginActivity")
+                        // Limpar sessão
+                        preferencesManager.clearSavedUser()
+                        preferencesManager.clearSessionData()
+                        Intent(this@SplashActivity, LoginActivity::class.java).apply {
+                            putExtra("token_expired", true)
+                            putExtra("message", "Sua sessão expirou. Faça login novamente.")
+                        }
+                    }
+                } else {
+                    Log.d(TAG, "navigateToNextScreen: Navegando para LoginActivity")
+                    Intent(this@SplashActivity, LoginActivity::class.java)
+                }
+                
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                Log.d(TAG, "navigateToNextScreen: Flags configuradas")
+                
+                startActivity(intent)
+                Log.d(TAG, "navigateToNextScreen: startActivity executado")
+                
+                finish()
+                Log.d(TAG, "navigateToNextScreen: finish() executado")
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "navigateToNextScreen: Erro durante navegação", e)
+                // Em caso de erro, ir para LoginActivity como fallback
+                val intent = Intent(this@SplashActivity, LoginActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                finish()
             }
-            
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            Log.d(TAG, "navigateToNextScreen: Flags configuradas")
-            
-            startActivity(intent)
-            Log.d(TAG, "navigateToNextScreen: startActivity executado")
-            
-            finish()
-            Log.d(TAG, "navigateToNextScreen: finish() executado")
-            
-        } catch (e: Exception) {
-            Log.e(TAG, "navigateToNextScreen: Erro durante navegação", e)
-            // Em caso de erro, ir para LoginActivity como fallback
-            val intent = Intent(this, LoginActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
-            finish()
         }
     }
 }

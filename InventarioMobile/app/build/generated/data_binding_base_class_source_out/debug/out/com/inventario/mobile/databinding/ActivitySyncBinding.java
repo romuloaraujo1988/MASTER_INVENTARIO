@@ -30,6 +30,9 @@ public final class ActivitySyncBinding implements ViewBinding {
   public final MaterialButton btnRefresh;
 
   @NonNull
+  public final MaterialButton btnSyncColetas;
+
+  @NonNull
   public final MaterialButton btnSyncNow;
 
   @NonNull
@@ -73,16 +76,18 @@ public final class ActivitySyncBinding implements ViewBinding {
 
   private ActivitySyncBinding(@NonNull CoordinatorLayout rootView,
       @NonNull MaterialButton btnClearData, @NonNull MaterialButton btnRefresh,
-      @NonNull MaterialButton btnSyncNow, @NonNull MaterialCardView cardLastSync,
-      @NonNull ProgressBar progressBar, @NonNull Toolbar toolbar,
-      @NonNull TextView tvColetadosCount, @NonNull TextView tvLastSyncDate,
-      @NonNull TextView tvLastSyncDetails, @NonNull TextView tvLastSyncStatus,
-      @NonNull TextView tvNetworkStatus, @NonNull TextView tvPatrimoniosCount,
-      @NonNull TextView tvPendentesCount, @NonNull TextView tvResponsaveisCount,
-      @NonNull TextView tvSalasCount, @NonNull TextView tvSyncProgress) {
+      @NonNull MaterialButton btnSyncColetas, @NonNull MaterialButton btnSyncNow,
+      @NonNull MaterialCardView cardLastSync, @NonNull ProgressBar progressBar,
+      @NonNull Toolbar toolbar, @NonNull TextView tvColetadosCount,
+      @NonNull TextView tvLastSyncDate, @NonNull TextView tvLastSyncDetails,
+      @NonNull TextView tvLastSyncStatus, @NonNull TextView tvNetworkStatus,
+      @NonNull TextView tvPatrimoniosCount, @NonNull TextView tvPendentesCount,
+      @NonNull TextView tvResponsaveisCount, @NonNull TextView tvSalasCount,
+      @NonNull TextView tvSyncProgress) {
     this.rootView = rootView;
     this.btnClearData = btnClearData;
     this.btnRefresh = btnRefresh;
+    this.btnSyncColetas = btnSyncColetas;
     this.btnSyncNow = btnSyncNow;
     this.cardLastSync = cardLastSync;
     this.progressBar = progressBar;
@@ -135,6 +140,12 @@ public final class ActivitySyncBinding implements ViewBinding {
       id = R.id.btnRefresh;
       MaterialButton btnRefresh = ViewBindings.findChildViewById(rootView, id);
       if (btnRefresh == null) {
+        break missingId;
+      }
+
+      id = R.id.btnSyncColetas;
+      MaterialButton btnSyncColetas = ViewBindings.findChildViewById(rootView, id);
+      if (btnSyncColetas == null) {
         break missingId;
       }
 
@@ -223,8 +234,8 @@ public final class ActivitySyncBinding implements ViewBinding {
       }
 
       return new ActivitySyncBinding((CoordinatorLayout) rootView, btnClearData, btnRefresh,
-          btnSyncNow, cardLastSync, progressBar, toolbar, tvColetadosCount, tvLastSyncDate,
-          tvLastSyncDetails, tvLastSyncStatus, tvNetworkStatus, tvPatrimoniosCount,
+          btnSyncColetas, btnSyncNow, cardLastSync, progressBar, toolbar, tvColetadosCount,
+          tvLastSyncDate, tvLastSyncDetails, tvLastSyncStatus, tvNetworkStatus, tvPatrimoniosCount,
           tvPendentesCount, tvResponsaveisCount, tvSalasCount, tvSyncProgress);
     }
     String missingId = rootView.getResources().getResourceName(id);

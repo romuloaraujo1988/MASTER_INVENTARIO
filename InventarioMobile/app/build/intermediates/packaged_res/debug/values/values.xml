@@ -156,7 +156,12 @@
     <string name="no_patrimonios_found">Nenhum patrimônio encontrado</string>
     <string name="no_server_found">Nenhum servidor acessível encontrado</string>
     <string name="observacoes">Observações</string>
+    <string name="offline">OFFLINE</string>
+    <string name="offline_mode">Modo Offline</string>
+    <string name="offline_mode_active">Operando em modo offline</string>
     <string name="ok">OK</string>
+    <string name="online">ONLINE</string>
+    <string name="online_mode_active">Conectado ao servidor</string>
     <string name="password_hint">Senha</string>
     <string name="patrimonio_info">Informações do Patrimônio</string>
     <string name="patrimonio_number">Patrimônio</string>

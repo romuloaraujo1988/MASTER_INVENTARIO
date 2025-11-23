@@ -7,6 +7,7 @@ import com.inventario.mobile.data.model.Coleta
 import com.inventario.mobile.domain.usecase.BuscarColetasUseCase
 import com.inventario.mobile.domain.usecase.ObterUsuarioAtualUseCase
 import com.inventario.mobile.domain.usecase.RemoverColetaUseCase
+import com.inventario.mobile.domain.usecase.FonteDados
 import com.inventario.mobile.presentation.state.CollectionViewState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -94,11 +95,15 @@ class CollectionViewViewModelClean @Inject constructor(
                 Log.d(TAG, "ID: $usuarioAtualId")
                 Log.d(TAG, "═══════════════════════════════════════════")
                 
-                // Buscar coletas
-                buscarColetasUseCase().fold(
-                    onSuccess = { coletas ->
+                // ✅ Buscar coletas com fallback automático (funciona offline)
+                buscarColetasComFallbackUseCase().fold(
+                    onSuccess = { resultado ->
+                        val coletas = resultado.coletas
+                        val fonte = resultado.fonte
+                        
                         Log.d(TAG, "═══════════════════════════════════════════")
-                        Log.d(TAG, "COLETAS CARREGADAS DO BANCO")
+                        Log.d(TAG, "COLETAS CARREGADAS")
+                        Log.d(TAG, "Fonte: ${if (fonte == FonteDados.SERVIDOR) "SERVIDOR" else "LOCAL (OFFLINE)"}")
                         Log.d(TAG, "Total de coletas: ${coletas.size}")
                         coletas.take(5).forEach { coleta ->
                             Log.d(TAG, "  Coleta ID=${coleta.id}, patrimonioId=${coleta.patrimonioId}, " +

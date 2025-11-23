@@ -8,6 +8,7 @@ import com.inventario.mobile.data.remote.api.PatrimonioApi
 import com.inventario.mobile.network.DeviceInfoInterceptor
 import com.inventario.mobile.utils.PreferencesManager
 import com.inventario.mobile.utils.ServerConfigManager
+import com.inventario.mobile.utils.OfflineNotificationManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -73,13 +74,15 @@ object ApiModule {
         @ApplicationContext context: Context,
         loggingInterceptor: HttpLoggingInterceptor,
         authInterceptor: Interceptor,
-        deviceInfoInterceptor: DeviceInfoInterceptor
+        deviceInfoInterceptor: DeviceInfoInterceptor,
+        offlineFallbackInterceptor: com.inventario.mobile.network.OfflineFallbackInterceptor
     ): OkHttpClient {
         val cacheSize = 10 * 1024 * 1024L
         val cache = okhttp3.Cache(context.cacheDir, cacheSize)
         
         return OkHttpClient.Builder()
             .cache(cache)
+            .addInterceptor(offlineFallbackInterceptor)  // ← Primeiro: detecta falhas de conexão
             .addInterceptor(deviceInfoInterceptor)
             .addInterceptor(authInterceptor)
             .addInterceptor(loggingInterceptor)
@@ -92,6 +95,19 @@ object ApiModule {
             .followSslRedirects(true)
             .connectionPool(okhttp3.ConnectionPool(5, 5, TimeUnit.MINUTES))
             .build()
+    }
+    
+    /**
+     * Fornece interceptor de fallback offline
+     */
+    @Provides
+    @Singleton
+    fun provideOfflineFallbackInterceptor(
+        @ApplicationContext context: Context,
+        preferencesManager: PreferencesManager,
+        offlineNotificationManager: OfflineNotificationManager
+    ): com.inventario.mobile.network.OfflineFallbackInterceptor {
+        return com.inventario.mobile.network.OfflineFallbackInterceptor(context, preferencesManager, offlineNotificationManager)
     }
     
     /**

@@ -2,87 +2,58 @@ package com.inventario.mobile.ui.components
 
 import android.app.Activity
 import android.view.View
-import android.view.ViewGroup
 import android.widget.LinearLayout
+import androidx.lifecycle.lifecycleScope
 import com.inventario.mobile.R
-import com.inventario.mobile.utils.PreferencesManager
+import com.inventario.mobile.utils.NetworkMonitor
+import kotlinx.coroutines.launch
 
 /**
- * Componente para exibir indicador de modo offline na barra superior
+ * Componente para mostrar indicador de modo offline na toolbar
  */
 object OfflineIndicator {
     
     /**
-     * Adiciona o indicador de modo offline ao layout da Activity
-     * Deve ser chamado após setContentView()
-     * 
-     * @param activity Activity onde o indicador será adicionado
-     * @return View do indicador (para controle manual se necessário)
+     * Configura o indicador de modo offline na Activity
      */
-    fun setup(activity: Activity): View? {
-        try {
-            val prefsManager = PreferencesManager(activity)
-            val isOfflineMode = prefsManager.isForceOfflineMode()
-            
-            // Buscar o root layout da activity
-            val rootView = activity.findViewById<ViewGroup>(android.R.id.content)
-            val activityRoot = rootView.getChildAt(0) as? ViewGroup
-            
-            if (activityRoot != null) {
-                // Inflar o indicador
-                val indicator = activity.layoutInflater.inflate(
-                    R.layout.view_offline_indicator,
-                    activityRoot,
-                    false
-                )
-                
-                // Adicionar no topo do layout
-                activityRoot.addView(indicator, 0)
-                
-                // Mostrar/ocultar baseado no modo offline
-                indicator.visibility = if (isOfflineMode) View.VISIBLE else View.GONE
-                
-                android.util.Log.d("OfflineIndicator", "Indicador adicionado - Modo offline: $isOfflineMode")
-                
-                return indicator
-            } else {
-                android.util.Log.w("OfflineIndicator", "Não foi possível encontrar o root layout")
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("OfflineIndicator", "Erro ao adicionar indicador", e)
+    fun setup(activity: Activity) {
+        val offlineIndicator = activity.findViewById<LinearLayout>(R.id.offline_indicator)
+        
+        if (offlineIndicator == null) {
+            android.util.Log.w("OfflineIndicator", "Indicador offline não encontrado no layout")
+            return
         }
         
-        return null
+        val networkMonitor = NetworkMonitor.getInstance(activity)
+        
+        // Verificar estado inicial
+        updateIndicator(offlineIndicator, networkMonitor.isConnected())
+        
+        // Observar mudanças de conectividade
+        if (activity is androidx.lifecycle.LifecycleOwner) {
+            activity.lifecycleScope.launch {
+                networkMonitor.observeConnectivity().collect { isConnected ->
+                    android.util.Log.d("OfflineIndicator", "Conexão mudou: ${if (isConnected) "ONLINE" else "OFFLINE"}")
+                    updateIndicator(offlineIndicator, isConnected)
+                }
+            }
+        }
     }
     
     /**
      * Atualiza a visibilidade do indicador
-     * 
-     * @param activity Activity onde o indicador está
-     * @param show true para mostrar, false para ocultar
      */
-    fun updateVisibility(activity: Activity, show: Boolean) {
-        try {
-            val rootView = activity.findViewById<ViewGroup>(android.R.id.content)
-            val activityRoot = rootView.getChildAt(0) as? ViewGroup
-            
-            activityRoot?.findViewById<View>(R.id.offlineIndicatorBar)?.let { indicator ->
-                indicator.visibility = if (show) View.VISIBLE else View.GONE
-                android.util.Log.d("OfflineIndicator", "Visibilidade atualizada: ${if (show) "VISIBLE" else "GONE"}")
+    private fun updateIndicator(indicator: LinearLayout, isConnected: Boolean) {
+        indicator.post {
+            if (isConnected) {
+                // Online - esconder indicador
+                indicator.visibility = View.GONE
+                android.util.Log.d("OfflineIndicator", "✅ Online - indicador oculto")
+            } else {
+                // Offline - mostrar indicador
+                indicator.visibility = View.VISIBLE
+                android.util.Log.d("OfflineIndicator", "📴 Offline - indicador visível")
             }
-        } catch (e: Exception) {
-            android.util.Log.e("OfflineIndicator", "Erro ao atualizar visibilidade", e)
         }
-    }
-    
-    /**
-     * Verifica e atualiza o indicador baseado nas preferências
-     * 
-     * @param activity Activity onde o indicador está
-     */
-    fun refresh(activity: Activity) {
-        val prefsManager = PreferencesManager(activity)
-        val isOfflineMode = prefsManager.isForceOfflineMode()
-        updateVisibility(activity, isOfflineMode)
     }
 }

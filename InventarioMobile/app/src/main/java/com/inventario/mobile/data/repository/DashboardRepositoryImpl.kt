@@ -69,6 +69,41 @@ class DashboardRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+    
+    override suspend fun buscarEstatisticasLocais(inventarioId: Int?): Result<com.inventario.mobile.domain.model.DashboardStats> {
+        return try {
+            Log.d(TAG, "═══ BUSCAR ESTATÍSTICAS LOCAIS (OFFLINE) ═══")
+            Log.d(TAG, "Inventário ID: $inventarioId")
+            
+            // TODO: Implementar busca no banco local (Room)
+            // Por enquanto, retornar estatísticas vazias
+            Log.w(TAG, "⚠️ Busca local ainda não implementada - retornando dados vazios")
+            
+            val emptyStats = com.inventario.mobile.domain.model.DashboardStats(
+                totalPatrimonios = 0,
+                totalColetados = 0,
+                totalPendentes = 0,
+                percentualConclusao = 0.0,
+                coletoresAtivos = 0,
+                divergencias = 0,
+                valorTotal = 0.0,
+                inventarioId = inventarioId,
+                inventarioNome = null,
+                coletasHoje = 0,
+                coletasSemana = 0,
+                coletasMes = 0,
+                tempoMedioColeta = 0.0,
+                isOfflineData = true
+            )
+            
+            Log.d(TAG, "═══ RETORNANDO DADOS VAZIOS (OFFLINE) ═══")
+            Result.success(emptyStats)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao buscar estatísticas locais", e)
+            Result.failure(e)
+        }
+    }
 
     
     override suspend fun buscarEvolucaoColetas(

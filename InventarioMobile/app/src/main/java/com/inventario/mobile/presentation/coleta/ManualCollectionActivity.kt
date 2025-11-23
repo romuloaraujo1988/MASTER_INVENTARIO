@@ -7,20 +7,21 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.snackbar.Snackbar
 import com.inventario.mobile.databinding.ActivityManualCollectionBinding
 import com.inventario.mobile.utils.PreferencesManager
 import com.inventario.mobile.utils.NavigationHelper
 import com.inventario.mobile.utils.SoundUtils
 import com.inventario.mobile.utils.VoiceSearchManager
 import com.inventario.mobile.presentation.dialog.EstadoPatrimonioDialog
+import com.inventario.mobile.ui.base.BaseOfflineActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class ManualCollectionActivity : AppCompatActivity() {
+class ManualCollectionActivity : BaseOfflineActivity() {
 
     private lateinit var binding: ActivityManualCollectionBinding
     private val viewModel: ManualCollectionViewModel by viewModels()
@@ -356,5 +357,37 @@ class ManualCollectionActivity : AppCompatActivity() {
     override fun onDestroy() {
         voiceSearchManager?.destroy()
         super.onDestroy()
+    }
+    
+    // ========== CALLBACKS DE CONECTIVIDADE ==========
+    
+    /**
+     * Chamado quando a conexão é restaurada
+     * Permite validações online
+     */
+    override fun onConnectivityRestored() {
+        Log.d("ManualCollectionActivity", "✓ Conexão restaurada! Validações online disponíveis...")
+        
+        Snackbar.make(
+            binding.root,
+            "Conexão restaurada. Validações online ativas.",
+            Snackbar.LENGTH_SHORT
+        ).show()
+    }
+    
+    /**
+     * Chamado quando a conexão é perdida
+     * Usa apenas validações locais
+     */
+    override fun onConnectivityLost() {
+        Log.d("ManualCollectionActivity", "⚠️ Conexão perdida! Usando validações locais...")
+        
+        Snackbar.make(
+            binding.root,
+            "Sem conexão. Usando dados locais para busca.",
+            Snackbar.LENGTH_LONG
+        ).setAction("OK") {
+            // Dismiss
+        }.show()
     }
 }

@@ -233,18 +233,27 @@ object NetworkModule {
             response
         }
         
+        // Interceptor para tratar timeouts graciosamente
+        val timeoutFallbackInterceptor = com.inventario.mobile.network.TimeoutFallbackInterceptor()
+        
+        // ✅ Interceptor para renovação automática de token
+        val preferencesManager = com.inventario.mobile.utils.PreferencesManager(context)
+        val refreshTokenInterceptor = com.inventario.mobile.network.RefreshTokenInterceptor(preferencesManager)
+        
         return OkHttpClient.Builder()
             .cache(cache)  // Cache HTTP
+            .addInterceptor(refreshTokenInterceptor)  // ✅ Renovação de token (PRIMEIRO)
+            .addInterceptor(timeoutFallbackInterceptor)  // Timeout handling
             .addInterceptor(rawResponseInterceptor)  // Log da resposta
             .addInterceptor(deviceInfoInterceptor)  // Device info
             .addInterceptor(authInterceptor)  // Auth
             .addInterceptor(loggingInterceptor)  // Log por último para ver todos os headers
-            // Timeouts aumentados para sincronização de grandes volumes
-            .connectTimeout(45, TimeUnit.SECONDS)  
-            .readTimeout(120, TimeUnit.SECONDS)    // Aumentado para 120s (patrimônios grandes)
-            .writeTimeout(60, TimeUnit.SECONDS)    
-            .callTimeout(180, TimeUnit.SECONDS)    // Timeout total de 3 minutos
-            .retryOnConnectionFailure(true)
+            // Timeouts ajustados para permitir carregamento de coletas
+            .connectTimeout(5, TimeUnit.SECONDS)   // 5s para conectar
+            .readTimeout(30, TimeUnit.SECONDS)     // 30s para ler dados (aumentado para coletas)
+            .writeTimeout(15, TimeUnit.SECONDS)    // 15s para escrever
+            .callTimeout(35, TimeUnit.SECONDS)     // 35s timeout total
+            .retryOnConnectionFailure(false)       // Não retry automático (fallback manual)
             // Configurações adicionais para Android 14
             .followRedirects(true)
             .followSslRedirects(true)

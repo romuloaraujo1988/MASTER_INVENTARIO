@@ -92,6 +92,7 @@ drawable ic_download
 drawable ic_edit
 drawable ic_error
 drawable ic_filter
+drawable ic_fingerprint
 drawable ic_home
 drawable ic_inventory
 drawable ic_list
@@ -101,6 +102,8 @@ drawable ic_mic
 drawable ic_mic_off
 drawable ic_money
 drawable ic_notification
+drawable ic_offline
+drawable ic_online
 drawable ic_pending
 drawable ic_people
 drawable ic_person
@@ -119,6 +122,7 @@ drawable ic_update
 drawable ic_warning
 drawable ic_warning_circle
 drawable info_background
+drawable offline_indicator_background
 drawable pin_dot
 drawable progress_bar_rounded
 drawable rounded_background_secondary
@@ -189,6 +193,7 @@ id btnScanQr
 id btnSearch
 id btnShowRecommendations
 id btnSyncAll
+id btnSyncColetas
 id btnSyncNow
 id btnSyncPendingColetas
 id btnTestBiometric
@@ -221,6 +226,7 @@ id cardHeader
 id cardInput
 id cardInventory
 id cardLastSync
+id cardOfflineIndicator
 id cardOfflineMode
 id cardPatrimonioInfo
 id cardRequirements
@@ -273,6 +279,7 @@ id etPatrimonioNumber
 id etSearch
 id etServerIp
 id fabBackToDashboard
+id fabBiometric
 id fabExport
 id fabScanQr
 id fabSearch
@@ -322,7 +329,9 @@ id nav_statistics
 id nav_sync
 id nav_view
 id nav_voice_search
-id offlineIndicatorBar
+id offline_icon
+id offline_indicator
+id offline_text
 id pinDot1
 id pinDot2
 id pinDot3
@@ -446,6 +455,8 @@ id tvNoOfflineMethod
 id tvNoResultsMessage
 id tvNumeroSerie
 id tvObservacoes
+id tvOfflineDetails
+id tvOfflineMessage
 id tvOfflineMode
 id tvOfflineModeMessage
 id tvOfflineStatus
@@ -485,9 +496,7 @@ id tvScanInstruction
 id tvSearchTime
 id tvStatus
 id tvStatusColeta
-id tvStatusIcon
 id tvStatusMessage
-id tvStatusText
 id tvSubtitle
 id tvSugestoes
 id tvSummary
@@ -663,7 +672,12 @@ string no_descriptions_found
 string no_patrimonios_found
 string no_server_found
 string observacoes
+string offline
+string offline_mode
+string offline_mode_active
 string ok
+string online
+string online_mode_active
 string password_hint
 string patrimonio_info
 string patrimonio_number

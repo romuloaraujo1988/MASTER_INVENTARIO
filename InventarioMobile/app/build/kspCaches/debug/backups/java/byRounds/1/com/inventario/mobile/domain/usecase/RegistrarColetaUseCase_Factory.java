@@ -1,5 +1,6 @@
 package com.inventario.mobile.domain.usecase;
 
+import com.inventario.mobile.data.local.LocalDataManager;
 import com.inventario.mobile.domain.repository.ColetaRepository;
 import com.inventario.mobile.domain.repository.PatrimonioRepository;
 import dagger.internal.DaggerGenerated;
@@ -27,25 +28,30 @@ public final class RegistrarColetaUseCase_Factory implements Factory<RegistrarCo
 
   private final Provider<PatrimonioRepository> patrimonioRepositoryProvider;
 
+  private final Provider<LocalDataManager> localDataManagerProvider;
+
   public RegistrarColetaUseCase_Factory(Provider<ColetaRepository> coletaRepositoryProvider,
-      Provider<PatrimonioRepository> patrimonioRepositoryProvider) {
+      Provider<PatrimonioRepository> patrimonioRepositoryProvider,
+      Provider<LocalDataManager> localDataManagerProvider) {
     this.coletaRepositoryProvider = coletaRepositoryProvider;
     this.patrimonioRepositoryProvider = patrimonioRepositoryProvider;
+    this.localDataManagerProvider = localDataManagerProvider;
   }
 
   @Override
   public RegistrarColetaUseCase get() {
-    return newInstance(coletaRepositoryProvider.get(), patrimonioRepositoryProvider.get());
+    return newInstance(coletaRepositoryProvider.get(), patrimonioRepositoryProvider.get(), localDataManagerProvider.get());
   }
 
   public static RegistrarColetaUseCase_Factory create(
       Provider<ColetaRepository> coletaRepositoryProvider,
-      Provider<PatrimonioRepository> patrimonioRepositoryProvider) {
-    return new RegistrarColetaUseCase_Factory(coletaRepositoryProvider, patrimonioRepositoryProvider);
+      Provider<PatrimonioRepository> patrimonioRepositoryProvider,
+      Provider<LocalDataManager> localDataManagerProvider) {
+    return new RegistrarColetaUseCase_Factory(coletaRepositoryProvider, patrimonioRepositoryProvider, localDataManagerProvider);
   }
 
   public static RegistrarColetaUseCase newInstance(ColetaRepository coletaRepository,
-      PatrimonioRepository patrimonioRepository) {
-    return new RegistrarColetaUseCase(coletaRepository, patrimonioRepository);
+      PatrimonioRepository patrimonioRepository, LocalDataManager localDataManager) {
+    return new RegistrarColetaUseCase(coletaRepository, patrimonioRepository, localDataManager);
   }
 }

@@ -24,8 +24,10 @@ import hilt_aggregated_deps._com_inventario_mobile_di_AppModule;
 import hilt_aggregated_deps._com_inventario_mobile_di_DashboardModule;
 import hilt_aggregated_deps._com_inventario_mobile_di_DatabaseModule;
 import hilt_aggregated_deps._com_inventario_mobile_di_MapperModule;
+import hilt_aggregated_deps._com_inventario_mobile_di_NotificationModule;
 import hilt_aggregated_deps._com_inventario_mobile_di_RepositoryModule;
 import hilt_aggregated_deps._com_inventario_mobile_di_SyncModule;
+import hilt_aggregated_deps._com_inventario_mobile_di_UseCaseModule;
 import hilt_aggregated_deps._com_inventario_mobile_di_UtilModule;
 import hilt_aggregated_deps._com_inventario_mobile_presentation_charts_ChartsFragment_GeneratedInjector;
 import hilt_aggregated_deps._com_inventario_mobile_presentation_charts_ChartsViewModel_HiltModules_BindsModule;
@@ -49,6 +51,7 @@ import hilt_aggregated_deps._com_inventario_mobile_presentation_descricao_Descri
 import hilt_aggregated_deps._com_inventario_mobile_presentation_descricao_DescricaoSelectionViewModelClean_HiltModules_KeyModule;
 import hilt_aggregated_deps._com_inventario_mobile_presentation_main_MainActivity_GeneratedInjector;
 import hilt_aggregated_deps._com_inventario_mobile_presentation_sala_SalaSelectionActivity_GeneratedInjector;
+import hilt_aggregated_deps._com_inventario_mobile_presentation_scanner_ScannerActivity_GeneratedInjector;
 import hilt_aggregated_deps._com_inventario_mobile_presentation_statistics_ChartsFragment_GeneratedInjector;
 import hilt_aggregated_deps._com_inventario_mobile_presentation_statistics_ExportFragment_GeneratedInjector;
 import hilt_aggregated_deps._com_inventario_mobile_presentation_statistics_OverviewFragment_GeneratedInjector;
@@ -60,7 +63,9 @@ import hilt_aggregated_deps._com_inventario_mobile_presentation_sync_SyncViewMod
 import hilt_aggregated_deps._com_inventario_mobile_presentation_validation_ValidationExampleFragment_GeneratedInjector;
 import hilt_aggregated_deps._com_inventario_mobile_presentation_validation_ValidationViewModel_HiltModules_BindsModule;
 import hilt_aggregated_deps._com_inventario_mobile_presentation_validation_ValidationViewModel_HiltModules_KeyModule;
+import hilt_aggregated_deps._com_inventario_mobile_ui_base_BaseOfflineActivity_GeneratedInjector;
 import hilt_aggregated_deps._com_inventario_mobile_ui_coleta_ColetaActivity_GeneratedInjector;
+import hilt_aggregated_deps._com_inventario_mobile_ui_splash_SplashActivity_GeneratedInjector;
 import hilt_aggregated_deps._com_inventario_mobile_worker_BackupWorker_HiltModule;
 import hilt_aggregated_deps._com_inventario_mobile_worker_ColetaSyncWorker_HiltModule;
 import hilt_aggregated_deps._com_inventario_mobile_worker_DatabaseBackupWorker_HiltModule;
@@ -111,8 +116,10 @@ import hilt_aggregated_deps._dagger_hilt_android_internal_modules_HiltWrapper_Ac
         _com_inventario_mobile_di_DashboardModule.class,
         _com_inventario_mobile_di_DatabaseModule.class,
         _com_inventario_mobile_di_MapperModule.class,
+        _com_inventario_mobile_di_NotificationModule.class,
         _com_inventario_mobile_di_RepositoryModule.class,
         _com_inventario_mobile_di_SyncModule.class,
+        _com_inventario_mobile_di_UseCaseModule.class,
         _com_inventario_mobile_di_UtilModule.class,
         _com_inventario_mobile_presentation_charts_ChartsFragment_GeneratedInjector.class,
         _com_inventario_mobile_presentation_charts_ChartsViewModel_HiltModules_BindsModule.class,
@@ -136,6 +143,7 @@ import hilt_aggregated_deps._dagger_hilt_android_internal_modules_HiltWrapper_Ac
         _com_inventario_mobile_presentation_descricao_DescricaoSelectionViewModelClean_HiltModules_KeyModule.class,
         _com_inventario_mobile_presentation_main_MainActivity_GeneratedInjector.class,
         _com_inventario_mobile_presentation_sala_SalaSelectionActivity_GeneratedInjector.class,
+        _com_inventario_mobile_presentation_scanner_ScannerActivity_GeneratedInjector.class,
         _com_inventario_mobile_presentation_statistics_ChartsFragment_GeneratedInjector.class,
         _com_inventario_mobile_presentation_statistics_ExportFragment_GeneratedInjector.class,
         _com_inventario_mobile_presentation_statistics_OverviewFragment_GeneratedInjector.class,
@@ -147,7 +155,9 @@ import hilt_aggregated_deps._dagger_hilt_android_internal_modules_HiltWrapper_Ac
         _com_inventario_mobile_presentation_validation_ValidationExampleFragment_GeneratedInjector.class,
         _com_inventario_mobile_presentation_validation_ValidationViewModel_HiltModules_BindsModule.class,
         _com_inventario_mobile_presentation_validation_ValidationViewModel_HiltModules_KeyModule.class,
+        _com_inventario_mobile_ui_base_BaseOfflineActivity_GeneratedInjector.class,
         _com_inventario_mobile_ui_coleta_ColetaActivity_GeneratedInjector.class,
+        _com_inventario_mobile_ui_splash_SplashActivity_GeneratedInjector.class,
         _com_inventario_mobile_worker_BackupWorker_HiltModule.class,
         _com_inventario_mobile_worker_ColetaSyncWorker_HiltModule.class,
         _com_inventario_mobile_worker_DatabaseBackupWorker_HiltModule.class,

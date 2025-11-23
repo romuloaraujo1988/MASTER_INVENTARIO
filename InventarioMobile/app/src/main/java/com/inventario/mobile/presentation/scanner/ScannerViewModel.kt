@@ -11,10 +11,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel para Scanner de QR Code
+ * ✅ Agora usa RegistrarColetaUseCase obrigatório (UNIFICADO com coleta manual)
+ */
 class ScannerViewModel(
     private val inventarioRepository: InventarioRepository,
     private val preferencesManager: PreferencesManager,
-    private val registrarColetaUseCase: com.inventario.mobile.domain.usecase.RegistrarColetaUseCase? = null
+    private val registrarColetaUseCase: com.inventario.mobile.domain.usecase.RegistrarColetaUseCase
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(ScannerUiState())
@@ -335,23 +339,20 @@ class ScannerViewModel(
                 
                 Log.d("ScannerViewModel", "Patrimônio encontrado: ${patrimonio.numeroPatrimonio}")
                 
-                // Usar RegistrarColetaUseCase (mesma estrutura da coleta manual)
-                val result = if (registrarColetaUseCase != null) {
-                    Log.d("ScannerViewModel", "Usando RegistrarColetaUseCase (Clean Architecture)")
-                    registrarColetaUseCase.invoke(
-                        numeroPatrimonio = patrimonio.numeroPatrimonio,
-                        localizacaoAtual = salaNome,
-                        estadoEncontrado = estadoEncontrado,
-                        observacoes = null
-                    )
-                } else {
-                    Log.d("ScannerViewModel", "Usando InventarioRepository (fallback)")
-                    inventarioRepository.coletarPatrimonioComSala(
-                        patrimonio = patrimonio,
-                        salaNome = salaNome,
-                        estadoEncontrado = estadoEncontrado
-                    )
-                }
+                // ✅ Usar RegistrarColetaUseCase (UNIFICADO com coleta manual)
+                Log.d("ScannerViewModel", "═══════════════════════════════════════")
+                Log.d("ScannerViewModel", "✓ Usando RegistrarColetaUseCase (Clean Architecture - UNIFICADO)")
+                Log.d("ScannerViewModel", "  Patrimônio: ${patrimonio.numeroPatrimonio}")
+                Log.d("ScannerViewModel", "  Sala: $salaNome")
+                Log.d("ScannerViewModel", "  Estado: $estadoEncontrado")
+                Log.d("ScannerViewModel", "═══════════════════════════════════════")
+                
+                val result = registrarColetaUseCase.invoke(
+                    numeroPatrimonio = patrimonio.numeroPatrimonio,
+                    localizacaoAtual = salaNome,
+                    estadoEncontrado = estadoEncontrado,
+                    observacoes = null
+                )
                 
                 result.fold(
                     onSuccess = { coleta ->

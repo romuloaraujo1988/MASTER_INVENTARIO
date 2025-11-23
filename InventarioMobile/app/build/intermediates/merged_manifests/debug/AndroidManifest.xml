@@ -252,19 +252,12 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <activity
-            android:name="pub.devrel.easypermissions.AppSettingsDialogHolderActivity"
-            android:exported="false"
-            android:label=""
-            android:theme="@style/EasyPermissions.Transparent" />
-
+        <!-- Desabilitar inicialização automática do WorkManager -->
+        <!-- Necessário para usar HiltWorkerFactory customizado -->
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="com.inventario.mobile.debug.androidx-startup"
             android:exported="false" >
-            <meta-data
-                android:name="androidx.work.WorkManagerInitializer"
-                android:value="androidx.startup" />
             <meta-data
                 android:name="androidx.emoji2.text.EmojiCompatInitializer"
                 android:value="androidx.startup" />
@@ -275,6 +268,12 @@
                 android:name="androidx.profileinstaller.ProfileInstallerInitializer"
                 android:value="androidx.startup" />
         </provider>
+
+        <activity
+            android:name="pub.devrel.easypermissions.AppSettingsDialogHolderActivity"
+            android:exported="false"
+            android:label=""
+            android:theme="@style/EasyPermissions.Transparent" />
 
         <service
             android:name="androidx.work.impl.background.systemalarm.SystemAlarmService"

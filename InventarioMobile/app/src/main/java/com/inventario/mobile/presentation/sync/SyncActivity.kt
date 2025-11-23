@@ -45,6 +45,12 @@ class SyncActivity : AppCompatActivity() {
     }
     
     private fun setupListeners() {
+        // Sincronizar coletas pendentes
+        binding.btnSyncColetas.setOnClickListener {
+            viewModel.syncPendingColetas()
+        }
+        
+        // Importar dados do servidor
         binding.btnSyncNow.setOnClickListener {
             viewModel.syncFromServer()
         }
@@ -129,7 +135,8 @@ class SyncActivity : AppCompatActivity() {
             getColor(if (isOnline) R.color.success else R.color.error)
         )
         
-        // Habilitar/desabilitar botões
+        // Habilitar/desabilitar botões baseado na conexão
+        binding.btnSyncColetas.isEnabled = isOnline
         binding.btnSyncNow.isEnabled = isOnline
     }
     
@@ -148,6 +155,7 @@ class SyncActivity : AppCompatActivity() {
         binding.progressBar.visibility = View.VISIBLE
         binding.tvSyncProgress.visibility = View.VISIBLE
         binding.tvSyncProgress.text = message
+        binding.btnSyncColetas.isEnabled = false
         binding.btnSyncNow.isEnabled = false
         binding.btnClearData.isEnabled = false
     }

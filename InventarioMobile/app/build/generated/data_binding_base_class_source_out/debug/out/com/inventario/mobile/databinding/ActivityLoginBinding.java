@@ -15,6 +15,7 @@ import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.inventario.mobile.R;
@@ -58,6 +59,9 @@ public final class ActivityLoginBinding implements ViewBinding {
 
   @NonNull
   public final TextInputEditText etServerIp;
+
+  @NonNull
+  public final FloatingActionButton fabBiometric;
 
   @NonNull
   public final ImageView ivLogo;
@@ -116,14 +120,15 @@ public final class ActivityLoginBinding implements ViewBinding {
       @NonNull MaterialCardView cardOfflineMode, @NonNull View divider,
       @NonNull View dividerBiometric, @NonNull TextInputEditText etLogin,
       @NonNull TextInputEditText etPassword, @NonNull TextInputEditText etServerIp,
-      @NonNull ImageView ivLogo, @NonNull ProgressBar progressBar,
-      @NonNull TextInputLayout tilLogin, @NonNull TextInputLayout tilPassword,
-      @NonNull TextInputLayout tilServerIp, @NonNull TextView tvBiometricHint,
-      @NonNull TextView tvBiometricType, @NonNull TextView tvError,
-      @NonNull TextView tvNoOfflineMethod, @NonNull TextView tvOfflineMode,
-      @NonNull TextView tvOfflineModeMessage, @NonNull TextView tvOfflineUsername,
-      @NonNull TextView tvOrDivider, @NonNull TextView tvSavedUser, @NonNull TextView tvSubtitle,
-      @NonNull TextView tvTitle, @NonNull TextView tvVersion) {
+      @NonNull FloatingActionButton fabBiometric, @NonNull ImageView ivLogo,
+      @NonNull ProgressBar progressBar, @NonNull TextInputLayout tilLogin,
+      @NonNull TextInputLayout tilPassword, @NonNull TextInputLayout tilServerIp,
+      @NonNull TextView tvBiometricHint, @NonNull TextView tvBiometricType,
+      @NonNull TextView tvError, @NonNull TextView tvNoOfflineMethod,
+      @NonNull TextView tvOfflineMode, @NonNull TextView tvOfflineModeMessage,
+      @NonNull TextView tvOfflineUsername, @NonNull TextView tvOrDivider,
+      @NonNull TextView tvSavedUser, @NonNull TextView tvSubtitle, @NonNull TextView tvTitle,
+      @NonNull TextView tvVersion) {
     this.rootView = rootView;
     this.btnBiometric = btnBiometric;
     this.btnLogin = btnLogin;
@@ -136,6 +141,7 @@ public final class ActivityLoginBinding implements ViewBinding {
     this.etLogin = etLogin;
     this.etPassword = etPassword;
     this.etServerIp = etServerIp;
+    this.fabBiometric = fabBiometric;
     this.ivLogo = ivLogo;
     this.progressBar = progressBar;
     this.tilLogin = tilLogin;
@@ -248,6 +254,12 @@ public final class ActivityLoginBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.fabBiometric;
+      FloatingActionButton fabBiometric = ViewBindings.findChildViewById(rootView, id);
+      if (fabBiometric == null) {
+        break missingId;
+      }
+
       id = R.id.ivLogo;
       ImageView ivLogo = ViewBindings.findChildViewById(rootView, id);
       if (ivLogo == null) {
@@ -352,10 +364,10 @@ public final class ActivityLoginBinding implements ViewBinding {
 
       return new ActivityLoginBinding((ScrollView) rootView, btnBiometric, btnLogin,
           btnOfflineBiometric, btnOfflinePin, cardBiometric, cardOfflineMode, divider,
-          dividerBiometric, etLogin, etPassword, etServerIp, ivLogo, progressBar, tilLogin,
-          tilPassword, tilServerIp, tvBiometricHint, tvBiometricType, tvError, tvNoOfflineMethod,
-          tvOfflineMode, tvOfflineModeMessage, tvOfflineUsername, tvOrDivider, tvSavedUser,
-          tvSubtitle, tvTitle, tvVersion);
+          dividerBiometric, etLogin, etPassword, etServerIp, fabBiometric, ivLogo, progressBar,
+          tilLogin, tilPassword, tilServerIp, tvBiometricHint, tvBiometricType, tvError,
+          tvNoOfflineMethod, tvOfflineMode, tvOfflineModeMessage, tvOfflineUsername, tvOrDivider,
+          tvSavedUser, tvSubtitle, tvTitle, tvVersion);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

@@ -2,6 +2,7 @@ package com.inventario.mobile.di;
 
 import android.content.Context;
 import com.inventario.mobile.network.DeviceInfoInterceptor;
+import com.inventario.mobile.network.OfflineFallbackInterceptor;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
 import dagger.internal.Preconditions;
@@ -35,31 +36,37 @@ public final class ApiModule_ProvideOkHttpClientFactory implements Factory<OkHtt
 
   private final Provider<DeviceInfoInterceptor> deviceInfoInterceptorProvider;
 
+  private final Provider<OfflineFallbackInterceptor> offlineFallbackInterceptorProvider;
+
   public ApiModule_ProvideOkHttpClientFactory(Provider<Context> contextProvider,
       Provider<HttpLoggingInterceptor> loggingInterceptorProvider,
       Provider<Interceptor> authInterceptorProvider,
-      Provider<DeviceInfoInterceptor> deviceInfoInterceptorProvider) {
+      Provider<DeviceInfoInterceptor> deviceInfoInterceptorProvider,
+      Provider<OfflineFallbackInterceptor> offlineFallbackInterceptorProvider) {
     this.contextProvider = contextProvider;
     this.loggingInterceptorProvider = loggingInterceptorProvider;
     this.authInterceptorProvider = authInterceptorProvider;
     this.deviceInfoInterceptorProvider = deviceInfoInterceptorProvider;
+    this.offlineFallbackInterceptorProvider = offlineFallbackInterceptorProvider;
   }
 
   @Override
   public OkHttpClient get() {
-    return provideOkHttpClient(contextProvider.get(), loggingInterceptorProvider.get(), authInterceptorProvider.get(), deviceInfoInterceptorProvider.get());
+    return provideOkHttpClient(contextProvider.get(), loggingInterceptorProvider.get(), authInterceptorProvider.get(), deviceInfoInterceptorProvider.get(), offlineFallbackInterceptorProvider.get());
   }
 
   public static ApiModule_ProvideOkHttpClientFactory create(Provider<Context> contextProvider,
       Provider<HttpLoggingInterceptor> loggingInterceptorProvider,
       Provider<Interceptor> authInterceptorProvider,
-      Provider<DeviceInfoInterceptor> deviceInfoInterceptorProvider) {
-    return new ApiModule_ProvideOkHttpClientFactory(contextProvider, loggingInterceptorProvider, authInterceptorProvider, deviceInfoInterceptorProvider);
+      Provider<DeviceInfoInterceptor> deviceInfoInterceptorProvider,
+      Provider<OfflineFallbackInterceptor> offlineFallbackInterceptorProvider) {
+    return new ApiModule_ProvideOkHttpClientFactory(contextProvider, loggingInterceptorProvider, authInterceptorProvider, deviceInfoInterceptorProvider, offlineFallbackInterceptorProvider);
   }
 
   public static OkHttpClient provideOkHttpClient(Context context,
       HttpLoggingInterceptor loggingInterceptor, Interceptor authInterceptor,
-      DeviceInfoInterceptor deviceInfoInterceptor) {
-    return Preconditions.checkNotNullFromProvides(ApiModule.INSTANCE.provideOkHttpClient(context, loggingInterceptor, authInterceptor, deviceInfoInterceptor));
+      DeviceInfoInterceptor deviceInfoInterceptor,
+      OfflineFallbackInterceptor offlineFallbackInterceptor) {
+    return Preconditions.checkNotNullFromProvides(ApiModule.INSTANCE.provideOkHttpClient(context, loggingInterceptor, authInterceptor, deviceInfoInterceptor, offlineFallbackInterceptor));
   }
 }

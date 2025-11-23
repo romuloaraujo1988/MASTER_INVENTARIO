@@ -6,22 +6,23 @@ import android.util.Log
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import com.inventario.mobile.R
 import com.inventario.mobile.databinding.ActivitySalaSelectionBinding
 import com.inventario.mobile.presentation.adapter.SalaAdapter
+import com.inventario.mobile.ui.base.BaseOfflineActivity
 import com.inventario.mobile.utils.NavigationHelper
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 /**
  * Activity para seleção de sala
- * Clean Architecture + MVVM + Hilt
+ * Clean Architecture + MVVM + Hilt + Modo Offline Automático
  */
 @AndroidEntryPoint
-class SalaSelectionActivity : AppCompatActivity() {
+class SalaSelectionActivity : BaseOfflineActivity() {
 
     private lateinit var binding: ActivitySalaSelectionBinding
     
@@ -281,6 +282,50 @@ class SalaSelectionActivity : AppCompatActivity() {
                 true
             }
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+    
+    // ========== CALLBACKS DE CONECTIVIDADE ==========
+    
+    /**
+     * Chamado quando a conexão é restaurada
+     * Recarrega salas do servidor
+     */
+    override fun onConnectivityRestored() {
+        Log.d(TAG, "✓ Conexão restaurada! Recarregando salas do servidor...")
+        
+        // Mostrar Snackbar informativo
+        Snackbar.make(
+            binding.root,
+            "Conexão restaurada. Atualizando dados...",
+            Snackbar.LENGTH_SHORT
+        ).show()
+        
+        // Recarregar salas do servidor
+        viewModel.refreshSalas()
+    }
+    
+    /**
+     * Chamado quando a conexão é perdida
+     * Usa apenas dados locais
+     */
+    override fun onConnectivityLost() {
+        Log.d(TAG, "⚠️ Conexão perdida! Usando dados locais...")
+        
+        // Mostrar Snackbar informativo
+        Snackbar.make(
+            binding.root,
+            "Sem conexão. Usando dados locais.",
+            Snackbar.LENGTH_LONG
+        ).setAction("OK") {
+            // Dismiss
+        }.show()
+        
+        // Garantir que está usando dados locais
+        // O ViewModel já deve estar configurado para fallback automático
+        if (allSalas.isEmpty()) {
+            // Se não há salas carregadas, tentar carregar do banco local
+            viewModel.loadSalas()
         }
     }
 }

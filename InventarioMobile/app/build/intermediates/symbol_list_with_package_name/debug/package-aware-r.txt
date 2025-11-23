@@ -3132,6 +3132,7 @@ drawable ic_download
 drawable ic_edit
 drawable ic_error
 drawable ic_filter
+drawable ic_fingerprint
 drawable ic_home
 drawable ic_inventory
 drawable ic_keyboard_black_24dp
@@ -3149,6 +3150,8 @@ drawable ic_mtrl_chip_checked_black
 drawable ic_mtrl_chip_checked_circle
 drawable ic_mtrl_chip_close_circle
 drawable ic_notification
+drawable ic_offline
+drawable ic_online
 drawable ic_pending
 drawable ic_people
 drawable ic_person
@@ -3241,6 +3244,7 @@ drawable notification_template_icon_bg
 drawable notification_template_icon_low_bg
 drawable notification_tile_bg
 drawable notify_panel_notification_icon_bg
+drawable offline_indicator_background
 drawable pin_dot
 drawable progress_bar_rounded
 drawable rounded_background_secondary
@@ -3413,6 +3417,7 @@ id btnScanQr
 id btnSearch
 id btnShowRecommendations
 id btnSyncAll
+id btnSyncColetas
 id btnSyncNow
 id btnSyncPendingColetas
 id btnTestBiometric
@@ -3449,6 +3454,7 @@ id cardHeader
 id cardInput
 id cardInventory
 id cardLastSync
+id cardOfflineIndicator
 id cardOfflineMode
 id cardPatrimonioInfo
 id cardRequirements
@@ -3582,6 +3588,7 @@ id exitUntilCollapsed
 id expand_activities_button
 id expanded_menu
 id fabBackToDashboard
+id fabBiometric
 id fabExport
 id fabScanQr
 id fabSearch
@@ -3777,7 +3784,9 @@ id notification_background
 id notification_main_column
 id notification_main_column_container
 id off
-id offlineIndicatorBar
+id offline_icon
+id offline_indicator
+id offline_text
 id on
 id onAttachStateChangeListener
 id onDateChanged
@@ -4060,6 +4069,8 @@ id tvNoOfflineMethod
 id tvNoResultsMessage
 id tvNumeroSerie
 id tvObservacoes
+id tvOfflineDetails
+id tvOfflineMessage
 id tvOfflineMode
 id tvOfflineModeMessage
 id tvOfflineStatus
@@ -4099,9 +4110,7 @@ id tvScanInstruction
 id tvSearchTime
 id tvStatus
 id tvStatusColeta
-id tvStatusIcon
 id tvStatusMessage
-id tvStatusText
 id tvSubtitle
 id tvSugestoes
 id tvSummary
@@ -4698,7 +4707,12 @@ string no_descriptions_found
 string no_patrimonios_found
 string no_server_found
 string observacoes
+string offline
+string offline_mode
+string offline_mode_active
 string ok
+string online
+string online_mode_active
 string password_hint
 string password_toggle_content_description
 string path_password_eye

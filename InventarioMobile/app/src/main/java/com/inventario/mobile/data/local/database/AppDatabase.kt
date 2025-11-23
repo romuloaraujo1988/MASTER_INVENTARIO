@@ -21,7 +21,7 @@ import com.inventario.mobile.data.local.entity.*
         SyncLogEntity::class,
         LogColetaEntity::class  // v2.2: Log de auditoria
     ],
-    version = 6,  // v2.2: Incrementado para incluir log_coleta
+    version = 7,  // v2.3: Incrementado para corrigir estrutura da tabela patrimonio
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -37,6 +37,54 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
+        
+        /**
+         * Migração da versão 6 para 7
+         * Corrige estrutura da tabela patrimonio (numeroSerie)
+         */
+        private val MIGRATION_6_7 = object : androidx.room.migration.Migration(6, 7) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                // Recriar tabela patrimonio com estrutura correta
+                database.execSQL("DROP TABLE IF EXISTS patrimonio")
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS patrimonio (
+                        id INTEGER PRIMARY KEY NOT NULL,
+                        numero TEXT NOT NULL,
+                        numeroPatrimonio TEXT NOT NULL,
+                        descricao TEXT NOT NULL,
+                        marca TEXT,
+                        modelo TEXT,
+                        numeroSerie TEXT,
+                        estado TEXT,
+                        valor REAL,
+                        setorId INTEGER,
+                        setorNome TEXT,
+                        idSala INTEGER,
+                        nomeSala TEXT,
+                        salaId INTEGER,
+                        salaNome TEXT,
+                        idResponsavel INTEGER,
+                        nomeResponsavel TEXT,
+                        responsavelId INTEGER,
+                        responsavelNome TEXT,
+                        status TEXT,
+                        coletado INTEGER NOT NULL DEFAULT 0,
+                        dataColeta INTEGER,
+                        coletadoPor TEXT,
+                        observacoesColeta TEXT,
+                        observacoes TEXT,
+                        dataUltimaAtualizacao INTEGER NOT NULL
+                    )
+                """)
+                
+                // Recriar índices
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_patrimonio_numero ON patrimonio(numero)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_numeroPatrimonio ON patrimonio(numeroPatrimonio)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_descricao ON patrimonio(descricao)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_idSala ON patrimonio(idSala)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_coletado ON patrimonio(coletado)")
+            }
+        }
         
         /**
          * Migração da versão 5 para 6
@@ -103,7 +151,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "inventario_offline.db"
                 )
-                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6)  // v2.2: Adicionar migração 5->6
+                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)  // v2.3: Adicionar migração 6->7
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

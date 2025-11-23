@@ -7,8 +7,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import androidx.annotation.CallSuper;
 import androidx.annotation.MainThread;
-import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import com.inventario.mobile.ui.base.BaseOfflineFragment;
 import dagger.hilt.android.flags.FragmentGetContextFix;
 import dagger.hilt.android.internal.lifecycle.DefaultViewModelFactories;
 import dagger.hilt.android.internal.managers.FragmentComponentManager;
@@ -24,7 +24,7 @@ import javax.annotation.processing.Generated;
  * A generated base class to be extended by the @dagger.hilt.android.AndroidEntryPoint annotated class. If using the Gradle plugin, this is swapped as the base class via bytecode transformation.
  */
 @Generated("dagger.hilt.android.processor.internal.androidentrypoint.FragmentGenerator")
-public abstract class Hilt_DashboardFragment extends Fragment implements GeneratedComponentManagerHolder {
+public abstract class Hilt_DashboardFragment extends BaseOfflineFragment implements GeneratedComponentManagerHolder {
   private ContextWrapper componentContext;
 
   private boolean disableGetContextFix;
@@ -34,14 +34,6 @@ public abstract class Hilt_DashboardFragment extends Fragment implements Generat
   private final Object componentManagerLock = new Object();
 
   private boolean injected = false;
-
-  Hilt_DashboardFragment() {
-    super();
-  }
-
-  Hilt_DashboardFragment(int p0) {
-    super(p0);
-  }
 
   @Override
   @CallSuper

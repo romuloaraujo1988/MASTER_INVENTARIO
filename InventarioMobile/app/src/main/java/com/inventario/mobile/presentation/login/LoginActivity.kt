@@ -24,11 +24,18 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var viewModel: LoginViewModel
     private lateinit var biometricManager: com.inventario.mobile.security.BiometricAuthManager
     private lateinit var preferencesManager: PreferencesManager
+    
+    companion object {
+        private const val REQUEST_NOTIFICATION_PERMISSION = 1001
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        
+        // Solicitar permissão de notificações (Android 13+)
+        requestNotificationPermission()
 
         // Inicializar managers usando Singleton
         preferencesManager = PreferencesManager(this)
@@ -82,10 +89,26 @@ class LoginActivity : AppCompatActivity() {
 
         // Configurar botão de login
         binding.btnLogin.setOnClickListener {
+            // ✅ GARANTIR QUE OS CAMPOS SEJAM LIDOS NO MOMENTO DO CLIQUE
+            val loginText = binding.etLogin.text.toString().trim()
+            val passwordText = binding.etPassword.text.toString().trim()
+            val ipText = binding.etServerIp.text.toString().trim()
+            
+            android.util.Log.d("LoginActivity", "═══════════════════════════════════════")
+            android.util.Log.d("LoginActivity", "BOTÃO LOGIN CLICADO")
+            android.util.Log.d("LoginActivity", "Login digitado: '$loginText'")
+            android.util.Log.d("LoginActivity", "Senha digitada: ${if (passwordText.isNotEmpty()) "***" else "(vazio)"}")
+            android.util.Log.d("LoginActivity", "IP digitado: '$ipText'")
+            android.util.Log.d("LoginActivity", "═══════════════════════════════════════")
+            
+            // Atualizar ViewModel com valores atuais dos campos
+            viewModel.updateLogin(loginText)
+            viewModel.updatePassword(passwordText)
+            viewModel.updateServerIp(ipText)
+            
             // Garantir que baseUrl atual está salva antes de criar cliente
-            val currentIp = binding.etServerIp.text.toString().trim()
-            if (currentIp.isNotBlank()) {
-                serverConfigManager.setServerIp(currentIp)
+            if (ipText.isNotBlank()) {
+                serverConfigManager.setServerIp(ipText)
                 // Forçar recriação do ApiService com nova URL
                 com.inventario.mobile.data.remote.api.ApiClient.recreateApiService(this)
             }
@@ -98,6 +121,11 @@ class LoginActivity : AppCompatActivity() {
             authenticateWithBiometric()
         }
         binding.cardBiometric?.setOnClickListener {
+            authenticateWithBiometric()
+        }
+        
+        // ========== CONFIGURAR FAB DE BIOMETRIA ==========
+        binding.fabBiometric?.setOnClickListener {
             authenticateWithBiometric()
         }
 
@@ -326,6 +354,11 @@ class LoginActivity : AppCompatActivity() {
         
         // Mostrar/ocultar botão de biometria
         if (state.showBiometricButton) {
+            // Mostrar FAB de biometria (ícone flutuante)
+            binding.fabBiometric?.visibility = View.VISIBLE
+            binding.fabBiometric?.show()
+            
+            // Também manter o card para compatibilidade
             binding.cardBiometric?.visibility = View.VISIBLE
             binding.tvBiometricHint?.visibility = View.VISIBLE
             binding.dividerBiometric?.visibility = View.VISIBLE
@@ -345,6 +378,9 @@ class LoginActivity : AppCompatActivity() {
                 binding.tvSavedUser?.visibility = View.GONE
             }
         } else {
+            // Ocultar FAB e card
+            binding.fabBiometric?.visibility = View.GONE
+            binding.fabBiometric?.hide()
             binding.cardBiometric?.visibility = View.GONE
             binding.tvBiometricHint?.visibility = View.GONE
             binding.dividerBiometric?.visibility = View.GONE
@@ -529,6 +565,46 @@ class LoginActivity : AppCompatActivity() {
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
         finish()
+    }
+    
+    /**
+     * Solicita permissão de notificações (Android 13+)
+     */
+    private fun requestNotificationPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                androidx.core.app.ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                    REQUEST_NOTIFICATION_PERMISSION
+                )
+            }
+        }
+    }
+    
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        
+        if (requestCode == REQUEST_NOTIFICATION_PERMISSION) {
+            if (grantResults.isNotEmpty() && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                android.util.Log.d("LoginActivity", "✅ Permissão de notificações concedida")
+            } else {
+                android.util.Log.w("LoginActivity", "⚠️ Permissão de notificações negada")
+                android.widget.Toast.makeText(
+                    this,
+                    "Permissão de notificações negada. Você não receberá alertas sobre modo offline.",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }
+        }
     }
 
 }

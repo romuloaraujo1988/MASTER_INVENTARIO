@@ -6,7 +6,8 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.inventario.mobile.domain.usecase.SincronizarColetasPendentesUseCase
-import com.inventario.mobile.utils.NetworkUtils
+import com.inventario.mobile.utils.OfflineNotificationManager
+import com.inventario.mobile.utils.NetworkMonitor
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
@@ -21,24 +22,27 @@ class SyncWorker @AssistedInject constructor(
     private val sincronizarColetasPendentesUseCase: SincronizarColetasPendentesUseCase
 ) : CoroutineWorker(context, workerParams) {
     
-    private val syncNotificationManager = com.inventario.mobile.sync.SyncNotificationManager(context)
+    private val networkMonitor = NetworkMonitor.getInstance(context)
+    private val notificationManager = OfflineNotificationManager.getInstance(context)
     
     companion object {
         private const val TAG = "SyncWorker"
         const val WORK_NAME = "sync_coletas_pendentes"
     }
     
-    override suspend fun doWork(): Result {
+    override suspend fun doWork(): androidx.work.ListenableWorker.Result {
         Log.d(TAG, "═══════════════════════════════════════")
         Log.d(TAG, "INICIANDO SINCRONIZAÇÃO EM BACKGROUND")
         Log.d(TAG, "═══════════════════════════════════════")
         
         return try {
             // 1. Verificar conectividade
-            if (!NetworkUtils.isNetworkAvailable(applicationContext)) {
-                Log.w(TAG, "Sem conexão de rede, adiando sincronização")
-                return Result.retry()
+            if (!networkMonitor.isConnected()) {
+                Log.w(TAG, "❌ Sem conexão de rede, adiando sincronização")
+                return androidx.work.ListenableWorker.Result.retry()
             }
+            
+            Log.d(TAG, "✅ Conexão disponível: ${networkMonitor.getConnectionType()}")
             
             // 2. Buscar quantidade de coletas pendentes
             val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(applicationContext)
@@ -49,55 +53,46 @@ class SyncWorker @AssistedInject constructor(
             
             if (pendentes == 0) {
                 Log.d(TAG, "ℹ️ Nenhuma coleta pendente, finalizando")
-                syncNotificationManager.cancelSyncNotification()
-                return Result.success()
+                return androidx.work.ListenableWorker.Result.success()
             }
             
-            // 3. Mostrar notificação de progresso
-            syncNotificationManager.showSyncInProgress(0, pendentes)
-            
-            // 4. Executar sincronização
+            // 3. Executar sincronização
+            Log.d(TAG, "🔄 Iniciando sincronização de $pendentes coleta(s)...")
             val result = sincronizarColetasPendentesUseCase()
             
             if (result.isSuccess) {
                 val quantidade = result.getOrNull() ?: 0
-                Log.d(TAG, "✓ Sincronização concluída: $quantidade coletas")
+                Log.d(TAG, "✅ Sincronização concluída: $quantidade coletas")
                 Log.d(TAG, "═══════════════════════════════════════")
                 
                 // Mostrar notificação de sucesso
                 if (quantidade > 0) {
-                    syncNotificationManager.showSyncSuccess(quantidade)
-                } else {
-                    syncNotificationManager.cancelSyncNotification()
+                    notificationManager.showSyncSuccessNotification(quantidade)
                 }
                 
-                Result.success()
+                androidx.work.ListenableWorker.Result.success()
             } else {
                 val error = result.exceptionOrNull()
-                Log.e(TAG, "✗ Erro na sincronização: ${error?.message}", error)
+                Log.e(TAG, "❌ Erro na sincronização: ${error?.message}", error)
                 Log.d(TAG, "═══════════════════════════════════════")
                 
-                // Mostrar notificação de erro
-                syncNotificationManager.showSyncError(
-                    error?.message ?: "Erro desconhecido"
-                )
-                
                 // Retry em caso de erro de rede
-                if (error?.message?.contains("network", ignoreCase = true) == true ||
-                    error?.message?.contains("timeout", ignoreCase = true) == true) {
-                    Result.retry()
+                val isNetworkError = error?.message?.contains("network", ignoreCase = true) == true ||
+                    error?.message?.contains("timeout", ignoreCase = true) == true ||
+                    error?.message?.contains("connection", ignoreCase = true) == true
+                
+                if (isNetworkError) {
+                    Log.d(TAG, "🔄 Erro de rede detectado, agendando retry...")
+                    androidx.work.ListenableWorker.Result.retry()
                 } else {
-                    Result.failure()
+                    Log.e(TAG, "❌ Erro não recuperável, marcando como falha")
+                    androidx.work.ListenableWorker.Result.failure()
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "✗ Exceção na sincronização", e)
+            Log.e(TAG, "💥 Exceção na sincronização", e)
             Log.d(TAG, "═══════════════════════════════════════")
-            
-            // Mostrar notificação de erro
-            syncNotificationManager.showSyncError(e.message ?: "Erro desconhecido")
-            
-            Result.retry()
+            androidx.work.ListenableWorker.Result.retry()
         }
     }
 }

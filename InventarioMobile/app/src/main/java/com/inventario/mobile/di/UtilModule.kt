@@ -23,4 +23,6 @@ object UtilModule {
     ): NetworkChecker {
         return NetworkChecker(context)
     }
+    
+    // NetworkMonitor agora é provido pelo NotificationModule
 }

@@ -2,13 +2,9 @@ package com.inventario.mobile.ui.coleta;
 
 import android.content.Context;
 import androidx.activity.contextaware.OnContextAvailableListener;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
-import dagger.hilt.android.internal.lifecycle.DefaultViewModelFactories;
-import dagger.hilt.android.internal.managers.ActivityComponentManager;
+import com.inventario.mobile.ui.base.BaseOfflineActivity;
 import dagger.hilt.internal.GeneratedComponentManagerHolder;
 import dagger.hilt.internal.UnsafeCasts;
-import java.lang.Object;
 import java.lang.Override;
 import javax.annotation.processing.Generated;
 
@@ -16,20 +12,11 @@ import javax.annotation.processing.Generated;
  * A generated base class to be extended by the @dagger.hilt.android.AndroidEntryPoint annotated class. If using the Gradle plugin, this is swapped as the base class via bytecode transformation.
  */
 @Generated("dagger.hilt.android.processor.internal.androidentrypoint.ActivityGenerator")
-public abstract class Hilt_ColetaActivity extends AppCompatActivity implements GeneratedComponentManagerHolder {
-  private volatile ActivityComponentManager componentManager;
-
-  private final Object componentManagerLock = new Object();
-
+public abstract class Hilt_ColetaActivity extends BaseOfflineActivity {
   private boolean injected = false;
 
   Hilt_ColetaActivity() {
     super();
-    _initHiltInternal();
-  }
-
-  Hilt_ColetaActivity(int p0) {
-    super(p0);
     _initHiltInternal();
   }
 
@@ -42,36 +29,10 @@ public abstract class Hilt_ColetaActivity extends AppCompatActivity implements G
     });
   }
 
-  @Override
-  public final Object generatedComponent() {
-    return this.componentManager().generatedComponent();
-  }
-
-  protected ActivityComponentManager createComponentManager() {
-    return new ActivityComponentManager(this);
-  }
-
-  @Override
-  public final ActivityComponentManager componentManager() {
-    if (componentManager == null) {
-      synchronized (componentManagerLock) {
-        if (componentManager == null) {
-          componentManager = createComponentManager();
-        }
-      }
-    }
-    return componentManager;
-  }
-
   protected void inject() {
     if (!injected) {
       injected = true;
-      ((ColetaActivity_GeneratedInjector) this.generatedComponent()).injectColetaActivity(UnsafeCasts.<ColetaActivity>unsafeCast(this));
+      ((ColetaActivity_GeneratedInjector) UnsafeCasts.<GeneratedComponentManagerHolder>unsafeCast(this).generatedComponent()).injectColetaActivity(UnsafeCasts.<ColetaActivity>unsafeCast(this));
     }
-  }
-
-  @Override
-  public ViewModelProvider.Factory getDefaultViewModelProviderFactory() {
-    return DefaultViewModelFactories.getActivityFactory(this, super.getDefaultViewModelProviderFactory());
   }
 }

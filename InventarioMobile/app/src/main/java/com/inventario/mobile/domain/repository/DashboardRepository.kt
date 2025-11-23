@@ -19,6 +19,15 @@ interface DashboardRepository {
     suspend fun buscarEstatisticas(inventarioId: Int? = null): Result<DashboardStats>
     
     /**
+     * Busca estatísticas apenas do banco local (offline)
+     * Usado como fallback quando servidor está inacessível
+     * 
+     * @param inventarioId ID do inventário (null = inventário ativo)
+     * @return Result com DashboardStats locais ou erro
+     */
+    suspend fun buscarEstatisticasLocais(inventarioId: Int? = null): Result<DashboardStats>
+    
+    /**
      * Busca evolução de coletas por dia
      * 
      * @param inventarioId ID do inventário (null = inventário ativo)

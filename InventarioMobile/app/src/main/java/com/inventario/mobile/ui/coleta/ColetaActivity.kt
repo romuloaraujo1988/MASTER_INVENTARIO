@@ -3,26 +3,28 @@ package com.inventario.mobile.ui.coleta
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.snackbar.Snackbar
 import com.inventario.mobile.R
 import com.inventario.mobile.databinding.ActivityColetaBinding
 import com.inventario.mobile.presentation.coleta.ColetaViewModelClean
 import com.inventario.mobile.presentation.scanner.ScannerActivity
 import com.inventario.mobile.presentation.state.ColetaState
+import com.inventario.mobile.ui.base.BaseOfflineActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 /**
  * Activity para registro de coleta de patrimônio
- * Clean Architecture + MVVM + Hilt
+ * Clean Architecture + MVVM + Hilt + Modo Offline Automático
  */
 @AndroidEntryPoint
-class ColetaActivity : AppCompatActivity() {
+class ColetaActivity : BaseOfflineActivity() {
 
     private lateinit var binding: ActivityColetaBinding
     
@@ -224,6 +226,55 @@ class ColetaActivity : AppCompatActivity() {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+    
+    // ========== CALLBACKS DE CONECTIVIDADE ==========
+    
+    /**
+     * Chamado quando a conexão é restaurada
+     * Tenta sincronizar coletas pendentes
+     */
+    override fun onConnectivityRestored() {
+        Log.d(TAG, "✓ Conexão restaurada! Verificando coletas pendentes...")
+        
+        val pendingCount = getPendingCollectionsCount()
+        
+        if (pendingCount > 0) {
+            // Mostrar Snackbar com opção de sincronizar
+            Snackbar.make(
+                binding.root,
+                "Conexão restaurada. $pendingCount coleta(s) pendente(s).",
+                Snackbar.LENGTH_LONG
+            ).setAction("Sincronizar") {
+                // Abrir tela de sincronização
+                val intent = Intent(this, com.inventario.mobile.presentation.sync.SyncActivity::class.java)
+                intent.putExtra("AUTO_SYNC", true)
+                startActivity(intent)
+            }.show()
+        } else {
+            Snackbar.make(
+                binding.root,
+                "Conexão restaurada.",
+                Snackbar.LENGTH_SHORT
+            ).show()
+        }
+    }
+    
+    /**
+     * Chamado quando a conexão é perdida
+     * Avisa que coletas serão salvas localmente
+     */
+    override fun onConnectivityLost() {
+        Log.d(TAG, "⚠️ Conexão perdida! Coletas serão salvas localmente...")
+        
+        // Mostrar Snackbar informativo
+        Snackbar.make(
+            binding.root,
+            "Sem conexão. Coletas serão salvas localmente e sincronizadas depois.",
+            Snackbar.LENGTH_LONG
+        ).setAction("OK") {
+            // Dismiss
+        }.show()
     }
 }
 

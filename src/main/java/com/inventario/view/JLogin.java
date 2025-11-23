@@ -545,5 +545,4 @@ public class JLogin extends JFrame {
         SwingUtilities.invokeLater(() -> {
             new JLogin().setVisible(true);
         });
-    }
-}
+    }}

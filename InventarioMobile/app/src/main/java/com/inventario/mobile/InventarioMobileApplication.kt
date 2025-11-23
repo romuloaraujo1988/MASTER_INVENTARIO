@@ -5,15 +5,22 @@ import androidx.work.Configuration
 import androidx.work.WorkManager
 import com.jakewharton.threetenabp.AndroidThreeTen
 import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
 /**
  * Classe Application principal do app Inventário Mobile
  * Responsável por inicializar componentes globais e dependências
  * 
  * @HiltAndroidApp - Habilita injeção de dependência com Hilt
+ * 
+ * IMPORTANTE: Implementa Configuration.Provider para configurar WorkManager com Hilt
+ * Isso permite que Workers usem @HiltWorker e @AssistedInject
  */
 @HiltAndroidApp
-class InventarioMobileApplication : Application() {
+class InventarioMobileApplication : Application(), Configuration.Provider {
+    
+    @Inject
+    lateinit var workerFactory: androidx.hilt.work.HiltWorkerFactory
 
     override fun onCreate() {
         super.onCreate()
@@ -87,6 +94,19 @@ class InventarioMobileApplication : Application() {
         com.inventario.mobile.data.cache.SalaCache.clear()
         // Adicionar outros caches aqui conforme necessário
     }
+    
+    /**
+     * Configuração do WorkManager para usar HiltWorkerFactory
+     * Isso permite que Workers usem injeção de dependência via Hilt
+     * 
+     * CRÍTICO: Sem isso, Workers com @HiltWorker falham com:
+     * "Could not instantiate com.inventario.mobile.worker.SyncWorker"
+     */
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .setMinimumLoggingLevel(android.util.Log.DEBUG)
+            .build()
     
     companion object {
         const val TAG = "InventarioMobileApp"

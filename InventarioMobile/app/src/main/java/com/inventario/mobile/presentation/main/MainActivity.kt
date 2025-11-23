@@ -86,8 +86,7 @@ class MainActivity : AppCompatActivity() {
     
     override fun onResume() {
         super.onResume()
-        // Atualizar indicador de modo offline quando voltar para a activity
-        com.inventario.mobile.ui.components.OfflineIndicator.refresh(this)
+        // O indicador já está observando mudanças automaticamente
     }
     
     private fun requestLocationPermissionIfNeeded() {

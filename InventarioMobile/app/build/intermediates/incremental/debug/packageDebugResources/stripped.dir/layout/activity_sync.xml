@@ -316,13 +316,24 @@
                         android:layout_marginBottom="12dp" />
 
                     <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSyncColetas"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Sincronizar Coletas"
+                        android:textAllCaps="false"
+                        app:icon="@android:drawable/ic_menu_upload"
+                        app:iconGravity="start"
+                        android:layout_marginBottom="8dp" />
+
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnSyncNow"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Sincronizar Agora"
+                        android:text="Importar Dados"
                         android:textAllCaps="false"
-                        app:icon="@android:drawable/ic_popup_sync"
+                        app:icon="@android:drawable/ic_menu_upload_you_tube"
                         app:iconGravity="start"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_marginBottom="8dp" />
 
                     <com.google.android.material.button.MaterialButton
@@ -396,7 +407,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="• A sincronização baixa todos os dados do servidor para o banco local\n• Quando offline, o app usa automaticamente os dados locais\n• Coletas são salvas localmente e sincronizadas quando online"
+                        android:text="• Sincronizar Coletas: Envia coletas pendentes para o servidor\n• Importar Dados: Baixa patrimônios, salas e responsáveis do servidor\n• Quando offline, o app usa automaticamente os dados locais\n• Coletas são salvas localmente e sincronizadas quando online"
                         android:textSize="12sp"
                         android:lineSpacingExtra="2dp" />
 

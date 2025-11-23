@@ -177,4 +177,20 @@ public class MobileAuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+    
+    /**
+     * Endpoint de health check
+     * GET /api/mobile/auth/health
+     * 
+     * Usado pelo app para verificar se o servidor está disponível
+     * Não requer autenticação
+     * 
+     * @return status do servidor
+     */
+    @GetMapping("/health")
+    public ResponseEntity<ApiResponse<String>> healthCheck() {
+        return ResponseEntity.ok(
+            ApiResponse.success("OK", "Servidor disponível")
+        );
+    }
 }

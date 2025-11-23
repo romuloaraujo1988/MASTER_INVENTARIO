@@ -51,6 +51,7 @@ class BuscarColetasComFallbackUseCase @Inject constructor(
     
     /**
      * Tenta buscar do servidor, com fallback para local
+     * IMPORTANTE: Retorna coletas do servidor + coletas pendentes locais
      */
     private suspend fun buscarDoServidorComFallback(): Result<ColetasResult> {
         return try {
@@ -61,7 +62,8 @@ class BuscarColetasComFallbackUseCase @Inject constructor(
                 val apiResponse = response.body()!!
                 
                 if (apiResponse.success && apiResponse.data != null) {
-                    val coletas = apiResponse.data.map { dto ->
+                    // Coletas do servidor (sincronizadas)
+                    val coletasServidor = apiResponse.data.map { dto ->
                         Coleta(
                             id = dto.id?.toInt(),
                             patrimonioId = dto.patrimonioId,
@@ -79,10 +81,40 @@ class BuscarColetasComFallbackUseCase @Inject constructor(
                         )
                     }
                     
-                    Log.d(TAG, "✓ ${coletas.size} coletas carregadas do servidor")
+                    Log.d(TAG, "✓ ${coletasServidor.size} coletas sincronizadas do servidor")
+                    
+                    // Buscar coletas pendentes locais (não sincronizadas)
+                    val coletasPendentesLocais = try {
+                        val entities = coletaDao.buscarPendentes()
+                        entities.map { entity ->
+                            Coleta(
+                                id = entity.id.toInt(),
+                                patrimonioId = entity.idPatrimonio,
+                                numeroPatrimonio = entity.numeroPatrimonio,
+                                descricaoPatrimonio = null,
+                                usuarioId = entity.idUsuario,
+                                nomeColetor = entity.nomeUsuario,
+                                dataColeta = entity.dataColeta.toString(),
+                                nomeSala = entity.nomeSala,
+                                localizacaoAtual = entity.nomeSala,
+                                observacoes = entity.observacao,
+                                sincronizado = false  // ✓ Pendentes
+                            )
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Erro ao buscar pendentes locais: ${e.message}")
+                        emptyList()
+                    }
+                    
+                    Log.d(TAG, "✓ ${coletasPendentesLocais.size} coletas pendentes locais")
+                    
+                    // Combinar: servidor + pendentes locais
+                    val todasColetas = coletasServidor + coletasPendentesLocais
+                    
+                    Log.d(TAG, "✓ Total: ${todasColetas.size} coletas (${coletasServidor.size} sincronizadas + ${coletasPendentesLocais.size} pendentes)")
                     
                     val result = ColetasResult(
-                        coletas = coletas,
+                        coletas = todasColetas,
                         fonte = FonteDados.SERVIDOR,
                         timestamp = System.currentTimeMillis()
                     )

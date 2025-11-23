@@ -58,8 +58,7 @@ class SettingsActivity : AppCompatActivity() {
                 viewModel.setForceOfflineMode(isChecked)
                 updateOfflineStatusVisibility(isChecked)
                 
-                // Atualizar indicador na barra superior
-                com.inventario.mobile.ui.components.OfflineIndicator.updateVisibility(this@SettingsActivity, isChecked)
+                // O indicador já atualiza automaticamente via NetworkMonitor
                 
                 // Mostrar mensagem ao usuário
                 val message = if (isChecked) {

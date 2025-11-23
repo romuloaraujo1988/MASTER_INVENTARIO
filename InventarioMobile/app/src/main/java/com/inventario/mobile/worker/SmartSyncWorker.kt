@@ -96,7 +96,7 @@ class SmartSyncWorker(
         
         // 2. Verificar se é WiFi only
         if (preferencesManager.isWifiOnlySyncEnabled()) {
-            val isWifi = networkMonitor.isWifiConnected()
+            val isWifi = networkMonitor.getConnectionType() == com.inventario.mobile.utils.NetworkMonitor.ConnectionType.WIFI
             if (!isWifi) {
                 Log.d(TAG, "WiFi only habilitado, mas não está em WiFi")
                 return false

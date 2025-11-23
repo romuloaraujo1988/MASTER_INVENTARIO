@@ -5,6 +5,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
@@ -35,17 +38,30 @@ public final class ActivityMainBinding implements ViewBinding {
   public final NavigationView navView;
 
   @NonNull
+  public final ImageView offlineIcon;
+
+  @NonNull
+  public final LinearLayout offlineIndicator;
+
+  @NonNull
+  public final TextView offlineText;
+
+  @NonNull
   public final Toolbar toolbar;
 
   private ActivityMainBinding(@NonNull DrawerLayout rootView,
       @NonNull BottomNavigationView bottomNavigation, @NonNull DrawerLayout drawerLayout,
       @NonNull FrameLayout fragmentContainer, @NonNull NavigationView navView,
-      @NonNull Toolbar toolbar) {
+      @NonNull ImageView offlineIcon, @NonNull LinearLayout offlineIndicator,
+      @NonNull TextView offlineText, @NonNull Toolbar toolbar) {
     this.rootView = rootView;
     this.bottomNavigation = bottomNavigation;
     this.drawerLayout = drawerLayout;
     this.fragmentContainer = fragmentContainer;
     this.navView = navView;
+    this.offlineIcon = offlineIcon;
+    this.offlineIndicator = offlineIndicator;
+    this.offlineText = offlineText;
     this.toolbar = toolbar;
   }
 
@@ -96,6 +112,24 @@ public final class ActivityMainBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.offline_icon;
+      ImageView offlineIcon = ViewBindings.findChildViewById(rootView, id);
+      if (offlineIcon == null) {
+        break missingId;
+      }
+
+      id = R.id.offline_indicator;
+      LinearLayout offlineIndicator = ViewBindings.findChildViewById(rootView, id);
+      if (offlineIndicator == null) {
+        break missingId;
+      }
+
+      id = R.id.offline_text;
+      TextView offlineText = ViewBindings.findChildViewById(rootView, id);
+      if (offlineText == null) {
+        break missingId;
+      }
+
       id = R.id.toolbar;
       Toolbar toolbar = ViewBindings.findChildViewById(rootView, id);
       if (toolbar == null) {
@@ -103,7 +137,7 @@ public final class ActivityMainBinding implements ViewBinding {
       }
 
       return new ActivityMainBinding((DrawerLayout) rootView, bottomNavigation, drawerLayout,
-          fragmentContainer, navView, toolbar);
+          fragmentContainer, navView, offlineIcon, offlineIndicator, offlineText, toolbar);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

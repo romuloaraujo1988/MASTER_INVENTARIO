@@ -4,12 +4,12 @@ package com.inventario.mobile.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
+import com.google.android.material.card.MaterialCardView;
 import com.inventario.mobile.R;
 import java.lang.NullPointerException;
 import java.lang.Override;
@@ -17,29 +17,29 @@ import java.lang.String;
 
 public final class ViewOfflineIndicatorBinding implements ViewBinding {
   @NonNull
-  private final LinearLayout rootView;
+  private final MaterialCardView rootView;
 
   @NonNull
-  public final LinearLayout offlineIndicatorBar;
+  public final MaterialCardView cardOfflineIndicator;
 
   @NonNull
-  public final TextView tvStatusIcon;
+  public final TextView tvOfflineDetails;
 
   @NonNull
-  public final TextView tvStatusText;
+  public final TextView tvOfflineMessage;
 
-  private ViewOfflineIndicatorBinding(@NonNull LinearLayout rootView,
-      @NonNull LinearLayout offlineIndicatorBar, @NonNull TextView tvStatusIcon,
-      @NonNull TextView tvStatusText) {
+  private ViewOfflineIndicatorBinding(@NonNull MaterialCardView rootView,
+      @NonNull MaterialCardView cardOfflineIndicator, @NonNull TextView tvOfflineDetails,
+      @NonNull TextView tvOfflineMessage) {
     this.rootView = rootView;
-    this.offlineIndicatorBar = offlineIndicatorBar;
-    this.tvStatusIcon = tvStatusIcon;
-    this.tvStatusText = tvStatusText;
+    this.cardOfflineIndicator = cardOfflineIndicator;
+    this.tvOfflineDetails = tvOfflineDetails;
+    this.tvOfflineMessage = tvOfflineMessage;
   }
 
   @Override
   @NonNull
-  public LinearLayout getRoot() {
+  public MaterialCardView getRoot() {
     return rootView;
   }
 
@@ -64,22 +64,22 @@ public final class ViewOfflineIndicatorBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
-      LinearLayout offlineIndicatorBar = (LinearLayout) rootView;
+      MaterialCardView cardOfflineIndicator = (MaterialCardView) rootView;
 
-      id = R.id.tvStatusIcon;
-      TextView tvStatusIcon = ViewBindings.findChildViewById(rootView, id);
-      if (tvStatusIcon == null) {
+      id = R.id.tvOfflineDetails;
+      TextView tvOfflineDetails = ViewBindings.findChildViewById(rootView, id);
+      if (tvOfflineDetails == null) {
         break missingId;
       }
 
-      id = R.id.tvStatusText;
-      TextView tvStatusText = ViewBindings.findChildViewById(rootView, id);
-      if (tvStatusText == null) {
+      id = R.id.tvOfflineMessage;
+      TextView tvOfflineMessage = ViewBindings.findChildViewById(rootView, id);
+      if (tvOfflineMessage == null) {
         break missingId;
       }
 
-      return new ViewOfflineIndicatorBinding((LinearLayout) rootView, offlineIndicatorBar,
-          tvStatusIcon, tvStatusText);
+      return new ViewOfflineIndicatorBinding((MaterialCardView) rootView, cardOfflineIndicator,
+          tvOfflineDetails, tvOfflineMessage);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

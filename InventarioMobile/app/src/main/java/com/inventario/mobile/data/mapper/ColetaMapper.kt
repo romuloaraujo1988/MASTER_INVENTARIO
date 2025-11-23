@@ -40,6 +40,7 @@ class ColetaMapper @Inject constructor(
      * Converte Domain para Entity, preenchendo campos completos
      * Busca dados do patrimônio se necessário
      * v2.0: Usa PreferencesManager para obter inventário ativo e nome do usuário
+     * v2.3: PRIORIZA localizacaoAtual da coleta (onde foi realmente encontrado)
      */
     suspend fun toEntity(domain: Coleta, idInventario: Int? = null): ColetaEntity {
         // Buscar dados do patrimônio para preencher campos
@@ -61,13 +62,31 @@ class ColetaMapper @Inject constructor(
             Log.w(TAG, "⚠️ Inventário ativo não encontrado! Usando 0 como fallback")
         }
         
+        // ✅ CORREÇÃO CRÍTICA: Priorizar localizacaoAtual da coleta (onde foi realmente encontrado)
+        // Se localizacaoAtual está preenchida, usar ela (é onde o item foi REALMENTE encontrado)
+        // Caso contrário, usar nomeSala do patrimônio (sala cadastrada)
+        val salaReal = when {
+            !domain.localizacaoAtual.isNullOrBlank() -> {
+                Log.d(TAG, "✓ Usando localizacaoAtual da coleta: ${domain.localizacaoAtual}")
+                domain.localizacaoAtual
+            }
+            !patrimonio?.nomeSala.isNullOrBlank() -> {
+                Log.d(TAG, "⚠ localizacaoAtual vazia, usando nomeSala do patrimônio: ${patrimonio?.nomeSala}")
+                patrimonio?.nomeSala
+            }
+            else -> {
+                Log.w(TAG, "⚠ Nenhuma sala disponível!")
+                null
+            }
+        }
+        
         return ColetaEntity(
             id = domain.id,
             idPatrimonio = domain.patrimonioId.toInt(),
             numeroPatrimonio = patrimonio?.numero ?: "", // ✅ Preenchido do banco
             idInventario = inventarioAtivoId, // ✅ Do PreferencesManager
             idSala = patrimonio?.idSala,
-            nomeSala = patrimonio?.nomeSala ?: domain.localizacaoAtual, // ✅ Preenchido
+            nomeSala = salaReal, // ✅ PRIORIZA onde foi realmente encontrado
             idResponsavel = patrimonio?.idResponsavel,
             nomeResponsavel = patrimonio?.nomeResponsavel,
             observacao = domain.observacoes,

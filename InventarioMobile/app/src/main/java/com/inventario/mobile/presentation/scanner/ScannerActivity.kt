@@ -30,7 +30,10 @@ import com.inventario.mobile.utils.SoundUtils
 import androidx.activity.result.contract.ActivityResultContracts
 import kotlinx.coroutines.launch
 import com.inventario.mobile.presentation.dialog.EstadoPatrimonioDialog
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class ScannerActivity : AppCompatActivity() {
     
     private lateinit var binding: ActivityScannerBinding
@@ -41,6 +44,10 @@ class ScannerActivity : AppCompatActivity() {
     private var isInitializing = false
     private var retryCount = 0
     private val maxRetries = 3
+    
+    // ✅ Injetar Use Case via Hilt
+    @Inject
+    lateinit var registrarColetaUseCase: com.inventario.mobile.domain.usecase.RegistrarColetaUseCase
     
     // Launcher para solicitar permissão de câmera
     private val requestCameraPermissionLauncher = registerForActivityResult(
@@ -133,13 +140,13 @@ class ScannerActivity : AppCompatActivity() {
             android14CameraHelper = Android14CameraHelper(this)
             android.util.Log.d("ScannerActivity", "Android14CameraHelper inicializado com sucesso")
             
-            // Inicializar ViewModel com repositório real
-            android.util.Log.d("ScannerActivity", "Inicializando ViewModel...")
+            // ✅ Inicializar ViewModel com Use Case injetado via Hilt
+            android.util.Log.d("ScannerActivity", "Inicializando ViewModel com Hilt...")
             val apiService = NetworkModule.getApiService(this)
             val repository = InventarioRepository.getInstance(this, apiService)
-            val factory = ScannerViewModelFactory(repository, preferencesManager)
+            val factory = ScannerViewModelFactory(repository, preferencesManager, registrarColetaUseCase)
             viewModel = ViewModelProvider(this, factory)[ScannerViewModel::class.java]
-            android.util.Log.d("ScannerActivity", "ViewModel inicializado com sucesso")
+            android.util.Log.d("ScannerActivity", "✓ ViewModel inicializado com sucesso (com RegistrarColetaUseCase via Hilt)")
             
             setupToolbar()
             setupObservers()

@@ -11,6 +11,8 @@ import com.inventario.mobile.domain.repository.AuthRepository
 import com.inventario.mobile.utils.ErrorMapper
 import com.inventario.mobile.utils.PreferencesManager
 import com.inventario.mobile.utils.ServerConfigManager
+import com.inventario.mobile.utils.NetworkMonitor
+import com.inventario.mobile.utils.OfflineNotificationManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,6 +28,9 @@ class LoginViewModel(
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+    
+    private val networkMonitor = NetworkMonitor.getInstance(context)
+    private val notificationManager = OfflineNotificationManager.getInstance(context)
 
     init {
         // Carregar IP salvo (a partir da URL persistida em PreferencesManager)
@@ -39,6 +44,66 @@ class LoginViewModel(
                 _uiState.value = _uiState.value.copy(serverIp = suggestedIps[0])
             }
         }
+        
+        // Monitorar conexão de rede
+        monitorNetworkConnection()
+    }
+    
+    /**
+     * Monitora mudanças na conexão de rede
+     */
+    private fun monitorNetworkConnection() {
+        viewModelScope.launch {
+            networkMonitor.observeConnectivity().collect { isConnected ->
+                Log.d("LoginViewModel", "🌐 Conexão mudou: ${if (isConnected) "ONLINE" else "OFFLINE"}")
+                
+                val currentState = _uiState.value
+                _uiState.value = currentState.copy(
+                    isOnline = isConnected,
+                    offlineMode = !isConnected
+                )
+                
+                // Verificar se tem dados locais
+                val hasLocalData = checkHasLocalData()
+                
+                if (!isConnected) {
+                    // Sem conexão - mostrar notificação
+                    notificationManager.showOfflineModeNotification(hasLocalData)
+                    
+                    if (!hasLocalData) {
+                        // Sem dados locais - pedir sincronização
+                        notificationManager.showSyncNeededNotification()
+                    }
+                } else {
+                    // Conexão restaurada
+                    notificationManager.cancelOfflineNotification()
+                    notificationManager.cancelSyncNeededNotification()
+                    
+                    // Verificar se tem dados pendentes
+                    val hasPendingSync = checkHasPendingSync()
+                    if (hasPendingSync) {
+                        notificationManager.showConnectionRestoredNotification(true)
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Verifica se tem dados locais (patrimônios, salas, etc)
+     */
+    private fun checkHasLocalData(): Boolean {
+        // TODO: Implementar verificação real no banco Room
+        // Por enquanto, verificar se tem token salvo
+        return preferencesManager.getAccessToken() != null
+    }
+    
+    /**
+     * Verifica se tem coletas pendentes de sincronização
+     */
+    private fun checkHasPendingSync(): Boolean {
+        // TODO: Implementar verificação real no banco Room
+        return false
     }
 
     fun updateLogin(login: String) {
@@ -78,13 +143,22 @@ class LoginViewModel(
     fun login() {
         val currentState = _uiState.value
         
+        Log.d("LoginViewModel", "═══════════════════════════════════════")
+        Log.d("LoginViewModel", "MÉTODO LOGIN CHAMADO")
+        Log.d("LoginViewModel", "Login no estado: '${currentState.login}'")
+        Log.d("LoginViewModel", "Senha no estado: ${if (currentState.password.isNotEmpty()) "***" else "(vazio)"}")
+        Log.d("LoginViewModel", "IP no estado: '${currentState.serverIp}'")
+        Log.d("LoginViewModel", "═══════════════════════════════════════")
+        
         // Validações básicas
         if (currentState.login.isBlank()) {
+            Log.w("LoginViewModel", "❌ Validação falhou: Login está vazio")
             _uiState.value = currentState.copy(loginError = "Login não pode ser vazio")
             return
         }
         
         if (currentState.password.isBlank()) {
+            Log.w("LoginViewModel", "❌ Validação falhou: Senha está vazia")
             _uiState.value = currentState.copy(passwordError = "Senha não pode ser vazia")
             return
         }

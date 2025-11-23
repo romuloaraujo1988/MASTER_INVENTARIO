@@ -76,6 +76,7 @@
         android:requestLegacyExternalStorage="false"
         android:preserveLegacyExternalStorage="false"
         android:enableOnBackInvokedCallback="true"
+        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
         tools:targetApi="34">
         
         <!-- Splash Screen Activity -->
@@ -222,6 +223,19 @@
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
+        </provider>
+        
+        <!-- Desabilitar inicialização automática do WorkManager -->
+        <!-- Necessário para usar HiltWorkerFactory customizado -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
         </provider>
         
     </application>
