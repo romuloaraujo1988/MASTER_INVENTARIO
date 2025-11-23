@@ -22,6 +22,7 @@ import com.inventario.mobile.data.backup.BackupManager;
 import com.inventario.mobile.data.local.LocalDataManager;
 import com.inventario.mobile.data.local.backup.DatabaseBackupManager;
 import com.inventario.mobile.data.local.dao.ColetaDao;
+import com.inventario.mobile.data.local.dao.DashboardDao;
 import com.inventario.mobile.data.local.dao.LogColetaDao;
 import com.inventario.mobile.data.local.dao.PatrimonioDao;
 import com.inventario.mobile.data.local.dao.ResponsavelDao;
@@ -35,6 +36,7 @@ import com.inventario.mobile.data.remote.api.ColetaApi;
 import com.inventario.mobile.data.remote.api.OfflineSyncApi;
 import com.inventario.mobile.data.remote.api.PatrimonioApi;
 import com.inventario.mobile.data.repository.ColetaRepositoryImpl;
+import com.inventario.mobile.data.repository.DashboardRepositoryImpl;
 import com.inventario.mobile.data.repository.InventarioRepository;
 import com.inventario.mobile.data.repository.PatrimonioRepositoryAdapter;
 import com.inventario.mobile.data.repository.PatrimonioRepositoryImpl;
@@ -61,6 +63,7 @@ import com.inventario.mobile.di.DashboardModule_ProvideDashboardRepositoryFactor
 import com.inventario.mobile.di.DatabaseModule;
 import com.inventario.mobile.di.DatabaseModule_ProvideAppDatabaseFactory;
 import com.inventario.mobile.di.DatabaseModule_ProvideColetaDaoFactory;
+import com.inventario.mobile.di.DatabaseModule_ProvideDashboardDaoFactory;
 import com.inventario.mobile.di.DatabaseModule_ProvideLocalDataManagerFactory;
 import com.inventario.mobile.di.DatabaseModule_ProvideLogColetaDaoFactory;
 import com.inventario.mobile.di.DatabaseModule_ProvidePatrimonioDaoFactory;
@@ -864,6 +867,10 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
       return new BuscarEvolucaoColetasUseCase(singletonCImpl.provideDashboardRepositoryProvider.get());
     }
 
+    private DashboardRepositoryImpl dashboardRepositoryImpl() {
+      return new DashboardRepositoryImpl(singletonCImpl.provideApiServiceProvider.get(), singletonCImpl.provideDashboardMapperProvider.get(), singletonCImpl.dashboardDao());
+    }
+
     private BuscarDescricoesNaoColetadasUseCase buscarDescricoesNaoColetadasUseCase() {
       return new BuscarDescricoesNaoColetadasUseCase(singletonCImpl.patrimonioRepositoryAdapterProvider.get());
     }
@@ -934,7 +941,7 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
           return (T) new CollectionViewViewModelClean(viewModelCImpl.buscarColetasUseCase(), viewModelCImpl.buscarColetasComFallbackUseCase(), viewModelCImpl.obterUsuarioAtualUseCase(), viewModelCImpl.removerColetaUseCase(), viewModelCImpl.sincronizarColetasDoServidorUseCase(), viewModelCImpl.coletaMigration());
 
           case 3: // com.inventario.mobile.presentation.dashboard.DashboardViewModelClean 
-          return (T) new DashboardViewModelClean(viewModelCImpl.buscarEstatisticasDashboardUseCase(), viewModelCImpl.buscarEvolucaoColetasUseCase());
+          return (T) new DashboardViewModelClean(viewModelCImpl.buscarEstatisticasDashboardUseCase(), viewModelCImpl.buscarEvolucaoColetasUseCase(), viewModelCImpl.dashboardRepositoryImpl());
 
           case 4: // com.inventario.mobile.presentation.descricao.DescricaoSelectionViewModelClean 
           return (T) new DescricaoSelectionViewModelClean(viewModelCImpl.buscarDescricoesNaoColetadasUseCase());
@@ -1141,6 +1148,10 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
       return WorkerFactoryModule_ProvideFactoryFactory.provideFactory(mapOfStringAndProviderOfWorkerAssistedFactoryOf());
     }
 
+    private DashboardDao dashboardDao() {
+      return DatabaseModule_ProvideDashboardDaoFactory.provideDashboardDao(provideAppDatabaseProvider.get());
+    }
+
     private SalaDao salaDao() {
       return DatabaseModule_ProvideSalaDaoFactory.provideSalaDao(provideAppDatabaseProvider.get());
     }
@@ -1331,7 +1342,7 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
           return (T) new ChartDataProvider(singletonCImpl.provideDashboardRepositoryProvider.get());
 
           case 25: // com.inventario.mobile.domain.repository.DashboardRepository 
-          return (T) DashboardModule_ProvideDashboardRepositoryFactory.provideDashboardRepository(singletonCImpl.provideApiServiceProvider.get(), singletonCImpl.provideDashboardMapperProvider.get());
+          return (T) DashboardModule_ProvideDashboardRepositoryFactory.provideDashboardRepository(singletonCImpl.provideApiServiceProvider.get(), singletonCImpl.provideDashboardMapperProvider.get(), singletonCImpl.dashboardDao());
 
           case 26: // com.inventario.mobile.data.remote.api.ApiService 
           return (T) ApiModule_ProvideApiServiceFactory.provideApiService(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));

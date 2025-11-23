@@ -53,13 +53,9 @@ public class StatusBarPanel extends JPanel {
         lblColetasPendentes.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         lblColetasPendentes.setForeground(new Color(120, 120, 120));
         
-        // Botão de sincronização
-        btnSincronizar = new JButton("Sincronizar Agora");
-        btnSincronizar.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        btnSincronizar.setFocusPainted(false);
-        btnSincronizar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        // Botão de sincronização - estilo moderno com gradiente
+        btnSincronizar = criarBotaoModerno("🔄 Sincronizar");
         btnSincronizar.setEnabled(false);
-        estilizarBotao(btnSincronizar);
     }
     
     private void setupLayout() {
@@ -92,25 +88,108 @@ public class StatusBarPanel extends JPanel {
         return separator;
     }
     
-    private void estilizarBotao(JButton button) {
-        button.setBackground(new Color(52, 152, 219));
-        button.setForeground(Color.WHITE);
-        button.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(41, 128, 185), 1),
-            BorderFactory.createEmptyBorder(5, 15, 5, 15)
-        ));
+    /**
+     * Cria um botão moderno com gradiente e ícone (mesmo estilo do dashboard)
+     */
+    private JButton criarBotaoModerno(String texto) {
+        JButton button = new JButton() {
+            private boolean isHovered = false;
+
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // Cor de fundo com gradiente
+                Color baseColor = new Color(52, 152, 219);
+                Color hoverColor = new Color(41, 128, 185);
+                Color disabledColor = new Color(149, 165, 166);
+                
+                Color topColor;
+                Color bottomColor;
+                
+                if (!isEnabled()) {
+                    topColor = disabledColor;
+                    bottomColor = disabledColor.darker();
+                } else if (isHovered) {
+                    topColor = hoverColor;
+                    bottomColor = hoverColor.darker();
+                } else {
+                    topColor = baseColor;
+                    bottomColor = baseColor.darker();
+                }
+
+                GradientPaint gradient = new GradientPaint(
+                        0, 0, topColor,
+                        0, getHeight(), bottomColor);
+                g2d.setPaint(gradient);
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+
+                // Borda sutil
+                g2d.setColor(new Color(255, 255, 255, 50));
+                g2d.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+
+                g2d.dispose();
+
+                // Desenhar texto com ícone
+                g2d = (Graphics2D) g.create();
+                g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+
+                g2d.setFont(new Font("Segoe UI", Font.BOLD, 12));
+                g2d.setColor(Color.WHITE);
+                
+                FontMetrics fm = g2d.getFontMetrics();
+                int textWidth = fm.stringWidth(texto);
+                int textX = (getWidth() - textWidth) / 2;
+                int textY = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
+                
+                // Sombra do texto
+                g2d.setColor(new Color(0, 0, 0, 80));
+                g2d.drawString(texto, textX + 1, textY + 1);
+                
+                // Texto principal
+                g2d.setColor(Color.WHITE);
+                g2d.drawString(texto, textX, textY);
+
+                g2d.dispose();
+            }
+        };
+
+        button.setPreferredSize(new Dimension(140, 32));
+        button.setMinimumSize(new Dimension(120, 28));
+        button.setMaximumSize(new Dimension(160, 36));
+        button.setContentAreaFilled(false);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         
         // Efeito hover
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
-                if (button.isEnabled()) {
-                    button.setBackground(new Color(41, 128, 185));
+                try {
+                    java.lang.reflect.Field field = button.getClass().getDeclaredField("isHovered");
+                    field.setAccessible(true);
+                    field.set(button, true);
+                    button.repaint();
+                } catch (Exception e) {
+                    // Fallback silencioso
                 }
             }
+
             public void mouseExited(java.awt.event.MouseEvent evt) {
-                button.setBackground(new Color(52, 152, 219));
+                try {
+                    java.lang.reflect.Field field = button.getClass().getDeclaredField("isHovered");
+                    field.setAccessible(true);
+                    field.set(button, false);
+                    button.repaint();
+                } catch (Exception e) {
+                    // Fallback silencioso
+                }
             }
         });
+        
+        return button;
     }
     
     /**
@@ -223,8 +302,34 @@ public class StatusBarPanel extends JPanel {
      */
     public void mostrarSincronizandoProgresso() {
         SwingUtilities.invokeLater(() -> {
-            btnSincronizar.setText("Sincronizando...");
-            btnSincronizar.setEnabled(false);
+            // Recriar botão com texto de progresso
+            JButton novoBotao = criarBotaoModerno("⏳ Sincronizando...");
+            novoBotao.setEnabled(false);
+            
+            // Substituir botão no painel
+            Container parent = btnSincronizar.getParent();
+            if (parent != null) {
+                int index = -1;
+                for (int i = 0; i < parent.getComponentCount(); i++) {
+                    if (parent.getComponent(i) == btnSincronizar) {
+                        index = i;
+                        break;
+                    }
+                }
+                
+                if (index >= 0) {
+                    // Copiar listeners
+                    ActionListener[] listeners = btnSincronizar.getActionListeners();
+                    parent.remove(index);
+                    btnSincronizar = novoBotao;
+                    for (ActionListener listener : listeners) {
+                        btnSincronizar.addActionListener(listener);
+                    }
+                    parent.add(btnSincronizar, index);
+                    parent.revalidate();
+                    parent.repaint();
+                }
+            }
         });
     }
     
@@ -233,8 +338,34 @@ public class StatusBarPanel extends JPanel {
      */
     public void restaurarBotaoSincronizar() {
         SwingUtilities.invokeLater(() -> {
-            btnSincronizar.setText("Sincronizar Agora");
-            btnSincronizar.setEnabled(estadoAtual == OfflineManager.OfflineState.ONLINE);
+            // Recriar botão com texto normal
+            JButton novoBotao = criarBotaoModerno("🔄 Sincronizar");
+            novoBotao.setEnabled(estadoAtual == OfflineManager.OfflineState.ONLINE);
+            
+            // Substituir botão no painel
+            Container parent = btnSincronizar.getParent();
+            if (parent != null) {
+                int index = -1;
+                for (int i = 0; i < parent.getComponentCount(); i++) {
+                    if (parent.getComponent(i) == btnSincronizar) {
+                        index = i;
+                        break;
+                    }
+                }
+                
+                if (index >= 0) {
+                    // Copiar listeners
+                    ActionListener[] listeners = btnSincronizar.getActionListeners();
+                    parent.remove(index);
+                    btnSincronizar = novoBotao;
+                    for (ActionListener listener : listeners) {
+                        btnSincronizar.addActionListener(listener);
+                    }
+                    parent.add(btnSincronizar, index);
+                    parent.revalidate();
+                    parent.repaint();
+                }
+            }
         });
     }
     

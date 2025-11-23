@@ -558,4 +558,99 @@ public class MobileColetaService {
             throw new RuntimeException("Erro ao buscar descrições pendentes: " + e.getMessage(), e);
         }
     }
+    
+    /**
+     * Busca coletas modificadas desde o último timestamp (sincronização incremental)
+     * 
+     * @param lastSyncTimestamp timestamp da última sincronização em milissegundos
+     * @param inventarioId ID do inventário (opcional)
+     * @param limit limite de registros
+     * @param offset offset para paginação
+     * @return resposta com coletas incrementais
+     */
+    public com.inventario.mobile.server.dto.IncrementalSyncResponse<MobileColetaResponse> buscarColetasIncrementais(
+            Long lastSyncTimestamp, Integer inventarioId, Integer limit, Integer offset) {
+        
+        logger.info("Buscando coletas incrementais: lastSync={}, inventario={}, limit={}, offset={}", 
+                lastSyncTimestamp, inventarioId, limit, offset);
+        
+        try {
+            // Converter timestamp para Timestamp SQL
+            Timestamp dataUltimaSync = lastSyncTimestamp != null && lastSyncTimestamp > 0
+                    ? new Timestamp(lastSyncTimestamp)
+                    : new Timestamp(0); // Se não informado, busca todas
+            
+            // Buscar coletas modificadas desde o timestamp
+            List<Coleta> coletas;
+            if (inventarioId != null) {
+                // Buscar por inventário específico
+                coletas = coletaDAO.buscarModificadasDesde(dataUltimaSync, inventarioId);
+            } else {
+                // Buscar todas as coletas modificadas
+                coletas = coletaDAO.buscarModificadasDesde(dataUltimaSync);
+            }
+            
+            // Aplicar paginação
+            int totalCount = coletas.size();
+            int fromIndex = offset != null ? offset : 0;
+            int toIndex = Math.min(fromIndex + (limit != null ? limit : 100), totalCount);
+            
+            List<Coleta> coletasPaginadas = fromIndex < totalCount 
+                    ? coletas.subList(fromIndex, toIndex)
+                    : new ArrayList<>();
+            
+            // Converter para DTO
+            List<MobileColetaResponse> coletasResponse = new ArrayList<>();
+            for (Coleta coleta : coletasPaginadas) {
+                try {
+                    // Buscar dados relacionados
+                    Usuario usuario = usuarioDAO.findById(coleta.getIdColetor());
+                    Inventario inventario = inventarioDAO.findById(coleta.getIdInventario());
+                    
+                    if (usuario != null && inventario != null) {
+                        MobileColetaResponse response = converterParaResponse(coleta, usuario, inventario);
+                        coletasResponse.add(response);
+                    } else {
+                        logger.warn("Dados relacionados não encontrados para coleta {}", coleta.getId());
+                    }
+                } catch (Exception e) {
+                    logger.warn("Erro ao converter coleta {}: {}", coleta.getId(), e.getMessage());
+                }
+            }
+            
+            // Criar resposta incremental
+            com.inventario.mobile.server.dto.IncrementalSyncResponse<MobileColetaResponse> response = 
+                    new com.inventario.mobile.server.dto.IncrementalSyncResponse<>();
+            
+            response.setData(coletasResponse);
+            response.setTotalCount(totalCount);
+            response.setReturnedCount(coletasResponse.size());
+            response.setServerTimestamp(System.currentTimeMillis());
+            response.setHasMore(toIndex < totalCount);
+            
+            String mensagem = String.format("Sincronização incremental: %d/%d coletas", 
+                    coletasResponse.size(), totalCount);
+            response.setMessage(mensagem);
+            
+            logger.info("Retornando {} coletas de {} total (hasMore: {})", 
+                    coletasResponse.size(), totalCount, response.getHasMore());
+            
+            return response;
+            
+        } catch (Exception e) {
+            logger.error("Erro ao buscar coletas incrementais", e);
+            
+            // Retornar resposta vazia em caso de erro
+            com.inventario.mobile.server.dto.IncrementalSyncResponse<MobileColetaResponse> response = 
+                    new com.inventario.mobile.server.dto.IncrementalSyncResponse<>();
+            response.setData(new ArrayList<>());
+            response.setTotalCount(0);
+            response.setReturnedCount(0);
+            response.setServerTimestamp(System.currentTimeMillis());
+            response.setHasMore(false);
+            response.setMessage("Erro ao buscar coletas: " + e.getMessage());
+            
+            return response;
+        }
+    }
 }

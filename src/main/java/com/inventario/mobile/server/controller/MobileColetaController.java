@@ -488,5 +488,48 @@ public class MobileColetaController {
                     .body(ApiResponse.error("Erro ao verificar duplicata: " + e.getMessage(), "CHECK_ERROR"));
         }
     }
+    
+    /**
+     * Sincronização incremental de coletas
+     * Retorna apenas coletas modificadas após o timestamp fornecido
+     * 
+     * @param lastSyncTimestamp timestamp da última sincronização (em milissegundos)
+     * @param inventarioId ID do inventário (opcional)
+     * @param limit limite de registros (default: 100)
+     * @param offset offset para paginação (default: 0)
+     * @return coletas modificadas desde o último timestamp
+     */
+    @GetMapping("/incremental")
+    public ResponseEntity<ApiResponse<com.inventario.mobile.server.dto.IncrementalSyncResponse<MobileColetaResponse>>> 
+            sincronizacaoIncremental(
+                @RequestParam(required = false, defaultValue = "0") Long lastSyncTimestamp,
+                @RequestParam(required = false) Integer inventarioId,
+                @RequestParam(required = false, defaultValue = "100") Integer limit,
+                @RequestParam(required = false, defaultValue = "0") Integer offset) {
+        try {
+            logger.info("📥 Sincronização incremental de coletas: lastSync={}, inventario={}, limit={}, offset={}", 
+                lastSyncTimestamp, inventarioId, limit, offset);
+            
+            // Obter username do contexto de segurança
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication != null ? authentication.getName() : null;
+            
+            // Buscar coletas modificadas desde o último timestamp
+            com.inventario.mobile.server.dto.IncrementalSyncResponse<MobileColetaResponse> response = 
+                mobileColetaService.buscarColetasIncrementais(lastSyncTimestamp, inventarioId, limit, offset);
+            
+            String mensagem = String.format("✓ %d coleta(s) retornada(s) de %d total", 
+                response.getReturnedCount(), response.getTotalCount());
+            
+            logger.info(mensagem);
+            
+            return ResponseEntity.ok(ApiResponse.success(response, mensagem));
+            
+        } catch (Exception e) {
+            logger.error("❌ Erro na sincronização incremental de coletas", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro na sincronização incremental: " + e.getMessage(), "SYNC_ERROR"));
+        }
+    }
 
 }

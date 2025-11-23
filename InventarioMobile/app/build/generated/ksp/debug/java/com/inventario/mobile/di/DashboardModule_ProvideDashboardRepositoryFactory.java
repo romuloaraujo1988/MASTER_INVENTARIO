@@ -1,5 +1,6 @@
 package com.inventario.mobile.di;
 
+import com.inventario.mobile.data.local.dao.DashboardDao;
 import com.inventario.mobile.data.mapper.DashboardMapper;
 import com.inventario.mobile.data.remote.api.ApiService;
 import com.inventario.mobile.domain.repository.DashboardRepository;
@@ -29,24 +30,28 @@ public final class DashboardModule_ProvideDashboardRepositoryFactory implements 
 
   private final Provider<DashboardMapper> mapperProvider;
 
+  private final Provider<DashboardDao> dashboardDaoProvider;
+
   public DashboardModule_ProvideDashboardRepositoryFactory(Provider<ApiService> apiServiceProvider,
-      Provider<DashboardMapper> mapperProvider) {
+      Provider<DashboardMapper> mapperProvider, Provider<DashboardDao> dashboardDaoProvider) {
     this.apiServiceProvider = apiServiceProvider;
     this.mapperProvider = mapperProvider;
+    this.dashboardDaoProvider = dashboardDaoProvider;
   }
 
   @Override
   public DashboardRepository get() {
-    return provideDashboardRepository(apiServiceProvider.get(), mapperProvider.get());
+    return provideDashboardRepository(apiServiceProvider.get(), mapperProvider.get(), dashboardDaoProvider.get());
   }
 
   public static DashboardModule_ProvideDashboardRepositoryFactory create(
-      Provider<ApiService> apiServiceProvider, Provider<DashboardMapper> mapperProvider) {
-    return new DashboardModule_ProvideDashboardRepositoryFactory(apiServiceProvider, mapperProvider);
+      Provider<ApiService> apiServiceProvider, Provider<DashboardMapper> mapperProvider,
+      Provider<DashboardDao> dashboardDaoProvider) {
+    return new DashboardModule_ProvideDashboardRepositoryFactory(apiServiceProvider, mapperProvider, dashboardDaoProvider);
   }
 
   public static DashboardRepository provideDashboardRepository(ApiService apiService,
-      DashboardMapper mapper) {
-    return Preconditions.checkNotNullFromProvides(DashboardModule.INSTANCE.provideDashboardRepository(apiService, mapper));
+      DashboardMapper mapper, DashboardDao dashboardDao) {
+    return Preconditions.checkNotNullFromProvides(DashboardModule.INSTANCE.provideDashboardRepository(apiService, mapper, dashboardDao));
   }
 }

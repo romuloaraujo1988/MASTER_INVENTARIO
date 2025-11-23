@@ -53,6 +53,7 @@ class EstadoPatrimonioDialog : DialogFragment() {
         btnCancelar = view.findViewById(R.id.btnCancelar)
 
         // Criar radio buttons dinamicamente
+        var bomRadioButtonId = -1
         EstadoPatrimonio.values().forEach { estado ->
             val radioButton = RadioButton(requireContext()).apply {
                 id = View.generateViewId()
@@ -62,6 +63,16 @@ class EstadoPatrimonioDialog : DialogFragment() {
                 setPadding(16, 16, 16, 16)
             }
             radioGroup.addView(radioButton)
+            
+            // Guardar ID do radio button "Bom" para pré-selecionar
+            if (estado == EstadoPatrimonio.BOM) {
+                bomRadioButtonId = radioButton.id
+            }
+        }
+        
+        // Pré-selecionar "Bom" como padrão
+        if (bomRadioButtonId != -1) {
+            radioGroup.check(bomRadioButtonId)
         }
 
         btnConfirmar.setOnClickListener {

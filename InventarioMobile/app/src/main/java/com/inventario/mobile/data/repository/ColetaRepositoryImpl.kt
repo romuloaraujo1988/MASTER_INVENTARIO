@@ -337,6 +337,7 @@ class ColetaRepositoryImpl @Inject constructor(
     
     /**
      * Sincroniza coletas em lote (mais eficiente)
+     * v2.5: Apaga coletas sincronizadas do banco local para liberar espaço
      */
     private suspend fun sincronizarEmLote(coletasPendentes: List<com.inventario.mobile.data.local.entity.ColetaEntity>): Int {
         // Converter entities para requests
@@ -384,16 +385,21 @@ class ColetaRepositoryImpl @Inject constructor(
         val response = coletaApi.registrarColetasEmLote(batchRequest)
         
         if (response.success) {
-            // Marcar todas como sincronizadas
+            // ✅ APAGAR coletas sincronizadas do banco local (liberar espaço)
             coletasPendentes.forEach { entity ->
-                coletaDao.marcarSincronizada(entity.id)
+                try {
+                    coletaDao.deletar(entity.id)
+                    android.util.Log.d("ColetaRepositoryImpl", "🗑️ Coleta ${entity.id} apagada do banco local (sincronizada)")
+                } catch (e: Exception) {
+                    android.util.Log.e("ColetaRepositoryImpl", "Erro ao apagar coleta ${entity.id}", e)
+                }
             }
             
             // Extrair quantidade de sucesso do response
             val resultado = response.data
             val sucesso = (resultado?.get("sucesso") as? Number)?.toInt() ?: coletasPendentes.size
             
-            android.util.Log.d("ColetaRepositoryImpl", "Batch sync: ${sucesso} sucesso de ${coletasPendentes.size}")
+            android.util.Log.d("ColetaRepositoryImpl", "✓ Batch sync: ${sucesso} coletas sincronizadas e apagadas do banco local")
             return sucesso
         } else {
             throw Exception("Batch sync falhou: ${response.message}")
@@ -402,6 +408,7 @@ class ColetaRepositoryImpl @Inject constructor(
     
     /**
      * Sincroniza coletas individualmente (fallback)
+     * v2.5: Apaga coletas sincronizadas do banco local para liberar espaço
      */
     private suspend fun sincronizarIndividualmente(coletasPendentes: List<com.inventario.mobile.data.local.entity.ColetaEntity>): Int {
         var sincronizadas = 0
@@ -440,8 +447,14 @@ class ColetaRepositoryImpl @Inject constructor(
                 val response = coletaApi.registrarColeta(request)
                 
                 if (response.success) {
-                    coletaDao.marcarSincronizada(entity.id)
-                    sincronizadas++
+                    // ✅ APAGAR coleta sincronizada do banco local (liberar espaço)
+                    try {
+                        coletaDao.deletar(entity.id)
+                        android.util.Log.d("ColetaRepositoryImpl", "🗑️ Coleta ${entity.id} apagada do banco local (sincronizada)")
+                        sincronizadas++
+                    } catch (e: Exception) {
+                        android.util.Log.e("ColetaRepositoryImpl", "Erro ao apagar coleta ${entity.id}", e)
+                    }
                 } else {
                     coletaDao.registrarErroSincronizacao(
                         entity.id,
@@ -456,6 +469,7 @@ class ColetaRepositoryImpl @Inject constructor(
             }
         }
         
+        android.util.Log.d("ColetaRepositoryImpl", "✓ Sync individual: ${sincronizadas} coletas sincronizadas e apagadas do banco local")
         return sincronizadas
     }
     

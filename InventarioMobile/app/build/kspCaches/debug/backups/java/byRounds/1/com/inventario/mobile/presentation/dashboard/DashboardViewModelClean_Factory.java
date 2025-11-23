@@ -1,5 +1,6 @@
 package com.inventario.mobile.presentation.dashboard;
 
+import com.inventario.mobile.data.repository.DashboardRepositoryImpl;
 import com.inventario.mobile.domain.usecase.BuscarEstatisticasDashboardUseCase;
 import com.inventario.mobile.domain.usecase.BuscarEvolucaoColetasUseCase;
 import dagger.internal.DaggerGenerated;
@@ -27,27 +28,33 @@ public final class DashboardViewModelClean_Factory implements Factory<DashboardV
 
   private final Provider<BuscarEvolucaoColetasUseCase> buscarEvolucaoColetasUseCaseProvider;
 
+  private final Provider<DashboardRepositoryImpl> dashboardRepositoryProvider;
+
   public DashboardViewModelClean_Factory(
       Provider<BuscarEstatisticasDashboardUseCase> buscarEstatisticasDashboardUseCaseProvider,
-      Provider<BuscarEvolucaoColetasUseCase> buscarEvolucaoColetasUseCaseProvider) {
+      Provider<BuscarEvolucaoColetasUseCase> buscarEvolucaoColetasUseCaseProvider,
+      Provider<DashboardRepositoryImpl> dashboardRepositoryProvider) {
     this.buscarEstatisticasDashboardUseCaseProvider = buscarEstatisticasDashboardUseCaseProvider;
     this.buscarEvolucaoColetasUseCaseProvider = buscarEvolucaoColetasUseCaseProvider;
+    this.dashboardRepositoryProvider = dashboardRepositoryProvider;
   }
 
   @Override
   public DashboardViewModelClean get() {
-    return newInstance(buscarEstatisticasDashboardUseCaseProvider.get(), buscarEvolucaoColetasUseCaseProvider.get());
+    return newInstance(buscarEstatisticasDashboardUseCaseProvider.get(), buscarEvolucaoColetasUseCaseProvider.get(), dashboardRepositoryProvider.get());
   }
 
   public static DashboardViewModelClean_Factory create(
       Provider<BuscarEstatisticasDashboardUseCase> buscarEstatisticasDashboardUseCaseProvider,
-      Provider<BuscarEvolucaoColetasUseCase> buscarEvolucaoColetasUseCaseProvider) {
-    return new DashboardViewModelClean_Factory(buscarEstatisticasDashboardUseCaseProvider, buscarEvolucaoColetasUseCaseProvider);
+      Provider<BuscarEvolucaoColetasUseCase> buscarEvolucaoColetasUseCaseProvider,
+      Provider<DashboardRepositoryImpl> dashboardRepositoryProvider) {
+    return new DashboardViewModelClean_Factory(buscarEstatisticasDashboardUseCaseProvider, buscarEvolucaoColetasUseCaseProvider, dashboardRepositoryProvider);
   }
 
   public static DashboardViewModelClean newInstance(
       BuscarEstatisticasDashboardUseCase buscarEstatisticasDashboardUseCase,
-      BuscarEvolucaoColetasUseCase buscarEvolucaoColetasUseCase) {
-    return new DashboardViewModelClean(buscarEstatisticasDashboardUseCase, buscarEvolucaoColetasUseCase);
+      BuscarEvolucaoColetasUseCase buscarEvolucaoColetasUseCase,
+      DashboardRepositoryImpl dashboardRepository) {
+    return new DashboardViewModelClean(buscarEstatisticasDashboardUseCase, buscarEvolucaoColetasUseCase, dashboardRepository);
   }
 }

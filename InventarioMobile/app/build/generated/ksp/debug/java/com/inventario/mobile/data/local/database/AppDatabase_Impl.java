@@ -13,6 +13,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.sqlite.db.SupportSQLiteOpenHelper;
 import com.inventario.mobile.data.local.dao.ColetaDao;
 import com.inventario.mobile.data.local.dao.ColetaDao_AppDatabase_Impl;
+import com.inventario.mobile.data.local.dao.DashboardDao;
+import com.inventario.mobile.data.local.dao.DashboardDao_Impl;
 import com.inventario.mobile.data.local.dao.LogColetaDao;
 import com.inventario.mobile.data.local.dao.LogColetaDao_Impl;
 import com.inventario.mobile.data.local.dao.PatrimonioDao;
@@ -54,6 +56,8 @@ public final class AppDatabase_Impl extends AppDatabase {
   private volatile SyncLogDao _syncLogDao;
 
   private volatile LogColetaDao _logColetaDao;
+
+  private volatile DashboardDao _dashboardDao;
 
   @Override
   @NonNull
@@ -376,6 +380,7 @@ public final class AppDatabase_Impl extends AppDatabase {
     _typeConvertersMap.put(SincronizacaoDao.class, SincronizacaoDao_Impl.getRequiredConverters());
     _typeConvertersMap.put(SyncLogDao.class, SyncLogDao_Impl.getRequiredConverters());
     _typeConvertersMap.put(LogColetaDao.class, LogColetaDao_Impl.getRequiredConverters());
+    _typeConvertersMap.put(DashboardDao.class, DashboardDao_Impl.getRequiredConverters());
     return _typeConvertersMap;
   }
 
@@ -488,6 +493,20 @@ public final class AppDatabase_Impl extends AppDatabase {
           _logColetaDao = new LogColetaDao_Impl(this);
         }
         return _logColetaDao;
+      }
+    }
+  }
+
+  @Override
+  public DashboardDao dashboardDao() {
+    if (_dashboardDao != null) {
+      return _dashboardDao;
+    } else {
+      synchronized(this) {
+        if(_dashboardDao == null) {
+          _dashboardDao = new DashboardDao_Impl(this);
+        }
+        return _dashboardDao;
       }
     }
   }

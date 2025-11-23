@@ -995,6 +995,18 @@ public class MainFrame extends JFrame {
         }
     }
 
+    private void abrirMonitorMobile() {
+        try {
+            MobileMonitorFrameV2 monitorFrame = new MobileMonitorFrameV2();
+            monitorFrame.setVisible(true);
+        } catch (Exception e) {
+            ModernDialog.showMessage(this,
+                    "Erro ao abrir monitor de dispositivos mobile: " + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
     private void abrirConfiguracaoBanco() {
         try {
             ConfiguracaoBancoDialog dialog = new ConfiguracaoBancoDialog(this);
@@ -1461,18 +1473,6 @@ public class MainFrame extends JFrame {
         }
     }
 
-    private void abrirMonitorMobile() {
-        try {
-            MobileMonitorFrame monitorFrame = new MobileMonitorFrame();
-            monitorFrame.setVisible(true);
-        } catch (Exception e) {
-            ModernDialog.showMessage(this,
-                    "Erro ao abrir monitor de usuários mobile: " + e.getMessage(),
-                    "Erro",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
     /**
      * Verifica se o servidor mobile está respondendo
      */
@@ -1717,18 +1717,6 @@ public class MainFrame extends JFrame {
             // Atualizar status após importação
             syncStatusManager.atualizarUltimaSincronizacaoGeral();
             statusBarPanel.atualizarUltimaSincronizacao(java.time.LocalDateTime.now());
-            
-            // Verificar se há dados locais agora
-            if (false) { // Remover verificação de sucesso pois não existe mais esse método
-                syncStatusManager.atualizarUltimaSincronizacaoGeral();
-                statusBarPanel.atualizarUltimaSincronizacao(java.time.LocalDateTime.now());
-                
-                JOptionPane.showMessageDialog(this,
-                    "Dados importados com sucesso!\n" +
-                    "O sistema está pronto para operar em modo offline.",
-                    "Importação Concluída",
-                    JOptionPane.INFORMATION_MESSAGE);
-            }
             
         } catch (Exception e) {
             ModernDialog.showMessage(this,

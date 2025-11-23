@@ -2270,4 +2270,93 @@ public class ColetaDAO {
         return resultado;
     }
     
+    /**
+     * Busca coletas modificadas desde um timestamp específico
+     * 
+     * @param dataUltimaSync timestamp da última sincronização
+     * @return lista de coletas modificadas
+     * @throws SQLException se ocorrer erro na consulta
+     */
+    public List<Coleta> buscarModificadasDesde(Timestamp dataUltimaSync) throws SQLException {
+        String sql = "SELECT * FROM TABELA_COLETA " +
+                    "WHERE DATA_COLETA >= ? " +
+                    "ORDER BY DATA_COLETA DESC";
+        
+        List<Coleta> coletas = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setTimestamp(1, dataUltimaSync);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Coleta coleta = mapearResultSet(rs);
+                    coletas.add(coleta);
+                }
+            }
+        }
+        
+        return coletas;
+    }
+    
+    /**
+     * Busca coletas modificadas desde um timestamp específico para um inventário
+     * 
+     * @param dataUltimaSync timestamp da última sincronização
+     * @param inventarioId ID do inventário
+     * @return lista de coletas modificadas
+     * @throws SQLException se ocorrer erro na consulta
+     */
+    public List<Coleta> buscarModificadasDesde(Timestamp dataUltimaSync, Integer inventarioId) throws SQLException {
+        String sql = "SELECT * FROM TABELA_COLETA " +
+                    "WHERE DATA_COLETA >= ? AND ID_INVENTARIO = ? " +
+                    "ORDER BY DATA_COLETA DESC";
+        
+        List<Coleta> coletas = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setTimestamp(1, dataUltimaSync);
+            stmt.setInt(2, inventarioId);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Coleta coleta = mapearResultSet(rs);
+                    coletas.add(coleta);
+                }
+            }
+        }
+        
+        return coletas;
+    }
+    
+    /**
+     * Mapeia um ResultSet para um objeto Coleta
+     * 
+     * @param rs ResultSet com dados da coleta
+     * @return objeto Coleta
+     * @throws SQLException se ocorrer erro ao ler dados
+     */
+    private Coleta mapearResultSet(ResultSet rs) throws SQLException {
+        Coleta coleta = new Coleta();
+        coleta.setId(rs.getInt("ID"));
+        coleta.setIdInventario(rs.getInt("ID_INVENTARIO"));
+        coleta.setIdPatrimonio(rs.getInt("ID_PATRIMONIO"));
+        coleta.setIdColetor(rs.getInt("ID_COLETOR"));
+        coleta.setDataColeta(rs.getTimestamp("DATA_COLETA"));
+        coleta.setLocalizacaoEncontrada(rs.getString("LOCALIZACAO_ENCONTRADA"));
+        coleta.setEstadoEncontrado(rs.getString("ESTADO_ENCONTRADO"));
+        coleta.setObservacaoColeta(rs.getString("OBSERVACAO_COLETA"));
+        
+        // Converter double para BigDecimal
+        double lat = rs.getDouble("LATITUDE");
+        double lon = rs.getDouble("LONGITUDE");
+        coleta.setLatitude(lat != 0 ? java.math.BigDecimal.valueOf(lat) : null);
+        coleta.setLongitude(lon != 0 ? java.math.BigDecimal.valueOf(lon) : null);
+        
+        return coleta;
+    }
+
 }

@@ -33,6 +33,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun sincronizacaoDao(): SincronizacaoDao
     abstract fun syncLogDao(): SyncLogDao
     abstract fun logColetaDao(): LogColetaDao  // v2.2: DAO de auditoria
+    abstract fun dashboardDao(): DashboardDao  // v2.4: DAO reativo para estatísticas
     
     companion object {
         @Volatile

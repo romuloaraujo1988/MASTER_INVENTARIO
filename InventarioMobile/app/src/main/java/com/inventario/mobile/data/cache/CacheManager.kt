@@ -52,7 +52,7 @@ class CacheManager @Inject constructor(
      * Salva timestamp da última sincronização de patrimônios
      */
     fun setLastSyncPatrimonios(timestamp: Long = System.currentTimeMillis()) {
-        preferencesManager.saveLong(KEY_LAST_SYNC_PATRIMONIOS, timestamp)
+        preferencesManager.putLong(KEY_LAST_SYNC_PATRIMONIOS, timestamp)
         Log.d(TAG, "✓ Timestamp de patrimônios atualizado: $timestamp")
     }
     
@@ -67,7 +67,7 @@ class CacheManager @Inject constructor(
      * Salva timestamp da última sincronização de salas
      */
     fun setLastSyncSalas(timestamp: Long = System.currentTimeMillis()) {
-        preferencesManager.saveLong(KEY_LAST_SYNC_SALAS, timestamp)
+        preferencesManager.putLong(KEY_LAST_SYNC_SALAS, timestamp)
         Log.d(TAG, "✓ Timestamp de salas atualizado: $timestamp")
     }
     
@@ -82,7 +82,7 @@ class CacheManager @Inject constructor(
      * Salva timestamp da última sincronização de responsáveis
      */
     fun setLastSyncResponsaveis(timestamp: Long = System.currentTimeMillis()) {
-        preferencesManager.saveLong(KEY_LAST_SYNC_RESPONSAVEIS, timestamp)
+        preferencesManager.putLong(KEY_LAST_SYNC_RESPONSAVEIS, timestamp)
         Log.d(TAG, "✓ Timestamp de responsáveis atualizado: $timestamp")
     }
     
@@ -97,7 +97,7 @@ class CacheManager @Inject constructor(
      * Salva timestamp da última sincronização de coletas
      */
     fun setLastSyncColetas(timestamp: Long = System.currentTimeMillis()) {
-        preferencesManager.saveLong(KEY_LAST_SYNC_COLETAS, timestamp)
+        preferencesManager.putLong(KEY_LAST_SYNC_COLETAS, timestamp)
         Log.d(TAG, "✓ Timestamp de coletas atualizado: $timestamp")
     }
     
@@ -165,10 +165,10 @@ class CacheManager @Inject constructor(
      * Invalida todo o cache (forçar sincronização completa)
      */
     fun invalidateAll() {
-        preferencesManager.saveLong(KEY_LAST_SYNC_PATRIMONIOS, 0L)
-        preferencesManager.saveLong(KEY_LAST_SYNC_SALAS, 0L)
-        preferencesManager.saveLong(KEY_LAST_SYNC_RESPONSAVEIS, 0L)
-        preferencesManager.saveLong(KEY_LAST_SYNC_COLETAS, 0L)
+        preferencesManager.putLong(KEY_LAST_SYNC_PATRIMONIOS, 0L)
+        preferencesManager.putLong(KEY_LAST_SYNC_SALAS, 0L)
+        preferencesManager.putLong(KEY_LAST_SYNC_RESPONSAVEIS, 0L)
+        preferencesManager.putLong(KEY_LAST_SYNC_COLETAS, 0L)
         Log.d(TAG, "⚠️ Todo o cache foi invalidado")
     }
     
@@ -176,7 +176,7 @@ class CacheManager @Inject constructor(
      * Invalida cache de patrimônios
      */
     fun invalidatePatrimonios() {
-        preferencesManager.saveLong(KEY_LAST_SYNC_PATRIMONIOS, 0L)
+        preferencesManager.putLong(KEY_LAST_SYNC_PATRIMONIOS, 0L)
         Log.d(TAG, "⚠️ Cache de patrimônios invalidado")
     }
     
@@ -184,7 +184,7 @@ class CacheManager @Inject constructor(
      * Invalida cache de salas
      */
     fun invalidateSalas() {
-        preferencesManager.saveLong(KEY_LAST_SYNC_SALAS, 0L)
+        preferencesManager.putLong(KEY_LAST_SYNC_SALAS, 0L)
         Log.d(TAG, "⚠️ Cache de salas invalidado")
     }
     
@@ -192,7 +192,7 @@ class CacheManager @Inject constructor(
      * Invalida cache de responsáveis
      */
     fun invalidateResponsaveis() {
-        preferencesManager.saveLong(KEY_LAST_SYNC_RESPONSAVEIS, 0L)
+        preferencesManager.putLong(KEY_LAST_SYNC_RESPONSAVEIS, 0L)
         Log.d(TAG, "⚠️ Cache de responsáveis invalidado")
     }
     
@@ -200,7 +200,7 @@ class CacheManager @Inject constructor(
      * Invalida cache de coletas
      */
     fun invalidateColetas() {
-        preferencesManager.saveLong(KEY_LAST_SYNC_COLETAS, 0L)
+        preferencesManager.putLong(KEY_LAST_SYNC_COLETAS, 0L)
         Log.d(TAG, "⚠️ Cache de coletas invalidado")
     }
     
@@ -253,3 +253,4 @@ data class CacheStats(
     fun getAgeInMinutes(ageMs: Long): Long = ageMs / 1000 / 60
     fun getAgeInHours(ageMs: Long): Long = ageMs / 1000 / 60 / 60
 }
+

@@ -29,13 +29,15 @@ object DashboardModule {
     
     /**
      * Provê implementação do DashboardRepository
+     * v2.4: Adicionado dashboardDao para Room Flow reativo
      */
     @Provides
     @Singleton
     fun provideDashboardRepository(
         apiService: ApiService,
-        mapper: DashboardMapper
+        mapper: DashboardMapper,
+        dashboardDao: com.inventario.mobile.data.local.dao.DashboardDao
     ): DashboardRepository {
-        return DashboardRepositoryImpl(apiService, mapper)
+        return DashboardRepositoryImpl(apiService, mapper, dashboardDao)
     }
 }

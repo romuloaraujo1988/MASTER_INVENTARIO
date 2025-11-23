@@ -193,6 +193,65 @@ class DashboardFragment : BaseOfflineFragment() {
                 }
             }
         }
+        
+        // ========================================
+        // 🔄 OBSERVAÇÃO HÍBRIDA (v2.5) - ATIVADA
+        // ========================================
+        
+        // SOLUÇÃO IMPLEMENTADA:
+        // - Busca estatísticas base do servidor (total correto de patrimônios)
+        // - Observa coletas locais pendentes (não sincronizadas)
+        // - Soma: Servidor + Coletas Locais = Total Atualizado
+        //
+        // Benefícios:
+        // - Total de patrimônios sempre correto (11428 do servidor)
+        // - Coletas locais somadas instantaneamente
+        // - Atualização em tempo real sem esperar sincronização
+        
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                val inventarioId = preferencesManager.getInventarioAtivoId()
+                
+                Log.d(TAG, "🔄 Iniciando observação híbrida de estatísticas (inventário: $inventarioId)")
+                
+                viewModel.observarEstatisticasHibridas(inventarioId).collect { stats ->
+                    Log.d(TAG, "🔄 Estatísticas híbridas recebidas!")
+                    Log.d(TAG, "   Total: ${stats.totalPatrimonios}")
+                    Log.d(TAG, "   Coletados: ${stats.totalColetados}")
+                    Log.d(TAG, "   Pendentes: ${stats.totalPendentes}")
+                    Log.d(TAG, "   Percentual: ${stats.percentualConclusao}%")
+                    
+                    updateStatsUI(stats)
+                }
+            }
+        }
+    }
+    
+    /**
+     * Atualiza apenas as estatísticas na UI
+     * Chamado automaticamente quando banco muda via Room Flow
+     * 
+     * Views corretas do layout:
+     * - tvKpiColetados (não tvColetados)
+     * - tvKpiPendentes (não tvPendentes)
+     * - tvKpiDivergencias
+     * - tvKpiColetores
+     */
+    private fun updateStatsUI(stats: com.inventario.mobile.domain.model.DashboardStats) {
+        try {
+            // Atualizar KPIs principais
+            binding.tvKpiColetados.text = stats.totalColetados.toString()
+            binding.tvKpiPendentes.text = stats.totalPendentes.toString()
+            binding.tvKpiDivergencias.text = stats.divergencias.toString()
+            binding.tvKpiColetores.text = stats.coletoresAtivos.toString()
+            
+            Log.d(TAG, "✅ UI atualizada com estatísticas reativas")
+            Log.d(TAG, "   Coletados: ${stats.totalColetados}")
+            Log.d(TAG, "   Pendentes: ${stats.totalPendentes}")
+            Log.d(TAG, "   Percentual: ${stats.percentualConclusao}%")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Erro ao atualizar UI com estatísticas", e)
+        }
     }
 
     private fun updateUI(state: DashboardUiStateClean) {

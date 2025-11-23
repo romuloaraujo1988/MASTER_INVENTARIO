@@ -1,411 +1,53 @@
-2025-11-22 11:56:39.837 [main] INFO  com.inventario.MobileApiApplication - ╔════════════════════════════════════════════════════════════════
-2025-11-22 11:56:39.879 [main] INFO  com.inventario.MobileApiApplication - ║ VERIFICANDO PORTA 8081
-2025-11-22 11:56:39.880 [main] INFO  com.inventario.MobileApiApplication - ╚════════════════════════════════════════════════════════════════
-2025-11-22 11:56:39.884 [main] INFO  com.inventario.util.PortManager - ✓ Porta 8081 está disponível
-2025-11-22 11:56:39.884 [main] INFO  com.inventario.MobileApiApplication - ╔════════════════════════════════════════════════════════════════
-2025-11-22 11:56:39.885 [main] INFO  com.inventario.MobileApiApplication - ║ Porta 8081 disponível - Iniciando servidor...
-2025-11-22 11:56:39.885 [main] INFO  com.inventario.MobileApiApplication - ╚════════════════════════════════════════════════════════════════
-2025-11-22 11:56:39.906 [main] INFO  com.inventario.MobileApiApplication - Sons de notificação do desktop desabilitados (servidor mobile ativo)
-2025-11-22 11:56:40.339 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
-2025-11-22 11:56:40.435 [main] INFO  com.inventario.MobileApiApplication - Starting MobileApiApplication using Java 21.0.7 with PID 7916 (C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\target\classes started by Romulo in C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO)
-2025-11-22 11:56:40.437 [main] DEBUG com.inventario.MobileApiApplication - Running with Spring Boot v3.2.0, Spring v6.1.1
-2025-11-22 11:56:40.439 [main] INFO  com.inventario.MobileApiApplication - The following 1 profile is active: "mobile"
-2025-11-22 11:56:43.567 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-0.0.0.0-8081"]
-2025-11-22 11:56:43.570 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
-2025-11-22 11:56:43.570 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.16]
-2025-11-22 11:56:43.671 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/inventario] - Initializing Spring embedded WebApplicationContext
-2025-11-22 11:56:44.169 [main] DEBUG com.inventario.security.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
-2025-11-22 11:56:44.210 [main] INFO  com.zaxxer.hikari.HikariDataSource - InventarioMobilePool - Starting...
-2025-11-22 11:56:44.444 [main] INFO  com.zaxxer.hikari.pool.HikariPool - InventarioMobilePool - Added connection org.postgresql.jdbc.PgConnection@33f2cf82
-2025-11-22 11:56:44.446 [main] INFO  com.zaxxer.hikari.HikariDataSource - InventarioMobilePool - Start completed.
-2025-11-22 11:56:44.609 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
-2025-11-22 11:56:44.700 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.3.1.Final
-2025-11-22 11:56:44.739 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
-2025-11-22 11:56:44.974 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2025-11-22 11:56:45.223 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2025-11-22 11:56:45.737 [main] INFO  com.inventario.offline.ConnectivityManager - Conexão detectada com servidor do banco de dados
-2025-11-22 11:56:45.742 [main] DEBUG com.inventario.offline.ConnectivityManager - Listener adicionado: 
-2025-11-22 11:56:45.744 [main] DEBUG com.inventario.offline.ConnectivityManager - Listener adicionado: 
-2025-11-22 11:56:45.935 [main] INFO  com.inventario.service.MobileConnectionService - MobileConnectionService inicializado com limpeza automática
-2025-11-22 11:56:46.101 [main] INFO  com.inventario.util.notification.NotificationManager - Toast notifications enabled
-2025-11-22 11:56:46.101 [main] INFO  com.inventario.util.notification.NotificationManager - Error reporting enabled
-2025-11-22 11:56:46.101 [main] INFO  com.inventario.config.NotificationConfig - Sistema de Notificação inicializado:
-2025-11-22 11:56:46.101 [main] INFO  com.inventario.config.NotificationConfig -   - Toast notifications: ATIVADO
-2025-11-22 11:56:46.101 [main] INFO  com.inventario.config.NotificationConfig -   - Error reporting: ATIVADO
-2025-11-22 11:56:49.440 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-0.0.0.0-8081"]
-2025-11-22 11:56:49.645 [main] INFO  com.inventario.MobileApiApplication - Started MobileApiApplication in 9.648 seconds (process running for 10.603)
-2025-11-22 12:13:09.968 [main] INFO  com.inventario.MobileApiApplication - ╔════════════════════════════════════════════════════════════════
-2025-11-22 12:13:09.982 [main] INFO  com.inventario.MobileApiApplication - ║ VERIFICANDO PORTA 8081
-2025-11-22 12:13:09.984 [main] INFO  com.inventario.MobileApiApplication - ╚════════════════════════════════════════════════════════════════
-2025-11-22 12:13:09.987 [main] INFO  com.inventario.util.PortManager - ✓ Porta 8081 está disponível
-2025-11-22 12:13:09.987 [main] INFO  com.inventario.MobileApiApplication - ╔════════════════════════════════════════════════════════════════
-2025-11-22 12:13:09.987 [main] INFO  com.inventario.MobileApiApplication - ║ Porta 8081 disponível - Iniciando servidor...
-2025-11-22 12:13:09.987 [main] INFO  com.inventario.MobileApiApplication - ╚════════════════════════════════════════════════════════════════
-2025-11-22 12:13:10.001 [main] INFO  com.inventario.MobileApiApplication - Sons de notificação do desktop desabilitados (servidor mobile ativo)
-2025-11-22 12:13:10.555 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
-2025-11-22 12:13:10.688 [main] INFO  com.inventario.MobileApiApplication - Starting MobileApiApplication using Java 21.0.7 with PID 13052 (C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\target\classes started by Romulo in C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO)
-2025-11-22 12:13:10.696 [main] DEBUG com.inventario.MobileApiApplication - Running with Spring Boot v3.2.0, Spring v6.1.1
-2025-11-22 12:13:10.698 [main] INFO  com.inventario.MobileApiApplication - The following 1 profile is active: "mobile"
-2025-11-22 12:13:15.106 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-0.0.0.0-8081"]
-2025-11-22 12:13:15.111 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
-2025-11-22 12:13:15.112 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.16]
-2025-11-22 12:13:15.212 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/inventario] - Initializing Spring embedded WebApplicationContext
-2025-11-22 12:13:15.782 [main] DEBUG com.inventario.security.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
-2025-11-22 12:13:15.838 [main] INFO  com.zaxxer.hikari.HikariDataSource - InventarioMobilePool - Starting...
-2025-11-22 12:13:16.137 [main] INFO  com.zaxxer.hikari.pool.HikariPool - InventarioMobilePool - Added connection org.postgresql.jdbc.PgConnection@3e71a1f8
-2025-11-22 12:13:16.141 [main] INFO  com.zaxxer.hikari.HikariDataSource - InventarioMobilePool - Start completed.
-2025-11-22 12:13:16.382 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
-2025-11-22 12:13:16.525 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.3.1.Final
-2025-11-22 12:13:16.611 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
-2025-11-22 12:13:17.100 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2025-11-22 12:13:17.555 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2025-11-22 12:13:18.435 [main] INFO  com.inventario.offline.ConnectivityManager - Conexão detectada com servidor do banco de dados
-2025-11-22 12:13:18.450 [main] DEBUG com.inventario.offline.ConnectivityManager - Listener adicionado: 
-2025-11-22 12:13:18.451 [main] DEBUG com.inventario.offline.ConnectivityManager - Listener adicionado: 
-2025-11-22 12:13:18.657 [main] INFO  com.inventario.service.MobileConnectionService - MobileConnectionService inicializado com limpeza automática
-2025-11-22 12:13:18.950 [main] INFO  com.inventario.util.notification.NotificationManager - Toast notifications enabled
-2025-11-22 12:13:18.950 [main] INFO  com.inventario.util.notification.NotificationManager - Error reporting enabled
-2025-11-22 12:13:18.950 [main] INFO  com.inventario.config.NotificationConfig - Sistema de Notificação inicializado:
-2025-11-22 12:13:18.950 [main] INFO  com.inventario.config.NotificationConfig -   - Toast notifications: ATIVADO
-2025-11-22 12:13:18.950 [main] INFO  com.inventario.config.NotificationConfig -   - Error reporting: ATIVADO
-2025-11-22 12:13:25.992 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-0.0.0.0-8081"]
-2025-11-22 12:13:26.328 [main] INFO  com.inventario.MobileApiApplication - Started MobileApiApplication in 16.231 seconds (process running for 17.301)
-2025-11-22 12:14:20.780 [http-nio-0.0.0.0-8081-exec-1] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/inventario] - Initializing Spring DispatcherServlet 'dispatcherServlet'
-2025-11-22 13:21:23.991 [http-nio-0.0.0.0-8081-exec-13] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 13:21:23.993 [http-nio-0.0.0.0-8081-exec-13] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 13:21:24.109 [http-nio-0.0.0.0-8081-exec-13] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 13:21:24.109 [http-nio-0.0.0.0-8081-exec-13] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 13:21:24.110 [http-nio-0.0.0.0-8081-exec-13] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 13:21:24.111 [http-nio-0.0.0.0-8081-exec-13] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 13:21:24.116 [http-nio-0.0.0.0-8081-exec-13] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 13:21:24.562 [http-nio-0.0.0.0-8081-exec-13] INFO  com.inventario.service.UsuarioService - UsuarioService.buscarPorUsername - Buscando: 'admin'
-2025-11-22 13:21:24.656 [http-nio-0.0.0.0-8081-exec-13] INFO  com.inventario.service.UsuarioService - Usuário encontrado - ID: 1, Login: 'admin', Nome: Administrador do Sistema, Ativo: true
-2025-11-22 13:21:25.463 [http-nio-0.0.0.0-8081-exec-14] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 13:21:25.464 [http-nio-0.0.0.0-8081-exec-14] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 13:21:25.613 [http-nio-0.0.0.0-8081-exec-15] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 13:21:25.613 [http-nio-0.0.0.0-8081-exec-15] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 13:21:25.704 [http-nio-0.0.0.0-8081-exec-14] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 13:21:25.705 [http-nio-0.0.0.0-8081-exec-14] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 13:21:25.705 [http-nio-0.0.0.0-8081-exec-14] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 13:21:25.705 [http-nio-0.0.0.0-8081-exec-14] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 13:21:25.705 [http-nio-0.0.0.0-8081-exec-14] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 13:21:25.729 [http-nio-0.0.0.0-8081-exec-15] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 13:21:25.730 [http-nio-0.0.0.0-8081-exec-15] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 13:21:25.730 [http-nio-0.0.0.0-8081-exec-15] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 13:21:25.731 [http-nio-0.0.0.0-8081-exec-15] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 13:21:25.731 [http-nio-0.0.0.0-8081-exec-15] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 13:44:11.386 [http-nio-0.0.0.0-8081-exec-20] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 13:44:11.390 [http-nio-0.0.0.0-8081-exec-20] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 13:44:11.547 [http-nio-0.0.0.0-8081-exec-20] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 13:44:11.547 [http-nio-0.0.0.0-8081-exec-20] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 13:44:11.548 [http-nio-0.0.0.0-8081-exec-20] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 13:44:11.548 [http-nio-0.0.0.0-8081-exec-20] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 13:44:11.550 [http-nio-0.0.0.0-8081-exec-20] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 13:45:33.493 [http-nio-0.0.0.0-8081-exec-18] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 13:45:33.493 [http-nio-0.0.0.0-8081-exec-18] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 13:45:33.554 [http-nio-0.0.0.0-8081-exec-18] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 13:45:33.555 [http-nio-0.0.0.0-8081-exec-18] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 13:45:33.555 [http-nio-0.0.0.0-8081-exec-18] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 13:45:33.555 [http-nio-0.0.0.0-8081-exec-18] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 13:45:33.555 [http-nio-0.0.0.0-8081-exec-18] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 13:45:55.342 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 13:45:55.342 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 13:45:55.399 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 13:45:55.399 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 13:45:55.399 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 13:45:55.399 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 13:45:55.399 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 13:47:25.961 [main] INFO  com.inventario.MobileApiApplication - ╔════════════════════════════════════════════════════════════════
-2025-11-22 13:47:25.980 [main] INFO  com.inventario.MobileApiApplication - ║ VERIFICANDO PORTA 8081
-2025-11-22 13:47:25.980 [main] INFO  com.inventario.MobileApiApplication - ╚════════════════════════════════════════════════════════════════
-2025-11-22 13:47:25.985 [main] INFO  com.inventario.util.PortManager - ✓ Porta 8081 está disponível
-2025-11-22 13:47:25.985 [main] INFO  com.inventario.MobileApiApplication - ╔════════════════════════════════════════════════════════════════
-2025-11-22 13:47:25.985 [main] INFO  com.inventario.MobileApiApplication - ║ Porta 8081 disponível - Iniciando servidor...
-2025-11-22 13:47:25.985 [main] INFO  com.inventario.MobileApiApplication - ╚════════════════════════════════════════════════════════════════
-2025-11-22 13:47:26.011 [main] INFO  com.inventario.MobileApiApplication - Sons de notificação do desktop desabilitados (servidor mobile ativo)
-2025-11-22 13:47:26.759 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
-2025-11-22 13:47:26.916 [main] INFO  com.inventario.MobileApiApplication - Starting MobileApiApplication using Java 21.0.7 with PID 20704 (C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\target\classes started by Romulo in C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO)
-2025-11-22 13:47:26.922 [main] DEBUG com.inventario.MobileApiApplication - Running with Spring Boot v3.2.0, Spring v6.1.1
-2025-11-22 13:47:26.924 [main] INFO  com.inventario.MobileApiApplication - The following 1 profile is active: "mobile"
-2025-11-22 13:47:33.214 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-0.0.0.0-8081"]
-2025-11-22 13:47:33.220 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
-2025-11-22 13:47:33.221 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.16]
-2025-11-22 13:47:33.485 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/inventario] - Initializing Spring embedded WebApplicationContext
-2025-11-22 13:47:34.455 [main] DEBUG com.inventario.security.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
-2025-11-22 13:47:34.538 [main] INFO  com.zaxxer.hikari.HikariDataSource - InventarioMobilePool - Starting...
-2025-11-22 13:47:35.127 [main] INFO  com.zaxxer.hikari.pool.HikariPool - InventarioMobilePool - Added connection org.postgresql.jdbc.PgConnection@5c60f096
-2025-11-22 13:47:35.130 [main] INFO  com.zaxxer.hikari.HikariDataSource - InventarioMobilePool - Start completed.
-2025-11-22 13:47:35.749 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
-2025-11-22 13:47:35.943 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.3.1.Final
-2025-11-22 13:47:36.061 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
-2025-11-22 13:47:36.850 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2025-11-22 13:47:37.575 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2025-11-22 13:47:38.550 [main] INFO  com.inventario.offline.ConnectivityManager - Conexão detectada com servidor do banco de dados
-2025-11-22 13:47:38.570 [main] DEBUG com.inventario.offline.ConnectivityManager - Listener adicionado: 
-2025-11-22 13:47:38.571 [main] DEBUG com.inventario.offline.ConnectivityManager - Listener adicionado: 
-2025-11-22 13:47:38.745 [main] INFO  com.inventario.service.MobileConnectionService - MobileConnectionService inicializado com limpeza automática
-2025-11-22 13:47:39.094 [main] INFO  com.inventario.util.notification.NotificationManager - Toast notifications enabled
-2025-11-22 13:47:39.095 [main] INFO  com.inventario.util.notification.NotificationManager - Error reporting enabled
-2025-11-22 13:47:39.095 [main] INFO  com.inventario.config.NotificationConfig - Sistema de Notificação inicializado:
-2025-11-22 13:47:39.095 [main] INFO  com.inventario.config.NotificationConfig -   - Toast notifications: ATIVADO
-2025-11-22 13:47:39.095 [main] INFO  com.inventario.config.NotificationConfig -   - Error reporting: ATIVADO
-2025-11-22 13:47:47.711 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-0.0.0.0-8081"]
-2025-11-22 13:47:48.206 [main] INFO  com.inventario.MobileApiApplication - Started MobileApiApplication in 22.019 seconds (process running for 23.482)
-2025-11-22 13:55:21.900 [http-nio-0.0.0.0-8081-exec-1] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/inventario] - Initializing Spring DispatcherServlet 'dispatcherServlet'
-2025-11-22 13:55:22.139 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 13:55:22.139 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 13:55:22.260 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 13:55:22.260 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 13:55:22.261 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 13:55:22.261 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 13:55:22.305 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 14:05:31.021 [http-nio-0.0.0.0-8081-exec-4] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 14:05:31.023 [http-nio-0.0.0.0-8081-exec-4] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 14:05:31.307 [http-nio-0.0.0.0-8081-exec-4] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 14:05:31.307 [http-nio-0.0.0.0-8081-exec-4] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 14:05:31.307 [http-nio-0.0.0.0-8081-exec-4] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 14:05:31.309 [http-nio-0.0.0.0-8081-exec-4] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 14:05:31.310 [http-nio-0.0.0.0-8081-exec-4] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 14:05:38.599 [http-nio-0.0.0.0-8081-exec-5] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 14:05:38.599 [http-nio-0.0.0.0-8081-exec-5] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 14:05:38.671 [http-nio-0.0.0.0-8081-exec-5] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 14:05:38.672 [http-nio-0.0.0.0-8081-exec-5] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 14:05:38.672 [http-nio-0.0.0.0-8081-exec-5] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 14:05:38.672 [http-nio-0.0.0.0-8081-exec-5] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 14:05:38.672 [http-nio-0.0.0.0-8081-exec-5] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 14:07:05.463 [http-nio-0.0.0.0-8081-exec-8] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 14:07:05.463 [http-nio-0.0.0.0-8081-exec-8] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 14:07:05.558 [http-nio-0.0.0.0-8081-exec-8] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 14:07:05.558 [http-nio-0.0.0.0-8081-exec-8] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 14:07:05.558 [http-nio-0.0.0.0-8081-exec-8] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 14:07:05.558 [http-nio-0.0.0.0-8081-exec-8] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 14:07:05.559 [http-nio-0.0.0.0-8081-exec-8] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 14:07:36.448 [http-nio-0.0.0.0-8081-exec-9] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 14:07:36.449 [http-nio-0.0.0.0-8081-exec-9] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 14:07:36.524 [http-nio-0.0.0.0-8081-exec-9] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 14:07:36.524 [http-nio-0.0.0.0-8081-exec-9] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 14:07:36.525 [http-nio-0.0.0.0-8081-exec-9] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 14:07:36.525 [http-nio-0.0.0.0-8081-exec-9] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 14:07:36.525 [http-nio-0.0.0.0-8081-exec-9] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 19:33:32.099 [main] INFO  com.inventario.MobileApiApplication - ╔════════════════════════════════════════════════════════════════
-2025-11-22 19:33:32.114 [main] INFO  com.inventario.MobileApiApplication - ║ VERIFICANDO PORTA 8081
-2025-11-22 19:33:32.116 [main] INFO  com.inventario.MobileApiApplication - ╚════════════════════════════════════════════════════════════════
-2025-11-22 19:33:32.119 [main] INFO  com.inventario.util.PortManager - ✓ Porta 8081 está disponível
-2025-11-22 19:33:32.119 [main] INFO  com.inventario.MobileApiApplication - ╔════════════════════════════════════════════════════════════════
-2025-11-22 19:33:32.120 [main] INFO  com.inventario.MobileApiApplication - ║ Porta 8081 disponível - Iniciando servidor...
-2025-11-22 19:33:32.120 [main] INFO  com.inventario.MobileApiApplication - ╚════════════════════════════════════════════════════════════════
-2025-11-22 19:33:32.141 [main] INFO  com.inventario.MobileApiApplication - Sons de notificação do desktop desabilitados (servidor mobile ativo)
-2025-11-22 19:33:33.020 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
-2025-11-22 19:33:33.185 [main] INFO  com.inventario.MobileApiApplication - Starting MobileApiApplication using Java 21.0.7 with PID 12540 (C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\target\classes started by Romulo in C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO)
-2025-11-22 19:33:33.191 [main] DEBUG com.inventario.MobileApiApplication - Running with Spring Boot v3.2.0, Spring v6.1.1
-2025-11-22 19:33:33.192 [main] INFO  com.inventario.MobileApiApplication - The following 1 profile is active: "mobile"
-2025-11-22 19:33:39.203 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-0.0.0.0-8081"]
-2025-11-22 19:33:39.208 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
-2025-11-22 19:33:39.209 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.16]
-2025-11-22 19:33:39.387 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/inventario] - Initializing Spring embedded WebApplicationContext
-2025-11-22 19:33:40.504 [main] DEBUG com.inventario.security.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
-2025-11-22 19:33:40.619 [main] INFO  com.zaxxer.hikari.HikariDataSource - InventarioMobilePool - Starting...
-2025-11-22 19:33:41.054 [main] INFO  com.zaxxer.hikari.pool.HikariPool - InventarioMobilePool - Added connection org.postgresql.jdbc.PgConnection@43cbafa6
-2025-11-22 19:33:41.059 [main] INFO  com.zaxxer.hikari.HikariDataSource - InventarioMobilePool - Start completed.
-2025-11-22 19:33:41.406 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
-2025-11-22 19:33:41.556 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.3.1.Final
-2025-11-22 19:33:41.626 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
-2025-11-22 19:33:42.138 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2025-11-22 19:33:42.583 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2025-11-22 19:33:43.369 [main] INFO  com.inventario.offline.ConnectivityManager - Conexão detectada com servidor do banco de dados
-2025-11-22 19:33:43.381 [main] DEBUG com.inventario.offline.ConnectivityManager - Listener adicionado: 
-2025-11-22 19:33:43.383 [main] DEBUG com.inventario.offline.ConnectivityManager - Listener adicionado: 
-2025-11-22 19:33:43.538 [main] INFO  com.inventario.service.MobileConnectionService - MobileConnectionService inicializado com limpeza automática
-2025-11-22 19:33:43.784 [main] INFO  com.inventario.util.notification.NotificationManager - Toast notifications enabled
-2025-11-22 19:33:43.784 [main] INFO  com.inventario.util.notification.NotificationManager - Error reporting enabled
-2025-11-22 19:33:43.784 [main] INFO  com.inventario.config.NotificationConfig - Sistema de Notificação inicializado:
-2025-11-22 19:33:43.784 [main] INFO  com.inventario.config.NotificationConfig -   - Toast notifications: ATIVADO
-2025-11-22 19:33:43.784 [main] INFO  com.inventario.config.NotificationConfig -   - Error reporting: ATIVADO
-2025-11-22 19:33:49.457 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-0.0.0.0-8081"]
-2025-11-22 19:33:49.893 [main] INFO  com.inventario.MobileApiApplication - Started MobileApiApplication in 17.593 seconds (process running for 18.806)
-2025-11-22 19:43:21.274 [http-nio-0.0.0.0-8081-exec-1] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/inventario] - Initializing Spring DispatcherServlet 'dispatcherServlet'
-2025-11-22 19:43:21.525 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 19:43:21.525 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 19:43:21.682 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 19:43:21.682 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 19:43:21.683 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 19:43:21.684 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 19:43:21.689 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 19:43:27.410 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 19:43:27.410 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 19:43:27.511 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 19:43:27.512 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 19:43:27.512 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 19:43:27.512 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 19:43:27.512 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 19:43:32.371 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 19:43:32.371 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 19:43:32.481 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 19:43:32.481 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 19:43:32.482 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 19:43:32.482 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 19:43:32.482 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 19:54:23.459 [main] INFO  com.inventario.MobileApiApplication - ╔════════════════════════════════════════════════════════════════
-2025-11-22 19:54:23.478 [main] INFO  com.inventario.MobileApiApplication - ║ VERIFICANDO PORTA 8081
-2025-11-22 19:54:23.479 [main] INFO  com.inventario.MobileApiApplication - ╚════════════════════════════════════════════════════════════════
-2025-11-22 19:54:23.482 [main] INFO  com.inventario.util.PortManager - ✓ Porta 8081 está disponível
-2025-11-22 19:54:23.482 [main] INFO  com.inventario.MobileApiApplication - ╔════════════════════════════════════════════════════════════════
-2025-11-22 19:54:23.483 [main] INFO  com.inventario.MobileApiApplication - ║ Porta 8081 disponível - Iniciando servidor...
-2025-11-22 19:54:23.483 [main] INFO  com.inventario.MobileApiApplication - ╚════════════════════════════════════════════════════════════════
-2025-11-22 19:54:23.502 [main] INFO  com.inventario.MobileApiApplication - Sons de notificação do desktop desabilitados (servidor mobile ativo)
-2025-11-22 19:54:24.144 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
-2025-11-22 19:54:24.259 [main] INFO  com.inventario.MobileApiApplication - Starting MobileApiApplication using Java 21.0.7 with PID 16076 (C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\target\classes started by Romulo in C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO)
-2025-11-22 19:54:24.262 [main] DEBUG com.inventario.MobileApiApplication - Running with Spring Boot v3.2.0, Spring v6.1.1
-2025-11-22 19:54:24.265 [main] INFO  com.inventario.MobileApiApplication - The following 1 profile is active: "mobile"
-2025-11-22 19:54:29.223 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-0.0.0.0-8081"]
-2025-11-22 19:54:29.226 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
-2025-11-22 19:54:29.226 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.16]
-2025-11-22 19:54:29.333 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/inventario] - Initializing Spring embedded WebApplicationContext
-2025-11-22 19:54:30.037 [main] DEBUG com.inventario.security.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
-2025-11-22 19:54:30.104 [main] INFO  com.zaxxer.hikari.HikariDataSource - InventarioMobilePool - Starting...
-2025-11-22 19:54:30.456 [main] INFO  com.zaxxer.hikari.pool.HikariPool - InventarioMobilePool - Added connection org.postgresql.jdbc.PgConnection@33e8694b
-2025-11-22 19:54:30.458 [main] INFO  com.zaxxer.hikari.HikariDataSource - InventarioMobilePool - Start completed.
-2025-11-22 19:54:30.719 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
-2025-11-22 19:54:30.907 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.3.1.Final
-2025-11-22 19:54:30.996 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
-2025-11-22 19:54:31.397 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2025-11-22 19:54:31.849 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2025-11-22 19:54:32.809 [main] INFO  com.inventario.offline.ConnectivityManager - Conexão detectada com servidor do banco de dados
-2025-11-22 19:54:32.823 [main] DEBUG com.inventario.offline.ConnectivityManager - Listener adicionado: 
-2025-11-22 19:54:32.824 [main] DEBUG com.inventario.offline.ConnectivityManager - Listener adicionado: 
-2025-11-22 19:54:33.033 [main] INFO  com.inventario.service.MobileConnectionService - MobileConnectionService inicializado com limpeza automática
-2025-11-22 19:54:33.309 [main] INFO  com.inventario.util.notification.NotificationManager - Toast notifications enabled
-2025-11-22 19:54:33.309 [main] INFO  com.inventario.util.notification.NotificationManager - Error reporting enabled
-2025-11-22 19:54:33.309 [main] INFO  com.inventario.config.NotificationConfig - Sistema de Notificação inicializado:
-2025-11-22 19:54:33.309 [main] INFO  com.inventario.config.NotificationConfig -   - Toast notifications: ATIVADO
-2025-11-22 19:54:33.309 [main] INFO  com.inventario.config.NotificationConfig -   - Error reporting: ATIVADO
-2025-11-22 19:54:38.478 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-0.0.0.0-8081"]
-2025-11-22 19:54:38.837 [main] INFO  com.inventario.MobileApiApplication - Started MobileApiApplication in 15.189 seconds (process running for 16.558)
-2025-11-22 19:55:02.671 [http-nio-0.0.0.0-8081-exec-1] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/inventario] - Initializing Spring DispatcherServlet 'dispatcherServlet'
-2025-11-22 19:55:03.205 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 19:55:03.205 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 19:55:03.397 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 19:55:03.397 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 19:55:03.399 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 19:55:03.399 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 19:55:03.404 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 19:55:11.091 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 19:55:11.091 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 19:55:11.185 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 19:55:11.185 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 19:55:11.185 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 19:55:11.185 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 19:55:11.185 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 19:55:39.827 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 19:55:39.827 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 19:55:39.912 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 19:55:39.912 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 19:55:39.912 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 19:55:39.912 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 19:55:39.912 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 20:05:05.968 [http-nio-0.0.0.0-8081-exec-4] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 20:05:05.970 [http-nio-0.0.0.0-8081-exec-4] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 20:05:06.297 [http-nio-0.0.0.0-8081-exec-4] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 20:05:06.297 [http-nio-0.0.0.0-8081-exec-4] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 20:05:06.299 [http-nio-0.0.0.0-8081-exec-4] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 20:05:06.299 [http-nio-0.0.0.0-8081-exec-4] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 20:05:06.299 [http-nio-0.0.0.0-8081-exec-4] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 20:05:19.074 [http-nio-0.0.0.0-8081-exec-5] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 20:05:19.074 [http-nio-0.0.0.0-8081-exec-5] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 20:05:19.164 [http-nio-0.0.0.0-8081-exec-5] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 20:05:19.164 [http-nio-0.0.0.0-8081-exec-5] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 20:05:19.164 [http-nio-0.0.0.0-8081-exec-5] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 20:05:19.164 [http-nio-0.0.0.0-8081-exec-5] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 20:05:19.164 [http-nio-0.0.0.0-8081-exec-5] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 20:07:08.722 [http-nio-0.0.0.0-8081-exec-6] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 20:07:08.723 [http-nio-0.0.0.0-8081-exec-6] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 20:07:08.859 [http-nio-0.0.0.0-8081-exec-6] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 20:07:08.859 [http-nio-0.0.0.0-8081-exec-6] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 20:07:08.859 [http-nio-0.0.0.0-8081-exec-6] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 20:07:08.859 [http-nio-0.0.0.0-8081-exec-6] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 20:07:08.860 [http-nio-0.0.0.0-8081-exec-6] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 20:07:18.541 [http-nio-0.0.0.0-8081-exec-7] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 20:07:18.542 [http-nio-0.0.0.0-8081-exec-7] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 20:07:18.738 [http-nio-0.0.0.0-8081-exec-7] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 20:07:18.738 [http-nio-0.0.0.0-8081-exec-7] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 20:07:18.738 [http-nio-0.0.0.0-8081-exec-7] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 20:07:18.738 [http-nio-0.0.0.0-8081-exec-7] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 20:07:18.738 [http-nio-0.0.0.0-8081-exec-7] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 20:13:21.004 [http-nio-0.0.0.0-8081-exec-8] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 20:13:21.009 [http-nio-0.0.0.0-8081-exec-8] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 20:13:21.211 [http-nio-0.0.0.0-8081-exec-8] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 20:13:21.211 [http-nio-0.0.0.0-8081-exec-8] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 20:13:21.212 [http-nio-0.0.0.0-8081-exec-8] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 20:13:21.213 [http-nio-0.0.0.0-8081-exec-8] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 20:13:21.213 [http-nio-0.0.0.0-8081-exec-8] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 20:17:02.986 [http-nio-0.0.0.0-8081-exec-10] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 20:17:02.986 [http-nio-0.0.0.0-8081-exec-10] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 20:17:03.196 [http-nio-0.0.0.0-8081-exec-10] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 20:17:03.196 [http-nio-0.0.0.0-8081-exec-10] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 20:17:03.202 [http-nio-0.0.0.0-8081-exec-10] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 20:17:03.202 [http-nio-0.0.0.0-8081-exec-10] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 20:17:03.202 [http-nio-0.0.0.0-8081-exec-10] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 20:35:35.882 [http-nio-0.0.0.0-8081-exec-12] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 20:35:35.884 [http-nio-0.0.0.0-8081-exec-12] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 20:35:36.015 [http-nio-0.0.0.0-8081-exec-12] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 20:35:36.015 [http-nio-0.0.0.0-8081-exec-12] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 20:35:36.015 [http-nio-0.0.0.0-8081-exec-12] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 20:35:36.015 [http-nio-0.0.0.0-8081-exec-12] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 20:35:36.015 [http-nio-0.0.0.0-8081-exec-12] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 20:38:38.656 [http-nio-0.0.0.0-8081-exec-14] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 20:38:38.656 [http-nio-0.0.0.0-8081-exec-14] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 20:38:38.792 [http-nio-0.0.0.0-8081-exec-14] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 20:38:38.793 [http-nio-0.0.0.0-8081-exec-14] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 20:38:38.794 [http-nio-0.0.0.0-8081-exec-14] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 20:38:38.794 [http-nio-0.0.0.0-8081-exec-14] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 20:38:38.794 [http-nio-0.0.0.0-8081-exec-14] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 20:39:25.867 [http-nio-0.0.0.0-8081-exec-15] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 20:39:25.867 [http-nio-0.0.0.0-8081-exec-15] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 20:39:25.960 [http-nio-0.0.0.0-8081-exec-15] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 20:39:25.960 [http-nio-0.0.0.0-8081-exec-15] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 20:39:25.960 [http-nio-0.0.0.0-8081-exec-15] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 20:39:25.960 [http-nio-0.0.0.0-8081-exec-15] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 20:39:25.960 [http-nio-0.0.0.0-8081-exec-15] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 20:57:25.824 [http-nio-0.0.0.0-8081-exec-17] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 20:57:25.827 [http-nio-0.0.0.0-8081-exec-17] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 20:57:26.127 [http-nio-0.0.0.0-8081-exec-17] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 20:57:26.127 [http-nio-0.0.0.0-8081-exec-17] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 20:57:26.131 [http-nio-0.0.0.0-8081-exec-17] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 20:57:26.132 [http-nio-0.0.0.0-8081-exec-17] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 20:57:26.133 [http-nio-0.0.0.0-8081-exec-17] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 21:01:36.931 [http-nio-0.0.0.0-8081-exec-19] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 21:01:36.932 [http-nio-0.0.0.0-8081-exec-19] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 21:01:37.075 [http-nio-0.0.0.0-8081-exec-19] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 21:01:37.075 [http-nio-0.0.0.0-8081-exec-19] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 21:01:37.075 [http-nio-0.0.0.0-8081-exec-19] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 21:01:37.076 [http-nio-0.0.0.0-8081-exec-19] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 21:01:37.076 [http-nio-0.0.0.0-8081-exec-19] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 21:02:06.017 [http-nio-0.0.0.0-8081-exec-20] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 21:02:06.017 [http-nio-0.0.0.0-8081-exec-20] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 21:02:06.100 [http-nio-0.0.0.0-8081-exec-20] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 21:02:06.100 [http-nio-0.0.0.0-8081-exec-20] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 21:02:06.100 [http-nio-0.0.0.0-8081-exec-20] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 21:02:06.101 [http-nio-0.0.0.0-8081-exec-20] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 21:02:06.101 [http-nio-0.0.0.0-8081-exec-20] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 21:02:39.122 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 21:02:39.122 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 21:02:39.218 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 21:02:39.218 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 21:02:39.218 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 21:02:39.218 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 21:02:39.218 [http-nio-0.0.0.0-8081-exec-1] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 21:02:46.775 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 21:02:46.775 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 21:02:46.878 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 21:02:46.879 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 21:02:46.879 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 21:02:46.879 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 21:02:46.879 [http-nio-0.0.0.0-8081-exec-2] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 21:02:48.869 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - === CARREGANDO USUÁRIO PARA AUTENTICAÇÃO ===
-2025-11-22 21:02:48.869 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - Username: admin
-2025-11-22 21:02:49.097 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - Resultado da busca: Usuário encontrado
-2025-11-22 21:02:49.097 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - Dados do usuário - ID: 1, Nome: Administrador do Sistema, Ativo: true, Bloqueado: false, Perfil: Administrador
-2025-11-22 21:02:49.098 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - Authorities: [ROLE_ADMIN]
-2025-11-22 21:02:49.098 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - Senha hash (primeiros 20 chars): $2a$10$nLxp.8.j9two8...
-2025-11-22 21:02:49.098 [http-nio-0.0.0.0-8081-exec-3] INFO  com.inventario.security.CustomUserDetailsService - === USERDETAILS CRIADO COM SUCESSO ===
-2025-11-22 21:02:51.178 [http-nio-0.0.0.0-8081-exec-3] DEBUG com.inventario.util.SoundNotification - Som desabilitado - não será reproduzido: SUCCESS
+2025-11-23 03:29:48.031 [SwingWorker-pool-3-thread-1] ERROR com.inventario.util.MobileApiClient - Erro ao testar conexão: Connection refused: getsockopt
+2025-11-23 03:40:53.488 [SwingWorker-pool-3-thread-1] ERROR com.inventario.util.MobileApiClient - Erro ao testar conexão: Connection refused: getsockopt
+2025-11-23 03:41:02.374 [main] INFO  com.inventario.MobileApiApplication - ╔════════════════════════════════════════════════════════════════
+2025-11-23 03:41:02.387 [main] INFO  com.inventario.MobileApiApplication - ║ VERIFICANDO PORTA 8081
+2025-11-23 03:41:02.389 [main] INFO  com.inventario.MobileApiApplication - ╚════════════════════════════════════════════════════════════════
+2025-11-23 03:41:02.392 [main] INFO  com.inventario.util.PortManager - ✓ Porta 8081 está disponível
+2025-11-23 03:41:02.393 [main] INFO  com.inventario.MobileApiApplication - ╔════════════════════════════════════════════════════════════════
+2025-11-23 03:41:02.393 [main] INFO  com.inventario.MobileApiApplication - ║ Porta 8081 disponível - Iniciando servidor...
+2025-11-23 03:41:02.393 [main] INFO  com.inventario.MobileApiApplication - ╚════════════════════════════════════════════════════════════════
+2025-11-23 03:41:02.417 [main] INFO  com.inventario.MobileApiApplication - Sons de notificação do desktop desabilitados (servidor mobile ativo)
+2025-11-23 03:41:03.112 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2025-11-23 03:41:03.228 [main] INFO  com.inventario.MobileApiApplication - Starting MobileApiApplication using Java 21.0.7 with PID 7400 (C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\target\classes started by Romulo in C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO)
+2025-11-23 03:41:03.231 [main] DEBUG com.inventario.MobileApiApplication - Running with Spring Boot v3.2.0, Spring v6.1.1
+2025-11-23 03:41:03.231 [main] INFO  com.inventario.MobileApiApplication - The following 1 profile is active: "mobile"
+2025-11-23 03:41:09.343 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-0.0.0.0-8081"]
+2025-11-23 03:41:09.348 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2025-11-23 03:41:09.348 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.16]
+2025-11-23 03:41:09.518 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/inventario] - Initializing Spring embedded WebApplicationContext
+2025-11-23 03:41:10.342 [main] DEBUG com.inventario.security.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-11-23 03:41:10.412 [main] INFO  com.zaxxer.hikari.HikariDataSource - InventarioMobilePool - Starting...
+2025-11-23 03:41:10.834 [main] INFO  com.zaxxer.hikari.pool.HikariPool - InventarioMobilePool - Added connection org.postgresql.jdbc.PgConnection@18209303
+2025-11-23 03:41:10.838 [main] INFO  com.zaxxer.hikari.HikariDataSource - InventarioMobilePool - Start completed.
+2025-11-23 03:41:11.187 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-11-23 03:41:11.388 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.3.1.Final
+2025-11-23 03:41:11.510 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-11-23 03:41:12.238 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-11-23 03:41:12.692 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-11-23 03:41:13.828 [main] INFO  com.inventario.offline.ConnectivityManager - Conexão detectada com servidor do banco de dados
+2025-11-23 03:41:13.839 [main] DEBUG com.inventario.offline.ConnectivityManager - Listener adicionado: 
+2025-11-23 03:41:13.840 [main] DEBUG com.inventario.offline.ConnectivityManager - Listener adicionado: 
+2025-11-23 03:41:14.009 [main] INFO  com.inventario.service.MobileConnectionService - MobileConnectionService inicializado com limpeza automática
+2025-11-23 03:41:14.276 [main] INFO  com.inventario.util.notification.NotificationManager - Toast notifications enabled
+2025-11-23 03:41:14.276 [main] INFO  com.inventario.util.notification.NotificationManager - Error reporting enabled
+2025-11-23 03:41:14.276 [main] INFO  com.inventario.config.NotificationConfig - Sistema de Notificação inicializado:
+2025-11-23 03:41:14.276 [main] INFO  com.inventario.config.NotificationConfig -   - Toast notifications: ATIVADO
+2025-11-23 03:41:14.276 [main] INFO  com.inventario.config.NotificationConfig -   - Error reporting: ATIVADO
+2025-11-23 03:41:21.177 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-0.0.0.0-8081"]
+2025-11-23 03:41:21.689 [main] INFO  com.inventario.MobileApiApplication - Started MobileApiApplication in 19.119 seconds (process running for 20.828)
+2025-11-23 03:41:38.549 [SwingWorker-pool-3-thread-3] ERROR com.inventario.util.MobileApiClient - Erro ao testar conexão: Erro HTTP 404: <!doctype html><html lang="en"><head><title>HTTP Status 404 – Not Found</title><style type="text/css">body {font-family:Tahoma,Arial,sans-serif;} h1, h2, h3, b {color:white;background-color:#525D76;} h1 {font-size:22px;} h2 {font-size:16px;} h3 {font-size:14px;} p {font-size:12px;} a {color:black;} .line {height:1px;background-color:#525D76;border:none;}</style></head><body><h1>HTTP Status 404 – Not Found</h1></body></html>
+2025-11-23 03:41:47.899 [SwingWorker-pool-3-thread-4] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active
+2025-11-23 03:41:59.276 [SwingWorker-pool-3-thread-5] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active
+2025-11-23 03:42:09.270 [SwingWorker-pool-3-thread-6] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active
+2025-11-23 03:42:19.272 [SwingWorker-pool-3-thread-7] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active
+2025-11-23 03:42:29.271 [SwingWorker-pool-3-thread-8] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active
+2025-11-23 03:42:39.283 [SwingWorker-pool-3-thread-9] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active
+2025-11-23 03:42:49.273 [SwingWorker-pool-3-thread-10] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active
+2025-11-23 03:42:59.270 [SwingWorker-pool-3-thread-1] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active
+2025-11-23 03:43:09.276 [SwingWorker-pool-3-thread-2] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active
+2025-11-23 03:43:19.270 [SwingWorker-pool-3-thread-3] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active
+2025-11-23 03:43:29.276 [SwingWorker-pool-3-thread-4] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active
+2025-11-23 03:43:39.271 [SwingWorker-pool-3-thread-5] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active
+2025-11-23 03:43:49.271 [SwingWorker-pool-3-thread-6] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active
+2025-11-23 03:43:59.270 [SwingWorker-pool-3-thread-7] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active

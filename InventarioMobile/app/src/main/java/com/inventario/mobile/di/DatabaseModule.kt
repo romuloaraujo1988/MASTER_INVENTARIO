@@ -63,4 +63,9 @@ object DatabaseModule {
     fun provideLogColetaDao(database: AppDatabase): LogColetaDao {
         return database.logColetaDao()
     }
+    
+    @Provides
+    fun provideDashboardDao(database: AppDatabase): DashboardDao {
+        return database.dashboardDao()
+    }
 }
