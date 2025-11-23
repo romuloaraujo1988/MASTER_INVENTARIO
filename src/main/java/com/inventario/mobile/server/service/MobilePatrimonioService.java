@@ -7,6 +7,8 @@ import com.inventario.dao.InventarioDAO;
 import com.inventario.model.Patrimonio;
 import com.inventario.model.Inventario;
 import com.inventario.mobile.server.dto.MobilePatrimonioDTO;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,9 +19,10 @@ import java.util.List;
 
 /**
  * Serviço para operações de patrimônio mobile
+ * Com cache de alta performance para reduzir consultas ao banco
  * 
  * @author Sistema de Inventário
- * @version 1.0.0
+ * @version 1.1.0
  */
 @Service
 public class MobilePatrimonioService {
@@ -39,8 +42,9 @@ public class MobilePatrimonioService {
     }
     
     /**
-     * Busca patrimônio por QR Code
+     * Busca patrimônio por QR Code (com cache)
      */
+    @Cacheable(value = "patrimonios", key = "#qrCode")
     public MobilePatrimonioDTO buscarPorQRCode(String qrCode) throws SQLException {
         logger.info("Buscando patrimônio por QR Code: {}", qrCode);
         
@@ -55,8 +59,9 @@ public class MobilePatrimonioService {
     }
     
     /**
-     * Busca patrimônio por número
+     * Busca patrimônio por número (com cache)
      */
+    @Cacheable(value = "patrimonios", key = "#numero")
     public MobilePatrimonioDTO buscarPorNumero(String numero) throws SQLException {
         logger.info("Buscando patrimônio por número: {}", numero);
         

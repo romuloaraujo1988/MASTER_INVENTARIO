@@ -52,3 +52,41 @@
 2025-11-23 03:43:49.271 [SwingWorker-pool-3-thread-6] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active
 2025-11-23 03:43:59.270 [SwingWorker-pool-3-thread-7] INFO  com.inventario.util.MobileApiClient - Buscando dispositivos conectados: http://localhost:8081/api/mobile/v1/connection/active
 2025-11-23 12:16:13.224 [SwingWorker-pool-3-thread-1] ERROR com.inventario.util.MobileApiClient - Erro ao testar conexão: Connection refused: getsockopt
+2025-11-23 12:51:48.132 [main] INFO  com.inventario.MobileApiApplication - ╔════════════════════════════════════════════════════════════════
+2025-11-23 12:51:48.142 [main] INFO  com.inventario.MobileApiApplication - ║ VERIFICANDO PORTA 8081
+2025-11-23 12:51:48.142 [main] INFO  com.inventario.MobileApiApplication - ╚════════════════════════════════════════════════════════════════
+2025-11-23 12:51:48.145 [main] INFO  com.inventario.util.PortManager - ✓ Porta 8081 está disponível
+2025-11-23 12:51:48.145 [main] INFO  com.inventario.MobileApiApplication - ╔════════════════════════════════════════════════════════════════
+2025-11-23 12:51:48.145 [main] INFO  com.inventario.MobileApiApplication - ║ Porta 8081 disponível - Iniciando servidor...
+2025-11-23 12:51:48.146 [main] INFO  com.inventario.MobileApiApplication - ╚════════════════════════════════════════════════════════════════
+2025-11-23 12:51:48.159 [main] INFO  com.inventario.MobileApiApplication - Sons de notificação do desktop desabilitados (servidor mobile ativo)
+2025-11-23 12:51:48.600 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2025-11-23 12:51:48.681 [main] INFO  com.inventario.MobileApiApplication - Starting MobileApiApplication using Java 21.0.7 with PID 16580 (C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\target\classes started by Romulo in C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO)
+2025-11-23 12:51:48.684 [main] DEBUG com.inventario.MobileApiApplication - Running with Spring Boot v3.2.0, Spring v6.1.1
+2025-11-23 12:51:48.685 [main] INFO  com.inventario.MobileApiApplication - The following 1 profile is active: "mobile"
+2025-11-23 12:51:51.834 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-0.0.0.0-8081"]
+2025-11-23 12:51:51.835 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2025-11-23 12:51:51.836 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.16]
+2025-11-23 12:51:51.903 [main] INFO  org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/inventario] - Initializing Spring embedded WebApplicationContext
+2025-11-23 12:51:52.429 [main] DEBUG com.inventario.security.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-11-23 12:51:52.473 [main] INFO  com.zaxxer.hikari.HikariDataSource - InventarioMobilePool - Starting...
+2025-11-23 12:51:52.788 [main] INFO  com.zaxxer.hikari.pool.HikariPool - InventarioMobilePool - Added connection org.postgresql.jdbc.PgConnection@75c15f76
+2025-11-23 12:51:52.789 [main] INFO  com.zaxxer.hikari.HikariDataSource - InventarioMobilePool - Start completed.
+2025-11-23 12:51:52.963 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-11-23 12:51:53.076 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.3.1.Final
+2025-11-23 12:51:53.116 [main] INFO  org.hibernate.cache.internal.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-11-23 12:51:53.470 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-11-23 12:51:53.744 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-11-23 12:51:54.279 [main] INFO  com.inventario.offline.ConnectivityManager - Conexão detectada com servidor do banco de dados
+2025-11-23 12:51:54.289 [main] DEBUG com.inventario.offline.ConnectivityManager - Listener adicionado: 
+2025-11-23 12:51:54.290 [main] DEBUG com.inventario.offline.ConnectivityManager - Listener adicionado: 
+2025-11-23 12:51:54.377 [main] INFO  com.inventario.service.MobileConnectionService - MobileConnectionService inicializado com limpeza automática
+2025-11-23 12:51:54.640 [main] INFO  com.inventario.util.notification.NotificationManager - Toast notifications enabled
+2025-11-23 12:51:54.641 [main] INFO  com.inventario.util.notification.NotificationManager - Error reporting enabled
+2025-11-23 12:51:54.641 [main] INFO  com.inventario.config.NotificationConfig - Sistema de Notificação inicializado:
+2025-11-23 12:51:54.641 [main] INFO  com.inventario.config.NotificationConfig -   - Toast notifications: ATIVADO
+2025-11-23 12:51:54.641 [main] INFO  com.inventario.config.NotificationConfig -   - Error reporting: ATIVADO
+2025-11-23 12:52:00.349 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-0.0.0.0-8081"]
+2025-11-23 12:52:00.665 [main] INFO  com.inventario.MobileApiApplication - Started MobileApiApplication in 12.416 seconds (process running for 13.24)
+2025-11-23 13:07:48.959 [AWT-EventQueue-0] WARN  com.inventario.service.UsuarioService - UsuarioDAO não foi injetado pelo Spring, criando instância manual
+2025-11-23 13:07:49.021 [AWT-EventQueue-0] INFO  com.inventario.service.UsuarioService - Senha atualizada com sucesso para usuário ID: 8
