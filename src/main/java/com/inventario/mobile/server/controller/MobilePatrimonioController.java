@@ -369,5 +369,44 @@ public class MobilePatrimonioController {
                     .body(ApiResponse.error("Erro ao validar patrimônio: " + e.getMessage(), "VALIDATION_ERROR"));
         }
     }
+    
+    /**
+     * Buscar patrimônios não coletados por descrição
+     * GET /api/mobile/patrimonio/descricao/{descricao}
+     * 
+     * Usado para coleta por descrição (sem etiqueta)
+     * 
+     * @param descricao descrição do patrimônio (URL encoded)
+     * @param inventarioId ID do inventário (opcional, usa ativo se não informado)
+     * @return lista de patrimônios não coletados com essa descrição
+     */
+    @GetMapping("/descricao/{descricao}")
+    public ResponseEntity<ApiResponse<List<MobilePatrimonioDTO>>> buscarPorDescricaoNaoColetados(
+            @PathVariable String descricao,
+            @RequestParam(required = false) Integer inventarioId) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication != null ? authentication.getName() : "anonymous";
+            
+            // Decodificar a descrição (pode vir URL encoded)
+            String descricaoDecodificada = java.net.URLDecoder.decode(descricao, "UTF-8");
+            
+            logger.info("Buscando patrimônios não coletados com descrição '{}' (inventário: {}) para usuário: {}", 
+                    descricaoDecodificada, inventarioId, username);
+            
+            List<MobilePatrimonioDTO> patrimonios = patrimonioService.buscarPorDescricaoNaoColetados(descricaoDecodificada, inventarioId);
+            
+            logger.info("✓ {} patrimônio(s) encontrado(s) com descrição '{}'", patrimonios.size(), descricaoDecodificada);
+            
+            return ResponseEntity.ok(
+                    ApiResponse.success(patrimonios, 
+                            String.format("%d patrimônio(s) encontrado(s)", patrimonios.size())));
+            
+        } catch (Exception e) {
+            logger.error("Erro ao buscar patrimônios por descrição", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao buscar patrimônios: " + e.getMessage(), "FETCH_ERROR"));
+        }
+    }
 
 }

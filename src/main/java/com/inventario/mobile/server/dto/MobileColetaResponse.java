@@ -1,6 +1,6 @@
 package com.inventario.mobile.server.dto;
 
-import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * DTO para resposta de coleta mobile
@@ -10,24 +10,61 @@ import java.time.LocalDateTime;
  */
 public class MobileColetaResponse {
     
+    @JsonProperty("id")
     private Long id;
+    
+    @JsonProperty("numeroPatrimonio")
     private String numeroPatrimonio;
+    
+    @JsonProperty("descricaoPatrimonio")
     private String descricaoPatrimonio;
+    
+    @JsonProperty("idInventario")
     private Integer idInventario;
+    
+    @JsonProperty("nomeInventario")
     private String nomeInventario;
+    
+    @JsonProperty("idSala")
     private Integer idSala;
+    
+    @JsonProperty("nomeSala")
     private String nomeSala;
+    
+    @JsonProperty("localizacaoEncontrada")
     private String localizacaoEncontrada;
+    
+    @JsonProperty("estadoEncontrado")
     private String estadoEncontrado;
+    
+    @JsonProperty("observacaoColeta")
     private String observacaoColeta;
-    private LocalDateTime dataColeta;
+    
+    @JsonProperty("dataColeta")
+    private String dataColeta;  // String formatada para compatibilidade com app Android
+    
+    @JsonProperty("statusColeta")
     private String statusColeta;
+    
+    @JsonProperty("nomeColetor")
     private String nomeColetor;
+    
+    @JsonProperty("usuarioId")
     private Integer usuarioId;  // ID do usuário coletor
+    
+    @JsonProperty("patrimonioId")
     private Integer patrimonioId;  // ID do patrimônio coletado
+    
+    @JsonProperty("semEtiqueta")
     private Boolean semEtiqueta;
+    
+    @JsonProperty("descricaoItemSemEtiqueta")
     private String descricaoItemSemEtiqueta;
+    
+    @JsonProperty("categoriaItemSemEtiqueta")
     private String categoriaItemSemEtiqueta;
+    
+    @JsonProperty("sincronizado")
     private Boolean sincronizado;
     
     // Construtores
@@ -116,11 +153,11 @@ public class MobileColetaResponse {
         this.observacaoColeta = observacaoColeta;
     }
     
-    public LocalDateTime getDataColeta() {
+    public String getDataColeta() {
         return dataColeta;
     }
     
-    public void setDataColeta(LocalDateTime dataColeta) {
+    public void setDataColeta(String dataColeta) {
         this.dataColeta = dataColeta;
     }
     

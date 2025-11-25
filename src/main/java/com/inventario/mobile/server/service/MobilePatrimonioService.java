@@ -494,6 +494,52 @@ public class MobilePatrimonioService {
         return resultado;
     }
     
+    /**
+     * Busca patrimônios não coletados por descrição
+     * Usado para coleta por descrição (sem etiqueta)
+     * 
+     * @param descricao descrição do patrimônio
+     * @param inventarioId ID do inventário (opcional, usa ativo se null)
+     * @return lista de patrimônios não coletados com essa descrição
+     */
+    public List<MobilePatrimonioDTO> buscarPorDescricaoNaoColetados(String descricao, Integer inventarioId) throws SQLException {
+        logger.info("Buscando patrimônios não coletados com descrição: '{}'", descricao);
+        
+        // Obter inventário
+        Inventario inventario;
+        if (inventarioId != null) {
+            inventario = inventarioDAO.findById(inventarioId);
+        } else {
+            inventario = inventarioDAO.buscarInventarioAtivo();
+        }
+        
+        if (inventario == null) {
+            logger.warn("Nenhum inventário encontrado para busca por descrição");
+            return new ArrayList<>();
+        }
+        
+        // Buscar todos os patrimônios com essa descrição
+        List<Patrimonio> todosPatrimonios = patrimonioDAO.buscarPorDescricao(descricao);
+        logger.info("Encontrados {} patrimônios com descrição '{}'", todosPatrimonios.size(), descricao);
+        
+        // Filtrar apenas os não coletados
+        List<MobilePatrimonioDTO> naoColetados = new ArrayList<>();
+        
+        for (Patrimonio patrimonio : todosPatrimonios) {
+            boolean foiColetado = coletaDAO.coletaExiste(inventario.getId(), patrimonio.getId());
+            
+            if (!foiColetado) {
+                MobilePatrimonioDTO dto = converterParaDTO(patrimonio);
+                dto.setColetado(false);
+                naoColetados.add(dto);
+            }
+        }
+        
+        logger.info("✓ {} patrimônios NÃO coletados com descrição '{}'", naoColetados.size(), descricao);
+        
+        return naoColetados;
+    }
+    
     // Método auxiliar para converter Patrimonio para DTO
     private MobilePatrimonioDTO converterParaDTO(Patrimonio patrimonio) {
         MobilePatrimonioDTO dto = new MobilePatrimonioDTO();

@@ -29,7 +29,11 @@ data class ColetaDto(
     val nomeSala: String?,
     
     @SerializedName("localizacaoEncontrada")
-    val localizacaoEncontrada: String?,
+    val localizacaoEncontrada: String? = null,
+    
+    // Alias para compatibilidade com diferentes formatos do servidor
+    @SerializedName("localizacao_encontrada")
+    val localizacaoEncontradaSnake: String? = null,
     
     @SerializedName("estadoEncontrado")
     val estadoEncontrado: String?,

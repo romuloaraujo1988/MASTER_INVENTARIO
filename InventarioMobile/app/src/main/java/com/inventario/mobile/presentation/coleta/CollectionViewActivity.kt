@@ -99,6 +99,9 @@ class CollectionViewActivity : AppCompatActivity() {
                     binding.chipPending.id -> {
                         viewModel.filtrarPorStatus(CollectionViewViewModelClean.FiltroStatus.PENDENTES)
                     }
+                    binding.chipSemEtiqueta.id -> {
+                        viewModel.filtrarPorStatus(CollectionViewViewModelClean.FiltroStatus.SEM_ETIQUETA)
+                    }
                 }
             }
         }

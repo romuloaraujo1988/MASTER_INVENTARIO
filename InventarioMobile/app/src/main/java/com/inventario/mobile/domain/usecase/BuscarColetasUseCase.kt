@@ -35,8 +35,14 @@ class BuscarColetasUseCase @Inject constructor(
                 
                 if (apiResponse.success && apiResponse.data != null) {
                     val coletas = apiResponse.data.map { dto ->
-                        // Log para debug
-                        Log.d(TAG, "Mapeando coleta ${dto.id}: localizacaoEncontrada='${dto.localizacaoEncontrada}', nomeSala='${dto.nomeSala}'")
+                        Log.d(TAG, "═══════════════════════════════════════")
+                        Log.d(TAG, "DTO Recebido - ID: ${dto.id}")
+                        Log.d(TAG, "  numeroPatrimonio: '${dto.numeroPatrimonio}'")
+                        Log.d(TAG, "  nomeSala: '${dto.nomeSala}'")
+                        Log.d(TAG, "  localizacaoEncontrada: '${dto.localizacaoEncontrada}'")
+                        Log.d(TAG, "  localizacaoAtual: '${dto.localizacaoAtual}'")
+                        Log.d(TAG, "  observacoes: '${dto.observacoes}'")
+                        Log.d(TAG, "═══════════════════════════════════════")
                         
                         Coleta(
                             id = dto.id?.toInt(),
@@ -46,9 +52,9 @@ class BuscarColetasUseCase @Inject constructor(
                             usuarioId = dto.usuarioId,
                             nomeColetor = dto.nomeColetor,
                             dataColeta = dto.dataColeta ?: "",
-                            nomeSala = dto.nomeSala,
-                            // CORREÇÃO: usar localizacaoEncontrada do DTO (campo correto do servidor)
-                            localizacaoAtual = dto.localizacaoEncontrada ?: dto.nomeSala,
+                            nomeSala = dto.nomeSala,  // Localização ORIGINAL do patrimônio
+                            localizacaoAtual = dto.nomeSala,  // Localização ORIGINAL do patrimônio
+                            localizacaoEncontrada = dto.localizacaoEncontrada,  // Onde foi ENCONTRADO
                             observacoes = dto.observacoes,
                             sincronizado = true, // Dados do servidor são sempre sincronizados
                             estadoEncontrado = dto.estadoEncontrado,

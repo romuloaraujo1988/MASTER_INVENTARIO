@@ -53,6 +53,45 @@ interface ColetaDao {
     suspend fun contarTodas(): Int
     
     // ========================================
+    // Queries para Visualização de Coletas (v2.3)
+    // ========================================
+    
+    /**
+     * Busca coletas por usuário
+     * @see Requirements 2.1
+     */
+    @Query("SELECT * FROM coleta WHERE idUsuario = :usuarioId ORDER BY dataColeta DESC")
+    suspend fun buscarPorUsuario(usuarioId: Int): List<ColetaEntity>
+    
+    /**
+     * Busca coletas por sala
+     * @see Requirements 3.1
+     */
+    @Query("SELECT * FROM coleta WHERE idSala = :salaId ORDER BY dataColeta DESC")
+    suspend fun buscarPorSala(salaId: Int): List<ColetaEntity>
+    
+    /**
+     * Conta coletas sincronizadas
+     * @see Requirements 6.1
+     */
+    @Query("SELECT COUNT(*) FROM coleta WHERE sincronizado = 1")
+    suspend fun contarSincronizadas(): Int
+    
+    /**
+     * Busca todas as salas distintas das coletas
+     * Usado para popular filtro de salas
+     */
+    @Query("SELECT DISTINCT nomeSala FROM coleta WHERE nomeSala IS NOT NULL ORDER BY nomeSala ASC")
+    suspend fun buscarSalasDistintas(): List<String>
+    
+    /**
+     * Observa todas as coletas como Flow
+     * Usado para atualização reativa da UI
+     */
+    @Query("SELECT * FROM coleta ORDER BY dataColeta DESC")
+    fun observarTodas(): Flow<List<ColetaEntity>>
+    
+    // ========================================
     // TRANSAÇÕES ATÔMICAS (v2.2)
     // ========================================
     

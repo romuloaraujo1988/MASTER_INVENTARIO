@@ -47,7 +47,8 @@ class CollectionViewViewModelClean @Inject constructor(
     enum class FiltroStatus {
         TODOS,
         SINCRONIZADOS,
-        PENDENTES
+        PENDENTES,
+        SEM_ETIQUETA
     }
 
     private val _state = MutableStateFlow<CollectionViewState>(CollectionViewState.Idle)
@@ -118,14 +119,14 @@ class CollectionViewViewModelClean @Inject constructor(
                         val pendentes = coletas.size - sincronizadas
                         
                         // Extrair salas únicas
-                        // Prioridade: localizacaoAtual (vem de localizacaoEncontrada do servidor) > nomeSala
+                        // Prioridade: localizacaoEncontrada (onde o item FOI ENCONTRADO) > nomeSala (localização ORIGINAL)
                         val salasUnicas = coletas
-                            .mapNotNull { it.localizacaoAtual ?: it.nomeSala }
+                            .mapNotNull { it.localizacaoEncontrada ?: it.nomeSala }
                             .filter { it.isNotBlank() }
                             .distinct()
                             .sorted()
                         
-                        Log.d(TAG, "Salas extraídas: $salasUnicas")
+                        Log.d(TAG, "Salas extraídas (localizacaoEncontrada): $salasUnicas")
                         
                         Log.d(TAG, "Estatísticas:")
                         Log.d(TAG, "  Total: ${coletas.size}")
@@ -228,7 +229,8 @@ class CollectionViewViewModelClean @Inject constructor(
             filtradas = filtradas.filter { coleta ->
                 val patrimonioIdMatch = coleta.patrimonioId.toString().contains(queryBusca, ignoreCase = true)
                 val observacoesMatch = (coleta.observacoes ?: "").contains(queryBusca, ignoreCase = true)
-                val salaMatch = (coleta.localizacaoAtual ?: "").contains(queryBusca, ignoreCase = true)
+                // Buscar em localizacaoEncontrada (onde FOI ENCONTRADO) e nomeSala (localização ORIGINAL)
+                val salaMatch = (coleta.localizacaoEncontrada ?: coleta.nomeSala ?: "").contains(queryBusca, ignoreCase = true)
                 patrimonioIdMatch || observacoesMatch || salaMatch
             }
             Log.d(TAG, "Após filtro de busca: ${filtradas.size} coletas")
@@ -281,17 +283,21 @@ class CollectionViewViewModelClean @Inject constructor(
             FiltroStatus.TODOS -> filtradas
             FiltroStatus.SINCRONIZADOS -> filtradas.filter { it.sincronizado }
             FiltroStatus.PENDENTES -> filtradas.filter { !it.sincronizado }
+            FiltroStatus.SEM_ETIQUETA -> filtradas.filter { coleta ->
+                // Coletas sem etiqueta: campo semEtiqueta = true OU (numeroPatrimonio vazio e descricaoItemSemEtiqueta preenchido)
+                coleta.semEtiqueta || (coleta.numeroPatrimonio.isNullOrBlank() && !coleta.descricaoItemSemEtiqueta.isNullOrBlank())
+            }
         }
         
         Log.d(TAG, "Após filtro de status: ${filtradas.size} coletas")
         
         // Filtro de sala
-        // Prioridade: localizacaoAtual (vem de localizacaoEncontrada do servidor) > nomeSala
+        // Prioridade: localizacaoEncontrada (onde o item FOI ENCONTRADO) > nomeSala (localização ORIGINAL)
         filtradas = if (salaSelecionada == null) {
             filtradas
         } else {
             filtradas.filter { 
-                (it.localizacaoAtual ?: it.nomeSala) == salaSelecionada 
+                (it.localizacaoEncontrada ?: it.nomeSala) == salaSelecionada 
             }
         }
         
@@ -372,14 +378,14 @@ class CollectionViewViewModelClean @Inject constructor(
                         val pendentes = result.coletas.size - sincronizadas
                         
                         // Extrair salas únicas
-                        // Prioridade: localizacaoAtual (vem de localizacaoEncontrada do servidor) > nomeSala
+                        // Prioridade: localizacaoEncontrada (onde o item FOI ENCONTRADO) > nomeSala (localização ORIGINAL)
                         val salasUnicas = result.coletas
-                            .mapNotNull { it.localizacaoAtual ?: it.nomeSala }
+                            .mapNotNull { it.localizacaoEncontrada ?: it.nomeSala }
                             .filter { it.isNotBlank() }
                             .distinct()
                             .sorted()
                         
-                        Log.d(TAG, "Salas extraídas: $salasUnicas")
+                        Log.d(TAG, "Salas extraídas (localizacaoEncontrada): $salasUnicas")
                         
                         Log.d(TAG, "Estatísticas:")
                         Log.d(TAG, "  Total: ${result.coletas.size}")

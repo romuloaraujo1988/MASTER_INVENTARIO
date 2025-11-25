@@ -246,6 +246,13 @@
                     android:text="Pendentes"
                     style="@style/Widget.MaterialComponents.Chip.Choice" />
 
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipSemEtiqueta"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sem Etiqueta"
+                    style="@style/Widget.MaterialComponents.Chip.Choice" />
+
             </com.google.android.material.chip.ChipGroup>
 
         </LinearLayout>

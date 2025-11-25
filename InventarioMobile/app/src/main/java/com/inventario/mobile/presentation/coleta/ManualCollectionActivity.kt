@@ -58,7 +58,8 @@ class ManualCollectionActivity : BaseOfflineActivity() {
         salaNome = intent.getStringExtra(EXTRA_SALA_NOME) ?: ""
         
         // Validar se sala foi selecionada
-        if (salaId == -1L || salaNome.isEmpty()) {
+        if (salaId < 0 || salaNome.isEmpty()) {
+            Log.e("ManualCollectionActivity", "Erro: Nenhuma sala selecionada (salaId=$salaId, salaNome=$salaNome)")
             Toast.makeText(this, "Erro: Nenhuma sala selecionada", Toast.LENGTH_LONG).show()
             finish()
             return

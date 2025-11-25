@@ -89,7 +89,7 @@ interface ApiService {
     suspend fun getUsuarioById(@Path("id") id: Long): UsuarioDto
 
     // Coletas
-    @GET("api/mobile/coletas/all")
+    @GET("api/mobile/coletas")
     suspend fun getColetas(): Response<ApiResponse<List<ColetaDto>>>
     
     @GET("api/mobile/coletas/all")

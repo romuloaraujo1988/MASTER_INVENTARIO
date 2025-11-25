@@ -441,4 +441,44 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         
         throw new Exception("Não foi possível parsear a data: " + dataStr);
     }
+    
+    /**
+     * Busca múltiplos inventários por IDs em uma única query (otimização de performance)
+     * 
+     * @param ids lista de IDs dos inventários
+     * @return lista de inventários encontrados
+     * @throws SQLException em caso de erro no banco
+     */
+    public List<Inventario> buscarPorIds(List<Integer> ids) throws SQLException {
+        if (ids == null || ids.isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
+        
+        String tableName = getInventarioTableName();
+        String placeholders = String.join(",", java.util.Collections.nCopies(ids.size(), "?"));
+        String sql = "SELECT * FROM " + tableName + " WHERE id IN (" + placeholders + ")";
+        
+        List<Inventario> inventarios = new java.util.ArrayList<>();
+        
+        Connection conn = null;
+        try {
+            conn = com.inventario.util.DatabaseConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            
+            for (int i = 0; i < ids.size(); i++) {
+                stmt.setInt(i + 1, ids.get(i));
+            }
+            
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                inventarios.add(mapResultSetToEntity(rs));
+            }
+            
+            // Log: Buscados X inventários em batch
+        } finally {
+            com.inventario.util.ConnectionManager.closeConnection(conn);
+        }
+        
+        return inventarios;
+    }
 }

@@ -509,4 +509,45 @@ public class UsuarioDAO extends BaseDAO<Usuario, Integer> {
             return new ArrayList<>();
         }
     }
+    
+    /**
+     * Busca múltiplos usuários por IDs em uma única query (otimização de performance)
+     * 
+     * @param ids lista de IDs dos usuários
+     * @return lista de usuários encontrados
+     * @throws SQLException em caso de erro no banco
+     */
+    public List<Usuario> buscarPorIds(List<Integer> ids) throws SQLException {
+        if (ids == null || ids.isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
+        
+        String placeholders = String.join(",", java.util.Collections.nCopies(ids.size(), "?"));
+        String sql = "SELECT u.*, s.NOME as NOME_SETOR FROM TABELA_USUARIO u " +
+                    "LEFT JOIN TABELA_SETOR s ON u.ID_SETOR = s.ID " +
+                    "WHERE u.ID IN (" + placeholders + ")";
+        
+        List<Usuario> usuarios = new java.util.ArrayList<>();
+        
+        Connection conn = null;
+        try {
+            conn = com.inventario.util.DatabaseConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            
+            for (int i = 0; i < ids.size(); i++) {
+                stmt.setInt(i + 1, ids.get(i));
+            }
+            
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                usuarios.add(mapResultSetToEntity(rs));
+            }
+            
+            // Log: Buscados X usuários em batch
+        } finally {
+            com.inventario.util.ConnectionManager.closeConnection(conn);
+        }
+        
+        return usuarios;
+    }
 }

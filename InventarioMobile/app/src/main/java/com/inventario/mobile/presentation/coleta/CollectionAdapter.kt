@@ -51,7 +51,8 @@ class CollectionAdapter : ListAdapter<Coleta, CollectionAdapter.CollectionViewHo
             Log.d("CollectionViewHolder", "numeroPatrimonio: '${coleta.numeroPatrimonio}'")
             Log.d("CollectionViewHolder", "descricaoPatrimonio: '${coleta.descricaoPatrimonio}'")
             Log.d("CollectionViewHolder", "observacoes: '${coleta.observacoes}'")
-            Log.d("CollectionViewHolder", "nomeSala: '${coleta.nomeSala}'")
+            Log.d("CollectionViewHolder", "nomeSala (localização ORIGINAL): '${coleta.nomeSala}'")
+            Log.d("CollectionViewHolder", "localizacaoEncontrada (onde FOI ENCONTRADO): '${coleta.localizacaoEncontrada}'")
             Log.d("CollectionViewHolder", "localizacaoAtual: '${coleta.localizacaoAtual}'")
             Log.d("CollectionViewHolder", "sincronizado: ${coleta.sincronizado}")
             Log.d("CollectionViewHolder", "==================")
@@ -87,12 +88,16 @@ class CollectionAdapter : ListAdapter<Coleta, CollectionAdapter.CollectionViewHo
                     coleta.dataColeta
                 }
                 
-                // Location information - garantir que sempre exiba algo útil
+                // Location information - PRIORIZAR localizacaoEncontrada (onde o item FOI ENCONTRADO)
+                // localizacaoEncontrada = onde o item foi encontrado durante a coleta
+                // nomeSala = localização ORIGINAL do patrimônio no cadastro
                 val salaExibida = when {
+                    !coleta.localizacaoEncontrada.isNullOrBlank() -> coleta.localizacaoEncontrada
                     !coleta.nomeSala.isNullOrBlank() -> coleta.nomeSala
                     !coleta.localizacaoAtual.isNullOrBlank() -> coleta.localizacaoAtual
                     else -> "Local não informado"
                 }
+                Log.d("CollectionViewHolder", "Sala exibida (localizacaoEncontrada): '$salaExibida'")
                 tvSalaInfo.text = salaExibida
                 
                 // Sync status

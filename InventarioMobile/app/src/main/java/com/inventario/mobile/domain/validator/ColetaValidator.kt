@@ -15,17 +15,21 @@ object ColetaValidator {
      * @return Result.success se válido, Result.failure com mensagem de erro se inválido
      */
     fun validar(coleta: Coleta): Result<Unit> {
-        // 1. Validar número do patrimônio (CRÍTICO!)
-        if (coleta.numeroPatrimonio.isNullOrBlank()) {
+        // Verificar se é coleta por descrição (sem número de patrimônio)
+        val isColetaPorDescricao = !coleta.descricaoPatrimonio.isNullOrBlank() && 
+                                   coleta.numeroPatrimonio.isNullOrBlank()
+        
+        // 1. Validar número do patrimônio OU descrição (um dos dois é obrigatório)
+        if (coleta.numeroPatrimonio.isNullOrBlank() && coleta.descricaoPatrimonio.isNullOrBlank()) {
             return Result.failure(ValidationException(
                 campo = "numeroPatrimonio",
-                mensagem = "❌ Número do patrimônio é obrigatório",
+                mensagem = "❌ Número do patrimônio ou descrição é obrigatório",
                 codigoErro = "NUMERO_PATRIMONIO_VAZIO"
             ))
         }
         
-        // 2. Validar ID do patrimônio
-        if (coleta.patrimonioId <= 0) {
+        // 2. Validar ID do patrimônio (não obrigatório para coleta por descrição)
+        if (!isColetaPorDescricao && coleta.patrimonioId <= 0) {
             return Result.failure(ValidationException(
                 campo = "patrimonioId",
                 mensagem = "❌ ID do patrimônio inválido: ${coleta.patrimonioId}",
@@ -102,8 +106,17 @@ object ColetaValidator {
      * Valida apenas campos essenciais (validação rápida)
      */
     fun validarEssencial(coleta: Coleta): Boolean {
-        return !coleta.numeroPatrimonio.isNullOrBlank() &&
-               coleta.patrimonioId > 0 &&
+        // Coleta por descrição: descricaoPatrimonio preenchida, numeroPatrimonio pode ser vazio
+        val temIdentificacao = !coleta.numeroPatrimonio.isNullOrBlank() || 
+                               !coleta.descricaoPatrimonio.isNullOrBlank()
+        
+        // Para coleta por descrição, patrimonioId pode ser 0
+        val isColetaPorDescricao = !coleta.descricaoPatrimonio.isNullOrBlank() && 
+                                   coleta.numeroPatrimonio.isNullOrBlank()
+        val patrimonioIdValido = isColetaPorDescricao || coleta.patrimonioId > 0
+        
+        return temIdentificacao &&
+               patrimonioIdValido &&
                coleta.usuarioId > 0 &&
                coleta.dataColeta > 0
     }

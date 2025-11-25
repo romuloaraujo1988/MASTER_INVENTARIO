@@ -3082,6 +3082,8 @@ drawable abc_textfield_search_material
 drawable abc_vector_test
 drawable avd_hide_password
 drawable avd_show_password
+drawable bg_badge
+drawable bg_spinner
 drawable btn_checkbox_checked_mtrl
 drawable btn_checkbox_checked_to_unchecked_mtrl_animation
 drawable btn_checkbox_unchecked_mtrl
@@ -3123,6 +3125,7 @@ drawable ic_call_decline
 drawable ic_call_decline_low
 drawable ic_check
 drawable ic_check_circle
+drawable ic_clear
 drawable ic_clear_black_24
 drawable ic_clock_black_24dp
 drawable ic_collections
@@ -3131,6 +3134,7 @@ drawable ic_delete
 drawable ic_download
 drawable ic_edit
 drawable ic_error
+drawable ic_export
 drawable ic_filter
 drawable ic_fingerprint
 drawable ic_home
@@ -3311,9 +3315,11 @@ id action_bar_root
 id action_bar_spinner
 id action_bar_subtitle
 id action_bar_title
+id action_clear_filters
 id action_container
 id action_context_bar
 id action_divider
+id action_export
 id action_filter
 id action_image
 id action_logout
@@ -3322,9 +3328,11 @@ id action_menu_presenter
 id action_mode_bar
 id action_mode_bar_stub
 id action_mode_close_button
+id action_refresh
 id action_search
 id action_settings
 id action_sort
+id action_sync
 id action_text
 id actions
 id activity_chooser_view_content
@@ -3483,6 +3491,7 @@ id chipAll
 id chipAllUsers
 id chipColetados
 id chipDivergencias
+id chipFiltroUsuario
 id chipFiltrosAvancados
 id chipGroupFilters
 id chipGroupPeriod
@@ -3493,6 +3502,7 @@ id chipMyCollections
 id chipNaoColetados
 id chipPendentes
 id chipPending
+id chipSemEtiqueta
 id chipSyncStatus
 id chipSynced
 id chipTipo
@@ -3568,6 +3578,7 @@ id edtBusca
 id edtDescricao
 id edtLocalizacao
 id edtObservacoes
+id edtPesquisa
 id elastic
 id embed
 id emptyView
@@ -3904,6 +3915,7 @@ id special_effects_controller_view_tag
 id spinnerCategoria
 id spinnerEstado
 id spinnerResponsavel
+id spinnerSala
 id spinnerSalas
 id spinnerStatus
 id spinnerTipoBusca
@@ -3930,6 +3942,7 @@ id submit_area
 id supportScrollUp
 id swipeRefresh
 id swipeRefreshLayout
+id switchAgrupado
 id switchAutoSync
 id switchAutoSyncByCount
 id switchBiometric
@@ -4296,6 +4309,7 @@ layout abc_select_dialog_material
 layout abc_tooltip
 layout activity_coleta
 layout activity_coletas
+layout activity_coletas_clean
 layout activity_collection_history
 layout activity_collection_view
 layout activity_consulta_patrimonio
@@ -4355,6 +4369,7 @@ layout fragment_statistics_rankings
 layout ime_base_split_test_activity
 layout ime_secondary_split_test_activity
 layout item_coleta
+layout item_coleta_header
 layout item_descricao
 layout item_load_state
 layout item_loading

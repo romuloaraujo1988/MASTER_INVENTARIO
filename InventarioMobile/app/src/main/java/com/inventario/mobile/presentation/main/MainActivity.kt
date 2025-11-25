@@ -157,7 +157,8 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_collections -> {
-                    val intent = Intent(this, com.inventario.mobile.presentation.coleta.CollectionViewActivity::class.java)
+                    // Usar nova tela de coletas com Clean Architecture
+                    val intent = Intent(this, com.inventario.mobile.presentation.coletas.ColetasActivityClean::class.java)
                     startActivity(intent)
                     true
                 }

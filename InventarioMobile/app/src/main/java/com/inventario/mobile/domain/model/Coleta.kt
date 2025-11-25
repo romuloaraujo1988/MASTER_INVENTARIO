@@ -36,8 +36,10 @@ data class Coleta(
     
     // Relacionamentos
     val patrimonioId: Long,
-    val numeroPatrimonio: String? = null, // ✅ ADICIONAR número do patrimônio
+    val numeroPatrimonio: String? = null, // Número do patrimônio (pode ser null para coleta por descrição)
+    val descricaoPatrimonio: String? = null, // Descrição do patrimônio (usado em coleta por descrição)
     val usuarioId: Long,
+    val salaId: Int? = null, // ID da sala onde está coletando
     
     // Dados da coleta
     val dataColeta: Long = System.currentTimeMillis(),

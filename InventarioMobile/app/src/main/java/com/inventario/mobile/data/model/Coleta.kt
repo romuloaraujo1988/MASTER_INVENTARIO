@@ -10,6 +10,7 @@ data class Coleta(
     val usuarioId: Int,
     val dataColeta: String,
     val localizacaoAtual: String? = null,
+    val localizacaoEncontrada: String? = null,  // Onde o item foi ENCONTRADO durante a coleta
     val estadoEncontrado: String? = "BOM",
     val observacoes: String? = null,
     val fotoPath: String? = null,
@@ -27,12 +28,17 @@ data class Coleta(
     val numeroPatrimonio: String? = null,
     val descricaoPatrimonio: String? = null,
     val nomeInventario: String? = null,
-    val nomeSala: String? = null,
+    val nomeSala: String? = null,  // Localização ORIGINAL do patrimônio
     val nomeColetor: String? = null,
     
     // Campos adicionais para funcionalidade local
     val sincronizado: Boolean = false,
-    val tentativasSincronizacao: Int = 0
+    val tentativasSincronizacao: Int = 0,
+    
+    // Campos para itens sem etiqueta
+    val semEtiqueta: Boolean = false,
+    val descricaoItemSemEtiqueta: String? = null,
+    val categoriaItemSemEtiqueta: String? = null
 ) {
     companion object {
         /**
@@ -40,16 +46,23 @@ data class Coleta(
          */
         fun fromDto(dto: com.inventario.mobile.data.remote.dto.ColetaDto): Coleta {
             val usuarioId = dto.usuarioIdCamel ?: dto.usuarioId ?: 0
-            android.util.Log.d("Coleta.fromDto", "Convertendo DTO - ID: ${dto.id}, usuarioIdCamel: ${dto.usuarioIdCamel}, usuarioId: ${dto.usuarioId}, resultado: $usuarioId")
+            android.util.Log.d("Coleta.fromDto", "═══════════════════════════════════════")
+            android.util.Log.d("Coleta.fromDto", "Convertendo DTO - ID: ${dto.id}")
+            android.util.Log.d("Coleta.fromDto", "  numeroPatrimonio: '${dto.numeroPatrimonio}'")
+            android.util.Log.d("Coleta.fromDto", "  descricaoPatrimonio: '${dto.descricaoPatrimonio}'")
             android.util.Log.d("Coleta.fromDto", "  localizacaoEncontrada: '${dto.localizacaoEncontrada}'")
             android.util.Log.d("Coleta.fromDto", "  nomeSala: '${dto.nomeSala}'")
+            android.util.Log.d("Coleta.fromDto", "  observacaoColeta: '${dto.observacaoColeta}'")
+            android.util.Log.d("Coleta.fromDto", "  usuarioIdCamel: ${dto.usuarioIdCamel}, usuarioId: ${dto.usuarioId}")
+            android.util.Log.d("Coleta.fromDto", "═══════════════════════════════════════")
             
             return Coleta(
                 id = dto.id,
                 patrimonioId = dto.patrimonioIdCamel ?: dto.patrimonioId ?: 0,
                 usuarioId = usuarioId,
                 dataColeta = dto.dataColeta ?: System.currentTimeMillis().toString(),
-                localizacaoAtual = dto.localizacaoEncontrada,
+                localizacaoAtual = dto.nomeSala,  // Localização ORIGINAL do patrimônio
+                localizacaoEncontrada = dto.localizacaoEncontrada,  // Onde foi ENCONTRADO
                 observacoes = dto.observacaoColeta,
                 fotoPath = dto.fotoPath,
                 status = dto.statusColeta ?: "coletado",
@@ -58,7 +71,7 @@ data class Coleta(
                 dataCriacao = dto.dataCriacao ?: System.currentTimeMillis().toString(),
                 dataAtualizacao = dto.dataAtualizacao ?: System.currentTimeMillis().toString(),
                 nomeInventario = dto.nomeInventario,
-                nomeSala = dto.nomeSala,
+                nomeSala = dto.nomeSala,  // Localização ORIGINAL do patrimônio
                 nomeColetor = dto.nomeColetor,
                 sincronizado = dto.sincronizado ?: true,
                 // Garantir que numeroPatrimonio e descricaoPatrimonio sejam sempre populados
@@ -66,7 +79,11 @@ data class Coleta(
                     ?: (dto.patrimonioId?.toString() ?: "0"),
                 descricaoPatrimonio = dto.descricaoPatrimonio?.takeIf { it.isNotBlank() } 
                     ?: dto.observacaoColeta?.takeIf { it.isNotBlank() } 
-                    ?: "Patrimônio ${dto.patrimonioId ?: 0}"
+                    ?: "Patrimônio ${dto.patrimonioId ?: 0}",
+                // Campos para itens sem etiqueta
+                semEtiqueta = dto.semEtiqueta ?: false,
+                descricaoItemSemEtiqueta = dto.descricaoItemSemEtiqueta,
+                categoriaItemSemEtiqueta = dto.categoriaItemSemEtiqueta
             )
         }
         
@@ -118,9 +135,9 @@ data class Coleta(
             dataColeta = dataCriacao,
             statusColeta = status,
             nomeColetor = null, // Será preenchido pelo servidor
-            semEtiqueta = false, // Para coletas manuais normais
-            descricaoItemSemEtiqueta = null,
-            categoriaItemSemEtiqueta = null,
+            semEtiqueta = semEtiqueta, // Usar valor do modelo
+            descricaoItemSemEtiqueta = descricaoItemSemEtiqueta,
+            categoriaItemSemEtiqueta = categoriaItemSemEtiqueta,
             sincronizado = sincronizado,
             patrimonioId = patrimonioId,
             usuarioId = usuarioId,

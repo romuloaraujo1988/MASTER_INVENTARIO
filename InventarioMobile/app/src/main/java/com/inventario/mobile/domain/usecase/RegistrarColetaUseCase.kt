@@ -17,6 +17,7 @@ class RegistrarColetaUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(
         numeroPatrimonio: String,
+        salaId: Int? = null, // ✅ CRÍTICO: ID da sala onde está coletando
         localizacaoAtual: String?,
         estadoEncontrado: String? = null,
         observacoes: String? = null,
@@ -46,12 +47,13 @@ class RegistrarColetaUseCase @Inject constructor(
             
             // 4. TODO: Verificar se já foi coletado (implementar método no repositório)
             
-            // 5. Criar coleta com número do patrimônio e usuário identificado
+            // 5. Criar coleta com número do patrimônio, usuário identificado e sala atual
             val coleta = Coleta(
                 id = 0,
                 patrimonioId = patrimonio.id,
                 numeroPatrimonio = numeroPatrimonio,
                 usuarioId = usuarioIdFinal, // ✅ Usuário identificado corretamente
+                salaId = salaId, // ✅ CRÍTICO: ID da sala onde está coletando
                 dataColeta = System.currentTimeMillis(),
                 localizacaoAtual = localizacaoAtual,
                 observacoes = observacoes,
@@ -61,7 +63,9 @@ class RegistrarColetaUseCase @Inject constructor(
                 sincronizado = false
             )
             
-            android.util.Log.d("RegistrarColetaUseCase", "✓ Coleta criada: Patrimônio ${coleta.numeroPatrimonio}, Usuário ${coleta.usuarioId}")
+            android.util.Log.d("RegistrarColetaUseCase", "✓ Coleta criada: Patrimônio ${coleta.numeroPatrimonio}, Usuário ${coleta.usuarioId}, Sala ${coleta.salaId}")
+            
+
             
             // 6. Registrar coleta
             coletaRepository.registrarColeta(coleta)

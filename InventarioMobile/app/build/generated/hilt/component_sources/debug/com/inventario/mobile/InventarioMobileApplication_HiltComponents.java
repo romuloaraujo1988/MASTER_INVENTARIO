@@ -20,6 +20,8 @@ import com.inventario.mobile.presentation.coleta.ItemSemEtiquetaActivity_Generat
 import com.inventario.mobile.presentation.coleta.ItemSemEtiquetaViewModel_HiltModules;
 import com.inventario.mobile.presentation.coleta.ManualCollectionActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.coleta.ManualCollectionViewModel_HiltModules;
+import com.inventario.mobile.presentation.coletas.ColetasActivityClean_GeneratedInjector;
+import com.inventario.mobile.presentation.coletas.ColetasViewModelClean_HiltModules;
 import com.inventario.mobile.presentation.dashboard.DashboardFragment_GeneratedInjector;
 import com.inventario.mobile.presentation.dashboard.DashboardViewModelClean_HiltModules;
 import com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity_GeneratedInjector;
@@ -199,6 +201,7 @@ public final class InventarioMobileApplication_HiltComponents {
       modules = {
           ChartsViewModel_HiltModules.KeyModule.class,
           ColetaViewModelClean_HiltModules.KeyModule.class,
+          ColetasViewModelClean_HiltModules.KeyModule.class,
           CollectionViewViewModelClean_HiltModules.KeyModule.class,
           DashboardViewModelClean_HiltModules.KeyModule.class,
           DescricaoSelectionViewModelClean_HiltModules.KeyModule.class,
@@ -234,6 +237,7 @@ public final class InventarioMobileApplication_HiltComponents {
   public abstract static class ActivityC implements CollectionViewActivity_GeneratedInjector,
       ItemSemEtiquetaActivity_GeneratedInjector,
       ManualCollectionActivity_GeneratedInjector,
+      ColetasActivityClean_GeneratedInjector,
       DescricaoSelectionActivity_GeneratedInjector,
       MainActivity_GeneratedInjector,
       SalaSelectionActivity_GeneratedInjector,
@@ -259,6 +263,7 @@ public final class InventarioMobileApplication_HiltComponents {
       modules = {
           ChartsViewModel_HiltModules.BindsModule.class,
           ColetaViewModelClean_HiltModules.BindsModule.class,
+          ColetasViewModelClean_HiltModules.BindsModule.class,
           CollectionViewViewModelClean_HiltModules.BindsModule.class,
           DashboardViewModelClean_HiltModules.BindsModule.class,
           DescricaoSelectionViewModelClean_HiltModules.BindsModule.class,

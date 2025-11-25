@@ -1,7 +1,9 @@
 package com.inventario.mobile.presentation.sync
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import com.inventario.mobile.data.repository.InventarioRepository
+import com.inventario.mobile.domain.usecase.SincronizarColetasPendentesUseCase
+import com.inventario.mobile.domain.usecase.SincronizarDadosUseCase
+import com.inventario.mobile.sync.SyncManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
@@ -20,7 +22,13 @@ class SyncViewModelTest {
     val instantTaskExecutorRule = InstantTaskExecutorRule()
 
     @Mock
-    private lateinit var repository: InventarioRepository
+    private lateinit var sincronizarDadosUseCase: SincronizarDadosUseCase
+    
+    @Mock
+    private lateinit var sincronizarColetasPendentesUseCase: SincronizarColetasPendentesUseCase
+    
+    @Mock
+    private lateinit var syncManager: SyncManager
 
     private lateinit var viewModel: SyncViewModel
     private val testDispatcher = UnconfinedTestDispatcher()
@@ -29,7 +37,11 @@ class SyncViewModelTest {
     fun setup() {
         MockitoAnnotations.openMocks(this)
         Dispatchers.setMain(testDispatcher)
-        viewModel = SyncViewModel(repository)
+        viewModel = SyncViewModel(
+            sincronizarDadosUseCase = sincronizarDadosUseCase,
+            sincronizarColetasPendentesUseCase = sincronizarColetasPendentesUseCase,
+            syncManager = syncManager
+        )
     }
 
     @After
@@ -40,27 +52,12 @@ class SyncViewModelTest {
     @Test
     fun `viewModel should initialize correctly`() {
         assertNotNull(viewModel)
-        assertNotNull(viewModel.uiState)
+        assertNotNull(viewModel.state)
     }
 
     @Test
-    fun `clearMessages should work correctly`() {
-        viewModel.clearMessages()
-        // Test passes if no exception is thrown
-        assertTrue(true)
-    }
-
-    @Test
-    fun `clearError should work correctly`() {
-        viewModel.clearError()
-        // Test passes if no exception is thrown
-        assertTrue(true)
-    }
-
-    @Test
-    fun `clearSuccess should work correctly`() {
-        viewModel.clearSuccess()
-        // Test passes if no exception is thrown
-        assertTrue(true)
+    fun `initial state should be Idle`() {
+        val state = viewModel.state.value
+        assertTrue(state is SyncState.Idle)
     }
 }

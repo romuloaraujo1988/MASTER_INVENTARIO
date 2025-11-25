@@ -208,6 +208,14 @@
             android:theme="@style/Theme.InventarioMobile.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
         
+        <!-- Coletas Activity Clean (Clean Architecture) -->
+        <activity
+            android:name=".presentation.coletas.ColetasActivityClean"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
         <!-- Work Manager para sincronização -->
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"

@@ -1,7 +1,6 @@
 package com.inventario.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.time.LocalDateTime;
 
 /**
  * DTO para representar um dispositivo conectado ao servidor mobile

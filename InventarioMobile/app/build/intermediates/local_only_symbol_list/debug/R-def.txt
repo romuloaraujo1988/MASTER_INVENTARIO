@@ -66,6 +66,8 @@ color warning_color
 color warning_dark
 color warning_light
 color white
+drawable bg_badge
+drawable bg_spinner
 drawable circle_background
 drawable circle_background_primary
 drawable error_background
@@ -85,12 +87,14 @@ drawable ic_backup_error
 drawable ic_business
 drawable ic_check
 drawable ic_check_circle
+drawable ic_clear
 drawable ic_collections
 drawable ic_dashboard
 drawable ic_delete
 drawable ic_download
 drawable ic_edit
 drawable ic_error
+drawable ic_export
 drawable ic_filter
 drawable ic_fingerprint
 drawable ic_home
@@ -128,11 +132,15 @@ drawable progress_bar_rounded
 drawable rounded_background_secondary
 drawable scanner_overlay
 drawable status_background
+id action_clear_filters
+id action_export
 id action_filter
 id action_logout
+id action_refresh
 id action_search
 id action_settings
 id action_sort
+id action_sync
 id appBarLayout
 id autoCompleteResponsavel
 id autoCompleteSala
@@ -244,6 +252,7 @@ id chipAll
 id chipAllUsers
 id chipColetados
 id chipDivergencias
+id chipFiltroUsuario
 id chipFiltrosAvancados
 id chipGroupFilters
 id chipGroupPeriod
@@ -254,6 +263,7 @@ id chipMyCollections
 id chipNaoColetados
 id chipPendentes
 id chipPending
+id chipSemEtiqueta
 id chipSyncStatus
 id chipSynced
 id chipTipo
@@ -268,6 +278,7 @@ id edtBusca
 id edtDescricao
 id edtLocalizacao
 id edtObservacoes
+id edtPesquisa
 id emptyView
 id etCodigo
 id etDescricao
@@ -358,11 +369,13 @@ id searchView
 id spinnerCategoria
 id spinnerEstado
 id spinnerResponsavel
+id spinnerSala
 id spinnerSalas
 id spinnerStatus
 id spinnerTipoBusca
 id swipeRefresh
 id swipeRefreshLayout
+id switchAgrupado
 id switchAutoSync
 id switchAutoSyncByCount
 id switchBiometric
@@ -531,6 +544,7 @@ id voiceListeningOverlay
 integer default_server_port
 layout activity_coleta
 layout activity_coletas
+layout activity_coletas_clean
 layout activity_collection_history
 layout activity_collection_view
 layout activity_consulta_patrimonio
@@ -571,6 +585,7 @@ layout fragment_statistics_export
 layout fragment_statistics_overview
 layout fragment_statistics_rankings
 layout item_coleta
+layout item_coleta_header
 layout item_descricao
 layout item_load_state
 layout item_loading

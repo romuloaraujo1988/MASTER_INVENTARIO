@@ -72,6 +72,10 @@
         "source": "com.inventario.mobile.app-main-69:/layout/dialog_pin_setup.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-merged_res-67:/drawable_ic_export.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/drawable/ic_export.xml"
+    },
+    {
         "merged": "com.inventario.mobile.app-merged_res-67:/layout_fragment_dashboard_backup.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/layout/fragment_dashboard_backup.xml"
     },
@@ -146,6 +150,10 @@
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/layout_item_loading.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/layout/item_loading.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-merged_res-67:/layout_activity_coletas_clean.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_coletas_clean.xml"
     },
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/mipmap-xxhdpi_ic_launcher.xml.flat",
@@ -248,6 +256,10 @@
         "source": "com.inventario.mobile.app-main-69:/menu/bottom_navigation.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-merged_res-67:/drawable_bg_badge.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/drawable/bg_badge.xml"
+    },
+    {
         "merged": "com.inventario.mobile.app-merged_res-67:/layout_activity_coleta.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/layout/activity_coleta.xml"
     },
@@ -294,6 +306,10 @@
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/mipmap-hdpi_ic_launcher.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/mipmap-hdpi/ic_launcher.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-merged_res-67:/drawable_ic_clear.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/drawable/ic_clear.xml"
     },
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/drawable_ic_server.xml.flat",
@@ -448,6 +464,10 @@
         "source": "com.inventario.mobile.app-main-69:/drawable/ic_trending_up.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-merged_res-67:/drawable_bg_spinner.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/drawable/bg_spinner.xml"
+    },
+    {
         "merged": "com.inventario.mobile.app-merged_res-67:/drawable_ic_settings.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/drawable/ic_settings.xml"
     },
@@ -542,6 +562,10 @@
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/anim_rotate_continuous.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/anim/rotate_continuous.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-merged_res-67:/layout_item_coleta_header.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_coleta_header.xml"
     },
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/layout_activity_descricao_selection.xml.flat",

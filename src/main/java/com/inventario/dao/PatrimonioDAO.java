@@ -1019,4 +1019,60 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
         
         return patrimonios;
     }
+    
+    /**
+     * Busca múltiplos patrimônios por IDs em uma única query (otimização de performance)
+     * 
+     * @param ids lista de IDs dos patrimônios
+     * @return lista de patrimônios encontrados
+     * @throws SQLException em caso de erro no banco
+     */
+    public List<Patrimonio> buscarPorIds(List<Integer> ids) throws SQLException {
+        if (ids == null || ids.isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
+        
+        String placeholders = String.join(",", java.util.Collections.nCopies(ids.size(), "?"));
+        // CORREÇÃO: Usar alias 'nome_sala' e 'nome_responsavel' para compatibilidade com mapResultSetToEntity
+        String sql = "SELECT p.*, " +
+                     "COALESCE(s.DESCRICAO, s.NUMERO_SALA) as nome_sala, " +
+                     "r.NOME as nome_responsavel " +
+                     "FROM TABELA_PATRIMONIO p " +
+                     "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
+                     "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
+                     "WHERE p.ID IN (" + placeholders + ")";
+        
+        List<Patrimonio> patrimonios = new java.util.ArrayList<>();
+        
+        Connection conn = null;
+        try {
+            conn = com.inventario.util.ConnectionManager.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            
+            for (int i = 0; i < ids.size(); i++) {
+                stmt.setInt(i + 1, ids.get(i));
+            }
+            
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Patrimonio p = mapResultSetToEntity(rs);
+                // Garantir que nomeSala seja populado
+                try {
+                    String nomeSala = rs.getString("nome_sala");
+                    if (nomeSala != null && !nomeSala.isEmpty()) {
+                        p.setNomeSala(nomeSala);
+                    }
+                } catch (SQLException e) {
+                    // Ignorar se coluna não existir
+                }
+                patrimonios.add(p);
+            }
+            
+            System.out.println("DEBUG PatrimonioDAO.buscarPorIds: Buscados " + patrimonios.size() + " patrimônios em batch");
+        } finally {
+            com.inventario.util.ConnectionManager.closeConnection(conn);
+        }
+        
+        return patrimonios;
+    }
 }

@@ -104,6 +104,10 @@
         "source": "com.inventario.mobile.app-main-69:/layout/dialog_estado_patrimonio.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_coletas_clean.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_coletas_clean.xml"
+    },
+    {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_pending_collections.xml",
         "source": "com.inventario.mobile.app-main-69:/layout/activity_pending_collections.xml"
     },
@@ -154,6 +158,10 @@
     {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/nav_header_main.xml",
         "source": "com.inventario.mobile.app-main-69:/layout/nav_header_main.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_coleta_header.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_coleta_header.xml"
     },
     {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_collection_view.xml",

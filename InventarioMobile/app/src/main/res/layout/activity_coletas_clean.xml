@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".presentation.coletas.ColetasActivityClean">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/primary"
+            app:title="Coletas"
+            app:titleTextColor="@android:color/white"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationIconTint="@android:color/white" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <!-- Header com estatísticas -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:orientation="horizontal">
+
+            <!-- Card Coletados -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvColetadosCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/success"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        tools:text="150" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sincronizados"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Card Pendentes -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvPendentesCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/warning"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        tools:text="85" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Pendentes"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+
+        <!-- Seção de Filtros -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <!-- Linha 1: Filtro por usuário e agrupamento -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipFiltroUsuario"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Minhas coletas"
+                        android:checkable="true"
+                        android:checked="true"
+                        style="@style/Widget.MaterialComponents.Chip.Filter" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Agrupar"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginEnd="8dp" />
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchAgrupado"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+
+                <!-- Linha 2: Filtro por sala -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sala:"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginEnd="8dp" />
+
+                    <Spinner
+                        android:id="@+id/spinnerSala"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_spinner" />
+
+                </LinearLayout>
+
+                <!-- Linha 3: Campo de pesquisa -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:hint="Pesquisar patrimônio..."
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edtPesquisa"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:imeOptions="actionSearch"
+                        android:drawableStart="@drawable/ic_search"
+                        android:drawablePadding="8dp" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Linha 4: Filtro por status -->
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipGroupStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    app:singleSelection="true"
+                    app:selectionRequired="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipTodos"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Todos"
+                        android:checked="true"
+                        style="@style/Widget.MaterialComponents.Chip.Choice" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipColetados"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sincronizados"
+                        style="@style/Widget.MaterialComponents.Chip.Choice" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipPendentes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Pendentes"
+                        style="@style/Widget.MaterialComponents.Chip.Choice" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipSemEtiqueta"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sem Etiqueta"
+                        style="@style/Widget.MaterialComponents.Chip.Choice" />
+
+                </com.google.android.material.chip.ChipGroup>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- SwipeRefreshLayout com RecyclerView -->
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeRefresh"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingHorizontal="16dp"
+                android:paddingBottom="16dp"
+                tools:listitem="@layout/item_coleta" />
+
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+        <!-- Empty view -->
+        <LinearLayout
+            android:id="@+id/emptyView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="32dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_marginBottom="16dp"
+                android:alpha="0.5"
+                android:src="@drawable/ic_collections"
+                app:tint="@color/text_secondary" />
+
+            <TextView
+                android:id="@+id/tvEmptyMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nenhuma coleta encontrada"
+                android:textColor="@color/text_secondary"
+                android:textSize="16sp"
+                android:textAlignment="center" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLimparFiltros"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Limpar filtros"
+                android:visibility="gone"
+                style="@style/Widget.MaterialComponents.Button.TextButton" />
+
+        </LinearLayout>
+
+        <!-- Progress Bar -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

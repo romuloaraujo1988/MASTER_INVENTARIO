@@ -383,7 +383,12 @@ public class ColetaDAO {
     }
     
     public List<Coleta> buscarPorColetor(int idColetor) throws SQLException {
-        String sql = "SELECT c.*, p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
+        String sql = "SELECT c.ID, c.ID_INVENTARIO, c.ID_PATRIMONIO, c.ID_COLETOR, c.ID_PARTICIPANTE_INVENTARIO, " +
+                    "c.DATA_COLETA, c.STATUS_COLETA, c.OBSERVACAO_COLETA, c.LOCALIZACAO_ATUAL, " +
+                    "c.LOCALIZACAO_ENCONTRADA, c.ESTADO_ENCONTRADO, c.DIVERGENCIA, c.MOTIVO_DIVERGENCIA, " +
+                    "c.LATITUDE, c.LONGITUDE, c.FOTO_PATRIMONIO, c.SEM_ETIQUETA, " +
+                    "c.DESCRICAO_ITEM_SEM_ETIQUETA, c.CATEGORIA_ITEM_SEM_ETIQUETA, " +
+                    "p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
                     "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO " +
                     "FROM TABELA_COLETA c " +
                     "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
@@ -414,7 +419,12 @@ public class ColetaDAO {
      * @throws SQLException
      */
     public List<Coleta> buscarTodas() throws SQLException {
-        String sql = "SELECT c.*, c.ID_COLETOR, p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
+        String sql = "SELECT c.ID, c.ID_INVENTARIO, c.ID_PATRIMONIO, c.ID_COLETOR, c.ID_PARTICIPANTE_INVENTARIO, " +
+                    "c.DATA_COLETA, c.STATUS_COLETA, c.OBSERVACAO_COLETA, c.LOCALIZACAO_ATUAL, " +
+                    "c.LOCALIZACAO_ENCONTRADA, c.ESTADO_ENCONTRADO, c.DIVERGENCIA, c.MOTIVO_DIVERGENCIA, " +
+                    "c.LATITUDE, c.LONGITUDE, c.FOTO_PATRIMONIO, c.SEM_ETIQUETA, " +
+                    "c.DESCRICAO_ITEM_SEM_ETIQUETA, c.CATEGORIA_ITEM_SEM_ETIQUETA, " +
+                    "p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
                     "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO " +
                     "FROM TABELA_COLETA c " +
                     "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +

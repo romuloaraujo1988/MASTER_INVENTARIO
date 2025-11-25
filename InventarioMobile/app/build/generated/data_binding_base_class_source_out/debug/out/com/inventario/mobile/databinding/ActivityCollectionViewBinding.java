@@ -53,6 +53,9 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
   public final Chip chipPending;
 
   @NonNull
+  public final Chip chipSemEtiqueta;
+
+  @NonNull
   public final Chip chipSynced;
 
   @NonNull
@@ -86,11 +89,11 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
       @NonNull MaterialCardView cardHeader, @NonNull MaterialCardView cardSalaFilter,
       @NonNull Chip chipAll, @NonNull Chip chipAllUsers, @NonNull ChipGroup chipGroupFilters,
       @NonNull ChipGroup chipGroupUser, @NonNull Chip chipMyCollections, @NonNull Chip chipPending,
-      @NonNull Chip chipSynced, @NonNull FloatingActionButton fabBackToDashboard,
-      @NonNull LinearLayout layoutEmptyState, @NonNull LinearLayout layoutFilters,
-      @NonNull ProgressBar progressBar, @NonNull RecyclerView recyclerViewColetas,
-      @NonNull Spinner spinnerSalas, @NonNull Toolbar toolbar, @NonNull TextView tvPendingSync,
-      @NonNull TextView tvTotalColetas) {
+      @NonNull Chip chipSemEtiqueta, @NonNull Chip chipSynced,
+      @NonNull FloatingActionButton fabBackToDashboard, @NonNull LinearLayout layoutEmptyState,
+      @NonNull LinearLayout layoutFilters, @NonNull ProgressBar progressBar,
+      @NonNull RecyclerView recyclerViewColetas, @NonNull Spinner spinnerSalas,
+      @NonNull Toolbar toolbar, @NonNull TextView tvPendingSync, @NonNull TextView tvTotalColetas) {
     this.rootView = rootView;
     this.cardHeader = cardHeader;
     this.cardSalaFilter = cardSalaFilter;
@@ -100,6 +103,7 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
     this.chipGroupUser = chipGroupUser;
     this.chipMyCollections = chipMyCollections;
     this.chipPending = chipPending;
+    this.chipSemEtiqueta = chipSemEtiqueta;
     this.chipSynced = chipSynced;
     this.fabBackToDashboard = fabBackToDashboard;
     this.layoutEmptyState = layoutEmptyState;
@@ -187,6 +191,12 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.chipSemEtiqueta;
+      Chip chipSemEtiqueta = ViewBindings.findChildViewById(rootView, id);
+      if (chipSemEtiqueta == null) {
+        break missingId;
+      }
+
       id = R.id.chipSynced;
       Chip chipSynced = ViewBindings.findChildViewById(rootView, id);
       if (chipSynced == null) {
@@ -249,8 +259,9 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
 
       return new ActivityCollectionViewBinding((ConstraintLayout) rootView, cardHeader,
           cardSalaFilter, chipAll, chipAllUsers, chipGroupFilters, chipGroupUser, chipMyCollections,
-          chipPending, chipSynced, fabBackToDashboard, layoutEmptyState, layoutFilters, progressBar,
-          recyclerViewColetas, spinnerSalas, toolbar, tvPendingSync, tvTotalColetas);
+          chipPending, chipSemEtiqueta, chipSynced, fabBackToDashboard, layoutEmptyState,
+          layoutFilters, progressBar, recyclerViewColetas, spinnerSalas, toolbar, tvPendingSync,
+          tvTotalColetas);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

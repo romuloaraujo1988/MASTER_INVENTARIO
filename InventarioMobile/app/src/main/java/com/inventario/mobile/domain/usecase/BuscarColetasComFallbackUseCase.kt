@@ -64,6 +64,7 @@ class BuscarColetasComFallbackUseCase @Inject constructor(
                 if (apiResponse.success && apiResponse.data != null) {
                     // Coletas do servidor (sincronizadas)
                     val coletasServidor = apiResponse.data.map { dto ->
+                        Log.d(TAG, "Mapeando DTO: id=${dto.id}, localizacaoEncontrada='${dto.localizacaoEncontrada}', nomeSala='${dto.nomeSala}'")
                         Coleta(
                             id = dto.id?.toInt(),
                             patrimonioId = dto.patrimonioId,
@@ -72,8 +73,9 @@ class BuscarColetasComFallbackUseCase @Inject constructor(
                             usuarioId = dto.usuarioId,
                             nomeColetor = dto.nomeColetor,
                             dataColeta = dto.dataColeta ?: "",
-                            nomeSala = dto.nomeSala,
-                            localizacaoAtual = dto.localizacaoAtual ?: dto.nomeSala,
+                            nomeSala = dto.nomeSala,  // Localização ORIGINAL do patrimônio
+                            localizacaoAtual = dto.nomeSala,  // Localização ORIGINAL do patrimônio
+                            localizacaoEncontrada = dto.localizacaoEncontrada,  // Onde foi ENCONTRADO durante a coleta
                             observacoes = dto.observacoes,
                             sincronizado = true,
                             estadoEncontrado = dto.estadoEncontrado,

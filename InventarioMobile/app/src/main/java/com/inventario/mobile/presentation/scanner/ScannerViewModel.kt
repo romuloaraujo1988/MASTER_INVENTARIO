@@ -318,6 +318,20 @@ class ScannerViewModel(
                 Log.d("ScannerViewModel", "Sala: $salaNome")
                 Log.d("ScannerViewModel", "Estado: $estadoEncontrado")
                 
+                // ✅ CRÍTICO: Obter ID da sala atual do PreferencesManager
+                val salaIdAtual = preferencesManager.getCurrentSalaId()
+                Log.d("ScannerViewModel", "Sala ID atual (PreferencesManager): $salaIdAtual")
+                
+                if (salaIdAtual <= 0) {
+                    Log.e("ScannerViewModel", "❌ ERRO CRÍTICO: Sala ID não encontrada!")
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        statusMessage = "Erro ao coletar",
+                        errorMessage = "Sala não selecionada. Selecione uma sala antes de coletar."
+                    )
+                    return@launch
+                }
+                
                 _uiState.value = _uiState.value.copy(
                     isLoading = true,
                     statusMessage = "Coletando patrimônio...",
@@ -343,12 +357,14 @@ class ScannerViewModel(
                 Log.d("ScannerViewModel", "═══════════════════════════════════════")
                 Log.d("ScannerViewModel", "✓ Usando RegistrarColetaUseCase (Clean Architecture - UNIFICADO)")
                 Log.d("ScannerViewModel", "  Patrimônio: ${patrimonio.numeroPatrimonio}")
-                Log.d("ScannerViewModel", "  Sala: $salaNome")
+                Log.d("ScannerViewModel", "  Sala ID: $salaIdAtual")
+                Log.d("ScannerViewModel", "  Sala Nome: $salaNome")
                 Log.d("ScannerViewModel", "  Estado: $estadoEncontrado")
                 Log.d("ScannerViewModel", "═══════════════════════════════════════")
                 
                 val result = registrarColetaUseCase.invoke(
                     numeroPatrimonio = patrimonio.numeroPatrimonio,
+                    salaId = salaIdAtual, // ✅ CRÍTICO: Passar ID da sala atual
                     localizacaoAtual = salaNome,
                     estadoEncontrado = estadoEncontrado,
                     observacoes = null

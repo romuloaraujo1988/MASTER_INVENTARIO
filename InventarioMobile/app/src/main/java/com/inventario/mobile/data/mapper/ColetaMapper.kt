@@ -26,6 +26,7 @@ class ColetaMapper @Inject constructor(
             id = entity.id,
             patrimonioId = entity.idPatrimonio.toLong(),
             usuarioId = entity.idUsuario.toLong(),
+            salaId = entity.idSala, // ✅ Incluir salaId
             dataColeta = entity.dataColeta,
             localizacaoAtual = entity.nomeSala,
             observacoes = entity.observacao,
@@ -80,12 +81,22 @@ class ColetaMapper @Inject constructor(
             }
         }
         
+        // ✅ CRÍTICO: Priorizar salaId da coleta (onde está coletando AGORA)
+        val salaIdReal = domain.salaId ?: patrimonio?.idSala
+        
+        Log.d(TAG, "═══════════════════════════════════════")
+        Log.d(TAG, "MAPEANDO COLETA PARA ENTITY")
+        Log.d(TAG, "Sala ID da coleta (atual): ${domain.salaId}")
+        Log.d(TAG, "Sala ID do patrimônio (cadastrado): ${patrimonio?.idSala}")
+        Log.d(TAG, "Sala ID FINAL (usado): $salaIdReal")
+        Log.d(TAG, "═══════════════════════════════════════")
+        
         return ColetaEntity(
             id = domain.id,
             idPatrimonio = domain.patrimonioId.toInt(),
             numeroPatrimonio = patrimonio?.numero ?: "", // ✅ Preenchido do banco
             idInventario = inventarioAtivoId, // ✅ Do PreferencesManager
-            idSala = patrimonio?.idSala,
+            idSala = salaIdReal, // ✅ CRÍTICO: Prioriza sala atual da coleta
             nomeSala = salaReal, // ✅ PRIORIZA onde foi realmente encontrado
             idResponsavel = patrimonio?.idResponsavel,
             nomeResponsavel = patrimonio?.nomeResponsavel,

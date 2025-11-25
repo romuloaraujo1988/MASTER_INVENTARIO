@@ -44,6 +44,7 @@ class ScannerActivity : AppCompatActivity() {
     private var isInitializing = false
     private var retryCount = 0
     private val maxRetries = 3
+    private var hasScannedOnce = false // ✅ Flag para evitar reiniciar scanner após primeira leitura
     
     // ✅ Injetar Use Case via Hilt
     @Inject
@@ -59,25 +60,37 @@ class ScannerActivity : AppCompatActivity() {
     // Launcher moderno para scanner (substitui IntentIntegrator deprecated)
     private val barcodeLauncher = registerForActivityResult(ScanContract()) { result ->
         android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
-        android.util.Log.d("ScannerActivity", "Resultado do scanner recebido")
+        android.util.Log.d("ScannerActivity", "CALLBACK DO SCANNER RECEBIDO")
         android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
+        android.util.Log.d("ScannerActivity", "Thread: ${Thread.currentThread().name}")
+        android.util.Log.d("ScannerActivity", "Result: $result")
+        android.util.Log.d("ScannerActivity", "Contents: ${result?.contents}")
+        android.util.Log.d("ScannerActivity", "Format: ${result?.formatName}")
         
-        isInitializing = false // Reset flag
+        // ✅ CRÍTICO: Reset flags IMEDIATAMENTE
+        isInitializing = false
+        hasScannedOnce = true // ✅ Marcar que já escaneou uma vez
         
-        if (result.contents == null) {
+        android.util.Log.d("ScannerActivity", "✓ Flags atualizadas: isInitializing=false, hasScannedOnce=true")
+        
+        if (result == null || result.contents == null) {
             // Scan cancelado pelo usuário
-            android.util.Log.w("ScannerActivity", "Scan cancelado pelo usuário")
+            android.util.Log.w("ScannerActivity", "❌ Scan cancelado ou resultado nulo")
             showError("Scan cancelado")
             finish()
         } else {
             // Código lido com sucesso
-            android.util.Log.d("ScannerActivity", "Código lido: ${result.contents}")
+            android.util.Log.d("ScannerActivity", "✅ Código lido com sucesso: ${result.contents}")
             android.util.Log.d("ScannerActivity", "Formato: ${result.formatName}")
             
-            // Tocar som suave de sucesso
+            // ✅ Tocar som suave de sucesso
             SoundUtils.playSuccessSound()
             
-            processQRCode(result.contents)
+            // ✅ Processar código na thread principal
+            runOnUiThread {
+                android.util.Log.d("ScannerActivity", "Processando código na UI thread...")
+                processQRCode(result.contents)
+            }
         }
     }
     
@@ -343,9 +356,17 @@ class ScannerActivity : AppCompatActivity() {
         }
         
         binding.buttonRetry.setOnClickListener {
-            android.util.Log.d("ScannerActivity", "=== BOTÃO ESCANEAR NOVAMENTE CLICADO ===")
+            android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
+            android.util.Log.d("ScannerActivity", "BOTÃO 'ESCANEAR OUTRO' CLICADO")
+            android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
+            
+            // ✅ Resetar estado e reiniciar scanner
             resetScannerState()
-            initializeScanner()
+            
+            // ✅ Aguardar um pouco para garantir que UI foi atualizada
+            Handler(Looper.getMainLooper()).postDelayed({
+                initializeScanner()
+            }, 200)
         }
         
         binding.buttonCancel.setOnClickListener {
@@ -363,6 +384,9 @@ class ScannerActivity : AppCompatActivity() {
         // Limpar resultado atual
         currentScanResult = null
         
+        // ✅ CRÍTICO: Resetar flag para permitir novo scan
+        hasScannedOnce = false
+        
         // Limpar estado do ViewModel
         viewModel.clearScanResult()
         
@@ -376,6 +400,8 @@ class ScannerActivity : AppCompatActivity() {
         
         // Resetar contador de tentativas
         retryCount = 0
+        
+        android.util.Log.d("ScannerActivity", "✓ hasScannedOnce resetado para false")
         
         // Atualizar status
         binding.textStatus.text = "Preparando scanner..."
@@ -411,16 +437,18 @@ class ScannerActivity : AppCompatActivity() {
         }
         
         state.scanResult?.let { result ->
+            android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
+            android.util.Log.d("ScannerActivity", "PATRIMÔNIO ENCONTRADO - MOSTRANDO DADOS")
+            android.util.Log.d("ScannerActivity", "Número: ${result.patrimonioCodigo}")
+            android.util.Log.d("ScannerActivity", "Já coletado: ${result.jaColetado}")
+            android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
+            
             currentScanResult = result
             displayPatrimonioInfo(result)
             
-            // Verificar se deve permitir coleta ou apenas retornar resultado
-            val allowCollection = intent.getBooleanExtra(EXTRA_ALLOW_COLLECTION, false)
-            if (allowCollection) {
-                showCollectionInterface(result)
-            } else {
-                handleScanSuccess(result)
-            }
+            // ✅ SEMPRE mostrar interface de coleta (mesmo se já coletado)
+            // Permite que usuário veja os dados e decida se quer escanear outro
+            showCollectionInterface(result)
         }
     }
     
@@ -497,25 +525,35 @@ class ScannerActivity : AppCompatActivity() {
     }
     
     private fun showCollectionInterface(result: ScanResult) {
-        // Mostrar card de informações
+        android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
+        android.util.Log.d("ScannerActivity", "MOSTRANDO INTERFACE DE COLETA")
+        android.util.Log.d("ScannerActivity", "Patrimônio: ${result.patrimonioCodigo}")
+        android.util.Log.d("ScannerActivity", "Já coletado: ${result.jaColetado}")
+        android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
+        
+        // ✅ SEMPRE mostrar card de informações
         binding.cardPatrimonioInfo.visibility = View.VISIBLE
         
         if (result.jaColetado) {
             // Se já foi coletado, NÃO mostrar botão de coletar
-            // Princípio: Cada coleta é única, sem possibilidade de duplicação
+            // Mas SEMPRE mostrar botão "Escanear Outro" para continuar coletando
             binding.buttonColetar.visibility = View.GONE
             binding.buttonRetry.visibility = View.VISIBLE
             binding.buttonRetry.text = "Escanear Outro"
             binding.buttonCancel.visibility = View.VISIBLE
             
-            android.util.Log.w("ScannerActivity", "Patrimônio ${result.patrimonioCodigo} já foi coletado. Botão de coleta ocultado.")
+            android.util.Log.w("ScannerActivity", "⚠️ Patrimônio ${result.patrimonioCodigo} já foi coletado")
+            android.util.Log.d("ScannerActivity", "✓ Mostrando botão 'Escanear Outro' para continuar")
         } else {
-            // Se não foi coletado, mostrar botão de coletar
+            // Se não foi coletado, mostrar botão de coletar E botão de escanear outro
             binding.buttonColetar.visibility = View.VISIBLE
             binding.buttonColetar.text = "Coletar"
             binding.buttonRetry.visibility = View.VISIBLE
             binding.buttonRetry.text = "Escanear Outro"
             binding.buttonCancel.visibility = View.VISIBLE
+            
+            android.util.Log.d("ScannerActivity", "✓ Patrimônio disponível para coleta")
+            android.util.Log.d("ScannerActivity", "✓ Mostrando botões: Coletar + Escanear Outro")
         }
     }
     
@@ -582,6 +620,12 @@ class ScannerActivity : AppCompatActivity() {
                 setOrientationLocked(true)
                 setTimeout(30000) // 30 segundos timeout
             }
+            
+            android.util.Log.d("ScannerActivity", "✓ ScanOptions configurado")
+            android.util.Log.d("ScannerActivity", "  - Formatos: QR_CODE, EAN, CODE_128, etc")
+            android.util.Log.d("ScannerActivity", "  - Câmera: Traseira (ID: 0)")
+            android.util.Log.d("ScannerActivity", "  - Beep: Desabilitado")
+            android.util.Log.d("ScannerActivity", "  - Timeout: 30s")
             
             android.util.Log.d("ScannerActivity", "Iniciando scanner com ScanContract...")
             binding.progressBar.visibility = View.GONE
@@ -802,22 +846,33 @@ class ScannerActivity : AppCompatActivity() {
         
         android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
         android.util.Log.d("ScannerActivity", "onResume() chamado")
+        android.util.Log.d("ScannerActivity", "isInitializing: $isInitializing")
+        android.util.Log.d("ScannerActivity", "hasScannedOnce: $hasScannedOnce")
+        android.util.Log.d("ScannerActivity", "currentScanResult: ${currentScanResult != null}")
         android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
         
-        // Verificar se voltou das configurações com permissão concedida
-        if (!isInitializing && android14CameraHelper.checkCameraPermissions()) {
-            android.util.Log.d("ScannerActivity", "✅ Permissão detectada no onResume, verificando se precisa inicializar scanner")
+        // ✅ CRÍTICO: Só reiniciar scanner se:
+        // 1. Não está inicializando
+        // 2. Tem permissão
+        // 3. NÃO escaneou ainda (evita reiniciar após primeira leitura)
+        // 4. Não tem resultado de scan
+        if (!isInitializing && 
+            !hasScannedOnce && 
+            android14CameraHelper.checkCameraPermissions() && 
+            currentScanResult == null) {
             
-            // Se não há resultado de scan ainda, inicializar
-            if (currentScanResult == null) {
-                android.util.Log.d("ScannerActivity", "Nenhum resultado de scan, inicializando scanner...")
-                Handler(Looper.getMainLooper()).postDelayed({
-                    try {
-                        initializeScanner()
-                    } catch (e: Exception) {
-                        android.util.Log.e("ScannerActivity", "Erro ao inicializar scanner no onResume", e)
-                    }
-                }, 300)
+            android.util.Log.d("ScannerActivity", "✅ Condições atendidas, inicializando scanner...")
+            Handler(Looper.getMainLooper()).postDelayed({
+                try {
+                    initializeScanner()
+                } catch (e: Exception) {
+                    android.util.Log.e("ScannerActivity", "Erro ao inicializar scanner no onResume", e)
+                }
+            }, 300)
+        } else {
+            android.util.Log.d("ScannerActivity", "⏭️ Pulando inicialização do scanner no onResume")
+            if (hasScannedOnce) {
+                android.util.Log.d("ScannerActivity", "  Motivo: Já escaneou uma vez")
             }
         }
     }
