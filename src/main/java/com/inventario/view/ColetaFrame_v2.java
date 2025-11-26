@@ -98,6 +98,7 @@ public class ColetaFrame_v2 extends JFrame {
     // Tabela de histórico de coleta - sempre visível
     private JTable tabelaHistorico;
     private DefaultTableModel modeloTabelaHistorico;
+    private JLabel lblContagemColetas; // Label para exibir contagem de coletas na sala
     private JScrollPane scrollHistorico;
 
     // Componentes para estrutura de abas
@@ -154,6 +155,10 @@ public class ColetaFrame_v2 extends JFrame {
     // Modo de coleta automática com leitor de código de barras
     private JCheckBox chkColetaAutomatica;
     private boolean modoColetaAutomatica = false;
+
+    // Timers para controle de animações visuais (evitar conflitos)
+    private Timer timerAnimacaoAtual;
+    private Timer timerTextoAtual;
 
     public ColetaFrame_v2() {
         this(null, null); // Chama o construtor com usuário e mainFrame null para compatibilidade
@@ -715,6 +720,12 @@ public class ColetaFrame_v2 extends JFrame {
         scrollHistorico.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollHistorico.setBorder(BorderFactory.createLoweredBevelBorder());
 
+        // Label de contagem de coletas na sala
+        lblContagemColetas = new JLabel("📊 Total de itens coletados: 0");
+        lblContagemColetas.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblContagemColetas.setForeground(new Color(52, 152, 219));
+        lblContagemColetas.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
         // Adicionar componentes à lista de desabilitação (EXCETO a tabela de histórico)
         componentesParaDesabilitar.add(campoBusca);
         componentesParaDesabilitar.add(btnBuscar);
@@ -910,8 +921,14 @@ public class ColetaFrame_v2 extends JFrame {
             panelBotoesHistorico.add(btnReabrirColeta);
         }
 
+        // Painel inferior com contagem e botões
+        JPanel panelInferiorHistorico = new JPanel(new BorderLayout());
+        panelInferiorHistorico.setBackground(Color.WHITE);
+        panelInferiorHistorico.add(lblContagemColetas, BorderLayout.WEST);
+        panelInferiorHistorico.add(panelBotoesHistorico, BorderLayout.EAST);
+
         panelHistorico.add(scrollHistorico, BorderLayout.CENTER);
-        panelHistorico.add(panelBotoesHistorico, BorderLayout.SOUTH);
+        panelHistorico.add(panelInferiorHistorico, BorderLayout.SOUTH);
 
         // Panel direito - informações e ações com design moderno
         JPanel panelDireito = new JPanel(new BorderLayout());
@@ -2150,6 +2167,10 @@ public class ColetaFrame_v2 extends JFrame {
             if (campoLocalizacaoSemPatrimonio != null) {
                 campoLocalizacaoSemPatrimonio.setText("");
             }
+            
+            // Resetar contagem de coletas e limpar tabela de histórico
+            atualizarContagemColetas(0);
+            modeloTabelaHistorico.setRowCount(0);
 
             return;
         }
@@ -2162,10 +2183,28 @@ public class ColetaFrame_v2 extends JFrame {
         }
 
         try {
-            // Habilitar componentes quando uma sala válida é selecionada
-            habilitarComponentes();
+            // Buscar inventário ativo
+            Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
+            
+            // Verificar se a sala está finalizada
+            boolean salaFinalizada = false;
+            int totalItensColetados = 0;
+            
+            if (inventarioAtivo != null) {
+                salaFinalizada = salaInventarioDAO.isColetaFinalizada(
+                        salaSelecionada.getIdSala(), inventarioAtivo.getId());
+                
+                // Contar itens coletados
+                try {
+                    int[] estatisticas = coletaDAO.contarColetasPorSala(
+                            inventarioAtivo.getId(), salaSelecionada.getNumeroSala());
+                    totalItensColetados = estatisticas[0];
+                } catch (Exception e) {
+                    System.err.println("Erro ao contar coletas: " + e.getMessage());
+                }
+            }
 
-            // Carregar histórico usando APENAS o número da sala (ex: "CAE" ao invés de "CAE(IFMT - PDL)")
+            // Carregar histórico usando APENAS o número da sala
             carregarHistoricoColeta(salaSelecionada.getNumeroSala());
 
             // Carregar itens sem patrimônio se estiver na aba correspondente
@@ -2173,20 +2212,57 @@ public class ColetaFrame_v2 extends JFrame {
                 carregarTodosItensSemPatrimonio();
             }
 
-            // Modo offline simplificado - não há controle de finalização de salas
-            lblResumoSala.setText(String.format("Coletando em: %s", salaSelecionada.getIdentificacaoCompleta()));
-            btnFinalizarColeta.setText("🏁 Finalizar");
-            btnFinalizarColeta.setBackground(new Color(40, 167, 69));
-            btnFinalizarColeta.setEnabled(true);
-            
-            if (btnReabrirColeta.isVisible()) {
-                btnReabrirColeta.setEnabled(false);
+            // Configurar interface baseado no status da sala
+            if (salaFinalizada) {
+                // Sala FINALIZADA - desabilitar coleta
+                lblResumoSala.setText(String.format("✅ Sala FINALIZADA: %s | %d itens coletados",
+                        salaSelecionada.getIdentificacaoCompleta(), totalItensColetados));
+                lblResumoSala.setForeground(new Color(40, 167, 69)); // Verde
+                
+                btnFinalizarColeta.setText("✅ Finalizada");
+                btnFinalizarColeta.setBackground(new Color(108, 117, 125)); // Cinza
+                btnFinalizarColeta.setEnabled(false);
+                
+                // Habilitar botão reabrir se usuário tem permissão
+                if (btnReabrirColeta.isVisible()) {
+                    btnReabrirColeta.setEnabled(true);
+                }
+                
+                // Desabilitar campos de coleta
+                campoBusca.setEnabled(false);
+                btnBuscar.setEnabled(false);
+                btnColetar.setEnabled(false);
+                campoObservacao.setEnabled(false);
+                comboEstado.setEnabled(false);
+                
+                System.out.println("DEBUG: Sala " + salaSelecionada.getIdentificacaoCompleta() + 
+                                  " está FINALIZADA - campos desabilitados");
+                
+            } else {
+                // Sala ABERTA - habilitar coleta
+                lblResumoSala.setText(String.format("Coletando em: %s | %d itens coletados",
+                        salaSelecionada.getIdentificacaoCompleta(), totalItensColetados));
+                lblResumoSala.setForeground(new Color(100, 100, 100)); // Cinza padrão
+                
+                btnFinalizarColeta.setText("🏁 Finalizar");
+                btnFinalizarColeta.setBackground(new Color(40, 167, 69)); // Verde
+                btnFinalizarColeta.setEnabled(true);
+                
+                // Desabilitar botão reabrir (sala não está finalizada)
+                if (btnReabrirColeta.isVisible()) {
+                    btnReabrirColeta.setEnabled(false);
+                }
+                
+                // Habilitar componentes de coleta
+                habilitarComponentes();
+                
+                // Habilitar componentes baseado na aba atualmente selecionada
+                int abaSelecionada = tabbedPane.getSelectedIndex();
+                habilitarComponentesPorAba(abaSelecionada);
+                
+                System.out.println("DEBUG: Sala " + salaSelecionada.getIdentificacaoCompleta() + 
+                                  " está ABERTA - campos habilitados");
             }
-
-            // Habilitar componentes baseado na aba atualmente selecionada
-            int abaSelecionada = tabbedPane.getSelectedIndex();
-            habilitarComponentesPorAba(abaSelecionada);
-            btnFinalizarColeta.setEnabled(true);
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this,
@@ -2196,122 +2272,144 @@ public class ColetaFrame_v2 extends JFrame {
         }
     }
 
+    // Limite de registros para performance
+    private static final int LIMITE_HISTORICO = 100;
+    
+    /**
+     * Carrega histórico de coletas de forma OTIMIZADA e ASSÍNCRONA
+     * - Usa query única com JOIN (evita N+1)
+     * - Executa em background (não trava UI)
+     * - Limita registros para performance
+     */
     private void carregarHistoricoColeta(String identificacaoSala) {
-        System.out.println("=== DEBUG TIMESTAMP: Iniciando carregarHistoricoColeta ===");
-        System.out.println("DEBUG TIMESTAMP: Identificação da sala recebida: " + identificacaoSala);
+        System.out.println("[OTIMIZADO] Carregando histórico para sala: " + identificacaoSala);
         
-        try {
-            modeloTabelaHistorico.setRowCount(0);
-            
-            Sala salaAtual = (Sala) comboSalas.getSelectedItem();
-            if (salaAtual == null) {
-                System.out.println("DEBUG TIMESTAMP: Sala atual é null, retornando");
-                return;
+        Sala salaAtual = (Sala) comboSalas.getSelectedItem();
+        if (salaAtual == null) {
+            return;
+        }
+        
+        // Mostrar loading na UI
+        lblResumoSala.setText("⏳ Carregando histórico...");
+        tabelaHistorico.setEnabled(false);
+        
+        // Executar em background para não travar a UI
+        SwingWorker<HistoricoResult, Void> worker = new SwingWorker<>() {
+            @Override
+            protected HistoricoResult doInBackground() throws Exception {
+                long inicio = System.currentTimeMillis();
+                
+                // 1. Buscar histórico limitado para exibição (performance)
+                List<com.inventario.dto.ColetaResumo> coletas = 
+                    coletaDAO.buscarHistoricoOtimizado(identificacaoSala, LIMITE_HISTORICO);
+                
+                // 2. Buscar contagem TOTAL separadamente (query leve)
+                int totalReal = coletaDAO.contarColetasTotalPorSala(identificacaoSala);
+                
+                long tempo = System.currentTimeMillis() - inicio;
+                System.out.println("[OTIMIZADO] Queries executadas em " + tempo + "ms - " + 
+                                 coletas.size() + " exibidos, " + totalReal + " total");
+                
+                return new HistoricoResult(coletas, totalReal);
             }
-
-            System.out.println("DEBUG TIMESTAMP: Sala selecionada - ID: " + salaAtual.getIdSala() + ", Identificação: " + salaAtual.getIdentificacaoCompleta());
             
-            // Buscar coletas usando o número/identificação da sala
-            List<Coleta> coletas = coletaDAO.buscarColetasPorNumeroSala(identificacaoSala);
-            System.out.println("DEBUG TIMESTAMP: Encontradas " + coletas.size() + " coletas para sala: " + identificacaoSala);
-            
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-
-            int contador = 0;
-            for (Coleta coleta : coletas) {
-                contador++;
-                System.out.println("\n--- DEBUG TIMESTAMP: Processando coleta " + contador + " ---");
-                System.out.println("DEBUG TIMESTAMP: ID Coleta: " + coleta.getId());
-                System.out.println("DEBUG TIMESTAMP: ID Patrimônio: " + coleta.getIdPatrimonio());
-                System.out.println("DEBUG TIMESTAMP: Sem Etiqueta: " + coleta.isSemEtiqueta());
-                
-                // Log detalhado do timestamp
-                java.sql.Timestamp dataColeta = coleta.getDataColeta();
-                System.out.println("DEBUG TIMESTAMP: Data Coleta (raw): " + dataColeta);
-                System.out.println("DEBUG TIMESTAMP: Data Coleta (class): " + (dataColeta != null ? dataColeta.getClass().getName() : "null"));
-                System.out.println("DEBUG TIMESTAMP: Data Coleta (time): " + (dataColeta != null ? dataColeta.getTime() : "null"));
-                
-                // Buscar número e descrição do patrimônio
-                String numeroPatrimonio = "-";
-                String descricao = "-";
-                
-                if (coleta.isSemEtiqueta()) {
-                    numeroPatrimonio = "SEM ETIQUETA";
-                    descricao = coleta.getDescricaoItemSemEtiqueta() != null 
-                        ? coleta.getDescricaoItemSemEtiqueta() 
-                        : "-";
-                } else {
-                    // Buscar patrimônio para pegar número e descrição
-                    try {
-                        Patrimonio patrimonio = patrimonioDAO.buscarPorIdComJoins(coleta.getIdPatrimonio());
-                        if (patrimonio != null) {
-                            numeroPatrimonio = patrimonio.getNumero();
-                            descricao = patrimonio.getDescricao();
-                        } else {
-                            numeroPatrimonio = String.valueOf(coleta.getIdPatrimonio());
-                            descricao = "Patrimônio não encontrado";
-                        }
-                    } catch (Exception e) {
-                        System.err.println("Erro ao buscar patrimônio ID " + coleta.getIdPatrimonio() + ": " + e.getMessage());
-                        numeroPatrimonio = String.valueOf(coleta.getIdPatrimonio());
-                        descricao = "Erro ao buscar patrimônio";
-                    }
-                }
-                
-                // Estado encontrado (pode ser null em coletas antigas)
-                String estadoEncontrado = coleta.getEstadoEncontrado() != null 
-                    ? coleta.getEstadoEncontrado() 
-                    : "-";
-
-                System.out.println("DEBUG TIMESTAMP: Número Patrimônio: " + numeroPatrimonio);
-                System.out.println("DEBUG TIMESTAMP: Descrição: " + descricao);
-                System.out.println("DEBUG TIMESTAMP: Estado: " + estadoEncontrado);
-                
-                // Tentar formatar a data
-                String dataFormatada = "ERRO";
+            @Override
+            protected void done() {
                 try {
-                    if (dataColeta != null) {
-                        dataFormatada = sdf.format(dataColeta);
-                        System.out.println("DEBUG TIMESTAMP: Data formatada com sucesso: " + dataFormatada);
-                    } else {
-                        System.err.println("DEBUG TIMESTAMP: ERRO - dataColeta é null!");
-                        dataFormatada = "DATA INVÁLIDA";
-                    }
-                } catch (Exception formatEx) {
-                    System.err.println("DEBUG TIMESTAMP: ERRO ao formatar data: " + formatEx.getMessage());
-                    formatEx.printStackTrace();
-                    dataFormatada = "ERRO FORMATO";
+                    HistoricoResult resultado = get();
+                    
+                    // Atualizar tabela na EDT
+                    atualizarTabelaHistoricoOtimizado(resultado.coletas);
+                    
+                    // Atualizar contagem com o TOTAL REAL (não limitado)
+                    atualizarContagemColetas(resultado.totalReal);
+                    
+                    // Atualizar resumo com total real
+                    lblResumoSala.setText(String.format("Coletando em: %s (%d itens)", 
+                        salaAtual.getIdentificacaoCompleta(), resultado.totalReal));
+                    
+                    tabelaHistorico.setEnabled(true);
+                    
+                } catch (Exception e) {
+                    System.err.println("[OTIMIZADO] Erro ao carregar histórico: " + e.getMessage());
+                    lblResumoSala.setText("❌ Erro ao carregar histórico");
+                    tabelaHistorico.setEnabled(true);
+                    e.printStackTrace();
                 }
-
-                Object[] linha = {
-                    dataFormatada,
-                    numeroPatrimonio,
-                    descricao,
-                    estadoEncontrado
-                };
-                
-                System.out.println("DEBUG TIMESTAMP: Adicionando linha à tabela");
-                modeloTabelaHistorico.addRow(linha);
-                System.out.println("DEBUG TIMESTAMP: Linha adicionada com sucesso");
             }
+        };
+        
+        worker.execute();
+    }
+    
+    /**
+     * Classe auxiliar para retornar histórico + contagem total
+     */
+    private static class HistoricoResult {
+        final List<com.inventario.dto.ColetaResumo> coletas;
+        final int totalReal;
+        
+        HistoricoResult(List<com.inventario.dto.ColetaResumo> coletas, int totalReal) {
+            this.coletas = coletas;
+            this.totalReal = totalReal;
+        }
+    }
+    
+    /**
+     * Atualiza a tabela de histórico de forma otimizada
+     * - Desabilita auto-resize durante carga
+     * - Usa dados já formatados do DTO
+     */
+    private void atualizarTabelaHistoricoOtimizado(List<com.inventario.dto.ColetaResumo> coletas) {
+        // Desabilitar auto-resize durante carga (performance)
+        tabelaHistorico.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        
+        // Limpar tabela
+        modeloTabelaHistorico.setRowCount(0);
+        
+        // Formatador de data (criado UMA vez, fora do loop)
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        
+        // Adicionar linhas
+        for (com.inventario.dto.ColetaResumo coleta : coletas) {
+            String dataFormatada = coleta.getDataColeta() != null 
+                ? sdf.format(coleta.getDataColeta()) 
+                : "-";
             
-            System.out.println("\n=== DEBUG TIMESTAMP: carregarHistoricoColeta concluído com sucesso ===");
-            System.out.println("DEBUG TIMESTAMP: Total de linhas na tabela: " + modeloTabelaHistorico.getRowCount());
+            Object[] linha = {
+                dataFormatada,
+                coleta.getNumeroPatrimonio(),
+                coleta.getDescricao(),
+                coleta.getEstadoEncontrado()
+            };
             
-        } catch (Exception e) {
-            System.err.println("=== DEBUG TIMESTAMP: ERRO FATAL em carregarHistoricoColeta ===");
-            System.err.println("DEBUG TIMESTAMP: Mensagem: " + e.getMessage());
-            System.err.println("DEBUG TIMESTAMP: Classe: " + e.getClass().getName());
-            System.err.println("DEBUG TIMESTAMP: Stack trace:");
-            e.printStackTrace();
+            modeloTabelaHistorico.addRow(linha);
+        }
+        
+        // Restaurar auto-resize
+        tabelaHistorico.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+        
+        // NOTA: A contagem é atualizada separadamente com o total REAL
+        // (não usar coletas.size() pois é limitado a LIMITE_HISTORICO)
+        
+        System.out.println("[OTIMIZADO] Tabela atualizada com " + coletas.size() + " registros exibidos");
+    }
+    
+    /**
+     * Atualiza o label de contagem de coletas na sala
+     * @param totalColetas número total de coletas na sala atual
+     */
+    private void atualizarContagemColetas(int totalColetas) {
+        if (lblContagemColetas != null) {
+            lblContagemColetas.setText(String.format("📊 Total de itens coletados: %d", totalColetas));
             
-            // Tentar identificar a causa raiz
-            Throwable causa = e.getCause();
-            if (causa != null) {
-                System.err.println("\nDEBUG TIMESTAMP: Causa raiz:");
-                System.err.println("DEBUG TIMESTAMP: Mensagem causa: " + causa.getMessage());
-                System.err.println("DEBUG TIMESTAMP: Classe causa: " + causa.getClass().getName());
-                causa.printStackTrace();
+            // Mudar cor baseado na quantidade
+            if (totalColetas == 0) {
+                lblContagemColetas.setForeground(new Color(149, 165, 166)); // Cinza
+            } else if (totalColetas < 10) {
+                lblContagemColetas.setForeground(new Color(241, 196, 15)); // Amarelo
+            } else {
+                lblContagemColetas.setForeground(new Color(46, 204, 113)); // Verde
             }
         }
     }
@@ -3323,6 +3421,7 @@ public class ColetaFrame_v2 extends JFrame {
 
     /**
      * Finaliza a coleta na sala selecionada
+     * Atualiza a tabela SALA_INVENTARIO com estatísticas e marca como finalizada
      */
     private void finalizarColetaSala() {
         Sala salaAtual = (Sala) comboSalas.getSelectedItem();
@@ -3341,8 +3440,20 @@ public class ColetaFrame_v2 extends JFrame {
                 return;
             }
 
-            // Modo offline: não há controle de finalização de salas (tabela não existe no SQLite)
-            System.out.println("DEBUG: Modo offline - verificação de finalização desabilitada");
+            // Verificar se a sala já está finalizada
+            boolean jaFinalizada = salaInventarioDAO.isColetaFinalizada(salaAtual.getIdSala(), inventarioAtivo.getId());
+            if (jaFinalizada) {
+                JOptionPane.showMessageDialog(this,
+                        "Esta sala já foi finalizada anteriormente.\n" +
+                        "Use o botão 'Reabrir' se precisar fazer alterações.",
+                        "Sala já Finalizada", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Contar itens coletados na sala
+            int[] estatisticas = coletaDAO.contarColetasPorSala(inventarioAtivo.getId(), salaAtual.getNumeroSala());
+            int totalItensColetados = estatisticas[0];
+            int totalItensSemEtiqueta = estatisticas[1];
 
             // Solicitar observações opcionais
             String observacoes = JOptionPane.showInputDialog(this,
@@ -3350,11 +3461,17 @@ public class ColetaFrame_v2 extends JFrame {
                     "Finalizar Coleta da Sala",
                     JOptionPane.QUESTION_MESSAGE);
 
-            // Confirmar finalização
+            // Confirmar finalização com estatísticas
             int confirmacao = JOptionPane.showConfirmDialog(this,
-                    "Tem certeza que deseja finalizar a coleta da sala:\n" +
-                            salaAtual.getIdentificacaoCompleta() + "\n\n" +
-                            "Após finalizar, a sala será marcada como concluída para este inventário.",
+                    "Tem certeza que deseja FINALIZAR a coleta da sala?\n\n" +
+                            "📍 Sala: " + salaAtual.getIdentificacaoCompleta() + "\n" +
+                            "📊 Total de itens coletados: " + totalItensColetados + "\n" +
+                            "🏷️ Itens sem etiqueta: " + totalItensSemEtiqueta + "\n\n" +
+                            "⚠️ Após finalizar:\n" +
+                            "• A sala será marcada como CONCLUÍDA\n" +
+                            "• Não será possível adicionar novas coletas\n" +
+                            "• A sala não aparecerá mais no app mobile\n\n" +
+                            "Confirma a finalização?",
                     "Confirmar Finalização",
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.QUESTION_MESSAGE);
@@ -3363,21 +3480,76 @@ public class ColetaFrame_v2 extends JFrame {
                 return;
             }
 
-            // Modo offline: finalização simplificada (não usa TABELA_SALA_INVENTARIO)
-            System.out.println("DEBUG: Modo offline - finalização de sala registrada localmente");
+            // Obter ID do participante (usuário logado)
+            Integer idParticipante = null;
+            if (usuarioLogado != null) {
+                idParticipante = participanteInventarioDAO.buscarIdParticipantePorUsuario(
+                        inventarioAtivo.getId(), usuarioLogado.getId());
+                if (idParticipante == null) {
+                    idParticipante = usuarioLogado.getId(); // Fallback para ID do usuário
+                }
+            }
 
-            JOptionPane.showMessageDialog(this,
-                    "Coleta da sala finalizada com sucesso!\n" +
-                            "Sala: " + salaAtual.getIdentificacaoCompleta(),
-                    "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            // Finalizar a coleta no banco de dados
+            boolean sucesso = salaInventarioDAO.finalizarColeta(
+                    salaAtual.getIdSala(),
+                    inventarioAtivo.getId(),
+                    idParticipante,
+                    observacoes
+            );
 
-            // Atualizar interface
-            btnFinalizarColeta.setText("Reabrir Coleta");
-            btnFinalizarColeta.setBackground(new Color(255, 193, 7));
+            // Atualizar estatísticas
+            if (sucesso) {
+                salaInventarioDAO.atualizarEstatisticas(
+                        salaAtual.getIdSala(),
+                        inventarioAtivo.getId(),
+                        totalItensColetados,
+                        totalItensSemEtiqueta
+                );
+            }
 
-            // Atualizar resumo da sala
-            lblResumoSala.setText(String.format("Coletando em: %s [FINALIZADA]",
-                    salaAtual.getIdentificacaoCompleta()));
+            if (sucesso) {
+                // Reproduzir som de sucesso
+                SoundNotification.playSound(SoundNotification.SoundType.SUCCESS);
+
+                JOptionPane.showMessageDialog(this,
+                        "✅ Coleta da sala FINALIZADA com sucesso!\n\n" +
+                                "📍 Sala: " + salaAtual.getIdentificacaoCompleta() + "\n" +
+                                "📊 Total coletado: " + totalItensColetados + " itens\n" +
+                                "🏷️ Sem etiqueta: " + totalItensSemEtiqueta + " itens\n\n" +
+                                "A sala foi marcada como concluída no inventário.",
+                        "Finalização Concluída", JOptionPane.INFORMATION_MESSAGE);
+
+                // Atualizar interface - desabilitar campos
+                btnFinalizarColeta.setText("✅ Finalizada");
+                btnFinalizarColeta.setBackground(new Color(108, 117, 125)); // Cinza
+                btnFinalizarColeta.setEnabled(false);
+
+                // Habilitar botão reabrir se usuário tem permissão
+                if (btnReabrirColeta.isVisible()) {
+                    btnReabrirColeta.setEnabled(true);
+                }
+
+                // Atualizar resumo da sala
+                lblResumoSala.setText(String.format("✅ Sala FINALIZADA: %s | %d itens coletados",
+                        salaAtual.getIdentificacaoCompleta(), totalItensColetados));
+                lblResumoSala.setForeground(new Color(40, 167, 69)); // Verde
+
+                // Desabilitar campos de coleta para esta sala
+                campoBusca.setEnabled(false);
+                btnBuscar.setEnabled(false);
+                btnColetar.setEnabled(false);
+                campoObservacao.setEnabled(false);
+                comboEstado.setEnabled(false);
+
+                System.out.println("DEBUG: Sala " + salaAtual.getIdentificacaoCompleta() + 
+                                  " finalizada com " + totalItensColetados + " itens");
+
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Erro ao finalizar coleta da sala.\nVerifique os logs para mais detalhes.",
+                        "Erro", JOptionPane.ERROR_MESSAGE);
+            }
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Erro ao finalizar coleta: " + e.getMessage(),
@@ -3391,6 +3563,21 @@ public class ColetaFrame_v2 extends JFrame {
      * Apenas administradores e supervisores podem executar esta ação
      */
     private void reabrirColetaSala() {
+        // VALIDAÇÃO DE PERMISSÃO: Apenas ADMIN e SUPERVISOR podem reabrir salas
+        if (usuarioLogado == null ||
+                (!("ADMIN".equals(usuarioLogado.getPerfil().name()) ||
+                        "SUPERVISOR".equals(usuarioLogado.getPerfil().name())))) {
+            JOptionPane.showMessageDialog(this,
+                    "⛔ Acesso Negado!\n\n" +
+                    "Apenas Administradores e Supervisores podem reabrir salas finalizadas.\n\n" +
+                    "Seu perfil atual: " + (usuarioLogado != null ? usuarioLogado.getPerfil().name() : "Não identificado"),
+                    "Permissão Insuficiente",
+                    JOptionPane.ERROR_MESSAGE);
+            System.out.println("DEBUG: Tentativa de reabrir sala negada - Usuário: " +
+                    (usuarioLogado != null ? usuarioLogado.getNomeCompleto() + " (" + usuarioLogado.getPerfil() + ")" : "null"));
+            return;
+        }
+        
         Sala salaAtual = (Sala) comboSalas.getSelectedItem();
         if (salaAtual == null) {
             JOptionPane.showMessageDialog(this,
@@ -3411,18 +3598,26 @@ public class ColetaFrame_v2 extends JFrame {
                 return;
             }
 
-            // Modo offline: não há controle de finalização (tabela não existe no SQLite)
-            System.out.println("DEBUG: Modo offline - verificação de finalização desabilitada");
+            // Verificar se a sala está realmente finalizada
+            boolean estaFinalizada = salaInventarioDAO.isColetaFinalizada(salaAtual.getIdSala(), inventarioAtivo.getId());
+            if (!estaFinalizada) {
+                JOptionPane.showMessageDialog(this,
+                        "Esta sala não está finalizada.\nNão é necessário reabrir.",
+                        "Aviso",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
 
             // Confirmar reabertura com popup de confirmação
             int confirmacao = JOptionPane.showConfirmDialog(this,
                     "⚠️ ATENÇÃO: Deseja realmente REABRIR a coleta desta sala?\n\n" +
-                            "Sala: " + salaAtual.getIdentificacaoCompleta() + "\n" +
-                            "Inventário: " + inventarioAtivo.getNome() + "\n\n" +
+                            "📍 Sala: " + salaAtual.getIdentificacaoCompleta() + "\n" +
+                            "📋 Inventário: " + inventarioAtivo.getNome() + "\n\n" +
                             "Ao reabrir:\n" +
                             "• A sala voltará a aparecer no aplicativo mobile\n" +
                             "• Será possível adicionar novas coletas\n" +
-                            "• O status será alterado para EM ANDAMENTO\n\n" +
+                            "• O status será alterado para EM ANDAMENTO\n" +
+                            "• As estatísticas serão mantidas\n\n" +
                             "Confirma a reabertura?",
                     "Confirmar Reabertura de Sala",
                     JOptionPane.YES_NO_OPTION,
@@ -3432,32 +3627,50 @@ public class ColetaFrame_v2 extends JFrame {
                 return;
             }
 
-            // Modo offline: reabertura simplificada (não usa TABELA_SALA_INVENTARIO)
-            System.out.println("DEBUG: Modo offline - reabertura de sala registrada localmente");
+            // Reabrir a coleta no banco de dados
+            boolean sucesso = salaInventarioDAO.reabrirColeta(salaAtual.getIdSala(), inventarioAtivo.getId());
 
-            // Reproduzir som de sucesso
-            SoundNotification.playSound(SoundNotification.SoundType.SUCCESS);
+            if (sucesso) {
+                // Reproduzir som de sucesso
+                SoundNotification.playSound(SoundNotification.SoundType.SUCCESS);
 
-            JOptionPane.showMessageDialog(this,
-                    "✅ Coleta da sala reaberta com sucesso!\n\n" +
-                            "Sala: " + salaAtual.getIdentificacaoCompleta() + "\n\n" +
-                            "A sala voltará a aparecer no aplicativo mobile e\n" +
-                            "poderá receber novas coletas.",
-                    "Sucesso",
-                    JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this,
+                        "✅ Coleta da sala REABERTA com sucesso!\n\n" +
+                                "📍 Sala: " + salaAtual.getIdentificacaoCompleta() + "\n\n" +
+                                "A sala voltará a aparecer no aplicativo mobile e\n" +
+                                "poderá receber novas coletas.",
+                        "Reabertura Concluída",
+                        JOptionPane.INFORMATION_MESSAGE);
 
-            // Atualizar interface
-            btnFinalizarColeta.setText("🏁 Finalizar");
-            btnFinalizarColeta.setBackground(new Color(40, 167, 69));
+                // Atualizar interface - habilitar campos novamente
+                btnFinalizarColeta.setText("🏁 Finalizar");
+                btnFinalizarColeta.setBackground(new Color(40, 167, 69));
+                btnFinalizarColeta.setEnabled(true);
 
-            // Habilitar botão reabrir apenas se sala estiver finalizada
-            if (btnReabrirColeta.isVisible()) {
-                btnReabrirColeta.setEnabled(false);
+                // Desabilitar botão reabrir (sala não está mais finalizada)
+                if (btnReabrirColeta.isVisible()) {
+                    btnReabrirColeta.setEnabled(false);
+                }
+
+                // Atualizar resumo da sala
+                lblResumoSala.setText(String.format("Coletando em: %s",
+                        salaAtual.getIdentificacaoCompleta()));
+                lblResumoSala.setForeground(new Color(100, 100, 100)); // Cor padrão
+
+                // Habilitar campos de coleta
+                campoBusca.setEnabled(true);
+                btnBuscar.setEnabled(true);
+                campoObservacao.setEnabled(true);
+                comboEstado.setEnabled(true);
+
+                System.out.println("DEBUG: Sala " + salaAtual.getIdentificacaoCompleta() + " reaberta com sucesso");
+
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Erro ao reabrir coleta da sala.\nVerifique os logs para mais detalhes.",
+                        "Erro",
+                        JOptionPane.ERROR_MESSAGE);
             }
-
-            // Atualizar resumo da sala (remover marcação de FINALIZADA)
-            lblResumoSala.setText(String.format("Coletando em: %s",
-                    salaAtual.getIdentificacaoCompleta()));
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this,
@@ -3572,19 +3785,38 @@ public class ColetaFrame_v2 extends JFrame {
     }
 
     /**
+     * Cancela animações visuais em andamento para evitar conflitos de cores
+     */
+    private void cancelarAnimacoesAnteriores() {
+        if (timerAnimacaoAtual != null && timerAnimacaoAtual.isRunning()) {
+            timerAnimacaoAtual.stop();
+        }
+        if (timerTextoAtual != null && timerTextoAtual.isRunning()) {
+            timerTextoAtual.stop();
+        }
+        // Restaurar cores padrão imediatamente
+        panelInfoItem.setBackground(Color.WHITE);
+        lblResumoSala.setForeground(new Color(100, 100, 100));
+        lblResumoSala.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+    }
+
+    /**
      * Mostra feedback visual de sucesso ao registrar um item
      * Pisca o painel de informações em verde para indicar sucesso
      */
     private void mostrarFeedbackVisualSucesso() {
+        // Cancelar animações anteriores para evitar conflito de cores
+        cancelarAnimacoesAnteriores();
+
         // Salvar cor original
-        Color corOriginal = panelInfoItem.getBackground();
+        Color corOriginal = Color.WHITE;
         Color corSucesso = new Color(46, 204, 113, 100); // Verde com transparência
 
         // Criar animação de piscar
-        Timer timer = new Timer(100, null);
+        timerAnimacaoAtual = new Timer(100, null);
         final int[] contador = { 0 };
 
-        timer.addActionListener(e -> {
+        timerAnimacaoAtual.addActionListener(e -> {
             if (contador[0] % 2 == 0) {
                 panelInfoItem.setBackground(corSucesso);
                 lblResumoSala.setForeground(new Color(0, 150, 0));
@@ -3599,27 +3831,30 @@ public class ColetaFrame_v2 extends JFrame {
 
             // Parar após 3 piscadas (6 mudanças)
             if (contador[0] >= 6) {
-                timer.stop();
+                timerAnimacaoAtual.stop();
                 panelInfoItem.setBackground(corOriginal);
                 lblResumoSala.setForeground(new Color(100, 100, 100));
                 lblResumoSala.setFont(new Font("Segoe UI", Font.PLAIN, 12));
             }
         });
 
-        timer.start();
+        timerAnimacaoAtual.start();
 
         // Mostrar mensagem temporária no label de resumo
-        String textoOriginal = lblResumoSala.getText();
+        Sala salaAtual = (Sala) comboSalas.getSelectedItem();
+        String textoOriginal = salaAtual != null 
+            ? String.format("Coletando em: %s", salaAtual.getIdentificacaoCompleta())
+            : "Selecione uma sala para iniciar a coleta";
         lblResumoSala.setText("✅ Item registrado com sucesso!");
         lblResumoSala.setForeground(new Color(46, 204, 113));
 
         // Restaurar texto original após 2 segundos
-        Timer timerTexto = new Timer(2000, e -> {
+        timerTextoAtual = new Timer(2000, e -> {
             lblResumoSala.setText(textoOriginal);
             lblResumoSala.setForeground(new Color(100, 100, 100));
         });
-        timerTexto.setRepeats(false);
-        timerTexto.start();
+        timerTextoAtual.setRepeats(false);
+        timerTextoAtual.start();
     }
 
     /**
@@ -3627,15 +3862,18 @@ public class ColetaFrame_v2 extends JFrame {
      * Pisca o painel em vermelho e mostra mensagem
      */
     private void mostrarFeedbackVisualErro(String mensagem) {
+        // Cancelar animações anteriores para evitar conflito de cores
+        cancelarAnimacoesAnteriores();
+
         // Salvar cor original
-        Color corOriginal = panelInfoItem.getBackground();
+        Color corOriginal = Color.WHITE;
         Color corErro = new Color(231, 76, 60, 100); // Vermelho com transparência
 
         // Criar animação de piscar
-        Timer timer = new Timer(100, null);
+        timerAnimacaoAtual = new Timer(100, null);
         final int[] contador = { 0 };
 
-        timer.addActionListener(e -> {
+        timerAnimacaoAtual.addActionListener(e -> {
             if (contador[0] % 2 == 0) {
                 panelInfoItem.setBackground(corErro);
             } else {
@@ -3646,27 +3884,30 @@ public class ColetaFrame_v2 extends JFrame {
 
             // Parar após 3 piscadas (6 mudanças)
             if (contador[0] >= 6) {
-                timer.stop();
+                timerAnimacaoAtual.stop();
                 panelInfoItem.setBackground(corOriginal);
             }
         });
 
-        timer.start();
+        timerAnimacaoAtual.start();
 
         // Mostrar mensagem temporária no label de resumo
-        String textoOriginal = lblResumoSala.getText();
+        Sala salaAtual = (Sala) comboSalas.getSelectedItem();
+        String textoOriginal = salaAtual != null 
+            ? String.format("Coletando em: %s", salaAtual.getIdentificacaoCompleta())
+            : "Selecione uma sala para iniciar a coleta";
         lblResumoSala.setText("❌ " + mensagem);
         lblResumoSala.setForeground(new Color(231, 76, 60));
         lblResumoSala.setFont(new Font("Segoe UI", Font.BOLD, 13));
 
         // Restaurar texto original após 3 segundos
-        Timer timerTexto = new Timer(3000, e -> {
+        timerTextoAtual = new Timer(3000, e -> {
             lblResumoSala.setText(textoOriginal);
             lblResumoSala.setForeground(new Color(100, 100, 100));
             lblResumoSala.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         });
-        timerTexto.setRepeats(false);
-        timerTexto.start();
+        timerTextoAtual.setRepeats(false);
+        timerTextoAtual.start();
     }
 
     /**
@@ -3674,15 +3915,18 @@ public class ColetaFrame_v2 extends JFrame {
      * Pisca o painel em amarelo e mostra mensagem
      */
     private void mostrarFeedbackVisualAviso(String mensagem) {
+        // Cancelar animações anteriores para evitar conflito de cores
+        cancelarAnimacoesAnteriores();
+
         // Salvar cor original
-        Color corOriginal = panelInfoItem.getBackground();
+        Color corOriginal = Color.WHITE;
         Color corAviso = new Color(241, 196, 15, 100); // Amarelo com transparência
 
         // Criar animação de piscar
-        Timer timer = new Timer(100, null);
+        timerAnimacaoAtual = new Timer(100, null);
         final int[] contador = { 0 };
 
-        timer.addActionListener(e -> {
+        timerAnimacaoAtual.addActionListener(e -> {
             if (contador[0] % 2 == 0) {
                 panelInfoItem.setBackground(corAviso);
             } else {
@@ -3693,27 +3937,30 @@ public class ColetaFrame_v2 extends JFrame {
 
             // Parar após 3 piscadas (6 mudanças)
             if (contador[0] >= 6) {
-                timer.stop();
+                timerAnimacaoAtual.stop();
                 panelInfoItem.setBackground(corOriginal);
             }
         });
 
-        timer.start();
+        timerAnimacaoAtual.start();
 
         // Mostrar mensagem temporária no label de resumo
-        String textoOriginal = lblResumoSala.getText();
+        Sala salaAtual = (Sala) comboSalas.getSelectedItem();
+        String textoOriginal = salaAtual != null 
+            ? String.format("Coletando em: %s", salaAtual.getIdentificacaoCompleta())
+            : "Selecione uma sala para iniciar a coleta";
         lblResumoSala.setText("⚠️ " + mensagem);
         lblResumoSala.setForeground(new Color(241, 196, 15));
         lblResumoSala.setFont(new Font("Segoe UI", Font.BOLD, 13));
 
         // Restaurar texto original após 3 segundos
-        Timer timerTexto = new Timer(3000, e -> {
+        timerTextoAtual = new Timer(3000, e -> {
             lblResumoSala.setText(textoOriginal);
             lblResumoSala.setForeground(new Color(100, 100, 100));
             lblResumoSala.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         });
-        timerTexto.setRepeats(false);
-        timerTexto.start();
+        timerTextoAtual.setRepeats(false);
+        timerTextoAtual.start();
     }
 
     /**

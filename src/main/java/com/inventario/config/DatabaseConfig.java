@@ -1,7 +1,10 @@
 package com.inventario.config;
 
 /**
- * Classe que representa a configuração de conexão com o banco de dados PostgreSQL
+ * Classe de configuração do banco de dados
+ * 
+ * Armazena as configurações de conexão com o PostgreSQL.
+ * Usada pelo DatabaseConfigManager para gerenciar conexões.
  * 
  * @author Sistema de Inventário
  * @version 1.0.0
@@ -16,48 +19,56 @@ public class DatabaseConfig {
     private String schema;
     private boolean ssl;
     private int connectionTimeout;
-    private int maxPoolSize;
     
     /**
      * Construtor padrão
      */
     public DatabaseConfig() {
-        // Valores padrão
         this.host = "localhost";
         this.port = 5432;
-        this.database = "sispatrimonio";
+        this.database = "";
+        this.username = "";
+        this.password = "";
         this.schema = "public";
         this.ssl = false;
-        this.connectionTimeout = 30;
-        this.maxPoolSize = 10;
+        this.connectionTimeout = 30000;
     }
     
     /**
-     * Construtor com parâmetros principais
+     * Construtor com parâmetros básicos
      */
     public DatabaseConfig(String host, int port, String database, String username, String password) {
-        this();
         this.host = host;
         this.port = port;
         this.database = database;
         this.username = username;
         this.password = password;
+        this.schema = "public";
+        this.ssl = false;
+        this.connectionTimeout = 30000;
     }
     
     /**
-     * Valida se a configuração está completa
+     * Verifica se a configuração é válida
      * 
-     * @return true se a configuração é válida, false caso contrário
+     * @return true se todos os campos obrigatórios estão preenchidos
      */
     public boolean isValid() {
-        return host != null && !host.trim().isEmpty() &&
-               port > 0 && port <= 65535 &&
-               database != null && !database.trim().isEmpty() &&
-               username != null && !username.trim().isEmpty() &&
-               password != null; // Senha pode ser vazia
+        return host != null && !host.isEmpty() &&
+               port > 0 && port < 65536 &&
+               database != null && !database.isEmpty() &&
+               username != null && !username.isEmpty();
     }
     
-    // Getters e Setters
+    /**
+     * Retorna uma string segura (sem senha) para logging
+     */
+    public String toSafeString() {
+        return String.format("DatabaseConfig{host='%s', port=%d, database='%s', username='%s', ssl=%b}",
+            host, port, database, username, ssl);
+    }
+    
+    // ========== Getters e Setters ==========
     
     public String getHost() {
         return host;
@@ -123,27 +134,8 @@ public class DatabaseConfig {
         this.connectionTimeout = connectionTimeout;
     }
     
-    public int getMaxPoolSize() {
-        return maxPoolSize;
-    }
-    
-    public void setMaxPoolSize(int maxPoolSize) {
-        this.maxPoolSize = maxPoolSize;
-    }
-    
     @Override
     public String toString() {
-        return String.format("DatabaseConfig{host='%s', port=%d, database='%s', username='%s', schema='%s', ssl=%s}",
-                           host, port, database, username, schema, ssl);
-    }
-    
-    /**
-     * Cria uma cópia da configuração sem a senha (para logs)
-     * 
-     * @return string segura para log
-     */
-    public String toSafeString() {
-        return String.format("DatabaseConfig{host='%s', port=%d, database='%s', username='%s', schema='%s', ssl=%s}",
-                           host, port, database, username, schema, ssl);
+        return toSafeString();
     }
 }

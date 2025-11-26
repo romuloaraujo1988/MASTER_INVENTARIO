@@ -934,7 +934,8 @@ public class ColetaDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     if (sqlite) {
-                        return rs.getTimestamp("data_coleta");
+                        // ✅ CORRIGIDO: Usar método seguro para ler timestamp do SQLite
+                        return com.inventario.util.DateFormatUtils.getTimestampSafe(rs, "data_coleta");
                     } else {
                         return rs.getTimestamp("DATA_COLETA");
                     }
@@ -2367,6 +2368,178 @@ public class ColetaDAO {
         coleta.setLongitude(lon != 0 ? java.math.BigDecimal.valueOf(lon) : null);
         
         return coleta;
+    }
+
+    /**
+     * Conta o número de coletas realizadas em uma sala específica para um inventário
+     * @param idInventario ID do inventário
+     * @param localizacaoSala Identificação da sala (LOCALIZACAO_ENCONTRADA)
+     * @return Array com [totalItensColetados, totalItensSemEtiqueta]
+     */
+    public int[] contarColetasPorSala(int idInventario, String localizacaoSala) throws SQLException {
+        boolean sqlite = isSQLite();
+        
+        String sqlTotal;
+        String sqlSemEtiqueta;
+        
+        if (sqlite) {
+            sqlTotal = "SELECT COUNT(*) FROM " + getColetaTableName() + 
+                      " WHERE id_inventario = ? AND localizacao_encontrada = ?";
+            sqlSemEtiqueta = "SELECT COUNT(*) FROM " + getColetaTableName() + 
+                            " WHERE id_inventario = ? AND localizacao_encontrada = ? AND sem_etiqueta = 1";
+        } else {
+            sqlTotal = "SELECT COUNT(*) FROM " + getColetaTableName() + 
+                      " WHERE ID_INVENTARIO = ? AND LOCALIZACAO_ENCONTRADA = ?";
+            sqlSemEtiqueta = "SELECT COUNT(*) FROM " + getColetaTableName() + 
+                            " WHERE ID_INVENTARIO = ? AND LOCALIZACAO_ENCONTRADA = ? AND SEM_ETIQUETA = true";
+        }
+        
+        int totalItens = 0;
+        int totalSemEtiqueta = 0;
+        
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            // Contar total de itens
+            try (PreparedStatement stmt = conn.prepareStatement(sqlTotal)) {
+                stmt.setInt(1, idInventario);
+                stmt.setString(2, localizacaoSala);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        totalItens = rs.getInt(1);
+                    }
+                }
+            }
+            
+            // Contar itens sem etiqueta
+            try (PreparedStatement stmt = conn.prepareStatement(sqlSemEtiqueta)) {
+                stmt.setInt(1, idInventario);
+                stmt.setString(2, localizacaoSala);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        totalSemEtiqueta = rs.getInt(1);
+                    }
+                }
+            }
+        }
+        
+        System.out.println("[DEBUG ColetaDAO] contarColetasPorSala - Sala: '" + localizacaoSala + 
+                          "', Total: " + totalItens + ", Sem Etiqueta: " + totalSemEtiqueta);
+        
+        return new int[] { totalItens, totalSemEtiqueta };
+    }
+    
+    /**
+     * MÉTODO OTIMIZADO: Busca histórico de coletas com dados do patrimônio em UMA única query
+     * Evita N+1 queries e retorna dados prontos para exibição na tabela
+     * 
+     * @param numeroSala Número/identificação da sala
+     * @param limite Quantidade máxima de registros (0 = sem limite)
+     * @return Lista de ColetaResumo com dados prontos para exibição
+     */
+    public List<com.inventario.dto.ColetaResumo> buscarHistoricoOtimizado(String numeroSala, int limite) throws SQLException {
+        System.out.println("[DEBUG ColetaDAO] buscarHistoricoOtimizado - Sala: '" + numeroSala + "', Limite: " + limite);
+        
+        boolean sqlite = isSQLite();
+        
+        String sql;
+        if (sqlite) {
+            // ✅ CORRIGIDO: Nome correto da coluna no SQLite é "descricao_sem_etiqueta"
+            sql = "SELECT " +
+                  "c.id as id_coleta, " +
+                  "c.data_coleta, " +
+                  "CASE WHEN c.sem_etiqueta = 1 THEN 'SEM ETIQUETA' ELSE COALESCE(p.numero, 'N/A') END as numero_patrimonio, " +
+                  "CASE WHEN c.sem_etiqueta = 1 THEN COALESCE(c.descricao_sem_etiqueta, '-') ELSE COALESCE(p.descricao, '-') END as descricao, " +
+                  "COALESCE(c.situacao_encontrada, '-') as estado, " +
+                  "COALESCE(c.sem_etiqueta, 0) as sem_etiqueta " +
+                  "FROM local_coleta c " +
+                  "LEFT JOIN local_patrimonio p ON c.id_patrimonio = p.id " +
+                  "WHERE c.localizacao_encontrada = ? " +
+                  "ORDER BY c.data_coleta DESC" +
+                  (limite > 0 ? " LIMIT " + limite : "");
+        } else {
+            sql = "SELECT " +
+                  "c.ID as id_coleta, " +
+                  "c.DATA_COLETA, " +
+                  "CASE WHEN c.SEM_ETIQUETA = true THEN 'SEM ETIQUETA' ELSE COALESCE(p.NUMERO, 'N/A') END as numero_patrimonio, " +
+                  "CASE WHEN c.SEM_ETIQUETA = true THEN COALESCE(c.DESCRICAO_ITEM_SEM_ETIQUETA, '-') ELSE COALESCE(p.DESCRICAO, '-') END as descricao, " +
+                  "COALESCE(c.ESTADO_ENCONTRADO, '-') as estado, " +
+                  "COALESCE(c.SEM_ETIQUETA, false) as sem_etiqueta " +
+                  "FROM " + getColetaTableName() + " c " +
+                  "LEFT JOIN " + getPatrimonioTableName() + " p ON c.ID_PATRIMONIO = p.ID " +
+                  "WHERE c.LOCALIZACAO_ENCONTRADA = ? " +
+                  "ORDER BY c.DATA_COLETA DESC" +
+                  (limite > 0 ? " LIMIT " + limite : "");
+        }
+        
+        List<com.inventario.dto.ColetaResumo> resultado = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, numeroSala);
+            
+            long inicio = System.currentTimeMillis();
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    com.inventario.dto.ColetaResumo resumo = new com.inventario.dto.ColetaResumo();
+                    resumo.setId(rs.getLong("id_coleta"));
+                    resumo.setDataColeta(rs.getTimestamp("data_coleta"));
+                    resumo.setNumeroPatrimonio(rs.getString("numero_patrimonio"));
+                    resumo.setDescricao(rs.getString("descricao"));
+                    resumo.setEstadoEncontrado(rs.getString("estado"));
+                    resumo.setSemEtiqueta(rs.getBoolean("sem_etiqueta"));
+                    resultado.add(resumo);
+                }
+            }
+            
+            long tempo = System.currentTimeMillis() - inicio;
+            System.out.println("[DEBUG ColetaDAO] buscarHistoricoOtimizado - " + resultado.size() + 
+                             " registros em " + tempo + "ms (1 query apenas!)");
+        }
+        
+        return resultado;
+    }
+    
+    /**
+     * MÉTODO OTIMIZADO: Conta o total de coletas de uma sala SEM trazer os dados
+     * Query leve apenas para contagem - usado para exibir contador correto
+     * 
+     * @param numeroSala Número/identificação da sala
+     * @return Total de coletas na sala
+     */
+    public int contarColetasTotalPorSala(String numeroSala) throws SQLException {
+        System.out.println("[DEBUG ColetaDAO] contarColetasTotalPorSala - Sala: '" + numeroSala + "'");
+        
+        boolean sqlite = isSQLite();
+        
+        String sql;
+        if (sqlite) {
+            sql = "SELECT COUNT(*) FROM local_coleta WHERE localizacao_encontrada = ?";
+        } else {
+            sql = "SELECT COUNT(*) FROM " + getColetaTableName() + " WHERE LOCALIZACAO_ENCONTRADA = ?";
+        }
+        
+        int total = 0;
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, numeroSala);
+            
+            long inicio = System.currentTimeMillis();
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    total = rs.getInt(1);
+                }
+            }
+            
+            long tempo = System.currentTimeMillis() - inicio;
+            System.out.println("[DEBUG ColetaDAO] contarColetasTotalPorSala - Total: " + total + 
+                             " em " + tempo + "ms");
+        }
+        
+        return total;
     }
 
 }

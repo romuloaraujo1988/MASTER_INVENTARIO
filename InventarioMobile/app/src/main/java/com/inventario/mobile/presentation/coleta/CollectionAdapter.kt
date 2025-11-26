@@ -13,7 +13,9 @@ import com.inventario.mobile.data.model.Coleta
 import java.text.SimpleDateFormat
 import java.util.*
 
-class CollectionAdapter : ListAdapter<Coleta, CollectionAdapter.CollectionViewHolder>(Companion.DiffCallback) {
+class CollectionAdapter(
+    private val onItemLongClick: ((Coleta) -> Unit)? = null
+) : ListAdapter<Coleta, CollectionAdapter.CollectionViewHolder>(Companion.DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CollectionViewHolder {
         val binding = ItemColetaBinding.inflate(
@@ -28,6 +30,12 @@ class CollectionAdapter : ListAdapter<Coleta, CollectionAdapter.CollectionViewHo
         val coleta = getItem(position)
         Log.d(TAG, "onBindViewHolder: position=$position, patrimonioId=${coleta.patrimonioId}, sincronizado=${coleta.sincronizado}")
         holder.bind(coleta)
+        
+        // Configurar long click listener
+        holder.itemView.setOnLongClickListener {
+            onItemLongClick?.invoke(coleta)
+            true
+        }
     }
 
     override fun submitList(list: List<Coleta>?) {

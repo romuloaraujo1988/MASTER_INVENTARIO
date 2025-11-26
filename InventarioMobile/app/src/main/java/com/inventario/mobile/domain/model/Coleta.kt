@@ -60,5 +60,9 @@ data class Coleta(
     val dataAtualizacao: Long = System.currentTimeMillis(),
     
     // ID do servidor (quando sincronizado)
-    val servidorId: Long? = null
+    val servidorId: Long? = null,
+    
+    // v2.6: Diagnóstico de erros de sincronização
+    val tentativasSincronizacao: Int = 0,
+    val erroSincronizacao: String? = null
 )

@@ -221,17 +221,18 @@ class NetworkQualityMonitor @Inject constructor(
     
     /**
      * Obtém timeout recomendado baseado na qualidade da rede
+     * v2.1: Timeouts mais generosos para garantir sincronização
      * @return Timeout em milissegundos
      */
     fun getRecommendedTimeout(): Long {
         return when (_networkQuality.value) {
-            NetworkQuality.EXCELENTE -> 10_000L   // 10s
+            NetworkQuality.EXCELENTE -> 15_000L   // 15s
             NetworkQuality.BOA -> 15_000L          // 15s
-            NetworkQuality.REGULAR -> 8_000L       // 8s (timeout curto)
-            NetworkQuality.RUIM -> 5_000L          // 5s (muito curto)
-            NetworkQuality.MUITO_RUIM -> 3_000L    // 3s (mínimo)
+            NetworkQuality.REGULAR -> 10_000L      // 10s (era 8s)
+            NetworkQuality.RUIM -> 8_000L          // 8s (era 5s)
+            NetworkQuality.MUITO_RUIM -> 5_000L    // 5s (era 3s)
             NetworkQuality.SEM_REDE -> 0L          // Não tenta
-            NetworkQuality.UNKNOWN -> 10_000L      // Padrão
+            NetworkQuality.UNKNOWN -> 15_000L      // 15s (era 10s)
         }
     }
     
@@ -288,13 +289,15 @@ enum class NetworkQuality {
     
     /**
      * Deve tentar sincronizar imediatamente?
+     * v2.1: Mais agressivo - tenta sincronizar sempre que há conexão
      */
     fun shouldSyncImmediately(): Boolean {
         return when (this) {
             EXCELENTE, BOA -> true
-            REGULAR -> false  // Salva local, tenta depois
-            RUIM, MUITO_RUIM, SEM_REDE -> false
-            UNKNOWN -> false  // Conservador
+            REGULAR -> true   // ✅ ALTERADO: Tenta sincronizar mesmo com rede regular
+            RUIM -> true      // ✅ ALTERADO: Tenta sincronizar mesmo com rede ruim (com timeout curto)
+            MUITO_RUIM, SEM_REDE -> false  // Só não tenta se realmente não tem rede
+            UNKNOWN -> true   // ✅ ALTERADO: Tenta sincronizar (otimista)
         }
     }
     

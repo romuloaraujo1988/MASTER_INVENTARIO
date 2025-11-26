@@ -16,6 +16,9 @@ interface ColetaDao {
     @Query("UPDATE coleta SET sincronizado = :sincronizado, servidorId = :servidorId WHERE id = :id")
     suspend fun atualizarSincronizado(id: Long, sincronizado: Boolean, servidorId: Int)
     
+    @Query("SELECT * FROM coleta WHERE id = :id")
+    suspend fun buscarPorId(id: Long): ColetaEntity?
+    
     @Query("SELECT * FROM coleta WHERE sincronizado = 0 ORDER BY dataColeta ASC")
     suspend fun buscarPendentes(): List<ColetaEntity>
     
@@ -156,6 +159,56 @@ interface ColetaDao {
      */
     @Query("SELECT COUNT(DISTINCT idPatrimonio) FROM coleta WHERE idInventario = :idInventario")
     suspend fun countByInventario(idInventario: Int): Int
+    
+    // ========================================
+    // Queries para Diagnóstico de Coletas Pendentes (v2.6)
+    // ========================================
+    
+    /**
+     * Busca coletas pendentes COM erro de sincronização
+     * Útil para diagnóstico de coletas "presas"
+     */
+    @Query("""
+        SELECT * FROM coleta 
+        WHERE sincronizado = 0 
+        AND erroSincronizacao IS NOT NULL 
+        ORDER BY tentativasSincronizacao DESC, dataColeta DESC
+    """)
+    suspend fun buscarPendentesComErro(): List<ColetaEntity>
+    
+    /**
+     * Busca coletas pendentes SEM erro (nunca tentaram sincronizar)
+     */
+    @Query("""
+        SELECT * FROM coleta 
+        WHERE sincronizado = 0 
+        AND erroSincronizacao IS NULL 
+        ORDER BY dataColeta DESC
+    """)
+    suspend fun buscarPendentesSemErro(): List<ColetaEntity>
+    
+    /**
+     * Busca coletas com muitas tentativas de sincronização (possível problema permanente)
+     */
+    @Query("""
+        SELECT * FROM coleta 
+        WHERE sincronizado = 0 
+        AND tentativasSincronizacao >= :minTentativas
+        ORDER BY tentativasSincronizacao DESC
+    """)
+    suspend fun buscarColetasComMuitasTentativas(minTentativas: Int = 3): List<ColetaEntity>
+    
+    /**
+     * Limpa erro de sincronização para permitir nova tentativa
+     */
+    @Query("UPDATE coleta SET erroSincronizacao = NULL, tentativasSincronizacao = 0 WHERE id = :id")
+    suspend fun limparErroSincronizacao(id: Long)
+    
+    /**
+     * Limpa erros de todas as coletas pendentes (reset para nova tentativa)
+     */
+    @Query("UPDATE coleta SET erroSincronizacao = NULL, tentativasSincronizacao = 0 WHERE sincronizado = 0")
+    suspend fun limparTodosErrosSincronizacao(): Int
     
     /**
      * Busca evolução diária das coletas (últimos 30 dias)

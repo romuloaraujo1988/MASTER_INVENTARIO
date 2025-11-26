@@ -126,7 +126,8 @@ public class OfflineAuthService {
         usuario.setTentativasLogin(rs.getInt("tentativas_login"));
         usuario.setPrimeiroAcesso(rs.getBoolean("primeiro_acesso"));
         
-        Timestamp dataUltimoAcesso = rs.getTimestamp("data_ultimo_acesso");
+        // ✅ CORRIGIDO: Usar método seguro para ler timestamp do SQLite
+        Timestamp dataUltimoAcesso = com.inventario.util.DateFormatUtils.getTimestampSafe(rs, "data_ultimo_acesso");
         if (dataUltimoAcesso != null) {
             usuario.setDataUltimoAcesso(dataUltimoAcesso.toLocalDateTime());
         }

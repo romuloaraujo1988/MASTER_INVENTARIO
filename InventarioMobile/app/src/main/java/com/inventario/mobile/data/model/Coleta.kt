@@ -34,6 +34,7 @@ data class Coleta(
     // Campos adicionais para funcionalidade local
     val sincronizado: Boolean = false,
     val tentativasSincronizacao: Int = 0,
+    val erroSincronizacao: String? = null,  // v2.6: Motivo do erro de sincronização
     
     // Campos para itens sem etiqueta
     val semEtiqueta: Boolean = false,

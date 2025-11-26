@@ -351,23 +351,51 @@ class SyncRepository @Inject constructor(
     
     /**
      * Obtém estatísticas dos dados locais
+     * 
+     * v2.6: CORRIGIDO - Agora conta coletas pendentes de sincronização
      */
     suspend fun getLocalStats(): Map<String, Int> {
         return try {
+            android.util.Log.d("SyncRepository", "═══════════════════════════════════════════")
+            android.util.Log.d("SyncRepository", "📊 BUSCANDO ESTATÍSTICAS LOCAIS")
+            
+            // Dados gerais
             val totalPatrimonios = patrimonioDao.contarTodos()
-            val pendentes = patrimonioDao.contarNaoColetados()
-            val coletados = totalPatrimonios - pendentes
             val salas = salaDao.contar()
             val responsaveis = responsavelDao.contar()
+            
+            // Coletas (CORRIGIDO)
+            val totalColetas = coletaDao.contarTodas()
+            val coletasSincronizadas = coletaDao.contarSincronizadas()
+            val coletasPendentes = coletaDao.contarPendentes()
+            
+            // Logs detalhados
+            android.util.Log.d("SyncRepository", "📦 Patrimônios no banco: $totalPatrimonios")
+            android.util.Log.d("SyncRepository", "🏢 Salas no banco: $salas")
+            android.util.Log.d("SyncRepository", "👤 Responsáveis no banco: $responsaveis")
+            android.util.Log.d("SyncRepository", "")
+            android.util.Log.d("SyncRepository", "📋 COLETAS:")
+            android.util.Log.d("SyncRepository", "   Total: $totalColetas")
+            android.util.Log.d("SyncRepository", "   ✅ Sincronizadas: $coletasSincronizadas")
+            android.util.Log.d("SyncRepository", "   ⏳ Pendentes: $coletasPendentes")
+            
+            // Validação
+            if (coletasSincronizadas + coletasPendentes != totalColetas) {
+                android.util.Log.w("SyncRepository", "⚠️ INCONSISTÊNCIA: Soma não bate!")
+                android.util.Log.w("SyncRepository", "   $coletasSincronizadas + $coletasPendentes ≠ $totalColetas")
+            }
+            
+            android.util.Log.d("SyncRepository", "═══════════════════════════════════════════")
             
             mapOf(
                 "patrimonios" to totalPatrimonios,
                 "salas" to salas,
                 "responsaveis" to responsaveis,
-                "coletados" to coletados,
-                "pendentes" to pendentes
+                "coletados" to coletasSincronizadas,
+                "pendentes" to coletasPendentes
             )
         } catch (e: Exception) {
+            android.util.Log.e("SyncRepository", "❌ ERRO ao buscar estatísticas locais", e)
             emptyMap()
         }
     }

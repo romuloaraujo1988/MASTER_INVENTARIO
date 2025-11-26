@@ -25,15 +25,18 @@ class ColetaMapper @Inject constructor(
         return Coleta(
             id = entity.id,
             patrimonioId = entity.idPatrimonio.toLong(),
+            numeroPatrimonio = entity.numeroPatrimonio,  // v2.6: Incluir número
             usuarioId = entity.idUsuario.toLong(),
-            salaId = entity.idSala, // ✅ Incluir salaId
+            salaId = entity.idSala,
             dataColeta = entity.dataColeta,
             localizacaoAtual = entity.nomeSala,
             observacoes = entity.observacao,
-            status = "COLETADO", // Status padrão
+            status = if (entity.sincronizado) "SINCRONIZADO" else "PENDENTE",
             latitude = entity.latitude,
             longitude = entity.longitude,
-            sincronizado = entity.sincronizado
+            sincronizado = entity.sincronizado,
+            tentativasSincronizacao = entity.tentativasSincronizacao,  // v2.6
+            erroSincronizacao = entity.erroSincronizacao  // v2.6
         )
     }
     

@@ -99,10 +99,9 @@ public class UnifiedAuthService {
      * @return Resultado da autenticação
      */
     private AuthResult autenticarAuto(String login, String senha) {
-        // Tentar autenticação online primeiro (sem verificar offline)
-        // Offline só será usado se explicitamente solicitado via OFFLINE_ONLY
+        LOGGER.info("DEBUG: Modo atual antes de autenticar: " + currentMode);
         
-        // Tentar autenticação online
+        // Tentar autenticação online primeiro
         try {
             LOGGER.info("Tentando autenticação online para: " + login);
             Usuario usuario = onlineAuthService.autenticar(login, senha);
@@ -116,15 +115,61 @@ public class UnifiedAuthService {
                 
                 return AuthResult.success(usuario, false);
             } else {
-                // Autenticação online falhou - NÃO tentar offline no modo AUTO
+                // Autenticação online falhou - credenciais incorretas
+                // Tentar offline como fallback (usuário pode ter sido sincronizado antes)
                 LOGGER.info("Autenticação online falhou: credenciais incorretas");
+                return tentarFallbackOffline(login, senha, "Usuário ou senha incorretos");
+            }
+            
+        } catch (Exception e) {
+            // Erro na autenticação online (conexão, timeout, etc.)
+            // Tentar fallback para modo offline
+            LOGGER.log(Level.WARNING, "Erro na autenticação online - tentando fallback offline", e);
+            return tentarFallbackOffline(login, senha, "Erro ao conectar com o servidor: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Tenta autenticação offline como fallback
+     * @param login Login do usuário
+     * @param senha Senha
+     * @param mensagemErroOriginal Mensagem de erro original (caso offline também falhe)
+     * @return Resultado da autenticação
+     */
+    private AuthResult tentarFallbackOffline(String login, String senha, String mensagemErroOriginal) {
+        try {
+            LOGGER.info("Tentando fallback para autenticação offline: " + login);
+            
+            // Criar OfflineAuthService se ainda não foi criado
+            ensureOfflineAuthServiceCreated();
+            
+            // Verificar se existem usuários no banco offline
+            if (!offlineAuthService.existemUsuarios()) {
+                LOGGER.info("Nenhum usuário no banco offline - fallback não disponível");
+                return AuthResult.failure(mensagemErroOriginal + "\n(Modo offline não disponível - nenhum usuário sincronizado)");
+            }
+            
+            // Tentar autenticação offline
+            Usuario usuario = offlineAuthService.autenticarOffline(login, senha);
+            
+            if (usuario != null) {
+                LOGGER.info("Autenticação offline bem-sucedida (fallback): " + login);
+                
+                // Forçar modo offline já que online não está disponível
+                ensureOfflineManagerObtained();
+                if (offlineManager != null) {
+                    offlineManager.forceOfflineMode();
+                }
+                
+                return AuthResult.success(usuario, true);
+            } else {
+                LOGGER.info("Autenticação offline também falhou: credenciais incorretas");
                 return AuthResult.failure("Usuário ou senha incorretos");
             }
             
         } catch (Exception e) {
-            // Erro na autenticação online - NÃO tentar offline no modo AUTO
-            LOGGER.log(Level.SEVERE, "Erro na autenticação online", e);
-            return AuthResult.failure("Erro ao conectar com o servidor: " + e.getMessage());
+            LOGGER.log(Level.WARNING, "Erro no fallback offline", e);
+            return AuthResult.failure(mensagemErroOriginal);
         }
     }
     

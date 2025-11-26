@@ -38,4 +38,40 @@ interface ColetaRepository {
     suspend fun jaFoiColetado(idPatrimonio: Int): Boolean
     suspend fun sincronizarColetasPendentes(): Int
     suspend fun getColetasLocal(): List<Coleta>
+    
+    /**
+     * Sincroniza uma coleta específica (reenvio)
+     */
+    suspend fun sincronizarColetaEspecifica(coletaId: Long): Boolean
+    
+    // ========================================
+    // Diagnóstico de Coletas Pendentes (v2.6)
+    // ========================================
+    
+    /**
+     * Busca coletas pendentes que têm erro de sincronização
+     * Útil para diagnóstico de coletas "presas"
+     */
+    suspend fun getColetasPendentesComErro(): List<Coleta>
+    
+    /**
+     * Busca coletas pendentes que nunca tentaram sincronizar
+     */
+    suspend fun getColetasPendentesSemErro(): List<Coleta>
+    
+    /**
+     * Limpa erro de uma coleta específica para permitir nova tentativa
+     */
+    suspend fun limparErroColeta(coletaId: Long)
+    
+    /**
+     * Limpa erros de todas as coletas pendentes (reset geral)
+     * @return quantidade de coletas resetadas
+     */
+    suspend fun limparTodosErrosColetas(): Int
+    
+    /**
+     * Remove uma coleta pendente que não pode ser sincronizada
+     */
+    suspend fun removerColetaPendente(coletaId: Long)
 }

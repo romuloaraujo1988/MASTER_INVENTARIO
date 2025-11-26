@@ -276,6 +276,30 @@ public class ConnectivityManager {
     }
     
     /**
+     * Marca o sistema como offline manualmente
+     * Útil quando uma operação falha por erro de conexão
+     */
+    public void markOffline() {
+        if (isOnline) {
+            LOGGER.warning("Marcando sistema como OFFLINE devido a falha de conexão");
+            isOnline = false;
+            notifyConnectionLost();
+        }
+    }
+    
+    /**
+     * Marca o sistema como online manualmente
+     * Útil após reconexão bem-sucedida
+     */
+    public void markOnline() {
+        if (!isOnline) {
+            LOGGER.info("Marcando sistema como ONLINE");
+            isOnline = true;
+            notifyConnectionEstablished();
+        }
+    }
+    
+    /**
      * Testa especificamente a conectividade com o servidor do banco de dados
      * @return true se conseguir conectar com o servidor do banco
      */

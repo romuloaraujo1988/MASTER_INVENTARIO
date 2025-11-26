@@ -10,7 +10,6 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.RoundRectangle2D;
-import java.io.File;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -225,10 +224,6 @@ public class MainFrame extends JFrame {
         itemMonitorMobile.setFont(new Font("Arial", Font.PLAIN, 13));
         itemMonitorMobile.addActionListener(e -> abrirMonitorMobile());
 
-        JMenuItem itemConfigurarFirewall = new JMenuItem("Configurar Firewall para Mobile");
-        itemConfigurarFirewall.setFont(new Font("Arial", Font.PLAIN, 13));
-        itemConfigurarFirewall.addActionListener(e -> mostrarInstrucoesFirewall());
-
         menuSistema.add(itemImportarDados);
         menuSistema.addSeparator();
         menuSistema.add(itemForcarOffline);
@@ -237,7 +232,6 @@ public class MainFrame extends JFrame {
         menuSistema.add(itemIniciarServidorMobile);
         menuSistema.add(itemPararServidorMobile);
         menuSistema.add(itemMonitorMobile);
-        menuSistema.add(itemConfigurarFirewall);
         menuSistema.addSeparator();
         menuSistema.add(itemStatusSistema);
 
@@ -1542,68 +1536,7 @@ public class MainFrame extends JFrame {
         return null;
     }
 
-    /**
-     * Mostra instruções para configurar o firewall
-     */
-    private void mostrarInstrucoesFirewall() {
-        String ipLocal = obterIPLocal();
-        String ipInfo = ipLocal != null ? ipLocal : "[SEU_IP_LOCAL]";
 
-        StringBuilder instrucoes = new StringBuilder();
-        instrucoes.append("=== CONFIGURAÇÃO DO FIREWALL PARA SERVIDOR MOBILE ===\n\n");
-        instrucoes.append("Para que o smartphone consiga se conectar ao servidor, você precisa:\n\n");
-
-        instrucoes.append("1️⃣ VERIFICAR SEU IP LOCAL\n");
-        if (ipLocal != null) {
-            instrucoes.append("   ✓ Seu IP detectado: ").append(ipLocal).append("\n");
-        } else {
-            instrucoes.append("   • Execute 'ipconfig' no CMD (Windows)\n");
-            instrucoes.append("   • Procure por 'Endereço IPv4' na sua rede Wi-Fi\n");
-        }
-        instrucoes.append("\n");
-
-        instrucoes.append("2️⃣ CONFIGURAR FIREWALL DO WINDOWS\n");
-        instrucoes.append("   a) Abra o 'Firewall do Windows Defender'\n");
-        instrucoes.append("   b) Clique em 'Configurações avançadas'\n");
-        instrucoes.append("   c) Clique em 'Regras de Entrada' → 'Nova Regra'\n");
-        instrucoes.append("   d) Selecione 'Porta' → Avançar\n");
-        instrucoes.append("   e) Selecione 'TCP' e digite '8081' → Avançar\n");
-        instrucoes.append("   f) Selecione 'Permitir a conexão' → Avançar\n");
-        instrucoes.append("   g) Marque todos os perfis → Avançar\n");
-        instrucoes.append("   h) Nome: 'Servidor Mobile Inventário' → Concluir\n\n");
-
-        instrucoes.append("3️⃣ CONFIGURAR NO SMARTPHONE\n");
-        instrucoes.append("   • Conecte o smartphone na MESMA rede Wi-Fi\n");
-        instrucoes.append("   • No app, configure o servidor como:\n");
-        instrucoes.append("     URL: http://").append(ipInfo).append(":8081/inventario\n\n");
-
-        instrucoes.append("4️⃣ TESTAR CONEXÃO\n");
-        instrucoes.append("   • No navegador do smartphone, acesse:\n");
-        instrucoes.append("     http://").append(ipInfo).append(":8081/inventario/actuator/health\n");
-        instrucoes.append("   • Deve retornar: {\"status\":\"UP\"}\n\n");
-
-        instrucoes.append("5️⃣ COMANDO RÁPIDO (PowerShell como Administrador)\n");
-        instrucoes.append("   netsh advfirewall firewall add rule name=\"Servidor Mobile Inventário\" ");
-        instrucoes.append("dir=in action=allow protocol=TCP localport=8081\n\n");
-
-        instrucoes.append("⚠️ PROBLEMAS COMUNS:\n");
-        instrucoes.append("   • Antivírus bloqueando: Adicione exceção para porta 8081\n");
-        instrucoes.append("   • Redes diferentes: Smartphone e PC devem estar na mesma rede\n");
-        instrucoes.append("   • Servidor não iniciado: Inicie pelo menu Sistema\n");
-
-        JTextArea textArea = new JTextArea(instrucoes.toString());
-        textArea.setEditable(false);
-        textArea.setFont(new Font("Monospaced", Font.PLAIN, 11));
-        textArea.setCaretPosition(0);
-
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setPreferredSize(new Dimension(700, 500));
-
-        JOptionPane.showMessageDialog(this,
-                scrollPane,
-                "Configurar Firewall para Servidor Mobile",
-                JOptionPane.INFORMATION_MESSAGE);
-    }
 
     /**
      * Abre o diálogo para o usuário alterar sua própria senha
@@ -1659,6 +1592,9 @@ public class MainFrame extends JFrame {
                         statusBarPanel.atualizarUltimaSincronizacao(java.time.LocalDateTime.now());
                         syncStatusManager.atualizarUltimaSincronizacaoGeral();
                     }
+                    
+                    // Atualizar contador de coletas pendentes
+                    atualizarContadorColetasPendentes();
                 });
             }
         });
@@ -1676,6 +1612,28 @@ public class MainFrame extends JFrame {
         // Atualizar status inicial
         OfflineManager.OfflineState estadoInicial = offlineManager.getCurrentState();
         statusBarPanel.atualizarStatus(estadoInicial);
+        
+        // Atualizar contador de coletas pendentes na inicialização
+        atualizarContadorColetasPendentes();
+    }
+    
+    /**
+     * Atualiza o contador de coletas pendentes consultando o SQLite
+     */
+    private void atualizarContadorColetasPendentes() {
+        try {
+            com.inventario.offline.OfflineDAO offlineDAO = new com.inventario.offline.OfflineDAO();
+            int coletasPendentes = offlineDAO.contarColetasPendentes();
+            
+            SwingUtilities.invokeLater(() -> {
+                statusBarPanel.atualizarColetasPendentes(coletasPendentes);
+            });
+            
+            System.out.println(">>> Coletas pendentes de sincronização: " + coletasPendentes);
+            
+        } catch (Exception e) {
+            System.err.println(">>> Erro ao contar coletas pendentes: " + e.getMessage());
+        }
     }
     
     /**

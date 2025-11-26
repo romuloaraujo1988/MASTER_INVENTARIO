@@ -134,6 +134,94 @@ class PendingCollectionsViewModel(
             successMessage = null
         )
     }
+    
+    /**
+     * v2.6: Tenta sincronizar uma coleta específica novamente
+     * Limpa o erro e tenta sincronizar
+     */
+    fun retryCollection(coleta: Coleta) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            
+            try {
+                android.util.Log.d("PendingCollectionsVM", "🔄 Tentando sincronizar coleta ${coleta.patrimonioId} novamente...")
+                
+                // Limpar erro da coleta no banco local (se disponível via Room)
+                try {
+                    val database = com.inventario.mobile.data.local.database.InventarioDatabase
+                        .getDatabase(android.app.Application())
+                    database.coletaDao().limparErroSincronizacao(coleta.id?.toLong() ?: 0)
+                } catch (e: Exception) {
+                    android.util.Log.w("PendingCollectionsVM", "Não foi possível limpar erro no Room: ${e.message}")
+                }
+                
+                // Tentar sincronizar todas as pendentes (incluindo esta)
+                repository.sincronizarDados()
+                
+                // Aguardar um pouco
+                kotlinx.coroutines.delay(1500)
+                
+                // Recarregar lista
+                val pendingCollections = repository.getColetasPendentes()
+                
+                // Verificar se a coleta foi sincronizada
+                val coletaAindaPendente = pendingCollections.any { it.patrimonioId == coleta.patrimonioId }
+                
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    pendingCollections = pendingCollections,
+                    successMessage = if (!coletaAindaPendente) {
+                        "✓ Coleta sincronizada com sucesso!"
+                    } else {
+                        "Sincronização tentada. Verifique se há erros."
+                    }
+                )
+                
+            } catch (e: Exception) {
+                android.util.Log.e("PendingCollectionsVM", "Erro ao tentar sincronizar coleta", e)
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Erro ao sincronizar: ${e.message}"
+                )
+            }
+        }
+    }
+    
+    /**
+     * v2.6: Limpa erros de todas as coletas pendentes para nova tentativa
+     */
+    fun clearAllErrors() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            
+            try {
+                // Limpar erros no banco Room
+                try {
+                    val database = com.inventario.mobile.data.local.database.InventarioDatabase
+                        .getDatabase(android.app.Application())
+                    val quantidade = database.coletaDao().limparTodosErrosSincronizacao()
+                    android.util.Log.d("PendingCollectionsVM", "✓ Erros limpos de $quantidade coletas")
+                } catch (e: Exception) {
+                    android.util.Log.w("PendingCollectionsVM", "Não foi possível limpar erros no Room: ${e.message}")
+                }
+                
+                // Recarregar lista
+                val pendingCollections = repository.getColetasPendentes()
+                
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    pendingCollections = pendingCollections,
+                    successMessage = "Erros limpos. Tente sincronizar novamente."
+                )
+                
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Erro ao limpar: ${e.message}"
+                )
+            }
+        }
+    }
 }
 
 class PendingCollectionsViewModelFactory(

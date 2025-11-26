@@ -20,4 +20,6 @@ sealed class CollectionViewState {
         val pendentes: Int
     ) : CollectionViewState()
     data class Error(val message: String) : CollectionViewState()
+    data class ColetaReenviada(val message: String) : CollectionViewState()
+    data class ColetaExcluida(val message: String) : CollectionViewState()
 }

@@ -73,6 +73,10 @@ class InventarioActivity : AppCompatActivity() {
             setupFiltros()
             android.util.Log.d("InventarioActivity", "Filtros configurados com sucesso")
             
+            // Forçar carregamento de responsáveis após observers configurados
+            viewModel.loadResponsaveis()
+            android.util.Log.d("InventarioActivity", "Carregamento de responsáveis solicitado")
+            
             // NÃO carregar patrimônios automaticamente
             // Apenas mostrar mensagem para selecionar responsável
             android.util.Log.d("InventarioActivity", "onCreate concluído com sucesso")
@@ -169,15 +173,21 @@ class InventarioActivity : AppCompatActivity() {
     private fun setupResponsavelSpinner(responsaveis: List<Responsavel>) {
         android.util.Log.d("InventarioActivity", "setupResponsavelSpinner chamado com ${responsaveis.size} responsáveis")
         
-        // Evitar reconfigurar se já foi configurado
+        if (responsaveis.isEmpty()) {
+            android.util.Log.w("InventarioActivity", "Lista de responsáveis vazia, não configurando spinner")
+            return
+        }
+        
         val autoComplete = binding.spinnerResponsavel as? AutoCompleteTextView
-        if (autoComplete?.adapter != null && autoComplete.adapter.count > 0) {
-            android.util.Log.d("InventarioActivity", "Spinner já configurado, ignorando")
+        
+        // Verificar se já está configurado com os mesmos dados
+        if (autoComplete?.adapter != null && autoComplete.adapter.count == responsaveis.size) {
+            android.util.Log.d("InventarioActivity", "Spinner já configurado com ${responsaveis.size} responsáveis")
             return
         }
         
         val items = responsaveis.map { it.nome }
-        android.util.Log.d("InventarioActivity", "Itens do spinner: $items")
+        android.util.Log.d("InventarioActivity", "Configurando spinner com itens: $items")
         
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, items)
         autoComplete?.apply {
@@ -191,7 +201,7 @@ class InventarioActivity : AppCompatActivity() {
             }
         }
         
-        android.util.Log.d("InventarioActivity", "Spinner configurado com sucesso")
+        android.util.Log.d("InventarioActivity", "✓ Spinner configurado com sucesso com ${responsaveis.size} responsáveis")
     }
     
     private fun aplicarFiltros() {

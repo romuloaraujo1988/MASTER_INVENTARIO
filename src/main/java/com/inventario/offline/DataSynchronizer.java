@@ -150,9 +150,9 @@ public class DataSynchronizer {
             // 2. Baixa dados atualizados do servidor
             result.downloadedRecords = baixarDadosServidor();
             
-            // 3. Atualiza timestamp da última sincronização
+            // 3. Atualiza timestamp da última sincronização (formato ISO para compatibilidade)
             offlineDAO.atualizarMetadado("last_sync_timestamp", 
-                DateFormatUtils.formatDateTime(LocalDateTime.now()));
+                DateFormatUtils.formatForApi(LocalDateTime.now()));
             
             result.success = true;
             result.endTime = LocalDateTime.now();
@@ -221,7 +221,16 @@ public class DataSynchronizer {
         
         Map<String, Object> dados = jsonToMap(dataJson);
         
-        try (Connection conn = DatabaseConnection.getConnection()) {
+        // ✅ CORRIGIDO: Usar conexão PostgreSQL direta para upload (não SQLite)
+        // ✅ MELHORADO: Verificar conectividade antes de tentar conexão
+        if (!connectivityManager.isOnline()) {
+            LOGGER.warning("Servidor offline - adiando upload para " + tabela);
+            return false;
+        }
+        
+        Connection conn = null;
+        try {
+            conn = DatabaseConnection.getPostgreSQLConnection();
             
             switch (tabela) {
                 case "local_patrimonio":
@@ -239,8 +248,27 @@ public class DataSynchronizer {
             }
             
         } catch (SQLException e) {
+            // Verificar se é erro de conexão (servidor indisponível)
+            String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+            if (msg.contains("connection") || msg.contains("timeout") || 
+                msg.contains("refused") || msg.contains("não usual") ||
+                msg.contains("network") || msg.contains("host")) {
+                // Erro de conexão - marcar como offline e não propagar exceção
+                LOGGER.warning("Servidor PostgreSQL indisponível - operação será tentada novamente: " + e.getMessage());
+                connectivityManager.markOffline();
+                return false;
+            }
+            // Outros erros SQL devem ser propagados
             LOGGER.log(Level.SEVERE, "Erro ao processar upload para " + tabela, e);
             throw e;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    // Ignorar erro ao fechar conexão
+                }
+            }
         }
     }
     
@@ -323,16 +351,76 @@ public class DataSynchronizer {
         
         switch (operacao) {
             case "INSERT":
+                // ✅ CORRIGIDO: INSERT com todos os campos obrigatórios incluindo ID_PARTICIPANTE_INVENTARIO
                 String insertSql = """
-                    INSERT INTO coleta 
-                    (id_patrimonio, id_inventario, id_participante, numero_patrimonio, 
-                     data_coleta, localizacao_atual, localizacao_encontrada, situacao_encontrada, 
-                     observacoes, foto_patrimonio, sem_etiqueta, descricao_sem_etiqueta)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO TABELA_COLETA 
+                    (ID_PATRIMONIO, ID_INVENTARIO, ID_COLETOR, ID_PARTICIPANTE_INVENTARIO,
+                     DATA_COLETA, LOCALIZACAO_ATUAL, LOCALIZACAO_ENCONTRADA, ESTADO_ENCONTRADO, 
+                     OBSERVACAO_COLETA, FOTO_PATRIMONIO)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
                 
                 try (PreparedStatement stmt = conn.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
-                    setColetaParameters(stmt, dados);
+                    // ✅ DEBUG: Log dos dados antes de inserir
+                    LOGGER.info("Dados para INSERT coleta: " + dados);
+                    
+                    // Obter IDs com validação
+                    Object idPatrimonio = dados.get("id_patrimonio");
+                    Object idInventario = dados.get("id_inventario");
+                    Object idParticipante = dados.get("id_participante");
+                    
+                    // Validar IDs obrigatórios
+                    if (idPatrimonio == null || (idPatrimonio instanceof Number && ((Number)idPatrimonio).intValue() == 0)) {
+                        LOGGER.warning("ID_PATRIMONIO inválido: " + idPatrimonio + " - pulando registro");
+                        return false;
+                    }
+                    
+                    if (idInventario == null || (idInventario instanceof Number && ((Number)idInventario).intValue() == 0)) {
+                        LOGGER.warning("ID_INVENTARIO inválido: " + idInventario + " - pulando registro");
+                        return false;
+                    }
+                    
+                    if (idParticipante == null || (idParticipante instanceof Number && ((Number)idParticipante).intValue() == 0)) {
+                        LOGGER.warning("ID_PARTICIPANTE inválido: " + idParticipante + " - pulando registro");
+                        return false;
+                    }
+                    
+                    // Parâmetro 1: ID_PATRIMONIO
+                    stmt.setObject(1, idPatrimonio);
+                    // Parâmetro 2: ID_INVENTARIO
+                    stmt.setObject(2, idInventario);
+                    // Parâmetro 3: ID_COLETOR (mesmo valor que id_participante)
+                    stmt.setObject(3, idParticipante);
+                    // Parâmetro 4: ID_PARTICIPANTE_INVENTARIO (OBRIGATÓRIO - NOT NULL)
+                    stmt.setObject(4, idParticipante);
+                    
+                    // ✅ CORRIGIDO: Tratamento robusto de timestamp para sincronização
+                    Object dataColetaObj = dados.get("data_coleta");
+                    Timestamp dataColeta = null;
+                    try {
+                        dataColeta = com.inventario.util.DateFormatUtils.toTimestampSafe(dataColetaObj);
+                        LOGGER.info("Timestamp convertido: " + dataColetaObj + " -> " + dataColeta);
+                    } catch (Exception e) {
+                        LOGGER.warning("Erro ao converter timestamp '" + dataColetaObj + "': " + e.getMessage() + " - usando data atual");
+                        dataColeta = new Timestamp(System.currentTimeMillis());
+                    }
+                    // Parâmetro 5: DATA_COLETA
+                    stmt.setTimestamp(5, dataColeta);
+                    
+                    // Parâmetro 6: LOCALIZACAO_ATUAL
+                    stmt.setString(6, objectToString(dados.get("localizacao_atual")));
+                    // Parâmetro 7: LOCALIZACAO_ENCONTRADA
+                    stmt.setString(7, objectToString(dados.get("localizacao_encontrada")));
+                    // Parâmetro 8: ESTADO_ENCONTRADO
+                    stmt.setString(8, objectToString(dados.get("situacao_encontrada")));
+                    // Parâmetro 9: OBSERVACAO_COLETA
+                    stmt.setString(9, objectToString(dados.get("observacoes")));
+                    // Parâmetro 10: FOTO_PATRIMONIO
+                    stmt.setString(10, objectToString(dados.get("foto_patrimonio")));
+                    
+                    LOGGER.info("Executando INSERT com: patrimonio=" + idPatrimonio + 
+                               ", inventario=" + idInventario + 
+                               ", participante=" + idParticipante);
                     
                     int rowsAffected = stmt.executeUpdate();
                     
@@ -341,6 +429,7 @@ public class DataSynchronizer {
                             if (rs.next()) {
                                 int remoteId = rs.getInt(1);
                                 atualizarIdRemoto("local_coleta", recordId, remoteId);
+                                LOGGER.info("Coleta sincronizada com sucesso! ID remoto: " + remoteId);
                             }
                         }
                         return true;
@@ -378,13 +467,13 @@ public class DataSynchronizer {
      * @throws SQLException
      */
     private boolean processarInventarioUpload(Connection conn, String operacao, int recordId, Map<String, Object> dados) throws SQLException {
-        
+        // CORREÇÃO: Nome correto da tabela no PostgreSQL é TABELA_INVENTARIO
         switch (operacao) {
             case "INSERT":
                 String insertSql = """
-                    INSERT INTO inventario 
-                    (nome, descricao, data_inicio, data_fim, status, id_responsavel, observacoes)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO TABELA_INVENTARIO 
+                    (NOME, OBSERVACAO, DATA_INICIO, DATA_FIM, STATUS_INVENTARIO, RESPONSAVEL_INVENTARIO)
+                    VALUES (?, ?, ?, ?, ?, ?)
                 """;
                 
                 try (PreparedStatement stmt = conn.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
@@ -411,8 +500,7 @@ public class DataSynchronizer {
                     }
                     
                     stmt.setString(5, (String) dados.get("status"));
-                    stmt.setObject(6, dados.get("id_responsavel"));
-                    stmt.setString(7, (String) dados.get("observacoes"));
+                    stmt.setString(6, (String) dados.get("responsavel"));
                     
                     int rowsAffected = stmt.executeUpdate();
                     
@@ -430,10 +518,10 @@ public class DataSynchronizer {
                 
             case "UPDATE":
                 String updateSql = """
-                    UPDATE inventario SET 
-                    nome = ?, descricao = ?, data_inicio = ?, data_fim = ?, 
-                    status = ?, id_responsavel = ?, observacoes = ?
-                    WHERE id = ?
+                    UPDATE TABELA_INVENTARIO SET 
+                    NOME = ?, OBSERVACAO = ?, DATA_INICIO = ?, DATA_FIM = ?, 
+                    STATUS_INVENTARIO = ?, RESPONSAVEL_INVENTARIO = ?
+                    WHERE ID = ?
                 """;
                 
                 try (PreparedStatement stmt = conn.prepareStatement(updateSql)) {
@@ -460,9 +548,8 @@ public class DataSynchronizer {
                     }
                     
                     stmt.setString(5, (String) dados.get("status"));
-                    stmt.setObject(6, dados.get("id_responsavel"));
-                    stmt.setString(7, (String) dados.get("observacoes"));
-                    stmt.setInt(8, recordId);
+                    stmt.setString(6, (String) dados.get("responsavel"));
+                    stmt.setInt(7, recordId);
                     
                     return stmt.executeUpdate() > 0;
                 }
@@ -499,10 +586,10 @@ public class DataSynchronizer {
             // Importa dados essenciais
             result.downloadedRecords += importarDadosEssenciais();
             
-            // Marca como importação inicial concluída
+            // Marca como importação inicial concluída (formato ISO para compatibilidade)
             offlineDAO.atualizarMetadado("initial_import_completed", "true");
             offlineDAO.atualizarMetadado("initial_import_timestamp", 
-                DateFormatUtils.formatDateTime(LocalDateTime.now()));
+                DateFormatUtils.formatForApi(LocalDateTime.now()));
             
             result.success = true;
             result.endTime = LocalDateTime.now();
@@ -713,7 +800,8 @@ public class DataSynchronizer {
      * @throws SQLException
      */
     private int importarInventariosCompleto(Connection conn) throws SQLException {
-        String sql = "SELECT * FROM inventario ORDER BY id";
+        // CORREÇÃO: Nome correto da tabela no PostgreSQL é TABELA_INVENTARIO
+        String sql = "SELECT * FROM TABELA_INVENTARIO ORDER BY ID";
         int count = 0;
         
         try (PreparedStatement stmt = conn.prepareStatement(sql);
@@ -760,8 +848,24 @@ public class DataSynchronizer {
     private int baixarDadosServidor() throws SQLException {
         int totalBaixados = 0;
         
+        // CORREÇÃO: Parsing robusto do timestamp da última sincronização
         String lastSyncStr = offlineDAO.obterMetadado("last_sync_timestamp");
-        Timestamp lastSync = Timestamp.valueOf(lastSyncStr != null ? lastSyncStr : "1970-01-01 00:00:00");
+        Timestamp lastSync;
+        try {
+            if (lastSyncStr != null && !lastSyncStr.isEmpty()) {
+                // Tentar converter usando DateFormatUtils (suporta múltiplos formatos)
+                lastSync = DateFormatUtils.toTimestampSafe(lastSyncStr);
+                if (lastSync == null) {
+                    // Fallback: tentar formato padrão do Timestamp
+                    lastSync = Timestamp.valueOf(lastSyncStr);
+                }
+            } else {
+                lastSync = Timestamp.valueOf("1970-01-01 00:00:00");
+            }
+        } catch (Exception e) {
+            LOGGER.warning("Erro ao parsear timestamp '" + lastSyncStr + "': " + e.getMessage() + " - usando data padrão");
+            lastSync = Timestamp.valueOf("1970-01-01 00:00:00");
+        }
         
         try (Connection conn = DatabaseConnection.getConnection()) {
             
@@ -867,10 +971,13 @@ public class DataSynchronizer {
      * @throws SQLException
      */
     private int baixarInventarios(Connection conn, Timestamp lastSync) throws SQLException {
+        // CORREÇÃO: Nome correto da tabela no PostgreSQL é TABELA_INVENTARIO
+        // A tabela usa DATA_ULTIMA_ATUALIZACAO ao invés de data_ultima_alteracao
         String sql = """
-            SELECT * FROM inventario 
-            WHERE data_ultima_alteracao > ? 
-            ORDER BY data_ultima_alteracao
+            SELECT * FROM TABELA_INVENTARIO 
+            WHERE DATA_ULTIMA_ATUALIZACAO > ? OR DATA_ULTIMA_ATUALIZACAO IS NULL
+            ORDER BY ID
+            LIMIT 1000
         """;
         
         int count = 0;
@@ -892,6 +999,10 @@ public class DataSynchronizer {
                     count++;
                 }
             }
+        } catch (SQLException e) {
+            // Log do erro mas não propaga para não quebrar sincronização
+            LOGGER.log(Level.WARNING, "Erro ao baixar inventários (tabela pode não existir): " + e.getMessage());
+            return 0;
         }
         
         return count;
@@ -930,15 +1041,24 @@ public class DataSynchronizer {
         stmt.setObject(1, dados.get("id_patrimonio"));
         stmt.setObject(2, dados.get("id_inventario"));
         stmt.setObject(3, dados.get("id_participante"));
-        stmt.setString(4, (String) dados.get("numero_patrimonio"));
-        stmt.setTimestamp(5, (Timestamp) dados.get("data_coleta"));
-        stmt.setString(6, (String) dados.get("localizacao_atual"));
-        stmt.setString(7, (String) dados.get("localizacao_encontrada"));
-        stmt.setString(8, (String) dados.get("situacao_encontrada"));
-        stmt.setString(9, (String) dados.get("observacoes"));
-        stmt.setString(10, (String) dados.get("foto_patrimonio"));
+        // ✅ CORRIGIDO: Conversão segura para String (pode vir como Integer)
+        stmt.setString(4, objectToString(dados.get("numero_patrimonio")));
+        // ✅ CORRIGIDO: Usar método seguro para timestamp
+        stmt.setTimestamp(5, com.inventario.util.DateFormatUtils.toTimestampSafe(dados.get("data_coleta")));
+        stmt.setString(6, objectToString(dados.get("localizacao_atual")));
+        stmt.setString(7, objectToString(dados.get("localizacao_encontrada")));
+        stmt.setString(8, objectToString(dados.get("situacao_encontrada")));
+        stmt.setString(9, objectToString(dados.get("observacoes")));
+        stmt.setString(10, objectToString(dados.get("foto_patrimonio")));
         stmt.setBoolean(11, (Boolean) dados.getOrDefault("sem_etiqueta", false));
-        stmt.setString(12, (String) dados.get("descricao_sem_etiqueta"));
+        stmt.setString(12, objectToString(dados.get("descricao_sem_etiqueta")));
+    }
+    
+    /**
+     * Converte qualquer objeto para String de forma segura
+     */
+    private String objectToString(Object obj) {
+        return obj != null ? String.valueOf(obj) : null;
     }
     
     /**

@@ -411,6 +411,66 @@ public class OfflineDAO {
         }
     }
     
+    /**
+     * Conta o total de coletas pendentes de sincronização
+     * Verifica tanto a tabela sync_control quanto o campo sync_status da local_coleta
+     * @return Número de coletas pendentes
+     */
+    public int contarColetasPendentes() {
+        int total = 0;
+        
+        try (Connection conn = sqliteConnection.getConnection()) {
+            // Método 1: Contar na tabela sync_control (operações pendentes)
+            String sql1 = "SELECT COUNT(*) FROM sync_control WHERE synced = FALSE AND table_name = 'local_coleta'";
+            try (PreparedStatement stmt = conn.prepareStatement(sql1);
+                 ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    total = rs.getInt(1);
+                }
+            }
+            
+            // Método 2: Se não encontrou na sync_control, verificar sync_status na local_coleta
+            if (total == 0) {
+                String sql2 = "SELECT COUNT(*) FROM local_coleta WHERE sync_status = 'PENDING' OR sync_status IS NULL";
+                try (PreparedStatement stmt = conn.prepareStatement(sql2);
+                     ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        total = rs.getInt(1);
+                    }
+                }
+            }
+            
+            LOGGER.fine("Coletas pendentes de sincronização: " + total);
+            
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, "Erro ao contar coletas pendentes: " + e.getMessage());
+        }
+        
+        return total;
+    }
+    
+    /**
+     * Conta o total de operações pendentes de sincronização (todas as tabelas)
+     * @return Número total de operações pendentes
+     */
+    public int contarOperacoesPendentes() {
+        String sql = "SELECT COUNT(*) FROM sync_control WHERE synced = FALSE";
+        
+        try (Connection conn = sqliteConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, "Erro ao contar operações pendentes: " + e.getMessage());
+        }
+        
+        return 0;
+    }
+    
     // ==================== OPERAÇÕES DE METADADOS ====================
     
     /**
@@ -533,7 +593,30 @@ public class OfflineDAO {
         while (rs.next()) {
             Map<String, Object> row = new HashMap<>();
             for (int i = 1; i <= columnCount; i++) {
-                row.put(metaData.getColumnName(i), rs.getObject(i));
+                String columnName = metaData.getColumnName(i);
+                String columnType = metaData.getColumnTypeName(i);
+                
+                // ✅ CORRIGIDO: Tratamento especial para timestamps do SQLite
+                // Mas NÃO converter campos que são JSON ou TEXT
+                if (columnType != null && 
+                    (columnType.equalsIgnoreCase("DATETIME") || columnType.equalsIgnoreCase("TIMESTAMP")) &&
+                    !columnName.toLowerCase().contains("json") &&
+                    !columnName.toLowerCase().contains("data_json")) {
+                    // Usar método seguro para ler timestamps
+                    row.put(columnName, lerTimestampSeguro(rs, columnName));
+                } else if (columnName.toLowerCase().contains("timestamp") || 
+                           (columnName.toLowerCase().startsWith("data_") && 
+                            !columnName.toLowerCase().contains("json"))) {
+                    // Campos com nome sugestivo de data, mas verificar se não é JSON
+                    try {
+                        row.put(columnName, lerTimestampSeguro(rs, columnName));
+                    } catch (Exception e) {
+                        // Se falhar, usar como objeto normal
+                        row.put(columnName, rs.getObject(i));
+                    }
+                } else {
+                    row.put(columnName, rs.getObject(i));
+                }
             }
             result.add(row);
         }
@@ -605,7 +688,12 @@ public class OfflineDAO {
             stmt.setObject(2, coleta.get("id_patrimonio"));
             stmt.setObject(3, coleta.get("id_participante"));
             stmt.setString(4, (String) coleta.get("numero_patrimonio"));
-            stmt.setString(5, (String) coleta.get("descricao_item_sem_etiqueta"));
+            // ✅ CORRIGIDO: Aceita tanto "descricao_sem_etiqueta" quanto "descricao_item_sem_etiqueta"
+            String descricaoSemEtiqueta = (String) coleta.get("descricao_sem_etiqueta");
+            if (descricaoSemEtiqueta == null) {
+                descricaoSemEtiqueta = (String) coleta.get("descricao_item_sem_etiqueta");
+            }
+            stmt.setString(5, descricaoSemEtiqueta);
             stmt.setString(6, (String) coleta.get("localizacao_encontrada"));
             stmt.setString(7, (String) coleta.get("situacao_encontrada")); // ✅ CORRIGIDO - campo correto do SQLite
             stmt.setString(8, (String) coleta.get("observacoes"));
@@ -706,11 +794,15 @@ public class OfflineDAO {
                 coleta.put("id_patrimonio", rs.getObject("id_patrimonio"));
                 coleta.put("id_participante", rs.getObject("id_participante"));
                 coleta.put("numero_patrimonio", rs.getString("numero_patrimonio"));
-                coleta.put("descricao_item_sem_etiqueta", rs.getString("descricao_item_sem_etiqueta"));
+                // ✅ CORRIGIDO: Nome correto da coluna no SQLite é "descricao_sem_etiqueta"
+                coleta.put("descricao_sem_etiqueta", rs.getString("descricao_sem_etiqueta"));
                 coleta.put("localizacao_encontrada", rs.getString("localizacao_encontrada"));
-                coleta.put("estado_encontrado", rs.getString("estado_encontrado"));
+                // ✅ CORRIGIDO: Nome correto da coluna no SQLite é "situacao_encontrada"
+                coleta.put("situacao_encontrada", rs.getString("situacao_encontrada"));
                 coleta.put("observacoes", rs.getString("observacoes"));
-                coleta.put("data_coleta", rs.getTimestamp("data_coleta"));
+                
+                // ✅ CORREÇÃO: Ler timestamp de forma segura do SQLite
+                coleta.put("data_coleta", lerTimestampSeguro(rs, "data_coleta"));
                 coletas.add(coleta);
             }
         }
@@ -1175,5 +1267,82 @@ public class OfflineDAO {
         }
         
         return stats;
+    }
+    
+    // ==================== MÉTODOS AUXILIARES ====================
+    
+    /**
+     * Lê um timestamp do ResultSet de forma segura para SQLite
+     * SQLite não tem tipo nativo de timestamp, então pode armazenar como:
+     * - String no formato "yyyy-MM-dd HH:mm:ss"
+     * - Long (milissegundos desde epoch)
+     * - Ou formato ISO 8601
+     * 
+     * @param rs ResultSet
+     * @param columnName Nome da coluna
+     * @return Timestamp ou null se não conseguir converter
+     */
+    private Timestamp lerTimestampSeguro(ResultSet rs, String columnName) {
+        try {
+            // Primeiro, tentar ler como string (mais comum no SQLite)
+            String strValue = rs.getString(columnName);
+            
+            if (strValue == null || strValue.isEmpty()) {
+                return null;
+            }
+            
+            // Tentar diferentes formatos
+            
+            // 1. Formato padrão JDBC: yyyy-mm-dd hh:mm:ss[.fffffffff]
+            try {
+                return Timestamp.valueOf(strValue);
+            } catch (IllegalArgumentException e1) {
+                // Não é formato padrão, tentar outros
+            }
+            
+            // 2. Formato ISO 8601 com T: yyyy-MM-ddTHH:mm:ss
+            if (strValue.contains("T")) {
+                try {
+                    String normalized = strValue.replace("T", " ");
+                    // Remover timezone se existir
+                    if (normalized.contains("+")) {
+                        normalized = normalized.substring(0, normalized.indexOf("+"));
+                    }
+                    if (normalized.contains("Z")) {
+                        normalized = normalized.replace("Z", "");
+                    }
+                    return Timestamp.valueOf(normalized);
+                } catch (IllegalArgumentException e2) {
+                    // Continuar tentando
+                }
+            }
+            
+            // 3. Tentar como número (milissegundos desde epoch)
+            try {
+                long millis = Long.parseLong(strValue);
+                return new Timestamp(millis);
+            } catch (NumberFormatException e3) {
+                // Não é número
+            }
+            
+            // 4. Formato brasileiro: dd/MM/yyyy HH:mm:ss
+            if (strValue.contains("/")) {
+                try {
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+                    java.util.Date date = sdf.parse(strValue);
+                    return new Timestamp(date.getTime());
+                } catch (java.text.ParseException e4) {
+                    // Continuar tentando
+                }
+            }
+            
+            // 5. Último recurso: usar data atual
+            LOGGER.warning("Não foi possível converter timestamp: " + strValue + " - usando data atual");
+            return new Timestamp(System.currentTimeMillis());
+            
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, "Erro ao ler timestamp da coluna " + columnName, e);
+            return new Timestamp(System.currentTimeMillis());
+        }
     }
 }

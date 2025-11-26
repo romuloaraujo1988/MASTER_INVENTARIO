@@ -681,7 +681,55 @@ class InventarioRepository(
         }
     }
     
-    suspend fun getColetasPendentes(): List<Coleta> = emptyList()
+    /**
+     * v2.6: Busca coletas pendentes do banco Room
+     * Inclui informações de erro de sincronização
+     */
+    suspend fun getColetasPendentes(): List<Coleta> {
+        return try {
+            android.util.Log.d("InventarioRepository", "Buscando coletas pendentes do banco local...")
+            
+            val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(context)
+            val coletaDao = database.coletaDao()
+            
+            val coletasEntity = coletaDao.buscarPendentes()
+            
+            val coletas = coletasEntity.map { entity ->
+                Coleta(
+                    id = entity.id.toInt(),
+                    patrimonioId = entity.idPatrimonio,
+                    usuarioId = entity.idUsuario,
+                    dataColeta = entity.dataColeta.toString(),
+                    localizacaoAtual = entity.nomeSala,
+                    estadoEncontrado = entity.estadoPatrimonio,
+                    observacoes = entity.observacao,
+                    latitude = entity.latitude,
+                    longitude = entity.longitude,
+                    sincronizado = entity.sincronizado,
+                    tentativasSincronizacao = entity.tentativasSincronizacao,
+                    erroSincronizacao = entity.erroSincronizacao,  // v2.6: Incluir erro
+                    status = if (entity.erroSincronizacao != null) "ERRO" else "PENDENTE",
+                    numeroPatrimonio = entity.numeroPatrimonio,
+                    descricaoPatrimonio = null,  // Pode ser buscado do patrimônio se necessário
+                    nomeSala = entity.nomeSala,
+                    nomeColetor = entity.nomeUsuario
+                )
+            }
+            
+            android.util.Log.d("InventarioRepository", "✓ ${coletas.size} coletas pendentes encontradas")
+            
+            // Log de coletas com erro
+            val coletasComErro = coletas.filter { !it.erroSincronizacao.isNullOrBlank() }
+            if (coletasComErro.isNotEmpty()) {
+                android.util.Log.w("InventarioRepository", "⚠️ ${coletasComErro.size} coletas com erro de sincronização")
+            }
+            
+            coletas
+        } catch (e: Exception) {
+            android.util.Log.e("InventarioRepository", "Erro ao buscar coletas pendentes", e)
+            emptyList()
+        }
+    }
     
     suspend fun getLastSyncTime(): Long = 0L
     

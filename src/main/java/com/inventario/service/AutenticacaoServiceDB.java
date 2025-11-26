@@ -26,6 +26,7 @@ public class AutenticacaoServiceDB {
      * @param login Login do usuário
      * @param senha Senha em texto plano
      * @return Usuario autenticado ou null se falhou
+     * @throws RuntimeException se houver erro de conexão com o banco
      */
     public Usuario autenticar(String login, String senha) {
         if (login == null || senha == null || login.trim().isEmpty() || senha.trim().isEmpty()) {
@@ -38,7 +39,9 @@ public class AutenticacaoServiceDB {
             usuario = usuarioDAO.buscarPorLogin(login.trim());
         } catch (Exception e) {
             System.err.println("Erro ao buscar usuário: " + e.getMessage());
-            return null;
+            // Propagar exceção para que o UnifiedAuthService saiba que é erro de conexão
+            // e não credenciais incorretas
+            throw new RuntimeException("Erro de conexão com o banco de dados: " + e.getMessage(), e);
         }
         
         if (usuario == null) {

@@ -54,14 +54,34 @@ class PendingCollectionsActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        adapter = PendingCollectionsAdapter { coleta ->
-            showDeleteConfirmationDialog(coleta)
-        }
+        adapter = PendingCollectionsAdapter(
+            onDeleteClick = { coleta ->
+                showDeleteConfirmationDialog(coleta)
+            },
+            onRetryClick = { coleta ->
+                // v2.6: Tentar sincronizar coleta novamente
+                showRetryConfirmationDialog(coleta)
+            }
+        )
 
         binding.recyclerViewPendingCollections.apply {
             layoutManager = LinearLayoutManager(this@PendingCollectionsActivity)
             adapter = this@PendingCollectionsActivity.adapter
         }
+    }
+    
+    /**
+     * v2.6: Dialog de confirmação para tentar sincronizar novamente
+     */
+    private fun showRetryConfirmationDialog(coleta: Coleta) {
+        AlertDialog.Builder(this)
+            .setTitle("Tentar Novamente")
+            .setMessage("Deseja tentar sincronizar a coleta do patrimônio ${coleta.numeroPatrimonio ?: coleta.patrimonioId} novamente?")
+            .setPositiveButton("Tentar") { _, _ ->
+                viewModel.retryCollection(coleta)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun setupClickListeners() {

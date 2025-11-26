@@ -99,10 +99,10 @@ public class OfflineManager {
             
             if (dbConnected && networkOnline) {
                 setState(OfflineState.ONLINE);
-                if (offlineModeEnabled) {
-                    dataSynchronizer.startAutoSync();
-                }
-                LOGGER.info("Sistema iniciado em modo ONLINE - banco e rede conectados");
+                // CORREÇÃO: Sempre iniciar sincronização automática quando online
+                // Isso garante que coletas pendentes sejam sincronizadas
+                dataSynchronizer.startAutoSync();
+                LOGGER.info("Sistema iniciado em modo ONLINE - banco e rede conectados - Sync automático ATIVADO");
             } else if (dbConnected && !networkOnline) {
                 // Banco conectado mas sem rede - ainda consideramos online para operações locais
                 setState(OfflineState.ONLINE);
@@ -244,6 +244,10 @@ public class OfflineManager {
                     if (result.success) {
                         setState(OfflineState.ONLINE);
                         LOGGER.info("Sincronização concluída: " + result);
+                        
+                        // CORREÇÃO: Iniciar sincronização automática após reconexão
+                        dataSynchronizer.startAutoSync();
+                        LOGGER.info("Sincronização automática reativada após reconexão");
                     } else {
                         setState(OfflineState.ERROR);
                         LOGGER.warning("Falha na sincronização: " + result.errorMessage);
@@ -256,6 +260,8 @@ public class OfflineManager {
             }, "SyncThread").start();
         } else {
             setState(OfflineState.ONLINE);
+            // CORREÇÃO: Garantir que sync automático esteja ativo mesmo se já estava online
+            dataSynchronizer.startAutoSync();
         }
     }
     
@@ -414,39 +420,55 @@ public class OfflineManager {
         LOGGER.info("Tentando reconectar ao modo online");
         
         try {
-            // Remove flag de modo forçado
-            offlineDAO.atualizarMetadado("forced_offline_mode", "false");
+            // Remove flag de modo forçado (tolerante a falhas)
+            try {
+                offlineDAO.atualizarMetadado("forced_offline_mode", "false");
+            } catch (Exception e) {
+                LOGGER.log(Level.FINE, "Erro ao remover flag de modo forçado (ignorando)", e);
+            }
             
-            // Força verificação de conectividade
+            // Força verificação de conectividade com o banco de dados
             boolean isConnected = connectivityManager.forceCheck();
             
-            if (isConnected) {
-                LOGGER.info("Conexão detectada, iniciando sincronização");
+            // Também verifica diretamente a conexão com o banco
+            boolean dbConnected = connectivityManager.checkDatabaseConnection();
+            
+            LOGGER.info("Status de conectividade - Rede: " + isConnected + ", Banco: " + dbConnected);
+            
+            if (isConnected || dbConnected) {
+                LOGGER.info("Conexão detectada, mudando para modo ONLINE");
                 
-                setState(OfflineState.SYNCING);
+                // CORREÇÃO: Mudar para ONLINE imediatamente se há conexão com o banco
+                // A sincronização é opcional e não deve bloquear a mudança de estado
+                setState(OfflineState.ONLINE);
                 
-                // Executa sincronização em thread separada
+                // Executa sincronização em thread separada (não bloqueia)
                 new Thread(() -> {
                     try {
+                        LOGGER.info("Iniciando sincronização em background...");
                         DataSynchronizer.SyncResult result = dataSynchronizer.executarSincronizacaoManual();
                         
                         if (result.success) {
-                            setState(OfflineState.ONLINE);
-                            
-                            // Reinicia sincronização automática se habilitada
-                            if (offlineModeEnabled) {
-                                dataSynchronizer.startAutoSync();
-                            }
-                            
-                            LOGGER.info("Reconexão bem-sucedida: " + result);
+                            LOGGER.info("Sincronização bem-sucedida: " + result);
                         } else {
-                            setState(OfflineState.OFFLINE);
-                            LOGGER.warning("Falha na sincronização durante reconexão: " + result.errorMessage);
+                            // CORREÇÃO: Não voltar para OFFLINE se sincronização falhar
+                            // O sistema já está ONLINE e pode operar normalmente
+                            LOGGER.warning("Sincronização falhou (sistema continua ONLINE): " + result.errorMessage);
+                        }
+                        
+                        // Reinicia sincronização automática se habilitada
+                        if (offlineModeEnabled) {
+                            try {
+                                dataSynchronizer.startAutoSync();
+                            } catch (Exception e) {
+                                LOGGER.log(Level.WARNING, "Erro ao iniciar auto-sync", e);
+                            }
                         }
                         
                     } catch (Exception e) {
-                        setState(OfflineState.OFFLINE);
-                        LOGGER.log(Level.SEVERE, "Erro durante reconexão", e);
+                        // CORREÇÃO: Não mudar estado para OFFLINE/ERROR se sincronização falhar
+                        // O sistema já está ONLINE e pode operar normalmente
+                        LOGGER.log(Level.WARNING, "Erro durante sincronização (sistema continua ONLINE)", e);
                     }
                 }, "ReconnectThread").start();
                 
@@ -460,6 +482,16 @@ public class OfflineManager {
             
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erro ao tentar reconectar", e);
+            // CORREÇÃO: Tentar verificar conexão direta antes de declarar erro
+            try {
+                if (connectivityManager.checkDatabaseConnection()) {
+                    setState(OfflineState.ONLINE);
+                    LOGGER.info("Conexão com banco detectada apesar do erro - mudando para ONLINE");
+                    return true;
+                }
+            } catch (Exception e2) {
+                // Ignorar
+            }
             setState(OfflineState.ERROR);
             return false;
         }
@@ -770,23 +802,42 @@ public class OfflineManager {
      * Método público para ser chamado externamente quando conectividade for confirmada
      */
     public void forceOnlineState() {
-        if (currentState == OfflineState.INITIALIZING || currentState == OfflineState.ERROR) {
-            boolean dbConnected = checkDatabaseConnectivity();
-            if (dbConnected) {
-                setState(OfflineState.ONLINE);
-                LOGGER.info("Estado forçado para ONLINE devido à conectividade detectada");
-                
-                // Inicia sincronização se modo offline estiver habilitado
-                if (offlineModeEnabled) {
-                    try {
-                        dataSynchronizer.startAutoSync();
-                    } catch (Exception e) {
-                        LOGGER.log(Level.WARNING, "Erro ao iniciar auto-sync: " + e.getMessage(), e);
-                    }
-                }
-            } else {
-                LOGGER.warning("Tentativa de forçar estado ONLINE falhou - sem conectividade com banco");
-            }
+        // CORREÇÃO: Permitir forçar ONLINE de qualquer estado exceto SYNCING
+        if (currentState == OfflineState.SYNCING) {
+            LOGGER.info("Sistema está sincronizando, aguardando conclusão");
+            return;
         }
+        
+        // Verificar se está em modo offline forçado
+        if (isForcedOffline()) {
+            LOGGER.info("Sistema está em modo offline forçado - use tryReconnect() para voltar ao modo online");
+            return;
+        }
+        
+        boolean dbConnected = checkDatabaseConnectivity();
+        if (dbConnected) {
+            setState(OfflineState.ONLINE);
+            LOGGER.info("Estado forçado para ONLINE devido à conectividade detectada");
+            
+            // Inicia sincronização se modo offline estiver habilitado
+            if (offlineModeEnabled) {
+                try {
+                    dataSynchronizer.startAutoSync();
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Erro ao iniciar auto-sync: " + e.getMessage(), e);
+                }
+            }
+        } else {
+            LOGGER.warning("Tentativa de forçar estado ONLINE falhou - sem conectividade com banco");
+        }
+    }
+    
+    /**
+     * Verifica se o sistema pode operar online
+     * Útil para verificar antes de operações que requerem conexão
+     * @return true se há conexão com o banco de dados
+     */
+    public boolean canOperateOnline() {
+        return connectivityManager.checkDatabaseConnection();
     }
 }

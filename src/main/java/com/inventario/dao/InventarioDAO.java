@@ -26,11 +26,14 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
     
     /**
      * Detecta se está usando SQLite
+     * IMPORTANTE: Usa a conexão atual para determinar o tipo de banco
      */
     private boolean isSQLite() throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection()) {
             String dbUrl = conn.getMetaData().getURL();
-            return dbUrl != null && dbUrl.contains("jdbc:sqlite");
+            boolean isSqlite = dbUrl != null && dbUrl.contains("jdbc:sqlite");
+            System.out.println("[InventarioDAO] isSQLite() - URL: " + dbUrl + " -> SQLite: " + isSqlite);
+            return isSqlite;
         }
     }
     
@@ -205,24 +208,66 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
     
     /**
      * Busca inventário por status (retorna o mais recente)
+     * Compatível com PostgreSQL (TABELA_INVENTARIO) e SQLite (local_inventario)
      */
     public Inventario buscarPorStatus(String status) throws SQLException {
-        String sql = "SELECT * FROM TABELA_INVENTARIO " +
-                    "WHERE STATUS_INVENTARIO = ? " +
-                    "ORDER BY DATA_CRIACAO DESC LIMIT 1";
+        String tableName = getInventarioTableName();
+        boolean isSqlite = tableName.equals("local_inventario");
+        
+        System.out.println("[InventarioDAO] buscarPorStatus: status=" + status + ", tabela=" + tableName);
+        
+        String sql;
+        if (isSqlite) {
+            // SQLite: usa local_inventario com campos diferentes
+            sql = "SELECT id as ID, nome_inventario as NOME, data_inicio as DATA_INICIO, " +
+                  "data_fim as DATA_FIM, status as STATUS_INVENTARIO, " +
+                  "responsavel as RESPONSAVEL_INVENTARIO, percentual_conclusao as PERCENTUAL_CONCLUSAO, " +
+                  "local_created_at as DATA_CRIACAO " +
+                  "FROM " + tableName + " " +
+                  "WHERE status = ? " +
+                  "ORDER BY local_created_at DESC LIMIT 1";
+        } else {
+            // PostgreSQL: usa TABELA_INVENTARIO
+            sql = "SELECT * FROM " + tableName + " " +
+                  "WHERE STATUS_INVENTARIO = ? " +
+                  "ORDER BY DATA_CRIACAO DESC LIMIT 1";
+        }
+        
+        System.out.println("[InventarioDAO] SQL: " + sql);
         return executeQuerySingle(sql, status);
     }
     
     /**
      * Busca o inventário ativo (em andamento)
      * Retorna o inventário com status EM_ANDAMENTO mais recente
+     * Compatível com PostgreSQL (TABELA_INVENTARIO) e SQLite (local_inventario)
      */
     public Inventario buscarInventarioAtivo() throws SQLException {
         System.out.println("[InventarioDAO] Buscando inventário ativo (status: EM_ANDAMENTO)");
         
-        String sql = "SELECT * FROM TABELA_INVENTARIO " +
-                    "WHERE STATUS_INVENTARIO = 'EM_ANDAMENTO' " +
-                    "ORDER BY DATA_INICIO DESC LIMIT 1";
+        String tableName = getInventarioTableName();
+        boolean isSqlite = tableName.equals("local_inventario");
+        
+        System.out.println("[InventarioDAO] Tabela: " + tableName + " (SQLite: " + isSqlite + ")");
+        
+        String sql;
+        if (isSqlite) {
+            // SQLite: usa local_inventario com campos diferentes
+            sql = "SELECT id as ID, nome_inventario as NOME, data_inicio as DATA_INICIO, " +
+                  "data_fim as DATA_FIM, status as STATUS_INVENTARIO, " +
+                  "responsavel as RESPONSAVEL_INVENTARIO, percentual_conclusao as PERCENTUAL_CONCLUSAO, " +
+                  "local_created_at as DATA_CRIACAO " +
+                  "FROM " + tableName + " " +
+                  "WHERE status = 'EM_ANDAMENTO' " +
+                  "ORDER BY data_inicio DESC LIMIT 1";
+        } else {
+            // PostgreSQL: usa TABELA_INVENTARIO
+            sql = "SELECT * FROM " + tableName + " " +
+                  "WHERE STATUS_INVENTARIO = 'EM_ANDAMENTO' " +
+                  "ORDER BY DATA_INICIO DESC LIMIT 1";
+        }
+        
+        System.out.println("[InventarioDAO] SQL: " + sql);
         
         Inventario inventario = executeQuerySingle(sql);
         
@@ -233,8 +278,19 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
             System.out.println("[InventarioDAO] Nenhum inventário ativo encontrado! Tentando buscar o mais recente...");
             
             // Fallback: buscar o inventário mais recente independente do status
-            sql = "SELECT * FROM TABELA_INVENTARIO " +
-                  "ORDER BY DATA_INICIO DESC LIMIT 1";
+            if (isSqlite) {
+                sql = "SELECT id as ID, nome_inventario as NOME, data_inicio as DATA_INICIO, " +
+                      "data_fim as DATA_FIM, status as STATUS_INVENTARIO, " +
+                      "responsavel as RESPONSAVEL_INVENTARIO, percentual_conclusao as PERCENTUAL_CONCLUSAO, " +
+                      "local_created_at as DATA_CRIACAO " +
+                      "FROM " + tableName + " " +
+                      "ORDER BY data_inicio DESC LIMIT 1";
+            } else {
+                sql = "SELECT * FROM " + tableName + " " +
+                      "ORDER BY DATA_INICIO DESC LIMIT 1";
+            }
+            
+            System.out.println("[InventarioDAO] SQL fallback: " + sql);
             inventario = executeQuerySingle(sql);
             
             if (inventario != null) {

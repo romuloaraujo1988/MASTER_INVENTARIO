@@ -67,6 +67,7 @@ color warning_dark
 color warning_light
 color white
 drawable bg_badge
+drawable bg_error_light
 drawable bg_spinner
 drawable circle_background
 drawable circle_background_primary
@@ -306,6 +307,7 @@ id ivStatusIcon
 id ivUserAvatar
 id layoutEmpty
 id layoutEmptyState
+id layoutErro
 id layoutError
 id layoutEstado
 id layoutFilters
@@ -442,6 +444,7 @@ id tvDivergencias
 id tvEmpty
 id tvEmptyMessage
 id tvEndOfList
+id tvErroSincronizacao
 id tvError
 id tvErrorCount
 id tvEstado

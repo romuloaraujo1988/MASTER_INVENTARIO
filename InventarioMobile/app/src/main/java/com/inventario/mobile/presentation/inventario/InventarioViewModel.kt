@@ -126,33 +126,54 @@ class InventarioViewModel(private val repository: InventarioRepository) : ViewMo
     
     fun loadResponsaveis() {
         viewModelScope.launch {
-            android.util.Log.d("InventarioViewModel", "Iniciando carregamento de responsáveis...")
+            android.util.Log.d("InventarioViewModel", "═══════════════════════════════════════")
+            android.util.Log.d("InventarioViewModel", "INICIANDO CARREGAMENTO DE RESPONSÁVEIS")
+            android.util.Log.d("InventarioViewModel", "═══════════════════════════════════════")
             
             try {
+                android.util.Log.d("InventarioViewModel", "Chamando repository.getResponsaveis()...")
                 val result = repository.getResponsaveis()
+                
+                android.util.Log.d("InventarioViewModel", "Result recebido: ${if (result.isSuccess) "SUCCESS" else "FAILURE"}")
                 
                 result.fold(
                     onSuccess = { responsaveis ->
-                        android.util.Log.d("InventarioViewModel", "Responsáveis carregados com sucesso: ${responsaveis.size} itens")
-                        responsaveis.forEachIndexed { index, resp ->
-                            android.util.Log.d("InventarioViewModel", "  [$index] ID: ${resp.id}, Nome: ${resp.nome}")
+                        android.util.Log.d("InventarioViewModel", "✓ Responsáveis carregados com sucesso: ${responsaveis.size} itens")
+                        
+                        if (responsaveis.isEmpty()) {
+                            android.util.Log.w("InventarioViewModel", "⚠️ Lista de responsáveis está VAZIA!")
+                        } else {
+                            responsaveis.forEachIndexed { index, resp ->
+                                android.util.Log.d("InventarioViewModel", "  [$index] ID: ${resp.id}, Nome: ${resp.nome}")
+                            }
                         }
+                        
+                        android.util.Log.d("InventarioViewModel", "Atualizando estado com ${responsaveis.size} responsáveis...")
                         _uiState.value = _uiState.value.copy(responsaveis = responsaveis)
-                        android.util.Log.d("InventarioViewModel", "Estado atualizado com responsáveis")
+                        
+                        android.util.Log.d("InventarioViewModel", "✓ Estado atualizado! Responsáveis no estado: ${_uiState.value.responsaveis.size}")
                     },
                     onFailure = { exception ->
-                        android.util.Log.e("InventarioViewModel", "Erro ao carregar responsáveis: ${exception.message}", exception)
+                        android.util.Log.e("InventarioViewModel", "❌ ERRO ao carregar responsáveis!")
+                        android.util.Log.e("InventarioViewModel", "Tipo: ${exception.javaClass.simpleName}")
+                        android.util.Log.e("InventarioViewModel", "Mensagem: ${exception.message}", exception)
+                        
                         _uiState.value = _uiState.value.copy(
                             errorMessage = "Erro ao carregar responsáveis: ${exception.message}"
                         )
                     }
                 )
             } catch (e: Exception) {
-                android.util.Log.e("InventarioViewModel", "Exceção ao carregar responsáveis", e)
+                android.util.Log.e("InventarioViewModel", "❌ EXCEÇÃO ao carregar responsáveis!")
+                android.util.Log.e("InventarioViewModel", "Tipo: ${e.javaClass.simpleName}")
+                android.util.Log.e("InventarioViewModel", "Mensagem: ${e.message}", e)
+                
                 _uiState.value = _uiState.value.copy(
                     errorMessage = "Erro ao carregar responsáveis: ${e.message}"
                 )
             }
+            
+            android.util.Log.d("InventarioViewModel", "═══════════════════════════════════════")
         }
     }
     

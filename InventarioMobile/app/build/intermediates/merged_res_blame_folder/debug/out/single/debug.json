@@ -312,6 +312,10 @@
         "source": "com.inventario.mobile.app-main-69:/drawable/ic_clear.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-merged_res-67:/drawable_bg_error_light.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/drawable/bg_error_light.xml"
+    },
+    {
         "merged": "com.inventario.mobile.app-merged_res-67:/drawable_ic_server.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/drawable/ic_server.xml"
     },

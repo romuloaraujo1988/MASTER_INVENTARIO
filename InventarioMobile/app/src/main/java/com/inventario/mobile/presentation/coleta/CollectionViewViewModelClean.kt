@@ -32,7 +32,9 @@ class CollectionViewViewModelClean @Inject constructor(
     private val obterUsuarioAtualUseCase: ObterUsuarioAtualUseCase,
     private val removerColetaUseCase: RemoverColetaUseCase,
     private val sincronizarColetasUseCase: com.inventario.mobile.domain.usecase.SincronizarColetasDoServidorUseCase,
-    private val coletaMigration: com.inventario.mobile.data.migration.ColetaMigration
+    private val coletaMigration: com.inventario.mobile.data.migration.ColetaMigration,
+    private val reenviarColetaUseCase: com.inventario.mobile.domain.usecase.ReenviarColetaUseCase,
+    private val excluirColetaPendenteUseCase: com.inventario.mobile.domain.usecase.ExcluirColetaPendenteUseCase
 ) : ViewModel() {
 
     companion object {
@@ -184,8 +186,30 @@ class CollectionViewViewModelClean @Inject constructor(
      * Filtra coletas por sala
      */
     fun filtrarPorSala(sala: String?) {
-        Log.d(TAG, "filtrarPorSala: $sala")
+        Log.d(TAG, "═══════════════════════════════════════")
+        Log.d(TAG, "FILTRAR POR SALA")
+        Log.d(TAG, "Sala selecionada: '${sala ?: "TODAS"}'")
+        Log.d(TAG, "Sala anterior: '${salaSelecionada ?: "TODAS"}'")
+        
         salaSelecionada = sala
+        
+        // Debug: Mostrar salas disponíveis
+        val salaAtual = sala // Cópia local para evitar smart cast issues
+        if (!salaAtual.isNullOrBlank()) {
+            val salasDisponiveis = todasColetas
+                .mapNotNull { it.localizacaoEncontrada ?: it.nomeSala }
+                .distinct()
+                .sorted()
+            
+            Log.d(TAG, "Salas disponíveis (${salasDisponiveis.size}):")
+            salasDisponiveis.forEach { s ->
+                val match = s.equals(salaAtual, ignoreCase = true)
+                Log.d(TAG, "  - '$s' ${if (match) "✓ MATCH" else ""}")
+            }
+        }
+        
+        Log.d(TAG, "═══════════════════════════════════════")
+        
         atualizarFiltros()
     }
     
@@ -217,7 +241,7 @@ class CollectionViewViewModelClean @Inject constructor(
         Log.d(TAG, "APLICANDO FILTROS")
         Log.d(TAG, "Filtro Usuário: $filtroUsuario")
         Log.d(TAG, "Filtro Status: $filtroStatus")
-        Log.d(TAG, "Sala Selecionada: $salaSelecionada")
+        Log.d(TAG, "Sala Selecionada: '$salaSelecionada'")
         Log.d(TAG, "Query Busca: '$queryBusca'")
         Log.d(TAG, "Total de coletas: ${coletas.size}")
         Log.d(TAG, "Usuário Atual ID: $usuarioAtualId")
@@ -292,13 +316,42 @@ class CollectionViewViewModelClean @Inject constructor(
         Log.d(TAG, "Após filtro de status: ${filtradas.size} coletas")
         
         // Filtro de sala
-        // Prioridade: localizacaoEncontrada (onde o item FOI ENCONTRADO) > nomeSala (localização ORIGINAL)
-        filtradas = if (salaSelecionada == null) {
+        // CORREÇÃO: Usar mesma lógica de extração e comparação case-insensitive
+        val salaFiltro = salaSelecionada // Cópia local para evitar smart cast issues
+        filtradas = if (salaFiltro.isNullOrBlank()) {
+            Log.d(TAG, "Filtro de sala: TODAS (nenhuma selecionada)")
             filtradas
         } else {
-            filtradas.filter { 
-                (it.localizacaoEncontrada ?: it.nomeSala) == salaSelecionada 
+            Log.d(TAG, "Filtrando por sala: '$salaFiltro'")
+            
+            val salaFiltroTrimmed = salaFiltro.trim()
+            val resultado = filtradas.filter { coleta ->
+                // Extrair sala da coleta usando mesma lógica
+                val salaColeta = (coleta.localizacaoEncontrada ?: coleta.nomeSala)?.trim()
+                val match = salaColeta.equals(salaFiltroTrimmed, ignoreCase = true)
+                
+                if (!match) {
+                    Log.d(TAG, "  Coleta ${coleta.id}: sala='$salaColeta' != '$salaFiltroTrimmed'")
+                }
+                
+                match
             }
+            
+            Log.d(TAG, "Coletas na sala '$salaFiltroTrimmed': ${resultado.size}")
+            
+            // Debug: Mostrar salas únicas nas coletas filtradas
+            if (resultado.isEmpty()) {
+                Log.w(TAG, "⚠️ NENHUMA coleta encontrada para sala '$salaFiltroTrimmed'")
+                Log.w(TAG, "Salas disponíveis nas coletas:")
+                filtradas.mapNotNull { it.localizacaoEncontrada ?: it.nomeSala }
+                    .distinct()
+                    .sorted()
+                    .forEach { sala ->
+                        Log.w(TAG, "  - '$sala'")
+                    }
+            }
+            
+            resultado
         }
         
         Log.d(TAG, "Resultado final: ${filtradas.size} coletas")
@@ -418,6 +471,57 @@ class CollectionViewViewModelClean @Inject constructor(
                     e.message ?: "Erro inesperado"
                 )
             }
+        }
+    }
+    
+    /**
+     * Reenviar uma coleta pendente específica
+     */
+    fun reenviarColeta(coletaId: Long) {
+        viewModelScope.launch {
+            Log.d(TAG, "reenviarColeta: id=$coletaId")
+            _state.value = CollectionViewState.Loading
+            
+            reenviarColetaUseCase(coletaId).fold(
+                onSuccess = {
+                    Log.d(TAG, "✅ Coleta reenviada com sucesso")
+                    _state.value = CollectionViewState.ColetaReenviada("Coleta reenviada com sucesso!")
+                    // Recarregar coletas
+                    carregarColetas()
+                },
+                onFailure = { error ->
+                    Log.e(TAG, "❌ Erro ao reenviar coleta", error)
+                    _state.value = CollectionViewState.Error(
+                        error.message ?: "Erro ao reenviar coleta"
+                    )
+                }
+            )
+        }
+    }
+    
+    /**
+     * Excluir uma coleta pendente
+     * IMPORTANTE: Só permite excluir coletas NÃO sincronizadas
+     */
+    fun excluirColetaPendente(coletaId: Long) {
+        viewModelScope.launch {
+            Log.d(TAG, "excluirColetaPendente: id=$coletaId")
+            _state.value = CollectionViewState.Loading
+            
+            excluirColetaPendenteUseCase(coletaId).fold(
+                onSuccess = {
+                    Log.d(TAG, "✅ Coleta excluída com sucesso")
+                    _state.value = CollectionViewState.ColetaExcluida("Coleta excluída com sucesso!")
+                    // Recarregar coletas
+                    carregarColetas()
+                },
+                onFailure = { error ->
+                    Log.e(TAG, "❌ Erro ao excluir coleta", error)
+                    _state.value = CollectionViewState.Error(
+                        error.message ?: "Erro ao excluir coleta"
+                    )
+                }
+            )
         }
     }
     

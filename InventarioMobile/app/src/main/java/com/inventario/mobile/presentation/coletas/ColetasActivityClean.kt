@@ -89,11 +89,19 @@ class ColetasActivityClean : AppCompatActivity() {
         binding.spinnerSala.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val sala = if (position == 0) null else binding.spinnerSala.selectedItem as String
-                viewModel.aplicarFiltroSala(sala)
+                
+                // Só aplicar filtro se a seleção realmente mudou
+                if (sala != salaSelecionadaAtual) {
+                    android.util.Log.d("ColetasActivity", "Usuário selecionou sala: $sala (posição $position)")
+                    viewModel.aplicarFiltroSala(sala)
+                }
             }
             
             override fun onNothingSelected(parent: AdapterView<*>?) {
-                viewModel.aplicarFiltroSala(null)
+                if (salaSelecionadaAtual != null) {
+                    android.util.Log.d("ColetasActivity", "Nenhuma sala selecionada")
+                    viewModel.aplicarFiltroSala(null)
+                }
             }
         }
         
@@ -168,8 +176,8 @@ class ColetasActivityClean : AppCompatActivity() {
                 binding.tvColetadosCount.text = state.totalColetados.toString()
                 binding.tvPendentesCount.text = state.totalPendentes.toString()
                 
-                // Atualizar spinner de salas
-                atualizarSpinnerSalas(state.salasDisponiveis)
+                // Atualizar spinner de salas (apenas se necessário)
+                atualizarSpinnerSalas(state.salasDisponiveis, state.filtroSala)
                 
                 // Atualizar lista
                 if (state.coletas.isEmpty()) {
@@ -210,11 +218,34 @@ class ColetasActivityClean : AppCompatActivity() {
         }
     }
     
-    private fun atualizarSpinnerSalas(salas: List<String>) {
-        val opcoes = listOf("Todas as salas") + salas
-        val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, opcoes)
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerSala.adapter = spinnerAdapter
+    private var salasAtuais: List<String> = emptyList()
+    private var salaSelecionadaAtual: String? = null
+    
+    private fun atualizarSpinnerSalas(salas: List<String>, salaSelecionada: String?) {
+        // Só atualizar se a lista de salas mudou
+        if (salas != salasAtuais) {
+            salasAtuais = salas
+            val opcoes = listOf("Todas as salas") + salas
+            val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, opcoes)
+            spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            binding.spinnerSala.adapter = spinnerAdapter
+        }
+        
+        // Atualizar seleção apenas se mudou
+        if (salaSelecionada != salaSelecionadaAtual) {
+            salaSelecionadaAtual = salaSelecionada
+            
+            val posicaoCorreta = if (salaSelecionada != null) {
+                salasAtuais.indexOf(salaSelecionada) + 1 // +1 por causa de "Todas as salas"
+            } else {
+                0 // "Todas as salas"
+            }
+            
+            // Só atualizar se a posição atual for diferente
+            if (binding.spinnerSala.selectedItemPosition != posicaoCorreta) {
+                binding.spinnerSala.setSelection(posicaoCorreta, false) // false = sem animação
+            }
+        }
     }
     
     private fun atualizarUIFiltros(state: ColetasState.Success) {

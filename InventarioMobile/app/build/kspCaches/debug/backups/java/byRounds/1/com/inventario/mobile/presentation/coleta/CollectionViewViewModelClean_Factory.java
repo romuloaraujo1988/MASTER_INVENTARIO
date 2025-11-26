@@ -3,7 +3,9 @@ package com.inventario.mobile.presentation.coleta;
 import com.inventario.mobile.data.migration.ColetaMigration;
 import com.inventario.mobile.domain.usecase.BuscarColetasComFallbackUseCase;
 import com.inventario.mobile.domain.usecase.BuscarColetasUseCase;
+import com.inventario.mobile.domain.usecase.ExcluirColetaPendenteUseCase;
 import com.inventario.mobile.domain.usecase.ObterUsuarioAtualUseCase;
+import com.inventario.mobile.domain.usecase.ReenviarColetaUseCase;
 import com.inventario.mobile.domain.usecase.RemoverColetaUseCase;
 import com.inventario.mobile.domain.usecase.SincronizarColetasDoServidorUseCase;
 import dagger.internal.DaggerGenerated;
@@ -39,24 +41,32 @@ public final class CollectionViewViewModelClean_Factory implements Factory<Colle
 
   private final Provider<ColetaMigration> coletaMigrationProvider;
 
+  private final Provider<ReenviarColetaUseCase> reenviarColetaUseCaseProvider;
+
+  private final Provider<ExcluirColetaPendenteUseCase> excluirColetaPendenteUseCaseProvider;
+
   public CollectionViewViewModelClean_Factory(
       Provider<BuscarColetasUseCase> buscarColetasUseCaseProvider,
       Provider<BuscarColetasComFallbackUseCase> buscarColetasComFallbackUseCaseProvider,
       Provider<ObterUsuarioAtualUseCase> obterUsuarioAtualUseCaseProvider,
       Provider<RemoverColetaUseCase> removerColetaUseCaseProvider,
       Provider<SincronizarColetasDoServidorUseCase> sincronizarColetasUseCaseProvider,
-      Provider<ColetaMigration> coletaMigrationProvider) {
+      Provider<ColetaMigration> coletaMigrationProvider,
+      Provider<ReenviarColetaUseCase> reenviarColetaUseCaseProvider,
+      Provider<ExcluirColetaPendenteUseCase> excluirColetaPendenteUseCaseProvider) {
     this.buscarColetasUseCaseProvider = buscarColetasUseCaseProvider;
     this.buscarColetasComFallbackUseCaseProvider = buscarColetasComFallbackUseCaseProvider;
     this.obterUsuarioAtualUseCaseProvider = obterUsuarioAtualUseCaseProvider;
     this.removerColetaUseCaseProvider = removerColetaUseCaseProvider;
     this.sincronizarColetasUseCaseProvider = sincronizarColetasUseCaseProvider;
     this.coletaMigrationProvider = coletaMigrationProvider;
+    this.reenviarColetaUseCaseProvider = reenviarColetaUseCaseProvider;
+    this.excluirColetaPendenteUseCaseProvider = excluirColetaPendenteUseCaseProvider;
   }
 
   @Override
   public CollectionViewViewModelClean get() {
-    return newInstance(buscarColetasUseCaseProvider.get(), buscarColetasComFallbackUseCaseProvider.get(), obterUsuarioAtualUseCaseProvider.get(), removerColetaUseCaseProvider.get(), sincronizarColetasUseCaseProvider.get(), coletaMigrationProvider.get());
+    return newInstance(buscarColetasUseCaseProvider.get(), buscarColetasComFallbackUseCaseProvider.get(), obterUsuarioAtualUseCaseProvider.get(), removerColetaUseCaseProvider.get(), sincronizarColetasUseCaseProvider.get(), coletaMigrationProvider.get(), reenviarColetaUseCaseProvider.get(), excluirColetaPendenteUseCaseProvider.get());
   }
 
   public static CollectionViewViewModelClean_Factory create(
@@ -65,15 +75,18 @@ public final class CollectionViewViewModelClean_Factory implements Factory<Colle
       Provider<ObterUsuarioAtualUseCase> obterUsuarioAtualUseCaseProvider,
       Provider<RemoverColetaUseCase> removerColetaUseCaseProvider,
       Provider<SincronizarColetasDoServidorUseCase> sincronizarColetasUseCaseProvider,
-      Provider<ColetaMigration> coletaMigrationProvider) {
-    return new CollectionViewViewModelClean_Factory(buscarColetasUseCaseProvider, buscarColetasComFallbackUseCaseProvider, obterUsuarioAtualUseCaseProvider, removerColetaUseCaseProvider, sincronizarColetasUseCaseProvider, coletaMigrationProvider);
+      Provider<ColetaMigration> coletaMigrationProvider,
+      Provider<ReenviarColetaUseCase> reenviarColetaUseCaseProvider,
+      Provider<ExcluirColetaPendenteUseCase> excluirColetaPendenteUseCaseProvider) {
+    return new CollectionViewViewModelClean_Factory(buscarColetasUseCaseProvider, buscarColetasComFallbackUseCaseProvider, obterUsuarioAtualUseCaseProvider, removerColetaUseCaseProvider, sincronizarColetasUseCaseProvider, coletaMigrationProvider, reenviarColetaUseCaseProvider, excluirColetaPendenteUseCaseProvider);
   }
 
   public static CollectionViewViewModelClean newInstance(BuscarColetasUseCase buscarColetasUseCase,
       BuscarColetasComFallbackUseCase buscarColetasComFallbackUseCase,
       ObterUsuarioAtualUseCase obterUsuarioAtualUseCase, RemoverColetaUseCase removerColetaUseCase,
       SincronizarColetasDoServidorUseCase sincronizarColetasUseCase,
-      ColetaMigration coletaMigration) {
-    return new CollectionViewViewModelClean(buscarColetasUseCase, buscarColetasComFallbackUseCase, obterUsuarioAtualUseCase, removerColetaUseCase, sincronizarColetasUseCase, coletaMigration);
+      ColetaMigration coletaMigration, ReenviarColetaUseCase reenviarColetaUseCase,
+      ExcluirColetaPendenteUseCase excluirColetaPendenteUseCase) {
+    return new CollectionViewViewModelClean(buscarColetasUseCase, buscarColetasComFallbackUseCase, obterUsuarioAtualUseCase, removerColetaUseCase, sincronizarColetasUseCase, coletaMigration, reenviarColetaUseCase, excluirColetaPendenteUseCase);
   }
 }

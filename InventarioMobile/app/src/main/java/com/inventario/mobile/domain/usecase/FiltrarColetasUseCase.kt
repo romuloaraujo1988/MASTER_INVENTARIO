@@ -43,10 +43,11 @@ class FiltrarColetasUseCase @Inject constructor() {
         }
         
         // Filtro por sala (Requirements 3.1, 3.2)
-        // Usa localizacaoEncontrada - onde o item foi ENCONTRADO durante a coleta
+        // Prioridade: localizacaoEncontrada (onde FOI ENCONTRADO) > nomeSala (localização ORIGINAL)
         if (!filtroSala.isNullOrBlank()) {
             resultado = resultado.filter { coleta ->
-                coleta.localizacaoEncontrada?.equals(filtroSala, ignoreCase = true) == true
+                val salaColeta = (coleta.localizacaoEncontrada ?: coleta.nomeSala)?.trim()
+                salaColeta?.equals(filtroSala.trim(), ignoreCase = true) == true
             }
         }
         
@@ -86,14 +87,14 @@ class FiltrarColetasUseCase @Inject constructor() {
     
     /**
      * Extrai lista de salas únicas das coletas
-     * Usa localizacaoEncontrada - onde os itens foram ENCONTRADOS durante a coleta
+     * Prioridade: localizacaoEncontrada (onde FOI ENCONTRADO) > nomeSala (localização ORIGINAL)
      * 
      * @param coletas Lista de coletas
      * @return Lista de nomes de salas ordenada alfabeticamente
      */
     fun extrairSalasDisponiveis(coletas: List<Coleta>): List<String> {
         return coletas
-            .mapNotNull { it.localizacaoEncontrada }
+            .mapNotNull { it.localizacaoEncontrada ?: it.nomeSala }
             .filter { it.isNotBlank() }
             .distinct()
             .sorted()

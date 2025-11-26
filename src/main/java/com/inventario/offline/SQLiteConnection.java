@@ -50,14 +50,63 @@ public class SQLiteConnection {
     
     /**
      * Obtém uma conexão com o banco SQLite
-     * @return Conexão ativa
+     * CORREÇÃO: Agora sempre retorna uma nova conexão independente para evitar
+     * problemas de concorrência e "stmt pointer is closed".
+     * A conexão DEVE ser fechada pelo chamador após o uso (try-with-resources).
+     * @return Nova conexão independente
      * @throws SQLException
      */
     public synchronized Connection getConnection() throws SQLException {
+        // CORREÇÃO: Sempre criar nova conexão para evitar problemas de concorrência
+        return getNewConnection();
+    }
+    
+    /**
+     * Obtém a conexão compartilhada (uso interno apenas)
+     * ATENÇÃO: Esta conexão NÃO deve ser fechada pelo chamador.
+     * @return Conexão compartilhada
+     * @throws SQLException
+     */
+    public synchronized Connection getSharedConnection() throws SQLException {
         if (connection == null || connection.isClosed()) {
             createConnection();
         }
         return connection;
+    }
+    
+    /**
+     * Cria uma nova conexão independente com o banco SQLite
+     * Esta conexão DEVE ser fechada pelo chamador após o uso.
+     * Use este método quando precisar de operações isoladas ou em threads diferentes.
+     * @return Nova conexão independente
+     * @throws SQLException
+     */
+    public Connection getNewConnection() throws SQLException {
+        try {
+            // Garante que o diretório existe
+            ensureDirectoryExists();
+            
+            // Carrega o driver SQLite
+            Class.forName("org.sqlite.JDBC");
+            
+            // Cria uma nova conexão independente
+            String url = JDBC_URL_PREFIX + dbPath;
+            Connection newConn = DriverManager.getConnection(url);
+            
+            // Configura a conexão
+            try (Statement stmt = newConn.createStatement()) {
+                stmt.execute("PRAGMA foreign_keys = ON");
+                stmt.execute("PRAGMA journal_mode = WAL");
+                stmt.execute("PRAGMA busy_timeout = 30000");
+                stmt.execute("PRAGMA synchronous = NORMAL");
+            }
+            
+            LOGGER.fine("Nova conexão SQLite criada: " + dbPath);
+            return newConn;
+            
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("Driver SQLite não encontrado", e);
+        }
     }
     
     /**
@@ -355,6 +404,21 @@ public class SQLiteConnection {
                 sync_status TEXT DEFAULT 'SYNCED',
                 last_modified DATETIME DEFAULT CURRENT_TIMESTAMP,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """);
+        
+        System.out.println("  - Criando local_participante_inventario...");
+        // Tabela local de participantes do inventário (CRÍTICA PARA SINCRONIZAÇÃO)
+        stmt.execute("""
+            CREATE TABLE IF NOT EXISTS local_participante_inventario (
+                id_participante INTEGER PRIMARY KEY,
+                id_inventario INTEGER NOT NULL,
+                id_usuario INTEGER NOT NULL,
+                papel TEXT DEFAULT 'COLETOR',
+                ativo BOOLEAN DEFAULT TRUE,
+                data_inclusao DATETIME DEFAULT CURRENT_TIMESTAMP,
+                sync_status TEXT DEFAULT 'SYNCED',
+                last_modified DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         """);
     }

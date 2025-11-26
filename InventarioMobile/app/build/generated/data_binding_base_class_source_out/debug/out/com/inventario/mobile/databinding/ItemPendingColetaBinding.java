@@ -26,7 +26,13 @@ public final class ItemPendingColetaBinding implements ViewBinding {
   public final MaterialButton btnDeleteColeta;
 
   @NonNull
+  public final MaterialButton btnRetry;
+
+  @NonNull
   public final Chip chipSyncStatus;
+
+  @NonNull
+  public final LinearLayout layoutErro;
 
   @NonNull
   public final LinearLayout layoutLocation;
@@ -36,6 +42,9 @@ public final class ItemPendingColetaBinding implements ViewBinding {
 
   @NonNull
   public final TextView tvDataColeta;
+
+  @NonNull
+  public final TextView tvErroSincronizacao;
 
   @NonNull
   public final TextView tvPatrimonioDescricao;
@@ -53,17 +62,22 @@ public final class ItemPendingColetaBinding implements ViewBinding {
   public final View viewStatusIndicator;
 
   private ItemPendingColetaBinding(@NonNull MaterialCardView rootView,
-      @NonNull MaterialButton btnDeleteColeta, @NonNull Chip chipSyncStatus,
+      @NonNull MaterialButton btnDeleteColeta, @NonNull MaterialButton btnRetry,
+      @NonNull Chip chipSyncStatus, @NonNull LinearLayout layoutErro,
       @NonNull LinearLayout layoutLocation, @NonNull LinearLayout layoutUserInfo,
-      @NonNull TextView tvDataColeta, @NonNull TextView tvPatrimonioDescricao,
-      @NonNull TextView tvPatrimonioNumber, @NonNull TextView tvSalaInfo,
-      @NonNull TextView tvUserInfo, @NonNull View viewStatusIndicator) {
+      @NonNull TextView tvDataColeta, @NonNull TextView tvErroSincronizacao,
+      @NonNull TextView tvPatrimonioDescricao, @NonNull TextView tvPatrimonioNumber,
+      @NonNull TextView tvSalaInfo, @NonNull TextView tvUserInfo,
+      @NonNull View viewStatusIndicator) {
     this.rootView = rootView;
     this.btnDeleteColeta = btnDeleteColeta;
+    this.btnRetry = btnRetry;
     this.chipSyncStatus = chipSyncStatus;
+    this.layoutErro = layoutErro;
     this.layoutLocation = layoutLocation;
     this.layoutUserInfo = layoutUserInfo;
     this.tvDataColeta = tvDataColeta;
+    this.tvErroSincronizacao = tvErroSincronizacao;
     this.tvPatrimonioDescricao = tvPatrimonioDescricao;
     this.tvPatrimonioNumber = tvPatrimonioNumber;
     this.tvSalaInfo = tvSalaInfo;
@@ -104,9 +118,21 @@ public final class ItemPendingColetaBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.btnRetry;
+      MaterialButton btnRetry = ViewBindings.findChildViewById(rootView, id);
+      if (btnRetry == null) {
+        break missingId;
+      }
+
       id = R.id.chipSyncStatus;
       Chip chipSyncStatus = ViewBindings.findChildViewById(rootView, id);
       if (chipSyncStatus == null) {
+        break missingId;
+      }
+
+      id = R.id.layoutErro;
+      LinearLayout layoutErro = ViewBindings.findChildViewById(rootView, id);
+      if (layoutErro == null) {
         break missingId;
       }
 
@@ -125,6 +151,12 @@ public final class ItemPendingColetaBinding implements ViewBinding {
       id = R.id.tvDataColeta;
       TextView tvDataColeta = ViewBindings.findChildViewById(rootView, id);
       if (tvDataColeta == null) {
+        break missingId;
+      }
+
+      id = R.id.tvErroSincronizacao;
+      TextView tvErroSincronizacao = ViewBindings.findChildViewById(rootView, id);
+      if (tvErroSincronizacao == null) {
         break missingId;
       }
 
@@ -158,9 +190,10 @@ public final class ItemPendingColetaBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ItemPendingColetaBinding((MaterialCardView) rootView, btnDeleteColeta,
-          chipSyncStatus, layoutLocation, layoutUserInfo, tvDataColeta, tvPatrimonioDescricao,
-          tvPatrimonioNumber, tvSalaInfo, tvUserInfo, viewStatusIndicator);
+      return new ItemPendingColetaBinding((MaterialCardView) rootView, btnDeleteColeta, btnRetry,
+          chipSyncStatus, layoutErro, layoutLocation, layoutUserInfo, tvDataColeta,
+          tvErroSincronizacao, tvPatrimonioDescricao, tvPatrimonioNumber, tvSalaInfo, tvUserInfo,
+          viewStatusIndicator);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

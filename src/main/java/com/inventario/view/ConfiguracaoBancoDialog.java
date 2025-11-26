@@ -412,6 +412,9 @@ public class ConfiguracaoBancoDialog extends JDialog {
             // Salvar configuração do SGBD
             boolean salvouSGBD = salvarConfiguracaoSGBD();
             
+            // ✅ NOVO: Salvar também no arquivo configuracao_banco.json (prioridade máxima)
+            boolean salvouJson = salvarConfiguracaoBancoJson(config);
+            
             if (salvouBanco && salvouSGBD) {
                 confirmado = true;
                 
@@ -428,9 +431,11 @@ public class ConfiguracaoBancoDialog extends JDialog {
                 
                 dispose();
                 
+                String msgJson = salvouJson ? "\n✅ Arquivo configuracao_banco.json atualizado!" : "";
                 JOptionPane.showMessageDialog(getParent(), 
-                    "Configurações salvas com sucesso!\n" +
-                    "A conexão foi atualizada e está pronta para uso.",
+                    "Configurações salvas com sucesso!" + msgJson + "\n" +
+                    "A conexão foi atualizada e está pronta para uso.\n\n" +
+                    "Host: " + config.getHost() + ":" + config.getPort(),
                     "Sucesso", 
                     JOptionPane.INFORMATION_MESSAGE);
             } else {
@@ -446,6 +451,59 @@ public class ConfiguracaoBancoDialog extends JDialog {
                 "Erro", 
                 JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Salva a configuração no arquivo configuracao_banco.json na raiz do projeto
+     * Este arquivo tem PRIORIDADE MÁXIMA no DatabaseConnection
+     */
+    private boolean salvarConfiguracaoBancoJson(DatabaseConfig config) {
+        try {
+            File jsonFile = new File("configuracao_banco.json");
+            
+            // Construir JSON manualmente (sem dependência externa)
+            StringBuilder json = new StringBuilder();
+            json.append("{\n");
+            json.append("    \"postgresql\": {\n");
+            json.append("        \"host\": \"").append(config.getHost()).append("\",\n");
+            json.append("        \"database\": \"").append(config.getDatabase()).append("\",\n");
+            json.append("        \"user\": \"").append(config.getUsername()).append("\",\n");
+            json.append("        \"password\": \"").append(config.getPassword()).append("\",\n");
+            json.append("        \"port\": ").append(config.getPort()).append(",\n");
+            json.append("        \"schema\": \"public\"\n");
+            json.append("    },\n");
+            json.append("    \"sqlite\": {\n");
+            json.append("        \"database\": \"inventario_offline.db\",\n");
+            json.append("        \"backup_dir\": \"backups\"\n");
+            json.append("    },\n");
+            json.append("    \"mysql\": {\n");
+            json.append("        \"host\": \"localhost\",\n");
+            json.append("        \"database\": \"sispatrimonio\",\n");
+            json.append("        \"user\": \"root\",\n");
+            json.append("        \"password\": \"\",\n");
+            json.append("        \"port\": 3306\n");
+            json.append("    },\n");
+            json.append("    \"debug\": true,\n");
+            json.append("    \"log_queries\": false\n");
+            json.append("}\n");
+            
+            // Escrever no arquivo
+            try (FileWriter writer = new FileWriter(jsonFile)) {
+                writer.write(json.toString());
+            }
+            
+            System.out.println("✅ Arquivo configuracao_banco.json atualizado com sucesso!");
+            System.out.println("   Host: " + config.getHost() + ":" + config.getPort());
+            System.out.println("   Database: " + config.getDatabase());
+            System.out.println("   User: " + config.getUsername());
+            
+            return true;
+            
+        } catch (IOException e) {
+            System.err.println("❌ Erro ao salvar configuracao_banco.json: " + e.getMessage());
+            e.printStackTrace();
+            return false;
         }
     }
     

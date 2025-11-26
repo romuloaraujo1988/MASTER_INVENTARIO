@@ -163,6 +163,20 @@ class CollectionViewActivity : AppCompatActivity() {
                         hideLoading()
                         showError(state.message)
                     }
+                    
+                    is CollectionViewState.ColetaReenviada -> {
+                        Log.d(TAG, "Estado: ColetaReenviada - ${state.message}")
+                        hideLoading()
+                        android.widget.Toast.makeText(this@CollectionViewActivity, state.message, android.widget.Toast.LENGTH_SHORT).show()
+                        viewModel.carregarColetas()
+                    }
+                    
+                    is CollectionViewState.ColetaExcluida -> {
+                        Log.d(TAG, "Estado: ColetaExcluida - ${state.message}")
+                        hideLoading()
+                        android.widget.Toast.makeText(this@CollectionViewActivity, state.message, android.widget.Toast.LENGTH_SHORT).show()
+                        viewModel.carregarColetas()
+                    }
                 }
             }
         }

@@ -206,10 +206,20 @@ class ColetaRepositoryImpl @Inject constructor(
                 // Lançar em coroutine separada com timeout
                 kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
                     try {
-                        // Timeout de 5 segundos para evitar travamento
-                        kotlinx.coroutines.withTimeout(5000L) {
+                        // Timeout de 15 segundos para garantir sincronização (era 5s)
+                        val timeout = networkQualityMonitor.getRecommendedTimeout().coerceAtLeast(10000L)
+                        android.util.Log.d("ColetaRepositoryImpl", "🔄 Iniciando sync com timeout de ${timeout}ms")
+                        kotlinx.coroutines.withTimeout(timeout) {
                             // ✅ Obter ID do inventário ativo
                             val inventarioId = preferencesManager.getInventarioAtivoId() ?: 0
+                            
+                            // ⚠️ VALIDAÇÃO: Verificar se inventário está configurado
+                            if (inventarioId <= 0) {
+                                val erro = "Inventário ativo não configurado no app"
+                                android.util.Log.e("ColetaRepositoryImpl", "❌ $erro")
+                                coletaDao.registrarErroSincronizacao(id, erro)
+                                return@withTimeout
+                            }
                             
                             // Converter para MobileColetaRequest (formato esperado pelo servidor)
                             val request = com.inventario.mobile.data.remote.dto.MobileColetaRequest(
@@ -252,34 +262,46 @@ class ColetaRepositoryImpl @Inject constructor(
                                 )
                             } else {
                                 networkQualityMonitor.registerSyncFailure()
-                                android.util.Log.w("ColetaRepositoryImpl", "⚠ Servidor retornou success=false: ${response.message}")
+                                val erroMsg = response.message ?: "Erro desconhecido do servidor"
+                                android.util.Log.w("ColetaRepositoryImpl", "⚠ Servidor retornou success=false: $erroMsg")
                                 
-                                // Registrar erro de sincronização
+                                // ✅ CORREÇÃO: Registrar erro no banco para que coleta não fique "presa"
+                                coletaDao.registrarErroSincronizacao(id, erroMsg)
+                                
+                                // Registrar erro de sincronização na auditoria
                                 auditService.registrarErroSincronizacao(
                                     coletaId = id,
-                                    erro = response.message ?: "Erro desconhecido",
+                                    erro = erroMsg,
                                     tentativa = 1
                                 )
                             }
                         }
                     } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                        // Timeout: não bloqueia, apenas loga
+                        // Timeout: registrar erro na coleta
                         networkQualityMonitor.registerSyncFailure()
-                        android.util.Log.w("ColetaRepositoryImpl", "⏱️ Timeout na sincronização (5s) - Coleta ficará pendente")
+                        val erroMsg = "Timeout na sincronização (${networkQualityMonitor.getRecommendedTimeout()}ms)"
+                        android.util.Log.w("ColetaRepositoryImpl", "⏱️ $erroMsg - Coleta ficará pendente")
+                        
+                        // ✅ CORREÇÃO: Registrar erro no banco
+                        coletaDao.registrarErroSincronizacao(id, erroMsg)
                         
                         auditService.registrarErroSincronizacao(
                             coletaId = id,
-                            erro = "Timeout na sincronização",
+                            erro = erroMsg,
                             tentativa = 1
                         )
                     } catch (e: Exception) {
-                        // Erro: não bloqueia, apenas loga
+                        // Erro: registrar no banco para diagnóstico
                         networkQualityMonitor.registerSyncFailure()
-                        android.util.Log.e("ColetaRepositoryImpl", "✗ Erro ao sincronizar coleta em background", e)
+                        val erroMsg = e.message ?: "Erro de conexão desconhecido"
+                        android.util.Log.e("ColetaRepositoryImpl", "✗ Erro ao sincronizar coleta em background: $erroMsg", e)
+                        
+                        // ✅ CORREÇÃO: Registrar erro no banco para que usuário saiba o motivo
+                        coletaDao.registrarErroSincronizacao(id, erroMsg)
                         
                         auditService.registrarErroSincronizacao(
                             coletaId = id,
-                            erro = e.message ?: "Erro de conexão",
+                            erro = erroMsg,
                             tentativa = 1
                         )
                     }
@@ -287,9 +309,75 @@ class ColetaRepositoryImpl @Inject constructor(
                 
                 android.util.Log.d("ColetaRepositoryImpl", "✓ Coleta salva localmente - Sincronização iniciada em background")
             } else {
-                // Rede ruim/instável: salvar apenas localmente
-                android.util.Log.d("ColetaRepositoryImpl", 
-                    "⚠ Rede instável ($networkQuality) - Salvando apenas localmente. Será sincronizado em background.")
+                // Rede ruim/instável: tentar sincronizar mesmo assim com timeout curto
+                android.util.Log.w("ColetaRepositoryImpl", 
+                    "⚠ Rede instável ($networkQuality) - Tentando sincronizar mesmo assim...")
+                
+                // ✅ NOVO: Tentar sincronizar mesmo com rede ruim (fallback)
+                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                    try {
+                        kotlinx.coroutines.withTimeout(8000L) { // 8s timeout curto
+                            val inventarioId = preferencesManager.getInventarioAtivoId() ?: 0
+                            
+                            // ⚠️ VALIDAÇÃO: Verificar se inventário está configurado
+                            if (inventarioId <= 0) {
+                                val erro = "Inventário ativo não configurado no app"
+                                android.util.Log.e("ColetaRepositoryImpl", "❌ $erro")
+                                coletaDao.registrarErroSincronizacao(id, erro)
+                                return@withTimeout
+                            }
+                            
+                            val patrimonioLocal = patrimonioDao.buscarPorId(coleta.patrimonioId.toInt())
+                            
+                            val request = com.inventario.mobile.data.remote.dto.MobileColetaRequest(
+                                numeroPatrimonio = coleta.numeroPatrimonio ?: patrimonioLocal?.numero ?: coleta.patrimonioId.toString(),
+                                idInventario = inventarioId,
+                                usuarioId = coleta.usuarioId.toInt(),
+                                idSala = patrimonioLocal?.idSala,
+                                localizacaoEncontrada = coleta.localizacaoAtual,
+                                estadoEncontrado = coleta.status ?: "BOM",
+                                observacaoColeta = coleta.observacoes,
+                                dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
+                                    .format(java.util.Date(coleta.dataColeta)),
+                                latitude = coleta.latitude,
+                                longitude = coleta.longitude,
+                                fotoPatrimonio = null,
+                                semEtiqueta = false,
+                                descricaoItemSemEtiqueta = null,
+                                categoriaItemSemEtiqueta = null,
+                                deviceId = android.os.Build.MODEL,
+                                appVersion = "1.2",
+                                divergencia = false,
+                                motivoDivergencia = null
+                            )
+                            
+                            android.util.Log.d("ColetaRepositoryImpl", "🔄 Tentativa de sync (fallback) - rede: $networkQuality")
+                            
+                            val response = coletaApi.registrarColeta(request)
+                            
+                            if (response.success) {
+                                coletaDao.marcarSincronizada(id)
+                                networkQualityMonitor.registerSyncSuccess()
+                                android.util.Log.d("ColetaRepositoryImpl", "✓ Sync fallback bem-sucedido!")
+                            } else {
+                                val erroMsg = response.message ?: "Erro do servidor no fallback"
+                                android.util.Log.w("ColetaRepositoryImpl", "⚠ Sync fallback falhou: $erroMsg")
+                                // ✅ CORREÇÃO: Registrar erro no banco
+                                coletaDao.registrarErroSincronizacao(id, erroMsg)
+                            }
+                        }
+                    } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                        val erroMsg = "Timeout no sync fallback (8s) - Rede instável"
+                        android.util.Log.w("ColetaRepositoryImpl", "⏱️ $erroMsg")
+                        // ✅ CORREÇÃO: Registrar erro no banco
+                        coletaDao.registrarErroSincronizacao(id, erroMsg)
+                    } catch (e: Exception) {
+                        val erroMsg = "Sync fallback falhou: ${e.message ?: "Erro desconhecido"}"
+                        android.util.Log.w("ColetaRepositoryImpl", "⚠ $erroMsg")
+                        // ✅ CORREÇÃO: Registrar erro no banco
+                        coletaDao.registrarErroSincronizacao(id, erroMsg)
+                    }
+                }
             }
             
             Result.success(coleta.copy(id = id))
@@ -385,13 +473,13 @@ class ColetaRepositoryImpl @Inject constructor(
         val response = coletaApi.registrarColetasEmLote(batchRequest)
         
         if (response.success) {
-            // ✅ APAGAR coletas sincronizadas do banco local (liberar espaço)
+            // ✅ CORRETO: Marcar como sincronizada (NÃO apagar!)
             coletasPendentes.forEach { entity ->
                 try {
-                    coletaDao.deletar(entity.id)
-                    android.util.Log.d("ColetaRepositoryImpl", "🗑️ Coleta ${entity.id} apagada do banco local (sincronizada)")
+                    coletaDao.marcarSincronizada(entity.id)
+                    android.util.Log.d("ColetaRepositoryImpl", "✅ Coleta ${entity.id} marcada como sincronizada")
                 } catch (e: Exception) {
-                    android.util.Log.e("ColetaRepositoryImpl", "Erro ao apagar coleta ${entity.id}", e)
+                    android.util.Log.e("ColetaRepositoryImpl", "❌ Erro ao marcar coleta ${entity.id}", e)
                 }
             }
             
@@ -399,9 +487,10 @@ class ColetaRepositoryImpl @Inject constructor(
             val resultado = response.data
             val sucesso = (resultado?.get("sucesso") as? Number)?.toInt() ?: coletasPendentes.size
             
-            android.util.Log.d("ColetaRepositoryImpl", "✓ Batch sync: ${sucesso} coletas sincronizadas e apagadas do banco local")
+            android.util.Log.d("ColetaRepositoryImpl", "✅ Batch sync: ${sucesso} coletas sincronizadas")
             return sucesso
         } else {
+            android.util.Log.e("ColetaRepositoryImpl", "❌ Batch sync falhou: ${response.message}")
             throw Exception("Batch sync falhou: ${response.message}")
         }
     }
@@ -447,15 +536,16 @@ class ColetaRepositoryImpl @Inject constructor(
                 val response = coletaApi.registrarColeta(request)
                 
                 if (response.success) {
-                    // ✅ APAGAR coleta sincronizada do banco local (liberar espaço)
+                    // ✅ CORRETO: Marcar como sincronizada (NÃO apagar!)
                     try {
-                        coletaDao.deletar(entity.id)
-                        android.util.Log.d("ColetaRepositoryImpl", "🗑️ Coleta ${entity.id} apagada do banco local (sincronizada)")
+                        coletaDao.marcarSincronizada(entity.id)
+                        android.util.Log.d("ColetaRepositoryImpl", "✅ Coleta ${entity.id} marcada como sincronizada")
                         sincronizadas++
                     } catch (e: Exception) {
-                        android.util.Log.e("ColetaRepositoryImpl", "Erro ao apagar coleta ${entity.id}", e)
+                        android.util.Log.e("ColetaRepositoryImpl", "❌ Erro ao marcar coleta ${entity.id}", e)
                     }
                 } else {
+                    android.util.Log.w("ColetaRepositoryImpl", "⚠️ Coleta ${entity.id} falhou: ${response.message}")
                     coletaDao.registrarErroSincronizacao(
                         entity.id,
                         response.message ?: "Erro desconhecido"
@@ -479,6 +569,129 @@ class ColetaRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             android.util.Log.e("ColetaRepositoryImpl", "Erro ao buscar coletas locais", e)
             emptyList()
+        }
+    }
+    
+    // ========================================
+    // Diagnóstico de Coletas Pendentes (v2.6)
+    // ========================================
+    
+    override suspend fun getColetasPendentesComErro(): List<Coleta> {
+        return try {
+            coletaDao.buscarPendentesComErro().map { mapper.toDomain(it) }
+        } catch (e: Exception) {
+            android.util.Log.e("ColetaRepositoryImpl", "Erro ao buscar coletas com erro", e)
+            emptyList()
+        }
+    }
+    
+    override suspend fun getColetasPendentesSemErro(): List<Coleta> {
+        return try {
+            coletaDao.buscarPendentesSemErro().map { mapper.toDomain(it) }
+        } catch (e: Exception) {
+            android.util.Log.e("ColetaRepositoryImpl", "Erro ao buscar coletas sem erro", e)
+            emptyList()
+        }
+    }
+    
+    override suspend fun limparErroColeta(coletaId: Long) {
+        try {
+            coletaDao.limparErroSincronizacao(coletaId)
+            android.util.Log.d("ColetaRepositoryImpl", "✓ Erro limpo da coleta $coletaId")
+        } catch (e: Exception) {
+            android.util.Log.e("ColetaRepositoryImpl", "Erro ao limpar erro da coleta $coletaId", e)
+        }
+    }
+    
+    override suspend fun limparTodosErrosColetas(): Int {
+        return try {
+            val quantidade = coletaDao.limparTodosErrosSincronizacao()
+            android.util.Log.d("ColetaRepositoryImpl", "✓ Erros limpos de $quantidade coletas")
+            quantidade
+        } catch (e: Exception) {
+            android.util.Log.e("ColetaRepositoryImpl", "Erro ao limpar todos os erros", e)
+            0
+        }
+    }
+    
+    override suspend fun removerColetaPendente(coletaId: Long) {
+        try {
+            coletaDao.deletar(coletaId)
+            android.util.Log.d("ColetaRepositoryImpl", "✓ Coleta pendente $coletaId removida")
+        } catch (e: Exception) {
+            android.util.Log.e("ColetaRepositoryImpl", "Erro ao remover coleta $coletaId", e)
+        }
+    }
+    
+    /**
+     * Sincroniza uma coleta específica
+     * Usado para reenviar coletas que falharam
+     */
+    override suspend fun sincronizarColetaEspecifica(coletaId: Long): Boolean {
+        return try {
+            android.util.Log.d("ColetaRepositoryImpl", "🔄 Sincronizando coleta específica: $coletaId")
+            
+            // Buscar coleta
+            val entity = coletaDao.buscarPorId(coletaId) ?: run {
+                android.util.Log.e("ColetaRepositoryImpl", "❌ Coleta $coletaId não encontrada")
+                return false
+            }
+            
+            // Converter para domain
+            val coleta = mapper.toDomain(entity)
+            val patrimonio = patrimonioDao.buscarPorId(coleta.patrimonioId.toInt())
+            
+            // Obter inventário ativo
+            val inventarioId = preferencesManager.getInventarioAtivoId() ?: 0
+            
+            if (inventarioId <= 0) {
+                android.util.Log.e("ColetaRepositoryImpl", "❌ Inventário não configurado")
+                coletaDao.registrarErroSincronizacao(coletaId, "Inventário não configurado no app")
+                return false
+            }
+            
+            // Criar request
+            val request = com.inventario.mobile.data.remote.dto.MobileColetaRequest(
+                numeroPatrimonio = patrimonio?.numero ?: entity.numeroPatrimonio,
+                idInventario = inventarioId,
+                usuarioId = coleta.usuarioId.toInt(),
+                idSala = patrimonio?.idSala,
+                localizacaoEncontrada = coleta.localizacaoAtual,
+                estadoEncontrado = coleta.status ?: "BOM",
+                observacaoColeta = coleta.observacoes,
+                dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
+                    .format(java.util.Date(coleta.dataColeta)),
+                latitude = coleta.latitude,
+                longitude = coleta.longitude,
+                fotoPatrimonio = null,
+                semEtiqueta = false,
+                descricaoItemSemEtiqueta = null,
+                categoriaItemSemEtiqueta = null,
+                deviceId = android.os.Build.MODEL,
+                appVersion = "1.2",
+                divergencia = false,
+                motivoDivergencia = null
+            )
+            
+            // Enviar para servidor
+            android.util.Log.d("ColetaRepositoryImpl", "📤 Enviando coleta $coletaId para servidor...")
+            val response = coletaApi.registrarColeta(request)
+            
+            if (response.success) {
+                coletaDao.marcarSincronizada(coletaId)
+                android.util.Log.d("ColetaRepositoryImpl", "✅ Coleta $coletaId sincronizada com sucesso")
+                true
+            } else {
+                val erro = response.message ?: "Erro desconhecido"
+                android.util.Log.e("ColetaRepositoryImpl", "❌ Falha ao sincronizar coleta $coletaId: $erro")
+                coletaDao.registrarErroSincronizacao(coletaId, erro)
+                false
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("ColetaRepositoryImpl", "❌ Exceção ao sincronizar coleta $coletaId", e)
+            coletaDao.registrarErroSincronizacao(coletaId, e.message ?: "Erro de conexão")
+            false
         }
     }
     

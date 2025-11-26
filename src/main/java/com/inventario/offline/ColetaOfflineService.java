@@ -311,31 +311,99 @@ public class ColetaOfflineService {
         coleta.setFotoPatrimonio((String) map.get("foto_patrimonio"));
         coleta.setSemEtiqueta((Boolean) map.getOrDefault("sem_etiqueta", false));
 
-        // Conversão segura de data
+        // Conversão segura de data - tratamento robusto para diferentes formatos
         Object dataObj = map.get("data_coleta");
-        if (dataObj instanceof java.sql.Timestamp) {
-            coleta.setDataColeta((java.sql.Timestamp) dataObj);
-        } else if (dataObj instanceof Long) {
-            coleta.setDataColeta(new java.sql.Timestamp((Long) dataObj));
-        } else if (dataObj instanceof String) {
-            // Tentar fazer parse da string ou converter se for numérico
-            String dataStr = (String) dataObj;
-            try {
-                long millis = Long.parseLong(dataStr);
-                coleta.setDataColeta(new java.sql.Timestamp(millis));
-            } catch (NumberFormatException e) {
-                // Tentar formatos de data comuns se não for número
-                // Por enquanto, vamos assumir que se não é long, pode ser um formato de data
-                // SQL padrão
-                try {
-                    coleta.setDataColeta(java.sql.Timestamp.valueOf(dataStr));
-                } catch (IllegalArgumentException ex) {
-                    LOGGER.warning("Não foi possível converter data: " + dataStr);
-                }
-            }
-        }
+        coleta.setDataColeta(converterParaTimestamp(dataObj));
 
         return coleta;
+    }
+    
+    /**
+     * Converte diferentes tipos de objeto para Timestamp de forma segura
+     * Suporta: Timestamp, Long, String em vários formatos
+     */
+    private java.sql.Timestamp converterParaTimestamp(Object dataObj) {
+        if (dataObj == null) {
+            return new java.sql.Timestamp(System.currentTimeMillis());
+        }
+        
+        if (dataObj instanceof java.sql.Timestamp) {
+            return (java.sql.Timestamp) dataObj;
+        }
+        
+        if (dataObj instanceof Long) {
+            return new java.sql.Timestamp((Long) dataObj);
+        }
+        
+        if (dataObj instanceof java.util.Date) {
+            return new java.sql.Timestamp(((java.util.Date) dataObj).getTime());
+        }
+        
+        if (dataObj instanceof String) {
+            String dataStr = ((String) dataObj).trim();
+            
+            if (dataStr.isEmpty()) {
+                return new java.sql.Timestamp(System.currentTimeMillis());
+            }
+            
+            // 1. Tentar como número (milissegundos)
+            try {
+                long millis = Long.parseLong(dataStr);
+                return new java.sql.Timestamp(millis);
+            } catch (NumberFormatException e) {
+                // Não é número, continuar
+            }
+            
+            // 2. Formato padrão JDBC: yyyy-MM-dd HH:mm:ss[.fffffffff]
+            try {
+                return java.sql.Timestamp.valueOf(dataStr);
+            } catch (IllegalArgumentException e) {
+                // Não é formato padrão
+            }
+            
+            // 3. Formato ISO 8601 com T: yyyy-MM-ddTHH:mm:ss
+            if (dataStr.contains("T")) {
+                try {
+                    String normalized = dataStr.replace("T", " ");
+                    // Remover timezone se existir
+                    if (normalized.contains("+")) {
+                        normalized = normalized.substring(0, normalized.indexOf("+"));
+                    }
+                    if (normalized.contains("Z")) {
+                        normalized = normalized.replace("Z", "");
+                    }
+                    return java.sql.Timestamp.valueOf(normalized);
+                } catch (IllegalArgumentException e) {
+                    // Continuar tentando
+                }
+            }
+            
+            // 4. Formato brasileiro: dd/MM/yyyy HH:mm:ss
+            if (dataStr.contains("/")) {
+                try {
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+                    java.util.Date date = sdf.parse(dataStr);
+                    return new java.sql.Timestamp(date.getTime());
+                } catch (java.text.ParseException e) {
+                    // Tentar só data sem hora
+                    try {
+                        java.text.SimpleDateFormat sdf2 = new java.text.SimpleDateFormat("dd/MM/yyyy");
+                        java.util.Date date = sdf2.parse(dataStr);
+                        return new java.sql.Timestamp(date.getTime());
+                    } catch (java.text.ParseException e2) {
+                        // Continuar
+                    }
+                }
+            }
+            
+            // 5. Formato americano: MM/dd/yyyy HH:mm:ss
+            // (menos comum, mas possível)
+            
+            LOGGER.warning("Não foi possível converter timestamp: '" + dataStr + "' - usando data atual");
+        }
+        
+        // Fallback: usar data atual
+        return new java.sql.Timestamp(System.currentTimeMillis());
     }
 
     /**

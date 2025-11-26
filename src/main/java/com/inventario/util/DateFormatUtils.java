@@ -366,4 +366,136 @@ public class DateFormatUtils {
     public static String formatWithDefault(Timestamp timestamp, String defaultValue) {
         return timestamp != null ? formatDateTime(timestamp) : defaultValue;
     }
+    
+    // ==================== LEITURA SEGURA DE TIMESTAMP DO SQLITE ====================
+    
+    /**
+     * Lê um timestamp do ResultSet de forma segura para SQLite
+     * SQLite não tem tipo nativo de timestamp, então pode armazenar como:
+     * - String no formato "yyyy-MM-dd HH:mm:ss"
+     * - Long (milissegundos desde epoch)
+     * - Ou formato ISO 8601
+     * 
+     * @param rs ResultSet
+     * @param columnName Nome da coluna
+     * @return Timestamp ou timestamp atual se não conseguir converter
+     */
+    public static Timestamp getTimestampSafe(java.sql.ResultSet rs, String columnName) {
+        try {
+            // Primeiro, tentar ler como string (mais comum no SQLite)
+            String strValue = rs.getString(columnName);
+            
+            if (strValue == null || strValue.isEmpty()) {
+                return nowAsTimestamp();
+            }
+            
+            return parseTimestampFromString(strValue);
+            
+        } catch (java.sql.SQLException e) {
+            System.err.println("Erro ao ler timestamp da coluna " + columnName + ": " + e.getMessage());
+            return nowAsTimestamp();
+        }
+    }
+    
+    /**
+     * Converte uma string para Timestamp de forma robusta
+     * Suporta múltiplos formatos de data
+     * 
+     * @param strValue String contendo a data
+     * @return Timestamp ou timestamp atual se não conseguir converter
+     */
+    public static Timestamp parseTimestampFromString(String strValue) {
+        if (strValue == null || strValue.trim().isEmpty()) {
+            return nowAsTimestamp();
+        }
+        
+        strValue = strValue.trim();
+        
+        // 1. Formato padrão JDBC: yyyy-MM-dd HH:mm:ss[.fffffffff]
+        try {
+            return Timestamp.valueOf(strValue);
+        } catch (IllegalArgumentException e1) {
+            // Não é formato padrão, tentar outros
+        }
+        
+        // 2. Formato ISO 8601 com T: yyyy-MM-ddTHH:mm:ss
+        if (strValue.contains("T")) {
+            try {
+                String normalized = strValue.replace("T", " ");
+                // Remover timezone se existir
+                if (normalized.contains("+")) {
+                    normalized = normalized.substring(0, normalized.indexOf("+"));
+                }
+                if (normalized.contains("Z")) {
+                    normalized = normalized.replace("Z", "");
+                }
+                return Timestamp.valueOf(normalized);
+            } catch (IllegalArgumentException e2) {
+                // Continuar tentando
+            }
+        }
+        
+        // 3. Tentar como número (milissegundos desde epoch)
+        try {
+            long millis = Long.parseLong(strValue);
+            return new Timestamp(millis);
+        } catch (NumberFormatException e3) {
+            // Não é número
+        }
+        
+        // 4. Formato brasileiro: dd/MM/yyyy HH:mm:ss
+        if (strValue.contains("/")) {
+            try {
+                Date date = DATETIME_FULL_FORMAT.get().parse(strValue);
+                return new Timestamp(date.getTime());
+            } catch (ParseException e4) {
+                // Tentar só data sem hora
+                try {
+                    Date date = DATE_FORMAT.get().parse(strValue);
+                    return new Timestamp(date.getTime());
+                } catch (ParseException e5) {
+                    // Continuar
+                }
+            }
+        }
+        
+        // 5. Último recurso: usar data atual
+        System.err.println("AVISO: Não foi possível converter timestamp: '" + strValue + "' - usando data atual");
+        return nowAsTimestamp();
+    }
+    
+    /**
+     * Converte qualquer objeto para Timestamp de forma segura
+     * 
+     * @param dataObj Objeto contendo a data (pode ser Timestamp, Long, String, Date)
+     * @return Timestamp ou timestamp atual se não conseguir converter
+     */
+    public static Timestamp toTimestampSafe(Object dataObj) {
+        if (dataObj == null) {
+            return nowAsTimestamp();
+        }
+        
+        if (dataObj instanceof Timestamp) {
+            return (Timestamp) dataObj;
+        }
+        
+        if (dataObj instanceof Long) {
+            return new Timestamp((Long) dataObj);
+        }
+        
+        if (dataObj instanceof Date) {
+            return new Timestamp(((Date) dataObj).getTime());
+        }
+        
+        if (dataObj instanceof LocalDateTime) {
+            return Timestamp.valueOf((LocalDateTime) dataObj);
+        }
+        
+        if (dataObj instanceof String) {
+            return parseTimestampFromString((String) dataObj);
+        }
+        
+        // Fallback: usar data atual
+        return nowAsTimestamp();
+    }
 }

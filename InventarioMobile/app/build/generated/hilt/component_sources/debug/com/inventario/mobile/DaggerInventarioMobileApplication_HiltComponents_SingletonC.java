@@ -89,8 +89,10 @@ import com.inventario.mobile.domain.usecase.BuscarEstatisticasDashboardUseCase;
 import com.inventario.mobile.domain.usecase.BuscarEvolucaoColetasUseCase;
 import com.inventario.mobile.domain.usecase.BuscarPatrimonioUseCase;
 import com.inventario.mobile.domain.usecase.BuscarPatrimoniosPorDescricaoUseCase;
+import com.inventario.mobile.domain.usecase.ExcluirColetaPendenteUseCase;
 import com.inventario.mobile.domain.usecase.FiltrarColetasUseCase;
 import com.inventario.mobile.domain.usecase.ObterUsuarioAtualUseCase;
+import com.inventario.mobile.domain.usecase.ReenviarColetaUseCase;
 import com.inventario.mobile.domain.usecase.RegistrarColetaPorDescricaoUseCase;
 import com.inventario.mobile.domain.usecase.RegistrarColetaUseCase;
 import com.inventario.mobile.domain.usecase.RemoverColetaUseCase;
@@ -887,6 +889,14 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
       return new ColetaMigration(singletonCImpl.coletaDao(), singletonCImpl.patrimonioDao());
     }
 
+    private ReenviarColetaUseCase reenviarColetaUseCase() {
+      return new ReenviarColetaUseCase(singletonCImpl.coletaRepositoryImplProvider.get());
+    }
+
+    private ExcluirColetaPendenteUseCase excluirColetaPendenteUseCase() {
+      return new ExcluirColetaPendenteUseCase(singletonCImpl.coletaRepositoryImplProvider.get());
+    }
+
     private BuscarEstatisticasDashboardUseCase buscarEstatisticasDashboardUseCase() {
       return new BuscarEstatisticasDashboardUseCase(singletonCImpl.provideDashboardRepositoryProvider.get());
     }
@@ -978,7 +988,7 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
           return (T) new ColetasViewModelClean(viewModelCImpl.buscarColetasUseCase(), new FiltrarColetasUseCase(), new AgruparColetasPorSalaUseCase(), viewModelCImpl.obterUsuarioAtualUseCase());
 
           case 3: // com.inventario.mobile.presentation.coleta.CollectionViewViewModelClean 
-          return (T) new CollectionViewViewModelClean(viewModelCImpl.buscarColetasUseCase(), viewModelCImpl.buscarColetasComFallbackUseCase(), viewModelCImpl.obterUsuarioAtualUseCase(), viewModelCImpl.removerColetaUseCase(), viewModelCImpl.sincronizarColetasDoServidorUseCase(), viewModelCImpl.coletaMigration());
+          return (T) new CollectionViewViewModelClean(viewModelCImpl.buscarColetasUseCase(), viewModelCImpl.buscarColetasComFallbackUseCase(), viewModelCImpl.obterUsuarioAtualUseCase(), viewModelCImpl.removerColetaUseCase(), viewModelCImpl.sincronizarColetasDoServidorUseCase(), viewModelCImpl.coletaMigration(), viewModelCImpl.reenviarColetaUseCase(), viewModelCImpl.excluirColetaPendenteUseCase());
 
           case 4: // com.inventario.mobile.presentation.dashboard.DashboardViewModelClean 
           return (T) new DashboardViewModelClean(viewModelCImpl.buscarEstatisticasDashboardUseCase(), viewModelCImpl.buscarEvolucaoColetasUseCase(), viewModelCImpl.dashboardRepositoryImpl());

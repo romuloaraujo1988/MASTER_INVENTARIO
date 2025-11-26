@@ -12,7 +12,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class PendingCollectionsAdapter(
-    private val onDeleteClick: (Coleta) -> Unit
+    private val onDeleteClick: (Coleta) -> Unit,
+    private val onRetryClick: ((Coleta) -> Unit)? = null  // v2.6: Callback para tentar novamente
 ) : ListAdapter<Coleta, PendingCollectionsAdapter.PendingColetaViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PendingColetaViewHolder {
@@ -57,8 +58,34 @@ class PendingCollectionsAdapter(
                 // User info
                 tvUserInfo.text = "Coletado por: ${coleta.nomeColetor ?: coleta.usuarioId.toString()}"
 
-                // Sync status chip
-                chipSyncStatus.text = "Pendente"
+                // Sync status chip - v2.6: Mostrar status baseado no erro
+                val temErro = !coleta.erroSincronizacao.isNullOrBlank()
+                if (temErro) {
+                    chipSyncStatus.text = "Erro"
+                    chipSyncStatus.setChipBackgroundColorResource(R.color.error_light)
+                    chipSyncStatus.setChipStrokeColorResource(R.color.error)
+                } else if (coleta.tentativasSincronizacao > 0) {
+                    chipSyncStatus.text = "Tentando..."
+                    chipSyncStatus.setChipBackgroundColorResource(R.color.warning_light)
+                    chipSyncStatus.setChipStrokeColorResource(R.color.warning)
+                } else {
+                    chipSyncStatus.text = "Pendente"
+                    chipSyncStatus.setChipBackgroundColorResource(R.color.warning_light)
+                    chipSyncStatus.setChipStrokeColorResource(R.color.warning)
+                }
+
+                // v2.6: Mostrar erro de sincronização se existir
+                if (temErro) {
+                    layoutErro.visibility = android.view.View.VISIBLE
+                    tvErroSincronizacao.text = coleta.erroSincronizacao
+                    
+                    // Botão retry
+                    btnRetry.setOnClickListener {
+                        onRetryClick?.invoke(coleta)
+                    }
+                } else {
+                    layoutErro.visibility = android.view.View.GONE
+                }
 
                 // Delete button click
                 btnDeleteColeta.setOnClickListener {
