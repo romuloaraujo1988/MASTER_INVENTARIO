@@ -3,7 +3,6 @@ package com.inventario.view;
 import com.inventario.dao.ItemCompostoDAO;
 import com.inventario.dao.InventarioDAO;
 import com.inventario.model.Inventario;
-import com.inventario.util.ExportadorExcel;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

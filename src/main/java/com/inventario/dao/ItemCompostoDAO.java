@@ -511,4 +511,85 @@ public class ItemCompostoDAO {
         
         return itens;
     }
+    
+    /**
+     * Busca relatório completo de itens compostos para um inventário
+     * Retorna todos os componentes com status de coleta
+     */
+    public List<Map<String, Object>> buscarRelatorioCompleto(int idInventario) throws SQLException {
+        // Verificar se a coluna localizacao_encontrada existe
+        boolean colunaLocalizacaoExiste = verificarColunaExiste("tabela_coleta_componente", "localizacao_encontrada");
+        
+        String sql;
+        if (colunaLocalizacaoExiste) {
+            sql = """
+                SELECT 
+                    p.numero,
+                    p.descricao,
+                    COALESCE(s.descricao, 'Sem sala') as sala,
+                    ic.tipo_componente,
+                    ic.descricao_componente,
+                    ic.quantidade_esperada,
+                    COALESCE(cc.quantidade_encontrada, 0) as quantidade_encontrada,
+                    COALESCE(cc.localizacao_encontrada, '') as localizacao_encontrada,
+                    COALESCE(cc.status_componente, 'PENDENTE') as status,
+                    TO_CHAR(cc.data_coleta, 'DD/MM/YYYY HH24:MI') as data_coleta,
+                    u.nome_completo as coletor
+                FROM tabela_patrimonio p
+                INNER JOIN tabela_item_composto ic ON p.id = ic.id_patrimonio_principal
+                LEFT JOIN tabela_sala s ON p.id_sala = s.id
+                LEFT JOIN tabela_coleta_componente cc ON ic.id = cc.id_item_composto AND cc.id_inventario = ?
+                LEFT JOIN tabela_usuario u ON cc.id_coletor = u.id
+                ORDER BY p.numero, ic.tipo_componente
+                """;
+        } else {
+            sql = """
+                SELECT 
+                    p.numero,
+                    p.descricao,
+                    COALESCE(s.descricao, 'Sem sala') as sala,
+                    ic.tipo_componente,
+                    ic.descricao_componente,
+                    ic.quantidade_esperada,
+                    COALESCE(cc.quantidade_encontrada, 0) as quantidade_encontrada,
+                    COALESCE(cc.status_componente, 'PENDENTE') as status,
+                    TO_CHAR(cc.data_coleta, 'DD/MM/YYYY HH24:MI') as data_coleta,
+                    u.nome_completo as coletor
+                FROM tabela_patrimonio p
+                INNER JOIN tabela_item_composto ic ON p.id = ic.id_patrimonio_principal
+                LEFT JOIN tabela_sala s ON p.id_sala = s.id
+                LEFT JOIN tabela_coleta_componente cc ON ic.id = cc.id_item_composto AND cc.id_inventario = ?
+                LEFT JOIN tabela_usuario u ON cc.id_coletor = u.id
+                ORDER BY p.numero, ic.tipo_componente
+                """;
+        }
+        
+        List<Map<String, Object>> resultado = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idInventario);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("numero", rs.getString("numero"));
+                    row.put("descricao", rs.getString("descricao"));
+                    row.put("sala", rs.getString("sala"));
+                    row.put("tipoComponente", rs.getString("tipo_componente"));
+                    row.put("descricaoComponente", rs.getString("descricao_componente"));
+                    row.put("qtdEsperada", rs.getInt("quantidade_esperada"));
+                    row.put("qtdEncontrada", rs.getInt("quantidade_encontrada"));
+                    row.put("localEncontrado", colunaLocalizacaoExiste ? rs.getString("localizacao_encontrada") : "");
+                    row.put("status", rs.getString("status"));
+                    row.put("dataColeta", rs.getString("data_coleta"));
+                    row.put("coletor", rs.getString("coletor"));
+                    resultado.add(row);
+                }
+            }
+        }
+        
+        return resultado;
+    }
 }
