@@ -49,22 +49,44 @@ public class ConfiguracaoBancoFrame extends JFrame {
         
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setTitle("Configuração do Banco de Dados - SIHCP");
-        setSize(600, 500);
+        setSize(700, 580);
         setResizable(false);
+        setLocationRelativeTo(null);
     }
     
     private void initializeComponents() {
-        txtHost = new JTextField("localhost", 30);
-        txtPort = new JTextField("5432", 15);
-        txtDatabase = new JTextField(30);
-        txtUsername = new JTextField(30);
-        txtPassword = new JPasswordField(30);
-        txtSchema = new JTextField("public", 30);
+        // Campos com tamanho maior para melhor visualização
+        txtHost = new JTextField("localhost", 35);
+        txtHost.setFont(new Font("Arial", Font.PLAIN, 14));
+        
+        txtPort = new JTextField("5432", 20);
+        txtPort.setFont(new Font("Arial", Font.PLAIN, 14));
+        
+        txtDatabase = new JTextField(35);
+        txtDatabase.setFont(new Font("Arial", Font.PLAIN, 14));
+        
+        txtUsername = new JTextField(35);
+        txtUsername.setFont(new Font("Arial", Font.PLAIN, 14));
+        
+        txtPassword = new JPasswordField(35);
+        txtPassword.setFont(new Font("Arial", Font.PLAIN, 14));
+        
+        txtSchema = new JTextField("public", 35);
+        txtSchema.setFont(new Font("Arial", Font.PLAIN, 14));
         chkSsl = new JCheckBox("Usar SSL");
+        chkSsl.setFont(new Font("Arial", Font.PLAIN, 13));
         
         btnTestarConexao = new JButton("Testar Conexão");
+        btnTestarConexao.setFont(new Font("Arial", Font.BOLD, 13));
+        btnTestarConexao.setPreferredSize(new Dimension(150, 38));
+        
         btnSalvar = new JButton("Salvar");
+        btnSalvar.setFont(new Font("Arial", Font.BOLD, 13));
+        btnSalvar.setPreferredSize(new Dimension(120, 38));
+        
         btnCancelar = new JButton("Cancelar");
+        btnCancelar.setFont(new Font("Arial", Font.BOLD, 13));
+        btnCancelar.setPreferredSize(new Dimension(120, 38));
         
         lblStatus = new JLabel(" ");
         lblStatus.setForeground(Color.BLUE);
@@ -90,42 +112,56 @@ public class ConfiguracaoBancoFrame extends JFrame {
         // Painel de formulário
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.WEST;
+        
+        Font labelFont = new Font("Arial", Font.BOLD, 13);
         
         // Host
         gbc.gridx = 0; gbc.gridy = 0;
-        formPanel.add(new JLabel("Host:"), gbc);
+        JLabel lblHost = new JLabel("Host:");
+        lblHost.setFont(labelFont);
+        formPanel.add(lblHost, gbc);
         gbc.gridx = 1;
         formPanel.add(txtHost, gbc);
         
         // Port
         gbc.gridx = 0; gbc.gridy = 1;
-        formPanel.add(new JLabel("Porta:"), gbc);
+        JLabel lblPort = new JLabel("Porta:");
+        lblPort.setFont(labelFont);
+        formPanel.add(lblPort, gbc);
         gbc.gridx = 1;
         formPanel.add(txtPort, gbc);
         
         // Database
         gbc.gridx = 0; gbc.gridy = 2;
-        formPanel.add(new JLabel("Banco de Dados:"), gbc);
+        JLabel lblDatabase = new JLabel("Banco de Dados:");
+        lblDatabase.setFont(labelFont);
+        formPanel.add(lblDatabase, gbc);
         gbc.gridx = 1;
         formPanel.add(txtDatabase, gbc);
         
         // Username
         gbc.gridx = 0; gbc.gridy = 3;
-        formPanel.add(new JLabel("Usuário:"), gbc);
+        JLabel lblUsername = new JLabel("Usuário:");
+        lblUsername.setFont(labelFont);
+        formPanel.add(lblUsername, gbc);
         gbc.gridx = 1;
         formPanel.add(txtUsername, gbc);
         
         // Password
         gbc.gridx = 0; gbc.gridy = 4;
-        formPanel.add(new JLabel("Senha:"), gbc);
+        JLabel lblPassword = new JLabel("Senha:");
+        lblPassword.setFont(labelFont);
+        formPanel.add(lblPassword, gbc);
         gbc.gridx = 1;
         formPanel.add(txtPassword, gbc);
         
         // Schema
         gbc.gridx = 0; gbc.gridy = 5;
-        formPanel.add(new JLabel("Schema:"), gbc);
+        JLabel lblSchema = new JLabel("Schema:");
+        lblSchema.setFont(labelFont);
+        formPanel.add(lblSchema, gbc);
         gbc.gridx = 1;
         formPanel.add(txtSchema, gbc);
         

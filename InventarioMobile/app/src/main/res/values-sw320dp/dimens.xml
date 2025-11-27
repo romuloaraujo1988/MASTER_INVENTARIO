@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dimensões para telas pequenas (sw320dp) - smartphones compactos -->
+<resources>
+    <!-- Margens e paddings reduzidos -->
+    <dimen name="margin_small">2dp</dimen>
+    <dimen name="margin_medium">4dp</dimen>
+    <dimen name="margin_large">8dp</dimen>
+    <dimen name="margin_xlarge">12dp</dimen>
+    
+    <dimen name="padding_small">2dp</dimen>
+    <dimen name="padding_medium">6dp</dimen>
+    <dimen name="padding_large">8dp</dimen>
+    
+    <!-- Scanner Activity - Tamanhos compactos -->
+    <dimen name="scanner_camera_height">150dp</dimen>
+    <dimen name="scanner_button_height">40dp</dimen>
+    <dimen name="scanner_button_text_size">12sp</dimen>
+    <dimen name="scanner_title_text_size">14sp</dimen>
+    <dimen name="scanner_info_text_size">10sp</dimen>
+    <dimen name="scanner_status_text_size">11sp</dimen>
+    <dimen name="scanner_counter_text_size">16sp</dimen>
+    <dimen name="scanner_counter_label_size">12sp</dimen>
+    <dimen name="scanner_icon_size">16dp</dimen>
+    <dimen name="scanner_card_padding">8dp</dimen>
+    <dimen name="scanner_card_corner_radius">6dp</dimen>
+    <dimen name="scanner_card_elevation">2dp</dimen>
+    
+    <!-- Patrimônio Info Card - Compacto -->
+    <dimen name="patrimonio_numero_text_size">12sp</dimen>
+    <dimen name="patrimonio_descricao_text_size">10sp</dimen>
+    <dimen name="patrimonio_sala_text_size">10sp</dimen>
+    <dimen name="patrimonio_status_text_size">11sp</dimen>
+    <dimen name="patrimonio_coleta_info_text_size">9sp</dimen>
+    
+    <!-- Botões de ação - Compactos -->
+    <dimen name="action_button_min_height">36dp</dimen>
+    <dimen name="action_button_padding">6dp</dimen>
+</resources>

@@ -134,6 +134,7 @@ import com.inventario.mobile.presentation.descricao.DescricaoSelectionViewModelC
 import com.inventario.mobile.presentation.descricao.DescricaoSelectionViewModelClean_HiltModules_KeyModule_ProvideFactory;
 import com.inventario.mobile.presentation.main.MainActivity;
 import com.inventario.mobile.presentation.sala.SalaSelectionActivity;
+import com.inventario.mobile.presentation.sala.SalaSelectionActivity_MembersInjector;
 import com.inventario.mobile.presentation.scanner.ScannerActivity;
 import com.inventario.mobile.presentation.scanner.ScannerActivity_MembersInjector;
 import com.inventario.mobile.presentation.statistics.ChartsFragment_MembersInjector;
@@ -755,6 +756,7 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
     private SalaSelectionActivity injectSalaSelectionActivity2(SalaSelectionActivity instance) {
       BaseOfflineActivity_MembersInjector.injectConnectionStateManager(instance, singletonCImpl.connectionStateManagerProvider.get());
       BaseOfflineActivity_MembersInjector.injectNetworkMonitor(instance, singletonCImpl.provideNetworkMonitorProvider.get());
+      SalaSelectionActivity_MembersInjector.injectPreferencesManager(instance, singletonCImpl.providePreferencesManagerProvider.get());
       return instance;
     }
 
@@ -1000,7 +1002,7 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
           return (T) new ItemSemEtiquetaViewModel(viewModelCImpl.registrarColetaUseCase(), singletonCImpl.providePreferencesManagerProvider.get());
 
           case 7: // com.inventario.mobile.presentation.coleta.ManualCollectionViewModel 
-          return (T) new ManualCollectionViewModel(viewModelCImpl.buscarPatrimonioUseCase(), viewModelCImpl.registrarColetaUseCase(), singletonCImpl.provideInventarioRepositoryProvider.get());
+          return (T) new ManualCollectionViewModel(viewModelCImpl.buscarPatrimonioUseCase(), viewModelCImpl.registrarColetaUseCase(), singletonCImpl.provideInventarioRepositoryProvider.get(), singletonCImpl.coletaDao());
 
           case 8: // com.inventario.mobile.presentation.sync.SyncViewModel 
           return (T) new SyncViewModel(viewModelCImpl.sincronizarDadosUseCase(), singletonCImpl.sincronizarColetasPendentesUseCase(), singletonCImpl.provideSyncManagerProvider.get());

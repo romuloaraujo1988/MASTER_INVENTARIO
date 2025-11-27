@@ -63,5 +63,9 @@ data class Patrimonio(
     // Campos para coleta
     val coletado: Boolean = false,
     val dataColeta: String? = null,
-    val coletorId: Long? = null
+    val coletorId: Long? = null,
+    val coletadoPor: String? = null,
+    val dataColetaFormatada: String? = null,
+    val localizacaoEncontrada: String? = null,
+    val estadoEncontrado: String? = null
 )

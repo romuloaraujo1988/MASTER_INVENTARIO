@@ -13,6 +13,33 @@ interface PatrimonioDao {
     @Query("SELECT * FROM patrimonio WHERE numeroPatrimonio = :numero LIMIT 1")
     suspend fun buscarPorNumero(numero: String): PatrimonioEntity?
     
+    /**
+     * Busca patrimônio por número com informações completas de sala e status de coleta
+     * Usa JOIN para buscar nome da sala e verificar se já foi coletado no inventário atual
+     * 
+     * @param numero Número do patrimônio
+     * @param inventarioId ID do inventário ativo
+     * @return Patrimônio com informações completas ou null se não encontrado
+     */
+    @Query("""
+        SELECT p.*, 
+               s.nome as salaNome,
+               s.nome as nomeSala,
+               CASE WHEN c.id IS NOT NULL THEN 1 ELSE 0 END as coletado,
+               c.nomeUsuario as coletadoPor,
+               c.dataColeta as dataColeta
+        FROM patrimonio p
+        LEFT JOIN sala s ON s.id = p.idSala
+        LEFT JOIN coleta c ON c.idPatrimonio = p.id 
+                           AND c.idInventario = :inventarioId
+        WHERE p.numeroPatrimonio = :numero
+        LIMIT 1
+    """)
+    suspend fun buscarPorNumeroComStatusColeta(
+        numero: String,
+        inventarioId: Int
+    ): PatrimonioEntity?
+    
     @Query("SELECT * FROM patrimonio WHERE id = :id LIMIT 1")
     suspend fun buscarPorId(id: Int): PatrimonioEntity?
     

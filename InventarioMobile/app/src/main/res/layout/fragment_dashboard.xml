@@ -21,6 +21,47 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- Indicador de Modo Offline (v2.7) -->
+        <LinearLayout
+            android:id="@+id/layoutOfflineIndicator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/offline_indicator_background"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_offline"
+                app:tint="@color/warning_dark" />
+
+            <TextView
+                android:id="@+id/tvOfflineStatus"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Modo Offline Ativo"
+                android:textColor="@color/warning_dark"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvOfflineInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dados locais"
+                android:textColor="@color/warning_dark"
+                android:textSize="11sp"
+                android:alpha="0.8" />
+
+        </LinearLayout>
+
         <!-- Ações Rápidas de Coleta -->
         <LinearLayout
             android:layout_width="match_parent"

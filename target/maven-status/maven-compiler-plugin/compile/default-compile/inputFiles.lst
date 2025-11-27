@@ -49,6 +49,7 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\offline\OfflineConfigManager.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\repository\SetorRepository.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\cache\CachedData.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\ColetaItemCompostoFrame.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\AutenticacaoService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\config\MobileDataSourceConfig.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\config\DatabaseConfigManager.java
@@ -56,11 +57,13 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobilePatrimonioDTO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\config\DeviceTrackingInterceptor.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\notification\ErrorReport.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\CadastrarItensCompostosMassa.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\ui\ConfiguracaoBancoFrame.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\SetorFrame.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\config\RequestLoggingFilter.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\service\MobileAuthService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\DatabaseExecuteUpdate.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\RemoverComponentesComputador.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\dto\mobile\RefreshTokenRequest.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\service\MobilePatrimonioService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\repository\ColetaRepository.java
@@ -85,6 +88,7 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\config\AsyncConfig.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\siads\test\SiadsLayoutFormatterTest.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\ui\ModernButtons.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\itemcomposto\service\ItemCompostoService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\print\EtiquetaGenerator.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\notification\ErrorReportingService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\ImportacaoCSVFrame.java
@@ -92,9 +96,11 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\sync\service\RetryManager.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\dao\InventarioDAO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\helper\ColetaFrameCacheHelper.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\itemcomposto\service\DeteccaoEmLoteService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\service\MobileConsultaService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileInventarioDTO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\config\HikariConnectionPool.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\itemcomposto\model\ItemComposto.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\DashboardStatsDTO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\repository\Repository.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileOfflineSyncController.java
@@ -108,8 +114,10 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\model\InventarioSetor.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\model\Coletor.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\ImpressaoEtiquetasDialog.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\CriarTabelasItemComposto.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\config\ConfigurationPaths.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\service\MobileOfflineSyncService.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\itemcomposto\dao\ComponenteDAO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\AutenticacaoServiceAPI.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\ConnectedDevicesManager.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileColetaController.java
@@ -142,14 +150,18 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\exception\RepositoryException.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\ExcelExporter.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\offline\SyncPostgresToSQLiteV2.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\dao\ItemCompostoDAO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\ConnectionManager.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\model\PerfilUsuario.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\components\PaginationPanel.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\ItemCompostoFrame.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\repository\InventarioRepository.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\ComponenteDialog.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\MobileApiApplication.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\UsuarioFrame.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\siads\config\SiadsConfig.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\model\StatusDispositivo.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\RegistroComponenteDialog.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\CampusService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\notification\ToastNotification.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\test\TestTimestampConversion.java
@@ -173,6 +185,7 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\VersionInfo.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\dto\ConnectedDeviceDTO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\ImportacaoDadosDialog.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\itemcomposto\model\ComponenteColeta.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\UnifiedAuthService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\MobileConnectionService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\dto\mobile\LoginRequest.java
@@ -217,6 +230,7 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\DatabaseTestQuery.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\ExceptionHandler.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\PatrimonioService.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\itemcomposto\model\Componente.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\sync\exception\SyncException.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\security\JwtAuthenticationEntryPoint.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\dao\ChartDataDAO.java
@@ -234,6 +248,7 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\ImageUtils.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileColetaBatchRequest.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\offline\OfflineManager.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\CriarTabelasCategoriaUtil.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\ResponsavelFrame.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\offline\OfflineAuthService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\IconPreview.java
@@ -243,6 +258,7 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\sync\model\EntityType.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\dao\InventarioSetorDAO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\siads\dao\SiadsPatrimonioDAO.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\itemcomposto\dao\ItemCompostoDAO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\config\DAOConfiguration.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\sync\model\Conflict.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\sync\model\RetryPolicy.java
@@ -262,6 +278,7 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\CampusManagementFrame.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\util\MobileValidationUtil.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\ColetaService.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\ExecutarScriptSQL.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\ModernDialog.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\chart\InventarioChartService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\siads\model\SiadsRegistro.java

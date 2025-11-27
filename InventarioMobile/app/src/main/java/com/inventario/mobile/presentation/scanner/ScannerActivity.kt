@@ -500,21 +500,13 @@ class ScannerActivity : AppCompatActivity() {
         binding.cardPatrimonioInfo.visibility = View.VISIBLE
         binding.textPatrimonioNumero.text = "Número: ${result.patrimonioCodigo}"
         binding.textPatrimonioDescricao.text = "Descrição: ${result.patrimonio?.descricao ?: "N/A"}"
-        binding.textPatrimonioSala.text = "Sala: ${result.patrimonio?.salaId?.toString() ?: "N/A"}"
         
-        val statusText = if (result.jaColetado) {
-            buildString {
-                append("Status: COLETADO")
-                if (!result.coletadoPor.isNullOrBlank()) {
-                    append("\nColetado por: ${result.coletadoPor}")
-                }
-                if (!result.dataColetaFormatada.isNullOrBlank()) {
-                    append("\nEm: ${result.dataColetaFormatada}")
-                }
-            }
-        } else {
-            "Status: Disponível para coleta"
-        }
+        // ✅ CORREÇÃO: Usar salaNome ao invés de salaId
+        val salaInfo = result.patrimonio?.salaNome ?: "Sala não informada"
+        binding.textPatrimonioSala.text = "Sala: $salaInfo"
+        
+        // Status do patrimônio
+        val statusText = if (result.jaColetado) "Status: JÁ COLETADO" else "Status: Disponível para coleta"
         binding.textPatrimonioStatus.text = statusText
         binding.textPatrimonioStatus.setTextColor(
             if (result.jaColetado) 
@@ -522,6 +514,35 @@ class ScannerActivity : AppCompatActivity() {
             else 
                 getColor(android.R.color.holo_green_dark)
         )
+        
+        // ✅ Exibir informações detalhadas da coleta quando já foi coletado
+        if (result.jaColetado) {
+            binding.layoutInfoColeta.visibility = View.VISIBLE
+            
+            // Coletado por
+            binding.textColetadoPor.text = if (!result.coletadoPor.isNullOrBlank()) {
+                "Coletado por: ${result.coletadoPor}"
+            } else {
+                "Coletado por: Não informado"
+            }
+            
+            // Data da coleta
+            binding.textDataColeta.text = if (!result.dataColetaFormatada.isNullOrBlank()) {
+                "Data: ${result.dataColetaFormatada}"
+            } else {
+                "Data: Não informada"
+            }
+            
+            // Localização encontrada
+            val localizacao = result.patrimonio?.localizacaoEncontrada
+            binding.textLocalizacaoEncontrada.text = if (!localizacao.isNullOrBlank()) {
+                "Local encontrado: $localizacao"
+            } else {
+                "Local encontrado: Não informado"
+            }
+        } else {
+            binding.layoutInfoColeta.visibility = View.GONE
+        }
     }
     
     private fun showCollectionInterface(result: ScanResult) {

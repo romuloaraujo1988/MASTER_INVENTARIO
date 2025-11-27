@@ -38,7 +38,11 @@ class PatrimonioRepositoryAdapter @Inject constructor(
             sincronizado = this.sincronizado,
             coletado = this.coletado,
             dataColeta = this.dataColeta,
-            coletorId = this.responsavelId
+            coletorId = this.responsavelId,
+            coletadoPor = this.coletadoPor,
+            dataColetaFormatada = this.dataColetaFormatada,
+            localizacaoEncontrada = this.localizacaoEncontrada,
+            estadoEncontrado = this.estadoEncontrado
         )
     }
     

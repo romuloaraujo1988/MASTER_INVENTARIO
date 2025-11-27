@@ -84,10 +84,18 @@ public class MobileDashboardService {
     }
     
     /**
-     * Busca evolução de coletas (últimos N dias)
+     * Busca evolução de coletas usando as datas de início e fim do inventário
+     * 
+     * CORREÇÃO: Agora usa as datas reais do inventário ao invés de "últimos N dias"
+     * - Se o inventário tem dataInicio e dataFim: usa esse período
+     * - Se o inventário tem apenas dataInicio: usa de dataInicio até hoje
+     * - Fallback: usa últimos N dias (comportamento anterior)
+     * 
+     * @param inventarioId ID do inventário (null = inventário ativo)
+     * @param dias Quantidade de dias (usado apenas como fallback se inventário não tem datas)
      */
     public Map<String, Object> buscarEvolucaoColetas(Integer inventarioId, int dias) throws SQLException {
-        logger.info("Buscando evolução de coletas (últimos {} dias)", dias);
+        logger.info("Buscando evolução de coletas para inventário: {}", inventarioId);
         
         // Obter inventário
         Inventario inventario;
@@ -101,39 +109,103 @@ public class MobileDashboardService {
             throw new IllegalArgumentException("Inventário não encontrado");
         }
         
-        // Buscar coletas agrupadas por dia (dados reais do banco)
-        List<Map<String, Object>> evolucaoDados = coletaDAO.buscarEvolucaoColetasPorDia(inventario.getId(), dias);
+        // Determinar período do gráfico baseado nas datas do inventário
+        Date dataInicio = inventario.getDataInicio();
+        Date dataFim = inventario.getDataFim();
+        Date hoje = new Date();
         
         // Formatar dados para o formato esperado pelo frontend
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM");
+        java.text.SimpleDateFormat sdfLog = new java.text.SimpleDateFormat("dd/MM/yyyy");
         Map<String, Integer> evolucaoPorDia = new LinkedHashMap<>();
         
-        // Preencher todos os dias do período (mesmo sem coletas)
-        Calendar cal = Calendar.getInstance();
-        for (int i = dias - 1; i >= 0; i--) {
-            cal.add(Calendar.DAY_OF_MONTH, -1);
-            String dataFormatada = sdf.format(cal.getTime());
-            evolucaoPorDia.put(dataFormatada, 0);
+        List<Map<String, Object>> evolucaoDados;
+        int diasPeriodo;
+        
+        // Usar datas do inventário se disponíveis
+        if (dataInicio != null) {
+            // Determinar data final: usar dataFim se existir e for no passado, senão usar hoje
+            Date dataFimEfetiva;
+            if (dataFim != null && dataFim.before(hoje)) {
+                dataFimEfetiva = dataFim;
+            } else {
+                dataFimEfetiva = hoje;
+            }
+            
+            logger.info("Usando período do inventário: {} a {}", 
+                    sdfLog.format(dataInicio), sdfLog.format(dataFimEfetiva));
+            
+            // Buscar coletas no período do inventário
+            evolucaoDados = coletaDAO.buscarEvolucaoColetasPorPeriodo(
+                    inventario.getId(), dataInicio, dataFimEfetiva);
+            
+            // Calcular quantidade de dias no período
+            long diffMillis = dataFimEfetiva.getTime() - dataInicio.getTime();
+            diasPeriodo = (int) (diffMillis / (1000 * 60 * 60 * 24)) + 1;
+            
+            // Preencher todos os dias do período (mesmo sem coletas)
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(dataInicio);
+            
+            for (int i = 0; i < diasPeriodo; i++) {
+                String dataFormatada = sdf.format(cal.getTime());
+                evolucaoPorDia.put(dataFormatada, 0);
+                cal.add(Calendar.DAY_OF_MONTH, 1);
+            }
+        } else {
+            // Fallback: usar últimos N dias (comportamento anterior)
+            logger.info("Inventário sem data de início definida, usando últimos {} dias", dias);
+            
+            evolucaoDados = coletaDAO.buscarEvolucaoColetasPorDia(inventario.getId(), dias);
+            diasPeriodo = dias;
+            
+            // Preencher todos os dias do período (mesmo sem coletas)
+            for (int i = dias - 1; i >= 0; i--) {
+                Calendar tempCal = Calendar.getInstance();
+                tempCal.add(Calendar.DAY_OF_MONTH, -i);
+                String dataFormatada = sdf.format(tempCal.getTime());
+                evolucaoPorDia.put(dataFormatada, 0);
+            }
         }
         
         // Preencher com dados reais
         for (Map<String, Object> item : evolucaoDados) {
-            java.sql.Date data = (java.sql.Date) item.get("data");
-            Integer quantidade = (Integer) item.get("quantidade");
-            String dataFormatada = sdf.format(data);
+            Object dataObj = item.get("data");
+            Integer quantidade = ((Number) item.get("quantidade")).intValue();
+            
+            String dataFormatada;
+            if (dataObj instanceof java.sql.Date) {
+                dataFormatada = sdf.format((java.sql.Date) dataObj);
+            } else if (dataObj instanceof Date) {
+                dataFormatada = sdf.format((Date) dataObj);
+            } else {
+                continue; // Pular se não conseguir converter
+            }
+            
             evolucaoPorDia.put(dataFormatada, quantidade);
         }
         
         Map<String, Object> resultado = new HashMap<>();
         resultado.put("inventarioId", inventario.getId());
         resultado.put("inventarioNome", inventario.getNome());
-        resultado.put("dias", dias);
+        resultado.put("dias", diasPeriodo);
         resultado.put("evolucao", evolucaoPorDia);
         resultado.put("totalColetas", evolucaoDados.stream()
-                .mapToInt(m -> (Integer) m.get("quantidade"))
+                .mapToInt(m -> ((Number) m.get("quantidade")).intValue())
                 .sum());
         
-        logger.info("Evolução carregada: {} dias com dados", evolucaoDados.size());
+        // Adicionar informações do período para debug/exibição
+        if (dataInicio != null) {
+            resultado.put("dataInicio", sdfLog.format(dataInicio));
+            resultado.put("dataFim", inventario.getDataFim() != null ? 
+                    sdfLog.format(inventario.getDataFim()) : sdfLog.format(new Date()));
+            resultado.put("usandoDatasInventario", true);
+        } else {
+            resultado.put("usandoDatasInventario", false);
+        }
+        
+        logger.info("Evolução carregada: {} dias, {} registros com dados", 
+                diasPeriodo, evolucaoDados.size());
         
         return resultado;
     }

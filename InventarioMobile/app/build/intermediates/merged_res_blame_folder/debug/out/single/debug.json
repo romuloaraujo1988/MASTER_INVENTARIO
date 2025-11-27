@@ -108,6 +108,10 @@
         "source": "com.inventario.mobile.app-main-69:/mipmap-mdpi/ic_launcher_round.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-merged_res-67:/drawable_bg_info_coleta.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/drawable/bg_info_coleta.xml"
+    },
+    {
         "merged": "com.inventario.mobile.app-merged_res-67:/drawable_ic_app_foreground.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/drawable/ic_app_foreground.xml"
     },
@@ -206,6 +210,10 @@
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/drawable_ic_edit.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/drawable/ic_edit.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-merged_res-67:/menu_menu_coleta_pendente.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/menu/menu_coleta_pendente.xml"
     },
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/drawable_ic_filter.xml.flat",
@@ -394,6 +402,10 @@
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/drawable_ic_fingerprint.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/drawable/ic_fingerprint.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-merged_res-67:/drawable_ic_calendar.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/drawable/ic_calendar.xml"
     },
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/layout_item_timeline_coleta.xml.flat",

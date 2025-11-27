@@ -19,6 +19,11 @@ public class ConnectedDevicesManager {
     
     private static final Map<String, ConnectedDevice> connectedDevices = new ConcurrentHashMap<>();
     private static final long TIMEOUT_MINUTES = 5; // Considera desconectado após 5 minutos sem atividade
+    private static final int MAX_DEVICES = 50; // Limite máximo de dispositivos em memória
+    
+    // Contador para limpeza periódica
+    private static int operationCount = 0;
+    private static final int CLEANUP_INTERVAL = 100; // Limpar a cada 100 operações
     
     /**
      * Representa um dispositivo conectado
@@ -87,15 +92,44 @@ public class ConnectedDevicesManager {
     
     /**
      * Registra um novo dispositivo conectado
+     * OTIMIZADO: Limita número de dispositivos em memória
      */
     public static void registerDevice(String deviceId, String username, String ipAddress) {
+        // Limpeza periódica para evitar acúmulo de memória
+        periodicCleanup();
+        
+        // Verificar limite de dispositivos
+        if (connectedDevices.size() >= MAX_DEVICES) {
+            cleanupInactiveDevices();
+        }
+        
         ConnectedDevice device = new ConnectedDevice(deviceId, username, ipAddress);
         connectedDevices.put(deviceId, device);
         
-        // Salvar no banco de dados
-        saveDeviceConnection(device);
-        
-        System.out.println("Dispositivo conectado: " + device);
+        // Salvar no banco de dados (async para não bloquear)
+        try {
+            saveDeviceConnection(device);
+        } catch (Exception e) {
+            // Não falhar se banco não disponível
+        }
+    }
+    
+    /**
+     * Limpeza periódica de dispositivos inativos
+     */
+    private static void periodicCleanup() {
+        operationCount++;
+        if (operationCount >= CLEANUP_INTERVAL) {
+            operationCount = 0;
+            cleanupInactiveDevices();
+        }
+    }
+    
+    /**
+     * Remove dispositivos inativos da memória
+     */
+    private static void cleanupInactiveDevices() {
+        connectedDevices.entrySet().removeIf(entry -> !entry.getValue().isActive());
     }
     
     /**

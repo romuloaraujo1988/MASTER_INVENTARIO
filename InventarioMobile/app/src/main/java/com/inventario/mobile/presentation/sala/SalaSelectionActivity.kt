@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
@@ -14,12 +15,16 @@ import com.inventario.mobile.databinding.ActivitySalaSelectionBinding
 import com.inventario.mobile.presentation.adapter.SalaAdapter
 import com.inventario.mobile.ui.base.BaseOfflineActivity
 import com.inventario.mobile.utils.NavigationHelper
+import com.inventario.mobile.utils.PreferencesManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Activity para seleção de sala
  * Clean Architecture + MVVM + Hilt + Modo Offline Automático
+ * 
+ * v2.9: Suporte a "Sala Fixada" - permite fixar uma sala para coleta rápida
  */
 @AndroidEntryPoint
 class SalaSelectionActivity : BaseOfflineActivity() {
@@ -30,6 +35,9 @@ class SalaSelectionActivity : BaseOfflineActivity() {
     private lateinit var viewModel: SalaSelectionViewModel
     
     private lateinit var salaAdapter: SalaAdapter
+    
+    @Inject
+    lateinit var preferencesManager: PreferencesManager
 
     private var coletaTipo: String = "QRCODE" // QRCODE ou MANUAL
     private var allSalas: List<com.inventario.mobile.domain.model.Sala> = emptyList() // Cache de todas as salas
@@ -64,6 +72,7 @@ class SalaSelectionActivity : BaseOfflineActivity() {
             setupSearchView()
             setupRecyclerView()
             setupObservers()
+            setupSalaFixada()
             
             // Carregar salas
             viewModel.loadSalas()
@@ -181,47 +190,165 @@ class SalaSelectionActivity : BaseOfflineActivity() {
         
         val layoutManager = LinearLayoutManager(this)
         
-        salaAdapter = SalaAdapter { sala ->
-            // Quando uma sala for selecionada
-            Log.d(TAG, "Sala selecionada: ${sala.nome} para coleta tipo: $coletaTipo")
-            
-            // Navegar para a activity apropriada baseado no tipo de coleta
-            when (coletaTipo) {
-                "MANUAL" -> {
-                    // Navegar para ManualCollectionActivity
-                    val intent = Intent(this, com.inventario.mobile.presentation.coleta.ManualCollectionActivity::class.java).apply {
-                        putExtra(EXTRA_SALA_ID, sala.id)
-                        putExtra(EXTRA_SALA_NOME, sala.nome)
-                    }
-                    startActivity(intent)
-                    finish()
-                }
-                "DESCRICAO" -> {
-                    // Navegar para DescricaoSelectionActivity
-                    val intent = Intent(this, com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity::class.java).apply {
-                        putExtra(com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity.EXTRA_SALA_ID, sala.id)
-                        putExtra(com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity.EXTRA_SALA_NOME, sala.nome)
-                    }
-                    startActivity(intent)
-                    finish()
-                }
-                else -> {
-                    // Navegar para ScannerActivity (com QR Code)
-                    val intent = Intent(this, com.inventario.mobile.presentation.scanner.ScannerActivity::class.java).apply {
-                        putExtra(com.inventario.mobile.presentation.scanner.ScannerActivity.EXTRA_SALA_ID, sala.id.toInt())
-                        putExtra(com.inventario.mobile.presentation.scanner.ScannerActivity.EXTRA_SALA_NOME, sala.nome)
-                        putExtra(com.inventario.mobile.presentation.scanner.ScannerActivity.EXTRA_ALLOW_COLLECTION, true)
-                    }
-                    startActivity(intent)
-                    finish()
-                }
+        salaAdapter = SalaAdapter(
+            onSalaClick = { sala ->
+                // Quando uma sala for selecionada
+                Log.d(TAG, "Sala selecionada: ${sala.nome} para coleta tipo: $coletaTipo")
+                navegarParaColeta(sala)
+            },
+            onSalaLongClick = { sala ->
+                // v2.9: Long click para fixar/desfixar sala
+                mostrarMenuSala(sala)
             }
-        }
+        )
         
         binding.recyclerViewSalas.apply {
             this.layoutManager = layoutManager
             adapter = salaAdapter
             // Todas as salas são carregadas de uma vez - sem scroll infinito
+        }
+    }
+    
+    /**
+     * Navega para a tela de coleta apropriada
+     */
+    private fun navegarParaColeta(sala: com.inventario.mobile.domain.model.Sala) {
+        when (coletaTipo) {
+            "MANUAL" -> {
+                // Navegar para ManualCollectionActivity
+                val intent = Intent(this, com.inventario.mobile.presentation.coleta.ManualCollectionActivity::class.java).apply {
+                    putExtra(EXTRA_SALA_ID, sala.id)
+                    putExtra(EXTRA_SALA_NOME, sala.nome)
+                }
+                startActivity(intent)
+                finish()
+            }
+            "DESCRICAO" -> {
+                // Navegar para DescricaoSelectionActivity
+                val intent = Intent(this, com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity::class.java).apply {
+                    putExtra(com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity.EXTRA_SALA_ID, sala.id)
+                    putExtra(com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity.EXTRA_SALA_NOME, sala.nome)
+                }
+                startActivity(intent)
+                finish()
+            }
+            else -> {
+                // Navegar para ScannerActivity (com QR Code)
+                val intent = Intent(this, com.inventario.mobile.presentation.scanner.ScannerActivity::class.java).apply {
+                    putExtra(com.inventario.mobile.presentation.scanner.ScannerActivity.EXTRA_SALA_ID, sala.id.toInt())
+                    putExtra(com.inventario.mobile.presentation.scanner.ScannerActivity.EXTRA_SALA_NOME, sala.nome)
+                    putExtra(com.inventario.mobile.presentation.scanner.ScannerActivity.EXTRA_ALLOW_COLLECTION, true)
+                }
+                startActivity(intent)
+                finish()
+            }
+        }
+    }
+    
+    // ========================================
+    // SALA FIXADA (v2.9)
+    // ========================================
+    
+    /**
+     * Configura a UI para sala fixada
+     */
+    private fun setupSalaFixada() {
+        // Verificar se há sala fixada
+        if (preferencesManager.hasSalaFixada()) {
+            val salaId = preferencesManager.getSalaFixadaId()
+            val salaNome = preferencesManager.getSalaFixadaNome()
+            
+            Log.d(TAG, "✓ Sala fixada encontrada: $salaNome (ID: $salaId)")
+            
+            // Mostrar banner de sala fixada
+            mostrarBannerSalaFixada(salaNome)
+        }
+    }
+    
+    /**
+     * Mostra banner informando que há uma sala fixada
+     */
+    private fun mostrarBannerSalaFixada(salaNome: String) {
+        binding.layoutSalaFixada?.visibility = android.view.View.VISIBLE
+        binding.tvSalaFixadaNome?.text = "📌 $salaNome"
+        
+        // Botão para ir direto para a sala fixada
+        binding.btnUsarSalaFixada?.setOnClickListener {
+            val salaId = preferencesManager.getSalaFixadaId()
+            val sala = com.inventario.mobile.domain.model.Sala(
+                id = salaId,
+                nome = salaNome,
+                codigo = "",
+                descricao = null,
+                setorId = 0
+            )
+            navegarParaColeta(sala)
+        }
+        
+        // Botão para remover sala fixada
+        binding.btnRemoverSalaFixada?.setOnClickListener {
+            preferencesManager.clearSalaFixada()
+            binding.layoutSalaFixada?.visibility = android.view.View.GONE
+            Toast.makeText(this, "Sala fixada removida", Toast.LENGTH_SHORT).show()
+            
+            // Recarregar lista completa
+            viewModel.loadSalas()
+        }
+    }
+    
+    /**
+     * Mostra menu de opções para a sala (long click)
+     */
+    private fun mostrarMenuSala(sala: com.inventario.mobile.domain.model.Sala) {
+        val salaFixadaId = preferencesManager.getSalaFixadaId()
+        val isFixada = sala.id == salaFixadaId
+        
+        val opcoes = if (isFixada) {
+            arrayOf("📌 Remover fixação", "✓ Selecionar sala")
+        } else {
+            arrayOf("📌 Fixar esta sala", "✓ Selecionar sala")
+        }
+        
+        AlertDialog.Builder(this)
+            .setTitle(sala.nome)
+            .setItems(opcoes) { _, which ->
+                when (which) {
+                    0 -> {
+                        if (isFixada) {
+                            // Remover fixação
+                            preferencesManager.clearSalaFixada()
+                            binding.layoutSalaFixada?.visibility = android.view.View.GONE
+                            Toast.makeText(this, "Sala fixada removida", Toast.LENGTH_SHORT).show()
+                            viewModel.loadSalas()
+                        } else {
+                            // Fixar sala
+                            preferencesManager.setSalaFixada(sala.id, sala.nome)
+                            mostrarBannerSalaFixada(sala.nome)
+                            Toast.makeText(this, "📌 Sala \"${sala.nome}\" fixada!", Toast.LENGTH_SHORT).show()
+                            
+                            // Filtrar para mostrar apenas a sala fixada
+                            filtrarSalaFixada()
+                        }
+                    }
+                    1 -> {
+                        // Selecionar sala normalmente
+                        navegarParaColeta(sala)
+                    }
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+    
+    /**
+     * Filtra a lista para mostrar apenas a sala fixada
+     */
+    private fun filtrarSalaFixada() {
+        val salaFixadaId = preferencesManager.getSalaFixadaId()
+        if (salaFixadaId > 0) {
+            val salasFiltradas = allSalas.filter { it.id == salaFixadaId }
+            salaAdapter.submitList(salasFiltradas)
+            Log.d(TAG, "Lista filtrada para sala fixada: ${salasFiltradas.size} sala(s)")
         }
     }
 

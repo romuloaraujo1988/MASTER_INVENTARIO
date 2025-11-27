@@ -21,6 +21,17 @@ public class MobileServerManager {
     private static boolean isStarting = false;
     private static List<ServerStatusListener> listeners = new ArrayList<>();
     
+    // ===== CONFIGURAÇÕES JVM OTIMIZADAS PARA ~15 USUÁRIOS =====
+    // Memória máxima de 512MB (suficiente para 15 usuários)
+    private static final String JVM_OPTS = "-Xms256m -Xmx512m " +
+            "-XX:+UseG1GC " +
+            "-XX:MaxGCPauseMillis=100 " +
+            "-XX:+UseStringDeduplication " +
+            "-XX:+ParallelRefProcEnabled " +
+            "-XX:InitiatingHeapOccupancyPercent=45 " +
+            "-XX:+DisableExplicitGC " +
+            "-Djava.awt.headless=true";
+    
     /**
      * Interface para receber notificações de mudança de status
      */
@@ -186,7 +197,9 @@ public class MobileServerManager {
                     return false;
                 }
                 
-                notifyStatusChanged(ServerStatus.STARTING, "Porta disponível. Iniciando servidor mobile...");
+                notifyStatusChanged(ServerStatus.STARTING, "Porta disponível. Iniciando servidor mobile (memória: 256-512MB)...");
+                
+                System.out.println("[MobileServer] Iniciando com JVM otimizada: " + JVM_OPTS);
                 
                 // Construir comando Maven com configurações explícitas
                 String os = System.getProperty("os.name").toLowerCase();
@@ -203,6 +216,7 @@ public class MobileServerManager {
                 command.add("spring-boot:run");
                 command.add("-Dspring-boot.run.profiles=" + PROFILE_MOBILE);
                 command.add("-Dspring-boot.run.main-class=com.inventario.MobileApiApplication");
+                command.add("-Dspring-boot.run.jvmArguments=" + JVM_OPTS);
                 command.add("-Dspring.datasource.url=jdbc:postgresql://localhost:5432/sispatrimonio");
                 command.add("-Dspring.datasource.username=postgres");
                 

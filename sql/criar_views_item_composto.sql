@@ -1,0 +1,224 @@
+-- =====================================================
+-- VIEWS PARA MÓDULO DE ITENS COMPOSTOS
+-- Sistema de Inventário de Patrimônio IFMT
+-- =====================================================
+-- Este arquivo contém as views otimizadas para
+-- consultas e relatórios de itens compostos
+-- =====================================================
+-- Data de Criação: 27/11/2025
+-- Versão: 1.0
+-- =====================================================
+
+-- =====================================================
+-- 1. VIEW_ITEM_COMPOSTO_RESUMO
+-- =====================================================
+-- View com informações completas do item composto
+-- Inclui dados do patrimônio, sala e setor
+
+CREATE OR REPLACE VIEW VIEW_ITEM_COMPOSTO_RESUMO AS
+SELECT 
+    ic.ID AS ID_ITEM_COMPOSTO,
+    ic.ID_PATRIMONIO,
+    p.NUMERO AS NUMERO_PATRIMONIO,
+    p.DESCRICAO AS DESCRICAO_PATRIMONIO,
+    p.STATUS AS STATUS_PATRIMONIO,
+    p.ID_SALA,
+    s.DESCRICAO AS NOME_SALA,
+    s.NUMERO_SALA,
+    s.ANDAR,
+    s.BLOCO,
+    s.ID_SETOR,
+    st.NOME AS NOME_SETOR,
+    p.ID_RESPONSAVEL,
+    r.NOME AS NOME_RESPONSAVEL,
+    COUNT(c.ID) AS TOTAL_COMPONENTES,
+    ic.DETECCAO_AUTOMATICA,
+    ic.DATA_CRIACAO,
+    ic.ID_USUARIO_CRIACAO,
+    u.NOME_COMPLETO AS USUARIO_CRIACAO,
+    ic.OBSERVACOES
+FROM TABELA_ITEM_COMPOSTO ic
+INNER JOIN TABELA_PATRIMONIO p ON ic.ID_PATRIMONIO = p.ID
+LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA
+LEFT JOIN TABELA_SETOR st ON s.ID_SETOR = st.ID
+LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID
+LEFT JOIN TABELA_USUARIO u ON ic.ID_USUARIO_CRIACAO = u.ID
+LEFT JOIN TABELA_COMPONENTE c ON ic.ID = c.ID_ITEM_COMPOSTO
+GROUP BY 
+    ic.ID, ic.ID_PATRIMONIO, p.NUMERO, p.DESCRICAO, p.STATUS,
+    p.ID_SALA, s.DESCRICAO, s.NUMERO_SALA, s.ANDAR, s.BLOCO,
+    s.ID_SETOR, st.NOME, p.ID_RESPONSAVEL, r.NOME,
+    ic.DETECCAO_AUTOMATICA, ic.DATA_CRIACAO, ic.ID_USUARIO_CRIACAO,
+    u.NOME_COMPLETO, ic.OBSERVACOES;
+
+COMMENT ON VIEW VIEW_ITEM_COMPOSTO_RESUMO IS 
+'View com informações completas dos itens compostos incluindo patrimônio, sala, setor e contagem de componentes';
+
+-- =====================================================
+-- 2. VIEW_COMPONENTE_STATUS_INVENTARIO
+-- =====================================================
+-- View com status de cada componente por inventário
+-- Calcula quantidade esperada, encontrada e faltante
+
+CREATE OR REPLACE VIEW VIEW_COMPONENTE_STATUS_INVENTARIO AS
+SELECT 
+    c.ID AS ID_COMPONENTE,
+    c.ID_ITEM_COMPOSTO,
+    c.TIPO AS TIPO_COMPONENTE,
+    c.DESCRICAO AS DESCRICAO_COMPONENTE,
+    c.QUANTIDADE_ESPERADA,
+    c.ORDEM,
+    i.ID AS ID_INVENTARIO,
+    i.NOME AS NOME_INVENTARIO,
+    i.ANO AS ANO_INVENTARIO,
+    i.STATUS_INVENTARIO,
+    COALESCE(SUM(cc.QUANTIDADE_ENCONTRADA), 0) AS QUANTIDADE_ENCONTRADA,
+    c.QUANTIDADE_ESPERADA - COALESCE(SUM(cc.QUANTIDADE_ENCONTRADA), 0) AS QUANTIDADE_FALTANTE,
+    CASE 
+        WHEN COALESCE(SUM(cc.QUANTIDADE_ENCONTRADA), 0) >= c.QUANTIDADE_ESPERADA THEN 'COMPLETO'
+        WHEN COALESCE(SUM(cc.QUANTIDADE_ENCONTRADA), 0) > 0 THEN 'PARCIAL'
+        ELSE 'FALTANTE'
+    END AS STATUS_COMPONENTE,
+    CASE 
+        WHEN c.QUANTIDADE_ESPERADA > 0 THEN 
+            ROUND((COALESCE(SUM(cc.QUANTIDADE_ENCONTRADA), 0)::DECIMAL / c.QUANTIDADE_ESPERADA::DECIMAL) * 100, 2)
+        ELSE 0
+    END AS PERCENTUAL_ENCONTRADO
+FROM TABELA_COMPONENTE c
+CROSS JOIN TABELA_INVENTARIO i
+LEFT JOIN TABELA_COMPONENTE_COLETA cc 
+    ON c.ID = cc.ID_COMPONENTE 
+    AND i.ID = cc.ID_INVENTARIO
+GROUP BY 
+    c.ID, c.ID_ITEM_COMPOSTO, c.TIPO, c.DESCRICAO, 
+    c.QUANTIDADE_ESPERADA, c.ORDEM,
+    i.ID, i.NOME, i.ANO, i.STATUS_INVENTARIO;
+
+COMMENT ON VIEW VIEW_COMPONENTE_STATUS_INVENTARIO IS 
+'View com status detalhado de cada componente em cada inventário, incluindo quantidades e percentuais';
+
+-- =====================================================
+-- 3. VIEW_ITEM_COMPOSTO_INTEGRIDADE
+-- =====================================================
+-- View com taxa de integridade de cada item composto por inventário
+
+CREATE OR REPLACE VIEW VIEW_ITEM_COMPOSTO_INTEGRIDADE AS
+SELECT 
+    ic.ID AS ID_ITEM_COMPOSTO,
+    ic.ID_PATRIMONIO,
+    p.NUMERO AS NUMERO_PATRIMONIO,
+    p.DESCRICAO AS DESCRICAO_PATRIMONIO,
+    i.ID AS ID_INVENTARIO,
+    i.NOME AS NOME_INVENTARIO,
+    i.ANO AS ANO_INVENTARIO,
+    COUNT(DISTINCT c.ID) AS TOTAL_COMPONENTES,
+    SUM(c.QUANTIDADE_ESPERADA) AS TOTAL_ESPERADO,
+    COALESCE(SUM(cc.QUANTIDADE_ENCONTRADA), 0) AS TOTAL_ENCONTRADO,
+    SUM(c.QUANTIDADE_ESPERADA) - COALESCE(SUM(cc.QUANTIDADE_ENCONTRADA), 0) AS TOTAL_FALTANTE,
+    CASE 
+        WHEN SUM(c.QUANTIDADE_ESPERADA) > 0 THEN 
+            ROUND((COALESCE(SUM(cc.QUANTIDADE_ENCONTRADA), 0)::DECIMAL / SUM(c.QUANTIDADE_ESPERADA)::DECIMAL) * 100, 2)
+        ELSE 0
+    END AS TAXA_INTEGRIDADE,
+    CASE 
+        WHEN COALESCE(SUM(cc.QUANTIDADE_ENCONTRADA), 0) >= SUM(c.QUANTIDADE_ESPERADA) THEN 'COMPLETO'
+        WHEN COALESCE(SUM(cc.QUANTIDADE_ENCONTRADA), 0) > 0 THEN 'INCOMPLETO'
+        ELSE 'NAO_COLETADO'
+    END AS STATUS_INTEGRIDADE
+FROM TABELA_ITEM_COMPOSTO ic
+INNER JOIN TABELA_PATRIMONIO p ON ic.ID_PATRIMONIO = p.ID
+INNER JOIN TABELA_COMPONENTE c ON ic.ID = c.ID_ITEM_COMPOSTO
+CROSS JOIN TABELA_INVENTARIO i
+LEFT JOIN TABELA_COMPONENTE_COLETA cc 
+    ON c.ID = cc.ID_COMPONENTE 
+    AND i.ID = cc.ID_INVENTARIO
+GROUP BY 
+    ic.ID, ic.ID_PATRIMONIO, p.NUMERO, p.DESCRICAO,
+    i.ID, i.NOME, i.ANO;
+
+COMMENT ON VIEW VIEW_ITEM_COMPOSTO_INTEGRIDADE IS 
+'View com taxa de integridade de cada item composto por inventário, útil para relatórios gerenciais';
+
+-- =====================================================
+-- 4. VIEW_ESTATISTICA_COMPONENTE_TIPO
+-- =====================================================
+-- View com estatísticas agregadas por tipo de componente
+
+CREATE OR REPLACE VIEW VIEW_ESTATISTICA_COMPONENTE_TIPO AS
+SELECT 
+    c.TIPO AS TIPO_COMPONENTE,
+    i.ID AS ID_INVENTARIO,
+    i.NOME AS NOME_INVENTARIO,
+    i.ANO AS ANO_INVENTARIO,
+    COUNT(DISTINCT c.ID) AS TOTAL_COMPONENTES_DISTINTOS,
+    SUM(c.QUANTIDADE_ESPERADA) AS TOTAL_ESPERADO,
+    COALESCE(SUM(cc.QUANTIDADE_ENCONTRADA), 0) AS TOTAL_ENCONTRADO,
+    SUM(c.QUANTIDADE_ESPERADA) - COALESCE(SUM(cc.QUANTIDADE_ENCONTRADA), 0) AS TOTAL_FALTANTE,
+    CASE 
+        WHEN SUM(c.QUANTIDADE_ESPERADA) > 0 THEN 
+            ROUND((COALESCE(SUM(cc.QUANTIDADE_ENCONTRADA), 0)::DECIMAL / SUM(c.QUANTIDADE_ESPERADA)::DECIMAL) * 100, 2)
+        ELSE 0
+    END AS TAXA_PRESENCA,
+    CASE 
+        WHEN SUM(c.QUANTIDADE_ESPERADA) > 0 THEN 
+            ROUND(((SUM(c.QUANTIDADE_ESPERADA) - COALESCE(SUM(cc.QUANTIDADE_ENCONTRADA), 0))::DECIMAL / SUM(c.QUANTIDADE_ESPERADA)::DECIMAL) * 100, 2)
+        ELSE 0
+    END AS TAXA_AUSENCIA
+FROM TABELA_COMPONENTE c
+CROSS JOIN TABELA_INVENTARIO i
+LEFT JOIN TABELA_COMPONENTE_COLETA cc 
+    ON c.ID = cc.ID_COMPONENTE 
+    AND i.ID = cc.ID_INVENTARIO
+GROUP BY 
+    c.TIPO, i.ID, i.NOME, i.ANO
+ORDER BY 
+    i.ANO DESC, TAXA_AUSENCIA DESC;
+
+COMMENT ON VIEW VIEW_ESTATISTICA_COMPONENTE_TIPO IS 
+'View com estatísticas agregadas por tipo de componente, útil para identificar padrões de ausência';
+
+-- =====================================================
+-- 5. VIEW_DESCRICAO_AGRUPADA
+-- =====================================================
+-- View para aplicação em lote: agrupa patrimônios por descrição
+
+CREATE OR REPLACE VIEW VIEW_DESCRICAO_AGRUPADA AS
+SELECT 
+    p.DESCRICAO,
+    COUNT(p.ID) AS QUANTIDADE_PATRIMONIOS,
+    COUNT(ic.ID) AS QUANTIDADE_JA_CONFIGURADOS,
+    COUNT(p.ID) - COUNT(ic.ID) AS QUANTIDADE_NAO_CONFIGURADOS,
+    CASE 
+        WHEN COUNT(ic.ID) = COUNT(p.ID) THEN TRUE
+        ELSE FALSE
+    END AS TODOS_CONFIGURADOS,
+    ARRAY_AGG(p.ID ORDER BY p.NUMERO) AS IDS_PATRIMONIOS,
+    MIN(p.NUMERO) AS PRIMEIRO_NUMERO,
+    MAX(p.NUMERO) AS ULTIMO_NUMERO
+FROM TABELA_PATRIMONIO p
+LEFT JOIN TABELA_ITEM_COMPOSTO ic ON p.ID = ic.ID_PATRIMONIO
+WHERE p.STATUS = 'ATIVO'
+  AND p.DESCRICAO IS NOT NULL
+  AND TRIM(p.DESCRICAO) != ''
+GROUP BY p.DESCRICAO
+HAVING COUNT(p.ID) > 1  -- Apenas descrições com mais de 1 patrimônio
+ORDER BY COUNT(p.ID) DESC, p.DESCRICAO;
+
+COMMENT ON VIEW VIEW_DESCRICAO_AGRUPADA IS 
+'View para aplicação em lote: agrupa patrimônios por descrição única para facilitar configuração em massa';
+
+-- =====================================================
+-- FIM DO SCRIPT
+-- =====================================================
+
+-- Mensagem de sucesso
+DO $
+BEGIN
+    RAISE NOTICE 'Views do módulo de Itens Compostos criadas com sucesso!';
+    RAISE NOTICE 'Total de views: 5';
+    RAISE NOTICE '  - VIEW_ITEM_COMPOSTO_RESUMO';
+    RAISE NOTICE '  - VIEW_COMPONENTE_STATUS_INVENTARIO';
+    RAISE NOTICE '  - VIEW_ITEM_COMPOSTO_INTEGRIDADE';
+    RAISE NOTICE '  - VIEW_ESTATISTICA_COMPONENTE_TIPO';
+    RAISE NOTICE '  - VIEW_DESCRICAO_AGRUPADA';
+END $;

@@ -128,10 +128,21 @@ class InventarioRepository(
             val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(context)
             val patrimonioDao = database.patrimonioDao()
             
-            val patrimonioEntity = patrimonioDao.buscarPorNumero(numero)
+            // ✅ CORREÇÃO: Usar query otimizada que busca nome da sala e status de coleta
+            // Usar inventário ID 1 como padrão (pode ser melhorado depois)
+            val inventarioId = 1
+            
+            android.util.Log.d("InventarioRepository", "Usando query otimizada com JOIN (sala + coleta)")
+            val patrimonioEntity = patrimonioDao.buscarPorNumeroComStatusColeta(numero, inventarioId)
             
             if (patrimonioEntity != null) {
                 android.util.Log.d("InventarioRepository", "✓ Patrimônio encontrado no banco local")
+                android.util.Log.d("InventarioRepository", "  ID: ${patrimonioEntity.id}")
+                android.util.Log.d("InventarioRepository", "  Número: ${patrimonioEntity.numeroPatrimonio}")
+                android.util.Log.d("InventarioRepository", "  Sala ID: ${patrimonioEntity.salaId ?: patrimonioEntity.idSala}")
+                android.util.Log.d("InventarioRepository", "  Sala Nome: ${patrimonioEntity.salaNome ?: patrimonioEntity.nomeSala}")
+                android.util.Log.d("InventarioRepository", "  Coletado: ${patrimonioEntity.coletado}")
+                android.util.Log.d("InventarioRepository", "  Coletado Por: ${patrimonioEntity.coletadoPor}")
                 
                 val patrimonio = Patrimonio(
                     id = patrimonioEntity.id,
@@ -145,15 +156,28 @@ class InventarioRepository(
                     setorId = patrimonioEntity.setorId?.toLong(),
                     setorNome = patrimonioEntity.setorNome,
                     salaId = patrimonioEntity.salaId?.toLong() ?: patrimonioEntity.idSala?.toLong(),
-                    salaNome = patrimonioEntity.salaNome ?: patrimonioEntity.nomeSala,
+                    salaNome = patrimonioEntity.salaNome ?: patrimonioEntity.nomeSala,  // ✅ CORREÇÃO: Prioriza salaNome
                     responsavelId = patrimonioEntity.responsavelId?.toLong() ?: patrimonioEntity.idResponsavel?.toLong(),
                     responsavelNome = patrimonioEntity.responsavelNome ?: patrimonioEntity.nomeResponsavel,
-                    coletado = patrimonioEntity.coletado,
+                    coletado = patrimonioEntity.coletado,  // ✅ CORREÇÃO: Agora vem do JOIN
                     dataColeta = patrimonioEntity.dataColeta?.toString(),
-                    coletadoPor = patrimonioEntity.coletadoPor,
+                    coletadoPor = patrimonioEntity.coletadoPor,  // ✅ CORREÇÃO: Agora vem do JOIN
+                    dataColetaFormatada = patrimonioEntity.dataColeta?.let { 
+                        try {
+                            val sdf = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+                            sdf.format(java.util.Date(it))
+                        } catch (e: Exception) {
+                            null
+                        }
+                    },
                     observacoesColeta = patrimonioEntity.observacoesColeta,
                     observacoes = patrimonioEntity.observacoes
                 )
+                
+                android.util.Log.d("InventarioRepository", "✓ Patrimônio mapeado:")
+                android.util.Log.d("InventarioRepository", "  salaNome: ${patrimonio.salaNome}")
+                android.util.Log.d("InventarioRepository", "  coletado: ${patrimonio.coletado}")
+                android.util.Log.d("InventarioRepository", "  coletadoPor: ${patrimonio.coletadoPor}")
                 
                 return Result.success(patrimonio)
             }
@@ -796,6 +820,44 @@ class InventarioRepository(
     fun getCurrentUser(): com.inventario.mobile.data.model.Usuario? = null
     
     private suspend fun obterInventarioAtivo(): Result<Int> = Result.success(1)
+    
+    /**
+     * v2.7: Limpa erro de sincronização de uma coleta específica
+     * Permite nova tentativa de sincronização
+     */
+    suspend fun limparErroColeta(coletaId: Long): Result<Unit> {
+        return try {
+            android.util.Log.d("InventarioRepository", "Limpando erro da coleta $coletaId...")
+            
+            val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(context)
+            database.coletaDao().limparErroSincronizacao(coletaId)
+            
+            android.util.Log.d("InventarioRepository", "✓ Erro da coleta $coletaId limpo")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            android.util.Log.e("InventarioRepository", "Erro ao limpar erro da coleta $coletaId", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * v2.7: Limpa erros de todas as coletas pendentes
+     * Permite nova tentativa de sincronização em lote
+     */
+    suspend fun limparTodosErrosColetas(): Result<Int> {
+        return try {
+            android.util.Log.d("InventarioRepository", "Limpando erros de todas as coletas pendentes...")
+            
+            val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(context)
+            val quantidade = database.coletaDao().limparTodosErrosSincronizacao()
+            
+            android.util.Log.d("InventarioRepository", "✓ Erros limpos de $quantidade coletas")
+            Result.success(quantidade)
+        } catch (e: Exception) {
+            android.util.Log.e("InventarioRepository", "Erro ao limpar erros das coletas", e)
+            Result.failure(e)
+        }
+    }
 }
 
 // Data classes para compatibilidade

@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.inventario.mobile.R;
 import java.lang.NullPointerException;
@@ -27,10 +28,19 @@ public final class ActivitySalaSelectionBinding implements ViewBinding {
   private final CoordinatorLayout rootView;
 
   @NonNull
+  public final ImageButton btnRemoverSalaFixada;
+
+  @NonNull
+  public final MaterialButton btnUsarSalaFixada;
+
+  @NonNull
   public final ImageButton buttonClearSearch;
 
   @NonNull
   public final EditText editTextSearch;
+
+  @NonNull
+  public final MaterialCardView layoutSalaFixada;
 
   @NonNull
   public final RecyclerView recyclerViewSalas;
@@ -50,20 +60,29 @@ public final class ActivitySalaSelectionBinding implements ViewBinding {
   @NonNull
   public final Toolbar toolbar;
 
+  @NonNull
+  public final TextView tvSalaFixadaNome;
+
   private ActivitySalaSelectionBinding(@NonNull CoordinatorLayout rootView,
+      @NonNull ImageButton btnRemoverSalaFixada, @NonNull MaterialButton btnUsarSalaFixada,
       @NonNull ImageButton buttonClearSearch, @NonNull EditText editTextSearch,
-      @NonNull RecyclerView recyclerViewSalas, @NonNull MaterialCardView searchCard,
-      @NonNull SwipeRefreshLayout swipeRefreshLayout, @NonNull LinearLayout textViewEmpty,
-      @NonNull TextView textViewTitle, @NonNull Toolbar toolbar) {
+      @NonNull MaterialCardView layoutSalaFixada, @NonNull RecyclerView recyclerViewSalas,
+      @NonNull MaterialCardView searchCard, @NonNull SwipeRefreshLayout swipeRefreshLayout,
+      @NonNull LinearLayout textViewEmpty, @NonNull TextView textViewTitle,
+      @NonNull Toolbar toolbar, @NonNull TextView tvSalaFixadaNome) {
     this.rootView = rootView;
+    this.btnRemoverSalaFixada = btnRemoverSalaFixada;
+    this.btnUsarSalaFixada = btnUsarSalaFixada;
     this.buttonClearSearch = buttonClearSearch;
     this.editTextSearch = editTextSearch;
+    this.layoutSalaFixada = layoutSalaFixada;
     this.recyclerViewSalas = recyclerViewSalas;
     this.searchCard = searchCard;
     this.swipeRefreshLayout = swipeRefreshLayout;
     this.textViewEmpty = textViewEmpty;
     this.textViewTitle = textViewTitle;
     this.toolbar = toolbar;
+    this.tvSalaFixadaNome = tvSalaFixadaNome;
   }
 
   @Override
@@ -93,6 +112,18 @@ public final class ActivitySalaSelectionBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.btnRemoverSalaFixada;
+      ImageButton btnRemoverSalaFixada = ViewBindings.findChildViewById(rootView, id);
+      if (btnRemoverSalaFixada == null) {
+        break missingId;
+      }
+
+      id = R.id.btnUsarSalaFixada;
+      MaterialButton btnUsarSalaFixada = ViewBindings.findChildViewById(rootView, id);
+      if (btnUsarSalaFixada == null) {
+        break missingId;
+      }
+
       id = R.id.buttonClearSearch;
       ImageButton buttonClearSearch = ViewBindings.findChildViewById(rootView, id);
       if (buttonClearSearch == null) {
@@ -102,6 +133,12 @@ public final class ActivitySalaSelectionBinding implements ViewBinding {
       id = R.id.editTextSearch;
       EditText editTextSearch = ViewBindings.findChildViewById(rootView, id);
       if (editTextSearch == null) {
+        break missingId;
+      }
+
+      id = R.id.layoutSalaFixada;
+      MaterialCardView layoutSalaFixada = ViewBindings.findChildViewById(rootView, id);
+      if (layoutSalaFixada == null) {
         break missingId;
       }
 
@@ -141,9 +178,15 @@ public final class ActivitySalaSelectionBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ActivitySalaSelectionBinding((CoordinatorLayout) rootView, buttonClearSearch,
-          editTextSearch, recyclerViewSalas, searchCard, swipeRefreshLayout, textViewEmpty,
-          textViewTitle, toolbar);
+      id = R.id.tvSalaFixadaNome;
+      TextView tvSalaFixadaNome = ViewBindings.findChildViewById(rootView, id);
+      if (tvSalaFixadaNome == null) {
+        break missingId;
+      }
+
+      return new ActivitySalaSelectionBinding((CoordinatorLayout) rootView, btnRemoverSalaFixada,
+          btnUsarSalaFixada, buttonClearSearch, editTextSearch, layoutSalaFixada, recyclerViewSalas,
+          searchCard, swipeRefreshLayout, textViewEmpty, textViewTitle, toolbar, tvSalaFixadaNome);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

@@ -6,12 +6,14 @@ import com.inventario.mobile.api.PatrimonioApi
 import com.inventario.mobile.api.SalaApi
 import com.inventario.mobile.data.local.dao.PatrimonioDao
 import com.inventario.mobile.data.local.dao.SalaDao
+import com.inventario.mobile.utils.PreferencesManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
  * Factory Pattern - Cria a estratégia apropriada baseada na conectividade
+ * v2.7: Respeita configuração de modo offline forçado
  */
 @Singleton
 class DataSourceStrategyFactory @Inject constructor(
@@ -26,6 +28,9 @@ class DataSourceStrategyFactory @Inject constructor(
         private const val TAG = "DataSourceFactory"
     }
     
+    // PreferencesManager para verificar modo offline forçado
+    private val preferencesManager by lazy { PreferencesManager(context) }
+    
     private val remoteStrategy by lazy {
         RemoteDataSourceStrategy(context, patrimonioApi, salaApi)
     }
@@ -36,12 +41,24 @@ class DataSourceStrategyFactory @Inject constructor(
     
     /**
      * Retorna a estratégia apropriada baseada na disponibilidade
-     * Prioridade: Remote -> Local
+     * v2.7: Respeita modo offline forçado
+     * Prioridade: ForceOffline -> Remote -> Local
      */
     suspend fun getStrategy(): DataSourceStrategy {
         Log.d(TAG, "Determinando estratégia de fonte de dados...")
         
-        // Tentar remoto primeiro
+        // v2.7: Verificar se modo offline está forçado
+        if (preferencesManager.isForceOfflineMode()) {
+            Log.d(TAG, "🔒 MODO OFFLINE FORÇADO - Usando fonte LOCAL")
+            if (localStrategy.isAvailable()) {
+                return localStrategy
+            } else {
+                Log.w(TAG, "⚠️ Modo offline forçado mas banco local vazio!")
+                return localStrategy // Retorna mesmo assim para mostrar erro apropriado
+            }
+        }
+        
+        // Tentar remoto primeiro (comportamento padrão)
         if (remoteStrategy.isAvailable()) {
             Log.d(TAG, "✓ Usando fonte REMOTA (servidor)")
             return remoteStrategy
@@ -70,12 +87,34 @@ class DataSourceStrategyFactory @Inject constructor(
     
     /**
      * Verifica qual estratégia está disponível
+     * v2.7: Respeita modo offline forçado
      */
     suspend fun getAvailableSourceType(): DataSourceType {
+        // v2.7: Se modo offline forçado, sempre retorna LOCAL
+        if (preferencesManager.isForceOfflineMode()) {
+            Log.d(TAG, "🔒 Modo offline forçado - retornando LOCAL")
+            return DataSourceType.LOCAL
+        }
+        
         return when {
             remoteStrategy.isAvailable() -> DataSourceType.REMOTE
             localStrategy.isAvailable() -> DataSourceType.LOCAL
             else -> DataSourceType.LOCAL // Default
         }
+    }
+    
+    /**
+     * Verifica se o modo offline está forçado
+     */
+    fun isForceOfflineMode(): Boolean {
+        return preferencesManager.isForceOfflineMode()
+    }
+    
+    /**
+     * Define o modo offline forçado
+     */
+    fun setForceOfflineMode(enabled: Boolean) {
+        preferencesManager.setForceOfflineMode(enabled)
+        Log.d(TAG, "Modo offline forçado: ${if (enabled) "ATIVADO" else "DESATIVADO"}")
     }
 }

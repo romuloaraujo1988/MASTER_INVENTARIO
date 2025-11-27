@@ -3,10 +3,14 @@ package com.inventario.mobile.presentation.coleta
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.PopupMenu
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.inventario.mobile.R
+import com.inventario.mobile.data.model.Coleta
 import com.inventario.mobile.databinding.ActivityCollectionViewBinding
 import com.inventario.mobile.presentation.state.CollectionViewState
 import dagger.hilt.android.AndroidEntryPoint
@@ -18,6 +22,7 @@ import dagger.hilt.android.AndroidEntryPoint
  * - Usa @AndroidEntryPoint para injeção Hilt
  * - Observa CollectionViewState (sealed class)
  * - Delega lógica para CollectionViewViewModelClean
+ * - v2.8: Menu de contexto para coletas pendentes (reenviar/excluir)
  */
 @AndroidEntryPoint
 class CollectionViewActivity : AppCompatActivity() {
@@ -31,7 +36,12 @@ class CollectionViewActivity : AppCompatActivity() {
     // ViewModel Clean Architecture (injetado via Hilt)
     private val viewModel: CollectionViewViewModelClean by viewModels()
 
-    private val adapter = CollectionAdapter()
+    // Adapter com callback para long click
+    private val adapter = CollectionAdapter(
+        onItemLongClick = { coleta ->
+            mostrarMenuColetaPendente(coleta)
+        }
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -221,5 +231,94 @@ class CollectionViewActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         onBackPressed()
         return true
+    }
+    
+    /**
+     * v2.8: Mostra menu de contexto para coletas pendentes
+     * Permite reenviar ou excluir a coleta
+     */
+    private fun mostrarMenuColetaPendente(coleta: Coleta) {
+        Log.d(TAG, "mostrarMenuColetaPendente: coleta=${coleta.id}, sincronizado=${coleta.sincronizado}")
+        
+        // Só mostrar menu para coletas pendentes (não sincronizadas)
+        if (coleta.sincronizado) {
+            Log.d(TAG, "Coleta já sincronizada, ignorando menu")
+            android.widget.Toast.makeText(
+                this,
+                "Esta coleta já está sincronizada",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+        
+        // Criar dialog com opções
+        // NOTA: setMessage() e setItems() não funcionam juntos, usar apenas setItems()
+        val patrimonioInfo = coleta.numeroPatrimonio ?: "Patrimônio ${coleta.patrimonioId}"
+        val opcoes = arrayOf("🔄 Reenviar Coleta", "🗑️ Excluir Coleta")
+        
+        AlertDialog.Builder(this)
+            .setTitle("Coleta Pendente\n$patrimonioInfo")
+            .setItems(opcoes) { _, which ->
+                when (which) {
+                    0 -> confirmarReenvio(coleta)
+                    1 -> confirmarExclusao(coleta)
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+    
+    /**
+     * v2.8: Confirma reenvio de coleta pendente
+     */
+    private fun confirmarReenvio(coleta: Coleta) {
+        Log.d(TAG, "confirmarReenvio: coleta=${coleta.id}")
+        
+        AlertDialog.Builder(this)
+            .setTitle("Reenviar Coleta")
+            .setMessage("Deseja tentar sincronizar a coleta do patrimônio ${coleta.numeroPatrimonio ?: coleta.patrimonioId} novamente?")
+            .setPositiveButton("Reenviar") { _, _ ->
+                val coletaId = coleta.id?.toLong() ?: 0L
+                if (coletaId > 0) {
+                    Log.d(TAG, "Reenviando coleta $coletaId")
+                    viewModel.reenviarColeta(coletaId)
+                } else {
+                    Log.e(TAG, "ID da coleta inválido: ${coleta.id}")
+                    android.widget.Toast.makeText(
+                        this,
+                        "Erro: ID da coleta inválido",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+    
+    /**
+     * v2.8: Confirma exclusão de coleta pendente
+     */
+    private fun confirmarExclusao(coleta: Coleta) {
+        Log.d(TAG, "confirmarExclusao: coleta=${coleta.id}")
+        
+        AlertDialog.Builder(this)
+            .setTitle("⚠️ Excluir Coleta")
+            .setMessage("Tem certeza que deseja EXCLUIR a coleta do patrimônio ${coleta.numeroPatrimonio ?: coleta.patrimonioId}?\n\nEsta ação não pode ser desfeita!")
+            .setPositiveButton("Excluir") { _, _ ->
+                val coletaId = coleta.id?.toLong() ?: 0L
+                if (coletaId > 0) {
+                    Log.d(TAG, "Excluindo coleta $coletaId")
+                    viewModel.excluirColetaPendente(coletaId)
+                } else {
+                    Log.e(TAG, "ID da coleta inválido: ${coleta.id}")
+                    android.widget.Toast.makeText(
+                        this,
+                        "Erro: ID da coleta inválido",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 }

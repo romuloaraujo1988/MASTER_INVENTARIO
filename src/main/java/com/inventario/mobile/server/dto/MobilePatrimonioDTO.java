@@ -1,13 +1,22 @@
 package com.inventario.mobile.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
  * DTO para patrimônio mobile
  * 
+ * ✅ COMPATIBILIDADE COM VERSÕES ANTIGAS:
+ * - @JsonIgnoreProperties: Ignora campos desconhecidos no JSON
+ * - @JsonInclude: Não serializa campos nulos (reduz tamanho do JSON)
+ * - Todos os campos são opcionais (podem ser null)
+ * 
  * @author Sistema de Inventário
  * @version 1.0.0
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MobilePatrimonioDTO {
     
     @JsonProperty("id")
@@ -78,6 +87,12 @@ public class MobilePatrimonioDTO {
     
     @JsonProperty("fornecedor")
     private String fornecedor;
+    
+    @JsonProperty("localizacaoEncontrada")
+    private String localizacaoEncontrada;
+    
+    @JsonProperty("estadoEncontrado")
+    private String estadoEncontrado;
     
     // Construtores
     public MobilePatrimonioDTO() {}
@@ -265,5 +280,21 @@ public class MobilePatrimonioDTO {
     
     public void setFornecedor(String fornecedor) {
         this.fornecedor = fornecedor;
+    }
+    
+    public String getLocalizacaoEncontrada() {
+        return localizacaoEncontrada;
+    }
+    
+    public void setLocalizacaoEncontrada(String localizacaoEncontrada) {
+        this.localizacaoEncontrada = localizacaoEncontrada;
+    }
+    
+    public String getEstadoEncontrado() {
+        return estadoEncontrado;
+    }
+    
+    public void setEstadoEncontrado(String estadoEncontrado) {
+        this.estadoEncontrado = estadoEncontrado;
     }
 }

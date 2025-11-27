@@ -55,6 +55,43 @@ class PatrimonioAdapter(
                 textViewStatus.setTextColor(itemView.context.getColor(statusColor))
                 textViewStatus.text = statusText
                 
+                // ✅ NOVO: Mostrar informações da coleta quando já foi coletado (igual ao scanner)
+                if (patrimonio.coletado) {
+                    layoutInfoColeta.visibility = android.view.View.VISIBLE
+                    
+                    // Coletado por
+                    textViewColetadoPor.text = if (!patrimonio.coletadoPor.isNullOrBlank()) {
+                        "Coletado por: ${patrimonio.coletadoPor}"
+                    } else {
+                        "Coletado por: Não informado"
+                    }
+                    
+                    // Data da coleta
+                    textViewDataColeta.text = if (!patrimonio.dataColetaFormatada.isNullOrBlank()) {
+                        "Data: ${patrimonio.dataColetaFormatada}"
+                    } else if (!patrimonio.dataColeta.isNullOrBlank()) {
+                        "Data: ${patrimonio.dataColeta}"
+                    } else {
+                        "Data: Não informada"
+                    }
+                    
+                    // Localização encontrada
+                    textViewLocalizacaoEncontrada.text = if (!patrimonio.localizacaoEncontrada.isNullOrBlank()) {
+                        "Local encontrado: ${patrimonio.localizacaoEncontrada}"
+                    } else {
+                        "Local encontrado: Não informado"
+                    }
+                    
+                    // Estado encontrado
+                    textViewEstadoEncontrado.text = if (!patrimonio.estadoEncontrado.isNullOrBlank()) {
+                        "Estado: ${patrimonio.estadoEncontrado}"
+                    } else {
+                        "Estado: Não informado"
+                    }
+                } else {
+                    layoutInfoColeta.visibility = android.view.View.GONE
+                }
+                
                 root.setOnClickListener {
                     onItemClick(patrimonio)
                 }

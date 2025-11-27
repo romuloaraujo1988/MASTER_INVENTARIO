@@ -15,14 +15,22 @@ import com.inventario.mobile.databinding.ActivityPendingCollectionsBinding
 import com.inventario.mobile.data.model.Coleta
 import com.inventario.mobile.data.repository.InventarioRepository
 import com.inventario.mobile.data.local.LocalDataManager
-import com.inventario.mobile.data.remote.api.MockApiService
+import com.inventario.mobile.data.remote.api.ApiClient
 import kotlinx.coroutines.launch
+
 class PendingCollectionsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityPendingCollectionsBinding
+    
+    // Correção: Usar ApiClient real ao invés de MockApiService
+    // e LocalDataManager.getInstance() ao invés de nova instância
     private val viewModel: PendingCollectionsViewModel by viewModels {
         PendingCollectionsViewModelFactory(
-            InventarioRepository(MockApiService(), LocalDataManager(this), this)
+            InventarioRepository(
+                ApiClient.getApiService(this),
+                LocalDataManager.getInstance(this),
+                this
+            )
         )
     }
     private lateinit var adapter: PendingCollectionsAdapter
@@ -105,6 +113,9 @@ class PendingCollectionsActivity : AppCompatActivity() {
     }
 
     private fun updateUI(state: PendingCollectionsUiState) {
+        // Log de diagnóstico
+        android.util.Log.d("PendingCollectionsUI", "🔄 Atualizando UI - isLoading: ${state.isLoading}, coletas: ${state.pendingCollections.size}")
+        
         // Update loading state
         binding.progressOverlay.visibility = if (state.isLoading || state.isDeleting) {
             View.VISIBLE
@@ -117,12 +128,15 @@ class PendingCollectionsActivity : AppCompatActivity() {
 
         // Update RecyclerView
         adapter.submitList(state.pendingCollections)
+        android.util.Log.d("PendingCollectionsUI", "📋 Lista submetida ao adapter: ${state.pendingCollections.size} itens")
 
         // Show/hide empty state
         if (state.pendingCollections.isEmpty() && !state.isLoading) {
+            android.util.Log.d("PendingCollectionsUI", "📭 Mostrando estado vazio")
             binding.recyclerViewPendingCollections.visibility = View.GONE
             binding.layoutEmptyState.visibility = View.VISIBLE
         } else {
+            android.util.Log.d("PendingCollectionsUI", "📋 Mostrando lista de coletas")
             binding.recyclerViewPendingCollections.visibility = View.VISIBLE
             binding.layoutEmptyState.visibility = View.GONE
         }
@@ -195,6 +209,16 @@ class PendingCollectionsActivity : AppCompatActivity() {
         snackbar.show()
     }
 
+    /**
+     * v2.7: Recarrega a lista de coletas pendentes ao voltar para a tela
+     * Garante que os dados estejam sempre atualizados
+     */
+    override fun onResume() {
+        super.onResume()
+        android.util.Log.d("PendingCollectionsUI", "🔄 onResume - Recarregando coletas pendentes...")
+        viewModel.loadPendingCollections()
+    }
+    
     override fun onSupportNavigateUp(): Boolean {
         onBackPressed()
         return true

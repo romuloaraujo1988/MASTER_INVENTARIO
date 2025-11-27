@@ -2,6 +2,7 @@ package com.inventario.mobile.server.config;
 
 import com.inventario.service.ConnectedDevicesManager;
 import com.inventario.service.ConnectedDevicesManager.ConnectedDevice;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -9,46 +10,45 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * Interceptor para rastrear dispositivos móveis conectados
- * Registra automaticamente atividade de dispositivos em cada requisição
+ * Interceptor OTIMIZADO para rastrear dispositivos móveis conectados
+ * 
+ * v3.0: Otimizado para baixo consumo de memória
+ * - Pode ser desabilitado via propriedade
+ * - Rastreamento simplificado
  */
 @Component
 public class DeviceTrackingInterceptor implements HandlerInterceptor {
     
+    // Desabilitado por padrão para economizar memória
+    @Value("${mobile.server.device-tracking.enabled:false}")
+    private boolean trackingEnabled;
+    
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        // Se tracking desabilitado, retorna imediatamente (RÁPIDO)
+        if (!trackingEnabled) {
+            return true;
+        }
+        
         // Verificar se é uma requisição da API mobile
         String requestURI = request.getRequestURI();
         
         if (requestURI.startsWith("/api/mobile") || requestURI.startsWith("/inventario/api/mobile")) {
-            // Extrair informações do dispositivo dos headers
+            // Extrair apenas informações essenciais
             String deviceId = request.getHeader("X-Device-ID");
             String username = request.getHeader("X-Username");
-            String deviceModel = request.getHeader("X-Device-Model");
-            String androidVersion = request.getHeader("X-Android-Version");
-            String appVersion = request.getHeader("X-App-Version");
-            String ipAddress = getClientIpAddress(request);
             
             // Se tem device ID e username, registrar/atualizar
             if (deviceId != null && username != null) {
                 ConnectedDevice device = ConnectedDevicesManager.getDevice(deviceId);
                 
                 if (device == null) {
-                    // Novo dispositivo
+                    // Novo dispositivo - registrar com informações mínimas
+                    String ipAddress = getClientIpAddress(request);
                     ConnectedDevicesManager.registerDevice(deviceId, username, ipAddress);
-                    
-                    // Atualizar informações adicionais
-                    if (deviceModel != null || androidVersion != null || appVersion != null) {
-                        ConnectedDevicesManager.updateDeviceInfo(deviceId, deviceModel, androidVersion, appVersion);
-                    }
                 } else {
                     // Dispositivo existente - apenas registrar atividade
                     ConnectedDevicesManager.registerActivity(deviceId);
-                    
-                    // Atualizar informações se mudaram
-                    if (deviceModel != null || androidVersion != null || appVersion != null) {
-                        ConnectedDevicesManager.updateDeviceInfo(deviceId, deviceModel, androidVersion, appVersion);
-                    }
                 }
             }
         }

@@ -2167,6 +2167,61 @@ public class ColetaDAO {
     }
     
     /**
+     * Busca evolução de coletas por período específico (usando datas do inventário)
+     * Retorna quantidade de coletas agrupadas por data dentro do período informado
+     * 
+     * NOVO: Este método usa as datas de início e fim do inventário ao invés de "últimos N dias"
+     * 
+     * @param inventarioId ID do inventário
+     * @param dataInicio Data de início do período
+     * @param dataFim Data de fim do período
+     * @return Lista de mapas com data e quantidade
+     * @throws SQLException Se ocorrer erro na consulta
+     */
+    public List<Map<String, Object>> buscarEvolucaoColetasPorPeriodo(
+            Integer inventarioId, 
+            java.util.Date dataInicio, 
+            java.util.Date dataFim) throws SQLException {
+        
+        String sql = "SELECT " +
+                    "    CAST(DATA_COLETA AS DATE) as data, " +
+                    "    COUNT(*) as quantidade " +
+                    "FROM TABELA_COLETA " +
+                    "WHERE ID_INVENTARIO = ? " +
+                    "    AND DATA_COLETA >= ? " +
+                    "    AND DATA_COLETA <= ? " +
+                    "GROUP BY CAST(DATA_COLETA AS DATE) " +
+                    "ORDER BY data ASC";
+        
+        List<Map<String, Object>> resultado = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, inventarioId);
+            stmt.setTimestamp(2, new java.sql.Timestamp(dataInicio.getTime()));
+            // Adicionar 23:59:59 ao dataFim para incluir todo o dia
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            cal.setTime(dataFim);
+            cal.set(java.util.Calendar.HOUR_OF_DAY, 23);
+            cal.set(java.util.Calendar.MINUTE, 59);
+            cal.set(java.util.Calendar.SECOND, 59);
+            stmt.setTimestamp(3, new java.sql.Timestamp(cal.getTimeInMillis()));
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> item = new java.util.HashMap<>();
+                    item.put("data", rs.getDate("data"));
+                    item.put("quantidade", rs.getInt("quantidade"));
+                    resultado.add(item);
+                }
+            }
+        }
+        
+        return resultado;
+    }
+    
+    /**
      * Busca top itens mais coletados (por descrição do patrimônio)
      * 
      * @param inventarioId ID do inventário

@@ -14,7 +14,8 @@ import com.inventario.mobile.domain.usecase.RegistrarColetaUseCase
 class ManualCollectionViewModelFactory(
     private val buscarPatrimonioUseCase: BuscarPatrimonioUseCase,
     private val registrarColetaUseCase: RegistrarColetaUseCase,
-    private val repository: InventarioRepository
+    private val repository: InventarioRepository,
+    private val coletaDao: com.inventario.mobile.data.local.dao.ColetaDao // v2.7
 ) : ViewModelProvider.Factory {
     
     @Suppress("UNCHECKED_CAST")
@@ -23,7 +24,8 @@ class ManualCollectionViewModelFactory(
             return ManualCollectionViewModel(
                 buscarPatrimonioUseCase,
                 registrarColetaUseCase,
-                repository
+                repository,
+                coletaDao
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")

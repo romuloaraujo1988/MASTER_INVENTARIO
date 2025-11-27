@@ -108,6 +108,24 @@ class ManualCollectionActivity : BaseOfflineActivity() {
             searchPatrimonio()
             true
         }
+        
+        // v2.7: Botão para voltar ao Dashboard
+        binding.btnBackToDashboard.setOnClickListener {
+            goBackToDashboard()
+        }
+    }
+    
+    /**
+     * v2.7: Navega de volta para o Dashboard (MainActivity)
+     */
+    private fun goBackToDashboard() {
+        Log.d("ManualCollectionActivity", "Voltando ao Dashboard...")
+        
+        // Usar FLAG_ACTIVITY_CLEAR_TOP para voltar à MainActivity existente
+        val intent = android.content.Intent(this, com.inventario.mobile.presentation.main.MainActivity::class.java)
+        intent.flags = android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
+        startActivity(intent)
+        finish()
     }
 
     private fun setupObservers() {
@@ -121,7 +139,7 @@ class ManualCollectionActivity : BaseOfflineActivity() {
     private fun updateUI(state: ManualCollectionUiState) {
         // Atualizar informações da sala
         binding.tvSalaInfo?.text = "Sala: ${state.salaNome}"
-        binding.tvCollectionCount.text = "Total coletado: ${state.totalColetas}"
+        binding.tvCollectionCount.text = "Total coletado na sala: ${state.totalColetas}"
 
         // Controlar loading
         binding.progressBar?.visibility = if (state.isLoading) 
@@ -137,7 +155,17 @@ class ManualCollectionActivity : BaseOfflineActivity() {
                     append("Patrimônio: ${state.patrimonio.numeroPatrimonio}\n")
                     append("Descrição: ${state.patrimonio.descricao}\n")
                     if (state.jaColetado) {
-                        append("Status: JÁ COLETADO")
+                        append("Status: JÁ COLETADO\n")
+                        // Exibir informações detalhadas da coleta
+                        if (!state.patrimonio.coletadoPor.isNullOrBlank()) {
+                            append("Coletado por: ${state.patrimonio.coletadoPor}\n")
+                        }
+                        if (!state.patrimonio.dataColetaFormatada.isNullOrBlank()) {
+                            append("Data: ${state.patrimonio.dataColetaFormatada}\n")
+                        }
+                        if (!state.patrimonio.localizacaoEncontrada.isNullOrBlank()) {
+                            append("Local encontrado: ${state.patrimonio.localizacaoEncontrada}")
+                        }
                     } else {
                         append("Status: Disponível para coleta")
                     }

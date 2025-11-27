@@ -65,5 +65,11 @@ data class MobilePatrimonioDto(
     val dataColetaFormatada: String?,
     
     @SerializedName("observacoes")
-    val observacoes: String?
+    val observacoes: String?,
+    
+    @SerializedName("localizacaoEncontrada")
+    val localizacaoEncontrada: String? = null,
+    
+    @SerializedName("estadoEncontrado")
+    val estadoEncontrado: String? = null
 )

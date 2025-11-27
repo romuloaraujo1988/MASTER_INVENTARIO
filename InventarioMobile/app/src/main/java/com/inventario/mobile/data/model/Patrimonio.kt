@@ -29,6 +29,8 @@ data class Patrimonio(
     val coletadoPor: String? = null,
     val dataColetaFormatada: String? = null,
     val observacoesColeta: String? = null,
+    val localizacaoEncontrada: String? = null,
+    val estadoEncontrado: String? = null,
     val sincronizado: Boolean = false,
     val servidorId: Long? = null
 ) {
@@ -57,7 +59,9 @@ data class Patrimonio(
                 coletado = dto.coletado,
                 dataColeta = dto.dataColeta,
                 coletadoPor = dto.coletadoPor,
-                dataColetaFormatada = dto.dataColetaFormatada
+                dataColetaFormatada = dto.dataColetaFormatada,
+                localizacaoEncontrada = dto.localizacaoEncontrada,
+                estadoEncontrado = dto.estadoEncontrado
             )
         }
         

@@ -42,9 +42,11 @@ public class MobilePatrimonioService {
     }
     
     /**
-     * Busca patrimônio por QR Code (com cache)
+     * Busca patrimônio por QR Code (SEM CACHE para status de coleta sempre atualizado)
+     * Inclui verificação se já foi coletado no inventário ativo
+     * 
+     * ⚠️ IMPORTANTE: Cache removido para garantir que o status de coleta seja sempre atual
      */
-    @Cacheable(value = "patrimonios", key = "#qrCode")
     public MobilePatrimonioDTO buscarPorQRCode(String qrCode) throws SQLException {
         logger.info("Buscando patrimônio por QR Code: {}", qrCode);
         
@@ -52,25 +54,65 @@ public class MobilePatrimonioService {
         Patrimonio patrimonio = patrimonioDAO.buscarPorNumero(qrCode);
         
         if (patrimonio != null) {
-            return converterParaDTO(patrimonio);
+            MobilePatrimonioDTO dto = converterParaDTO(patrimonio);
+            
+            // ✅ SEMPRE verificar se já foi coletado (sem cache)
+            try {
+                Inventario inventarioAtivo = inventarioDAO.buscarInventarioAtivo();
+                if (inventarioAtivo != null) {
+                    boolean foiColetado = coletaDAO.coletaExiste(inventarioAtivo.getId(), patrimonio.getId());
+                    dto.setColetado(foiColetado);
+                    logger.info("✓ Patrimônio {} (QR) - coletado: {} (inventário {})", qrCode, foiColetado, inventarioAtivo.getId());
+                } else {
+                    logger.warn("⚠ Nenhum inventário ativo encontrado para verificar coleta do patrimônio {}", qrCode);
+                    dto.setColetado(false);
+                }
+            } catch (Exception e) {
+                logger.error("❌ Erro ao verificar coleta do patrimônio {}: {}", qrCode, e.getMessage(), e);
+                dto.setColetado(false); // Em caso de erro, assume não coletado
+            }
+            
+            return dto;
         }
         
+        logger.warn("Patrimônio {} não encontrado no banco", qrCode);
         return null;
     }
     
     /**
-     * Busca patrimônio por número (com cache)
+     * Busca patrimônio por número (SEM CACHE para status de coleta sempre atualizado)
+     * Inclui verificação se já foi coletado no inventário ativo
+     * 
+     * ⚠️ IMPORTANTE: Cache removido para garantir que o status de coleta seja sempre atual
      */
-    @Cacheable(value = "patrimonios", key = "#numero")
     public MobilePatrimonioDTO buscarPorNumero(String numero) throws SQLException {
         logger.info("Buscando patrimônio por número: {}", numero);
         
         Patrimonio patrimonio = patrimonioDAO.buscarPorNumero(numero);
         
         if (patrimonio != null) {
-            return converterParaDTO(patrimonio);
+            MobilePatrimonioDTO dto = converterParaDTO(patrimonio);
+            
+            // ✅ SEMPRE verificar se já foi coletado (sem cache)
+            try {
+                Inventario inventarioAtivo = inventarioDAO.buscarInventarioAtivo();
+                if (inventarioAtivo != null) {
+                    boolean foiColetado = coletaDAO.coletaExiste(inventarioAtivo.getId(), patrimonio.getId());
+                    dto.setColetado(foiColetado);
+                    logger.info("✓ Patrimônio {} - coletado: {} (inventário {})", numero, foiColetado, inventarioAtivo.getId());
+                } else {
+                    logger.warn("⚠ Nenhum inventário ativo encontrado para verificar coleta do patrimônio {}", numero);
+                    dto.setColetado(false);
+                }
+            } catch (Exception e) {
+                logger.error("❌ Erro ao verificar coleta do patrimônio {}: {}", numero, e.getMessage(), e);
+                dto.setColetado(false); // Em caso de erro, assume não coletado
+            }
+            
+            return dto;
         }
         
+        logger.warn("Patrimônio {} não encontrado no banco", numero);
         return null;
     }
     
@@ -541,29 +583,87 @@ public class MobilePatrimonioService {
     }
     
     // Método auxiliar para converter Patrimonio para DTO
+    // ✅ TRATAMENTO ROBUSTO: Garante compatibilidade com versões antigas do app
+    // - Todos os campos são verificados antes de serem setados
+    // - Campos nulos são tratados com valores padrão seguros
+    // - Exceções são capturadas e logadas sem quebrar a conversão
     private MobilePatrimonioDTO converterParaDTO(Patrimonio patrimonio) {
         MobilePatrimonioDTO dto = new MobilePatrimonioDTO();
         
-        dto.setId(Long.valueOf(patrimonio.getId()));
-        dto.setCodigo(patrimonio.getNumero());
-        dto.setDescricao(patrimonio.getDescricao());
-        dto.setMarca(patrimonio.getMarca());
-        dto.setModelo(patrimonio.getModelo());
-        dto.setEstado(patrimonio.getEstadoConservacao());
-        dto.setSalaId(patrimonio.getIdSala() > 0 ? Long.valueOf(patrimonio.getIdSala()) : null);
-        dto.setSalaNome(patrimonio.getNomeSala());
-        dto.setResponsavelId(patrimonio.getIdResponsavel() > 0 ? Long.valueOf(patrimonio.getIdResponsavel()) : null);
-        dto.setResponsavelNome(patrimonio.getNomeResponsavel());
-        dto.setQrCode(patrimonio.getNumero()); // QR Code é o número do patrimônio
-        
-        if (patrimonio.getValor() != null) {
-            dto.setValor(patrimonio.getValor().doubleValue());
+        try {
+            // Campos obrigatórios com fallback
+            dto.setId(patrimonio.getId() > 0 ? Long.valueOf(patrimonio.getId()) : 0L);
+            dto.setCodigo(patrimonio.getNumero() != null ? patrimonio.getNumero() : "");
+            dto.setDescricao(patrimonio.getDescricao() != null ? patrimonio.getDescricao() : "Sem descrição");
+            
+            // Campos opcionais - só seta se não for null
+            if (patrimonio.getMarca() != null && !patrimonio.getMarca().trim().isEmpty()) {
+                dto.setMarca(patrimonio.getMarca());
+            }
+            
+            if (patrimonio.getModelo() != null && !patrimonio.getModelo().trim().isEmpty()) {
+                dto.setModelo(patrimonio.getModelo());
+            }
+            
+            if (patrimonio.getEstadoConservacao() != null && !patrimonio.getEstadoConservacao().trim().isEmpty()) {
+                dto.setEstado(patrimonio.getEstadoConservacao());
+            }
+            
+            // IDs com verificação de valores válidos (int primitivo, não pode ser null)
+            if (patrimonio.getIdSala() > 0) {
+                dto.setSalaId(Long.valueOf(patrimonio.getIdSala()));
+            }
+            
+            if (patrimonio.getNomeSala() != null && !patrimonio.getNomeSala().trim().isEmpty()) {
+                dto.setSalaNome(patrimonio.getNomeSala());
+            }
+            
+            if (patrimonio.getIdResponsavel() > 0) {
+                dto.setResponsavelId(Long.valueOf(patrimonio.getIdResponsavel()));
+            }
+            
+            if (patrimonio.getNomeResponsavel() != null && !patrimonio.getNomeResponsavel().trim().isEmpty()) {
+                dto.setResponsavelNome(patrimonio.getNomeResponsavel());
+            }
+            
+            // QR Code é o número do patrimônio
+            dto.setQrCode(patrimonio.getNumero() != null ? patrimonio.getNumero() : "");
+            
+            // Valor com tratamento de exceção
+            try {
+                if (patrimonio.getValor() != null) {
+                    dto.setValor(patrimonio.getValor().doubleValue());
+                }
+            } catch (Exception e) {
+                logger.warn("Erro ao converter valor do patrimônio {}: {}", patrimonio.getId(), e.getMessage());
+                dto.setValor(0.0);
+            }
+            
+            // Campos adicionais opcionais
+            if (patrimonio.getObservacoes() != null && !patrimonio.getObservacoes().trim().isEmpty()) {
+                dto.setObservacoes(patrimonio.getObservacoes());
+            }
+            
+            if (patrimonio.getEd() != null && !patrimonio.getEd().trim().isEmpty()) {
+                dto.setEd(patrimonio.getEd());
+            }
+            
+            if (patrimonio.getNumeroNotaFiscal() != null && !patrimonio.getNumeroNotaFiscal().trim().isEmpty()) {
+                dto.setNumeroNotaFiscal(patrimonio.getNumeroNotaFiscal());
+            }
+            
+            if (patrimonio.getFornecedor() != null && !patrimonio.getFornecedor().trim().isEmpty()) {
+                dto.setFornecedor(patrimonio.getFornecedor());
+            }
+            
+        } catch (Exception e) {
+            logger.error("Erro ao converter patrimônio {} para DTO: {}", 
+                    patrimonio != null ? patrimonio.getId() : "null", e.getMessage());
+            // Retornar DTO com dados mínimos para não quebrar o app
+            dto.setId(patrimonio != null && patrimonio.getId() > 0 ? Long.valueOf(patrimonio.getId()) : 0L);
+            dto.setCodigo(patrimonio != null && patrimonio.getNumero() != null ? patrimonio.getNumero() : "ERRO");
+            dto.setDescricao("Erro ao carregar dados completos");
         }
-        
-        dto.setObservacoes(patrimonio.getObservacoes());
-        dto.setEd(patrimonio.getEd());
-        dto.setNumeroNotaFiscal(patrimonio.getNumeroNotaFiscal());
-        dto.setFornecedor(patrimonio.getFornecedor());
         
         // Verificar se o patrimônio foi coletado no inventário ativo
         boolean coletado = false;
@@ -584,6 +684,8 @@ public class MobilePatrimonioService {
                         if (coleta.getIdPatrimonio() == patrimonio.getId()) {
                             coletadoPor = coleta.getNomeColetor();
                             dataColetaFormatada = coleta.getDataColetaFormatada();
+                            dto.setLocalizacaoEncontrada(coleta.getLocalizacaoEncontrada());
+                            dto.setEstadoEncontrado(coleta.getEstadoEncontrado());
                             break;
                         }
                     }

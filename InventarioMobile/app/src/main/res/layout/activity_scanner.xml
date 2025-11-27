@@ -8,6 +8,7 @@
 
     <!-- AppBar -->
     <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
@@ -23,245 +24,297 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- Conteúdo principal -->
-    <LinearLayout
+    <!-- Layout principal com botões fixos na parte inferior -->
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <!-- Card com instruções -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            app:cardElevation="4dp"
-            app:cardCornerRadius="8dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Scanner QR Code"
-                    android:textAppearance="?attr/textAppearanceHeadline6"
-                    android:textColor="?attr/colorPrimary"
-                    android:gravity="center" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Posicione o QR Code dentro da área de captura"
-                    android:textAppearance="?attr/textAppearanceBody2" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Card contador de coletas -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginBottom="16dp"
-            app:cardElevation="4dp"
-            app:cardCornerRadius="8dp"
-            app:cardBackgroundColor="?attr/colorSecondaryContainer">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="16dp"
-                android:gravity="center_vertical">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_check_circle"
-                    android:tint="?attr/colorOnSecondaryContainer"
-                    android:layout_marginEnd="12dp" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Itens coletados:"
-                    android:textAppearance="?attr/textAppearanceBody1"
-                    android:textColor="?attr/colorOnSecondaryContainer" />
-
-                <TextView
-                    android:id="@+id/textColetasCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textAppearance="?attr/textAppearanceHeadline6"
-                    android:textColor="?attr/colorOnSecondaryContainer"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Status do scanner -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="16dp">
-
-            <ProgressBar
-                android:id="@+id/progressBar"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginEnd="12dp"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/textStatus"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Iniciando câmera..."
-                android:textAppearance="?attr/textAppearanceBody1"
-                android:textColor="?attr/colorOnSurface"
-                android:gravity="center" />
-
-        </LinearLayout>
-
-        <!-- Área de visualização da câmera (será gerenciada pelo ZXing) -->
-        <FrameLayout
-            android:id="@+id/cameraPreview"
-            android:layout_width="match_parent"
+        <!-- Área scrollável para conteúdo -->
+        <ScrollView
+            android:id="@+id/scrollContent"
+            android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_margin="16dp"
-            android:background="@color/black">
-
-            <!-- Overlay com bordas do scanner -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/scanner_overlay" />
-
-            <!-- Texto de instrução sobreposto -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="Posicione o QR Code aqui"
-                android:textColor="@color/white"
-                android:textAppearance="?attr/textAppearanceBody1"
-                android:background="@color/black_transparent"
-                android:padding="8dp"
-                android:layout_marginTop="200dp" />
-
-        </FrameLayout>
-
-        <!-- Card com informações do patrimônio -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardPatrimonioInfo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:visibility="gone"
-            app:cardElevation="4dp"
-            app:cardCornerRadius="8dp">
+            android:fillViewport="true"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/layoutButtons"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="vertical">
 
-                <TextView
+                <!-- Card contador de coletas (compacto) -->
+                <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Patrimônio Encontrado"
-                    android:textAppearance="?attr/textAppearanceHeadline6"
-                    android:textColor="?attr/colorPrimary"
-                    android:gravity="center" />
-
-                <TextView
-                    android:id="@+id/textPatrimonioNumero"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="12dp"
                     android:layout_marginTop="8dp"
-                    android:textAppearance="?attr/textAppearanceSubtitle1"
-                    android:textStyle="bold"
-                    tools:text="Número: 123456" />
+                    app:cardElevation="2dp"
+                    app:cardCornerRadius="8dp"
+                    app:cardBackgroundColor="?attr/colorSecondaryContainer">
 
-                <TextView
-                    android:id="@+id/textPatrimonioDescricao"
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="12dp"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_check_circle"
+                            android:tint="?attr/colorOnSecondaryContainer"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Coletados:"
+                            android:textSize="14dp"
+                            android:textColor="?attr/colorOnSecondaryContainer" />
+
+                        <TextView
+                            android:id="@+id/textColetasCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="18dp"
+                            android:textColor="?attr/colorOnSecondaryContainer"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Status do scanner (compacto) -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textAppearance="?attr/textAppearanceBody2"
-                    tools:text="Descrição: Computador Desktop" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="8dp">
 
-                <TextView
-                    android:id="@+id/textPatrimonioSala"
+                    <ProgressBar
+                        android:id="@+id/progressBar"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginEnd="8dp"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/textStatus"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Iniciando câmera..."
+                        android:textSize="13dp"
+                        android:textColor="?attr/colorOnSurface"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+
+                </LinearLayout>
+
+                <!-- Área de visualização da câmera -->
+                <FrameLayout
+                    android:id="@+id/cameraPreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:layout_marginHorizontal="12dp"
+                    android:background="@color/black">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/scanner_overlay" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom|center_horizontal"
+                        android:layout_marginBottom="16dp"
+                        android:text="Posicione o código aqui"
+                        android:textColor="@color/white"
+                        android:textSize="12dp"
+                        android:background="@color/black_transparent"
+                        android:padding="6dp" />
+
+                </FrameLayout>
+
+                <!-- Card com informações do patrimônio (responsivo) -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardPatrimonioInfo"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textAppearance="?attr/textAppearanceBody2"
-                    tools:text="Sala: Laboratório de Informática" />
+                    android:layout_margin="12dp"
+                    android:visibility="gone"
+                    app:cardElevation="4dp"
+                    app:cardCornerRadius="8dp">
 
-                <TextView
-                    android:id="@+id/textPatrimonioStatus"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:textAppearance="?attr/textAppearanceBody2"
-                    android:textStyle="bold"
-                    tools:text="Status: Não coletado" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Patrimônio Encontrado"
+                            android:textSize="16dp"
+                            android:textColor="?attr/colorPrimary"
+                            android:textStyle="bold"
+                            android:gravity="center" />
+
+                        <TextView
+                            android:id="@+id/textPatrimonioNumero"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:textSize="14dp"
+                            android:textStyle="bold"
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            tools:text="Número: 123456" />
+
+                        <TextView
+                            android:id="@+id/textPatrimonioDescricao"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textSize="12dp"
+                            android:maxLines="2"
+                            android:ellipsize="end"
+                            tools:text="Descrição: Computador Desktop Dell Optiplex 7080" />
+
+                        <TextView
+                            android:id="@+id/textPatrimonioSala"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textSize="12dp"
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            tools:text="Sala: Laboratório de Informática" />
+
+                        <TextView
+                            android:id="@+id/textPatrimonioStatus"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:textSize="13dp"
+                            android:textStyle="bold"
+                            tools:text="Status: Não coletado" />
+
+                        <!-- Informações da coleta (compacto) -->
+                        <LinearLayout
+                            android:id="@+id/layoutInfoColeta"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginTop="6dp"
+                            android:padding="8dp"
+                            android:background="@drawable/bg_info_coleta"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:id="@+id/textColetadoPor"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:textSize="11dp"
+                                android:maxLines="1"
+                                android:ellipsize="end"
+                                android:drawableStart="@drawable/ic_person"
+                                android:drawablePadding="6dp"
+                                tools:text="Por: João Silva" />
+
+                            <TextView
+                                android:id="@+id/textDataColeta"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:textSize="11dp"
+                                android:maxLines="1"
+                                android:drawableStart="@drawable/ic_calendar"
+                                android:drawablePadding="6dp"
+                                tools:text="Em: 27/11/2025 10:30" />
+
+                            <TextView
+                                android:id="@+id/textLocalizacaoEncontrada"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:textSize="11dp"
+                                android:maxLines="1"
+                                android:ellipsize="end"
+                                android:drawableStart="@drawable/ic_location"
+                                android:drawablePadding="6dp"
+                                tools:text="Local: Sala 101" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
 
             </LinearLayout>
 
-        </com.google.android.material.card.MaterialCardView>
+        </ScrollView>
 
-        <!-- Botões de ação -->
+        <!-- Botões de ação FIXOS na parte inferior -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/layoutButtons"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:padding="16dp">
+            android:padding="12dp"
+            android:background="?attr/colorSurface"
+            android:elevation="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonColetar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
                 android:text="Coletar"
+                android:textSize="14dp"
                 android:visibility="gone"
                 style="@style/Widget.MaterialComponents.Button" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonRetry"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:text="Tentar Novamente"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="4dp"
+                android:text="Outro"
+                android:textSize="14dp"
                 android:visibility="gone"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonCancel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
                 android:text="Cancelar"
+                android:textSize="14dp"
                 style="@style/Widget.MaterialComponents.Button.TextButton" />
 
         </LinearLayout>
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

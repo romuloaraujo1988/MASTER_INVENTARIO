@@ -40,7 +40,8 @@ class ColetasActivity : AppCompatActivity() {
         val apiService = NetworkModule.getApiService(this)
         val repository = InventarioRepository.getInstance(this, apiService)
         
-        val factory = ColetasViewModelFactory(repository)
+        // Passar ApiService para buscar coletas diretamente do servidor
+        val factory = ColetasViewModelFactory(repository, apiService)
         viewModel = ViewModelProvider(this, factory)[ColetasViewModel::class.java]
     }
 

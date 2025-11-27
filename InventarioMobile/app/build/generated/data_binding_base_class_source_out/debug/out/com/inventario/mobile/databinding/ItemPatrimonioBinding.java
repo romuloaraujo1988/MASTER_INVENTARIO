@@ -21,6 +21,9 @@ public final class ItemPatrimonioBinding implements ViewBinding {
   private final MaterialCardView rootView;
 
   @NonNull
+  public final LinearLayout layoutInfoColeta;
+
+  @NonNull
   public final LinearLayout layoutLocalizacao;
 
   @NonNull
@@ -30,7 +33,19 @@ public final class ItemPatrimonioBinding implements ViewBinding {
   public final LinearLayout layoutResponsavel;
 
   @NonNull
+  public final TextView textViewColetadoPor;
+
+  @NonNull
+  public final TextView textViewDataColeta;
+
+  @NonNull
   public final TextView textViewDescricao;
+
+  @NonNull
+  public final TextView textViewEstadoEncontrado;
+
+  @NonNull
+  public final TextView textViewLocalizacaoEncontrada;
 
   @NonNull
   public final TextView textViewMarca;
@@ -54,17 +69,24 @@ public final class ItemPatrimonioBinding implements ViewBinding {
   public final TextView textViewStatus;
 
   private ItemPatrimonioBinding(@NonNull MaterialCardView rootView,
-      @NonNull LinearLayout layoutLocalizacao, @NonNull LinearLayout layoutMarcaModelo,
-      @NonNull LinearLayout layoutResponsavel, @NonNull TextView textViewDescricao,
-      @NonNull TextView textViewMarca, @NonNull TextView textViewModelo,
-      @NonNull TextView textViewNumero, @NonNull TextView textViewResponsavel,
-      @NonNull TextView textViewSala, @NonNull TextView textViewSetor,
-      @NonNull TextView textViewStatus) {
+      @NonNull LinearLayout layoutInfoColeta, @NonNull LinearLayout layoutLocalizacao,
+      @NonNull LinearLayout layoutMarcaModelo, @NonNull LinearLayout layoutResponsavel,
+      @NonNull TextView textViewColetadoPor, @NonNull TextView textViewDataColeta,
+      @NonNull TextView textViewDescricao, @NonNull TextView textViewEstadoEncontrado,
+      @NonNull TextView textViewLocalizacaoEncontrada, @NonNull TextView textViewMarca,
+      @NonNull TextView textViewModelo, @NonNull TextView textViewNumero,
+      @NonNull TextView textViewResponsavel, @NonNull TextView textViewSala,
+      @NonNull TextView textViewSetor, @NonNull TextView textViewStatus) {
     this.rootView = rootView;
+    this.layoutInfoColeta = layoutInfoColeta;
     this.layoutLocalizacao = layoutLocalizacao;
     this.layoutMarcaModelo = layoutMarcaModelo;
     this.layoutResponsavel = layoutResponsavel;
+    this.textViewColetadoPor = textViewColetadoPor;
+    this.textViewDataColeta = textViewDataColeta;
     this.textViewDescricao = textViewDescricao;
+    this.textViewEstadoEncontrado = textViewEstadoEncontrado;
+    this.textViewLocalizacaoEncontrada = textViewLocalizacaoEncontrada;
     this.textViewMarca = textViewMarca;
     this.textViewModelo = textViewModelo;
     this.textViewNumero = textViewNumero;
@@ -101,6 +123,12 @@ public final class ItemPatrimonioBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.layoutInfoColeta;
+      LinearLayout layoutInfoColeta = ViewBindings.findChildViewById(rootView, id);
+      if (layoutInfoColeta == null) {
+        break missingId;
+      }
+
       id = R.id.layoutLocalizacao;
       LinearLayout layoutLocalizacao = ViewBindings.findChildViewById(rootView, id);
       if (layoutLocalizacao == null) {
@@ -119,9 +147,33 @@ public final class ItemPatrimonioBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.textViewColetadoPor;
+      TextView textViewColetadoPor = ViewBindings.findChildViewById(rootView, id);
+      if (textViewColetadoPor == null) {
+        break missingId;
+      }
+
+      id = R.id.textViewDataColeta;
+      TextView textViewDataColeta = ViewBindings.findChildViewById(rootView, id);
+      if (textViewDataColeta == null) {
+        break missingId;
+      }
+
       id = R.id.textViewDescricao;
       TextView textViewDescricao = ViewBindings.findChildViewById(rootView, id);
       if (textViewDescricao == null) {
+        break missingId;
+      }
+
+      id = R.id.textViewEstadoEncontrado;
+      TextView textViewEstadoEncontrado = ViewBindings.findChildViewById(rootView, id);
+      if (textViewEstadoEncontrado == null) {
+        break missingId;
+      }
+
+      id = R.id.textViewLocalizacaoEncontrada;
+      TextView textViewLocalizacaoEncontrada = ViewBindings.findChildViewById(rootView, id);
+      if (textViewLocalizacaoEncontrada == null) {
         break missingId;
       }
 
@@ -167,9 +219,11 @@ public final class ItemPatrimonioBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ItemPatrimonioBinding((MaterialCardView) rootView, layoutLocalizacao,
-          layoutMarcaModelo, layoutResponsavel, textViewDescricao, textViewMarca, textViewModelo,
-          textViewNumero, textViewResponsavel, textViewSala, textViewSetor, textViewStatus);
+      return new ItemPatrimonioBinding((MaterialCardView) rootView, layoutInfoColeta,
+          layoutLocalizacao, layoutMarcaModelo, layoutResponsavel, textViewColetadoPor,
+          textViewDataColeta, textViewDescricao, textViewEstadoEncontrado,
+          textViewLocalizacaoEncontrada, textViewMarca, textViewModelo, textViewNumero,
+          textViewResponsavel, textViewSala, textViewSetor, textViewStatus);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

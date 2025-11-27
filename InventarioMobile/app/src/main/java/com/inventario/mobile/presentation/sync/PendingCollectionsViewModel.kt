@@ -31,15 +31,33 @@ class PendingCollectionsViewModel(
 
     fun loadPendingCollections() {
         viewModelScope.launch {
+            android.util.Log.d("PendingCollectionsVM", "📥 Iniciando carregamento de coletas pendentes...")
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             
             try {
                 val pendingCollections = repository.getColetasPendentes()
+                
+                // Log de diagnóstico
+                android.util.Log.d("PendingCollectionsVM", "✓ Carregamento concluído: ${pendingCollections.size} coletas pendentes")
+                
+                if (pendingCollections.isEmpty()) {
+                    android.util.Log.d("PendingCollectionsVM", "📭 Nenhuma coleta pendente encontrada")
+                } else {
+                    // Log detalhado das coletas
+                    pendingCollections.forEachIndexed { index, coleta ->
+                        android.util.Log.d("PendingCollectionsVM", "  [$index] Patrimônio: ${coleta.numeroPatrimonio}, Erro: ${coleta.erroSincronizacao ?: "nenhum"}")
+                    }
+                }
+                
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     pendingCollections = pendingCollections
                 )
             } catch (e: Exception) {
+                android.util.Log.e("PendingCollectionsVM", "❌ Erro ao carregar coletas pendentes", e)
+                android.util.Log.e("PendingCollectionsVM", "  Tipo: ${e.javaClass.simpleName}")
+                android.util.Log.e("PendingCollectionsVM", "  Mensagem: ${e.message}")
+                
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     errorMessage = "Erro ao carregar coletas pendentes: ${e.message}"
@@ -136,8 +154,8 @@ class PendingCollectionsViewModel(
     }
     
     /**
-     * v2.6: Tenta sincronizar uma coleta específica novamente
-     * Limpa o erro e tenta sincronizar
+     * v2.6/v2.7: Tenta sincronizar uma coleta específica novamente
+     * Limpa o erro usando o repository (contexto correto) e tenta sincronizar
      */
     fun retryCollection(coleta: Coleta) {
         viewModelScope.launch {
@@ -146,13 +164,11 @@ class PendingCollectionsViewModel(
             try {
                 android.util.Log.d("PendingCollectionsVM", "🔄 Tentando sincronizar coleta ${coleta.patrimonioId} novamente...")
                 
-                // Limpar erro da coleta no banco local (se disponível via Room)
-                try {
-                    val database = com.inventario.mobile.data.local.database.InventarioDatabase
-                        .getDatabase(android.app.Application())
-                    database.coletaDao().limparErroSincronizacao(coleta.id?.toLong() ?: 0)
-                } catch (e: Exception) {
-                    android.util.Log.w("PendingCollectionsVM", "Não foi possível limpar erro no Room: ${e.message}")
+                // v2.7: Usar método do repository ao invés de acessar database diretamente
+                val coletaId = coleta.id?.toLong() ?: 0
+                if (coletaId > 0) {
+                    repository.limparErroColeta(coletaId)
+                    android.util.Log.d("PendingCollectionsVM", "✓ Erro da coleta $coletaId limpo via repository")
                 }
                 
                 // Tentar sincronizar todas as pendentes (incluindo esta)
@@ -163,6 +179,7 @@ class PendingCollectionsViewModel(
                 
                 // Recarregar lista
                 val pendingCollections = repository.getColetasPendentes()
+                android.util.Log.d("PendingCollectionsVM", "📋 Lista recarregada: ${pendingCollections.size} coletas pendentes")
                 
                 // Verificar se a coleta foi sincronizada
                 val coletaAindaPendente = pendingCollections.any { it.patrimonioId == coleta.patrimonioId }
@@ -188,25 +205,29 @@ class PendingCollectionsViewModel(
     }
     
     /**
-     * v2.6: Limpa erros de todas as coletas pendentes para nova tentativa
+     * v2.6/v2.7: Limpa erros de todas as coletas pendentes para nova tentativa
+     * Usa método do repository ao invés de acessar database diretamente
      */
     fun clearAllErrors() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             
             try {
-                // Limpar erros no banco Room
-                try {
-                    val database = com.inventario.mobile.data.local.database.InventarioDatabase
-                        .getDatabase(android.app.Application())
-                    val quantidade = database.coletaDao().limparTodosErrosSincronizacao()
-                    android.util.Log.d("PendingCollectionsVM", "✓ Erros limpos de $quantidade coletas")
-                } catch (e: Exception) {
-                    android.util.Log.w("PendingCollectionsVM", "Não foi possível limpar erros no Room: ${e.message}")
-                }
+                // v2.7: Usar método do repository ao invés de acessar database diretamente
+                val result = repository.limparTodosErrosColetas()
+                
+                result.fold(
+                    onSuccess = { quantidade ->
+                        android.util.Log.d("PendingCollectionsVM", "✓ Erros limpos de $quantidade coletas via repository")
+                    },
+                    onFailure = { error ->
+                        android.util.Log.w("PendingCollectionsVM", "Não foi possível limpar erros: ${error.message}")
+                    }
+                )
                 
                 // Recarregar lista
                 val pendingCollections = repository.getColetasPendentes()
+                android.util.Log.d("PendingCollectionsVM", "📋 Lista recarregada: ${pendingCollections.size} coletas pendentes")
                 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -215,6 +236,7 @@ class PendingCollectionsViewModel(
                 )
                 
             } catch (e: Exception) {
+                android.util.Log.e("PendingCollectionsVM", "Erro ao limpar erros", e)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     errorMessage = "Erro ao limpar: ${e.message}"

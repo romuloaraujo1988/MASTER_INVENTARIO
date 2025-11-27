@@ -37,9 +37,11 @@ class SimpleSalaSelectionActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        salaAdapter = SalaAdapter { sala ->
-            onSalaSelected(sala)
-        }
+        salaAdapter = SalaAdapter(
+            onSalaClick = { sala ->
+                onSalaSelected(sala)
+            }
+        )
         
         binding.recyclerViewSalas.apply {
             layoutManager = LinearLayoutManager(this@SimpleSalaSelectionActivity)

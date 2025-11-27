@@ -170,6 +170,64 @@
 
         </LinearLayout>
 
+        <!-- ✅ NOVO: Informações da Coleta (quando já coletado) -->
+        <LinearLayout
+            android:id="@+id/layoutInfoColeta"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical"
+            android:padding="8dp"
+            android:background="#F0F4F8"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/layoutLocalizacao"
+            tools:visibility="visible">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📋 Informações da Coleta"
+                android:textAppearance="?attr/textAppearanceCaption"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/textViewColetadoPor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceCaption"
+                android:textColor="@color/text_secondary"
+                tools:text="Coletado por: João Silva" />
+
+            <TextView
+                android:id="@+id/textViewDataColeta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceCaption"
+                android:textColor="@color/text_secondary"
+                tools:text="Data: 27/11/2025 10:30" />
+
+            <TextView
+                android:id="@+id/textViewLocalizacaoEncontrada"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceCaption"
+                android:textColor="@color/text_secondary"
+                tools:text="Local encontrado: Sala 101" />
+
+            <TextView
+                android:id="@+id/textViewEstadoEncontrado"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceCaption"
+                android:textColor="@color/text_secondary"
+                tools:text="Estado: BOM" />
+
+        </LinearLayout>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.google.android.material.card.MaterialCardView>

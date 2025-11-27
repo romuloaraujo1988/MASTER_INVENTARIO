@@ -19,10 +19,17 @@ public class MobileSalaService {
     
     private static final Logger logger = LoggerFactory.getLogger(MobileSalaService.class);
     
-    private final SalaDAO salaDAO;
-    
     public MobileSalaService() {
-        this.salaDAO = new SalaDAO();
+        // Não mantém instância do DAO - cria nova a cada chamada
+        logger.info("MobileSalaService inicializado");
+    }
+    
+    /**
+     * Obtém uma nova instância do DAO para cada operação
+     * Evita problemas de conexão fechada/stale
+     */
+    private SalaDAO getSalaDAO() {
+        return new SalaDAO();
     }
     
     /**
@@ -219,17 +226,29 @@ public class MobileSalaService {
     
     /**
      * Busca sala por ID
+     * 
+     * CORREÇÃO 26/11/2025: Cria nova instância do DAO a cada chamada
      */
     public MobileSalaDTO buscarPorId(Integer id) throws SQLException {
         logger.info("Buscando sala por ID: {}", id);
         
-        Sala sala = salaDAO.buscarSalaPorId(id);
-        
-        if (sala != null) {
-            return converterParaDTO(sala);
+        try {
+            // Criar nova instância do DAO para esta operação
+            SalaDAO salaDAO = getSalaDAO();
+            Sala sala = salaDAO.buscarSalaPorId(id);
+            
+            if (sala != null) {
+                logger.info("✓ Sala encontrada: {}", sala.getDescricao());
+                return converterParaDTO(sala);
+            }
+            
+            logger.warn("Sala não encontrada com ID: {}", id);
+            return null;
+            
+        } catch (SQLException e) {
+            logger.error("❌ ERRO SQL ao buscar sala {}: {}", id, e.getMessage());
+            throw e;
         }
-        
-        return null;
     }
     
     /**

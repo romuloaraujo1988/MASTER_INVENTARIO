@@ -89,6 +89,49 @@ class PreferencesManager(context: Context) {
         remove("current_sala_nome")
     }
     
+    // ========================================
+    // Sala Fixada (v2.9) - Permite fixar uma sala para coleta rápida
+    // ========================================
+    
+    /**
+     * Fixa uma sala para aparecer sempre no topo ou ser a única visível
+     */
+    fun setSalaFixada(salaId: Long, salaNome: String) {
+        putLong("sala_fixada_id", salaId)
+        putString("sala_fixada_nome", salaNome)
+        android.util.Log.d("PreferencesManager", "✓ Sala fixada: $salaNome (ID: $salaId)")
+    }
+    
+    /**
+     * Obtém o ID da sala fixada (0 se nenhuma)
+     */
+    fun getSalaFixadaId(): Long {
+        return getLong("sala_fixada_id", 0L)
+    }
+    
+    /**
+     * Obtém o nome da sala fixada
+     */
+    fun getSalaFixadaNome(): String {
+        return getString("sala_fixada_nome", "")
+    }
+    
+    /**
+     * Verifica se há uma sala fixada
+     */
+    fun hasSalaFixada(): Boolean {
+        return getSalaFixadaId() > 0
+    }
+    
+    /**
+     * Remove a sala fixada (volta a mostrar todas)
+     */
+    fun clearSalaFixada() {
+        remove("sala_fixada_id")
+        remove("sala_fixada_nome")
+        android.util.Log.d("PreferencesManager", "✓ Sala fixada removida")
+    }
+    
     // Métodos de autenticação e tokens
     fun getAccessToken(): String? = getString("access_token", "").takeIf { it.isNotEmpty() }
     fun isTokenValid(): Boolean = getBoolean("token_valid", false)

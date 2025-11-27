@@ -12,10 +12,13 @@ import com.inventario.mobile.domain.model.Sala
  * Adapter simples para lista de salas
  * Mantido para compatibilidade com código legado
  * 
+ * v2.9: Suporte a long click para fixar sala
+ * 
  * Para novas implementações, use SalaPagingAdapter
  */
 class SalaAdapter(
-    private val onSalaClick: (Sala) -> Unit
+    private val onSalaClick: (Sala) -> Unit,
+    private val onSalaLongClick: ((Sala) -> Unit)? = null
 ) : ListAdapter<Sala, SalaAdapter.SalaViewHolder>(SALA_COMPARATOR) {
     
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SalaViewHolder {
@@ -52,8 +55,15 @@ class SalaAdapter(
                     tvSalaDescricao.visibility = android.view.View.GONE
                 }
                 
+                // Click normal - selecionar sala
                 root.setOnClickListener {
                     onSalaClick(sala)
+                }
+                
+                // v2.9: Long click - mostrar menu de opções (fixar/desfixar)
+                root.setOnLongClickListener {
+                    onSalaLongClick?.invoke(sala)
+                    true
                 }
             }
         }

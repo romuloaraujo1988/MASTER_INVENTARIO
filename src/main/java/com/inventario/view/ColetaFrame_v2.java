@@ -1890,21 +1890,30 @@ public class ColetaFrame_v2 extends JFrame {
             btnReabrirColeta.addActionListener(e -> reabrirColetaSala());
         }
 
-        // Listener para seleção na tabela de histórico (para habilitar/desabilitar
-        // botões)
+        // Listener para seleção na tabela de histórico
+        // ✅ REGRA: btnRemover só habilita se:
+        //    1. Há uma linha selecionada na tabela
+        //    2. Usuário é Admin ou Supervisor
+        //    3. Botão está visível (já foi verificado na criação)
         tabelaHistorico.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
-                // Habilitar botão de finalização se há uma sala selecionada
-                Sala salaSelecionada = (Sala) comboSalas.getSelectedItem();
-                btnFinalizarColeta.setEnabled(salaSelecionada != null);
-
-                // Habilitar botão remover se há item selecionado na tabela E usuário tem
-                // permissão
                 int linhaSelecionada = tabelaHistorico.getSelectedRow();
-                boolean podeRemover = usuarioLogado != null &&
-                        ("ADMIN".equals(usuarioLogado.getPerfil().name()) ||
-                                "SUPERVISOR".equals(usuarioLogado.getPerfil().name()));
-                btnRemoverItem.setEnabled(linhaSelecionada != -1 && podeRemover);
+                
+                // Habilitar botão remover APENAS se:
+                // - Há linha selecionada
+                // - Botão está visível (usuário tem permissão)
+                if (btnRemoverItem.isVisible()) {
+                    btnRemoverItem.setEnabled(linhaSelecionada != -1);
+                    
+                    if (linhaSelecionada != -1) {
+                        btnRemoverItem.setToolTipText("Remover item selecionado da coleta");
+                    } else {
+                        btnRemoverItem.setToolTipText("Selecione um item na tabela para remover");
+                    }
+                }
+                
+                // NOTA: btnFinalizarColeta e btnReabrirColeta são controlados em carregarDadosSala()
+                // baseado no status da sala (aberta/finalizada) e modo de operação (online/offline)
             }
         });
 
@@ -2026,6 +2035,11 @@ public class ColetaFrame_v2 extends JFrame {
 
     private void habilitarComponentes() {
         for (Component comp : componentesParaDesabilitar) {
+            // ✅ EXCEÇÃO: btnRemoverItem NÃO deve ser habilitado aqui
+            // Ele só é habilitado quando uma linha da tabela é selecionada
+            if (comp == btnRemoverItem) {
+                continue; // Pular btnRemoverItem
+            }
             comp.setEnabled(true);
         }
     }
@@ -2175,6 +2189,12 @@ public class ColetaFrame_v2 extends JFrame {
             lblResumoSala.setText("Selecione uma sala para iniciar a coleta");
             desabilitarComponentes();
             btnFinalizarColeta.setEnabled(false);
+            
+            // ✅ Desabilitar botões de ação quando não há sala selecionada
+            btnRemoverItem.setEnabled(false);
+            if (btnReabrirColeta.isVisible()) {
+                btnReabrirColeta.setEnabled(false);
+            }
 
             // Limpar campo de localização na aba de itens sem patrimônio
             if (campoLocalizacaoSemPatrimonio != null) {
@@ -2228,74 +2248,90 @@ public class ColetaFrame_v2 extends JFrame {
             // Verificar se está em modo offline - botões finalizar/reabrir só funcionam online
             boolean modoOffline = offlineManager.isOperatingOffline();
             
-            // Configurar interface baseado no status da sala
-            // REGRA: btnReabrir só fica ativo quando btnFinalizar está inativo (sala finalizada)
-            // REGRA: Ambos os botões ficam desabilitados em modo OFFLINE
+            // ✅ REGRA CRÍTICA: btnReabrir e btnFinalizar são MUTUAMENTE EXCLUSIVOS
+            // - Se sala FINALIZADA: btnFinalizar=false, btnReabrir=true (se online E admin/supervisor)
+            // - Se sala ABERTA: btnFinalizar=true (se online), btnReabrir=false
+            // - Em modo OFFLINE: ambos ficam desabilitados
+            // - btnRemover: SEMPRE desabilitado até que uma linha seja selecionada na tabela
+            
             if (salaFinalizada) {
-                // Sala FINALIZADA - desabilitar coleta, habilitar reabrir (se online)
+                // ========== SALA FINALIZADA ==========
                 lblResumoSala.setText(String.format("✅ Sala FINALIZADA: %s | %d itens coletados%s",
                         salaSelecionada.getIdentificacaoCompleta(), totalItensColetados,
                         modoOffline ? " [OFFLINE]" : ""));
                 lblResumoSala.setForeground(new Color(40, 167, 69)); // Verde
                 
+                // Botão Finalizar: SEMPRE desabilitado (sala já está finalizada)
                 btnFinalizarColeta.setText("✅ Finalizada");
                 btnFinalizarColeta.setBackground(new Color(108, 117, 125)); // Cinza
                 btnFinalizarColeta.setEnabled(false);
+                btnFinalizarColeta.setToolTipText("Sala já finalizada");
                 
-                // Habilitar botão reabrir APENAS quando:
-                // 1. Finalizar está inativo (sala finalizada)
-                // 2. Está em modo ONLINE (operação requer PostgreSQL)
+                // Botão Reabrir: habilitado APENAS se online E sala finalizada E usuário é admin/supervisor
                 if (btnReabrirColeta.isVisible()) {
-                    btnReabrirColeta.setEnabled(!modoOffline); // Só habilita se estiver online
+                    boolean podeReabrir = !modoOffline; // Só online (permissão já foi verificada na criação do botão)
+                    btnReabrirColeta.setEnabled(podeReabrir);
+                    
                     if (modoOffline) {
-                        btnReabrirColeta.setToolTipText("Reabrir sala requer conexão com o servidor");
+                        btnReabrirColeta.setToolTipText("⚠️ Reabrir sala requer conexão com o servidor");
                     } else {
-                        btnReabrirColeta.setToolTipText("Reabrir uma sala finalizada para permitir novas coletas (Admin/Supervisor)");
+                        btnReabrirColeta.setToolTipText("Reabrir sala finalizada para permitir novas coletas");
                     }
                 }
                 
-                // Desabilitar campos de coleta
+                // Botão Remover: SEMPRE desabilitado (nenhuma linha selecionada inicialmente)
+                btnRemoverItem.setEnabled(false);
+                btnRemoverItem.setToolTipText("Selecione um item na tabela para remover");
+                
+                // Desabilitar campos de coleta (sala finalizada)
                 campoBusca.setEnabled(false);
                 btnBuscar.setEnabled(false);
                 btnColetar.setEnabled(false);
                 campoObservacao.setEnabled(false);
                 comboEstado.setEnabled(false);
                 
-                System.out.println("DEBUG: Sala " + salaSelecionada.getIdentificacaoCompleta() + 
-                                  " está FINALIZADA - btnFinalizar=false, btnReabrir=" + (!modoOffline));
+                System.out.println("DEBUG: ✅ Sala FINALIZADA - btnFinalizar=false, btnReabrir=" + 
+                                  (!modoOffline) + ", btnRemover=false (aguardando seleção)" + 
+                                  (modoOffline ? " [OFFLINE]" : ""));
                 
             } else {
-                // Sala ABERTA - habilitar coleta, desabilitar reabrir
+                // ========== SALA ABERTA ==========
                 lblResumoSala.setText(String.format("Coletando em: %s | %d itens coletados%s",
                         salaSelecionada.getIdentificacaoCompleta(), totalItensColetados,
                         modoOffline ? " [OFFLINE]" : ""));
                 lblResumoSala.setForeground(new Color(100, 100, 100)); // Cinza padrão
                 
+                // Botão Finalizar: habilitado APENAS se online
                 btnFinalizarColeta.setText("🏁 Finalizar");
                 btnFinalizarColeta.setBackground(new Color(40, 167, 69)); // Verde
-                // Habilitar finalizar APENAS se estiver ONLINE (operação requer PostgreSQL)
                 btnFinalizarColeta.setEnabled(!modoOffline);
+                
                 if (modoOffline) {
-                    btnFinalizarColeta.setToolTipText("Finalizar sala requer conexão com o servidor");
+                    btnFinalizarColeta.setToolTipText("⚠️ Finalizar sala requer conexão com o servidor");
                 } else {
                     btnFinalizarColeta.setToolTipText("Marcar a coleta desta sala como finalizada");
                 }
                 
-                // Desabilitar botão reabrir quando finalizar está ativo (sala aberta)
+                // Botão Reabrir: SEMPRE desabilitado (sala está aberta)
                 if (btnReabrirColeta.isVisible()) {
                     btnReabrirColeta.setEnabled(false);
+                    btnReabrirColeta.setToolTipText("Sala já está aberta para coleta");
                 }
                 
-                // Habilitar componentes de coleta
+                // Botão Remover: SEMPRE desabilitado inicialmente (nenhuma linha selecionada)
+                btnRemoverItem.setEnabled(false);
+                btnRemoverItem.setToolTipText("Selecione um item na tabela para remover");
+                
+                // Habilitar componentes de coleta (EXCETO btnRemover que depende de seleção)
                 habilitarComponentes();
                 
                 // Habilitar componentes baseado na aba atualmente selecionada
                 int abaSelecionada = tabbedPane.getSelectedIndex();
                 habilitarComponentesPorAba(abaSelecionada);
                 
-                System.out.println("DEBUG: Sala " + salaSelecionada.getIdentificacaoCompleta() + 
-                                  " está ABERTA - btnFinalizar=" + (!modoOffline) + ", btnReabrir=false" +
-                                  (modoOffline ? " [MODO OFFLINE]" : ""));
+                System.out.println("DEBUG: 🔓 Sala ABERTA - btnFinalizar=" + (!modoOffline) + 
+                                  ", btnReabrir=false, btnRemover=false (aguardando seleção)" + 
+                                  (modoOffline ? " [OFFLINE]" : ""));
             }
 
         } catch (Exception e) {

@@ -39,6 +39,9 @@ class DescricaoSelectionActivity : AppCompatActivity() {
 
     private var salaId: Long = 0
     private var salaNome: String = ""
+    
+    // Lista completa de descrições (para filtrar)
+    private var descricoesCompletas: List<String> = emptyList()
 
     companion object {
         private const val TAG = "DescricaoSelectionActivity"
@@ -216,8 +219,13 @@ class DescricaoSelectionActivity : AppCompatActivity() {
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
+                // Filtrar em tempo real conforme o usuário digita
                 if (newText.isNullOrEmpty()) {
-                    loadDescricoes()
+                    // Se vazio, mostrar todas as descrições
+                    updateDescricoes(descricoesCompletas)
+                } else {
+                    // Filtrar descrições
+                    searchDescricoes(newText)
                 }
                 return true
             }
@@ -225,23 +233,48 @@ class DescricaoSelectionActivity : AppCompatActivity() {
     }
     
     /**
-     * Busca descrições
+     * Busca descrições localmente (filtro em memória)
      */
     private fun searchDescricoes(query: String) {
-        // TODO: Implementar busca no Use Case se necessário
-        viewModel.carregarDescricoes()
+        val queryLower = query.lowercase().trim()
+        
+        // Filtrar descrições que contenham o texto buscado
+        val descricoesFiltradas = descricoesCompletas.filter { descricao ->
+            descricao.lowercase().contains(queryLower)
+        }
+        
+        Log.d(TAG, "Busca: '$query' - Encontradas ${descricoesFiltradas.size} de ${descricoesCompletas.size} descrições")
+        
+        // Atualizar lista filtrada
+        updateDescricoes(descricoesFiltradas)
     }
 
     /**
      * Atualiza lista de descrições
      */
     private fun updateDescricoes(descricoes: List<String>) {
-        // Converter para formato do adapter (temporário)
-        // TODO: Atualizar adapter para usar List<String> diretamente
+        // Salvar lista completa se for a primeira vez
+        if (descricoesCompletas.isEmpty() && descricoes.isNotEmpty()) {
+            descricoesCompletas = descricoes
+            Log.d(TAG, "Lista completa salva: ${descricoesCompletas.size} descrições")
+        }
+        
+        // Atualizar adapter
         adapter.submitList(descricoes.map { it })
         
         // Atualizar mensagem vazia
-        binding.tvEmpty.visibility = if (descricoes.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
+        if (descricoes.isEmpty()) {
+            binding.tvEmpty.visibility = android.view.View.VISIBLE
+            // Verificar se está vazio por causa do filtro ou se realmente não há dados
+            val mensagem = if (descricoesCompletas.isEmpty()) {
+                "Nenhuma descrição disponível"
+            } else {
+                "Nenhuma descrição encontrada para a busca"
+            }
+            binding.tvEmpty.text = mensagem
+        } else {
+            binding.tvEmpty.visibility = android.view.View.GONE
+        }
     }
 
     private fun onDescricaoSelected(descricao: String) {

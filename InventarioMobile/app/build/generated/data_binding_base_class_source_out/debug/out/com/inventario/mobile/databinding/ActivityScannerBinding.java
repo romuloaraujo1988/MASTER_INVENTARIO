@@ -5,7 +5,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,6 +15,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.inventario.mobile.R;
@@ -23,6 +26,9 @@ import java.lang.String;
 public final class ActivityScannerBinding implements ViewBinding {
   @NonNull
   private final CoordinatorLayout rootView;
+
+  @NonNull
+  public final AppBarLayout appBarLayout;
 
   @NonNull
   public final MaterialButton buttonCancel;
@@ -40,10 +46,28 @@ public final class ActivityScannerBinding implements ViewBinding {
   public final MaterialCardView cardPatrimonioInfo;
 
   @NonNull
+  public final LinearLayout layoutButtons;
+
+  @NonNull
+  public final LinearLayout layoutInfoColeta;
+
+  @NonNull
   public final ProgressBar progressBar;
 
   @NonNull
+  public final ScrollView scrollContent;
+
+  @NonNull
+  public final TextView textColetadoPor;
+
+  @NonNull
   public final TextView textColetasCount;
+
+  @NonNull
+  public final TextView textDataColeta;
+
+  @NonNull
+  public final TextView textLocalizacaoEncontrada;
 
   @NonNull
   public final TextView textPatrimonioDescricao;
@@ -64,21 +88,31 @@ public final class ActivityScannerBinding implements ViewBinding {
   public final Toolbar toolbar;
 
   private ActivityScannerBinding(@NonNull CoordinatorLayout rootView,
-      @NonNull MaterialButton buttonCancel, @NonNull MaterialButton buttonColetar,
-      @NonNull MaterialButton buttonRetry, @NonNull FrameLayout cameraPreview,
-      @NonNull MaterialCardView cardPatrimonioInfo, @NonNull ProgressBar progressBar,
-      @NonNull TextView textColetasCount, @NonNull TextView textPatrimonioDescricao,
-      @NonNull TextView textPatrimonioNumero, @NonNull TextView textPatrimonioSala,
-      @NonNull TextView textPatrimonioStatus, @NonNull TextView textStatus,
-      @NonNull Toolbar toolbar) {
+      @NonNull AppBarLayout appBarLayout, @NonNull MaterialButton buttonCancel,
+      @NonNull MaterialButton buttonColetar, @NonNull MaterialButton buttonRetry,
+      @NonNull FrameLayout cameraPreview, @NonNull MaterialCardView cardPatrimonioInfo,
+      @NonNull LinearLayout layoutButtons, @NonNull LinearLayout layoutInfoColeta,
+      @NonNull ProgressBar progressBar, @NonNull ScrollView scrollContent,
+      @NonNull TextView textColetadoPor, @NonNull TextView textColetasCount,
+      @NonNull TextView textDataColeta, @NonNull TextView textLocalizacaoEncontrada,
+      @NonNull TextView textPatrimonioDescricao, @NonNull TextView textPatrimonioNumero,
+      @NonNull TextView textPatrimonioSala, @NonNull TextView textPatrimonioStatus,
+      @NonNull TextView textStatus, @NonNull Toolbar toolbar) {
     this.rootView = rootView;
+    this.appBarLayout = appBarLayout;
     this.buttonCancel = buttonCancel;
     this.buttonColetar = buttonColetar;
     this.buttonRetry = buttonRetry;
     this.cameraPreview = cameraPreview;
     this.cardPatrimonioInfo = cardPatrimonioInfo;
+    this.layoutButtons = layoutButtons;
+    this.layoutInfoColeta = layoutInfoColeta;
     this.progressBar = progressBar;
+    this.scrollContent = scrollContent;
+    this.textColetadoPor = textColetadoPor;
     this.textColetasCount = textColetasCount;
+    this.textDataColeta = textDataColeta;
+    this.textLocalizacaoEncontrada = textLocalizacaoEncontrada;
     this.textPatrimonioDescricao = textPatrimonioDescricao;
     this.textPatrimonioNumero = textPatrimonioNumero;
     this.textPatrimonioSala = textPatrimonioSala;
@@ -114,6 +148,12 @@ public final class ActivityScannerBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.appBarLayout;
+      AppBarLayout appBarLayout = ViewBindings.findChildViewById(rootView, id);
+      if (appBarLayout == null) {
+        break missingId;
+      }
+
       id = R.id.buttonCancel;
       MaterialButton buttonCancel = ViewBindings.findChildViewById(rootView, id);
       if (buttonCancel == null) {
@@ -144,15 +184,51 @@ public final class ActivityScannerBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.layoutButtons;
+      LinearLayout layoutButtons = ViewBindings.findChildViewById(rootView, id);
+      if (layoutButtons == null) {
+        break missingId;
+      }
+
+      id = R.id.layoutInfoColeta;
+      LinearLayout layoutInfoColeta = ViewBindings.findChildViewById(rootView, id);
+      if (layoutInfoColeta == null) {
+        break missingId;
+      }
+
       id = R.id.progressBar;
       ProgressBar progressBar = ViewBindings.findChildViewById(rootView, id);
       if (progressBar == null) {
         break missingId;
       }
 
+      id = R.id.scrollContent;
+      ScrollView scrollContent = ViewBindings.findChildViewById(rootView, id);
+      if (scrollContent == null) {
+        break missingId;
+      }
+
+      id = R.id.textColetadoPor;
+      TextView textColetadoPor = ViewBindings.findChildViewById(rootView, id);
+      if (textColetadoPor == null) {
+        break missingId;
+      }
+
       id = R.id.textColetasCount;
       TextView textColetasCount = ViewBindings.findChildViewById(rootView, id);
       if (textColetasCount == null) {
+        break missingId;
+      }
+
+      id = R.id.textDataColeta;
+      TextView textDataColeta = ViewBindings.findChildViewById(rootView, id);
+      if (textDataColeta == null) {
+        break missingId;
+      }
+
+      id = R.id.textLocalizacaoEncontrada;
+      TextView textLocalizacaoEncontrada = ViewBindings.findChildViewById(rootView, id);
+      if (textLocalizacaoEncontrada == null) {
         break missingId;
       }
 
@@ -192,10 +268,11 @@ public final class ActivityScannerBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ActivityScannerBinding((CoordinatorLayout) rootView, buttonCancel, buttonColetar,
-          buttonRetry, cameraPreview, cardPatrimonioInfo, progressBar, textColetasCount,
-          textPatrimonioDescricao, textPatrimonioNumero, textPatrimonioSala, textPatrimonioStatus,
-          textStatus, toolbar);
+      return new ActivityScannerBinding((CoordinatorLayout) rootView, appBarLayout, buttonCancel,
+          buttonColetar, buttonRetry, cameraPreview, cardPatrimonioInfo, layoutButtons,
+          layoutInfoColeta, progressBar, scrollContent, textColetadoPor, textColetasCount,
+          textDataColeta, textLocalizacaoEncontrada, textPatrimonioDescricao, textPatrimonioNumero,
+          textPatrimonioSala, textPatrimonioStatus, textStatus, toolbar);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

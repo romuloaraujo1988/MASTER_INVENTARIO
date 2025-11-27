@@ -22,6 +22,9 @@ public class RelatorioColetaDAO {
      * Gera relatório de itens encontrados durante a coleta
      * IMPORTANTE: Este método trabalha apenas com o inventário ativo do sistema
      * 
+     * CORREÇÃO 26/11/2025: Alterado INNER JOIN para LEFT JOIN na tabela de responsáveis
+     * para incluir patrimônios sem responsável cadastrado (9 itens estavam sendo excluídos)
+     * 
      * @param idInventario ID do inventário ativo
      * @return Lista de mapas com dados dos itens encontrados
      */
@@ -32,8 +35,8 @@ public class RelatorioColetaDAO {
                     p.DESCRICAO as "Descrição",
                     p.MARCA as "marca",
                     p.MODELO as "modelo",
-                    r.NOME as "Responsável",
-                    s.NOME as "Setor",
+                    COALESCE(r.NOME, 'Sem Responsável') as "Responsável",
+                    COALESCE(s.NOME, 'Sem Setor') as "Setor",
                     c.LOCALIZACAO_ENCONTRADA as "Localização Encontrada",
                     c.ESTADO_ENCONTRADO as "Estado",
                     c.DATA_COLETA as "Data Coleta",
@@ -43,7 +46,7 @@ public class RelatorioColetaDAO {
                     p.VALOR_AQUISICAO as "Valor"
                 FROM TABELA_COLETA c
                 INNER JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID
-                INNER JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID
+                LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID
                 LEFT JOIN TABELA_SETOR s ON r.ID_SETOR = s.ID
                 WHERE c.ID_INVENTARIO = ?
                   AND c.STATUS_COLETA = 'COLETADO'

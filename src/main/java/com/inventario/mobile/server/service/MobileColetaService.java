@@ -258,11 +258,17 @@ public class MobileColetaService {
                 Inventario inventario = inventarioDAO.findById(coleta.getIdInventario());
                 // Buscar o usuário que fez a coleta
                 Usuario coletor = usuarioDAO.findById(coleta.getIdColetor());
-                if (coletor != null) {
-                    responses.add(converterParaResponse(coleta, coletor, inventario));
-                } else {
-                    logger.warn("Coletor não encontrado para coleta ID {}, pulando", coleta.getId());
+                
+                // Se coletor não encontrado, criar um usuário temporário para não perder a coleta
+                if (coletor == null) {
+                    logger.warn("Coletor ID {} não encontrado para coleta ID {}, usando nome padrão", 
+                            coleta.getIdColetor(), coleta.getId());
+                    coletor = new Usuario();
+                    coletor.setId(coleta.getIdColetor());
+                    coletor.setNomeCompleto("Usuário ID " + coleta.getIdColetor() + " (não encontrado)");
                 }
+                
+                responses.add(converterParaResponse(coleta, coletor, inventario));
             } catch (Exception e) {
                 logger.error("Erro ao processar coleta ID {}: {}", coleta.getId(), e.getMessage());
             }
@@ -749,14 +755,19 @@ public class MobileColetaService {
                 Usuario coletor = usuariosCache.get(coleta.getIdColetor());
                 Patrimonio patrimonio = patrimoniosCache.get(coleta.getIdPatrimonio());
                 
-                if (coletor != null) {
-                    MobileColetaResponse response = converterParaResponseComCache(
-                        coleta, coletor, inventario, patrimonio
-                    );
-                    responses.add(response);
-                } else {
-                    logger.warn("Coletor não encontrado para coleta ID {}, pulando", coleta.getId());
+                // Se coletor não encontrado, criar um usuário temporário para não perder a coleta
+                if (coletor == null) {
+                    logger.warn("Coletor ID {} não encontrado para coleta ID {}, usando nome padrão", 
+                            coleta.getIdColetor(), coleta.getId());
+                    coletor = new Usuario();
+                    coletor.setId(coleta.getIdColetor());
+                    coletor.setNomeCompleto("Usuário ID " + coleta.getIdColetor() + " (não encontrado)");
                 }
+                
+                MobileColetaResponse response = converterParaResponseComCache(
+                    coleta, coletor, inventario, patrimonio
+                );
+                responses.add(response);
             } catch (Exception e) {
                 logger.error("Erro ao processar coleta ID {}: {}", coleta.getId(), e.getMessage());
             }

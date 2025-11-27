@@ -104,6 +104,10 @@ class DashboardFragment : BaseOfflineFragment() {
             observeViewModel()
             Log.d(TAG, "onViewCreated: observeViewModel executado")
             
+            // v2.7: Atualizar indicador de modo offline
+            updateOfflineIndicator()
+            Log.d(TAG, "onViewCreated: updateOfflineIndicator executado")
+            
             // ✅ REATIVADO: Carregamento automático otimizado
             // Carrega estatísticas de forma assíncrona com timeout
             loadDashboardDataAsync()
@@ -756,6 +760,9 @@ class DashboardFragment : BaseOfflineFragment() {
     override fun onConnectivityRestored() {
         Log.d(TAG, "✓ Conexão restaurada! Recarregando estatísticas...")
         
+        // Atualizar indicador de modo offline
+        updateOfflineIndicator()
+        
         // Mostrar Snackbar informativo
         view?.let { v ->
             Snackbar.make(
@@ -777,6 +784,9 @@ class DashboardFragment : BaseOfflineFragment() {
     override fun onConnectivityLost() {
         Log.d(TAG, "⚠️ Conexão perdida! Usando estatísticas locais...")
         
+        // Atualizar indicador de modo offline
+        updateOfflineIndicator()
+        
         // Mostrar Snackbar informativo
         view?.let { v ->
             Snackbar.make(
@@ -790,5 +800,44 @@ class DashboardFragment : BaseOfflineFragment() {
         
         // As estatísticas já devem estar carregadas do cache local
         // O ViewModel já deve estar configurado para fallback automático
+    }
+    
+    // ========== INDICADOR DE MODO OFFLINE (v2.7) ==========
+    
+    /**
+     * Atualiza o indicador visual de modo offline
+     * Mostra quando:
+     * - Modo offline está forçado nas configurações
+     * - Não há conexão com a internet
+     */
+    private fun updateOfflineIndicator() {
+        try {
+            val isForceOffline = preferencesManager.isForceOfflineMode()
+            val isConnected = networkMonitor.isConnected()
+            
+            val shouldShowIndicator = isForceOffline || !isConnected
+            
+            Log.d(TAG, "updateOfflineIndicator: forceOffline=$isForceOffline, connected=$isConnected, show=$shouldShowIndicator")
+            
+            binding.layoutOfflineIndicator.visibility = if (shouldShowIndicator) View.VISIBLE else View.GONE
+            
+            // Atualizar texto baseado no motivo
+            if (isForceOffline) {
+                binding.tvOfflineStatus.text = "Modo Offline Forçado"
+                binding.tvOfflineInfo.text = "Usando dados locais"
+            } else if (!isConnected) {
+                binding.tvOfflineStatus.text = "Sem Conexão"
+                binding.tvOfflineInfo.text = "Dados podem estar desatualizados"
+            }
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao atualizar indicador offline", e)
+        }
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Atualizar indicador de modo offline ao voltar para a tela
+        updateOfflineIndicator()
     }
 }

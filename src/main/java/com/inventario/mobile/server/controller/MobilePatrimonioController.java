@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -71,24 +73,37 @@ public class MobilePatrimonioController {
     public ResponseEntity<ApiResponse<MobilePatrimonioDTO>> buscarPorNumero(@PathVariable String numero) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
+            String username = authentication != null ? authentication.getName() : "anonymous";
             
             logger.info("Buscando patrimônio por número: {} para usuário: {}", numero, username);
             
-            MobilePatrimonioDTO patrimonio = patrimonioService.buscarPorNumero(numero);
+            // ✅ TRATAMENTO ROBUSTO: Validar entrada
+            if (numero == null || numero.trim().isEmpty()) {
+                logger.warn("Número de patrimônio vazio ou nulo");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.error("Número de patrimônio é obrigatório", "INVALID_INPUT"));
+            }
+            
+            MobilePatrimonioDTO patrimonio = patrimonioService.buscarPorNumero(numero.trim());
             
             if (patrimonio != null) {
+                logger.info("✓ Patrimônio {} encontrado", numero);
                 return ResponseEntity.ok(
                         ApiResponse.success(patrimonio, "Patrimônio encontrado"));
             } else {
+                logger.info("Patrimônio {} não encontrado", numero);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.error("Patrimônio não encontrado", "NOT_FOUND"));
             }
             
-        } catch (Exception e) {
-            logger.error("Erro ao buscar patrimônio por número", e);
+        } catch (SQLException e) {
+            logger.error("Erro SQL ao buscar patrimônio por número: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Erro ao buscar patrimônio", "FETCH_ERROR"));
+                    .body(ApiResponse.error("Erro de banco de dados ao buscar patrimônio", "DATABASE_ERROR"));
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao buscar patrimônio por número: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao buscar patrimônio: " + e.getMessage(), "FETCH_ERROR"));
         }
     }
     

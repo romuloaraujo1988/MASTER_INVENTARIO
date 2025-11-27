@@ -38,8 +38,13 @@ class ColetaRepositoryImpl @Inject constructor(
     }
     
     override suspend fun getColetaById(id: Long): Coleta? {
-        // TODO: Implementar busca por ID
-        return null
+        return try {
+            val entity = coletaDao.buscarPorId(id)
+            entity?.let { mapper.toDomain(it) }
+        } catch (e: Exception) {
+            android.util.Log.e("ColetaRepositoryImpl", "Erro ao buscar coleta por ID $id", e)
+            null
+        }
     }
     
     override suspend fun getColetasByPatrimonio(patrimonioId: Long): List<Coleta> {
@@ -122,31 +127,40 @@ class ColetaRepositoryImpl @Inject constructor(
             // ========================================
             
             // 2. Verificar se patrimônio já foi coletado neste inventário
+            // EXCEÇÃO: Coleta por descrição (patrimonioId = 0) permite múltiplas coletas
             val inventarioId = preferencesManager.getInventarioAtivoId() ?: 0
-            val coletaExistente = coletaDao.buscarColetaExistente(
-                coleta.patrimonioId.toInt(),
-                inventarioId
-            )
+            val isColetaPorDescricao = coleta.patrimonioId <= 0 || !coleta.descricaoPatrimonio.isNullOrBlank()
             
-            if (coletaExistente != null) {
-                val dataFormatada = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
-                    .format(java.util.Date(coletaExistente.dataColeta))
-                
-                android.util.Log.w("ColetaRepositoryImpl", "⚠️ Patrimônio já coletado em $dataFormatada")
-                
-                // Registrar detecção de duplicata
-                auditService.registrarDuplicataDetectada(
-                    coletaId = 0,
-                    numeroPatrimonio = coleta.numeroPatrimonio ?: "",
-                    coletaAnteriorId = coletaExistente.id
+            if (isColetaPorDescricao) {
+                android.util.Log.d("ColetaRepositoryImpl", "✓ Coleta por descrição - Validação de duplicata IGNORADA")
+                android.util.Log.d("ColetaRepositoryImpl", "  Descrição: ${coleta.descricaoPatrimonio}")
+            } else {
+                // Verificar duplicata apenas para coletas normais (com patrimônio específico)
+                val coletaExistente = coletaDao.buscarColetaExistente(
+                    coleta.patrimonioId.toInt(),
+                    inventarioId
                 )
                 
-                return Result.failure(Exception(
-                    "⚠️ Patrimônio ${coleta.numeroPatrimonio} já foi coletado em $dataFormatada por ${coletaExistente.nomeUsuario}"
-                ))
+                if (coletaExistente != null) {
+                    val dataFormatada = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+                        .format(java.util.Date(coletaExistente.dataColeta))
+                    
+                    android.util.Log.w("ColetaRepositoryImpl", "⚠️ Patrimônio já coletado em $dataFormatada")
+                    
+                    // Registrar detecção de duplicata
+                    auditService.registrarDuplicataDetectada(
+                        coletaId = 0,
+                        numeroPatrimonio = coleta.numeroPatrimonio ?: "",
+                        coletaAnteriorId = coletaExistente.id
+                    )
+                    
+                    return Result.failure(Exception(
+                        "⚠️ Patrimônio ${coleta.numeroPatrimonio} já foi coletado em $dataFormatada por ${coletaExistente.nomeUsuario}"
+                    ))
+                }
+                
+                android.util.Log.d("ColetaRepositoryImpl", "✓ Sem duplicata - Patrimônio não foi coletado ainda")
             }
-            
-            android.util.Log.d("ColetaRepositoryImpl", "✓ Sem duplicata - Patrimônio não foi coletado ainda")
             
             // ========================================
             // FASE 3: PREPARAR DADOS

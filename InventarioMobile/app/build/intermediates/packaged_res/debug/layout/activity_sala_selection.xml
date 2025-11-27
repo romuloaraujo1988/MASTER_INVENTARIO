@@ -36,6 +36,63 @@
             android:layout_height="match_parent"
             android:padding="16dp">
 
+            <!-- Banner de Sala Fixada (v2.9) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/layoutSalaFixada"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/primary_light"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp"
+                app:strokeColor="@color/primary_color"
+                app:strokeWidth="1dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:visibility="visible">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="12dp"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/tvSalaFixadaNome"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="@color/primary_color"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        tools:text="📌 Sala 101 - Laboratório" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnUsarSalaFixada"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:text="Usar"
+                        android:textSize="12sp"
+                        app:backgroundTint="@color/primary_color" />
+
+                    <ImageButton
+                        android:id="@+id/btnRemoverSalaFixada"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_marginStart="4dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Remover sala fixada"
+                        android:src="@android:drawable/ic_menu_close_clear_cancel"
+                        app:tint="@color/text_secondary" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Título da seção -->
             <TextView
                 android:id="@+id/textViewTitle"
@@ -48,7 +105,7 @@
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toBottomOf="@id/layoutSalaFixada" />
 
             <!-- Campo de busca -->
             <com.google.android.material.card.MaterialCardView

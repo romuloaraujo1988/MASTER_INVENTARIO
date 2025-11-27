@@ -20,7 +20,8 @@ import javax.inject.Inject
 class ManualCollectionViewModel @Inject constructor(
     private val buscarPatrimonioUseCase: BuscarPatrimonioUseCase,
     private val registrarColetaUseCase: RegistrarColetaUseCase,
-    private val inventarioRepository: InventarioRepository // Temporário para compatibilidade
+    private val inventarioRepository: InventarioRepository, // Temporário para compatibilidade
+    private val coletaDao: com.inventario.mobile.data.local.dao.ColetaDao // v2.7: Para contar coletas por sala
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ManualCollectionUiState())
@@ -122,8 +123,10 @@ class ManualCollectionViewModel @Inject constructor(
             observacoes = this.observacoes,
             coletado = this.coletado,
             dataColeta = this.dataColeta,
-            coletadoPor = null,
-            dataColetaFormatada = null,
+            coletadoPor = this.coletadoPor,
+            dataColetaFormatada = this.dataColetaFormatada,
+            localizacaoEncontrada = this.localizacaoEncontrada,
+            estadoEncontrado = this.estadoEncontrado,
             observacoesColeta = null,
             sincronizado = this.sincronizado,
             servidorId = this.servidorId
@@ -207,17 +210,23 @@ class ManualCollectionViewModel @Inject constructor(
         }
     }
 
+    /**
+     * v2.7: Carrega contagem de coletas da sala atual
+     * Usa ColetaDao diretamente para buscar do banco local
+     */
     private fun loadColetasCount() {
         viewModelScope.launch {
             try {
-                Log.d("ManualCollectionVM", "Carregando contagem de coletas para sala: $salaNome")
+                Log.d("ManualCollectionVM", "Carregando contagem de coletas para sala: $salaNome (ID: $salaId)")
                 
-                // Buscar todas as coletas
-                val todasColetas = inventarioRepository.getColetas()
-                
-                // Filtrar apenas as coletas da sala atual
-                val coletasDaSala = todasColetas.filter { coleta ->
-                    coleta.localizacaoAtual == salaNome || coleta.nomeSala == salaNome
+                // Buscar coletas da sala usando ColetaDao
+                val coletasDaSala = if (salaId > 0) {
+                    coletaDao.buscarPorSala(salaId.toInt())
+                } else {
+                    // Fallback: buscar todas e filtrar por nome
+                    coletaDao.buscarTodas().filter { coleta ->
+                        coleta.nomeSala == salaNome
+                    }
                 }
                 
                 Log.d("ManualCollectionVM", "Total de coletas na sala '$salaNome': ${coletasDaSala.size}")
@@ -228,6 +237,9 @@ class ManualCollectionViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e("ManualCollectionVM", "Erro ao carregar contagem de coletas", e)
                 // Silently fail for count - não bloqueia a funcionalidade principal
+                _uiState.value = _uiState.value.copy(
+                    totalColetas = 0
+                )
             }
         }
     }

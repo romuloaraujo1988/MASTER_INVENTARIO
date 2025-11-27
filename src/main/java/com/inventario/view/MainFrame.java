@@ -137,9 +137,19 @@ public class MainFrame extends JFrame {
             JMenuItem itemPatrimonio = new JMenuItem("Patrimônio");
             itemPatrimonio.setFont(new Font("Arial", Font.PLAIN, 13));
             itemPatrimonio.addActionListener(e -> abrirPatrimonio());
+            
+            JMenuItem itemItensCompostos = new JMenuItem("Gerenciar Itens Compostos");
+            itemItensCompostos.setFont(new Font("Arial", Font.PLAIN, 13));
+            itemItensCompostos.addActionListener(e -> abrirItensCompostos());
+            
             JMenuItem itemColeta = new JMenuItem("Coleta de Dados");
             itemColeta.setFont(new Font("Arial", Font.PLAIN, 13));
             itemColeta.addActionListener(e -> abrirColeta());
+            
+            JMenuItem itemColetaItensCompostos = new JMenuItem("Coleta de Itens Compostos");
+            itemColetaItensCompostos.setFont(new Font("Arial", Font.PLAIN, 13));
+            itemColetaItensCompostos.addActionListener(e -> abrirColetaItensCompostos());
+            
             JMenuItem itemImportarCSV = new JMenuItem("Importar Excel do SUAP");
             itemImportarCSV.setFont(new Font("Arial", Font.PLAIN, 13));
             itemImportarCSV.addActionListener(e -> abrirImportacaoCSV());
@@ -151,7 +161,9 @@ public class MainFrame extends JFrame {
             menuInventario.add(itemCampus);
             menuInventario.add(itemResponsaveis);
             menuInventario.add(itemPatrimonio);
+            menuInventario.add(itemItensCompostos);
             menuInventario.add(itemColeta);
+            menuInventario.add(itemColetaItensCompostos);
             menuInventario.addSeparator();
             menuInventario.add(itemImportarCSV);
 
@@ -851,6 +863,36 @@ public class MainFrame extends JFrame {
             ModernDialog.showMessage(this,
                     "Erro ao abrir gerenciamento de patrimônio: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    /**
+     * Abre a tela de gestão de itens compostos
+     */
+    private void abrirItensCompostos() {
+        try {
+            ItemCompostoFrame frame = new ItemCompostoFrame(usuarioLogado);
+            frame.setVisible(true);
+        } catch (Exception e) {
+            ModernDialog.showMessage(this,
+                    "Erro ao abrir gestão de itens compostos: " + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Abre a tela de coleta de itens compostos
+     */
+    private void abrirColetaItensCompostos() {
+        try {
+            ColetaItemCompostoFrame frame = new ColetaItemCompostoFrame(usuarioLogado);
+            frame.setVisible(true);
+        } catch (Exception e) {
+            ModernDialog.showMessage(this,
+                    "Erro ao abrir coleta de itens compostos: " + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
     }
 

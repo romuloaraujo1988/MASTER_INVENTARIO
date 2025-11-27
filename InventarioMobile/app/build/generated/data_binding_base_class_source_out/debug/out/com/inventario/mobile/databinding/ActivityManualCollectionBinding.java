@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -12,6 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.inventario.mobile.R;
@@ -22,6 +24,9 @@ import java.lang.String;
 public final class ActivityManualCollectionBinding implements ViewBinding {
   @NonNull
   private final ConstraintLayout rootView;
+
+  @NonNull
+  public final MaterialButton btnBackToDashboard;
 
   @NonNull
   public final Button btnClear;
@@ -42,6 +47,9 @@ public final class ActivityManualCollectionBinding implements ViewBinding {
   public final TextInputEditText etPatrimonioNumber;
 
   @NonNull
+  public final LinearLayout layoutDicas;
+
+  @NonNull
   public final ProgressBar progressBar;
 
   @NonNull
@@ -54,18 +62,21 @@ public final class ActivityManualCollectionBinding implements ViewBinding {
   public final TextView tvSalaInfo;
 
   private ActivityManualCollectionBinding(@NonNull ConstraintLayout rootView,
-      @NonNull Button btnClear, @NonNull Button btnCollect, @NonNull Button btnSearch,
-      @NonNull MaterialCardView cardInput, @NonNull MaterialCardView cardPatrimonioInfo,
-      @NonNull TextInputEditText etPatrimonioNumber, @NonNull ProgressBar progressBar,
+      @NonNull MaterialButton btnBackToDashboard, @NonNull Button btnClear,
+      @NonNull Button btnCollect, @NonNull Button btnSearch, @NonNull MaterialCardView cardInput,
+      @NonNull MaterialCardView cardPatrimonioInfo, @NonNull TextInputEditText etPatrimonioNumber,
+      @NonNull LinearLayout layoutDicas, @NonNull ProgressBar progressBar,
       @NonNull TextView tvCollectionCount, @NonNull TextView tvPatrimonioInfo,
       @NonNull TextView tvSalaInfo) {
     this.rootView = rootView;
+    this.btnBackToDashboard = btnBackToDashboard;
     this.btnClear = btnClear;
     this.btnCollect = btnCollect;
     this.btnSearch = btnSearch;
     this.cardInput = cardInput;
     this.cardPatrimonioInfo = cardPatrimonioInfo;
     this.etPatrimonioNumber = etPatrimonioNumber;
+    this.layoutDicas = layoutDicas;
     this.progressBar = progressBar;
     this.tvCollectionCount = tvCollectionCount;
     this.tvPatrimonioInfo = tvPatrimonioInfo;
@@ -99,6 +110,12 @@ public final class ActivityManualCollectionBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.btnBackToDashboard;
+      MaterialButton btnBackToDashboard = ViewBindings.findChildViewById(rootView, id);
+      if (btnBackToDashboard == null) {
+        break missingId;
+      }
+
       id = R.id.btnClear;
       Button btnClear = ViewBindings.findChildViewById(rootView, id);
       if (btnClear == null) {
@@ -135,6 +152,12 @@ public final class ActivityManualCollectionBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.layoutDicas;
+      LinearLayout layoutDicas = ViewBindings.findChildViewById(rootView, id);
+      if (layoutDicas == null) {
+        break missingId;
+      }
+
       id = R.id.progressBar;
       ProgressBar progressBar = ViewBindings.findChildViewById(rootView, id);
       if (progressBar == null) {
@@ -159,9 +182,9 @@ public final class ActivityManualCollectionBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ActivityManualCollectionBinding((ConstraintLayout) rootView, btnClear, btnCollect,
-          btnSearch, cardInput, cardPatrimonioInfo, etPatrimonioNumber, progressBar,
-          tvCollectionCount, tvPatrimonioInfo, tvSalaInfo);
+      return new ActivityManualCollectionBinding((ConstraintLayout) rootView, btnBackToDashboard,
+          btnClear, btnCollect, btnSearch, cardInput, cardPatrimonioInfo, etPatrimonioNumber,
+          layoutDicas, progressBar, tvCollectionCount, tvPatrimonioInfo, tvSalaInfo);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));
