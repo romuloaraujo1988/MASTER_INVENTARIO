@@ -385,6 +385,32 @@ public class DataSynchronizer {
                         return false;
                     }
                     
+                    // ✅ NOVO: Verificar se coleta já existe (evitar duplicatas)
+                    String checkDuplicateSql = """
+                        SELECT ID FROM TABELA_COLETA 
+                        WHERE ID_INVENTARIO = ? 
+                        AND ID_PATRIMONIO = ? 
+                        AND ID_PARTICIPANTE_INVENTARIO = ?
+                        LIMIT 1
+                    """;
+                    
+                    try (PreparedStatement checkStmt = conn.prepareStatement(checkDuplicateSql)) {
+                        checkStmt.setObject(1, idInventario);
+                        checkStmt.setObject(2, idPatrimonio);
+                        checkStmt.setObject(3, idParticipante);
+                        
+                        try (ResultSet rs = checkStmt.executeQuery()) {
+                            if (rs.next()) {
+                                int existingId = rs.getInt("ID");
+                                LOGGER.warning("⚠️ Coleta duplicada detectada! ID existente: " + existingId + 
+                                             " (Patrimônio: " + idPatrimonio + ", Inventário: " + idInventario + ")");
+                                // Marcar como sincronizada mesmo assim para não tentar novamente
+                                atualizarIdRemoto("local_coleta", recordId, existingId);
+                                return true;
+                            }
+                        }
+                    }
+                    
                     // Parâmetro 1: ID_PATRIMONIO
                     stmt.setObject(1, idPatrimonio);
                     // Parâmetro 2: ID_INVENTARIO
@@ -627,6 +653,10 @@ public class DataSynchronizer {
             // Importa dados principais
             totalImportados += importarPatrimoniosCompleto(conn);
             totalImportados += importarInventariosCompleto(conn);
+            
+            // ✅ CRÍTICO: Importar participantes ANTES das coletas
+            totalImportados += importarParticipantesInventario(conn);
+            
             totalImportados += importarColetasCompleto(conn);
             
         } catch (SQLException e) {
@@ -814,6 +844,49 @@ public class DataSynchronizer {
         }
         
         LOGGER.info(String.format("Importados %d inventários", count));
+        return count;
+    }
+    
+    /**
+     * ✅ NOVO: Importa participantes do inventário
+     * @param conn Conexão com PostgreSQL
+     * @return Número de participantes importados
+     * @throws SQLException
+     */
+    private int importarParticipantesInventario(Connection conn) throws SQLException {
+        String sql = """
+            SELECT 
+                ID_PARTICIPANTE as id_participante,
+                ID_INVENTARIO as id_inventario,
+                ID_USUARIO as id_usuario,
+                PAPEL as papel,
+                ATIVO as ativo,
+                DATA_INCLUSAO as data_inclusao
+            FROM TABELA_PARTICIPANTE_INVENTARIO 
+            WHERE ATIVO = TRUE
+            ORDER BY ID_PARTICIPANTE
+        """;
+        
+        int count = 0;
+        
+        try (PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                Map<String, Object> participante = new HashMap<>();
+                participante.put("id_participante", rs.getInt("id_participante"));
+                participante.put("id_inventario", rs.getInt("id_inventario"));
+                participante.put("id_usuario", rs.getInt("id_usuario"));
+                participante.put("papel", rs.getString("papel"));
+                participante.put("ativo", rs.getBoolean("ativo"));
+                participante.put("data_inclusao", rs.getTimestamp("data_inclusao"));
+                
+                inserirParticipanteLocal(participante);
+                count++;
+            }
+        }
+        
+        LOGGER.info(String.format("✅ Importados %d participantes do inventário", count));
         return count;
     }
     
@@ -1069,19 +1142,33 @@ public class DataSynchronizer {
      * @throws SQLException
      */
     private void atualizarIdRemoto(String tabela, int localId, int remoteId) throws SQLException {
-        String sql = "UPDATE " + tabela + " SET remote_id = ? WHERE id = ?";
+        // ✅ CORRIGIDO: Marcar como sincronizado na sync_control E na tabela local
         
-        try (Connection conn = SQLiteConnection.getInstance().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = SQLiteConnection.getInstance().getConnection()) {
+            // 1. Marcar na sync_control
+            String sql1 = "UPDATE sync_control SET synced = TRUE WHERE table_name = ? AND record_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sql1)) {
+                stmt.setString(1, tabela);
+                stmt.setInt(2, localId);
+                
+                int rowsUpdated = stmt.executeUpdate();
+                if (rowsUpdated > 0) {
+                    LOGGER.info(String.format("✅ Sincronização marcada na sync_control: %s local=%d -> remoto=%d", 
+                        tabela, localId, remoteId));
+                }
+            }
             
-            stmt.setInt(1, remoteId);
-            stmt.setInt(2, localId);
-            
-            int rowsUpdated = stmt.executeUpdate();
-            if (rowsUpdated > 0) {
-                LOGGER.info(String.format("Mapeamento atualizado %s: local=%d -> remoto=%d", tabela, localId, remoteId));
-            } else {
-                LOGGER.warning(String.format("Nenhum registro encontrado para atualizar %s: local=%d", tabela, localId));
+            // 2. Atualizar sync_status na tabela local (se for coleta)
+            if ("local_coleta".equals(tabela)) {
+                String sql2 = "UPDATE local_coleta SET sync_status = 'SYNCED' WHERE id = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(sql2)) {
+                    stmt.setInt(1, localId);
+                    
+                    int rowsUpdated = stmt.executeUpdate();
+                    if (rowsUpdated > 0) {
+                        LOGGER.info(String.format("✅ sync_status atualizado: local_coleta id=%d", localId));
+                    }
+                }
             }
         }
     }
@@ -1298,6 +1385,46 @@ public class DataSynchronizer {
             stmt.setTimestamp(9, (Timestamp) inventario.get("data_ultima_alteracao"));
             
             stmt.executeUpdate();
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Insere participante do inventário no banco local
+     * @param participante Dados do participante
+     * @throws SQLException
+     */
+    private void inserirParticipanteLocal(Map<String, Object> participante) throws SQLException {
+        String sql = """
+            INSERT OR REPLACE INTO local_participante_inventario 
+            (id_participante, id_inventario, id_usuario, papel, ativo, data_inclusao)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """;
+        
+        try (Connection conn = SQLiteConnection.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, (Integer) participante.get("id_participante"));
+            stmt.setInt(2, (Integer) participante.get("id_inventario"));
+            stmt.setInt(3, (Integer) participante.get("id_usuario"));
+            stmt.setString(4, (String) participante.get("papel"));
+            stmt.setBoolean(5, (Boolean) participante.getOrDefault("ativo", true));
+            
+            // Conversão segura de timestamp
+            Object dataInclusao = participante.get("data_inclusao");
+            if (dataInclusao instanceof Timestamp) {
+                stmt.setTimestamp(6, (Timestamp) dataInclusao);
+            } else if (dataInclusao instanceof java.util.Date) {
+                stmt.setTimestamp(6, new Timestamp(((java.util.Date) dataInclusao).getTime()));
+            } else {
+                stmt.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
+            }
+            
+            stmt.executeUpdate();
+            
+            LOGGER.fine(String.format("Participante inserido: ID=%d, Inventário=%d, Usuário=%d", 
+                participante.get("id_participante"), 
+                participante.get("id_inventario"),
+                participante.get("id_usuario")));
         }
     }
     

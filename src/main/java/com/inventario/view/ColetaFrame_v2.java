@@ -1578,11 +1578,11 @@ public class ColetaFrame_v2 extends JFrame {
         modeloTabelaSemPatrimonio.setRowCount(0);
 
         try {
-            // Buscar itens sem etiqueta da sala
+            // Buscar itens sem etiqueta da sala (usando numeroSala para consistência com dados no banco)
             System.out.println("DEBUG TIMESTAMP: Buscando itens sem etiqueta...");
             List<Coleta> itensSemPatrimonio = coletaDAO.buscarColetasSemEtiquetaPorSala(
                     salaSelecionada.getIdSala(),
-                    salaSelecionada.getIdentificacaoCompleta());
+                    salaSelecionada.getNumeroSala());
 
             System.out.println("DEBUG TIMESTAMP: Encontrados " + itensSemPatrimonio.size() + " itens sem patrimônio");
 
@@ -1699,8 +1699,20 @@ public class ColetaFrame_v2 extends JFrame {
             }
 
             // Modo offline: autorização simplificada
-            Integer idParticipante = usuarioLogado.getId();
-            System.out.println("DEBUG: Modo offline - ID participante: " + idParticipante);
+            // ✅ CORRIGIDO: Buscar ID do participante do inventário
+            ParticipanteInventarioDAO participanteDAO = new ParticipanteInventarioDAO();
+            Integer idParticipante = participanteDAO.buscarIdParticipantePorUsuario(
+                inventarioAtivo.getId(), 
+                usuarioLogado.getId()
+            );
+            
+            if (idParticipante == null || idParticipante == 0) {
+                // Fallback: usar ID do usuário
+                idParticipante = usuarioLogado.getId();
+                System.out.println("DEBUG: AVISO - Participante não encontrado, usando ID do usuário como fallback: " + idParticipante);
+            } else {
+                System.out.println("DEBUG: ID participante encontrado: " + idParticipante);
+            }
 
             // Criar objeto Coleta para item sem patrimônio
             Coleta coleta = new Coleta();
@@ -1722,8 +1734,9 @@ public class ColetaFrame_v2 extends JFrame {
             
             coleta.setStatusColeta("COLETADO");
             coleta.setObservacaoColeta(observacoes);
-            coleta.setLocalizacaoAtual(salaSelecionada.getIdentificacaoCompleta());
-            coleta.setLocalizacaoEncontrada(salaSelecionada.getIdentificacaoCompleta());
+            // ✅ CORRIGIDO: Usar numeroSala para consistência com dados existentes no banco
+            coleta.setLocalizacaoAtual(salaSelecionada.getNumeroSala());
+            coleta.setLocalizacaoEncontrada(salaSelecionada.getNumeroSala());
             coleta.setEstadoEncontrado("N/A");
             coleta.setDivergencia(false);
             coleta.setSemEtiqueta(true);
@@ -1803,10 +1816,10 @@ public class ColetaFrame_v2 extends JFrame {
             String descricao = (String) modeloTabelaSemPatrimonio.getValueAt(linhaSelecionada, 1);
             String localizacao = (String) modeloTabelaSemPatrimonio.getValueAt(linhaSelecionada, 3);
 
-            // Buscar e excluir a coleta
+            // Buscar e excluir a coleta (usando numeroSala para consistência com dados no banco)
             List<Coleta> itensSemPatrimonio = coletaDAO.buscarColetasSemEtiquetaPorSala(
                     salaSelecionada.getIdSala(),
-                    salaSelecionada.getIdentificacaoCompleta());
+                    salaSelecionada.getNumeroSala());
 
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
             boolean encontrado = false;
@@ -2204,7 +2217,7 @@ public class ColetaFrame_v2 extends JFrame {
                 }
             }
 
-            // Carregar histórico usando APENAS o número da sala
+            // Carregar histórico usando o número da sala (consistente com dados no banco)
             carregarHistoricoColeta(salaSelecionada.getNumeroSala());
 
             // Carregar itens sem patrimônio se estiver na aba correspondente
@@ -2212,20 +2225,33 @@ public class ColetaFrame_v2 extends JFrame {
                 carregarTodosItensSemPatrimonio();
             }
 
+            // Verificar se está em modo offline - botões finalizar/reabrir só funcionam online
+            boolean modoOffline = offlineManager.isOperatingOffline();
+            
             // Configurar interface baseado no status da sala
+            // REGRA: btnReabrir só fica ativo quando btnFinalizar está inativo (sala finalizada)
+            // REGRA: Ambos os botões ficam desabilitados em modo OFFLINE
             if (salaFinalizada) {
-                // Sala FINALIZADA - desabilitar coleta
-                lblResumoSala.setText(String.format("✅ Sala FINALIZADA: %s | %d itens coletados",
-                        salaSelecionada.getIdentificacaoCompleta(), totalItensColetados));
+                // Sala FINALIZADA - desabilitar coleta, habilitar reabrir (se online)
+                lblResumoSala.setText(String.format("✅ Sala FINALIZADA: %s | %d itens coletados%s",
+                        salaSelecionada.getIdentificacaoCompleta(), totalItensColetados,
+                        modoOffline ? " [OFFLINE]" : ""));
                 lblResumoSala.setForeground(new Color(40, 167, 69)); // Verde
                 
                 btnFinalizarColeta.setText("✅ Finalizada");
                 btnFinalizarColeta.setBackground(new Color(108, 117, 125)); // Cinza
                 btnFinalizarColeta.setEnabled(false);
                 
-                // Habilitar botão reabrir se usuário tem permissão
+                // Habilitar botão reabrir APENAS quando:
+                // 1. Finalizar está inativo (sala finalizada)
+                // 2. Está em modo ONLINE (operação requer PostgreSQL)
                 if (btnReabrirColeta.isVisible()) {
-                    btnReabrirColeta.setEnabled(true);
+                    btnReabrirColeta.setEnabled(!modoOffline); // Só habilita se estiver online
+                    if (modoOffline) {
+                        btnReabrirColeta.setToolTipText("Reabrir sala requer conexão com o servidor");
+                    } else {
+                        btnReabrirColeta.setToolTipText("Reabrir uma sala finalizada para permitir novas coletas (Admin/Supervisor)");
+                    }
                 }
                 
                 // Desabilitar campos de coleta
@@ -2236,19 +2262,26 @@ public class ColetaFrame_v2 extends JFrame {
                 comboEstado.setEnabled(false);
                 
                 System.out.println("DEBUG: Sala " + salaSelecionada.getIdentificacaoCompleta() + 
-                                  " está FINALIZADA - campos desabilitados");
+                                  " está FINALIZADA - btnFinalizar=false, btnReabrir=" + (!modoOffline));
                 
             } else {
-                // Sala ABERTA - habilitar coleta
-                lblResumoSala.setText(String.format("Coletando em: %s | %d itens coletados",
-                        salaSelecionada.getIdentificacaoCompleta(), totalItensColetados));
+                // Sala ABERTA - habilitar coleta, desabilitar reabrir
+                lblResumoSala.setText(String.format("Coletando em: %s | %d itens coletados%s",
+                        salaSelecionada.getIdentificacaoCompleta(), totalItensColetados,
+                        modoOffline ? " [OFFLINE]" : ""));
                 lblResumoSala.setForeground(new Color(100, 100, 100)); // Cinza padrão
                 
                 btnFinalizarColeta.setText("🏁 Finalizar");
                 btnFinalizarColeta.setBackground(new Color(40, 167, 69)); // Verde
-                btnFinalizarColeta.setEnabled(true);
+                // Habilitar finalizar APENAS se estiver ONLINE (operação requer PostgreSQL)
+                btnFinalizarColeta.setEnabled(!modoOffline);
+                if (modoOffline) {
+                    btnFinalizarColeta.setToolTipText("Finalizar sala requer conexão com o servidor");
+                } else {
+                    btnFinalizarColeta.setToolTipText("Marcar a coleta desta sala como finalizada");
+                }
                 
-                // Desabilitar botão reabrir (sala não está finalizada)
+                // Desabilitar botão reabrir quando finalizar está ativo (sala aberta)
                 if (btnReabrirColeta.isVisible()) {
                     btnReabrirColeta.setEnabled(false);
                 }
@@ -2261,7 +2294,8 @@ public class ColetaFrame_v2 extends JFrame {
                 habilitarComponentesPorAba(abaSelecionada);
                 
                 System.out.println("DEBUG: Sala " + salaSelecionada.getIdentificacaoCompleta() + 
-                                  " está ABERTA - campos habilitados");
+                                  " está ABERTA - btnFinalizar=" + (!modoOffline) + ", btnReabrir=false" +
+                                  (modoOffline ? " [MODO OFFLINE]" : ""));
             }
 
         } catch (Exception e) {
@@ -2280,14 +2314,23 @@ public class ColetaFrame_v2 extends JFrame {
      * - Usa query única com JOIN (evita N+1)
      * - Executa em background (não trava UI)
      * - Limita registros para performance
+     * - ✅ CORRIGIDO: Busca dados locais (SQLite) quando em modo offline
      */
     private void carregarHistoricoColeta(String identificacaoSala) {
-        System.out.println("[OTIMIZADO] Carregando histórico para sala: " + identificacaoSala);
+        System.out.println("[OTIMIZADO] ========================================");
+        System.out.println("[OTIMIZADO] Carregando histórico para sala: '" + identificacaoSala + "'");
+        System.out.println("[OTIMIZADO] Tipo de parâmetro: " + (identificacaoSala != null ? identificacaoSala.getClass().getSimpleName() : "null"));
+        System.out.println("[OTIMIZADO] Modo offline: " + offlineManager.isOperatingOffline());
+        System.out.println("[OTIMIZADO] ========================================");
         
         Sala salaAtual = (Sala) comboSalas.getSelectedItem();
         if (salaAtual == null) {
+            System.out.println("[OTIMIZADO] ERRO: Nenhuma sala selecionada!");
             return;
         }
+        
+        System.out.println("[OTIMIZADO] Sala atual: " + salaAtual.getIdentificacaoCompleta());
+        System.out.println("[OTIMIZADO] Número da sala: " + salaAtual.getNumeroSala());
         
         // Mostrar loading na UI
         lblResumoSala.setText("⏳ Carregando histórico...");
@@ -2298,19 +2341,52 @@ public class ColetaFrame_v2 extends JFrame {
             @Override
             protected HistoricoResult doInBackground() throws Exception {
                 long inicio = System.currentTimeMillis();
+                List<Coleta> coletas;
                 
-                // 1. Buscar histórico limitado para exibição (performance)
-                List<com.inventario.dto.ColetaResumo> coletas = 
-                    coletaDAO.buscarHistoricoOtimizado(identificacaoSala, LIMITE_HISTORICO);
+                // ✅ CORRIGIDO: Verificar modo de operação e buscar dados apropriados
+                if (offlineManager.isOperatingOffline()) {
+                    // MODO OFFLINE: Buscar do SQLite local via ColetaOfflineService
+                    System.out.println("[OTIMIZADO] Buscando coletas do banco LOCAL (SQLite)...");
+                    coletas = coletaOfflineService.buscarColetasPorLocalizacao(identificacaoSala);
+                    System.out.println("[OTIMIZADO] Coletas encontradas no SQLite: " + coletas.size());
+                } else {
+                    // MODO ONLINE: Buscar do PostgreSQL
+                    System.out.println("[OTIMIZADO] Buscando coletas do banco REMOTO (PostgreSQL)...");
+                    coletas = coletaDAO.buscarColetasPorNumeroSala(identificacaoSala);
+                    
+                    // ✅ ADICIONAL: Também buscar coletas locais pendentes de sincronização
+                    // para garantir que apareçam mesmo antes de sincronizar
+                    try {
+                        List<Coleta> coletasLocais = coletaOfflineService.buscarColetasPorLocalizacao(identificacaoSala);
+                        if (!coletasLocais.isEmpty()) {
+                            System.out.println("[OTIMIZADO] Adicionando " + coletasLocais.size() + " coletas locais pendentes");
+                            // Adicionar coletas locais que não estão no resultado do PostgreSQL
+                            for (Coleta coletaLocal : coletasLocais) {
+                                boolean jaExiste = coletas.stream()
+                                    .anyMatch(c -> c.getNumeroPatrimonio() != null && 
+                                                  c.getNumeroPatrimonio().equals(coletaLocal.getNumeroPatrimonio()));
+                                if (!jaExiste) {
+                                    coletas.add(0, coletaLocal); // Adicionar no início (mais recentes)
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.err.println("[OTIMIZADO] Erro ao buscar coletas locais: " + e.getMessage());
+                    }
+                }
                 
-                // 2. Buscar contagem TOTAL separadamente (query leve)
-                int totalReal = coletaDAO.contarColetasTotalPorSala(identificacaoSala);
+                // Limitar para exibição (performance)
+                List<Coleta> coletasLimitadas = coletas.size() > LIMITE_HISTORICO 
+                    ? coletas.subList(0, LIMITE_HISTORICO) 
+                    : coletas;
+                
+                int totalReal = coletas.size();
                 
                 long tempo = System.currentTimeMillis() - inicio;
                 System.out.println("[OTIMIZADO] Queries executadas em " + tempo + "ms - " + 
-                                 coletas.size() + " exibidos, " + totalReal + " total");
+                                 coletasLimitadas.size() + " exibidos, " + totalReal + " total");
                 
-                return new HistoricoResult(coletas, totalReal);
+                return new HistoricoResult(coletasLimitadas, totalReal);
             }
             
             @Override
@@ -2319,14 +2395,15 @@ public class ColetaFrame_v2 extends JFrame {
                     HistoricoResult resultado = get();
                     
                     // Atualizar tabela na EDT
-                    atualizarTabelaHistoricoOtimizado(resultado.coletas);
+                    atualizarTabelaHistorico(resultado.coletas);
                     
                     // Atualizar contagem com o TOTAL REAL (não limitado)
                     atualizarContagemColetas(resultado.totalReal);
                     
-                    // Atualizar resumo com total real
-                    lblResumoSala.setText(String.format("Coletando em: %s (%d itens)", 
-                        salaAtual.getIdentificacaoCompleta(), resultado.totalReal));
+                    // Atualizar resumo com total real e indicador de modo
+                    String modoIndicador = offlineManager.isOperatingOffline() ? " [OFFLINE]" : "";
+                    lblResumoSala.setText(String.format("Coletando em: %s (%d itens)%s", 
+                        salaAtual.getIdentificacaoCompleta(), resultado.totalReal, modoIndicador));
                     
                     tabelaHistorico.setEnabled(true);
                     
@@ -2346,10 +2423,10 @@ public class ColetaFrame_v2 extends JFrame {
      * Classe auxiliar para retornar histórico + contagem total
      */
     private static class HistoricoResult {
-        final List<com.inventario.dto.ColetaResumo> coletas;
+        final List<Coleta> coletas;
         final int totalReal;
         
-        HistoricoResult(List<com.inventario.dto.ColetaResumo> coletas, int totalReal) {
+        HistoricoResult(List<Coleta> coletas, int totalReal) {
             this.coletas = coletas;
             this.totalReal = totalReal;
         }
@@ -2358,41 +2435,67 @@ public class ColetaFrame_v2 extends JFrame {
     /**
      * Atualiza a tabela de histórico de forma otimizada
      * - Desabilita auto-resize durante carga
-     * - Usa dados já formatados do DTO
+     * - Usa dados do modelo Coleta
      */
-    private void atualizarTabelaHistoricoOtimizado(List<com.inventario.dto.ColetaResumo> coletas) {
+    private void atualizarTabelaHistorico(List<Coleta> coletas) {
+        System.out.println("[OTIMIZADO] ========================================");
+        System.out.println("[OTIMIZADO] atualizarTabelaHistorico chamado");
+        System.out.println("[OTIMIZADO] Quantidade de coletas recebidas: " + (coletas != null ? coletas.size() : "null"));
+        
         // Desabilitar auto-resize durante carga (performance)
         tabelaHistorico.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         
         // Limpar tabela
+        int linhasAntes = modeloTabelaHistorico.getRowCount();
         modeloTabelaHistorico.setRowCount(0);
+        System.out.println("[OTIMIZADO] Tabela limpa - linhas removidas: " + linhasAntes);
         
         // Formatador de data (criado UMA vez, fora do loop)
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         
         // Adicionar linhas
-        for (com.inventario.dto.ColetaResumo coleta : coletas) {
+        int contador = 0;
+        for (Coleta coleta : coletas) {
+            contador++;
             String dataFormatada = coleta.getDataColeta() != null 
                 ? sdf.format(coleta.getDataColeta()) 
                 : "-";
             
+            // Usar número do patrimônio ou descrição do item sem etiqueta
+            String numeroPatrimonio = coleta.isSemEtiqueta() 
+                ? "SEM ETIQUETA" 
+                : (coleta.getNumeroPatrimonio() != null ? coleta.getNumeroPatrimonio() : "-");
+            
+            // Usar descrição do patrimônio ou descrição do item sem etiqueta
+            String descricao = coleta.isSemEtiqueta()
+                ? coleta.getDescricaoItemSemEtiqueta()
+                : (coleta.getDescricaoPatrimonio() != null ? coleta.getDescricaoPatrimonio() : "-");
+            
             Object[] linha = {
                 dataFormatada,
-                coleta.getNumeroPatrimonio(),
-                coleta.getDescricao(),
-                coleta.getEstadoEncontrado()
+                numeroPatrimonio,
+                descricao,
+                coleta.getEstadoEncontrado() != null ? coleta.getEstadoEncontrado() : "-"
             };
             
             modeloTabelaHistorico.addRow(linha);
+            
+            if (contador <= 3) {
+                System.out.println("[OTIMIZADO] Linha " + contador + " adicionada: " + 
+                                 dataFormatada + " | " + numeroPatrimonio + " | " + 
+                                 descricao + " | " + coleta.getEstadoEncontrado());
+            }
         }
         
         // Restaurar auto-resize
         tabelaHistorico.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
         
+        int linhasDepois = modeloTabelaHistorico.getRowCount();
+        System.out.println("[OTIMIZADO] Tabela atualizada - linhas adicionadas: " + linhasDepois);
+        System.out.println("[OTIMIZADO] ========================================");
+        
         // NOTA: A contagem é atualizada separadamente com o total REAL
         // (não usar coletas.size() pois é limitado a LIMITE_HISTORICO)
-        
-        System.out.println("[OTIMIZADO] Tabela atualizada com " + coletas.size() + " registros exibidos");
     }
     
     /**
@@ -2894,6 +2997,22 @@ public class ColetaFrame_v2 extends JFrame {
             if (usuarioLogado != null) {
                 coleta.setIdColetor(usuarioLogado.getId());
                 System.out.println("DEBUG: Modo offline - ID coletor: " + usuarioLogado.getId());
+                
+                // ✅ CORRIGIDO: Buscar ID do participante do inventário
+                ParticipanteInventarioDAO participanteDAO = new ParticipanteInventarioDAO();
+                Integer idParticipante = participanteDAO.buscarIdParticipantePorUsuario(
+                    inventarioAtivo.getId(), 
+                    usuarioLogado.getId()
+                );
+                
+                if (idParticipante != null && idParticipante > 0) {
+                    coleta.setIdParticipanteInventario(idParticipante);
+                    System.out.println("DEBUG: ID participante definido: " + idParticipante);
+                } else {
+                    // Fallback: usar ID do coletor
+                    coleta.setIdParticipanteInventario(usuarioLogado.getId());
+                    System.out.println("DEBUG: AVISO - Participante não encontrado, usando ID do coletor como fallback");
+                }
             } else {
                 JOptionPane.showMessageDialog(this,
                         "Usuário não autenticado.",
@@ -2914,13 +3033,18 @@ public class ColetaFrame_v2 extends JFrame {
             
             coleta.setStatusColeta("COLETADO");
             coleta.setObservacaoColeta(observacoes);
+            // ✅ CORRIGIDO: Usar numeroSala para consistência com dados existentes no banco
+            // O campo localizacao_encontrada no banco contém apenas o número/nome da sala (ex: "CAE")
+            // e não a identificação completa (ex: "CAE - CAE(IFMT - PDL)")
             coleta.setLocalizacaoEncontrada(salaAtual.getNumeroSala());
             coleta.setEstadoEncontrado(estadoAtual);
             coleta.setDivergencia(false);
             
-            // DEBUG: Confirmar que o estado foi definido
+            // DEBUG: Confirmar que o estado e localização foram definidos
             System.out.println("DEBUG: Estado de conservação definido: " + estadoAtual);
             System.out.println("DEBUG: Estado na coleta: " + coleta.getEstadoEncontrado());
+            System.out.println("DEBUG: Localização encontrada: " + coleta.getLocalizacaoEncontrada());
+            System.out.println("DEBUG: Sala atual (numeroSala): " + salaAtual.getNumeroSala());
 
             if (itemSemEtiqueta) {
                 // Configurar para item sem etiqueta
@@ -2962,7 +3086,7 @@ public class ColetaFrame_v2 extends JFrame {
                 }
 
                 // Verificar divergência de localização
-                if (!salaAtual.getNumeroSala().equals(patrimonioSelecionado.getNomeSala())) {
+                if (!salaAtual.getIdentificacaoCompleta().equals(patrimonioSelecionado.getNomeSala())) {
                     coleta.setDivergencia(true);
                     coleta.setMotivoDivergencia("Item encontrado em sala diferente da registrada");
                 }
@@ -2981,7 +3105,7 @@ public class ColetaFrame_v2 extends JFrame {
             // Modo offline: não atualiza estatísticas em TABELA_SALA_INVENTARIO (não existe no SQLite)
             System.out.println("DEBUG: Modo offline - estatísticas não são atualizadas");
 
-            // Atualizar tabela de histórico usando APENAS o número da sala
+            // Atualizar tabela de histórico usando o número da sala (consistente com dados no banco)
             System.out.println("DEBUG: Atualizando histórico...");
             carregarHistoricoColeta(salaAtual.getNumeroSala());
 
@@ -3422,8 +3546,20 @@ public class ColetaFrame_v2 extends JFrame {
     /**
      * Finaliza a coleta na sala selecionada
      * Atualiza a tabela SALA_INVENTARIO com estatísticas e marca como finalizada
+     * NOTA: Esta operação só funciona em modo ONLINE (requer PostgreSQL)
      */
     private void finalizarColetaSala() {
+        // Verificar se está em modo online - operação requer PostgreSQL
+        if (offlineManager.isOperatingOffline()) {
+            JOptionPane.showMessageDialog(this,
+                    "⚠️ Operação não disponível em modo OFFLINE!\n\n" +
+                    "A finalização de salas requer conexão com o servidor.\n" +
+                    "Conecte-se ao servidor e tente novamente.",
+                    "Modo Offline",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
         Sala salaAtual = (Sala) comboSalas.getSelectedItem();
         if (salaAtual == null) {
             JOptionPane.showMessageDialog(this, "Selecione uma sala para finalizar a coleta.",
@@ -3561,8 +3697,20 @@ public class ColetaFrame_v2 extends JFrame {
     /**
      * Reabre a coleta de uma sala finalizada
      * Apenas administradores e supervisores podem executar esta ação
+     * NOTA: Esta operação só funciona em modo ONLINE (requer PostgreSQL)
      */
     private void reabrirColetaSala() {
+        // Verificar se está em modo online - operação requer PostgreSQL
+        if (offlineManager.isOperatingOffline()) {
+            JOptionPane.showMessageDialog(this,
+                    "⚠️ Operação não disponível em modo OFFLINE!\n\n" +
+                    "A reabertura de salas requer conexão com o servidor.\n" +
+                    "Conecte-se ao servidor e tente novamente.",
+                    "Modo Offline",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
         // VALIDAÇÃO DE PERMISSÃO: Apenas ADMIN e SUPERVISOR podem reabrir salas
         if (usuarioLogado == null ||
                 (!("ADMIN".equals(usuarioLogado.getPerfil().name()) ||

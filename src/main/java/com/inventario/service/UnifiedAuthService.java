@@ -110,6 +110,18 @@ public class UnifiedAuthService {
                 // Autenticação online bem-sucedida
                 LOGGER.info("Autenticação online bem-sucedida: " + login);
                 
+                // ✅ CORREÇÃO: Limpar modo offline forçado e garantir modo ONLINE
+                ensureOfflineManagerObtained();
+                if (offlineManager != null) {
+                    // Limpar flag de modo offline forçado (persiste entre sessões)
+                    offlineManager.clearForcedOfflineMode();
+                    
+                    // Desabilitar modo offline
+                    offlineManager.disableOfflineMode();
+                    
+                    LOGGER.info("Modo OFFLINE desabilitado - operando em modo ONLINE");
+                }
+                
                 // Sincronizar usuário para o banco offline (para uso futuro)
                 sincronizarUsuarioParaOffline(usuario);
                 

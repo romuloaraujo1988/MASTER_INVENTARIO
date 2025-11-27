@@ -1269,6 +1269,98 @@ public class OfflineDAO {
         return stats;
     }
     
+    // ==================== BUSCA DE COLETAS POR LOCALIZAÇÃO ====================
+    
+    /**
+     * Busca coletas por localização (para exibir histórico offline)
+     * Busca tanto coletas pendentes quanto já sincronizadas
+     * 
+     * @param localizacao Localização encontrada (número/nome da sala)
+     * @return Lista de coletas na localização
+     * @throws SQLException
+     */
+    public List<Map<String, Object>> buscarColetasPorLocalizacao(String localizacao) throws SQLException {
+        String sql = """
+            SELECT lc.*, lp.descricao as descricao_patrimonio
+            FROM local_coleta lc
+            LEFT JOIN local_patrimonio lp ON lc.id_patrimonio = lp.id
+            WHERE lc.localizacao_encontrada = ?
+            ORDER BY lc.data_coleta DESC
+            LIMIT 100
+        """;
+        
+        List<Map<String, Object>> coletas = new ArrayList<>();
+        
+        try (Connection conn = sqliteConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, localizacao);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> coleta = new HashMap<>();
+                    coleta.put("id", rs.getInt("id"));
+                    coleta.put("id_inventario", rs.getInt("id_inventario"));
+                    coleta.put("id_patrimonio", rs.getObject("id_patrimonio"));
+                    coleta.put("id_participante", rs.getObject("id_participante"));
+                    coleta.put("numero_patrimonio", rs.getString("numero_patrimonio"));
+                    coleta.put("descricao_patrimonio", rs.getString("descricao_patrimonio"));
+                    coleta.put("descricao_sem_etiqueta", rs.getString("descricao_sem_etiqueta"));
+                    coleta.put("localizacao_encontrada", rs.getString("localizacao_encontrada"));
+                    coleta.put("situacao_encontrada", rs.getString("situacao_encontrada"));
+                    coleta.put("observacoes", rs.getString("observacoes"));
+                    coleta.put("sync_status", rs.getString("sync_status"));
+                    
+                    // Verificar se é item sem etiqueta
+                    Object idPatrimonio = rs.getObject("id_patrimonio");
+                    boolean semEtiqueta = idPatrimonio == null || 
+                                         (idPatrimonio instanceof Number && ((Number) idPatrimonio).intValue() == 0);
+                    coleta.put("sem_etiqueta", semEtiqueta);
+                    
+                    // Ler timestamp de forma segura
+                    coleta.put("data_coleta", lerTimestampSeguro(rs, "data_coleta"));
+                    
+                    coletas.add(coleta);
+                }
+            }
+            
+            LOGGER.info("Encontradas " + coletas.size() + " coletas para localização: " + localizacao);
+            
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Erro ao buscar coletas por localização offline", e);
+            throw e;
+        }
+        
+        return coletas;
+    }
+    
+    /**
+     * Conta coletas por localização (para estatísticas)
+     * 
+     * @param localizacao Localização encontrada
+     * @return Total de coletas na localização
+     */
+    public int contarColetasPorLocalizacao(String localizacao) {
+        String sql = "SELECT COUNT(*) FROM local_coleta WHERE localizacao_encontrada = ?";
+        
+        try (Connection conn = sqliteConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, localizacao);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+            
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, "Erro ao contar coletas por localização: " + e.getMessage());
+        }
+        
+        return 0;
+    }
+    
     // ==================== MÉTODOS AUXILIARES ====================
     
     /**

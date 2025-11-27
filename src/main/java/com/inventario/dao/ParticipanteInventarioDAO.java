@@ -341,17 +341,23 @@ public class ParticipanteInventarioDAO {
      * Retorna null se o usuário não for participante ativo do inventário
      */
     public Integer buscarIdParticipantePorUsuario(int idInventario, int idUsuario) {
-        // Primeiro, tentar sem o filtro de ativo para debug
-        String sqlDebug = "SELECT id_participante, ativo FROM tabela_participante_inventario " +
-                         "WHERE id_inventario = ? AND id_usuario = ?";
-        
         System.out.println("[DEBUG ParticipanteInventarioDAO] ========================================");
         System.out.println("[DEBUG ParticipanteInventarioDAO] Buscando participante:");
         System.out.println("[DEBUG ParticipanteInventarioDAO]   idInventario = " + idInventario);
         System.out.println("[DEBUG ParticipanteInventarioDAO]   idUsuario = " + idUsuario);
         
         try (Connection conn = DatabaseConnection.getConnection()) {
+            // ✅ CORRIGIDO: Detectar se é SQLite ou PostgreSQL
+            boolean isSQLite = conn.getMetaData().getDriverName().toLowerCase().contains("sqlite");
+            String tableName = isSQLite ? "local_participante_inventario" : "tabela_participante_inventario";
+            
+            System.out.println("[DEBUG ParticipanteInventarioDAO]   Banco: " + (isSQLite ? "SQLite" : "PostgreSQL"));
+            System.out.println("[DEBUG ParticipanteInventarioDAO]   Tabela: " + tableName);
+            
             // Debug: verificar se existe registro (com ou sem ativo)
+            String sqlDebug = "SELECT id_participante, ativo FROM " + tableName + " " +
+                             "WHERE id_inventario = ? AND id_usuario = ?";
+            
             try (PreparedStatement stmtDebug = conn.prepareStatement(sqlDebug)) {
                 stmtDebug.setInt(1, idInventario);
                 stmtDebug.setInt(2, idUsuario);
@@ -370,8 +376,8 @@ public class ParticipanteInventarioDAO {
             }
             
             // Query principal com filtro de ativo
-            String sql = "SELECT id_participante FROM tabela_participante_inventario " +
-                        "WHERE id_inventario = ? AND id_usuario = ? AND ativo = TRUE";
+            String sql = "SELECT id_participante FROM " + tableName + " " +
+                        "WHERE id_inventario = ? AND id_usuario = ? AND ativo = " + (isSQLite ? "1" : "TRUE");
             
             System.out.println("[DEBUG ParticipanteInventarioDAO]   SQL = " + sql);
             

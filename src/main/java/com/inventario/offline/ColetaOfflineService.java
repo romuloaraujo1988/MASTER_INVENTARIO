@@ -154,37 +154,37 @@ public class ColetaOfflineService {
 
     /**
      * Busca coletas por localização (para histórico offline)
+     * Busca tanto coletas pendentes quanto já sincronizadas no banco local
      * 
-     * @param localizacao Localização encontrada
+     * @param localizacao Localização encontrada (número/nome da sala)
      * @return Lista de coletas na localização
      */
     public List<Coleta> buscarColetasPorLocalizacao(String localizacao) {
         List<Coleta> coletas = new ArrayList<>();
         try {
-            // Buscar todas as coletas locais (pendentes e sincronizadas)
-            // Idealmente o OfflineDAO teria um método específico, mas vamos filtrar em
-            // memória por enquanto
-            // ou buscar tudo da tabela local_coleta e coleta_offline
-
-            // Por simplificação, vamos buscar da tabela coleta_offline (que armazena o que
-            // foi feito offline)
-            // Se precisar de dados que vieram do servidor (sync), precisaria consultar
-            // local_coleta também
-
-            List<Map<String, Object>> coletasMap = offlineDAO.buscarColetasPendentes(); // Isso busca só pendentes
-            // TODO: Melhorar para buscar também as já sincronizadas que estão no banco
-            // local
-
+            // Usar o novo método do OfflineDAO que busca todas as coletas por localização
+            List<Map<String, Object>> coletasMap = offlineDAO.buscarColetasPorLocalizacao(localizacao);
+            
             for (Map<String, Object> map : coletasMap) {
-                String loc = (String) map.get("localizacao_encontrada");
-                if (loc != null && loc.equals(localizacao)) {
-                    coletas.add(mapToColeta(map));
-                }
+                coletas.add(mapToColeta(map));
             }
+            
+            LOGGER.info("Encontradas " + coletas.size() + " coletas offline para localização: " + localizacao);
+            
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erro ao buscar coletas por localização offline", e);
         }
         return coletas;
+    }
+    
+    /**
+     * Conta coletas por localização no banco local
+     * 
+     * @param localizacao Localização encontrada
+     * @return Total de coletas na localização
+     */
+    public int contarColetasPorLocalizacao(String localizacao) {
+        return offlineDAO.contarColetasPorLocalizacao(localizacao);
     }
 
     /**
@@ -309,7 +309,24 @@ public class ColetaOfflineService {
         coleta.setEstadoEncontrado((String) map.get("situacao_encontrada")); // SQLite usa situacao_encontrada
         coleta.setObservacaoColeta((String) map.get("observacoes"));
         coleta.setFotoPatrimonio((String) map.get("foto_patrimonio"));
-        coleta.setSemEtiqueta((Boolean) map.getOrDefault("sem_etiqueta", false));
+        
+        // Verificar se é item sem etiqueta
+        Object semEtiquetaObj = map.get("sem_etiqueta");
+        if (semEtiquetaObj instanceof Boolean) {
+            coleta.setSemEtiqueta((Boolean) semEtiquetaObj);
+        } else {
+            // Inferir se é sem etiqueta pelo id_patrimonio
+            Object idPatrimonio = map.get("id_patrimonio");
+            boolean semEtiqueta = idPatrimonio == null || 
+                                 (idPatrimonio instanceof Number && ((Number) idPatrimonio).intValue() == 0);
+            coleta.setSemEtiqueta(semEtiqueta);
+        }
+        
+        // Descrição do patrimônio (vem do JOIN com local_patrimonio)
+        String descricaoPatrimonio = (String) map.get("descricao_patrimonio");
+        if (descricaoPatrimonio != null) {
+            coleta.setDescricaoPatrimonio(descricaoPatrimonio);
+        }
 
         // Conversão segura de data - tratamento robusto para diferentes formatos
         Object dataObj = map.get("data_coleta");

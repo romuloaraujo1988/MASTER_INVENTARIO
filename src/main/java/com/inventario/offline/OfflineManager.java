@@ -412,6 +412,22 @@ public class OfflineManager {
     }
     
     /**
+     * Limpa o modo offline forçado e permite voltar ao modo online
+     * Deve ser chamado quando o usuário faz login online com sucesso
+     */
+    public void clearForcedOfflineMode() {
+        LOGGER.info("Limpando modo offline forçado");
+        
+        try {
+            // Remove o metadado que indica modo forçado
+            offlineDAO.atualizarMetadado("forced_offline_mode", "false");
+            LOGGER.info("Modo offline forçado removido com sucesso");
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Erro ao limpar modo offline forçado", e);
+        }
+    }
+    
+    /**
      * Tenta reconectar e voltar ao modo online
      * Executa verificação de conectividade e sincronização se possível
      * @return true se conseguiu reconectar
