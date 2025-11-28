@@ -707,6 +707,8 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
     /**
      * Buscar IDs de patrimônios já coletados em um inventário
      * 
+     * CORREÇÃO 27/11/2025: Corrigido nome da coluna STATUS_INVENTARIO (era STATUS)
+     * 
      * @param idInventario ID do inventário (null = inventário ativo)
      * @return lista de IDs de patrimônios coletados
      */
@@ -717,9 +719,10 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
         if (idInventario != null) {
             sql = "SELECT DISTINCT ID_PATRIMONIO FROM TABELA_COLETA WHERE ID_INVENTARIO = ?";
         } else {
+            // Buscar do inventário ativo (EM_ANDAMENTO)
             sql = "SELECT DISTINCT c.ID_PATRIMONIO FROM TABELA_COLETA c " +
                   "INNER JOIN TABELA_INVENTARIO i ON c.ID_INVENTARIO = i.ID " +
-                  "WHERE i.STATUS = 'ATIVO'";
+                  "WHERE i.STATUS_INVENTARIO = 'EM_ANDAMENTO'";
         }
         
         Connection conn = null;

@@ -73,6 +73,7 @@ com\inventario\itemcomposto\model\Componente.class
 com\inventario\view\ColetaFrame_v2$1.class
 com\inventario\view\ui\ModernButtons$1.class
 com\inventario\util\ExcelExporter.class
+com\inventario\view\ColetaItemCompostoFrame$5.class
 com\inventario\view\RelatorioFrame$1.class
 com\inventario\config\DatabaseConfigManager.class
 com\inventario\model\Sala.class
@@ -187,6 +188,7 @@ com\inventario\view\components\PaginationPanelTest.class
 com\inventario\dao\SetorDAO$SetorComEstatisticas.class
 com\inventario\view\CampusFormDialog$1.class
 com\inventario\mobile\server\controller\MobileAuthController.class
+com\inventario\view\RelatorioItensCompostosFrame$1.class
 com\inventario\service\DataImportServiceTest$1.class
 com\inventario\util\DatabaseTestQuery.class
 com\inventario\offline\SyncStatusManager$SyncStatusListener.class
@@ -241,6 +243,7 @@ com\inventario\view\SetorFormDialog.class
 com\inventario\presentation\state\RelatorioState$InventariosCarregados.class
 com\inventario\dao\SalaDAO.class
 com\inventario\mobile\server\dto\MobileSyncRequest.class
+com\inventario\view\RelatorioItensCompostosFrame$2.class
 com\inventario\siads\config\SiadsConfig.class
 com\inventario\mobile\server\service\MobilePatrimonioService$1.class
 com\inventario\ui\ConfiguracaoBancoController$3.class
@@ -392,6 +395,7 @@ com\inventario\view\ColetaFrame_v2$3.class
 com\inventario\view\CampusFrame.class
 com\inventario\dao\ChartDataDAO.class
 com\inventario\view\InventarioFrame$7.class
+com\inventario\view\RelatorioItensCompostosFrame.class
 com\inventario\view\SetorFormDialog$1.class
 com\inventario\util\Page.class
 com\inventario\mobile\server\controller\MobileOfflineSyncController.class
@@ -400,6 +404,7 @@ com\inventario\view\ColetaFrame_v2$2.class
 com\inventario\presentation\state\RelatorioState$SalasCarregadas.class
 com\inventario\print\EtiquetaPrinter.class
 com\inventario\util\ExceptionHandler.class
+com\inventario\mobile\server\config\DatabaseConfigLoader.class
 com\inventario\mobile\server\dto\DashboardStatsDTO.class
 com\inventario\view\InventarioFormDialog.class
 com\inventario\service\AutenticacaoService.class
@@ -449,6 +454,7 @@ com\inventario\view\CampusManagementFrame$3.class
 com\inventario\offline\DataSynchronizer$SyncStatus.class
 com\inventario\sync\service\RetryManager$RetryCallback.class
 com\inventario\view\SalaFormDialogRefactored.class
+com\inventario\view\RelatorioItensCompostosFrame$StatusCellRenderer.class
 com\inventario\mobile\server\config\DeviceTrackingInterceptor.class
 com\inventario\view\ColetaFrame_v2$15.class
 com\inventario\view\ui\ButtonStyleFactory.class

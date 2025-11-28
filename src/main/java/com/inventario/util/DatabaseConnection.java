@@ -45,13 +45,6 @@ public class DatabaseConnection {
             if (!jsonConfigLoaded) {
                 configManager = new DatabaseConfigManager();
                 currentConfig = configManager.getCurrentConfig();
-                
-                if (currentConfig != null) {
-                    System.out.println("DatabaseConnection inicializado via DatabaseConfigManager.");
-                    System.out.println("DEBUG DatabaseConnection: Configuração carregada - " + currentConfig.toSafeString());
-                } else {
-                    System.err.println("DEBUG DatabaseConnection: NENHUMA configuração carregada!");
-                }
             }
             
         } catch (ClassNotFoundException e) {
@@ -70,11 +63,8 @@ public class DatabaseConnection {
         try {
             File jsonFile = new File("configuracao_banco.json");
             if (!jsonFile.exists()) {
-                System.out.println("DEBUG DatabaseConnection: Arquivo configuracao_banco.json não encontrado na raiz");
                 return;
             }
-            
-            System.out.println("DEBUG DatabaseConnection: Lendo configuracao_banco.json da raiz do projeto");
             
             // Ler o arquivo JSON manualmente (sem dependência externa)
             StringBuilder content = new StringBuilder();
@@ -98,21 +88,10 @@ public class DatabaseConnection {
             
             if (jsonHost != null && jsonDatabase != null && jsonUser != null && jsonPassword != null) {
                 jsonConfigLoaded = true;
-                System.out.println("╔════════════════════════════════════════════════════════════════╗");
-                System.out.println("║  ✅ Configuração carregada de configuracao_banco.json         ║");
-                System.out.println("╠════════════════════════════════════════════════════════════════╣");
-                System.out.println("║  Host: " + jsonHost);
-                System.out.println("║  Port: " + jsonPort);
-                System.out.println("║  Database: " + jsonDatabase);
-                System.out.println("║  User: " + jsonUser);
-                System.out.println("║  Password: " + (jsonPassword != null ? "***" : "NÃO DEFINIDA"));
-                System.out.println("╚════════════════════════════════════════════════════════════════╝");
-            } else {
-                System.err.println("DEBUG DatabaseConnection: Configuração JSON incompleta");
             }
             
         } catch (Exception e) {
-            System.err.println("DEBUG DatabaseConnection: Erro ao ler configuracao_banco.json: " + e.getMessage());
+            // Ignorar erros silenciosamente - fallback para outras configurações
         }
     }
     
@@ -186,11 +165,8 @@ public class DatabaseConnection {
             // PRIORIDADE 1: Usar configuração do JSON na raiz (mais confiável)
             if (jsonConfigLoaded) {
                 try {
-                    Connection conn = createConnectionFromJson();
-                    System.out.println("DEBUG DatabaseConnection: Conexão PostgreSQL via JSON estabelecida!");
-                    return conn;
+                    return createConnectionFromJson();
                 } catch (SQLException e) {
-                    System.err.println("DEBUG DatabaseConnection: Falha ao conectar via JSON: " + e.getMessage());
                     // Continua para tentar outras opções
                 }
             }
@@ -198,11 +174,9 @@ public class DatabaseConnection {
             // PRIORIDADE 2: Se há configuração via DatabaseConfigManager
             if (currentConfig != null && currentConfig.isValid()) {
                 try {
-                    Connection conn = createConnectionFromConfig(currentConfig);
-                    System.out.println("DEBUG DatabaseConnection: Conexão PostgreSQL via ConfigManager estabelecida!");
-                    return conn;
+                    return createConnectionFromConfig(currentConfig);
                 } catch (SQLException e) {
-                    System.err.println("DEBUG DatabaseConnection: Falha ao conectar via ConfigManager: " + e.getMessage());
+                    // Continua para tentar outras opções
                 }
             }
             
@@ -212,7 +186,6 @@ public class DatabaseConnection {
                     com.inventario.offline.OfflineManager.getInstance();
                 
                 if (offlineManager.isForcedOffline()) {
-                    System.out.println("DEBUG DatabaseConnection: Modo OFFLINE FORÇADO - usando SQLite");
                     return getOfflineConnection();
                 }
             } catch (Exception e) {
@@ -221,7 +194,6 @@ public class DatabaseConnection {
             
             // PRIORIDADE 4: Tentar novamente com JSON se disponível
             if (jsonConfigLoaded) {
-                System.out.println("DEBUG DatabaseConnection: Tentando PostgreSQL via JSON novamente...");
                 return createConnectionFromJson();
             }
             
@@ -250,24 +222,13 @@ public class DatabaseConnection {
     private static Connection createConnectionFromJson() throws SQLException {
         String url = String.format("jdbc:postgresql://%s:%d/%s", jsonHost, jsonPort, jsonDatabase);
         
-        System.out.println("DEBUG DatabaseConnection: Conectando via JSON em: " + url);
-        System.out.println("DEBUG DatabaseConnection: Usuário: " + jsonUser);
-        
         Properties props = new Properties();
         props.setProperty("user", jsonUser);
         props.setProperty("password", jsonPassword);
         props.setProperty("connectTimeout", "10");
         props.setProperty("socketTimeout", "30");
         
-        try {
-            Connection conn = DriverManager.getConnection(url, props);
-            System.out.println("DEBUG DatabaseConnection: ✅ Conexão PostgreSQL estabelecida com sucesso!");
-            return conn;
-        } catch (SQLException e) {
-            System.err.println("DEBUG DatabaseConnection: ❌ Falha na conexão PostgreSQL!");
-            System.err.println("DEBUG DatabaseConnection: Erro: " + e.getMessage());
-            throw e;
-        }
+        return DriverManager.getConnection(url, props);
     }
     
     /**
@@ -278,18 +239,13 @@ public class DatabaseConnection {
      */
     private static Connection getOfflineConnection() throws SQLException {
         try {
-            // Carregar driver SQLite se necessário
             Class.forName("org.sqlite.JDBC");
             
-            // Caminho do banco SQLite
             String dbPath = "data/inventario.db";
             String url = "jdbc:sqlite:" + dbPath;
             
-            System.out.println("DEBUG DatabaseConnection: Conectando ao SQLite: " + url);
-            
             Connection conn = DriverManager.getConnection(url);
             
-            // Habilitar foreign keys no SQLite
             try (java.sql.Statement stmt = conn.createStatement()) {
                 stmt.execute("PRAGMA foreign_keys = ON");
             }
@@ -297,7 +253,6 @@ public class DatabaseConnection {
             return conn;
             
         } catch (ClassNotFoundException e) {
-            System.err.println("Driver SQLite não encontrado: " + e.getMessage());
             throw new SQLException("Driver SQLite não disponível", e);
         }
     }
@@ -306,46 +261,28 @@ public class DatabaseConnection {
      * Obtém uma conexão direta com PostgreSQL (ignora modo offline)
      * Usado para sincronização de dados quando o servidor está disponível
      * 
-     * PRIORIDADE:
-     * 1. Configuração do arquivo JSON na raiz (mais confiável)
-     * 2. DatabaseConfigManager
-     * 
      * @return Connection ativa com PostgreSQL
      * @throws SQLException se houver erro na conexão ou configuração inválida
      */
     public static Connection getPostgreSQLConnection() throws SQLException {
-        System.out.println("DEBUG DatabaseConnection: Obtendo conexão PostgreSQL direta para sincronização");
-        
-        // PRIORIDADE 1: Usar configuração do JSON na raiz (mais confiável)
+        // PRIORIDADE 1: Usar configuração do JSON na raiz
         if (jsonConfigLoaded) {
-            System.out.println("DEBUG DatabaseConnection: Usando configuração do JSON para PostgreSQL");
             return createConnectionFromJson();
         }
         
         // PRIORIDADE 2: Usar DatabaseConfigManager
         if (currentConfig != null && currentConfig.isValid()) {
-            System.out.println("DEBUG DatabaseConnection: Usando DatabaseConfigManager para PostgreSQL");
             return createConnectionFromConfig(currentConfig);
         }
         
-        // Nenhuma configuração disponível - tentar recarregar do JSON
-        System.out.println("DEBUG DatabaseConnection: Tentando recarregar configuração do JSON...");
+        // Tentar recarregar do JSON
         loadJsonConfig();
         
         if (jsonConfigLoaded) {
-            System.out.println("DEBUG DatabaseConnection: Configuração JSON recarregada com sucesso!");
             return createConnectionFromJson();
         }
         
-        // Erro detalhado
-        System.err.println("╔════════════════════════════════════════════════════════════════╗");
-        System.err.println("║  ⚠️  ERRO: Configuração PostgreSQL não disponível             ║");
-        System.err.println("╠════════════════════════════════════════════════════════════════╣");
-        System.err.println("║  Verifique se o arquivo configuracao_banco.json existe        ║");
-        System.err.println("║  na raiz do projeto com as credenciais corretas.              ║");
-        System.err.println("╚════════════════════════════════════════════════════════════════╝");
-        
-        throw new SQLException("Configuração de banco PostgreSQL não disponível para sincronização. " +
+        throw new SQLException("Configuração de banco PostgreSQL não disponível. " +
             "Verifique o arquivo configuracao_banco.json na raiz do projeto.");
     }
     
@@ -362,15 +299,10 @@ public class DatabaseConnection {
                                   config.getPort(), 
                                   config.getDatabase());
         
-        System.out.println("DEBUG DatabaseConnection: Tentando conectar em: " + url);
-        System.out.println("DEBUG DatabaseConnection: Usuário: " + config.getUsername());
-        System.out.println("DEBUG DatabaseConnection: Senha configurada: " + (config.getPassword() != null && !config.getPassword().isEmpty() ? "SIM (tamanho: " + config.getPassword().length() + ")" : "NÃO"));
-        
         Properties props = new Properties();
         props.setProperty("user", config.getUsername());
         props.setProperty("password", config.getPassword());
         
-        // Configurações adicionais
         if (config.isSsl()) {
             props.setProperty("ssl", "true");
         }
@@ -379,37 +311,7 @@ public class DatabaseConnection {
         props.setProperty("socketTimeout", "30");
         props.setProperty("loginTimeout", String.valueOf(config.getConnectionTimeout()));
         
-        try {
-            Connection conn = DriverManager.getConnection(url, props);
-            System.out.println("DEBUG DatabaseConnection: Conexão estabelecida com sucesso!");
-            return conn;
-        } catch (SQLException e) {
-            System.err.println("DEBUG DatabaseConnection: Falha na conexão!");
-            System.err.println("DEBUG DatabaseConnection: Código de erro SQL: " + e.getErrorCode());
-            System.err.println("DEBUG DatabaseConnection: Estado SQL: " + e.getSQLState());
-            System.err.println("DEBUG DatabaseConnection: Mensagem: " + e.getMessage());
-            
-            // Verificar se é erro de autenticação
-            if (e.getMessage() != null && (
-                e.getMessage().contains("password") || 
-                e.getMessage().contains("authentication") ||
-                e.getMessage().contains("FATAL") ||
-                e.getMessage().contains("driver"))) {
-                System.err.println("╔════════════════════════════════════════════════════════════════╗");
-                System.err.println("║  ⚠️  ERRO DE AUTENTICAÇÃO NO POSTGRESQL                       ║");
-                System.err.println("╠════════════════════════════════════════════════════════════════╣");
-                System.err.println("║  Possíveis causas:                                             ║");
-                System.err.println("║  1. Senha incorreta ou corrompida                              ║");
-                System.err.println("║  2. Senha foi criptografada em outra máquina                   ║");
-                System.err.println("║  3. Usuário não existe no PostgreSQL                           ║");
-                System.err.println("║                                                                ║");
-                System.err.println("║  Solução: Reconfigure o banco via:                             ║");
-                System.err.println("║  Tela de Login → Botão '⚙ Configurar Banco'                  ║");
-                System.err.println("╚════════════════════════════════════════════════════════════════╝");
-            }
-            
-            throw e;
-        }
+        return DriverManager.getConnection(url, props);
     }
     
     /**
@@ -421,7 +323,6 @@ public class DatabaseConnection {
         try (Connection conn = getConnection()) {
             return conn != null && !conn.isClosed();
         } catch (SQLException e) {
-            System.err.println("Falha no teste de conexão: " + e.getMessage());
             return false;
         }
     }
@@ -440,7 +341,6 @@ public class DatabaseConnection {
         try (Connection conn = createConnectionFromConfig(config)) {
             return conn != null && !conn.isClosed();
         } catch (SQLException e) {
-            System.err.println("Falha no teste de conexão: " + e.getMessage());
             return false;
         }
     }
@@ -456,7 +356,6 @@ public class DatabaseConnection {
             if (configManager != null) {
                 configManager.saveConfiguration(newConfig);
             }
-            System.out.println("Configuração do banco atualizada.");
         }
     }
     
@@ -501,12 +400,10 @@ public class DatabaseConnection {
      */
     public static void reloadConfig() {
         try {
-            // Reinicializa o gerenciador para recarregar a configuração
             configManager = new DatabaseConfigManager();
             currentConfig = configManager.getCurrentConfig();
-            System.out.println("Configuração recarregada.");
         } catch (Exception e) {
-            System.err.println("Erro ao recarregar configuração: " + e.getMessage());
+            // Ignorar erros silenciosamente
         }
     }
     
@@ -522,7 +419,7 @@ public class DatabaseConnection {
                     connection.close();
                 }
             } catch (SQLException e) {
-                System.err.println("Erro ao fechar conexão: " + e.getMessage());
+                // Ignorar erros ao fechar
             }
         }
     }

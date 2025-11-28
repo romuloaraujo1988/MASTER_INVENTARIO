@@ -26,14 +26,11 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
     
     /**
      * Detecta se está usando SQLite
-     * IMPORTANTE: Usa a conexão atual para determinar o tipo de banco
      */
     private boolean isSQLite() throws SQLException {
         try (Connection conn = DatabaseConnection.getConnection()) {
             String dbUrl = conn.getMetaData().getURL();
-            boolean isSqlite = dbUrl != null && dbUrl.contains("jdbc:sqlite");
-            System.out.println("[InventarioDAO] isSQLite() - URL: " + dbUrl + " -> SQLite: " + isSqlite);
-            return isSqlite;
+            return dbUrl != null && dbUrl.contains("jdbc:sqlite");
         }
     }
     
@@ -85,81 +82,53 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
     
     @Override
     protected Inventario mapResultSetToEntity(ResultSet rs) throws SQLException {
-        System.out.println("=== DEBUG TIMESTAMP: InventarioDAO.mapResultSetToEntity ===");
-        
         Inventario inventario = new Inventario();
         
         inventario.setId(rs.getInt("ID"));
         inventario.setNome(rs.getString("NOME"));
         
-        // DEBUG: Tentar ler DATA_INICIO com tratamento robusto
+        // Ler DATA_INICIO com tratamento robusto
         try {
-            System.out.println("DEBUG TIMESTAMP: Lendo DATA_INICIO...");
-            
-            // Tentar como Timestamp primeiro (mais robusto para SQLite)
             try {
                 Timestamp tsInicio = rs.getTimestamp("DATA_INICIO");
                 if (tsInicio != null) {
                     inventario.setDataInicio(new java.sql.Date(tsInicio.getTime()));
-                    System.out.println("DEBUG TIMESTAMP: DATA_INICIO lida como Timestamp: " + tsInicio);
-                } else {
-                    System.out.println("DEBUG TIMESTAMP: DATA_INICIO é null");
                 }
             } catch (SQLException e1) {
-                System.out.println("DEBUG TIMESTAMP: Falha ao ler como Timestamp, tentando como String...");
-                // Se falhar, tentar ler como String e parsear
                 String dataStr = rs.getString("DATA_INICIO");
-                System.out.println("DEBUG TIMESTAMP: DATA_INICIO como String: " + dataStr);
-                
                 if (dataStr != null && !dataStr.isEmpty()) {
                     try {
-                        // Tentar parsear diferentes formatos
                         java.sql.Date data = parseDataFromString(dataStr);
                         inventario.setDataInicio(data);
-                        System.out.println("DEBUG TIMESTAMP: DATA_INICIO parseada: " + data);
                     } catch (Exception e2) {
-                        System.err.println("DEBUG TIMESTAMP: ERRO ao parsear DATA_INICIO: " + e2.getMessage());
-                        // Usar data atual como fallback
                         inventario.setDataInicio(new java.sql.Date(System.currentTimeMillis()));
                     }
                 }
             }
         } catch (Exception e) {
-            System.err.println("DEBUG TIMESTAMP: ERRO FATAL ao ler DATA_INICIO: " + e.getMessage());
-            e.printStackTrace();
+            // Ignorar erros
         }
         
-        // DEBUG: Tentar ler DATA_FIM com tratamento robusto
+        // Ler DATA_FIM com tratamento robusto
         try {
-            System.out.println("DEBUG TIMESTAMP: Lendo DATA_FIM...");
-            
             try {
                 Timestamp tsFim = rs.getTimestamp("DATA_FIM");
                 if (tsFim != null) {
                     inventario.setDataFim(new java.sql.Date(tsFim.getTime()));
-                    System.out.println("DEBUG TIMESTAMP: DATA_FIM lida como Timestamp: " + tsFim);
-                } else {
-                    System.out.println("DEBUG TIMESTAMP: DATA_FIM é null");
                 }
             } catch (SQLException e1) {
-                System.out.println("DEBUG TIMESTAMP: Falha ao ler como Timestamp, tentando como String...");
                 String dataStr = rs.getString("DATA_FIM");
-                System.out.println("DEBUG TIMESTAMP: DATA_FIM como String: " + dataStr);
-                
                 if (dataStr != null && !dataStr.isEmpty()) {
                     try {
                         java.sql.Date data = parseDataFromString(dataStr);
                         inventario.setDataFim(data);
-                        System.out.println("DEBUG TIMESTAMP: DATA_FIM parseada: " + data);
                     } catch (Exception e2) {
-                        System.err.println("DEBUG TIMESTAMP: ERRO ao parsear DATA_FIM: " + e2.getMessage());
                         inventario.setDataFim(new java.sql.Date(System.currentTimeMillis()));
                     }
                 }
             }
         } catch (Exception e) {
-            System.err.println("DEBUG TIMESTAMP: ERRO FATAL ao ler DATA_FIM: " + e.getMessage());
-            e.printStackTrace();
+            // Ignorar erros
         }
         
         inventario.setStatusInventario(rs.getString("STATUS_INVENTARIO"));
@@ -214,11 +183,8 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         String tableName = getInventarioTableName();
         boolean isSqlite = tableName.equals("local_inventario");
         
-        System.out.println("[InventarioDAO] buscarPorStatus: status=" + status + ", tabela=" + tableName);
-        
         String sql;
         if (isSqlite) {
-            // SQLite: usa local_inventario com campos diferentes
             sql = "SELECT id as ID, nome_inventario as NOME, data_inicio as DATA_INICIO, " +
                   "data_fim as DATA_FIM, status as STATUS_INVENTARIO, " +
                   "responsavel as RESPONSAVEL_INVENTARIO, percentual_conclusao as PERCENTUAL_CONCLUSAO, " +
@@ -227,13 +193,11 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
                   "WHERE status = ? " +
                   "ORDER BY local_created_at DESC LIMIT 1";
         } else {
-            // PostgreSQL: usa TABELA_INVENTARIO
             sql = "SELECT * FROM " + tableName + " " +
                   "WHERE STATUS_INVENTARIO = ? " +
                   "ORDER BY DATA_CRIACAO DESC LIMIT 1";
         }
         
-        System.out.println("[InventarioDAO] SQL: " + sql);
         return executeQuerySingle(sql, status);
     }
     
@@ -243,16 +207,11 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
      * Compatível com PostgreSQL (TABELA_INVENTARIO) e SQLite (local_inventario)
      */
     public Inventario buscarInventarioAtivo() throws SQLException {
-        System.out.println("[InventarioDAO] Buscando inventário ativo (status: EM_ANDAMENTO)");
-        
         String tableName = getInventarioTableName();
         boolean isSqlite = tableName.equals("local_inventario");
         
-        System.out.println("[InventarioDAO] Tabela: " + tableName + " (SQLite: " + isSqlite + ")");
-        
         String sql;
         if (isSqlite) {
-            // SQLite: usa local_inventario com campos diferentes
             sql = "SELECT id as ID, nome_inventario as NOME, data_inicio as DATA_INICIO, " +
                   "data_fim as DATA_FIM, status as STATUS_INVENTARIO, " +
                   "responsavel as RESPONSAVEL_INVENTARIO, percentual_conclusao as PERCENTUAL_CONCLUSAO, " +
@@ -261,22 +220,14 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
                   "WHERE status = 'EM_ANDAMENTO' " +
                   "ORDER BY data_inicio DESC LIMIT 1";
         } else {
-            // PostgreSQL: usa TABELA_INVENTARIO
             sql = "SELECT * FROM " + tableName + " " +
                   "WHERE STATUS_INVENTARIO = 'EM_ANDAMENTO' " +
                   "ORDER BY DATA_INICIO DESC LIMIT 1";
         }
         
-        System.out.println("[InventarioDAO] SQL: " + sql);
-        
         Inventario inventario = executeQuerySingle(sql);
         
-        if (inventario != null) {
-            System.out.println("[InventarioDAO] Inventário ativo encontrado: ID=" + inventario.getId() + 
-                ", Nome=" + inventario.getNome());
-        } else {
-            System.out.println("[InventarioDAO] Nenhum inventário ativo encontrado! Tentando buscar o mais recente...");
-            
+        if (inventario == null) {
             // Fallback: buscar o inventário mais recente independente do status
             if (isSqlite) {
                 sql = "SELECT id as ID, nome_inventario as NOME, data_inicio as DATA_INICIO, " +
@@ -290,15 +241,7 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
                       "ORDER BY DATA_INICIO DESC LIMIT 1";
             }
             
-            System.out.println("[InventarioDAO] SQL fallback: " + sql);
             inventario = executeQuerySingle(sql);
-            
-            if (inventario != null) {
-                System.out.println("[InventarioDAO] Usando inventário mais recente: ID=" + inventario.getId() + 
-                    ", Nome=" + inventario.getNome() + ", Status=" + inventario.getStatusInventario());
-            } else {
-                System.err.println("[InventarioDAO] ERRO: Nenhum inventário encontrado no banco de dados!");
-            }
         }
         
         return inventario;
@@ -463,9 +406,6 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
             return null;
         }
         
-        System.out.println("DEBUG TIMESTAMP: Tentando parsear data: " + dataStr);
-        
-        // Tentar diferentes formatos comuns
         String[] formatos = {
             "yyyy-MM-dd HH:mm:ss.SSS",
             "yyyy-MM-dd HH:mm:ss",
@@ -479,7 +419,6 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
                 java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(formato);
                 sdf.setLenient(false);
                 java.util.Date parsed = sdf.parse(dataStr);
-                System.out.println("DEBUG TIMESTAMP: Data parseada com formato: " + formato);
                 return new java.sql.Date(parsed.getTime());
             } catch (Exception e) {
                 // Tentar próximo formato
@@ -489,7 +428,6 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         // Se nenhum formato funcionou, tentar parsear como long (milissegundos)
         try {
             long millis = Long.parseLong(dataStr);
-            System.out.println("DEBUG TIMESTAMP: Data parseada como milissegundos: " + millis);
             return new java.sql.Date(millis);
         } catch (NumberFormatException e) {
             // Não é um número

@@ -35,13 +35,19 @@ public class MobileSalaService {
     /**
      * Lista TODAS as salas ativas de uma vez (sem paginação)
      * Otimizado com query única
+     * 
+     * CORREÇÃO 27/11/2025: Filtra salas com coleta finalizada no inventário ativo
+     * Salas com coleta_finalizada = true NÃO aparecem na lista de seleção
      */
     public List<MobileSalaDTO> listarTodasSalas() throws SQLException {
-        logger.info("Listando TODAS as salas ativas");
+        logger.info("Listando TODAS as salas ativas (excluindo salas com coleta finalizada)");
         
         long startTime = System.currentTimeMillis();
         
-        // Query otimizada usando TABELA_SALA - busca TODAS as salas de uma vez
+        // Query otimizada que EXCLUI salas com coleta finalizada no inventário ativo
+        // Uma sala é excluída se:
+        // 1. Existe registro em tabela_sala_inventario para o inventário ativo
+        // 2. E coleta_finalizada = true OU status_coleta = 'FINALIZADA'
         String sql = "SELECT DISTINCT " +
                     "    s.ID_SALA, " +
                     "    s.NUMERO_SALA, " +
@@ -51,6 +57,16 @@ public class MobileSalaService {
                     "    s.ATIVO " +
                     "FROM TABELA_SALA s " +
                     "WHERE s.ATIVO = true " +
+                    "  AND NOT EXISTS ( " +
+                    "      SELECT 1 FROM TABELA_SALA_INVENTARIO si " +
+                    "      WHERE si.ID_SALA = s.ID_SALA " +
+                    "        AND si.ID_INVENTARIO = ( " +
+                    "            SELECT id FROM TABELA_INVENTARIO " +
+                    "            WHERE STATUS_INVENTARIO = 'EM_ANDAMENTO' " +
+                    "            ORDER BY DATA_INICIO DESC LIMIT 1 " +
+                    "        ) " +
+                    "        AND (si.COLETA_FINALIZADA = true OR si.STATUS_COLETA = 'FINALIZADA') " +
+                    "  ) " +
                     "ORDER BY s.NUMERO_SALA, s.DESCRICAO";
         
         List<MobileSalaDTO> dtos = new ArrayList<>();
@@ -90,16 +106,18 @@ public class MobileSalaService {
      * Lista salas ativas com paginação REAL (otimizado)
      * Performance: 15s → <500ms
      * 
+     * CORREÇÃO 27/11/2025: Filtra salas com coleta finalizada no inventário ativo
+     * 
      * @param page Número da página (0-based)
      * @param size Tamanho da página
      * @return Lista de salas paginadas
      */
     public List<MobileSalaDTO> listarSalasPaginado(int page, int size) throws SQLException {
-        logger.info("Listando salas paginadas (page: {}, size: {})", page, size);
+        logger.info("Listando salas paginadas (page: {}, size: {}) - excluindo finalizadas", page, size);
         
         long startTime = System.currentTimeMillis();
         
-        // Query otimizada usando TABELA_SALA com paginação no banco (1 única query!)
+        // Query otimizada que EXCLUI salas com coleta finalizada no inventário ativo
         String sql = "SELECT DISTINCT " +
                     "    s.ID_SALA, " +
                     "    s.NUMERO_SALA, " +
@@ -109,6 +127,16 @@ public class MobileSalaService {
                     "    s.ATIVO " +
                     "FROM TABELA_SALA s " +
                     "WHERE s.ATIVO = true " +
+                    "  AND NOT EXISTS ( " +
+                    "      SELECT 1 FROM TABELA_SALA_INVENTARIO si " +
+                    "      WHERE si.ID_SALA = s.ID_SALA " +
+                    "        AND si.ID_INVENTARIO = ( " +
+                    "            SELECT id FROM TABELA_INVENTARIO " +
+                    "            WHERE STATUS_INVENTARIO = 'EM_ANDAMENTO' " +
+                    "            ORDER BY DATA_INICIO DESC LIMIT 1 " +
+                    "        ) " +
+                    "        AND (si.COLETA_FINALIZADA = true OR si.STATUS_COLETA = 'FINALIZADA') " +
+                    "  ) " +
                     "ORDER BY s.NUMERO_SALA, s.DESCRICAO " +
                     "LIMIT ? OFFSET ?";
         
@@ -150,12 +178,24 @@ public class MobileSalaService {
     }
     
     /**
-     * Conta total de salas ativas (para paginação)
+     * Conta total de salas ativas disponíveis para coleta (para paginação)
+     * 
+     * CORREÇÃO 27/11/2025: Exclui salas com coleta finalizada no inventário ativo
      */
     public int contarSalasAtivas() throws SQLException {
         String sql = "SELECT COUNT(DISTINCT s.ID_SALA) " +
                     "FROM TABELA_SALA s " +
-                    "WHERE s.ATIVO = true";
+                    "WHERE s.ATIVO = true " +
+                    "  AND NOT EXISTS ( " +
+                    "      SELECT 1 FROM TABELA_SALA_INVENTARIO si " +
+                    "      WHERE si.ID_SALA = s.ID_SALA " +
+                    "        AND si.ID_INVENTARIO = ( " +
+                    "            SELECT id FROM TABELA_INVENTARIO " +
+                    "            WHERE STATUS_INVENTARIO = 'EM_ANDAMENTO' " +
+                    "            ORDER BY DATA_INICIO DESC LIMIT 1 " +
+                    "        ) " +
+                    "        AND (si.COLETA_FINALIZADA = true OR si.STATUS_COLETA = 'FINALIZADA') " +
+                    "  )";
         
         try (java.sql.Connection conn = com.inventario.util.DatabaseConnection.getConnection();
              java.sql.PreparedStatement stmt = conn.prepareStatement(sql);
