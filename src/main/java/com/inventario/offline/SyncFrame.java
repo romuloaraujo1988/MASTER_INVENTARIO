@@ -7,7 +7,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 // Formatação de datas centralizada em DateFormatUtils
 import com.inventario.util.DateFormatUtils;
-import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;

@@ -60,8 +60,27 @@ class ColetasActivity : AppCompatActivity() {
         binding.toolbar.inflateMenu(com.inventario.mobile.R.menu.menu_coletas)
         binding.toolbar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
-                com.inventario.mobile.R.id.action_filter -> {
-                    toggleFiltro()
+                com.inventario.mobile.R.id.action_refresh -> {
+                    viewModel.loadColetas()
+                    true
+                }
+                com.inventario.mobile.R.id.filter_todos -> {
+                    aplicarFiltro(FiltroColeta.TODOS, "Mostrando todas as coletas")
+                    menuItem.isChecked = true
+                    true
+                }
+                com.inventario.mobile.R.id.filter_com_etiqueta -> {
+                    aplicarFiltro(FiltroColeta.COM_ETIQUETA, "Mostrando coletas com etiqueta")
+                    menuItem.isChecked = true
+                    true
+                }
+                com.inventario.mobile.R.id.filter_sem_etiqueta -> {
+                    aplicarFiltro(FiltroColeta.SEM_ETIQUETA, "Mostrando itens sem etiqueta")
+                    menuItem.isChecked = true
+                    true
+                }
+                com.inventario.mobile.R.id.action_clear_filters -> {
+                    aplicarFiltro(FiltroColeta.TODOS, "Filtros limpos")
                     true
                 }
                 else -> false
@@ -69,18 +88,13 @@ class ColetasActivity : AppCompatActivity() {
         }
     }
     
-    private var filtrandoPorUsuario = true
-    
-    private fun toggleFiltro() {
-        filtrandoPorUsuario = !filtrandoPorUsuario
-        viewModel.loadColetas(filtrandoPorUsuario)
-        
-        val mensagem = if (filtrandoPorUsuario) {
-            "Mostrando minhas coletas"
-        } else {
-            "Mostrando todas as coletas"
-        }
+    private fun aplicarFiltro(filtro: FiltroColeta, mensagem: String) {
+        viewModel.aplicarFiltro(filtro)
         Toast.makeText(this, mensagem, Toast.LENGTH_SHORT).show()
+        
+        // Atualizar a UI com os dados filtrados
+        val coletasFiltradas = viewModel.getColetasFiltradas()
+        pagerAdapter.updateData(coletasFiltradas, viewModel.uiState.value.patrimoniosPendentes)
     }
 
     private fun setupViewPager() {
@@ -105,17 +119,27 @@ class ColetasActivity : AppCompatActivity() {
     }
 
     private fun updateUI(state: ColetasUiState) {
-        // Atualizar contadores
-        binding.tvColetadosCount.text = state.totalColetados.toString()
+        // Atualizar contadores - v2.7: incluir itens sem etiqueta no total
+        val totalColetadosComSemEtiqueta = state.totalColetados + state.totalSemEtiqueta
+        binding.tvColetadosCount.text = totalColetadosComSemEtiqueta.toString()
         binding.tvPendentesCount.text = state.totalPendentes.toString()
 
-        // Atualizar dados do adapter
-        pagerAdapter.updateData(state.patrimoniosColetados, state.patrimoniosPendentes)
+        // v2.7: Usar dados filtrados baseado no filtro ativo
+        val coletasFiltradas = viewModel.getColetasFiltradas()
+        pagerAdapter.updateData(coletasFiltradas, state.patrimoniosPendentes)
 
         // Mostrar/ocultar empty view
-        val hasData = state.patrimoniosColetados.isNotEmpty() || state.patrimoniosPendentes.isNotEmpty()
+        val hasData = coletasFiltradas.isNotEmpty() || state.patrimoniosPendentes.isNotEmpty()
         binding.viewPager.visibility = if (hasData) View.VISIBLE else View.GONE
         binding.emptyView.visibility = if (hasData) View.GONE else View.VISIBLE
+
+        // v2.7: Mostrar indicador de filtro ativo
+        val filtroInfo = when (state.filtroAtivo) {
+            FiltroColeta.TODOS -> ""
+            FiltroColeta.COM_ETIQUETA -> " (com etiqueta)"
+            FiltroColeta.SEM_ETIQUETA -> " (sem etiqueta: ${state.totalSemEtiqueta})"
+        }
+        supportActionBar?.subtitle = if (filtroInfo.isNotEmpty()) filtroInfo else null
 
         // Mostrar erro se houver
         state.errorMessage?.let { message ->

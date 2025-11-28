@@ -229,6 +229,10 @@ class LoginViewModel(
                         // IMPORTANTE: Salvar dados do usuário PRIMEIRO
                         preferencesManager.saveUserData(loginResponse.data.usuario)
                         
+                        // ✅ CRÍTICO: Salvar ID do usuário para uso nas coletas
+                        preferencesManager.saveUserId(loginResponse.data.usuario.id.toInt())
+                        Log.d("LoginViewModel", "✓ User ID salvo: ${loginResponse.data.usuario.id}")
+                        
                         // Salvar usuário com tokens no LocalDataManager para o NetworkModule usar
                         val localDataManager = com.inventario.mobile.data.local.LocalDataManager.getInstance(context)
                         
@@ -287,6 +291,17 @@ class LoginViewModel(
                         Log.d("LoginViewModel", "✓ Último usuário salvo: $username")
                         
                         Log.d("LoginViewModel", "✓ Dados salvos para possível login offline futuro")
+                        
+                        // ========== SALVAR INVENTÁRIO ATIVO ==========
+                        // Salvar o inventário ativo retornado pelo servidor
+                        // Isso garante que o app sempre use o ID correto do inventário
+                        loginResponse.data.inventarioAtivo?.let { inventario ->
+                            salvarInventarioAtivo(inventario)
+                        } ?: run {
+                            // FALLBACK: Se não veio no login, buscar separadamente
+                            Log.w("LoginViewModel", "⚠️ Inventário não veio no login, buscando separadamente...")
+                            buscarInventarioAtivoDoServidor()
+                        }
                         
                         // TODO: Registrar dispositivo automaticamente
                         // registrarDispositivoAutomaticamente(loginResponse.data.usuario.id)
@@ -653,6 +668,69 @@ class LoginViewModel(
             Log.d("LoginViewModel", "✅ Dados do usuário limpos")
         } catch (e: Exception) {
             Log.e("LoginViewModel", "Erro ao limpar dados do usuário", e)
+        }
+    }
+    
+    // ========== MÉTODOS AUXILIARES PARA INVENTÁRIO ATIVO ==========
+    
+    /**
+     * Salva o inventário ativo no PreferencesManager
+     */
+    private fun salvarInventarioAtivo(inventario: com.inventario.mobile.data.model.InventarioAtivoDto) {
+        preferencesManager.saveInventarioAtivo(
+            id = inventario.id,
+            nome = inventario.nome,
+            status = inventario.status
+        )
+        
+        // Salvar estatísticas se disponíveis
+        val coletados = inventario.getColetados()
+        if (inventario.totalPatrimonios != null && coletados != null) {
+            preferencesManager.saveInventarioEstatisticas(
+                totalPatrimonios = inventario.totalPatrimonios,
+                totalColetados = coletados,
+                percentualConclusao = inventario.percentualConclusao ?: 0.0
+            )
+        }
+        
+        Log.d("LoginViewModel", "═══════════════════════════════════════════")
+        Log.d("LoginViewModel", "✅ INVENTÁRIO ATIVO SALVO")
+        Log.d("LoginViewModel", "ID: ${inventario.id}")
+        Log.d("LoginViewModel", "Nome: ${inventario.nome}")
+        Log.d("LoginViewModel", "Status: ${inventario.status}")
+        Log.d("LoginViewModel", "Progresso: ${inventario.percentualConclusao ?: 0}%")
+        Log.d("LoginViewModel", "═══════════════════════════════════════════")
+    }
+    
+    /**
+     * FALLBACK: Busca o inventário ativo diretamente do endpoint /api/mobile/inventario/ativo
+     * Chamado quando o inventário não vem na resposta do login
+     */
+    private fun buscarInventarioAtivoDoServidor() {
+        viewModelScope.launch {
+            try {
+                Log.d("LoginViewModel", "Buscando inventário ativo do servidor (fallback)...")
+                
+                val apiService = com.inventario.mobile.data.remote.api.ApiClient.getApiService(context)
+                val response = apiService.getInventarioAtivo()
+                
+                if (response.isSuccessful && response.body()?.success == true) {
+                    val inventario = response.body()?.data
+                    
+                    if (inventario != null) {
+                        salvarInventarioAtivo(inventario)
+                        Log.d("LoginViewModel", "✅ Inventário obtido via fallback: ${inventario.nome}")
+                    } else {
+                        Log.w("LoginViewModel", "⚠️ Resposta do servidor não contém inventário")
+                    }
+                } else {
+                    Log.e("LoginViewModel", "❌ Falha ao buscar inventário: ${response.message()}")
+                }
+                
+            } catch (e: Exception) {
+                Log.e("LoginViewModel", "❌ Erro ao buscar inventário ativo (fallback)", e)
+                // Não falhar o login por causa disso - o app vai detectar na MainActivity
+            }
         }
     }
 }

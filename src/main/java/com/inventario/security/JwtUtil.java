@@ -125,11 +125,11 @@ public class JwtUtil {
      */
     public Boolean isTokenValid(String token) {
         try {
-            Claims claims = Jwts.parserBuilder()
+            // Valida a assinatura e estrutura do token
+            Jwts.parserBuilder()
                     .setSigningKey(getSigningKey())
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+                    .parseClaimsJws(token);
             
             return !isTokenExpired(token);
         } catch (Exception e) {

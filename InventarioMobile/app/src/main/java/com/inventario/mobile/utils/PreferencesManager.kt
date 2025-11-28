@@ -143,7 +143,10 @@ class PreferencesManager(context: Context) {
     fun saveDispositivoId(dispositivoId: Int) = putInt("dispositivo_id", dispositivoId)
     
     // Métodos de inventário
-    fun getInventarioId(): Int = getInt("inventario_id", 1)
+    // IMPORTANTE: Default é 0 (não 1!) para evitar usar ID inexistente
+    // O ID correto deve ser obtido via getInventarioAtivoId() que é salvo no login
+    @Deprecated("Use getInventarioAtivoId() que é salvo automaticamente no login")
+    fun getInventarioId(): Int = getInt("inventario_id", 0)
     fun saveInventarioId(inventarioId: Int) = putInt("inventario_id", inventarioId)
     
     // Métodos de modo offline forçado

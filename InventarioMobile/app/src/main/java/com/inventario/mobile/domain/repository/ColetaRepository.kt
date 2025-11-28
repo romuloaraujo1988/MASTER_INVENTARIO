@@ -40,6 +40,11 @@ interface ColetaRepository {
     suspend fun getColetasLocal(): List<Coleta>
     
     /**
+     * v2.7: Registra coleta de item sem etiqueta
+     */
+    suspend fun registrarColetaSemEtiqueta(coleta: Coleta): Result<Coleta>
+    
+    /**
      * Sincroniza uma coleta específica (reenvio)
      */
     suspend fun sincronizarColetaEspecifica(coletaId: Long): Boolean

@@ -18,12 +18,13 @@ public class SalaInventarioDAO {
     
     /**
      * Verifica se está usando SQLite (modo offline)
+     * NOTA: Para operações do desktop/servidor, sempre usar PostgreSQL
      * @param conn Conexão ativa
-     * @return true se for SQLite, false se for PostgreSQL
+     * @return sempre false para forçar uso do PostgreSQL
      */
     private boolean isSQLite(Connection conn) throws SQLException {
-        String dbType = conn.getMetaData().getDatabaseProductName().toLowerCase();
-        return dbType.contains("sqlite");
+        // CORREÇÃO: Sempre retornar false para forçar uso do PostgreSQL
+        return false;
     }
     
     /**

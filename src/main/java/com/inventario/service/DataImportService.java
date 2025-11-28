@@ -485,8 +485,6 @@ public class DataImportService {
             
             // Importar responsáveis
             int imported = 0;
-            int total = responsaveis.size();
-            
             for (var responsavel : responsaveis) {
                 try {
                     var responsavelMap = new java.util.HashMap<String, Object>();
@@ -659,8 +657,6 @@ public class DataImportService {
             
             // Importar usuários
             int imported = 0;
-            int total = usuariosAtivos.size();
-            
             for (var usuario : usuariosAtivos) {
                 try {
                     var usuarioMap = new java.util.HashMap<String, Object>();

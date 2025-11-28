@@ -36,7 +36,12 @@ class ColetaMapper @Inject constructor(
             longitude = entity.longitude,
             sincronizado = entity.sincronizado,
             tentativasSincronizacao = entity.tentativasSincronizacao,  // v2.6
-            erroSincronizacao = entity.erroSincronizacao  // v2.6
+            erroSincronizacao = entity.erroSincronizacao,  // v2.6
+            // v2.7: Campos de item sem etiqueta
+            semEtiqueta = entity.semEtiqueta,
+            descricaoItemSemEtiqueta = entity.descricaoItemSemEtiqueta,
+            categoriaItemSemEtiqueta = entity.categoriaItemSemEtiqueta,
+            fotoPath = entity.fotoPatrimonio
         )
     }
     
@@ -45,6 +50,7 @@ class ColetaMapper @Inject constructor(
      * Busca dados do patrimônio se necessário
      * v2.0: Usa PreferencesManager para obter inventário ativo e nome do usuário
      * v2.3: PRIORIZA localizacaoAtual da coleta (onde foi realmente encontrado)
+     * v2.4: GARANTE que usuarioId seja preenchido do PreferencesManager se não informado
      */
     suspend fun toEntity(domain: Coleta, idInventario: Int? = null): ColetaEntity {
         // Buscar dados do patrimônio para preencher campos
@@ -58,9 +64,23 @@ class ColetaMapper @Inject constructor(
         // ✅ Obter ID do inventário ativo do PreferencesManager
         val inventarioAtivoId = idInventario ?: preferencesManager.getInventarioAtivoId() ?: 0
         
+        // ✅ CRÍTICO: Obter ID do usuário - prioriza domain, fallback para PreferencesManager
+        val usuarioIdFinal = if (domain.usuarioId > 0) {
+            domain.usuarioId.toInt()
+        } else {
+            val savedUserId = preferencesManager.getUserId() ?: 0
+            if (savedUserId > 0) {
+                Log.d(TAG, "✓ Usando usuarioId do PreferencesManager: $savedUserId")
+                savedUserId
+            } else {
+                Log.w(TAG, "⚠️ usuarioId não encontrado! Usando 0 como fallback")
+                0
+            }
+        }
+        
         // ✅ Obter nome do usuário do PreferencesManager
         val nomeUsuario = preferencesManager.getUserName().takeIf { it.isNotEmpty() }
-            ?: "Usuário ${domain.usuarioId}"
+            ?: "Usuário $usuarioIdFinal"
         
         if (inventarioAtivoId == 0) {
             Log.w(TAG, "⚠️ Inventário ativo não encontrado! Usando 0 como fallback")
@@ -108,9 +128,14 @@ class ColetaMapper @Inject constructor(
             latitude = domain.latitude,
             longitude = domain.longitude,
             dataColeta = domain.dataColeta,
-            idUsuario = domain.usuarioId.toInt(),
+            idUsuario = usuarioIdFinal, // ✅ CRÍTICO: Usa usuarioIdFinal que garante valor válido
             nomeUsuario = nomeUsuario, // ✅ Do PreferencesManager
-            sincronizado = domain.sincronizado
+            sincronizado = domain.sincronizado,
+            // v2.7: Campos de item sem etiqueta
+            semEtiqueta = domain.semEtiqueta,
+            descricaoItemSemEtiqueta = domain.descricaoItemSemEtiqueta,
+            categoriaItemSemEtiqueta = domain.categoriaItemSemEtiqueta,
+            fotoPatrimonio = domain.fotoPath
         )
     }
     
@@ -118,14 +143,22 @@ class ColetaMapper @Inject constructor(
      * Converte Domain para Entity sem buscar dados adicionais
      * Usado quando os dados já estão completos
      * v2.0: Usa PreferencesManager para obter inventário ativo
+     * v2.4: GARANTE que usuarioId seja preenchido do PreferencesManager se não informado
      */
     fun toEntitySimple(domain: Coleta, idInventario: Int? = null): ColetaEntity {
         // ✅ Obter ID do inventário ativo do PreferencesManager
         val inventarioAtivoId = idInventario ?: preferencesManager.getInventarioAtivoId() ?: 0
         
+        // ✅ CRÍTICO: Obter ID do usuário - prioriza domain, fallback para PreferencesManager
+        val usuarioIdFinal = if (domain.usuarioId > 0) {
+            domain.usuarioId.toInt()
+        } else {
+            preferencesManager.getUserId() ?: 0
+        }
+        
         // ✅ Obter nome do usuário do PreferencesManager
         val nomeUsuario = preferencesManager.getUserName().takeIf { it.isNotEmpty() }
-            ?: "Usuário ${domain.usuarioId}"
+            ?: "Usuário $usuarioIdFinal"
         
         return ColetaEntity(
             id = domain.id,
@@ -141,9 +174,14 @@ class ColetaMapper @Inject constructor(
             latitude = domain.latitude,
             longitude = domain.longitude,
             dataColeta = domain.dataColeta,
-            idUsuario = domain.usuarioId.toInt(),
+            idUsuario = usuarioIdFinal, // ✅ CRÍTICO: Usa usuarioIdFinal que garante valor válido
             nomeUsuario = nomeUsuario, // ✅ Do PreferencesManager
-            sincronizado = domain.sincronizado
+            sincronizado = domain.sincronizado,
+            // v2.7: Campos de item sem etiqueta
+            semEtiqueta = domain.semEtiqueta,
+            descricaoItemSemEtiqueta = domain.descricaoItemSemEtiqueta,
+            categoriaItemSemEtiqueta = domain.categoriaItemSemEtiqueta,
+            fotoPatrimonio = domain.fotoPath
         )
     }
     

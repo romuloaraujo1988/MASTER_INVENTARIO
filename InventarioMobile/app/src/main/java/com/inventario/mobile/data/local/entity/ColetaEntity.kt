@@ -58,5 +58,11 @@ data class ColetaEntity(
     val tipoScan: String? = null,                   // QR_CODE ou CODIGO_BARRAS
     val tentativasScan: Int = 1,                    // Número de tentativas
     val errosScan: Int = 0,                         // Número de erros
-    val qualidadeEtiqueta: String? = null           // OTIMA, BOA, REGULAR, RUIM
+    val qualidadeEtiqueta: String? = null,          // OTIMA, BOA, REGULAR, RUIM
+    
+    // ========== ITEM SEM ETIQUETA (v2.7) ==========
+    val semEtiqueta: Boolean = false,               // Se é item sem etiqueta
+    val descricaoItemSemEtiqueta: String? = null,   // Descrição do item sem etiqueta
+    val categoriaItemSemEtiqueta: String? = null,   // Categoria do item sem etiqueta
+    val fotoPatrimonio: String? = null              // Foto em Base64
 )

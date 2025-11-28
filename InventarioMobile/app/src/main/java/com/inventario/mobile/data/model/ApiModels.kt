@@ -44,6 +44,8 @@ data class LoginResponse(
 
 /**
  * Dados do login
+ * 
+ * v1.1.0 - Adicionado inventarioAtivo para salvar automaticamente no login
  */
 data class LoginData(
     @SerializedName("access_token")
@@ -56,8 +58,58 @@ data class LoginData(
     val expiresIn: Long,
     
     @SerializedName("usuario")
-    val usuario: UsuarioDto
+    val usuario: UsuarioDto,
+    
+    /**
+     * Inventário ativo (em andamento) retornado automaticamente no login
+     * O app deve salvar este ID localmente para usar nas coletas
+     */
+    @SerializedName("inventario_ativo")
+    val inventarioAtivo: InventarioAtivoDto? = null
 )
+
+/**
+ * DTO com informações do inventário ativo
+ * Retornado no login e no endpoint /api/mobile/inventario/ativo
+ * 
+ * Compatível com MobileInventarioDTO do backend e MobileInventarioInfo
+ */
+data class InventarioAtivoDto(
+    @SerializedName("id")
+    val id: Int,
+    
+    @SerializedName("nome")
+    val nome: String,
+    
+    @SerializedName("status")
+    val status: String,
+    
+    @SerializedName("descricao")
+    val descricao: String? = null,
+    
+    @SerializedName("ano")
+    val ano: Int? = null,
+    
+    // Campos do MobileInventarioDTO (endpoint /inventario/ativo)
+    @SerializedName("totalPatrimonios")
+    val totalPatrimonios: Int? = null,
+    
+    @SerializedName("totalColetados")
+    val totalColetados: Int? = null,
+    
+    // Campos do MobileInventarioInfo (resposta do login)
+    @SerializedName("patrimoniosColetados")
+    val patrimoniosColetados: Int? = null,
+    
+    @SerializedName("percentualConclusao")
+    val percentualConclusao: Double? = null
+) {
+    /**
+     * Retorna o total de patrimônios coletados
+     * Compatível com ambos os formatos de resposta
+     */
+    fun getColetados(): Int? = totalColetados ?: patrimoniosColetados
+}
 
 /**
  * Request para refresh token

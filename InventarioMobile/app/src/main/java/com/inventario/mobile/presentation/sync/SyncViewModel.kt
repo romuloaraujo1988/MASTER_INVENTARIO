@@ -106,21 +106,44 @@ class SyncViewModel @Inject constructor(
     
     /**
      * Limpa todos os dados locais
+     * Preserva coletas pendentes de sincronização
      */
     fun clearLocalData() {
         viewModelScope.launch {
             _state.value = SyncState.Loading("Limpando dados locais...")
             
-            // TODO: Implementar limpeza de dados
-            _state.value = SyncState.Success(
-                message = "Dados locais limpos com sucesso!",
-                patrimoniosSincronizados = 0,
-                salasSincronizadas = 0,
-                responsaveisSincronizados = 0,
-                tempoDecorrido = 0
-            )
-            loadStats() // Atualizar estatísticas
+            val result = sincronizarDadosUseCase.clearLocalData()
+            
+            if (result.isSuccess) {
+                val clearResult = result.getOrNull()!!
+                _state.value = SyncState.ClearSuccess(
+                    message = buildClearSuccessMessage(clearResult),
+                    patrimoniosRemovidos = clearResult.patrimoniosRemovidos,
+                    salasRemovidas = clearResult.salasRemovidas,
+                    responsaveisRemovidos = clearResult.responsaveisRemovidos,
+                    coletasPendentesPreservadas = clearResult.coletasPendentesPreservadas
+                )
+                loadStats() // Atualizar estatísticas para mostrar zeros
+            } else {
+                val error = result.exceptionOrNull()
+                _state.value = SyncState.Error(
+                    error?.message ?: "Erro ao limpar dados locais"
+                )
+            }
         }
+    }
+    
+    private fun buildClearSuccessMessage(result: com.inventario.mobile.data.repository.SyncRepository.ClearResult): String {
+        val sb = StringBuilder("Dados locais limpos com sucesso!\n\n")
+        sb.append("📦 Patrimônios removidos: ${result.patrimoniosRemovidos}\n")
+        sb.append("🏢 Salas removidas: ${result.salasRemovidas}\n")
+        sb.append("👤 Responsáveis removidos: ${result.responsaveisRemovidos}")
+        
+        if (result.coletasPendentesPreservadas > 0) {
+            sb.append("\n\n⚠️ ${result.coletasPendentesPreservadas} coleta(s) pendente(s) foram preservadas")
+        }
+        
+        return sb.toString()
     }
     
     /**
@@ -168,6 +191,13 @@ sealed class SyncState {
     data class ColetasSyncSuccess(
         val message: String,
         val quantidade: Int
+    ) : SyncState()
+    data class ClearSuccess(
+        val message: String,
+        val patrimoniosRemovidos: Int,
+        val salasRemovidas: Int,
+        val responsaveisRemovidos: Int,
+        val coletasPendentesPreservadas: Int
     ) : SyncState()
     data class Error(val message: String) : SyncState()
 }

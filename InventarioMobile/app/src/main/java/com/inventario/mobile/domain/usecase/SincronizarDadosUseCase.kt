@@ -46,4 +46,12 @@ class SincronizarDadosUseCase @Inject constructor(
     suspend fun getLocalStats(): Map<String, Int> {
         return syncRepository.getLocalStats()
     }
+    
+    /**
+     * Limpa todos os dados locais
+     * Preserva coletas pendentes de sincronização
+     */
+    suspend fun clearLocalData(): Result<SyncRepository.ClearResult> {
+        return syncRepository.clearAllLocalData()
+    }
 }

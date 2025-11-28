@@ -710,6 +710,40 @@ public class ColetaFrame_v2 extends JFrame {
             }
         });
 
+        // Menu de contexto para excluir coleta (apenas admin)
+        JPopupMenu popupMenuHistorico = new JPopupMenu();
+        JMenuItem menuExcluirColeta = new JMenuItem("🗑️ Excluir Coleta");
+        menuExcluirColeta.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        menuExcluirColeta.addActionListener(e -> excluirColetaSelecionada());
+        popupMenuHistorico.add(menuExcluirColeta);
+
+        // Adicionar listener de mouse para mostrar popup menu
+        tabelaHistorico.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                mostrarPopupSeNecessario(e);
+            }
+
+            @Override
+            public void mouseReleased(java.awt.event.MouseEvent e) {
+                mostrarPopupSeNecessario(e);
+            }
+
+            private void mostrarPopupSeNecessario(java.awt.event.MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    // Selecionar a linha clicada
+                    int row = tabelaHistorico.rowAtPoint(e.getPoint());
+                    if (row >= 0 && row < tabelaHistorico.getRowCount()) {
+                        tabelaHistorico.setRowSelectionInterval(row, row);
+                    }
+                    // Mostrar menu apenas para admin
+                    if (usuarioLogado != null && "ADMIN".equals(usuarioLogado.getPerfil().name())) {
+                        popupMenuHistorico.show(e.getComponent(), e.getX(), e.getY());
+                    }
+                }
+            }
+        });
+
         // Criar JScrollPane para a tabela
         scrollHistorico = new JScrollPane(tabelaHistorico);
         // Altura para exibir 3 linhas: altura da linha (25) * 3 + cabeçalho (25) +

@@ -216,6 +216,14 @@
             android:theme="@style/Theme.InventarioMobile.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
         
+        <!-- Item Sem Etiqueta Activity -->
+        <activity
+            android:name=".presentation.coleta.ItemSemEtiquetaActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
         <!-- Work Manager para sincronização -->
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"

@@ -506,8 +506,6 @@ public class MobileColetaController {
             
             // Obter username do contexto de segurança
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication != null ? authentication.getName() : null;
-            
             // Buscar coletas modificadas desde o último timestamp
             com.inventario.mobile.server.dto.IncrementalSyncResponse<MobileColetaResponse> response = 
                 mobileColetaService.buscarColetasIncrementais(lastSyncTimestamp, inventarioId, limit, offset);

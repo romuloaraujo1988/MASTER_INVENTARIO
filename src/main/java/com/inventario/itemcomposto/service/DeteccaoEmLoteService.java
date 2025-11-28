@@ -2,7 +2,6 @@ package com.inventario.itemcomposto.service;
 
 import com.inventario.itemcomposto.dao.ItemCompostoDAO;
 import com.inventario.itemcomposto.model.Componente;
-import com.inventario.itemcomposto.model.ItemComposto;
 import com.inventario.util.ConnectionManager;
 import org.springframework.stereotype.Service;
 
@@ -111,12 +110,6 @@ public class DeteccaoEmLoteService {
                 try {
                     // Verificar se já é composto
                     if (!itemCompostoDAO.patrimonioJaEhComposto(idPatrimonio)) {
-                        // Criar item composto
-                        ItemComposto item = itemCompostoService.criarItemComposto(
-                            idPatrimonio, 
-                            clonarComponentes(componentes), 
-                            idUsuario
-                        );
                         processados++;
                         componentesCriados += componentes.size();
                     }

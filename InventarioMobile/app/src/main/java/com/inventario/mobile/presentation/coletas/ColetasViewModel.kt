@@ -15,10 +15,22 @@ data class ColetasUiState(
     val isLoading: Boolean = false,
     val patrimoniosColetados: List<Patrimonio> = emptyList(),
     val patrimoniosPendentes: List<Patrimonio> = emptyList(),
+    val itensSemEtiqueta: List<Patrimonio> = emptyList(),  // v2.7: Itens sem etiqueta
     val totalColetados: Int = 0,
     val totalPendentes: Int = 0,
-    val errorMessage: String? = null
+    val totalSemEtiqueta: Int = 0,  // v2.7: Total de itens sem etiqueta
+    val errorMessage: String? = null,
+    val filtroAtivo: FiltroColeta = FiltroColeta.TODOS  // v2.7: Filtro ativo
 )
+
+/**
+ * Enum para filtros de coleta
+ */
+enum class FiltroColeta {
+    TODOS,           // Todas as coletas
+    COM_ETIQUETA,    // Apenas coletas com número de patrimônio
+    SEM_ETIQUETA     // Apenas itens sem etiqueta
+}
 
 /**
  * ViewModel para tela de Coletas
@@ -52,8 +64,14 @@ class ColetasViewModel(
                 if (coletasDoServidor != null) {
                     android.util.Log.d("ColetasViewModel", "✓ ${coletasDoServidor.size} coletas carregadas do servidor")
                     
-                    // Converter coletas para patrimônios (para manter compatibilidade com UI)
-                    val patrimoniosColetados = coletasDoServidor.map { coleta ->
+                    // v2.7: Separar coletas com etiqueta e sem etiqueta
+                    val coletasComEtiqueta = coletasDoServidor.filter { it.semEtiqueta != true }
+                    val coletasSemEtiqueta = coletasDoServidor.filter { it.semEtiqueta == true }
+                    
+                    android.util.Log.d("ColetasViewModel", "📊 Com etiqueta: ${coletasComEtiqueta.size}, Sem etiqueta: ${coletasSemEtiqueta.size}")
+                    
+                    // Converter coletas COM etiqueta para patrimônios
+                    val patrimoniosColetados = coletasComEtiqueta.map { coleta ->
                         Patrimonio(
                             id = coleta.idPatrimonio?.toLong() ?: 0L,
                             numeroPatrimonio = coleta.numeroPatrimonio ?: "",
@@ -77,20 +95,48 @@ class ColetasViewModel(
                         )
                     }
                     
+                    // v2.7: Converter coletas SEM etiqueta para patrimônios (com descrição especial)
+                    val itensSemEtiqueta = coletasSemEtiqueta.map { coleta ->
+                        Patrimonio(
+                            id = coleta.id ?: 0L,  // Usar ID da coleta
+                            numeroPatrimonio = "[SEM ETIQUETA]",  // Marcador visual
+                            descricao = coleta.descricaoItemSemEtiqueta ?: coleta.descricaoPatrimonio ?: "Item sem etiqueta",
+                            marca = coleta.categoriaItemSemEtiqueta,  // Usar marca para categoria
+                            modelo = null,
+                            numeroSerie = null,
+                            estado = coleta.estadoEncontrado,
+                            valor = null,
+                            setorId = null,
+                            setorNome = null,
+                            salaId = coleta.idSala?.toLong(),
+                            salaNome = coleta.nomeSala ?: coleta.localizacaoEncontrada,
+                            responsavelId = null,
+                            responsavelNome = null,
+                            coletado = true,
+                            dataColeta = coleta.dataColeta,
+                            coletadoPor = coleta.nomeUsuario,
+                            observacoesColeta = coleta.observacao,
+                            observacoes = "Categoria: ${coleta.categoriaItemSemEtiqueta ?: "Não informada"}"
+                        )
+                    }
+                    
                     // Buscar total de patrimônios para calcular pendentes
                     val totalPatrimonios = buscarTotalPatrimonios()
                     val totalPendentes = totalPatrimonios - patrimoniosColetados.size
                     
                     android.util.Log.d("ColetasViewModel", "Total patrimônios: $totalPatrimonios")
-                    android.util.Log.d("ColetasViewModel", "Coletados: ${patrimoniosColetados.size}")
+                    android.util.Log.d("ColetasViewModel", "Coletados (com etiqueta): ${patrimoniosColetados.size}")
+                    android.util.Log.d("ColetasViewModel", "Itens sem etiqueta: ${itensSemEtiqueta.size}")
                     android.util.Log.d("ColetasViewModel", "Pendentes: $totalPendentes")
                     
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         patrimoniosColetados = patrimoniosColetados,
-                        patrimoniosPendentes = emptyList(), // Não carregamos pendentes aqui
+                        patrimoniosPendentes = emptyList(),
+                        itensSemEtiqueta = itensSemEtiqueta,  // v2.7
                         totalColetados = patrimoniosColetados.size,
-                        totalPendentes = totalPendentes
+                        totalPendentes = totalPendentes,
+                        totalSemEtiqueta = itensSemEtiqueta.size  // v2.7
                     )
                     
                     android.util.Log.d("ColetasViewModel", "✓ Coletas carregadas com sucesso do servidor!")
@@ -135,16 +181,19 @@ class ColetasViewModel(
                     apiResponse.data.map { dto ->
                         ColetaResponse(
                             id = dto.id,
-                            idPatrimonio = dto.patrimonioId,  // Campo correto do DTO
+                            idPatrimonio = dto.patrimonioId,
                             numeroPatrimonio = dto.numeroPatrimonio,
                             descricaoPatrimonio = dto.descricaoPatrimonio,
                             idSala = dto.idSala,
                             nomeSala = dto.nomeSala,
                             localizacaoEncontrada = dto.localizacaoEncontrada,
                             estadoEncontrado = dto.estadoEncontrado,
-                            observacao = dto.observacoes,  // Campo correto do DTO
+                            observacao = dto.observacoes,
                             dataColeta = dto.dataColeta,
-                            nomeUsuario = dto.nomeColetor  // Campo correto do DTO
+                            nomeUsuario = dto.nomeColetor,
+                            semEtiqueta = dto.semEtiqueta ?: false,  // v2.7
+                            descricaoItemSemEtiqueta = dto.descricaoItemSemEtiqueta,  // v2.7
+                            categoriaItemSemEtiqueta = dto.categoriaItemSemEtiqueta   // v2.7
                         )
                     }
                 } else {
@@ -229,10 +278,38 @@ class ColetasViewModel(
         val pendentes = _uiState.value.patrimoniosPendentes
         return pendentes.groupBy { it.salaNome ?: "Sala não definida" }
     }
+    
+    /**
+     * v2.7: Aplica filtro de tipo de coleta
+     */
+    fun aplicarFiltro(filtro: FiltroColeta) {
+        android.util.Log.d("ColetasViewModel", "Aplicando filtro: $filtro")
+        _uiState.value = _uiState.value.copy(filtroAtivo = filtro)
+    }
+    
+    /**
+     * v2.7: Retorna coletas filtradas baseado no filtro ativo
+     */
+    fun getColetasFiltradas(): List<Patrimonio> {
+        val state = _uiState.value
+        return when (state.filtroAtivo) {
+            FiltroColeta.TODOS -> state.patrimoniosColetados + state.itensSemEtiqueta
+            FiltroColeta.COM_ETIQUETA -> state.patrimoniosColetados
+            FiltroColeta.SEM_ETIQUETA -> state.itensSemEtiqueta
+        }
+    }
+    
+    /**
+     * v2.7: Retorna itens sem etiqueta
+     */
+    fun getItensSemEtiqueta(): List<Patrimonio> {
+        return _uiState.value.itensSemEtiqueta
+    }
 }
 
 /**
  * Data class para resposta de coleta do servidor
+ * v2.7: Adicionados campos para itens sem etiqueta
  */
 data class ColetaResponse(
     val id: Long?,
@@ -245,7 +322,10 @@ data class ColetaResponse(
     val estadoEncontrado: String?,
     val observacao: String?,
     val dataColeta: String?,
-    val nomeUsuario: String?
+    val nomeUsuario: String?,
+    val semEtiqueta: Boolean? = false,  // v2.7: Flag de item sem etiqueta
+    val descricaoItemSemEtiqueta: String? = null,  // v2.7: Descrição do item sem etiqueta
+    val categoriaItemSemEtiqueta: String? = null   // v2.7: Categoria do item sem etiqueta
 )
 
 class ColetasViewModelFactory(

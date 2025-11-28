@@ -21,15 +21,18 @@ public class MobileServerManager {
     private static boolean isStarting = false;
     private static List<ServerStatusListener> listeners = new ArrayList<>();
     
-    // ===== CONFIGURAÇÕES JVM OTIMIZADAS PARA ~15 USUÁRIOS =====
-    // Memória máxima de 512MB (suficiente para 15 usuários)
-    private static final String JVM_OPTS = "-Xms256m -Xmx512m " +
+    // ===== CONFIGURAÇÕES JVM OTIMIZADAS =====
+    // Memória: 512MB inicial, 2GB máximo
+    // HikariCP gerencia conexões automaticamente
+    private static final String JVM_OPTS = "-Xms512m -Xmx2g " +
             "-XX:+UseG1GC " +
             "-XX:MaxGCPauseMillis=100 " +
             "-XX:+UseStringDeduplication " +
             "-XX:+ParallelRefProcEnabled " +
             "-XX:InitiatingHeapOccupancyPercent=45 " +
             "-XX:+DisableExplicitGC " +
+            "-XX:+HeapDumpOnOutOfMemoryError " +
+            "-XX:HeapDumpPath=logs/ " +
             "-Djava.awt.headless=true";
     
     /**
@@ -197,7 +200,7 @@ public class MobileServerManager {
                     return false;
                 }
                 
-                notifyStatusChanged(ServerStatus.STARTING, "Porta disponível. Iniciando servidor mobile (memória: 256-512MB)...");
+                notifyStatusChanged(ServerStatus.STARTING, "Porta disponível. Iniciando servidor mobile (memória: 512MB-2GB, HikariCP ativo)...");
                 
                 System.out.println("[MobileServer] Iniciando com JVM otimizada: " + JVM_OPTS);
                 

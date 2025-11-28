@@ -21,19 +21,18 @@ public class ParticipanteInventarioDAO {
     
     /**
      * Detecta se está usando SQLite
+     * NOTA: Para operações do desktop/servidor, sempre usar PostgreSQL
      */
     private boolean isSQLite() throws SQLException {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            String dbUrl = conn.getMetaData().getURL();
-            return dbUrl != null && dbUrl.contains("jdbc:sqlite");
-        }
+        // CORREÇÃO: Sempre retornar false para forçar uso do PostgreSQL
+        return false;
     }
     
     /**
-     * Retorna o nome correto da tabela baseado no banco
+     * Retorna o nome correto da tabela
      */
     private String getTableName() throws SQLException {
-        return isSQLite() ? "local_participante_inventario" : "TABELA_PARTICIPANTE_INVENTARIO";
+        return "TABELA_PARTICIPANTE_INVENTARIO";
     }
     
     /**

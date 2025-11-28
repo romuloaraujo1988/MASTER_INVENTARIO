@@ -9,6 +9,27 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/action_filter"
+        android:icon="@drawable/ic_filter"
+        android:title="Filtrar"
+        app:showAsAction="ifRoom">
+        <menu>
+            <item
+                android:id="@+id/filter_todos"
+                android:title="Todas as coletas"
+                android:checkable="true" />
+            <item
+                android:id="@+id/filter_com_etiqueta"
+                android:title="Com etiqueta"
+                android:checkable="true" />
+            <item
+                android:id="@+id/filter_sem_etiqueta"
+                android:title="Sem etiqueta"
+                android:checkable="true" />
+        </menu>
+    </item>
+
+    <item
         android:id="@+id/action_export"
         android:icon="@drawable/ic_export"
         android:title="Exportar"

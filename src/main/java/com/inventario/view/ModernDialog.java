@@ -40,8 +40,6 @@ public class ModernDialog extends JDialog {
     public static final int INFO = 4;
     public static final int QUESTION = 5;
 
-    private int result = JOptionPane.CLOSED_OPTION;
-
     private ModernDialog(Frame parent, String title, String message, int messageType, boolean showCancel) {
         super(parent, title, true);
         initComponents(message, messageType, showCancel);
@@ -74,7 +72,6 @@ public class ModernDialog extends JDialog {
 
         getRootPane().registerKeyboardAction(
                 e -> {
-                    result = JOptionPane.CANCEL_OPTION;
                     dispose();
                 },
                 KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
@@ -133,7 +130,6 @@ public class ModernDialog extends JDialog {
         if (showCancel) {
             JButton btnCancel = createStyledButton("Cancelar", new Color(149, 165, 166), Color.WHITE);
             btnCancel.addActionListener(e -> {
-                result = JOptionPane.CANCEL_OPTION;
                 dispose();
             });
             buttonPanel.add(btnCancel);
@@ -142,7 +138,6 @@ public class ModernDialog extends JDialog {
         String okText = messageType == QUESTION ? "Sim" : "OK";
         JButton btnOk = createStyledButton(okText, getColorForType(messageType), Color.WHITE);
         btnOk.addActionListener(e -> {
-            result = JOptionPane.OK_OPTION;
             dispose();
         });
         buttonPanel.add(btnOk);

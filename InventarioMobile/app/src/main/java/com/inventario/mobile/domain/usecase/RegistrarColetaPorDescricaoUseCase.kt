@@ -41,6 +41,7 @@ class RegistrarColetaPorDescricaoUseCase @Inject constructor(
             Log.d(TAG, "✓ Usuário identificado: ${usuarioAtual.nome} (ID: ${usuarioAtual.id})")
             
             // 3. Criar coleta SEM número de patrimônio, apenas com descrição
+            // IMPORTANTE: Marcar como semEtiqueta=true para que o servidor salve corretamente
             val coleta = Coleta(
                 id = 0,
                 patrimonioId = 0, // Sem patrimônio específico
@@ -54,13 +55,17 @@ class RegistrarColetaPorDescricaoUseCase @Inject constructor(
                 status = estadoEncontrado ?: "COLETADO",
                 latitude = null,
                 longitude = null,
-                sincronizado = false
+                sincronizado = false,
+                // v2.7: Campos de item sem etiqueta
+                semEtiqueta = true,
+                descricaoItemSemEtiqueta = descricao,
+                categoriaItemSemEtiqueta = "COLETA_POR_DESCRICAO"
             )
             
-            Log.d(TAG, "✓ Coleta por descrição criada: '$descricao', Usuário ${coleta.usuarioId}, Sala ${coleta.salaId}")
+            Log.d(TAG, "✓ Coleta por descrição criada: '$descricao', Usuário ${coleta.usuarioId}, Sala ${coleta.salaId}, semEtiqueta=true")
             
-            // 4. Registrar coleta
-            coletaRepository.registrarColeta(coleta)
+            // 4. Registrar coleta usando método específico para sem etiqueta
+            coletaRepository.registrarColetaSemEtiqueta(coleta)
             
         } catch (e: Exception) {
             Log.e(TAG, "❌ Erro ao registrar coleta por descrição", e)

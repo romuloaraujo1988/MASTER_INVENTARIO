@@ -13,6 +13,9 @@ import com.inventario.util.SoundNotification;
 import com.inventario.mobile.server.dto.MobileColetaRequest;
 import com.inventario.mobile.server.dto.MobileColetaResponse;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,10 +31,20 @@ import java.util.Map;
 /**
  * Serviço para operações de coleta mobile
  * 
+ * CONFIGURAÇÃO:
+ * - Transações com isolamento READ_COMMITTED
+ * - Rollback automático em exceções
+ * - Timeout de 30s (coleta individual ~10s + margem)
+ * 
  * @author Sistema de Inventário
- * @version 1.0.0
+ * @version 2.0.0
  */
 @Service
+@Transactional(
+    isolation = Isolation.READ_COMMITTED,
+    timeout = 30,
+    rollbackFor = Exception.class
+)
 public class MobileColetaService {
 
     private static final Logger logger = LoggerFactory.getLogger(MobileColetaService.class);
@@ -52,7 +65,11 @@ public class MobileColetaService {
 
     /**
      * Registra uma nova coleta
+     * 
+     * TRANSAÇÃO: Propagation.REQUIRED garante que a coleta seja salva
+     * em uma transação. Se falhar, faz rollback automático.
      */
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public MobileColetaResponse registrarColeta(MobileColetaRequest request, String username) throws SQLException {
         logger.info("Registrando coleta para patrimônio: {} por usuário: {} (usuarioId: {})",
                 request.getNumeroPatrimonio(), username, request.getUsuarioId());
@@ -138,8 +155,25 @@ public class MobileColetaService {
         coleta.setDivergencia(false);
         coleta.setSemEtiqueta(request.getSemEtiqueta() != null ? request.getSemEtiqueta() : false);
 
+        // Validação customizada: verificar se tem número de patrimônio OU é sem etiqueta
+        boolean temNumeroPatrimonio = request.getNumeroPatrimonio() != null && !request.getNumeroPatrimonio().trim().isEmpty();
+        boolean isSemEtiqueta = coleta.isSemEtiqueta();
+        
+        // Se não tem número de patrimônio e não é sem etiqueta, verificar se tem descrição
+        // (pode ser coleta por descrição que foi salva offline sem o flag semEtiqueta)
+        if (!temNumeroPatrimonio && !isSemEtiqueta) {
+            // Verificar se tem descrição - pode ser coleta por descrição
+            if (request.getDescricaoItemSemEtiqueta() != null && !request.getDescricaoItemSemEtiqueta().trim().isEmpty()) {
+                logger.info("Coleta sem número de patrimônio mas com descrição - tratando como sem etiqueta");
+                coleta.setSemEtiqueta(true);
+                isSemEtiqueta = true;
+            } else {
+                throw new IllegalArgumentException("Número do patrimônio é obrigatório para coletas com etiqueta");
+            }
+        }
+        
         // Se não for item sem etiqueta, buscar patrimônio
-        if (!coleta.isSemEtiqueta()) {
+        if (!isSemEtiqueta) {
             Patrimonio patrimonio = patrimonioDAO.buscarPorNumero(request.getNumeroPatrimonio());
             if (patrimonio == null) {
                 throw new IllegalArgumentException("Patrimônio não encontrado: " + request.getNumeroPatrimonio());
@@ -147,7 +181,10 @@ public class MobileColetaService {
             coleta.setIdPatrimonio(patrimonio.getId());
             coleta.setLocalizacaoAtual(patrimonio.getNomeSala());
         } else {
-            // Item sem etiqueta
+            // Item sem etiqueta - validar que tem descrição
+            if (request.getDescricaoItemSemEtiqueta() == null || request.getDescricaoItemSemEtiqueta().trim().isEmpty()) {
+                throw new IllegalArgumentException("Descrição é obrigatória para coletas sem etiqueta");
+            }
             coleta.setDescricaoItemSemEtiqueta(request.getDescricaoItemSemEtiqueta());
             coleta.setCategoriaItemSemEtiqueta(request.getCategoriaItemSemEtiqueta());
         }

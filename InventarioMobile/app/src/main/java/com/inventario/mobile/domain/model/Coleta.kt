@@ -64,5 +64,10 @@ data class Coleta(
     
     // v2.6: Diagnóstico de erros de sincronização
     val tentativasSincronizacao: Int = 0,
-    val erroSincronizacao: String? = null
+    val erroSincronizacao: String? = null,
+    
+    // v2.7: Campos para itens sem etiqueta
+    val semEtiqueta: Boolean = false,
+    val descricaoItemSemEtiqueta: String? = null,
+    val categoriaItemSemEtiqueta: String? = null
 )

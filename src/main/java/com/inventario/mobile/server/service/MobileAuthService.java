@@ -3,8 +3,13 @@ package com.inventario.mobile.server.service;
 import com.inventario.mobile.server.dto.MobileLoginRequest;
 import com.inventario.mobile.server.dto.MobileLoginResponse;
 import com.inventario.mobile.server.dto.MobileUserInfo;
+import com.inventario.mobile.server.dto.MobileInventarioInfo;
 import com.inventario.model.Usuario;
+import com.inventario.model.Inventario;
 import com.inventario.service.UsuarioService;
+import com.inventario.dao.InventarioDAO;
+import com.inventario.dao.ColetaDAO;
+import com.inventario.dao.PatrimonioDAO;
 import com.inventario.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -99,10 +104,18 @@ public class MobileAuthService {
                 registrarDispositivo(usuario.getId(), loginRequest.getDeviceId(), loginRequest.getAppVersion());
             }
             
+            // Buscar inventário ativo para retornar junto com o login
+            MobileInventarioInfo inventarioInfo = buscarInventarioAtivo();
+            
             logger.info("=== LOGIN MOBILE CONCLUÍDO COM SUCESSO ===");
             logger.info("Usuário: {}, Perfil: {}", loginRequest.getUsername(), usuario.getPerfil());
+            if (inventarioInfo != null) {
+                logger.info("Inventário ativo: ID={}, Nome={}", inventarioInfo.getId(), inventarioInfo.getNome());
+            } else {
+                logger.warn("Nenhum inventário ativo encontrado");
+            }
             
-            return new MobileLoginResponse(accessToken, refreshToken, expiresIn, userInfo);
+            return new MobileLoginResponse(accessToken, refreshToken, expiresIn, userInfo, inventarioInfo);
             
         } catch (AuthenticationException e) {
             logger.error("Falha na autenticação mobile para usuário: {}", loginRequest.getUsername(), e);
@@ -235,6 +248,54 @@ public class MobileAuthService {
         } catch (Exception e) {
             logger.warn("Erro ao registrar dispositivo", e);
             // Não falhar o login por causa disso
+        }
+    }
+    
+    /**
+     * Busca o inventário ativo (em andamento) para retornar no login
+     * Isso permite que o app salve o ID correto do inventário localmente
+     * 
+     * @return informações do inventário ativo ou null se não houver
+     */
+    private MobileInventarioInfo buscarInventarioAtivo() {
+        try {
+            InventarioDAO inventarioDAO = new InventarioDAO();
+            Inventario inventario = inventarioDAO.buscarInventarioAtivo();
+            
+            if (inventario == null) {
+                logger.warn("Nenhum inventário ativo encontrado no sistema");
+                return null;
+            }
+            
+            // Buscar estatísticas do inventário
+            PatrimonioDAO patrimonioDAO = new PatrimonioDAO();
+            ColetaDAO coletaDAO = new ColetaDAO();
+            
+            int totalPatrimonios = patrimonioDAO.contarPatrimoniosAtivos();
+            int patrimoniosColetados = coletaDAO.contarColetasPorInventario(inventario.getId());
+            double percentualConclusao = totalPatrimonios > 0 
+                    ? (patrimoniosColetados * 100.0) / totalPatrimonios 
+                    : 0.0;
+            
+            MobileInventarioInfo info = new MobileInventarioInfo(
+                inventario.getId(),
+                inventario.getNome(),
+                inventario.getStatusInventario() != null ? inventario.getStatusInventario() : "EM_ANDAMENTO",
+                inventario.getAno(),
+                totalPatrimonios,
+                patrimoniosColetados,
+                Math.round(percentualConclusao * 100.0) / 100.0
+            );
+            
+            logger.info("Inventário ativo encontrado: ID={}, Nome={}, Progresso={}%", 
+                       info.getId(), info.getNome(), info.getPercentualConclusao());
+            
+            return info;
+            
+        } catch (Exception e) {
+            logger.error("Erro ao buscar inventário ativo", e);
+            // Não falhar o login por causa disso
+            return null;
         }
     }
 }

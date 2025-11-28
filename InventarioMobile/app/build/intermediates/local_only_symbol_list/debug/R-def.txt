@@ -330,6 +330,9 @@ id fabExport
 id fabScanQr
 id fabSearch
 id fabVoiceSearch
+id filter_com_etiqueta
+id filter_sem_etiqueta
+id filter_todos
 id fragment_container
 id imgPreview
 id ivBiometricStatus

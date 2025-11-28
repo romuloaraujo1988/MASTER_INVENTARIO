@@ -26,6 +26,7 @@ class ItemSemEtiquetaViewModel @Inject constructor(
     
     /**
      * Registra item sem etiqueta
+     * v2.7: Usa método específico para itens sem etiqueta
      */
     fun registrarItemSemEtiqueta(
         descricao: String,
@@ -39,34 +40,38 @@ class ItemSemEtiquetaViewModel @Inject constructor(
             _state.value = ItemSemEtiquetaState.Loading
             
             try {
-                // Obter ID do usuário logado
-                val usuarioId = preferencesManager.getUserId() ?: 0
+                android.util.Log.d("ItemSemEtiquetaVM", "═══════════════════════════════════════════")
+                android.util.Log.d("ItemSemEtiquetaVM", "🏷️ Registrando item SEM ETIQUETA")
+                android.util.Log.d("ItemSemEtiquetaVM", "   Descrição: $descricao")
+                android.util.Log.d("ItemSemEtiquetaVM", "   Categoria: $categoria")
+                android.util.Log.d("ItemSemEtiquetaVM", "   Estado: $estado")
+                android.util.Log.d("ItemSemEtiquetaVM", "   Localização: $localizacao")
                 
-                // Registrar coleta para item sem etiqueta
-                // Usa número especial "SEM_ETIQUETA_" + timestamp para identificar
-                val numeroEspecial = "SEM_ETIQUETA_${System.currentTimeMillis()}"
-                
-                val observacoesCompletas = "SEM ETIQUETA - $descricao | Categoria: $categoria | $observacoes"
-                
-                val result = registrarColetaUseCase(
-                    numeroPatrimonio = numeroEspecial,
+                // v2.7: Usar método específico para itens sem etiqueta
+                val result = registrarColetaUseCase.registrarItemSemEtiqueta(
+                    descricao = descricao,
+                    categoria = categoria,
+                    salaId = null,  // TODO: Obter sala selecionada se disponível
                     localizacaoAtual = localizacao,
                     estadoEncontrado = estado,
-                    observacoes = observacoesCompletas,
+                    observacoes = observacoes,
                     latitude = null,
                     longitude = null,
-                    idUsuario = usuarioId.toLong()
+                    fotoBase64 = fotoBase64
                 )
                 
                 if (result.isSuccess) {
+                    android.util.Log.d("ItemSemEtiquetaVM", "✓ Item sem etiqueta registrado com sucesso!")
                     _state.value = ItemSemEtiquetaState.Success
                 } else {
                     val error = result.exceptionOrNull()
+                    android.util.Log.e("ItemSemEtiquetaVM", "❌ Erro: ${error?.message}")
                     _state.value = ItemSemEtiquetaState.Error(
                         error?.message ?: "Erro ao registrar item sem etiqueta"
                     )
                 }
             } catch (e: Exception) {
+                android.util.Log.e("ItemSemEtiquetaVM", "❌ Exceção: ${e.message}", e)
                 _state.value = ItemSemEtiquetaState.Error(
                     e.message ?: "Erro desconhecido"
                 )

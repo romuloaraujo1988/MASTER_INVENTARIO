@@ -35,7 +35,14 @@ interface ColetaDao {
     suspend fun contarPendentes(): Int
     
     @Query("UPDATE coleta SET sincronizado = 1, servidorId = :servidorId WHERE id = :id")
-    suspend fun marcarSincronizada(id: Long, servidorId: Long? = null)
+    suspend fun marcarSincronizadaComServidor(id: Long, servidorId: Long)
+    
+    /**
+     * Marca coleta como sincronizada (sem ID do servidor)
+     * IMPORTANTE: Esta é a versão principal usada na sincronização
+     */
+    @Query("UPDATE coleta SET sincronizado = 1 WHERE id = :id")
+    suspend fun marcarSincronizada(id: Long)
     
     @Query("UPDATE coleta SET tentativasSincronizacao = tentativasSincronizacao + 1, erroSincronizacao = :erro WHERE id = :id")
     suspend fun registrarErroSincronizacao(id: Long, erro: String?)
@@ -45,6 +52,9 @@ interface ColetaDao {
     
     @Query("DELETE FROM coleta WHERE sincronizado = 1")
     suspend fun limparSincronizadas()
+    
+    @Query("DELETE FROM coleta")
+    suspend fun limparTodas()
     
     @Query("DELETE FROM coleta WHERE sincronizado = 1 AND dataColeta < :timestamp")
     suspend fun limparSincronizadasAntigas(timestamp: Long): Int

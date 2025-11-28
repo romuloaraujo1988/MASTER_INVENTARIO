@@ -1,6 +1,7 @@
 package com.inventario.mobile.data.remote.api
 
 import com.inventario.mobile.data.remote.dto.*
+import com.inventario.mobile.data.model.InventarioAtivoDto
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -140,6 +141,13 @@ interface ApiService {
     // Inventários
     @GET("api/mobile/test/inventarios-ativos")
     suspend fun obterInventarioAtivo(): Response<ApiResponse<Map<String, Any>>>
+    
+    /**
+     * Busca o inventário ativo (em andamento) do servidor
+     * Usado para verificar se o inventário local está atualizado
+     */
+    @GET("api/mobile/inventario/ativo")
+    suspend fun getInventarioAtivo(): Response<ApiResponse<InventarioAtivoDto>>
     
     // Dashboard
     @GET("api/mobile/dashboard/stats")

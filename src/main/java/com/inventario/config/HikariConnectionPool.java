@@ -1,135 +1,248 @@
 package com.inventario.config;
 
-import com.inventario.util.ConnectionManager;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
+import java.io.File;
+import java.io.FileReader;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
- * Configuração do Connection Pool usando HikariCP
+ * Pool de conexões HikariCP centralizado
  * 
- * Singleton thread-safe que gerencia o pool de conexões com PostgreSQL.
- * Otimizado para performance com reutilização de conexões.
- * Integra com ConnectionManager existente.
+ * PROBLEMA RESOLVIDO: Antes, cada chamada a DatabaseConnection.getConnection()
+ * criava uma NOVA conexão via DriverManager, causando:
+ * - Vazamento de conexões
+ * - Consumo excessivo de memória (3.9GB+)
+ * - Travamento do servidor
  * 
- * @see Requirements 10.1, 10.2, 10.5
+ * SOLUÇÃO: Pool de conexões com reutilização automática
+ * - Máximo 15 conexões (configurável)
+ * - Conexões ociosas são liberadas após 10 minutos
+ * - Detecção de vazamento de conexões
+ * 
+ * @author Sistema de Inventário
+ * @version 1.0.0
  */
 public class HikariConnectionPool {
     
     private static final Logger logger = LoggerFactory.getLogger(HikariConnectionPool.class);
-    private static HikariConnectionPool instance;
-    private HikariDataSource dataSource;
     
-    // Configurações otimizadas do pool
-    private static final int MAXIMUM_POOL_SIZE = 10;
-    private static final int MINIMUM_IDLE = 5;
-    private static final long CONNECTION_TIMEOUT = 5000; // 5 segundos
-    private static final long IDLE_TIMEOUT = 300000; // 5 minutos
-    private static final long MAX_LIFETIME = 600000; // 10 minutos
-    private static final long LEAK_DETECTION_THRESHOLD = 60000; // 1 minuto
+    private static volatile HikariDataSource dataSource;
+    private static final Object lock = new Object();
     
-    /**
-     * Construtor privado - Singleton
-     */
+    // Configurações do pool (alinhadas com application-mobile.properties)
+    private static final int MAXIMUM_POOL_SIZE = 15;      // Máximo de conexões
+    private static final int MINIMUM_IDLE = 5;            // Mínimo de conexões ociosas
+    private static final long CONNECTION_TIMEOUT = 10000; // 10 segundos para obter conexão
+    private static final long IDLE_TIMEOUT = 300000;      // 5 minutos para conexão ociosa
+    private static final long MAX_LIFETIME = 900000;      // 15 minutos de vida máxima
+    private static final long LEAK_DETECTION = 30000;     // Detectar vazamento após 30s
+    
     private HikariConnectionPool() {
-        // Não inicializa automaticamente - usa ConnectionManager existente
+        // Singleton
     }
     
     /**
-     * Obtém instância singleton do HikariConnectionPool
-     * Thread-safe usando double-checked locking
-     */
-    public static synchronized HikariConnectionPool getInstance() {
-        if (instance == null) {
-            instance = new HikariConnectionPool();
-        }
-        return instance;
-    }
-    
-    /**
-     * Inicializa o HikariCP DataSource com configurações otimizadas
+     * Obtém uma conexão do pool
      * 
-     * @param url URL JDBC
-     * @param username Nome de usuário
-     * @param password Senha
+     * @return Connection do pool (DEVE ser fechada após uso!)
+     * @throws SQLException se não conseguir obter conexão
      */
-    public synchronized void initialize(String url, String username, String password) {
-        if (dataSource != null && !dataSource.isClosed()) {
-            logger.info("HikariCP já está inicializado");
-            return;
+    public static Connection getConnection() throws SQLException {
+        if (dataSource == null) {
+            synchronized (lock) {
+                if (dataSource == null) {
+                    initializePool();
+                }
+            }
         }
         
         try {
-            logger.info("Inicializando HikariCP Connection Pool...");
+            Connection conn = dataSource.getConnection();
             
-            // Configurar HikariCP
-            HikariConfig config = new HikariConfig();
+            // Log a cada 100 conexões para não poluir o log
+            int active = dataSource.getHikariPoolMXBean().getActiveConnections();
+            int idle = dataSource.getHikariPoolMXBean().getIdleConnections();
+            int total = dataSource.getHikariPoolMXBean().getTotalConnections();
+            
+            // Log detalhado apenas em debug ou quando há muitas conexões ativas
+            if (active > 10) {
+                logger.warn("⚠️ Pool com muitas conexões ativas: {}/{} (ociosas: {})", active, total, idle);
+            } else {
+                logger.debug("✓ HikariCP: Ativas={}, Ociosas={}, Total={}", active, idle, total);
+            }
+            
+            return conn;
+        } catch (SQLException e) {
+            logger.error("❌ Erro ao obter conexão do pool: {}", e.getMessage());
+            throw e;
+        }
+    }
+    
+    /**
+     * Inicializa o pool de conexões
+     */
+    private static void initializePool() throws SQLException {
+        logger.info("═══════════════════════════════════════════════════════════════");
+        logger.info("🚀 Inicializando HikariCP Connection Pool");
+        logger.info("═══════════════════════════════════════════════════════════════");
+        
+        try {
+            // Carregar configurações do banco
+            String[] config = loadDatabaseConfig();
+            String host = config[0];
+            int port = Integer.parseInt(config[1]);
+            String database = config[2];
+            String user = config[3];
+            String password = config[4];
+            
+            String jdbcUrl = String.format("jdbc:postgresql://%s:%d/%s", host, port, database);
+            
+            HikariConfig hikariConfig = new HikariConfig();
             
             // Configurações de conexão
-            config.setJdbcUrl(url);
-            config.setUsername(username);
-            config.setPassword(password);
-            config.setDriverClassName("org.postgresql.Driver");
+            hikariConfig.setJdbcUrl(jdbcUrl);
+            hikariConfig.setUsername(user);
+            hikariConfig.setPassword(password);
+            hikariConfig.setDriverClassName("org.postgresql.Driver");
             
             // Configurações do pool
-            config.setMaximumPoolSize(MAXIMUM_POOL_SIZE);
-            config.setMinimumIdle(MINIMUM_IDLE);
-            config.setConnectionTimeout(CONNECTION_TIMEOUT);
-            config.setIdleTimeout(IDLE_TIMEOUT);
-            config.setMaxLifetime(MAX_LIFETIME);
-            config.setLeakDetectionThreshold(LEAK_DETECTION_THRESHOLD);
+            hikariConfig.setMaximumPoolSize(MAXIMUM_POOL_SIZE);
+            hikariConfig.setMinimumIdle(MINIMUM_IDLE);
+            hikariConfig.setConnectionTimeout(CONNECTION_TIMEOUT);
+            hikariConfig.setIdleTimeout(IDLE_TIMEOUT);
+            hikariConfig.setMaxLifetime(MAX_LIFETIME);
+            hikariConfig.setLeakDetectionThreshold(LEAK_DETECTION);
+            
+            // Nome do pool para identificação nos logs
+            hikariConfig.setPoolName("InventarioPool");
             
             // Configurações de performance
-            config.setAutoCommit(true);
-            config.setConnectionTestQuery("SELECT 1");
-            config.setPoolName("InventarioHikariPool");
+            hikariConfig.addDataSourceProperty("cachePrepStmts", "true");
+            hikariConfig.addDataSourceProperty("prepStmtCacheSize", "250");
+            hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+            hikariConfig.addDataSourceProperty("useServerPrepStmts", "true");
             
-            // Propriedades adicionais do PostgreSQL
-            config.addDataSourceProperty("cachePrepStmts", "true");
-            config.addDataSourceProperty("prepStmtCacheSize", "250");
-            config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-            config.addDataSourceProperty("useServerPrepStmts", "true");
+            // Configurações de timeout do PostgreSQL
+            hikariConfig.addDataSourceProperty("socketTimeout", "30");
+            hikariConfig.addDataSourceProperty("connectTimeout", "10");
             
-            // Criar DataSource
-            dataSource = new HikariDataSource(config);
+            // Criar o DataSource
+            dataSource = new HikariDataSource(hikariConfig);
             
-            logger.info("HikariCP Connection Pool inicializado com sucesso");
-            logger.info("Pool configurado: maxPoolSize={}, minIdle={}, connectionTimeout={}ms",
-                    MAXIMUM_POOL_SIZE, MINIMUM_IDLE, CONNECTION_TIMEOUT);
+            // Testar conexão
+            try (Connection testConn = dataSource.getConnection()) {
+                logger.info("✅ Pool inicializado com sucesso!");
+                logger.info("   URL: {}", jdbcUrl);
+                logger.info("   Pool Size: {} (min: {})", MAXIMUM_POOL_SIZE, MINIMUM_IDLE);
+                logger.info("   Leak Detection: {}ms", LEAK_DETECTION);
+            }
+            
+            logger.info("═══════════════════════════════════════════════════════════════");
             
         } catch (Exception e) {
-            logger.error("Erro ao inicializar HikariCP Connection Pool", e);
-            throw new RuntimeException("Falha ao inicializar connection pool", e);
+            logger.error("❌ Falha ao inicializar pool de conexões: {}", e.getMessage(), e);
+            throw new SQLException("Falha ao inicializar pool de conexões", e);
         }
     }
     
     /**
-     * Obtém o DataSource configurado
-     * 
-     * @return DataSource do HikariCP
+     * Carrega configurações do banco do arquivo JSON
      */
-    public DataSource getDataSource() {
+    private static String[] loadDatabaseConfig() throws Exception {
+        File jsonFile = new File("configuracao_banco.json");
+        
+        if (!jsonFile.exists()) {
+            throw new Exception("Arquivo configuracao_banco.json não encontrado");
+        }
+        
+        StringBuilder content = new StringBuilder();
+        try (FileReader reader = new FileReader(jsonFile)) {
+            char[] buffer = new char[1024];
+            int read;
+            while ((read = reader.read(buffer)) != -1) {
+                content.append(buffer, 0, read);
+            }
+        }
+        
+        String json = content.toString();
+        
+        String host = extractJsonValue(json, "host");
+        String port = extractJsonValue(json, "port");
+        String database = extractJsonValue(json, "database");
+        String user = extractJsonValue(json, "user");
+        String password = extractJsonValue(json, "password");
+        
+        if (host == null || database == null || user == null || password == null) {
+            throw new Exception("Configuração de banco incompleta no JSON");
+        }
+        
+        return new String[] { host, port != null ? port : "5432", database, user, password };
+    }
+    
+    /**
+     * Extrai valor do JSON (parser simples)
+     */
+    private static String extractJsonValue(String json, String key) {
+        try {
+            int pgStart = json.indexOf("\"postgresql\"");
+            if (pgStart == -1) return null;
+            
+            int blockStart = json.indexOf("{", pgStart);
+            int blockEnd = json.indexOf("}", blockStart);
+            if (blockStart == -1 || blockEnd == -1) return null;
+            
+            String pgBlock = json.substring(blockStart, blockEnd + 1);
+            
+            String searchKey = "\"" + key + "\"";
+            int keyIndex = pgBlock.indexOf(searchKey);
+            if (keyIndex == -1) return null;
+            
+            int colonIndex = pgBlock.indexOf(":", keyIndex);
+            if (colonIndex == -1) return null;
+            
+            int valueStart = colonIndex + 1;
+            while (valueStart < pgBlock.length() && 
+                   (pgBlock.charAt(valueStart) == ' ' || pgBlock.charAt(valueStart) == '\t')) {
+                valueStart++;
+            }
+            
+            if (valueStart >= pgBlock.length()) return null;
+            
+            if (pgBlock.charAt(valueStart) == '"') {
+                int valueEnd = pgBlock.indexOf("\"", valueStart + 1);
+                if (valueEnd == -1) return null;
+                return pgBlock.substring(valueStart + 1, valueEnd);
+            } else {
+                int valueEnd = valueStart;
+                while (valueEnd < pgBlock.length() && 
+                       pgBlock.charAt(valueEnd) != ',' && 
+                       pgBlock.charAt(valueEnd) != '}' &&
+                       pgBlock.charAt(valueEnd) != '\n') {
+                    valueEnd++;
+                }
+                return pgBlock.substring(valueStart, valueEnd).trim();
+            }
+            
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    /**
+     * Retorna estatísticas do pool
+     */
+    public static String getPoolStats() {
         if (dataSource == null || dataSource.isClosed()) {
-            throw new IllegalStateException("DataSource não está inicializado ou foi fechado");
-        }
-        return dataSource;
-    }
-    
-    /**
-     * Obtém estatísticas do pool de conexões
-     * 
-     * @return String com estatísticas formatadas
-     */
-    public String getPoolStats() {
-        if (dataSource == null) {
             return "Pool não inicializado";
         }
         
         return String.format(
-            "HikariCP Stats - Active: %d, Idle: %d, Total: %d, Waiting: %d",
+            "Pool Stats - Ativas: %d, Ociosas: %d, Total: %d, Aguardando: %d",
             dataSource.getHikariPoolMXBean().getActiveConnections(),
             dataSource.getHikariPoolMXBean().getIdleConnections(),
             dataSource.getHikariPoolMXBean().getTotalConnections(),
@@ -138,58 +251,29 @@ public class HikariConnectionPool {
     }
     
     /**
-     * Fecha o DataSource e libera recursos
-     * Deve ser chamado ao encerrar a aplicação
+     * Fecha o pool de conexões (usar apenas no shutdown da aplicação)
      */
-    public void close() {
+    public static void shutdown() {
         if (dataSource != null && !dataSource.isClosed()) {
-            logger.info("Fechando HikariCP Connection Pool...");
-            logger.info("Estatísticas finais: {}", getPoolStats());
+            logger.info("🛑 Fechando pool de conexões...");
             dataSource.close();
-            logger.info("HikariCP Connection Pool fechado com sucesso");
+            logger.info("✅ Pool fechado com sucesso");
         }
     }
     
     /**
      * Verifica se o pool está saudável
-     * 
-     * @return true se o pool está operacional
      */
-    public boolean isHealthy() {
-        try {
-            if (dataSource == null || dataSource.isClosed()) {
-                return false;
-            }
-            
-            // Tentar obter uma conexão para verificar saúde
-            try (var conn = dataSource.getConnection()) {
-                return conn.isValid(1); // Timeout de 1 segundo
-            }
-        } catch (Exception e) {
-            logger.error("Erro ao verificar saúde do pool", e);
+    public static boolean isHealthy() {
+        if (dataSource == null || dataSource.isClosed()) {
             return false;
         }
-    }
-    
-    /**
-     * Verifica se o pool está inicializado
-     * 
-     * @return true se inicializado
-     */
-    public boolean isInitialized() {
-        return dataSource != null && !dataSource.isClosed();
-    }
-    
-    /**
-     * Registra shutdown hook para fechar pool ao encerrar aplicação
-     */
-    static {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            HikariConnectionPool pool = HikariConnectionPool.getInstance();
-            if (pool != null && pool.isInitialized()) {
-                pool.close();
-            }
-            ConnectionManager.shutdown();
-        }));
+        
+        try (Connection conn = dataSource.getConnection()) {
+            return conn.isValid(5);
+        } catch (SQLException e) {
+            logger.warn("Pool não está saudável: {}", e.getMessage());
+            return false;
+        }
     }
 }

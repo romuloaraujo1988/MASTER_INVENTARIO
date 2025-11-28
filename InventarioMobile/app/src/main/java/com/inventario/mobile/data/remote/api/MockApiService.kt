@@ -1,5 +1,6 @@
 package com.inventario.mobile.data.remote.api
 
+import com.inventario.mobile.data.model.InventarioAtivoDto
 import com.inventario.mobile.data.remote.dto.*
 import retrofit2.Response
 
@@ -292,6 +293,20 @@ class MockApiService : ApiService {
             success = true,
             message = "Mock data - no active inventory",
             data = mockData
+        )
+        return Response.success(apiResponse)
+    }
+    
+    override suspend fun getInventarioAtivo(): Response<ApiResponse<InventarioAtivoDto>> {
+        val mockInventario = InventarioAtivoDto(
+            id = 0,
+            nome = "Mock Inventário",
+            status = "EM_ANDAMENTO"
+        )
+        val apiResponse = ApiResponse(
+            success = false,
+            message = "Mock data - no active inventory",
+            data = mockInventario
         )
         return Response.success(apiResponse)
     }

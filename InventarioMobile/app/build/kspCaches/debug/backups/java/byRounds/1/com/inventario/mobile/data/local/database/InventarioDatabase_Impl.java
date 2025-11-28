@@ -61,7 +61,7 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_patrimonio_descricao` ON `patrimonio` (`descricao`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_patrimonio_idSala` ON `patrimonio` (`idSala`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_patrimonio_coletado` ON `patrimonio` (`coletado`)");
-        db.execSQL("CREATE TABLE IF NOT EXISTS `coleta` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `idPatrimonio` INTEGER NOT NULL, `numeroPatrimonio` TEXT NOT NULL, `idInventario` INTEGER NOT NULL, `idSala` INTEGER, `nomeSala` TEXT, `idResponsavel` INTEGER, `nomeResponsavel` TEXT, `observacao` TEXT, `estadoPatrimonio` TEXT, `latitude` REAL, `longitude` REAL, `dataColeta` INTEGER NOT NULL, `idUsuario` INTEGER NOT NULL, `nomeUsuario` TEXT NOT NULL, `sincronizado` INTEGER NOT NULL, `tentativasSincronizacao` INTEGER NOT NULL, `erroSincronizacao` TEXT, `servidorId` INTEGER, `tempoColetaSegundos` INTEGER, `tempoScanSegundos` INTEGER, `tempoPreenchimentoSegundos` INTEGER, `metodoColeta` TEXT, `horaColeta` INTEGER, `diaSemana` INTEGER, `periodoColeta` TEXT, `tipoScan` TEXT, `tentativasScan` INTEGER NOT NULL, `errosScan` INTEGER NOT NULL, `qualidadeEtiqueta` TEXT)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS `coleta` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `idPatrimonio` INTEGER NOT NULL, `numeroPatrimonio` TEXT NOT NULL, `idInventario` INTEGER NOT NULL, `idSala` INTEGER, `nomeSala` TEXT, `idResponsavel` INTEGER, `nomeResponsavel` TEXT, `observacao` TEXT, `estadoPatrimonio` TEXT, `latitude` REAL, `longitude` REAL, `dataColeta` INTEGER NOT NULL, `idUsuario` INTEGER NOT NULL, `nomeUsuario` TEXT NOT NULL, `sincronizado` INTEGER NOT NULL, `tentativasSincronizacao` INTEGER NOT NULL, `erroSincronizacao` TEXT, `servidorId` INTEGER, `tempoColetaSegundos` INTEGER, `tempoScanSegundos` INTEGER, `tempoPreenchimentoSegundos` INTEGER, `metodoColeta` TEXT, `horaColeta` INTEGER, `diaSemana` INTEGER, `periodoColeta` TEXT, `tipoScan` TEXT, `tentativasScan` INTEGER NOT NULL, `errosScan` INTEGER NOT NULL, `qualidadeEtiqueta` TEXT, `semEtiqueta` INTEGER NOT NULL, `descricaoItemSemEtiqueta` TEXT, `categoriaItemSemEtiqueta` TEXT, `fotoPatrimonio` TEXT)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_idPatrimonio` ON `coleta` (`idPatrimonio`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_idInventario` ON `coleta` (`idInventario`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_coleta_sincronizado` ON `coleta` (`sincronizado`)");
@@ -74,7 +74,7 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
         db.execSQL("CREATE TABLE IF NOT EXISTS `setor` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nome` TEXT NOT NULL, `descricao` TEXT, `sincronizado` INTEGER NOT NULL, `dataCriacao` INTEGER NOT NULL, `dataAtualizacao` INTEGER NOT NULL, `servidorId` INTEGER)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_setor_nome` ON `setor` (`nome`)");
         db.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)");
-        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '759781ea2c830992cbebc2b30a36f285')");
+        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '473ee1d262dbd8413d57c4ddb9872e67')");
       }
 
       @Override
@@ -188,7 +188,7 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
                   + " Expected:\n" + _infoPatrimonio + "\n"
                   + " Found:\n" + _existingPatrimonio);
         }
-        final HashMap<String, TableInfo.Column> _columnsColeta = new HashMap<String, TableInfo.Column>(30);
+        final HashMap<String, TableInfo.Column> _columnsColeta = new HashMap<String, TableInfo.Column>(34);
         _columnsColeta.put("id", new TableInfo.Column("id", "INTEGER", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsColeta.put("idPatrimonio", new TableInfo.Column("idPatrimonio", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsColeta.put("numeroPatrimonio", new TableInfo.Column("numeroPatrimonio", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
@@ -219,6 +219,10 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
         _columnsColeta.put("tentativasScan", new TableInfo.Column("tentativasScan", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsColeta.put("errosScan", new TableInfo.Column("errosScan", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsColeta.put("qualidadeEtiqueta", new TableInfo.Column("qualidadeEtiqueta", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("semEtiqueta", new TableInfo.Column("semEtiqueta", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("descricaoItemSemEtiqueta", new TableInfo.Column("descricaoItemSemEtiqueta", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("categoriaItemSemEtiqueta", new TableInfo.Column("categoriaItemSemEtiqueta", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsColeta.put("fotoPatrimonio", new TableInfo.Column("fotoPatrimonio", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         final HashSet<TableInfo.ForeignKey> _foreignKeysColeta = new HashSet<TableInfo.ForeignKey>(0);
         final HashSet<TableInfo.Index> _indicesColeta = new HashSet<TableInfo.Index>(6);
         _indicesColeta.add(new TableInfo.Index("index_coleta_idPatrimonio", false, Arrays.asList("idPatrimonio"), Arrays.asList("ASC")));
@@ -272,7 +276,7 @@ public final class InventarioDatabase_Impl extends InventarioDatabase {
         }
         return new RoomOpenHelper.ValidationResult(true, null);
       }
-    }, "759781ea2c830992cbebc2b30a36f285", "0930eb6ab7c066a76280b080e208253a");
+    }, "473ee1d262dbd8413d57c4ddb9872e67", "d9561a8e1eb3264ef73c3d335b882765");
     final SupportSQLiteOpenHelper.Configuration _sqliteConfig = SupportSQLiteOpenHelper.Configuration.builder(config.context).name(config.name).callback(_openCallback).build();
     final SupportSQLiteOpenHelper _helper = config.sqliteOpenHelperFactory.create(_sqliteConfig);
     return _helper;

@@ -152,35 +152,21 @@ public class DatabaseConnection {
     
     /**
      * Obtém uma conexão com o banco de dados
+     * 
+     * ⚠️ IMPORTANTE: Agora usa HikariCP Connection Pool para evitar vazamento de conexões!
+     * 
      * PRIORIDADE: 
-     * 1. Arquivo configuracao_banco.json na raiz (mais simples e direto)
-     * 2. DatabaseConfigManager
-     * 3. SQLite apenas se explicitamente forçado offline
+     * 1. HikariCP Pool (RECOMENDADO - reutiliza conexões)
+     * 2. Arquivo configuracao_banco.json na raiz (fallback)
+     * 3. DatabaseConfigManager (fallback)
+     * 4. SQLite apenas se explicitamente forçado offline
      * 
      * @return Connection ativa com o banco (PostgreSQL ou SQLite)
      * @throws SQLException se houver erro na conexão
      */
     public static Connection getConnection() throws SQLException {
         try {
-            // PRIORIDADE 1: Usar configuração do JSON na raiz (mais confiável)
-            if (jsonConfigLoaded) {
-                try {
-                    return createConnectionFromJson();
-                } catch (SQLException e) {
-                    // Continua para tentar outras opções
-                }
-            }
-            
-            // PRIORIDADE 2: Se há configuração via DatabaseConfigManager
-            if (currentConfig != null && currentConfig.isValid()) {
-                try {
-                    return createConnectionFromConfig(currentConfig);
-                } catch (SQLException e) {
-                    // Continua para tentar outras opções
-                }
-            }
-            
-            // PRIORIDADE 3: Verificar se modo offline foi EXPLICITAMENTE forçado
+            // PRIORIDADE 0: Verificar se modo offline foi EXPLICITAMENTE forçado
             try {
                 com.inventario.offline.OfflineManager offlineManager = 
                     com.inventario.offline.OfflineManager.getInstance();
@@ -189,7 +175,37 @@ public class DatabaseConnection {
                     return getOfflineConnection();
                 }
             } catch (Exception e) {
-                // Ignorar erros do OfflineManager
+                // Ignorar erros do OfflineManager - continuar com PostgreSQL
+            }
+            
+            // PRIORIDADE 1: Usar HikariCP Pool (RECOMENDADO)
+            // O pool gerencia conexões automaticamente, evitando vazamentos
+            try {
+                return com.inventario.config.HikariConnectionPool.getConnection();
+            } catch (SQLException e) {
+                System.err.println("⚠️ Falha ao obter conexão do pool HikariCP: " + e.getMessage());
+                System.err.println("   Tentando conexão direta como fallback...");
+                // Continua para tentar conexão direta
+            }
+            
+            // PRIORIDADE 2: Usar configuração do JSON na raiz (fallback)
+            if (jsonConfigLoaded) {
+                try {
+                    System.out.println("⚠️ Usando conexão direta (sem pool) - pode causar vazamento de memória!");
+                    return createConnectionFromJson();
+                } catch (SQLException e) {
+                    // Continua para tentar outras opções
+                }
+            }
+            
+            // PRIORIDADE 3: Se há configuração via DatabaseConfigManager
+            if (currentConfig != null && currentConfig.isValid()) {
+                try {
+                    System.out.println("⚠️ Usando conexão direta (sem pool) - pode causar vazamento de memória!");
+                    return createConnectionFromConfig(currentConfig);
+                } catch (SQLException e) {
+                    // Continua para tentar outras opções
+                }
             }
             
             // PRIORIDADE 4: Tentar novamente com JSON se disponível

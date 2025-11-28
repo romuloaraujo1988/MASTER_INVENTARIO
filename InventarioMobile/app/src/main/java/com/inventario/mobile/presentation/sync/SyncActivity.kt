@@ -86,6 +86,11 @@ class SyncActivity : AppCompatActivity() {
                         showSuccess(state.message)
                         viewModel.clearState()
                     }
+                    is SyncState.ClearSuccess -> {
+                        hideLoading()
+                        showSuccess(state.message)
+                        viewModel.clearState()
+                    }
                     is SyncState.Error -> {
                         hideLoading()
                         showError(state.message)

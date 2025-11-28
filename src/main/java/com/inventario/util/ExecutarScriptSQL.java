@@ -1,6 +1,5 @@
 package com.inventario.util;
 
-import com.inventario.util.DatabaseConnection;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.sql.Connection;

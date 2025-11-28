@@ -3,6 +3,7 @@ package com.inventario.mobile.data.repository
 import com.inventario.mobile.data.model.LoginData
 import com.inventario.mobile.data.model.LoginResponse
 import com.inventario.mobile.data.model.UsuarioDto
+import com.inventario.mobile.data.model.InventarioAtivoDto
 import com.inventario.mobile.data.remote.dto.LoginRequest
 import com.inventario.mobile.data.remote.dto.RefreshTokenRequest
 import com.inventario.mobile.domain.repository.AuthRepository
@@ -52,6 +53,14 @@ class AuthRepositoryImpl(
                         android.util.Log.d("AuthRepositoryImpl", "  User ID: ${dtoResponse.user.id}")
                         android.util.Log.d("AuthRepositoryImpl", "  User Nome: ${dtoResponse.user.nome}")
                         android.util.Log.d("AuthRepositoryImpl", "  User Login: ${dtoResponse.user.username}")
+                        
+                        // Log do inventário ativo
+                        if (dtoResponse.inventarioAtivo != null) {
+                            android.util.Log.d("AuthRepositoryImpl", "  ✅ Inventário Ativo: ID=${dtoResponse.inventarioAtivo.id}, Nome=${dtoResponse.inventarioAtivo.nome}")
+                        } else {
+                            android.util.Log.w("AuthRepositoryImpl", "  ⚠️ Nenhum inventário ativo retornado")
+                        }
+                        
                         // Converter MobileLoginResponseDto para o modelo interno
                         val usuarioModel = UsuarioDto(
                             id = dtoResponse.user.id,
@@ -62,11 +71,26 @@ class AuthRepositoryImpl(
                             perfil = dtoResponse.user.perfil,
                             setorId = dtoResponse.user.setorId
                         )
+                        
+                        // Converter inventário ativo se presente
+                        val inventarioAtivoModel = dtoResponse.inventarioAtivo?.let { inv ->
+                            InventarioAtivoDto(
+                                id = inv.id,
+                                nome = inv.nome,
+                                status = inv.status,
+                                ano = inv.ano,
+                                totalPatrimonios = inv.totalPatrimonios,
+                                patrimoniosColetados = inv.patrimoniosColetados,
+                                percentualConclusao = inv.percentualConclusao
+                            )
+                        }
+                        
                         val loginData = LoginData(
                             accessToken = dtoResponse.accessToken,
                             refreshToken = dtoResponse.refreshToken,
                             expiresIn = dtoResponse.expiresIn,
-                            usuario = usuarioModel
+                            usuario = usuarioModel,
+                            inventarioAtivo = inventarioAtivoModel
                         )
                         val loginResponse = LoginResponse(
                             success = true,

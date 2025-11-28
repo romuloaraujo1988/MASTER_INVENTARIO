@@ -17,63 +17,55 @@ public class ColetaDAO {
     
     /**
      * Detecta se está usando SQLite
+     * NOTA: Para operações do desktop/servidor, sempre usar PostgreSQL
      */
     private boolean isSQLite() throws SQLException {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            String dbUrl = conn.getMetaData().getURL();
-            return dbUrl != null && dbUrl.contains("jdbc:sqlite");
-        }
+        // CORREÇÃO: Sempre retornar false para forçar uso do PostgreSQL
+        // O modo offline SQLite é apenas para o app Android
+        return false;
     }
     
     /**
-     * Retorna o nome correto da tabela de coleta baseado no banco
+     * Retorna o nome correto da tabela de coleta
      */
     private String getColetaTableName() throws SQLException {
-        return isSQLite() ? "local_coleta" : "TABELA_COLETA";
+        return "TABELA_COLETA";
     }
     
     /**
-     * Retorna o nome correto da tabela de patrimônio baseado no banco
+     * Retorna o nome correto da tabela de patrimônio
      */
     private String getPatrimonioTableName() throws SQLException {
-        return isSQLite() ? "local_patrimonio" : "TABELA_PATRIMONIO";
+        return "TABELA_PATRIMONIO";
     }
     
     /**
-     * Retorna o nome correto da tabela de inventário baseado no banco
+     * Retorna o nome correto da tabela de inventário
      */
     private String getInventarioTableName() throws SQLException {
-        return isSQLite() ? "local_inventario" : "TABELA_INVENTARIO";
+        return "TABELA_INVENTARIO";
     }
     
     /**
-     * Retorna o nome correto da tabela de usuário baseado no banco
+     * Retorna o nome correto da tabela de usuário
      */
     private String getUsuarioTableName() throws SQLException {
-        return isSQLite() ? "local_usuario" : "TABELA_USUARIO";
+        return "TABELA_USUARIO";
     }
     
     /**
-     * Retorna o nome correto da tabela de participante baseado no banco
+     * Retorna o nome correto da tabela de participante
      */
     private String getParticipanteTableName() throws SQLException {
-        return isSQLite() ? "local_participante_inventario" : "TABELA_PARTICIPANTE_INVENTARIO";
+        return "TABELA_PARTICIPANTE_INVENTARIO";
     }
     
     /**
-     * Retorna o nome correto da tabela de sala baseado no banco
+     * Retorna o nome correto da tabela de sala
      */
     private String getSalaTableName() throws SQLException {
-        return isSQLite() ? "local_sala" : "TABELA_SALA";
+        return "TABELA_SALA";
     }
-    
-    /**
-     * Retorna o prefixo correto para colunas (maiúsculas para PostgreSQL, minúsculas para SQLite)
-     */
-    private String col(String columnName) throws SQLException {
-        return isSQLite() ? columnName.toLowerCase() : columnName.toUpperCase();
-    }
-
     
     public void inserirColeta(Coleta coleta) throws SQLException {
         System.out.println("[DEBUG ColetaDAO] ========================================");

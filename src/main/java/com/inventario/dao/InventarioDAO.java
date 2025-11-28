@@ -26,19 +26,21 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
     
     /**
      * Detecta se está usando SQLite
+     * NOTA: Para operações do desktop/servidor, sempre usar PostgreSQL
      */
     private boolean isSQLite() throws SQLException {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            String dbUrl = conn.getMetaData().getURL();
-            return dbUrl != null && dbUrl.contains("jdbc:sqlite");
-        }
+        // CORREÇÃO: Sempre retornar false para forçar uso do PostgreSQL
+        // O modo offline SQLite é apenas para o app Android
+        return false;
     }
     
     /**
-     * Retorna o nome correto da tabela de inventário baseado no banco
+     * Retorna o nome correto da tabela de inventário
+     * NOTA: Sempre usa TABELA_INVENTARIO (PostgreSQL)
      */
     private String getInventarioTableName() throws SQLException {
-        return isSQLite() ? "local_inventario" : "TABELA_INVENTARIO";
+        // CORREÇÃO: Sempre usar tabela PostgreSQL
+        return "TABELA_INVENTARIO";
     }
     
     // ==================== MÉTODOS ABSTRATOS IMPLEMENTADOS ====================

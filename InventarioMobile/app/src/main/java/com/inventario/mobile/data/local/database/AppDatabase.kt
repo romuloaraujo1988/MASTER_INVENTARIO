@@ -21,7 +21,7 @@ import com.inventario.mobile.data.local.entity.*
         SyncLogEntity::class,
         LogColetaEntity::class  // v2.2: Log de auditoria
     ],
-    version = 7,  // v2.3: Incrementado para corrigir estrutura da tabela patrimonio
+    version = 8,  // v2.7: Adicionados campos para item sem etiqueta
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -38,6 +38,23 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
+        
+        /**
+         * Migração da versão 7 para 8
+         * Adiciona campos para item sem etiqueta na tabela coleta
+         */
+        private val MIGRATION_7_8 = object : androidx.room.migration.Migration(7, 8) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                // Adicionar campos de item sem etiqueta
+                database.execSQL("ALTER TABLE coleta ADD COLUMN semEtiqueta INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE coleta ADD COLUMN descricaoItemSemEtiqueta TEXT")
+                database.execSQL("ALTER TABLE coleta ADD COLUMN categoriaItemSemEtiqueta TEXT")
+                database.execSQL("ALTER TABLE coleta ADD COLUMN fotoPatrimonio TEXT")
+                
+                // Criar índice para semEtiqueta
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_coleta_semEtiqueta ON coleta(semEtiqueta)")
+            }
+        }
         
         /**
          * Migração da versão 6 para 7
@@ -152,7 +169,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "inventario_offline.db"
                 )
-                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)  // v2.3: Adicionar migração 6->7
+                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)  // v2.7: Adicionar migração 7->8 (sem etiqueta)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

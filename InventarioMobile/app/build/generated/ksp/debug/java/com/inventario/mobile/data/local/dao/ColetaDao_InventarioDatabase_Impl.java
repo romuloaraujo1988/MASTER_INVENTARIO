@@ -41,6 +41,8 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
 
   private final SharedSQLiteStatement __preparedStmtOfAtualizarSincronizado;
 
+  private final SharedSQLiteStatement __preparedStmtOfMarcarSincronizadaComServidor;
+
   private final SharedSQLiteStatement __preparedStmtOfMarcarSincronizada;
 
   private final SharedSQLiteStatement __preparedStmtOfRegistrarErroSincronizacao;
@@ -48,6 +50,8 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
   private final SharedSQLiteStatement __preparedStmtOfDeletar;
 
   private final SharedSQLiteStatement __preparedStmtOfLimparSincronizadas;
+
+  private final SharedSQLiteStatement __preparedStmtOfLimparTodas;
 
   private final SharedSQLiteStatement __preparedStmtOfLimparSincronizadasAntigas;
 
@@ -63,7 +67,7 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR REPLACE INTO `coleta` (`id`,`idPatrimonio`,`numeroPatrimonio`,`idInventario`,`idSala`,`nomeSala`,`idResponsavel`,`nomeResponsavel`,`observacao`,`estadoPatrimonio`,`latitude`,`longitude`,`dataColeta`,`idUsuario`,`nomeUsuario`,`sincronizado`,`tentativasSincronizacao`,`erroSincronizacao`,`servidorId`,`tempoColetaSegundos`,`tempoScanSegundos`,`tempoPreenchimentoSegundos`,`metodoColeta`,`horaColeta`,`diaSemana`,`periodoColeta`,`tipoScan`,`tentativasScan`,`errosScan`,`qualidadeEtiqueta`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        return "INSERT OR REPLACE INTO `coleta` (`id`,`idPatrimonio`,`numeroPatrimonio`,`idInventario`,`idSala`,`nomeSala`,`idResponsavel`,`nomeResponsavel`,`observacao`,`estadoPatrimonio`,`latitude`,`longitude`,`dataColeta`,`idUsuario`,`nomeUsuario`,`sincronizado`,`tentativasSincronizacao`,`erroSincronizacao`,`servidorId`,`tempoColetaSegundos`,`tempoScanSegundos`,`tempoPreenchimentoSegundos`,`metodoColeta`,`horaColeta`,`diaSemana`,`periodoColeta`,`tipoScan`,`tentativasScan`,`errosScan`,`qualidadeEtiqueta`,`semEtiqueta`,`descricaoItemSemEtiqueta`,`categoriaItemSemEtiqueta`,`fotoPatrimonio`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override
@@ -176,6 +180,23 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
         } else {
           statement.bindString(30, entity.getQualidadeEtiqueta());
         }
+        final int _tmp_1 = entity.getSemEtiqueta() ? 1 : 0;
+        statement.bindLong(31, _tmp_1);
+        if (entity.getDescricaoItemSemEtiqueta() == null) {
+          statement.bindNull(32);
+        } else {
+          statement.bindString(32, entity.getDescricaoItemSemEtiqueta());
+        }
+        if (entity.getCategoriaItemSemEtiqueta() == null) {
+          statement.bindNull(33);
+        } else {
+          statement.bindString(33, entity.getCategoriaItemSemEtiqueta());
+        }
+        if (entity.getFotoPatrimonio() == null) {
+          statement.bindNull(34);
+        } else {
+          statement.bindString(34, entity.getFotoPatrimonio());
+        }
       }
     };
     this.__preparedStmtOfAtualizarSincronizado = new SharedSQLiteStatement(__db) {
@@ -186,11 +207,19 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
         return _query;
       }
     };
-    this.__preparedStmtOfMarcarSincronizada = new SharedSQLiteStatement(__db) {
+    this.__preparedStmtOfMarcarSincronizadaComServidor = new SharedSQLiteStatement(__db) {
       @Override
       @NonNull
       public String createQuery() {
         final String _query = "UPDATE coleta SET sincronizado = 1, servidorId = ? WHERE id = ?";
+        return _query;
+      }
+    };
+    this.__preparedStmtOfMarcarSincronizada = new SharedSQLiteStatement(__db) {
+      @Override
+      @NonNull
+      public String createQuery() {
+        final String _query = "UPDATE coleta SET sincronizado = 1 WHERE id = ?";
         return _query;
       }
     };
@@ -215,6 +244,14 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
       @NonNull
       public String createQuery() {
         final String _query = "DELETE FROM coleta WHERE sincronizado = 1";
+        return _query;
+      }
+    };
+    this.__preparedStmtOfLimparTodas = new SharedSQLiteStatement(__db) {
+      @Override
+      @NonNull
+      public String createQuery() {
+        final String _query = "DELETE FROM coleta";
         return _query;
       }
     };
@@ -308,20 +345,41 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
   }
 
   @Override
-  public Object marcarSincronizada(final long id, final Long servidorId,
+  public Object marcarSincronizadaComServidor(final long id, final long servidorId,
       final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        final SupportSQLiteStatement _stmt = __preparedStmtOfMarcarSincronizadaComServidor.acquire();
+        int _argIndex = 1;
+        _stmt.bindLong(_argIndex, servidorId);
+        _argIndex = 2;
+        _stmt.bindLong(_argIndex, id);
+        try {
+          __db.beginTransaction();
+          try {
+            _stmt.executeUpdateDelete();
+            __db.setTransactionSuccessful();
+            return Unit.INSTANCE;
+          } finally {
+            __db.endTransaction();
+          }
+        } finally {
+          __preparedStmtOfMarcarSincronizadaComServidor.release(_stmt);
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object marcarSincronizada(final long id, final Continuation<? super Unit> $completion) {
     return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
       @Override
       @NonNull
       public Unit call() throws Exception {
         final SupportSQLiteStatement _stmt = __preparedStmtOfMarcarSincronizada.acquire();
         int _argIndex = 1;
-        if (servidorId == null) {
-          _stmt.bindNull(_argIndex);
-        } else {
-          _stmt.bindLong(_argIndex, servidorId);
-        }
-        _argIndex = 2;
         _stmt.bindLong(_argIndex, id);
         try {
           __db.beginTransaction();
@@ -414,6 +472,29 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
           }
         } finally {
           __preparedStmtOfLimparSincronizadas.release(_stmt);
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object limparTodas(final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        final SupportSQLiteStatement _stmt = __preparedStmtOfLimparTodas.acquire();
+        try {
+          __db.beginTransaction();
+          try {
+            _stmt.executeUpdateDelete();
+            __db.setTransactionSuccessful();
+            return Unit.INSTANCE;
+          } finally {
+            __db.endTransaction();
+          }
+        } finally {
+          __preparedStmtOfLimparTodas.release(_stmt);
         }
       }
     }, $completion);
@@ -563,6 +644,10 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfTentativasScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasScan");
           final int _cursorIndexOfErrosScan = CursorUtil.getColumnIndexOrThrow(_cursor, "errosScan");
           final int _cursorIndexOfQualidadeEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "qualidadeEtiqueta");
+          final int _cursorIndexOfSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "semEtiqueta");
+          final int _cursorIndexOfDescricaoItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "descricaoItemSemEtiqueta");
+          final int _cursorIndexOfCategoriaItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "categoriaItemSemEtiqueta");
+          final int _cursorIndexOfFotoPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "fotoPatrimonio");
           final ColetaEntity _result;
           if (_cursor.moveToFirst()) {
             final long _tmpId;
@@ -703,7 +788,29 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             } else {
               _tmpQualidadeEtiqueta = _cursor.getString(_cursorIndexOfQualidadeEtiqueta);
             }
-            _result = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta);
+            final boolean _tmpSemEtiqueta;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfSemEtiqueta);
+            _tmpSemEtiqueta = _tmp_1 != 0;
+            final String _tmpDescricaoItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfDescricaoItemSemEtiqueta)) {
+              _tmpDescricaoItemSemEtiqueta = null;
+            } else {
+              _tmpDescricaoItemSemEtiqueta = _cursor.getString(_cursorIndexOfDescricaoItemSemEtiqueta);
+            }
+            final String _tmpCategoriaItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfCategoriaItemSemEtiqueta)) {
+              _tmpCategoriaItemSemEtiqueta = null;
+            } else {
+              _tmpCategoriaItemSemEtiqueta = _cursor.getString(_cursorIndexOfCategoriaItemSemEtiqueta);
+            }
+            final String _tmpFotoPatrimonio;
+            if (_cursor.isNull(_cursorIndexOfFotoPatrimonio)) {
+              _tmpFotoPatrimonio = null;
+            } else {
+              _tmpFotoPatrimonio = _cursor.getString(_cursorIndexOfFotoPatrimonio);
+            }
+            _result = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta,_tmpSemEtiqueta,_tmpDescricaoItemSemEtiqueta,_tmpCategoriaItemSemEtiqueta,_tmpFotoPatrimonio);
           } else {
             _result = null;
           }
@@ -757,6 +864,10 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfTentativasScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasScan");
           final int _cursorIndexOfErrosScan = CursorUtil.getColumnIndexOrThrow(_cursor, "errosScan");
           final int _cursorIndexOfQualidadeEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "qualidadeEtiqueta");
+          final int _cursorIndexOfSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "semEtiqueta");
+          final int _cursorIndexOfDescricaoItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "descricaoItemSemEtiqueta");
+          final int _cursorIndexOfCategoriaItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "categoriaItemSemEtiqueta");
+          final int _cursorIndexOfFotoPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "fotoPatrimonio");
           final List<ColetaEntity> _result = new ArrayList<ColetaEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final ColetaEntity _item;
@@ -898,7 +1009,29 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             } else {
               _tmpQualidadeEtiqueta = _cursor.getString(_cursorIndexOfQualidadeEtiqueta);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta);
+            final boolean _tmpSemEtiqueta;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfSemEtiqueta);
+            _tmpSemEtiqueta = _tmp_1 != 0;
+            final String _tmpDescricaoItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfDescricaoItemSemEtiqueta)) {
+              _tmpDescricaoItemSemEtiqueta = null;
+            } else {
+              _tmpDescricaoItemSemEtiqueta = _cursor.getString(_cursorIndexOfDescricaoItemSemEtiqueta);
+            }
+            final String _tmpCategoriaItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfCategoriaItemSemEtiqueta)) {
+              _tmpCategoriaItemSemEtiqueta = null;
+            } else {
+              _tmpCategoriaItemSemEtiqueta = _cursor.getString(_cursorIndexOfCategoriaItemSemEtiqueta);
+            }
+            final String _tmpFotoPatrimonio;
+            if (_cursor.isNull(_cursorIndexOfFotoPatrimonio)) {
+              _tmpFotoPatrimonio = null;
+            } else {
+              _tmpFotoPatrimonio = _cursor.getString(_cursorIndexOfFotoPatrimonio);
+            }
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta,_tmpSemEtiqueta,_tmpDescricaoItemSemEtiqueta,_tmpCategoriaItemSemEtiqueta,_tmpFotoPatrimonio);
             _result.add(_item);
           }
           return _result;
@@ -950,6 +1083,10 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfTentativasScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasScan");
           final int _cursorIndexOfErrosScan = CursorUtil.getColumnIndexOrThrow(_cursor, "errosScan");
           final int _cursorIndexOfQualidadeEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "qualidadeEtiqueta");
+          final int _cursorIndexOfSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "semEtiqueta");
+          final int _cursorIndexOfDescricaoItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "descricaoItemSemEtiqueta");
+          final int _cursorIndexOfCategoriaItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "categoriaItemSemEtiqueta");
+          final int _cursorIndexOfFotoPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "fotoPatrimonio");
           final List<ColetaEntity> _result = new ArrayList<ColetaEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final ColetaEntity _item;
@@ -1091,7 +1228,29 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             } else {
               _tmpQualidadeEtiqueta = _cursor.getString(_cursorIndexOfQualidadeEtiqueta);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta);
+            final boolean _tmpSemEtiqueta;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfSemEtiqueta);
+            _tmpSemEtiqueta = _tmp_1 != 0;
+            final String _tmpDescricaoItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfDescricaoItemSemEtiqueta)) {
+              _tmpDescricaoItemSemEtiqueta = null;
+            } else {
+              _tmpDescricaoItemSemEtiqueta = _cursor.getString(_cursorIndexOfDescricaoItemSemEtiqueta);
+            }
+            final String _tmpCategoriaItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfCategoriaItemSemEtiqueta)) {
+              _tmpCategoriaItemSemEtiqueta = null;
+            } else {
+              _tmpCategoriaItemSemEtiqueta = _cursor.getString(_cursorIndexOfCategoriaItemSemEtiqueta);
+            }
+            final String _tmpFotoPatrimonio;
+            if (_cursor.isNull(_cursorIndexOfFotoPatrimonio)) {
+              _tmpFotoPatrimonio = null;
+            } else {
+              _tmpFotoPatrimonio = _cursor.getString(_cursorIndexOfFotoPatrimonio);
+            }
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta,_tmpSemEtiqueta,_tmpDescricaoItemSemEtiqueta,_tmpCategoriaItemSemEtiqueta,_tmpFotoPatrimonio);
             _result.add(_item);
           }
           return _result;
@@ -1148,6 +1307,10 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfTentativasScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasScan");
           final int _cursorIndexOfErrosScan = CursorUtil.getColumnIndexOrThrow(_cursor, "errosScan");
           final int _cursorIndexOfQualidadeEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "qualidadeEtiqueta");
+          final int _cursorIndexOfSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "semEtiqueta");
+          final int _cursorIndexOfDescricaoItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "descricaoItemSemEtiqueta");
+          final int _cursorIndexOfCategoriaItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "categoriaItemSemEtiqueta");
+          final int _cursorIndexOfFotoPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "fotoPatrimonio");
           final List<ColetaEntity> _result = new ArrayList<ColetaEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final ColetaEntity _item;
@@ -1289,7 +1452,29 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             } else {
               _tmpQualidadeEtiqueta = _cursor.getString(_cursorIndexOfQualidadeEtiqueta);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta);
+            final boolean _tmpSemEtiqueta;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfSemEtiqueta);
+            _tmpSemEtiqueta = _tmp_1 != 0;
+            final String _tmpDescricaoItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfDescricaoItemSemEtiqueta)) {
+              _tmpDescricaoItemSemEtiqueta = null;
+            } else {
+              _tmpDescricaoItemSemEtiqueta = _cursor.getString(_cursorIndexOfDescricaoItemSemEtiqueta);
+            }
+            final String _tmpCategoriaItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfCategoriaItemSemEtiqueta)) {
+              _tmpCategoriaItemSemEtiqueta = null;
+            } else {
+              _tmpCategoriaItemSemEtiqueta = _cursor.getString(_cursorIndexOfCategoriaItemSemEtiqueta);
+            }
+            final String _tmpFotoPatrimonio;
+            if (_cursor.isNull(_cursorIndexOfFotoPatrimonio)) {
+              _tmpFotoPatrimonio = null;
+            } else {
+              _tmpFotoPatrimonio = _cursor.getString(_cursorIndexOfFotoPatrimonio);
+            }
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta,_tmpSemEtiqueta,_tmpDescricaoItemSemEtiqueta,_tmpCategoriaItemSemEtiqueta,_tmpFotoPatrimonio);
             _result.add(_item);
           }
           return _result;
@@ -1404,6 +1589,10 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfTentativasScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasScan");
           final int _cursorIndexOfErrosScan = CursorUtil.getColumnIndexOrThrow(_cursor, "errosScan");
           final int _cursorIndexOfQualidadeEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "qualidadeEtiqueta");
+          final int _cursorIndexOfSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "semEtiqueta");
+          final int _cursorIndexOfDescricaoItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "descricaoItemSemEtiqueta");
+          final int _cursorIndexOfCategoriaItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "categoriaItemSemEtiqueta");
+          final int _cursorIndexOfFotoPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "fotoPatrimonio");
           final List<ColetaEntity> _result = new ArrayList<ColetaEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final ColetaEntity _item;
@@ -1545,7 +1734,29 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             } else {
               _tmpQualidadeEtiqueta = _cursor.getString(_cursorIndexOfQualidadeEtiqueta);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta);
+            final boolean _tmpSemEtiqueta;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfSemEtiqueta);
+            _tmpSemEtiqueta = _tmp_1 != 0;
+            final String _tmpDescricaoItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfDescricaoItemSemEtiqueta)) {
+              _tmpDescricaoItemSemEtiqueta = null;
+            } else {
+              _tmpDescricaoItemSemEtiqueta = _cursor.getString(_cursorIndexOfDescricaoItemSemEtiqueta);
+            }
+            final String _tmpCategoriaItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfCategoriaItemSemEtiqueta)) {
+              _tmpCategoriaItemSemEtiqueta = null;
+            } else {
+              _tmpCategoriaItemSemEtiqueta = _cursor.getString(_cursorIndexOfCategoriaItemSemEtiqueta);
+            }
+            final String _tmpFotoPatrimonio;
+            if (_cursor.isNull(_cursorIndexOfFotoPatrimonio)) {
+              _tmpFotoPatrimonio = null;
+            } else {
+              _tmpFotoPatrimonio = _cursor.getString(_cursorIndexOfFotoPatrimonio);
+            }
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta,_tmpSemEtiqueta,_tmpDescricaoItemSemEtiqueta,_tmpCategoriaItemSemEtiqueta,_tmpFotoPatrimonio);
             _result.add(_item);
           }
           return _result;
@@ -1629,6 +1840,10 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfTentativasScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasScan");
           final int _cursorIndexOfErrosScan = CursorUtil.getColumnIndexOrThrow(_cursor, "errosScan");
           final int _cursorIndexOfQualidadeEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "qualidadeEtiqueta");
+          final int _cursorIndexOfSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "semEtiqueta");
+          final int _cursorIndexOfDescricaoItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "descricaoItemSemEtiqueta");
+          final int _cursorIndexOfCategoriaItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "categoriaItemSemEtiqueta");
+          final int _cursorIndexOfFotoPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "fotoPatrimonio");
           final List<ColetaEntity> _result = new ArrayList<ColetaEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final ColetaEntity _item;
@@ -1770,7 +1985,29 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             } else {
               _tmpQualidadeEtiqueta = _cursor.getString(_cursorIndexOfQualidadeEtiqueta);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta);
+            final boolean _tmpSemEtiqueta;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfSemEtiqueta);
+            _tmpSemEtiqueta = _tmp_1 != 0;
+            final String _tmpDescricaoItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfDescricaoItemSemEtiqueta)) {
+              _tmpDescricaoItemSemEtiqueta = null;
+            } else {
+              _tmpDescricaoItemSemEtiqueta = _cursor.getString(_cursorIndexOfDescricaoItemSemEtiqueta);
+            }
+            final String _tmpCategoriaItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfCategoriaItemSemEtiqueta)) {
+              _tmpCategoriaItemSemEtiqueta = null;
+            } else {
+              _tmpCategoriaItemSemEtiqueta = _cursor.getString(_cursorIndexOfCategoriaItemSemEtiqueta);
+            }
+            final String _tmpFotoPatrimonio;
+            if (_cursor.isNull(_cursorIndexOfFotoPatrimonio)) {
+              _tmpFotoPatrimonio = null;
+            } else {
+              _tmpFotoPatrimonio = _cursor.getString(_cursorIndexOfFotoPatrimonio);
+            }
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta,_tmpSemEtiqueta,_tmpDescricaoItemSemEtiqueta,_tmpCategoriaItemSemEtiqueta,_tmpFotoPatrimonio);
             _result.add(_item);
           }
           return _result;
@@ -1826,6 +2063,10 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfTentativasScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasScan");
           final int _cursorIndexOfErrosScan = CursorUtil.getColumnIndexOrThrow(_cursor, "errosScan");
           final int _cursorIndexOfQualidadeEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "qualidadeEtiqueta");
+          final int _cursorIndexOfSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "semEtiqueta");
+          final int _cursorIndexOfDescricaoItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "descricaoItemSemEtiqueta");
+          final int _cursorIndexOfCategoriaItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "categoriaItemSemEtiqueta");
+          final int _cursorIndexOfFotoPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "fotoPatrimonio");
           final List<ColetaEntity> _result = new ArrayList<ColetaEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final ColetaEntity _item;
@@ -1967,7 +2208,29 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             } else {
               _tmpQualidadeEtiqueta = _cursor.getString(_cursorIndexOfQualidadeEtiqueta);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta);
+            final boolean _tmpSemEtiqueta;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfSemEtiqueta);
+            _tmpSemEtiqueta = _tmp_1 != 0;
+            final String _tmpDescricaoItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfDescricaoItemSemEtiqueta)) {
+              _tmpDescricaoItemSemEtiqueta = null;
+            } else {
+              _tmpDescricaoItemSemEtiqueta = _cursor.getString(_cursorIndexOfDescricaoItemSemEtiqueta);
+            }
+            final String _tmpCategoriaItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfCategoriaItemSemEtiqueta)) {
+              _tmpCategoriaItemSemEtiqueta = null;
+            } else {
+              _tmpCategoriaItemSemEtiqueta = _cursor.getString(_cursorIndexOfCategoriaItemSemEtiqueta);
+            }
+            final String _tmpFotoPatrimonio;
+            if (_cursor.isNull(_cursorIndexOfFotoPatrimonio)) {
+              _tmpFotoPatrimonio = null;
+            } else {
+              _tmpFotoPatrimonio = _cursor.getString(_cursorIndexOfFotoPatrimonio);
+            }
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta,_tmpSemEtiqueta,_tmpDescricaoItemSemEtiqueta,_tmpCategoriaItemSemEtiqueta,_tmpFotoPatrimonio);
             _result.add(_item);
           }
           return _result;
@@ -2073,6 +2336,10 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfTentativasScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasScan");
           final int _cursorIndexOfErrosScan = CursorUtil.getColumnIndexOrThrow(_cursor, "errosScan");
           final int _cursorIndexOfQualidadeEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "qualidadeEtiqueta");
+          final int _cursorIndexOfSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "semEtiqueta");
+          final int _cursorIndexOfDescricaoItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "descricaoItemSemEtiqueta");
+          final int _cursorIndexOfCategoriaItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "categoriaItemSemEtiqueta");
+          final int _cursorIndexOfFotoPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "fotoPatrimonio");
           final List<ColetaEntity> _result = new ArrayList<ColetaEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final ColetaEntity _item;
@@ -2214,7 +2481,29 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             } else {
               _tmpQualidadeEtiqueta = _cursor.getString(_cursorIndexOfQualidadeEtiqueta);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta);
+            final boolean _tmpSemEtiqueta;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfSemEtiqueta);
+            _tmpSemEtiqueta = _tmp_1 != 0;
+            final String _tmpDescricaoItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfDescricaoItemSemEtiqueta)) {
+              _tmpDescricaoItemSemEtiqueta = null;
+            } else {
+              _tmpDescricaoItemSemEtiqueta = _cursor.getString(_cursorIndexOfDescricaoItemSemEtiqueta);
+            }
+            final String _tmpCategoriaItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfCategoriaItemSemEtiqueta)) {
+              _tmpCategoriaItemSemEtiqueta = null;
+            } else {
+              _tmpCategoriaItemSemEtiqueta = _cursor.getString(_cursorIndexOfCategoriaItemSemEtiqueta);
+            }
+            final String _tmpFotoPatrimonio;
+            if (_cursor.isNull(_cursorIndexOfFotoPatrimonio)) {
+              _tmpFotoPatrimonio = null;
+            } else {
+              _tmpFotoPatrimonio = _cursor.getString(_cursorIndexOfFotoPatrimonio);
+            }
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta,_tmpSemEtiqueta,_tmpDescricaoItemSemEtiqueta,_tmpCategoriaItemSemEtiqueta,_tmpFotoPatrimonio);
             _result.add(_item);
           }
           return _result;
@@ -2281,6 +2570,10 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfTentativasScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasScan");
           final int _cursorIndexOfErrosScan = CursorUtil.getColumnIndexOrThrow(_cursor, "errosScan");
           final int _cursorIndexOfQualidadeEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "qualidadeEtiqueta");
+          final int _cursorIndexOfSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "semEtiqueta");
+          final int _cursorIndexOfDescricaoItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "descricaoItemSemEtiqueta");
+          final int _cursorIndexOfCategoriaItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "categoriaItemSemEtiqueta");
+          final int _cursorIndexOfFotoPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "fotoPatrimonio");
           final ColetaEntity _result;
           if (_cursor.moveToFirst()) {
             final long _tmpId;
@@ -2421,7 +2714,29 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             } else {
               _tmpQualidadeEtiqueta = _cursor.getString(_cursorIndexOfQualidadeEtiqueta);
             }
-            _result = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta);
+            final boolean _tmpSemEtiqueta;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfSemEtiqueta);
+            _tmpSemEtiqueta = _tmp_1 != 0;
+            final String _tmpDescricaoItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfDescricaoItemSemEtiqueta)) {
+              _tmpDescricaoItemSemEtiqueta = null;
+            } else {
+              _tmpDescricaoItemSemEtiqueta = _cursor.getString(_cursorIndexOfDescricaoItemSemEtiqueta);
+            }
+            final String _tmpCategoriaItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfCategoriaItemSemEtiqueta)) {
+              _tmpCategoriaItemSemEtiqueta = null;
+            } else {
+              _tmpCategoriaItemSemEtiqueta = _cursor.getString(_cursorIndexOfCategoriaItemSemEtiqueta);
+            }
+            final String _tmpFotoPatrimonio;
+            if (_cursor.isNull(_cursorIndexOfFotoPatrimonio)) {
+              _tmpFotoPatrimonio = null;
+            } else {
+              _tmpFotoPatrimonio = _cursor.getString(_cursorIndexOfFotoPatrimonio);
+            }
+            _result = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta,_tmpSemEtiqueta,_tmpDescricaoItemSemEtiqueta,_tmpCategoriaItemSemEtiqueta,_tmpFotoPatrimonio);
           } else {
             _result = null;
           }
@@ -2548,6 +2863,10 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfTentativasScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasScan");
           final int _cursorIndexOfErrosScan = CursorUtil.getColumnIndexOrThrow(_cursor, "errosScan");
           final int _cursorIndexOfQualidadeEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "qualidadeEtiqueta");
+          final int _cursorIndexOfSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "semEtiqueta");
+          final int _cursorIndexOfDescricaoItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "descricaoItemSemEtiqueta");
+          final int _cursorIndexOfCategoriaItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "categoriaItemSemEtiqueta");
+          final int _cursorIndexOfFotoPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "fotoPatrimonio");
           final List<ColetaEntity> _result = new ArrayList<ColetaEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final ColetaEntity _item;
@@ -2689,7 +3008,29 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             } else {
               _tmpQualidadeEtiqueta = _cursor.getString(_cursorIndexOfQualidadeEtiqueta);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta);
+            final boolean _tmpSemEtiqueta;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfSemEtiqueta);
+            _tmpSemEtiqueta = _tmp_1 != 0;
+            final String _tmpDescricaoItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfDescricaoItemSemEtiqueta)) {
+              _tmpDescricaoItemSemEtiqueta = null;
+            } else {
+              _tmpDescricaoItemSemEtiqueta = _cursor.getString(_cursorIndexOfDescricaoItemSemEtiqueta);
+            }
+            final String _tmpCategoriaItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfCategoriaItemSemEtiqueta)) {
+              _tmpCategoriaItemSemEtiqueta = null;
+            } else {
+              _tmpCategoriaItemSemEtiqueta = _cursor.getString(_cursorIndexOfCategoriaItemSemEtiqueta);
+            }
+            final String _tmpFotoPatrimonio;
+            if (_cursor.isNull(_cursorIndexOfFotoPatrimonio)) {
+              _tmpFotoPatrimonio = null;
+            } else {
+              _tmpFotoPatrimonio = _cursor.getString(_cursorIndexOfFotoPatrimonio);
+            }
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta,_tmpSemEtiqueta,_tmpDescricaoItemSemEtiqueta,_tmpCategoriaItemSemEtiqueta,_tmpFotoPatrimonio);
             _result.add(_item);
           }
           return _result;
@@ -2747,6 +3088,10 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfTentativasScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasScan");
           final int _cursorIndexOfErrosScan = CursorUtil.getColumnIndexOrThrow(_cursor, "errosScan");
           final int _cursorIndexOfQualidadeEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "qualidadeEtiqueta");
+          final int _cursorIndexOfSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "semEtiqueta");
+          final int _cursorIndexOfDescricaoItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "descricaoItemSemEtiqueta");
+          final int _cursorIndexOfCategoriaItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "categoriaItemSemEtiqueta");
+          final int _cursorIndexOfFotoPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "fotoPatrimonio");
           final List<ColetaEntity> _result = new ArrayList<ColetaEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final ColetaEntity _item;
@@ -2888,7 +3233,29 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             } else {
               _tmpQualidadeEtiqueta = _cursor.getString(_cursorIndexOfQualidadeEtiqueta);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta);
+            final boolean _tmpSemEtiqueta;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfSemEtiqueta);
+            _tmpSemEtiqueta = _tmp_1 != 0;
+            final String _tmpDescricaoItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfDescricaoItemSemEtiqueta)) {
+              _tmpDescricaoItemSemEtiqueta = null;
+            } else {
+              _tmpDescricaoItemSemEtiqueta = _cursor.getString(_cursorIndexOfDescricaoItemSemEtiqueta);
+            }
+            final String _tmpCategoriaItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfCategoriaItemSemEtiqueta)) {
+              _tmpCategoriaItemSemEtiqueta = null;
+            } else {
+              _tmpCategoriaItemSemEtiqueta = _cursor.getString(_cursorIndexOfCategoriaItemSemEtiqueta);
+            }
+            final String _tmpFotoPatrimonio;
+            if (_cursor.isNull(_cursorIndexOfFotoPatrimonio)) {
+              _tmpFotoPatrimonio = null;
+            } else {
+              _tmpFotoPatrimonio = _cursor.getString(_cursorIndexOfFotoPatrimonio);
+            }
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta,_tmpSemEtiqueta,_tmpDescricaoItemSemEtiqueta,_tmpCategoriaItemSemEtiqueta,_tmpFotoPatrimonio);
             _result.add(_item);
           }
           return _result;
@@ -2949,6 +3316,10 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
           final int _cursorIndexOfTentativasScan = CursorUtil.getColumnIndexOrThrow(_cursor, "tentativasScan");
           final int _cursorIndexOfErrosScan = CursorUtil.getColumnIndexOrThrow(_cursor, "errosScan");
           final int _cursorIndexOfQualidadeEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "qualidadeEtiqueta");
+          final int _cursorIndexOfSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "semEtiqueta");
+          final int _cursorIndexOfDescricaoItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "descricaoItemSemEtiqueta");
+          final int _cursorIndexOfCategoriaItemSemEtiqueta = CursorUtil.getColumnIndexOrThrow(_cursor, "categoriaItemSemEtiqueta");
+          final int _cursorIndexOfFotoPatrimonio = CursorUtil.getColumnIndexOrThrow(_cursor, "fotoPatrimonio");
           final List<ColetaEntity> _result = new ArrayList<ColetaEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final ColetaEntity _item;
@@ -3090,7 +3461,29 @@ public final class ColetaDao_InventarioDatabase_Impl implements ColetaDao {
             } else {
               _tmpQualidadeEtiqueta = _cursor.getString(_cursorIndexOfQualidadeEtiqueta);
             }
-            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta);
+            final boolean _tmpSemEtiqueta;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfSemEtiqueta);
+            _tmpSemEtiqueta = _tmp_1 != 0;
+            final String _tmpDescricaoItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfDescricaoItemSemEtiqueta)) {
+              _tmpDescricaoItemSemEtiqueta = null;
+            } else {
+              _tmpDescricaoItemSemEtiqueta = _cursor.getString(_cursorIndexOfDescricaoItemSemEtiqueta);
+            }
+            final String _tmpCategoriaItemSemEtiqueta;
+            if (_cursor.isNull(_cursorIndexOfCategoriaItemSemEtiqueta)) {
+              _tmpCategoriaItemSemEtiqueta = null;
+            } else {
+              _tmpCategoriaItemSemEtiqueta = _cursor.getString(_cursorIndexOfCategoriaItemSemEtiqueta);
+            }
+            final String _tmpFotoPatrimonio;
+            if (_cursor.isNull(_cursorIndexOfFotoPatrimonio)) {
+              _tmpFotoPatrimonio = null;
+            } else {
+              _tmpFotoPatrimonio = _cursor.getString(_cursorIndexOfFotoPatrimonio);
+            }
+            _item = new ColetaEntity(_tmpId,_tmpIdPatrimonio,_tmpNumeroPatrimonio,_tmpIdInventario,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpObservacao,_tmpEstadoPatrimonio,_tmpLatitude,_tmpLongitude,_tmpDataColeta,_tmpIdUsuario,_tmpNomeUsuario,_tmpSincronizado,_tmpTentativasSincronizacao,_tmpErroSincronizacao,_tmpServidorId,_tmpTempoColetaSegundos,_tmpTempoScanSegundos,_tmpTempoPreenchimentoSegundos,_tmpMetodoColeta,_tmpHoraColeta,_tmpDiaSemana,_tmpPeriodoColeta,_tmpTipoScan,_tmpTentativasScan,_tmpErrosScan,_tmpQualidadeEtiqueta,_tmpSemEtiqueta,_tmpDescricaoItemSemEtiqueta,_tmpCategoriaItemSemEtiqueta,_tmpFotoPatrimonio);
             _result.add(_item);
           }
           return _result;

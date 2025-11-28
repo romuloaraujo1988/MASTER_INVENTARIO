@@ -24,19 +24,17 @@ import java.util.List;
 @Repository
 public class InventarioSetorDAO {
     
-    private Connection connection;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InventarioSetorDAO.class);
     
     public InventarioSetorDAO() {
-        try {
-            this.connection = DatabaseConnection.getConnection();
-        } catch (SQLException e) {
-            System.err.println("Erro ao obter conexão com o banco de dados: " + e.getMessage());
-            throw new RuntimeException("Falha ao conectar com o banco de dados", e);
-        }
+        // Conexão será obtida por operação para evitar connection leak
     }
     
-    public InventarioSetorDAO(Connection connection) {
-        this.connection = connection;
+    /**
+     * Obtém uma conexão do pool
+     */
+    private Connection getConnection() throws SQLException {
+        return DatabaseConnection.getConnection();
     }
     
     /**
@@ -51,7 +49,8 @@ public class InventarioSetorDAO {
                     "(ID_INVENTARIO, ID_SETOR, INCLUIR_TODOS_SETORES, DATA_INCLUSAO, ATIVO, OBSERVACOES) " +
                     "VALUES (?, ?, ?, ?, ?, ?)";
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection connection = getConnection();
+             PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, inventarioSetor.getIdInventario());
             
             if (inventarioSetor.getIdSetor() != null) {
@@ -97,7 +96,8 @@ public class InventarioSetorDAO {
                     "ATIVO = ?, OBSERVACOES = ? " +
                     "WHERE ID = ?";
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection();
+             PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, inventarioSetor.getIdInventario());
             
             if (inventarioSetor.getIdSetor() != null) {
@@ -127,7 +127,8 @@ public class InventarioSetorDAO {
     public boolean removerPorInventario(Integer idInventario) {
         String sql = "DELETE FROM TABELA_INVENTARIO_SETOR WHERE ID_INVENTARIO = ?";
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection();
+             PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, idInventario);
             return stmt.executeUpdate() > 0;
             
@@ -145,7 +146,8 @@ public class InventarioSetorDAO {
     public boolean desativarPorInventario(Integer idInventario) {
         String sql = "UPDATE TABELA_INVENTARIO_SETOR SET ATIVO = false WHERE ID_INVENTARIO = ?";
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection();
+             PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, idInventario);
             return stmt.executeUpdate() > 0;
             
@@ -170,7 +172,8 @@ public class InventarioSetorDAO {
                     "WHERE is.ID_INVENTARIO = ? AND is.ATIVO = true " +
                     "ORDER BY is.INCLUIR_TODOS_SETORES DESC, s.NOME";
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection();
+             PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, idInventario);
             
             try (ResultSet rs = stmt.executeQuery()) {
@@ -195,7 +198,8 @@ public class InventarioSetorDAO {
         String sql = "SELECT COUNT(*) FROM TABELA_INVENTARIO_SETOR " +
                     "WHERE ID_INVENTARIO = ? AND INCLUIR_TODOS_SETORES = true AND ATIVO = true";
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection();
+             PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, idInventario);
             
             try (ResultSet rs = stmt.executeQuery()) {
@@ -225,7 +229,8 @@ public class InventarioSetorDAO {
         String sql = "SELECT COUNT(*) FROM TABELA_INVENTARIO_SETOR " +
                     "WHERE ID_INVENTARIO = ? AND ID_SETOR = ? AND ATIVO = true";
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection();
+             PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, idInventario);
             stmt.setInt(2, idSetor);
             
@@ -265,7 +270,8 @@ public class InventarioSetorDAO {
                     "WHERE is.ID_INVENTARIO = ? AND is.ATIVO = true " +
                     "ORDER BY s.NOME";
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection();
+             PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, idInventario);
             
             try (ResultSet rs = stmt.executeQuery()) {
@@ -291,47 +297,29 @@ public class InventarioSetorDAO {
      * Remove configurações anteriores e salva as novas
      */
     public boolean salvarConfiguracaoSetores(Integer idInventario, boolean incluirTodos, List<Integer> idsSetores) {
+        // Usa transação simples - cada operação já gerencia sua própria conexão
         try {
-            connection.setAutoCommit(false);
-            
             // Remove configurações anteriores
             removerPorInventario(idInventario);
             
             if (incluirTodos) {
                 // Salva configuração "incluir todos os setores"
                 InventarioSetor inventarioSetor = new InventarioSetor(idInventario, true);
-                if (!salvar(inventarioSetor)) {
-                    connection.rollback();
-                    return false;
-                }
+                return salvar(inventarioSetor);
             } else if (idsSetores != null && !idsSetores.isEmpty()) {
                 // Salva setores específicos
                 for (Integer idSetor : idsSetores) {
                     InventarioSetor inventarioSetor = new InventarioSetor(idInventario, idSetor);
                     if (!salvar(inventarioSetor)) {
-                        connection.rollback();
                         return false;
                     }
                 }
+                return true;
             }
-            
-            connection.commit();
             return true;
             
-        } catch (SQLException e) {
-            try {
-                connection.rollback();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            System.err.println("Erro ao salvar configuração de setores: " + e.getMessage());
-            e.printStackTrace();
-        } finally {
-            try {
-                connection.setAutoCommit(true);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+        } catch (Exception e) {
+            logger.error("Erro ao salvar configuração de setores: {}", e.getMessage(), e);
         }
         
         return false;
@@ -347,7 +335,8 @@ public class InventarioSetorDAO {
                     "LEFT JOIN TABELA_SETOR s ON is.ID_SETOR = s.ID " +
                     "WHERE is.ID = ?";
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection();
+             PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, id);
             
             try (ResultSet rs = stmt.executeQuery()) {
@@ -377,7 +366,8 @@ public class InventarioSetorDAO {
                     "WHERE is.ATIVO = true " +
                     "ORDER BY i.NOME, is.INCLUIR_TODOS_SETORES DESC, s.NOME";
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
+        try (Connection connection = getConnection();
+             PreparedStatement stmt = connection.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             
             while (rs.next()) {
@@ -431,19 +421,21 @@ public class InventarioSetorDAO {
         if (inventarioIncluiTodosSetores(idInventario)) {
             // Se inclui todos, conta todos os setores ativos
             String sql = "SELECT COUNT(*) FROM TABELA_SETOR WHERE ATIVO = true";
-            try (PreparedStatement stmt = connection.prepareStatement(sql);
+            try (Connection connection = getConnection();
+                 PreparedStatement stmt = connection.prepareStatement(sql);
                  ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1);
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
+                logger.error("Erro ao contar setores: {}", e.getMessage());
             }
         } else {
             // Senão, conta apenas os setores específicos
             String sql = "SELECT COUNT(*) FROM TABELA_INVENTARIO_SETOR " +
                         "WHERE ID_INVENTARIO = ? AND ID_SETOR IS NOT NULL AND ATIVO = true";
-            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            try (Connection connection = getConnection();
+                 PreparedStatement stmt = connection.prepareStatement(sql)) {
                 stmt.setInt(1, idInventario);
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
@@ -451,7 +443,7 @@ public class InventarioSetorDAO {
                     }
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
+                logger.error("Erro ao contar setores específicos: {}", e.getMessage());
             }
         }
         return 0;

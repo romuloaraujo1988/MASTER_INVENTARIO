@@ -3644,6 +3644,9 @@ id fill
 id fill_horizontal
 id fill_vertical
 id filled
+id filter_com_etiqueta
+id filter_sem_etiqueta
+id filter_todos
 id fingerprint_description
 id fingerprint_error
 id fingerprint_icon

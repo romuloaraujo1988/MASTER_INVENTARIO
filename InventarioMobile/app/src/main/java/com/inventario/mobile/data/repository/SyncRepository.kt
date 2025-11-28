@@ -350,6 +350,75 @@ class SyncRepository @Inject constructor(
     }
     
     /**
+     * Limpa TODOS os dados locais
+     * Remove patrimônios, salas, responsáveis e coletas sincronizadas
+     * 
+     * ATENÇÃO: Coletas NÃO sincronizadas são preservadas para evitar perda de dados!
+     * 
+     * @return Resultado com estatísticas da limpeza
+     */
+    suspend fun clearAllLocalData(): Result<ClearResult> {
+        return try {
+            android.util.Log.d("SyncRepository", "═══════════════════════════════════════════")
+            android.util.Log.d("SyncRepository", "🗑️ INICIANDO LIMPEZA DE DADOS LOCAIS")
+            
+            // Contar antes de limpar
+            val patrimoniosAntes = patrimonioDao.contarTodos()
+            val salasAntes = salaDao.contar()
+            val responsaveisAntes = responsavelDao.contar()
+            val coletasPendentes = coletaDao.contarPendentes()
+            
+            android.util.Log.d("SyncRepository", "📊 Dados antes da limpeza:")
+            android.util.Log.d("SyncRepository", "   📦 Patrimônios: $patrimoniosAntes")
+            android.util.Log.d("SyncRepository", "   🏢 Salas: $salasAntes")
+            android.util.Log.d("SyncRepository", "   👤 Responsáveis: $responsaveisAntes")
+            android.util.Log.d("SyncRepository", "   ⏳ Coletas pendentes: $coletasPendentes (PRESERVADAS)")
+            
+            // Limpar dados
+            android.util.Log.d("SyncRepository", "🗑️ Limpando patrimônios...")
+            patrimonioDao.limparTodos()
+            
+            android.util.Log.d("SyncRepository", "🗑️ Limpando salas...")
+            salaDao.limparTodas()
+            
+            android.util.Log.d("SyncRepository", "🗑️ Limpando responsáveis...")
+            responsavelDao.limparTodos()
+            
+            android.util.Log.d("SyncRepository", "🗑️ Limpando coletas sincronizadas...")
+            coletaDao.limparSincronizadas()
+            
+            android.util.Log.d("SyncRepository", "═══════════════════════════════════════════")
+            android.util.Log.d("SyncRepository", "✅ LIMPEZA CONCLUÍDA")
+            android.util.Log.d("SyncRepository", "   📦 Patrimônios removidos: $patrimoniosAntes")
+            android.util.Log.d("SyncRepository", "   🏢 Salas removidas: $salasAntes")
+            android.util.Log.d("SyncRepository", "   👤 Responsáveis removidos: $responsaveisAntes")
+            android.util.Log.d("SyncRepository", "   ⏳ Coletas pendentes preservadas: $coletasPendentes")
+            android.util.Log.d("SyncRepository", "═══════════════════════════════════════════")
+            
+            Result.success(ClearResult(
+                patrimoniosRemovidos = patrimoniosAntes,
+                salasRemovidas = salasAntes,
+                responsaveisRemovidos = responsaveisAntes,
+                coletasPendentesPreservadas = coletasPendentes
+            ))
+            
+        } catch (e: Exception) {
+            android.util.Log.e("SyncRepository", "❌ ERRO ao limpar dados locais", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Resultado da limpeza de dados
+     */
+    data class ClearResult(
+        val patrimoniosRemovidos: Int,
+        val salasRemovidas: Int,
+        val responsaveisRemovidos: Int,
+        val coletasPendentesPreservadas: Int
+    )
+    
+    /**
      * Obtém estatísticas dos dados locais
      * 
      * v2.6: CORRIGIDO - Agora conta coletas pendentes de sincronização

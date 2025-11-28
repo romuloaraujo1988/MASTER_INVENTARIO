@@ -7,8 +7,6 @@ import com.inventario.dao.InventarioDAO;
 import com.inventario.model.Patrimonio;
 import com.inventario.model.Inventario;
 import com.inventario.mobile.server.dto.MobilePatrimonioDTO;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,30 +1,34 @@
 package com.inventario.mobile.server.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+// Validações removidas - feitas no service para suportar coletas sem etiqueta
 
 /**
  * DTO para requisição de registro de coleta mobile
  * 
+ * Suporta dois tipos de coleta:
+ * 1. Coleta COM etiqueta: numeroPatrimonio é obrigatório
+ * 2. Coleta SEM etiqueta: numeroPatrimonio pode ser vazio, mas descricaoItemSemEtiqueta é obrigatório
+ * 
  * @author Sistema de Inventário
- * @version 1.0.0
+ * @version 1.1.0
  */
 public class MobileColetaRequest {
     
-    @NotBlank(message = "Número do patrimônio é obrigatório")
+    // Removido @NotBlank - validação customizada no controller/service
+    // Para coletas sem etiqueta, este campo pode ser vazio
     private String numeroPatrimonio;
     
     // ID do inventário é opcional - se não informado, usa o inventário ativo
     private Integer idInventario;
     
-    @NotNull(message = "ID do usuário é obrigatório")
+    // Removido @NotNull - pode vir do contexto de autenticação
     private Integer usuarioId;
     
     private Integer idSala;
     
     private String localizacaoEncontrada;
     
-    @NotBlank(message = "Estado encontrado é obrigatório")
+    // Removido @NotBlank - pode ser vazio em coletas antigas offline
     private String estadoEncontrado;
     
     private String observacaoColeta;

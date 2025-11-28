@@ -209,7 +209,6 @@ com\inventario\siads\service\SiadsIntegrationService.class
 com\inventario\siads\test\SiadsExportTest.class
 com\inventario\view\ResponsavelFrame$3.class
 com\inventario\config\DatabaseConfig.class
-com\inventario\mobile\server\controller\MobileHealthController.class
 com\inventario\view\MobileMonitorFrameV2$6.class
 com\inventario\view\ui\ButtonStyleFactory$3.class
 com\inventario\util\ImportacaoExcel$ImportacaoCSVConstants.class
@@ -275,6 +274,7 @@ com\inventario\model\InventarioSetor.class
 com\inventario\offline\ConnectivityListener.class
 com\inventario\util\FormUtils$3.class
 com\inventario\mobile\server\service\MobileConsultaService.class
+com\inventario\mobile\server\config\DatabasePoolConfig.class
 com\inventario\mobile\server\controller\MobileSetorController.class
 com\inventario\mobile\server\controller\MobileDispositivoController.class
 com\inventario\mobile\server\service\MobileInventarioService.class
@@ -463,6 +463,7 @@ com\inventario\view\InventarioFrame$4.class
 com\inventario\view\MainFrame$9.class
 com\inventario\mobile\server\dto\MobileSalaDTO.class
 com\inventario\view\InventarioFrame$3.class
+com\inventario\mobile\server\dto\MobileInventarioInfo.class
 com\inventario\view\ColetaFrame_v2$14.class
 com\inventario\view\MainFrame$12.class
 com\inventario\dto\ColetaResumo.class
@@ -502,6 +503,7 @@ com\inventario\view\MainFrame$3.class
 com\inventario\dto\mobile\LoginRequest.class
 com\inventario\offline\OfflineManager.class
 com\inventario\sync\service\BackupService.class
+com\inventario\view\ColetaFrame_v2$16.class
 com\inventario\view\DashboardFrame.class
 com\inventario\view\RelatorioFrame.class
 com\inventario\offline\OfflineModeListener.class
@@ -514,6 +516,7 @@ com\inventario\model\Usuario.class
 com\inventario\dao\BaseDAO$TransactionCallback.class
 com\inventario\util\ExceptionHandler$ThrowingSupplier.class
 com\inventario\util\ImportacaoExcel.class
+com\inventario\mobile\server\controller\HealthController.class
 com\inventario\offline\DataSynchronizer.class
 com\inventario\sync\model\ValidationResult$ValidationError.class
 com\inventario\mobile\server\dto\MobileResponsavelDTO.class
