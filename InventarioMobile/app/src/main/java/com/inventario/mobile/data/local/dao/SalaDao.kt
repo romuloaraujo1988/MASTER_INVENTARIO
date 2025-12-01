@@ -86,4 +86,40 @@ interface SalaDao {
      */
     @Query("SELECT COUNT(*) FROM sala WHERE ativa = 1 AND nome LIKE :query")
     suspend fun contarPorNome(query: String): Int
+    
+    // ========================================
+    // Queries para Inventário por Sala
+    // ========================================
+    
+    /**
+     * Busca todas as salas com estatísticas de coleta (total e coletados).
+     * Usa LEFT JOIN com patrimonio para contar totais.
+     * 
+     * @return Lista de salas com estatísticas
+     */
+    @Query("""
+        SELECT s.*, 
+               COUNT(p.id) as total_patrimonios,
+               SUM(CASE WHEN p.coletado = 1 THEN 1 ELSE 0 END) as coletados
+        FROM sala s
+        LEFT JOIN patrimonio p ON p.idSala = s.id
+        WHERE s.ativa = 1
+        GROUP BY s.id
+        ORDER BY s.nome ASC
+    """)
+    suspend fun buscarComEstatisticas(): List<com.inventario.mobile.data.local.entity.SalaComEstatisticasEntity>
+    
+    /**
+     * Busca salas por nome ou número (case-insensitive).
+     * 
+     * @param query Termo de busca (usa LIKE com %)
+     * @return Lista de salas que correspondem à busca
+     */
+    @Query("""
+        SELECT * FROM sala 
+        WHERE ativa = 1 
+        AND (nome LIKE '%' || :query || '%' OR id LIKE '%' || :query || '%')
+        ORDER BY nome ASC
+    """)
+    suspend fun buscarPorNomeOuNumero(query: String): List<SalaEntity>
 }

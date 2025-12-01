@@ -32,12 +32,14 @@ color material_grey_800
 color material_grey_900
 color material_orange_600
 color material_red_600
+color overlay_background
 color primary
 color primary_color
 color primary_color_light
 color primary_dark
 color primary_light
 color primary_text
+color progress_background
 color purple_200
 color purple_500
 color purple_700
@@ -66,6 +68,7 @@ color warning_color
 color warning_dark
 color warning_light
 color white
+color white_70
 dimen action_button_min_height
 dimen action_button_padding
 dimen margin_large
@@ -120,6 +123,7 @@ drawable ic_check_circle
 drawable ic_clear
 drawable ic_collections
 drawable ic_dashboard
+drawable ic_date_range
 drawable ic_delete
 drawable ic_download
 drawable ic_edit
@@ -151,6 +155,7 @@ drawable ic_settings
 drawable ic_sync
 drawable ic_sync_done
 drawable ic_sync_error
+drawable ic_today
 drawable ic_trending_up
 drawable ic_update
 drawable ic_warning
@@ -158,6 +163,7 @@ drawable ic_warning_circle
 drawable info_background
 drawable offline_indicator_background
 drawable pin_dot
+drawable progress_bar_colored
 drawable progress_bar_rounded
 drawable rounded_background_secondary
 drawable scanner_overlay
@@ -173,6 +179,7 @@ id action_search
 id action_settings
 id action_sort
 id action_sync
+id actvSala
 id appBarLayout
 id autoCompleteResponsavel
 id autoCompleteSala
@@ -264,6 +271,7 @@ id cardColeta
 id cardCollections
 id cardConnectionStatus
 id cardDivergencias
+id cardEstatisticas
 id cardGraficoEvolucao
 id cardHeader
 id cardInput
@@ -290,6 +298,7 @@ id chipDivergencias
 id chipFiltroUsuario
 id chipFiltrosAvancados
 id chipGroupFilters
+id chipGroupFiltro
 id chipGroupPeriod
 id chipGroupStatus
 id chipGroupUser
@@ -336,6 +345,7 @@ id filter_todos
 id fragment_container
 id imgPreview
 id ivBiometricStatus
+id ivConcluido
 id ivConnectionStatus
 id ivLogo
 id ivMicAnimation
@@ -362,10 +372,12 @@ id layoutResponsavel
 id layoutSalaFixada
 id layoutSyncCount
 id layoutSyncInterval
+id layoutTemporais
 id layoutUserInfo
 id lineChart
 id lineChartEvolucao
 id loadingMoreIndicator
+id loadingOverlay
 id nav_about
 id nav_coletas
 id nav_collections
@@ -468,6 +480,8 @@ id tilLocalizacao
 id tilLogin
 id tilObservacoes
 id tilPassword
+id tilResponsavel
+id tilSala
 id tilServerIp
 id timelineDot
 id timelineLine
@@ -482,6 +496,8 @@ id tvCodigo
 id tvColetadoPor
 id tvColetados
 id tvColetadosCount
+id tvColetadosHoje
+id tvColetadosSemana
 id tvColetasPendentesCount
 id tvColetores
 id tvCollectionCount
@@ -544,6 +560,7 @@ id tvPercentualConclusao
 id tvPercentualPendente
 id tvPlaceholder
 id tvProgress
+id tvProgresso
 id tvQuantidade
 id tvRequirements
 id tvResponsaveisCount
@@ -576,6 +593,7 @@ id tvSyncInterval
 id tvSyncProgress
 id tvSyncedCount
 id tvTitle
+id tvTotal
 id tvTotalAtualizados
 id tvTotalColetados
 id tvTotalColetas
@@ -608,6 +626,7 @@ layout activity_detalhe_patrimonio
 layout activity_developer_settings
 layout activity_filtros
 layout activity_inventario
+layout activity_inventario_tabs
 layout activity_item_sem_etiqueta
 layout activity_login
 layout activity_main
@@ -634,6 +653,8 @@ layout fragment_biometric_settings
 layout fragment_charts
 layout fragment_dashboard
 layout fragment_dashboard_backup
+layout fragment_inventario_por_responsavel
+layout fragment_inventario_por_sala
 layout fragment_inventory
 layout fragment_statistics_charts
 layout fragment_statistics_export
@@ -642,11 +663,13 @@ layout fragment_statistics_rankings
 layout item_coleta
 layout item_coleta_header
 layout item_descricao
+layout item_estatisticas_sala
 layout item_load_state
 layout item_loading
 layout item_patrimonio
 layout item_pending_coleta
 layout item_sala
+layout item_sala_dropdown
 layout item_timeline_coleta
 layout nav_header_main
 layout numeric_keypad
@@ -657,6 +680,7 @@ menu main_menu
 menu menu_coleta_pendente
 menu menu_coletas
 menu menu_inventario
+menu menu_inventario_tabs
 menu navigation_drawer_menu
 mipmap ic_launcher
 mipmap ic_launcher_round
@@ -803,6 +827,7 @@ string user_avatar
 string user_profile
 string view_collections_button
 style PinKeypadButton
+style TabTextAppearance
 style Theme.InventarioMobile
 style Theme.InventarioMobile.AppBarOverlay
 style Theme.InventarioMobile.NoActionBar

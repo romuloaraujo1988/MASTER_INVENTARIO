@@ -664,7 +664,8 @@ public class ColetaFrame_v2 extends JFrame {
         lblInventarioAtual.setForeground(new Color(0, 100, 0));
 
         // Tabela de histórico de coleta - CONFIGURAÇÃO MELHORADA
-        String[] colunasHistorico = { "Data/Hora", "Patrimônio", "Descrição", "Estado" };
+        // NOTA: Coluna ID (índice 4) é oculta - usada internamente para exclusão
+        String[] colunasHistorico = { "Data/Hora", "Patrimônio", "Descrição", "Estado", "ID" };
         modeloTabelaHistorico = new DefaultTableModel(colunasHistorico, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -680,6 +681,11 @@ public class ColetaFrame_v2 extends JFrame {
         tabelaHistorico.getColumnModel().getColumn(1).setPreferredWidth(120); // Patrimônio
         tabelaHistorico.getColumnModel().getColumn(2).setPreferredWidth(400); // Descrição (aumentada)
         tabelaHistorico.getColumnModel().getColumn(3).setPreferredWidth(120); // Estado
+        
+        // Ocultar coluna ID (índice 4) - usada internamente para exclusão
+        tabelaHistorico.getColumnModel().getColumn(4).setMinWidth(0);
+        tabelaHistorico.getColumnModel().getColumn(4).setMaxWidth(0);
+        tabelaHistorico.getColumnModel().getColumn(4).setPreferredWidth(0);
 
         tabelaHistorico.setRowHeight(30);
         tabelaHistorico.setFont(new Font("Segoe UI", Font.PLAIN, 12));
@@ -2545,7 +2551,8 @@ public class ColetaFrame_v2 extends JFrame {
                 dataFormatada,
                 numeroPatrimonio,
                 descricao,
-                coleta.getEstadoEncontrado() != null ? coleta.getEstadoEncontrado() : "-"
+                coleta.getEstadoEncontrado() != null ? coleta.getEstadoEncontrado() : "-",
+                coleta.getId() // ID oculto para facilitar exclusão
             };
             
             modeloTabelaHistorico.addRow(linha);
@@ -3465,8 +3472,16 @@ public class ColetaFrame_v2 extends JFrame {
         }
 
         try {
-            // Buscar a coleta específica para exclusão
-            // Como não temos ID da coleta na tabela, vamos buscar por critérios
+            // Obter ID da coleta da coluna oculta (índice 4)
+            Object idObj = modeloTabelaHistorico.getValueAt(linhaSelecionada, 4);
+            if (idObj == null) {
+                JOptionPane.showMessageDialog(this, "Erro: ID da coleta não encontrado.",
+                        "Erro", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            int idColeta = (Integer) idObj;
+            
             Sala salaAtual = (Sala) comboSalas.getSelectedItem();
             if (salaAtual == null) {
                 JOptionPane.showMessageDialog(this, "Erro: Nenhuma sala selecionada.",
@@ -3474,26 +3489,17 @@ public class ColetaFrame_v2 extends JFrame {
                 return;
             }
 
-            String dataHora = (String) modeloTabelaHistorico.getValueAt(linhaSelecionada, 0);
-            String estado = (String) modeloTabelaHistorico.getValueAt(linhaSelecionada, 3);
+            // Excluir coleta usando o ID diretamente (mais confiável)
+            coletaDAO.excluirColeta(idColeta);
+            
+            JOptionPane.showMessageDialog(this, "Coleta excluída com sucesso!",
+                    "Sucesso", JOptionPane.INFORMATION_MESSAGE);
 
-            // Excluir coleta (sem observações)
-            boolean sucesso = coletaDAO.excluirColeta(salaAtual.getIdSala(), numeroPatrimonio, dataHora, estado, "");
+            // Modo offline: não atualiza estatísticas (tabela não existe no SQLite)
+            System.out.println("DEBUG: Coleta ID " + idColeta + " excluída com sucesso");
 
-            if (sucesso) {
-                JOptionPane.showMessageDialog(this, "Coleta excluída com sucesso!",
-                        "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-
-                // Modo offline: não atualiza estatísticas (tabela não existe no SQLite)
-                System.out.println("DEBUG: Modo offline - estatísticas não atualizadas após exclusão");
-
-                // Recarregar histórico
-                carregarHistoricoColeta(salaAtual.getIdentificacaoCompleta());
-
-            } else {
-                JOptionPane.showMessageDialog(this, "Erro ao excluir coleta. Verifique se a coleta ainda existe.",
-                        "Erro", JOptionPane.ERROR_MESSAGE);
-            }
+            // Recarregar histórico usando numeroSala (consistente com dados no banco)
+            carregarHistoricoColeta(salaAtual.getNumeroSala());
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Erro ao excluir coleta: " + e.getMessage(),
@@ -3537,11 +3543,10 @@ public class ColetaFrame_v2 extends JFrame {
             return;
         }
 
-        // Obter dados da linha selecionada
+        // Obter dados da linha selecionada para exibição na confirmação
         String dataHora = (String) modeloTabelaHistorico.getValueAt(linhaSelecionada, 0);
         String numeroPatrimonio = (String) modeloTabelaHistorico.getValueAt(linhaSelecionada, 1);
         String descricao = (String) modeloTabelaHistorico.getValueAt(linhaSelecionada, 2);
-        String estado = (String) modeloTabelaHistorico.getValueAt(linhaSelecionada, 3);
 
         // Confirmar remoção
         int confirmacao = JOptionPane.showConfirmDialog(this,
@@ -3559,47 +3564,42 @@ public class ColetaFrame_v2 extends JFrame {
         }
 
         try {
-            // Remover a coleta usando os dados da tabela
-            boolean sucesso = coletaDAO.excluirColeta(
-                    salaAtual.getIdSala(),
-                    numeroPatrimonio,
-                    dataHora,
-                    estado,
-                    ""); // Observações vazias pois não temos na tabela
-
-            if (sucesso) {
-                // Som de sucesso
-                SoundNotification.playSound(SoundNotification.SoundType.SUCCESS);
-
+            // Obter ID da coleta da coluna oculta (índice 4)
+            Object idObj = modeloTabelaHistorico.getValueAt(linhaSelecionada, 4);
+            if (idObj == null) {
                 JOptionPane.showMessageDialog(this,
-                        "✅ Item removido da coleta com sucesso!",
-                        "Sucesso",
-                        JOptionPane.INFORMATION_MESSAGE);
-
-                    // Modo offline: não atualiza estatísticas (tabela não existe no SQLite)
-                System.out.println("DEBUG: Modo offline - estatísticas não atualizadas após remoção");
-
-                // Recarregar histórico
-                carregarHistoricoColeta(salaAtual.getIdentificacaoCompleta());
-
-                // Limpar seleção atual se o patrimônio removido era o selecionado
-                if (patrimonioSelecionado != null &&
-                        patrimonioSelecionado.getNumero().equals(numeroPatrimonio)) {
-                    limparInformacoesItem();
-                    campoBusca.setText("");
-                }
-
-                campoBusca.requestFocusInWindow();
-
-            } else {
-                // Som de erro
-                SoundNotification.playSound(SoundNotification.SoundType.ERROR);
-
-                JOptionPane.showMessageDialog(this,
-                        "❌ Erro ao remover item da coleta.\nVerifique se o item ainda existe.",
+                        "❌ Erro: ID da coleta não encontrado.",
                         "Erro",
                         JOptionPane.ERROR_MESSAGE);
+                return;
             }
+            
+            int idColeta = (Integer) idObj;
+            
+            // Remover a coleta usando o ID diretamente (mais confiável)
+            coletaDAO.excluirColeta(idColeta);
+            
+            // Som de sucesso
+            SoundNotification.playSound(SoundNotification.SoundType.SUCCESS);
+
+            JOptionPane.showMessageDialog(this,
+                    "✅ Item removido da coleta com sucesso!",
+                    "Sucesso",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+            System.out.println("DEBUG: Coleta ID " + idColeta + " removida com sucesso");
+
+            // Recarregar histórico usando numeroSala (consistente com dados no banco)
+            carregarHistoricoColeta(salaAtual.getNumeroSala());
+
+            // Limpar seleção atual se o patrimônio removido era o selecionado
+            if (patrimonioSelecionado != null &&
+                    patrimonioSelecionado.getNumero().equals(numeroPatrimonio)) {
+                limparInformacoesItem();
+                campoBusca.setText("");
+            }
+
+            campoBusca.requestFocusInWindow();
 
         } catch (Exception e) {
             // Som de erro

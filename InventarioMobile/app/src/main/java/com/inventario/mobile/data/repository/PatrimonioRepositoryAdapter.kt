@@ -195,4 +195,28 @@ class PatrimonioRepositoryAdapter @Inject constructor(
             emptyList()
         }
     }
+    
+    // ========================================
+    // Métodos para Inventário por Sala
+    // ========================================
+    
+    override suspend fun buscarPorSala(
+        salaId: Int,
+        coletado: Boolean?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<DomainPatrimonio>> {
+        val result = impl.buscarPorSala(salaId, coletado, page, pageSize)
+        return result.map { dataList ->
+            dataList.map { it.toDomain() }
+        }
+    }
+    
+    override suspend fun contarPorSala(salaId: Int): Result<Int> {
+        return impl.contarPorSala(salaId)
+    }
+    
+    override suspend fun contarColetadosPorSala(salaId: Int): Result<Int> {
+        return impl.contarColetadosPorSala(salaId)
+    }
 }

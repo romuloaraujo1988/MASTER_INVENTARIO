@@ -49,31 +49,25 @@ public class MobileAuthService {
      */
     public MobileLoginResponse authenticateUser(MobileLoginRequest loginRequest) {
         try {
-            logger.info("=== INÍCIO AUTENTICAÇÃO MOBILE ===");
-            logger.info("Usuário: {}", loginRequest.getUsername());
-            logger.info("Senha fornecida: {}", loginRequest.getPassword() != null ? "***" : "null");
+            logger.debug("Autenticação mobile para usuário: {}", loginRequest.getUsername());
             
             // Autenticar usuário
-            logger.info("Chamando AuthenticationManager...");
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                     loginRequest.getUsername(),
                     loginRequest.getPassword()
                 )
             );
-            logger.info("Autenticação bem-sucedida pelo AuthenticationManager");
             
             // Buscar dados completos do usuário
-            logger.info("Buscando dados completos do usuário...");
             Usuario usuario = usuarioService.buscarPorUsername(loginRequest.getUsername());
             
             if (usuario == null) {
-                logger.error("Usuário não encontrado no banco: {}", loginRequest.getUsername());
+                logger.error("Usuário não encontrado: {}", loginRequest.getUsername());
                 throw new AuthenticationException("Usuário não encontrado") {};
             }
             
-            logger.info("Usuário encontrado - ID: {}, Nome: {}, Ativo: {}", 
-                       usuario.getId(), usuario.getNomeCompleto(), usuario.getAtivo());
+            logger.debug("Usuário encontrado - ID: {}, Ativo: {}", usuario.getId(), usuario.getAtivo());
             
             if (!usuario.getAtivo()) {
                 logger.error("Usuário inativo: {}", loginRequest.getUsername());
@@ -81,11 +75,9 @@ public class MobileAuthService {
             }
             
             // Gerar tokens
-            logger.info("Gerando tokens JWT...");
             String accessToken = jwtTokenProvider.generateToken(authentication);
             String refreshToken = jwtTokenProvider.generateRefreshToken(authentication);
             Long expiresIn = jwtTokenProvider.getExpirationTime();
-            logger.info("Tokens gerados com sucesso");
             
             // Criar informações do usuário
             MobileUserInfo userInfo = new MobileUserInfo(
@@ -107,13 +99,7 @@ public class MobileAuthService {
             // Buscar inventário ativo para retornar junto com o login
             MobileInventarioInfo inventarioInfo = buscarInventarioAtivo();
             
-            logger.info("=== LOGIN MOBILE CONCLUÍDO COM SUCESSO ===");
-            logger.info("Usuário: {}, Perfil: {}", loginRequest.getUsername(), usuario.getPerfil());
-            if (inventarioInfo != null) {
-                logger.info("Inventário ativo: ID={}, Nome={}", inventarioInfo.getId(), inventarioInfo.getNome());
-            } else {
-                logger.warn("Nenhum inventário ativo encontrado");
-            }
+            logger.debug("Login mobile concluído: {} ({})", loginRequest.getUsername(), usuario.getPerfil());
             
             return new MobileLoginResponse(accessToken, refreshToken, expiresIn, userInfo, inventarioInfo);
             
@@ -165,7 +151,7 @@ public class MobileAuthService {
      */
     public MobileLoginResponse refreshAccessToken(String refreshToken) {
         try {
-            logger.info("=== REFRESH TOKEN SOLICITADO ===");
+            logger.debug("Refresh token solicitado");
             
             // Validar refresh token
             if (!jwtTokenProvider.validateToken(refreshToken)) {
@@ -175,7 +161,6 @@ public class MobileAuthService {
             
             // Extrair username do refresh token
             String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
-            logger.info("Username extraído do refresh token: {}", username);
             
             if (username == null) {
                 logger.error("Não foi possível extrair username do refresh token");
@@ -218,8 +203,7 @@ public class MobileAuthService {
                 usuario.getAtivo()
             );
             
-            logger.info("=== REFRESH TOKEN CONCLUÍDO COM SUCESSO ===");
-            logger.info("Novo access token gerado para: {}", username);
+            logger.debug("Refresh token concluído para: {}", username);
             
             // Retornar com o mesmo refresh token (não precisa renovar)
             return new MobileLoginResponse(newAccessToken, refreshToken, expiresIn, userInfo);
@@ -243,8 +227,7 @@ public class MobileAuthService {
     private void registrarDispositivo(Integer userId, String deviceId, String appVersion) {
         try {
             // Implementar lógica de registro de dispositivo se necessário
-            logger.info("Dispositivo registrado - Usuário: {}, Device: {}, Versão: {}", 
-                       userId, deviceId, appVersion);
+            logger.debug("Dispositivo registrado - Usuário: {}, Device: {}", userId, deviceId);
         } catch (Exception e) {
             logger.warn("Erro ao registrar dispositivo", e);
             // Não falhar o login por causa disso
@@ -287,8 +270,7 @@ public class MobileAuthService {
                 Math.round(percentualConclusao * 100.0) / 100.0
             );
             
-            logger.info("Inventário ativo encontrado: ID={}, Nome={}, Progresso={}%", 
-                       info.getId(), info.getNome(), info.getPercentualConclusao());
+            logger.debug("Inventário ativo: ID={}, Progresso={}%", info.getId(), info.getPercentualConclusao());
             
             return info;
             

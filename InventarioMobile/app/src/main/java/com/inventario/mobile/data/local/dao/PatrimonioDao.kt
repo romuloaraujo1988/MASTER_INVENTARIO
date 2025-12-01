@@ -150,4 +150,58 @@ interface PatrimonioDao {
     """)
     suspend fun getDescricoesFrequentes(): List<TopItemData>
     
+    // ========================================
+    // Queries para Inventário por Sala
+    // ========================================
+    
+    /**
+     * Busca patrimônios por sala com filtro opcional de status de coleta e paginação.
+     * 
+     * @param salaId ID da sala
+     * @param coletado Filtro de status: null = todos, true = coletados, false = não coletados
+     * @param pageSize Quantidade de itens por página
+     * @param offset Posição inicial para paginação
+     * @return Lista de patrimônios da sala
+     */
+    @Query("""
+        SELECT * FROM patrimonio 
+        WHERE idSala = :salaId 
+        AND (:coletado IS NULL OR coletado = :coletado)
+        ORDER BY numeroPatrimonio ASC
+        LIMIT :pageSize OFFSET :offset
+    """)
+    suspend fun buscarPorSala(
+        salaId: Int,
+        coletado: Boolean?,
+        pageSize: Int,
+        offset: Int
+    ): List<PatrimonioEntity>
+    
+    /**
+     * Conta total de patrimônios em uma sala.
+     * 
+     * @param salaId ID da sala
+     * @return Total de patrimônios na sala
+     */
+    @Query("SELECT COUNT(*) FROM patrimonio WHERE idSala = :salaId")
+    suspend fun contarPorSala(salaId: Int): Int
+    
+    /**
+     * Conta patrimônios coletados em uma sala.
+     * 
+     * @param salaId ID da sala
+     * @return Total de patrimônios coletados na sala
+     */
+    @Query("SELECT COUNT(*) FROM patrimonio WHERE idSala = :salaId AND coletado = 1")
+    suspend fun contarColetadosPorSala(salaId: Int): Int
+    
+    /**
+     * Conta patrimônios não coletados em uma sala.
+     * 
+     * @param salaId ID da sala
+     * @return Total de patrimônios não coletados na sala
+     */
+    @Query("SELECT COUNT(*) FROM patrimonio WHERE idSala = :salaId AND coletado = 0")
+    suspend fun contarNaoColetadosPorSala(salaId: Int): Int
+    
 }

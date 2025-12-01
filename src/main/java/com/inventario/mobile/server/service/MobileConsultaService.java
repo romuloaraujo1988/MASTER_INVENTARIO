@@ -47,11 +47,11 @@ public class MobileConsultaService {
      * @throws SQLException Se ocorrer erro no banco
      */
     public List<MobilePatrimonioDTO> buscarPorCodigoParcial(String codigo, int limit) throws SQLException {
-        logger.info("Buscando patrimônios por código parcial: '{}' (limit: {})", codigo, limit);
+        logger.debug("Buscando patrimônios por código parcial: '{}' (limit: {})", codigo, limit);
         
         List<Patrimonio> patrimonios = patrimonioDAO.buscarPorCodigoParcial(codigo, limit);
         
-        logger.info("Encontrados {} patrimônios", patrimonios.size());
+        logger.debug("Encontrados {} patrimônios", patrimonios.size());
         
         return patrimonios.stream()
                 .map(this::converterParaDTO)
@@ -67,11 +67,11 @@ public class MobileConsultaService {
      * @throws SQLException Se ocorrer erro no banco
      */
     public List<MobilePatrimonioDTO> buscarPorDescricao(String descricao, int limit) throws SQLException {
-        logger.info("Buscando patrimônios por descrição: '{}' (limit: {})", descricao, limit);
+        logger.debug("Buscando patrimônios por descrição: '{}' (limit: {})", descricao, limit);
         
         List<Patrimonio> patrimonios = patrimonioDAO.buscarPorDescricao(descricao, limit);
         
-        logger.info("Encontrados {} patrimônios", patrimonios.size());
+        logger.debug("Encontrados {} patrimônios", patrimonios.size());
         
         return patrimonios.stream()
                 .map(this::converterParaDTO)
@@ -86,7 +86,7 @@ public class MobileConsultaService {
      * @throws SQLException Se ocorrer erro no banco
      */
     public PatrimonioDetalheDTO obterDetalhesCompletos(Long id) throws SQLException {
-        logger.info("Buscando detalhes completos do patrimônio ID: {}", id);
+        logger.debug("Buscando detalhes completos do patrimônio ID: {}", id);
         
         Patrimonio patrimonio = patrimonioDAO.findById(id.intValue());
         
@@ -193,13 +193,13 @@ public class MobileConsultaService {
         try {
             List<Map<String, Object>> historico = coletaDAO.buscarHistoricoColetasPatrimonio(patrimonio.getId());
             detalhes.setHistoricoColetas(historico);
-            logger.info("Histórico de coletas carregado: {} registros", historico.size());
+            logger.debug("Histórico de coletas carregado: {} registros", historico.size());
         } catch (Exception e) {
             logger.warn("Erro ao buscar histórico de coletas do patrimônio {}: {}", id, e.getMessage());
             detalhes.setHistoricoColetas(new java.util.ArrayList<>());
         }
         
-        logger.info("Detalhes do patrimônio {} carregados com sucesso", id);
+        logger.debug("Detalhes do patrimônio {} carregados", id);
         
         return detalhes;
     }
@@ -220,13 +220,13 @@ public class MobileConsultaService {
             Integer responsavelId, 
             int limit) throws SQLException {
         
-        logger.info("Busca avançada: termo='{}', salaId={}, responsavelId={}, limit={}", 
+        logger.debug("Busca avançada: termo='{}', salaId={}, responsavelId={}, limit={}", 
                 termo, salaId, responsavelId, limit);
         
         List<Patrimonio> patrimonios = patrimonioDAO.buscarAvancada(
                 termo, salaId, responsavelId, limit);
         
-        logger.info("Busca avançada encontrou {} patrimônios", patrimonios.size());
+        logger.debug("Busca avançada encontrou {} patrimônios", patrimonios.size());
         
         return patrimonios.stream()
                 .map(this::converterParaDTO)

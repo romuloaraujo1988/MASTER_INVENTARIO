@@ -71,8 +71,8 @@ public class MobileColetaService {
      */
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public MobileColetaResponse registrarColeta(MobileColetaRequest request, String username) throws SQLException {
-        logger.info("Registrando coleta para patrimônio: {} por usuário: {} (usuarioId: {})",
-                request.getNumeroPatrimonio(), username, request.getUsuarioId());
+        logger.debug("Registrando coleta para patrimônio: {} por usuário: {}", 
+                request.getNumeroPatrimonio(), username);
 
         // Buscar usuário - prioriza username, mas aceita usuarioId se não houver username
         Usuario usuario = null;
@@ -104,26 +104,13 @@ public class MobileColetaService {
         
         // Se não encontrou ou não foi informado, busca o inventário ativo
         if (inventario == null) {
-            logger.info("Buscando inventário ativo automaticamente...");
+            logger.debug("Buscando inventário ativo automaticamente...");
             try {
                 inventario = inventarioDAO.buscarInventarioAtivo();
                 if (inventario != null) {
-                    logger.info("Inventário ativo encontrado: ID={}, Nome={}, Status={}", 
-                            inventario.getId(), inventario.getNome(), inventario.getStatusInventario());
+                    logger.debug("Inventário ativo encontrado: ID={}", inventario.getId());
                 } else {
-                    logger.warn("Nenhum inventário com status 'EM_ANDAMENTO' foi encontrado no banco de dados");
-                    
-                    // Tentar listar todos os inventários para debug
-                    try {
-                        List<Inventario> todosInventarios = inventarioDAO.findAll();
-                        logger.info("Total de inventários no banco: {}", todosInventarios.size());
-                        for (Inventario inv : todosInventarios) {
-                            logger.info("  - ID={}, Nome={}, Status={}", 
-                                    inv.getId(), inv.getNome(), inv.getStatusInventario());
-                        }
-                    } catch (SQLException ex) {
-                        logger.error("Erro ao listar inventários: {}", ex.getMessage());
-                    }
+                    logger.warn("Nenhum inventário com status 'EM_ANDAMENTO' encontrado");
                 }
             } catch (SQLException e) {
                 logger.error("Erro ao buscar inventário ativo: {}", e.getMessage(), e);
@@ -164,7 +151,7 @@ public class MobileColetaService {
         if (!temNumeroPatrimonio && !isSemEtiqueta) {
             // Verificar se tem descrição - pode ser coleta por descrição
             if (request.getDescricaoItemSemEtiqueta() != null && !request.getDescricaoItemSemEtiqueta().trim().isEmpty()) {
-                logger.info("Coleta sem número de patrimônio mas com descrição - tratando como sem etiqueta");
+                logger.debug("Coleta sem número de patrimônio mas com descrição - tratando como sem etiqueta");
                 coleta.setSemEtiqueta(true);
                 isSemEtiqueta = true;
             } else {
@@ -206,7 +193,7 @@ public class MobileColetaService {
         // Reproduzir som de sucesso
         SoundNotification.playColetaSalvaSound();
 
-        logger.info("Coleta registrada com sucesso. ID: {}", coleta.getId());
+        logger.debug("Coleta registrada com sucesso. ID: {}", coleta.getId());
 
         // Retornar resposta
         return converterParaResponse(coleta, usuario, inventario);
@@ -216,7 +203,7 @@ public class MobileColetaService {
      * Registra múltiplas coletas em lote
      */
     public Map<String, Object> registrarColetasEmLote(List<MobileColetaRequest> coletas, String username) {
-        logger.info("Registrando {} coletas em lote para usuário: {}", coletas.size(), username);
+        logger.debug("Registrando {} coletas em lote para usuário: {}", coletas.size(), username);
 
         int sucesso = 0;
         int falhas = 0;
@@ -239,7 +226,7 @@ public class MobileColetaService {
         resultado.put("falhas", falhas);
         resultado.put("erros", erros);
 
-        logger.info("Lote processado: {} sucesso, {} falhas", sucesso, falhas);
+        logger.debug("Lote processado: {} sucesso, {} falhas", sucesso, falhas);
 
         return resultado;
     }
@@ -251,11 +238,11 @@ public class MobileColetaService {
     public List<MobileColetaResponse> buscarTodasColetas(String username) throws SQLException {
         // Se username for null, buscar todas as coletas do sistema
         if (username == null || username.trim().isEmpty()) {
-            logger.info("Username null/vazio - buscando TODAS as coletas do sistema");
+            logger.debug("Username null/vazio - buscando TODAS as coletas do sistema");
             return buscarTodasColetasDoSistema();
         }
         
-        logger.info("Buscando todas as coletas para usuário: {}", username);
+        logger.debug("Buscando todas as coletas para usuário: {}", username);
 
         Usuario usuario = usuarioDAO.buscarPorLogin(username);
         if (usuario == null) {
@@ -276,7 +263,7 @@ public class MobileColetaService {
             responses.add(converterParaResponse(coleta, coletor, inventario));
         }
 
-        logger.info("Encontradas {} coletas para o usuário {}", responses.size(), username);
+        logger.debug("Encontradas {} coletas para o usuário {}", responses.size(), username);
         return responses;
     }
     
@@ -285,7 +272,7 @@ public class MobileColetaService {
      * Usado para visualização geral de coletas
      */
     public List<MobileColetaResponse> buscarTodasColetasDoSistema() throws SQLException {
-        logger.info("Buscando todas as coletas do sistema");
+        logger.debug("Buscando todas as coletas do sistema");
 
         List<Coleta> coletas = coletaDAO.buscarTodas();
         List<MobileColetaResponse> responses = new ArrayList<>();
@@ -311,7 +298,7 @@ public class MobileColetaService {
             }
         }
 
-        logger.info("Encontradas {} coletas no sistema", responses.size());
+        logger.debug("Encontradas {} coletas no sistema", responses.size());
         return responses;
     }
     
@@ -319,7 +306,7 @@ public class MobileColetaService {
      * Busca coletas pendentes de sincronização
      */
     public List<MobileColetaResponse> buscarColetasPendentes(String username) throws SQLException {
-        logger.info("Buscando coletas pendentes para usuário: {}", username);
+        logger.debug("Buscando coletas pendentes para usuário: {}", username);
 
         Usuario usuario = usuarioDAO.buscarPorLogin(username);
         if (usuario == null) {
@@ -343,7 +330,7 @@ public class MobileColetaService {
      * Busca histórico de coletas do usuário
      */
     public List<MobileColetaResponse> buscarHistoricoColetas(String username, int limit) throws SQLException {
-        logger.info("Buscando histórico de coletas para usuário: {} (limit: {})", username, limit);
+        logger.debug("Buscando histórico de coletas para usuário: {} (limit: {})", username, limit);
 
         Usuario usuario = usuarioDAO.buscarPorLogin(username);
         if (usuario == null) {
@@ -370,7 +357,7 @@ public class MobileColetaService {
      * Busca coleta por ID
      */
     public MobileColetaResponse buscarColetaPorId(Long id, String username) throws SQLException {
-        logger.info("Buscando coleta {} para usuário: {}", id, username);
+        logger.debug("Buscando coleta {} para usuário: {}", id, username);
 
         Usuario usuario = usuarioDAO.buscarPorLogin(username);
         if (usuario == null) {
@@ -397,7 +384,7 @@ public class MobileColetaService {
      */
     public MobileColetaResponse atualizarColeta(Long id, MobileColetaRequest request, String username)
             throws SQLException {
-        logger.info("Atualizando coleta {} por usuário: {}", id, username);
+        logger.debug("Atualizando coleta {} por usuário: {}", id, username);
 
         Usuario usuario = usuarioDAO.buscarPorLogin(username);
         if (usuario == null) {
@@ -435,7 +422,7 @@ public class MobileColetaService {
      * Exclui uma coleta (apenas admin)
      */
     public boolean excluirColeta(Long id, String username) throws SQLException {
-        logger.info("Excluindo coleta {} por usuário: {}", id, username);
+        logger.debug("Excluindo coleta {} por usuário: {}", id, username);
 
         Usuario usuario = usuarioDAO.buscarPorLogin(username);
         if (usuario == null) {
@@ -464,10 +451,9 @@ public class MobileColetaService {
         response.setStatusColeta(coleta.getStatusColeta());
         response.setObservacaoColeta(coleta.getObservacaoColeta());
         
-        // DEBUG: Log do valor de localizacaoEncontrada
         String localizacaoEncontrada = coleta.getLocalizacaoEncontrada();
-        logger.info("🔍 converterParaResponse: Coleta ID={}, idPatrimonio={}, localizacaoEncontrada='{}'", 
-                coleta.getId(), coleta.getIdPatrimonio(), localizacaoEncontrada);
+        logger.debug("converterParaResponse: Coleta ID={}, idPatrimonio={}", 
+                coleta.getId(), coleta.getIdPatrimonio());
         
         response.setLocalizacaoEncontrada(localizacaoEncontrada);
         response.setEstadoEncontrado(coleta.getEstadoEncontrado());
@@ -479,35 +465,27 @@ public class MobileColetaService {
         if (coleta.isSemEtiqueta()) {
             response.setDescricaoItemSemEtiqueta(coleta.getDescricaoItemSemEtiqueta());
             response.setCategoriaItemSemEtiqueta(coleta.getCategoriaItemSemEtiqueta());
-            logger.info("📝 Coleta {} é SEM ETIQUETA", coleta.getId());
+            logger.debug("Coleta {} é SEM ETIQUETA", coleta.getId());
         } else {
             // Buscar dados do patrimônio - SEMPRE buscar se não for sem etiqueta
             if (coleta.getIdPatrimonio() > 0) {
                 try {
-                    logger.info("🔍 Buscando patrimônio ID {} para coleta {}", coleta.getIdPatrimonio(), coleta.getId());
                     Patrimonio patrimonio = patrimonioDAO.findById(coleta.getIdPatrimonio());
                     if (patrimonio != null) {
-                        logger.info("✓ Patrimônio encontrado: ID={}, Numero='{}', Descricao='{}'", 
-                                patrimonio.getId(), patrimonio.getNumero(), patrimonio.getDescricao());
-                        
                         response.setPatrimonioId(patrimonio.getId());
                         response.setNumeroPatrimonio(patrimonio.getNumero());
-                        response.setDescricaoPatrimonio(patrimonio.getDescricao());  // CRÍTICO: Descrição
+                        response.setDescricaoPatrimonio(patrimonio.getDescricao());
                         response.setIdSala(patrimonio.getIdSala());
                         response.setNomeSala(patrimonio.getNomeSala());
-                        
-                        // LOG CRÍTICO: Verificar se foi setado
-                        logger.info("📤 Response setado: numeroPatrimonio='{}', descricaoPatrimonio='{}'", 
-                                response.getNumeroPatrimonio(), response.getDescricaoPatrimonio());
                     } else {
-                        logger.error("❌ Patrimônio não encontrado para ID: {} (Coleta ID: {})", 
+                        logger.error("Patrimônio não encontrado para ID: {} (Coleta ID: {})", 
                                 coleta.getIdPatrimonio(), coleta.getId());
                     }
                 } catch (Exception e) {
-                    logger.error("❌ Erro ao buscar patrimônio ID {}: {}", coleta.getIdPatrimonio(), e.getMessage(), e);
+                    logger.error("Erro ao buscar patrimônio ID {}: {}", coleta.getIdPatrimonio(), e.getMessage());
                 }
             } else {
-                logger.warn("⚠️ ID do patrimônio inválido: {} (Coleta ID: {})", 
+                logger.warn("ID do patrimônio inválido: {} (Coleta ID: {})", 
                         coleta.getIdPatrimonio(), coleta.getId());
             }
         }
@@ -566,7 +544,7 @@ public class MobileColetaService {
      * @return Map com descrições pendentes e estatísticas
      */
     public Map<String, Object> buscarDescricoesPendentes(String termoBusca, Integer idInventario) {
-        logger.info("Buscando descrições pendentes para termo: '{}', inventário: {}", termoBusca, idInventario);
+        logger.debug("Buscando descrições pendentes para termo: '{}', inventário: {}", termoBusca, idInventario);
         
         if (termoBusca == null || termoBusca.trim().isEmpty()) {
             throw new IllegalArgumentException("Termo de busca não pode ser vazio");
@@ -631,7 +609,7 @@ public class MobileColetaService {
                 descricoes.size(), patrimoniosPendentes.size()
             ));
             
-            logger.info("Retornando {} descrições pendentes com {} patrimônios total", 
+            logger.debug("Retornando {} descrições pendentes com {} patrimônios total", 
                 descricoes.size(), patrimoniosPendentes.size());
             
             return resultado;
@@ -654,7 +632,7 @@ public class MobileColetaService {
     public com.inventario.mobile.server.dto.IncrementalSyncResponse<MobileColetaResponse> buscarColetasIncrementais(
             Long lastSyncTimestamp, Integer inventarioId, Integer limit, Integer offset) {
         
-        logger.info("Buscando coletas incrementais: lastSync={}, inventario={}, limit={}, offset={}", 
+        logger.debug("Buscando coletas incrementais: lastSync={}, inventario={}, limit={}, offset={}", 
                 lastSyncTimestamp, inventarioId, limit, offset);
         
         try {
@@ -715,7 +693,7 @@ public class MobileColetaService {
                     coletasResponse.size(), totalCount);
             response.setMessage(mensagem);
             
-            logger.info("Retornando {} coletas de {} total (hasMore: {})", 
+            logger.debug("Retornando {} coletas de {} total (hasMore: {})", 
                     coletasResponse.size(), totalCount, response.getHasMore());
             
             return response;
@@ -752,13 +730,13 @@ public class MobileColetaService {
      */
     public List<MobileColetaResponse> buscarTodasColetasDoSistemaOtimizado() throws SQLException {
         long startTime = System.currentTimeMillis();
-        logger.info("🚀 Buscando todas as coletas (OTIMIZADO)");
+        logger.debug("Buscando todas as coletas (OTIMIZADO)");
 
         // 1. Buscar todas as coletas (1 query)
         List<Coleta> coletas = coletaDAO.buscarTodas();
         
         if (coletas.isEmpty()) {
-            logger.info("Nenhuma coleta encontrada");
+            logger.debug("Nenhuma coleta encontrada");
             return new ArrayList<>();
         }
 
@@ -811,8 +789,7 @@ public class MobileColetaService {
         }
 
         long duration = System.currentTimeMillis() - startTime;
-        logger.info("✓ {} coletas processadas em {}ms (OTIMIZADO - {}x mais rápido)", 
-                responses.size(), duration, coletas.size() > 0 ? (coletas.size() * 3) / 5 : 0);
+        logger.debug("{} coletas processadas em {}ms", responses.size(), duration);
         
         return responses;
     }

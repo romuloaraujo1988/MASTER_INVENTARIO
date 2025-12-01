@@ -2,7 +2,6 @@ package com.inventario.mobile.di
 
 import android.content.Context
 import com.google.gson.GsonBuilder
-import com.inventario.mobile.data.local.LocalDataManager
 import com.inventario.mobile.data.remote.api.ColetaApi
 import com.inventario.mobile.data.remote.api.PatrimonioApi
 import com.inventario.mobile.network.DeviceInfoInterceptor
@@ -26,14 +25,14 @@ import javax.inject.Singleton
 
 /**
  * Módulo Hilt para APIs Retrofit
+ * 
+ * NOTA: Se o IP do servidor mudar, o app precisa ser reiniciado
+ * para que as novas configurações sejam aplicadas.
  */
 @Module
 @InstallIn(SingletonComponent::class)
 object ApiModule {
     
-    /**
-     * Fornece instância do Retrofit
-     */
     @Provides
     @Singleton
     fun provideRetrofit(
@@ -42,7 +41,6 @@ object ApiModule {
     ): Retrofit {
         val serverConfigManager = ServerConfigManager.getInstance(context)
         val baseUrl = serverConfigManager.getBaseUrl()
-        
         val finalBaseUrl = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
         
         val gson = GsonBuilder()
@@ -51,9 +49,7 @@ object ApiModule {
             .registerTypeAdapter(java.util.Date::class.java, com.google.gson.JsonDeserializer { json, _, _ ->
                 try {
                     SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).parse(json.asString)
-                } catch (e: Exception) {
-                    null
-                }
+                } catch (e: Exception) { null }
             })
             .create()
         
@@ -64,10 +60,6 @@ object ApiModule {
             .build()
     }
     
-    /**
-     * Fornece instância do OkHttpClient
-     * OTIMIZADO: Timeouts reduzidos para evitar ANR
-     */
     @Provides
     @Singleton
     fun provideOkHttpClient(
@@ -82,14 +74,14 @@ object ApiModule {
         
         return OkHttpClient.Builder()
             .cache(cache)
-            .addInterceptor(offlineFallbackInterceptor)  // ← Primeiro: detecta falhas de conexão
+            .addInterceptor(offlineFallbackInterceptor)
             .addInterceptor(deviceInfoInterceptor)
             .addInterceptor(authInterceptor)
             .addInterceptor(loggingInterceptor)
-            .connectTimeout(10, TimeUnit.SECONDS)  // Reduzido de 45s para 10s
-            .readTimeout(15, TimeUnit.SECONDS)     // Reduzido de 60s para 15s
-            .writeTimeout(15, TimeUnit.SECONDS)    // Reduzido de 60s para 15s
-            .callTimeout(30, TimeUnit.SECONDS)     // Reduzido de 120s para 30s
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .writeTimeout(15, TimeUnit.SECONDS)
+            .callTimeout(30, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
             .followRedirects(true)
             .followSslRedirects(true)
@@ -97,9 +89,6 @@ object ApiModule {
             .build()
     }
     
-    /**
-     * Fornece interceptor de fallback offline
-     */
     @Provides
     @Singleton
     fun provideOfflineFallbackInterceptor(
@@ -110,9 +99,6 @@ object ApiModule {
         return com.inventario.mobile.network.OfflineFallbackInterceptor(context, preferencesManager, offlineNotificationManager)
     }
     
-    /**
-     * Fornece interceptor de logging
-     */
     @Provides
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
@@ -121,21 +107,13 @@ object ApiModule {
         }
     }
     
-    /**
-     * Fornece interceptor de autenticação
-     * CORRIGIDO: Removido runBlocking que causava ANR
-     */
     @Provides
     @Singleton
     fun provideAuthInterceptor(
-        @ApplicationContext context: Context,
         preferencesManager: PreferencesManager
     ): Interceptor {
         return Interceptor { chain ->
             val originalRequest = chain.request()
-            
-            // Usar apenas PreferencesManager (síncrono e rápido)
-            // Não usar LocalDataManager aqui pois requer coroutine
             val token = preferencesManager.getAccessToken()
             val isTokenValid = preferencesManager.isTokenValid()
             
@@ -149,14 +127,10 @@ object ApiModule {
                     .addHeader("Content-Type", "application/json")
                     .build()
             }
-            
             chain.proceed(newRequest)
         }
     }
     
-    /**
-     * Fornece interceptor de informações do dispositivo
-     */
     @Provides
     @Singleton
     fun provideDeviceInfoInterceptor(
@@ -207,10 +181,6 @@ object ApiModule {
         return retrofit.create(com.inventario.mobile.data.remote.api.OfflineSyncApi::class.java)
     }
     
-    /**
-     * Provider para ApiService (legado)
-     * NOTA: Mantido para compatibilidade com código legado.
-     */
     @Provides
     @Singleton
     fun provideApiService(

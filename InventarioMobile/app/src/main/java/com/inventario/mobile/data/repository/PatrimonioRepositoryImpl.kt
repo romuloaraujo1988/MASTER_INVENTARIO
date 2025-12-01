@@ -109,7 +109,7 @@ class PatrimonioRepositoryImpl @Inject constructor(
         return try {
             Log.d(TAG, "Forçando busca REMOTA")
             
-            val strategy = strategyFactory.getRemoteStrategy()
+            val strategy = strategyFactory.getRemoteDataSource()
             
             if (!strategy.isAvailable()) {
                 return Result.failure(Exception("Servidor não disponível. Verifique sua conexão."))
@@ -130,7 +130,7 @@ class PatrimonioRepositoryImpl @Inject constructor(
         return try {
             Log.d(TAG, "Forçando busca LOCAL")
             
-            val strategy = strategyFactory.getLocalStrategy()
+            val strategy = strategyFactory.getLocalDataSource()
             
             if (!strategy.isAvailable()) {
                 return Result.failure(Exception("Banco local vazio. Sincronize os dados primeiro."))
@@ -247,7 +247,7 @@ class PatrimonioRepositoryImpl @Inject constructor(
             Log.d(TAG, "Buscando patrimônio LOCALMENTE: $numero")
             
             // Forçar uso da estratégia local
-            val localStrategy = strategyFactory.getLocalStrategy()
+            val localStrategy = strategyFactory.getLocalDataSource()
             _currentDataSource.value = DataSourceType.LOCAL
             
             if (!localStrategy.isAvailable()) {
@@ -268,6 +268,105 @@ class PatrimonioRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao buscar patrimônio localmente", e)
             null
+        }
+    }
+    
+    // ========================================
+    // Métodos para Inventário por Sala
+    // ========================================
+    
+    /**
+     * Busca patrimônios por sala com filtro opcional de status de coleta e paginação.
+     * Usa estratégia offline-first (banco local).
+     * 
+     * @param salaId ID da sala
+     * @param coletado Filtro de status: null = todos, true = coletados, false = não coletados
+     * @param page Número da página (0-indexed)
+     * @param pageSize Quantidade de itens por página
+     * @return Result com lista de patrimônios ou erro
+     */
+    suspend fun buscarPorSala(
+        salaId: Int,
+        coletado: Boolean? = null,
+        page: Int = 0,
+        pageSize: Int = 20
+    ): Result<List<Patrimonio>> {
+        return try {
+            Log.d(TAG, "Buscando patrimônios da sala $salaId (coletado=$coletado, page=$page)")
+            
+            // Usar estratégia local para offline-first
+            val localStrategy = strategyFactory.getLocalDataSource()
+            _currentDataSource.value = DataSourceType.LOCAL
+            
+            val result = localStrategy.buscarPorSala(salaId, coletado, page, pageSize)
+            
+            if (result.isSuccess) {
+                val patrimonios = result.getOrDefault(emptyList())
+                Log.d(TAG, "✓ ${patrimonios.size} patrimônios encontrados na sala $salaId")
+            } else {
+                Log.e(TAG, "✗ Erro ao buscar patrimônios da sala: ${result.exceptionOrNull()?.message}")
+            }
+            
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro inesperado ao buscar patrimônios da sala", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Conta total de patrimônios em uma sala.
+     * 
+     * @param salaId ID da sala
+     * @return Result com total de patrimônios ou erro
+     */
+    suspend fun contarPorSala(salaId: Int): Result<Int> {
+        return try {
+            Log.d(TAG, "Contando patrimônios da sala $salaId")
+            
+            val localStrategy = strategyFactory.getLocalDataSource()
+            _currentDataSource.value = DataSourceType.LOCAL
+            
+            val result = localStrategy.contarPorSala(salaId)
+            
+            if (result.isSuccess) {
+                Log.d(TAG, "✓ Total: ${result.getOrNull()} patrimônios na sala $salaId")
+            } else {
+                Log.e(TAG, "✗ Erro ao contar patrimônios: ${result.exceptionOrNull()?.message}")
+            }
+            
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro inesperado ao contar patrimônios da sala", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Conta patrimônios coletados em uma sala.
+     * 
+     * @param salaId ID da sala
+     * @return Result com total de patrimônios coletados ou erro
+     */
+    suspend fun contarColetadosPorSala(salaId: Int): Result<Int> {
+        return try {
+            Log.d(TAG, "Contando patrimônios coletados da sala $salaId")
+            
+            val localStrategy = strategyFactory.getLocalDataSource()
+            _currentDataSource.value = DataSourceType.LOCAL
+            
+            val result = localStrategy.contarColetadosPorSala(salaId)
+            
+            if (result.isSuccess) {
+                Log.d(TAG, "✓ Total coletados: ${result.getOrNull()} na sala $salaId")
+            } else {
+                Log.e(TAG, "✗ Erro ao contar coletados: ${result.exceptionOrNull()?.message}")
+            }
+            
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro inesperado ao contar patrimônios coletados", e)
+            Result.failure(e)
         }
     }
 }

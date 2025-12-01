@@ -184,6 +184,7 @@ com\inventario\sync\model\ResolutionStrategy.class
 com\inventario\view\CampusFrame$2.class
 com\inventario\util\ImageUtils.class
 com\inventario\mobile\server\controller\MobileUsuarioController.class
+com\inventario\mobile\server\dto\MobileSalaComProgressoDTO.class
 com\inventario\view\components\PaginationPanelTest.class
 com\inventario\dao\SetorDAO$SetorComEstatisticas.class
 com\inventario\view\CampusFormDialog$1.class

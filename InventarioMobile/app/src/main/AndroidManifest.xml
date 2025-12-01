@@ -200,6 +200,14 @@
             android:theme="@style/Theme.InventarioMobile.NoActionBar"
             android:windowSoftInputMode="adjustPan" />
         
+        <!-- Inventario Tabs Activity (Por Responsável / Por Sala) -->
+        <activity
+            android:name=".presentation.inventario.InventarioTabsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
         <!-- Filtros Activity -->
         <activity
             android:name=".presentation.inventario.FiltrosActivity"

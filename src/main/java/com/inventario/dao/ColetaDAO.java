@@ -265,11 +265,12 @@ public class ColetaDAO {
      */
     public boolean excluirColeta(int idSala, String numeroPatrimonio, String dataHora, String estado, String observacoes) throws SQLException {
         // Primeiro, buscar a coleta específica
+        // CORRIGIDO: Usar TO_CHAR (PostgreSQL) ao invés de DATE_FORMAT (MySQL)
         String sqlBusca = "SELECT c.ID FROM TABELA_COLETA c " +
                          "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
                          "WHERE p.ID_SALA = ? AND p.NUMERO = ? AND c.ESTADO_ENCONTRADO = ? " +
-                         "AND c.OBSERVACAO_COLETA = ? " +
-                         "AND DATE_FORMAT(c.DATA_COLETA, '%d/%m/%Y %H:%i') = ?";
+                         "AND COALESCE(c.OBSERVACAO_COLETA, '') = ? " +
+                         "AND TO_CHAR(c.DATA_COLETA, 'DD/MM/YYYY HH24:MI') = ?";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmtBusca = conn.prepareStatement(sqlBusca)) {

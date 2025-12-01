@@ -25,6 +25,10 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var biometricManager: com.inventario.mobile.security.BiometricAuthManager
     private lateinit var preferencesManager: PreferencesManager
     
+    // Rastreia se o IP mudou para reiniciar o app após login
+    private var ipChangedDuringSession = false
+    private var originalIp: String? = null
+    
     companion object {
         private const val REQUEST_NOTIFICATION_PERMISSION = 1001
     }
@@ -52,12 +56,14 @@ class LoginActivity : AppCompatActivity() {
         val currentIp = serverConfigManager.getServerIp()
         if (currentIp?.isNotBlank() == true) {
             binding.etServerIp.setText(currentIp)
+            originalIp = currentIp  // Salvar IP original para detectar mudanças
         } else {
             // Usar IP padrão (10.14.250.214)
             val defaultIp = serverConfigManager.getDefaultIp()
             binding.etServerIp.setText(defaultIp)
             // Salvar IP padrão para uso imediato
             serverConfigManager.setServerIp(defaultIp)
+            originalIp = defaultIp
         }
         
         // ✅ CARREGAR E PREENCHER ÚLTIMO USUÁRIO QUE FEZ LOGIN
@@ -120,6 +126,12 @@ class LoginActivity : AppCompatActivity() {
             
             // Garantir que baseUrl atual está salva antes de criar cliente
             if (ipText.isNotBlank()) {
+                // Detectar se IP mudou
+                if (originalIp != null && originalIp != ipText) {
+                    ipChangedDuringSession = true
+                    android.util.Log.d("LoginActivity", "⚠️ IP mudou de $originalIp para $ipText")
+                }
+                
                 serverConfigManager.setServerIp(ipText)
                 // Forçar recriação do ApiService com nova URL
                 com.inventario.mobile.data.remote.api.ApiClient.recreateApiService(this)
@@ -572,11 +584,38 @@ class LoginActivity : AppCompatActivity() {
     
     /**
      * Navega para MainActivity
+     * Se o IP mudou durante a sessão, reinicia o app para aplicar as novas configurações
      */
     private fun navigateToMain() {
-        val intent = Intent(this, MainActivity::class.java)
+        if (ipChangedDuringSession) {
+            android.util.Log.d("LoginActivity", "🔄 IP mudou, reiniciando app para aplicar configurações...")
+            restartApp()
+        } else {
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+    }
+    
+    /**
+     * Reinicia o app completamente para aplicar novas configurações de servidor
+     */
+    private fun restartApp() {
+        // Limpar caches
+        com.inventario.mobile.data.remote.api.ApiClient.clearInstance()
+        
+        // Criar intent para reiniciar
+        val intent = packageManager.getLaunchIntentForPackage(packageName)
+        intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        
+        // Passar flag indicando que é um restart após mudança de IP
+        intent?.putExtra("IP_CHANGED_RESTART", true)
+        
+        finishAffinity()
         startActivity(intent)
-        finish()
+        
+        // Forçar encerramento do processo para limpar singletons
+        android.os.Process.killProcess(android.os.Process.myPid())
     }
     
     /**

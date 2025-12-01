@@ -58,4 +58,22 @@ interface PatrimonioApi {
     suspend fun validarPatrimonio(
         @Path("numero") numero: String
     ): Response<ApiResponse<Map<String, Any>>>
+    
+    /**
+     * Busca patrimônios por sala com paginação e filtro de coleta
+     * 
+     * @param salaId ID da sala
+     * @param page número da página (0-based)
+     * @param size tamanho da página
+     * @param coletado filtro de coleta (true=coletados, false=não coletados, null=todos)
+     * @param inventarioId ID do inventário (opcional, usa ativo se não informado)
+     */
+    @GET("api/mobile/patrimonio/sala/{salaId}")
+    suspend fun buscarPorSala(
+        @Path("salaId") salaId: Int,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 50,
+        @Query("coletado") coletado: Boolean? = null,
+        @Query("inventarioId") inventarioId: Int? = null
+    ): Response<ApiResponse<List<Patrimonio>>>
 }

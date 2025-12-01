@@ -2,6 +2,7 @@ package com.inventario.mobile.server.controller;
 
 import com.inventario.mobile.server.dto.ApiResponse;
 import com.inventario.mobile.server.dto.MobileSalaDTO;
+import com.inventario.mobile.server.dto.MobileSalaComProgressoDTO;
 import com.inventario.mobile.server.service.MobileSalaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -54,6 +55,41 @@ public class MobileSalaController {
             
         } catch (Exception e) {
             logger.error("Erro ao listar salas", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao listar salas: " + e.getMessage(), "FETCH_ERROR"));
+        }
+    }
+    
+    /**
+     * Listar salas com estatísticas de progresso de coleta.
+     * Retorna total de patrimônios, coletados, pendentes e percentual.
+     * 
+     * @param inventarioId ID do inventário (opcional, usa ativo se não informado)
+     */
+    @GetMapping("/com-progresso")
+    public ResponseEntity<ApiResponse<List<MobileSalaComProgressoDTO>>> listarSalasComProgresso(
+            @RequestParam(required = false) Integer inventarioId) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            
+            logger.info("Listando salas com progresso para usuário: {}, inventário: {}", 
+                username, inventarioId != null ? inventarioId : "ATIVO");
+            
+            long startTime = System.currentTimeMillis();
+            
+            List<MobileSalaComProgressoDTO> salas = salaService.listarSalasComProgresso(inventarioId);
+            
+            long endTime = System.currentTimeMillis();
+            
+            logger.info("✓ Retornando {} salas com progresso em {}ms", salas.size(), (endTime - startTime));
+            
+            return ResponseEntity.ok(
+                    ApiResponse.success(salas, 
+                            String.format("%d sala(s) com progresso", salas.size())));
+            
+        } catch (Exception e) {
+            logger.error("Erro ao listar salas com progresso", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro ao listar salas: " + e.getMessage(), "FETCH_ERROR"));
         }

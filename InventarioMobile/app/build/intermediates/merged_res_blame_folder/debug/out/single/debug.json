@@ -1,5 +1,9 @@
 [
     {
+        "merged": "com.inventario.mobile.app-merged_res-67:/layout_fragment_inventario_por_sala.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_inventario_por_sala.xml"
+    },
+    {
         "merged": "com.inventario.mobile.app-merged_res-67:/drawable_ic_sync.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/drawable/ic_sync.xml"
     },
@@ -28,12 +32,20 @@
         "source": "com.inventario.mobile.app-main-69:/layout/dialog_pin_login.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-merged_res-67:/drawable_progress_bar_colored.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/drawable/progress_bar_colored.xml"
+    },
+    {
         "merged": "com.inventario.mobile.app-merged_res-67:/mipmap-anydpi-v26_ic_launcher.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/mipmap-anydpi-v26/ic_launcher.xml"
     },
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/layout_activity_inventario.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/layout/activity_inventario.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-merged_res-67:/layout_item_sala_dropdown.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_sala_dropdown.xml"
     },
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/drawable_ic_warning_circle.xml.flat",
@@ -78,6 +90,10 @@
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/layout_fragment_dashboard_backup.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/layout/fragment_dashboard_backup.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-merged_res-67:/layout_activity_inventario_tabs.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_inventario_tabs.xml"
     },
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/layout_activity_login.xml.flat",
@@ -156,6 +172,10 @@
         "source": "com.inventario.mobile.app-main-69:/layout/item_loading.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-merged_res-67:/layout_fragment_inventario_por_responsavel.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_inventario_por_responsavel.xml"
+    },
+    {
         "merged": "com.inventario.mobile.app-merged_res-67:/layout_activity_coletas_clean.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/layout/activity_coletas_clean.xml"
     },
@@ -204,8 +224,16 @@
         "source": "com.inventario.mobile.app-main-69:/mipmap-xxhdpi/ic_launcher_round.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-merged_res-67:/menu_menu_inventario_tabs.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/menu/menu_inventario_tabs.xml"
+    },
+    {
         "merged": "com.inventario.mobile.app-merged_res-67:/drawable_ic_refresh.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/drawable/ic_refresh.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-merged_res-67:/layout_item_estatisticas_sala.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_estatisticas_sala.xml"
     },
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/drawable_ic_edit.xml.flat",
@@ -346,6 +374,10 @@
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/drawable_ic_inventory.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/drawable/ic_inventory.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-merged_res-67:/drawable_ic_date_range.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/drawable/ic_date_range.xml"
     },
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/layout_activity_offline_manager.xml.flat",
@@ -558,6 +590,10 @@
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/drawable_gradient_success.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/drawable/gradient_success.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-merged_res-67:/drawable_ic_today.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/drawable/ic_today.xml"
     },
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/layout_activity_detalhe_patrimonio.xml.flat",

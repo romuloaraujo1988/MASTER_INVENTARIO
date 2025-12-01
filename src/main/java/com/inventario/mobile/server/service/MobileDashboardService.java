@@ -33,15 +33,13 @@ public class MobileDashboardService {
      * Busca estatísticas gerais do dashboard
      */
     public Map<String, Object> buscarEstatisticasGerais(Integer inventarioId) throws SQLException {
-        logger.info("Buscando estatísticas gerais (inventário: {})", inventarioId);
+        logger.debug("Buscando estatísticas gerais (inventário: {})", inventarioId);
         
         // Obter inventário
         Inventario inventario;
         if (inventarioId != null) {
-            logger.info("Buscando inventário por ID: {}", inventarioId);
             inventario = inventarioDAO.findById(inventarioId);
         } else {
-            logger.info("Buscando inventário ativo automaticamente");
             inventario = inventarioDAO.buscarInventarioAtivo();
         }
         
@@ -50,7 +48,7 @@ public class MobileDashboardService {
             throw new IllegalArgumentException("Inventário não encontrado");
         }
         
-        logger.info("Inventário encontrado: ID={}, Nome={}", inventario.getId(), inventario.getNome());
+        logger.debug("Inventário encontrado: ID={}", inventario.getId());
         
         // Estatísticas básicas
         int totalPatrimonios = patrimonioDAO.contarPatrimoniosAtivos();
@@ -77,8 +75,8 @@ public class MobileDashboardService {
         estatisticas.put("divergencias", divergencias);
         estatisticas.put("coletoresAtivos", coletoresAtivos);
         
-        logger.info("Estatísticas: {}% concluído ({}/{}), Divergências: {}, Coletores: {}", 
-                Math.round(percentualConclusao), totalColetados, totalPatrimonios, divergencias, coletoresAtivos);
+        logger.debug("Estatísticas: {}% concluído ({}/{})", 
+                Math.round(percentualConclusao), totalColetados, totalPatrimonios);
         
         return estatisticas;
     }
@@ -95,7 +93,7 @@ public class MobileDashboardService {
      * @param dias Quantidade de dias (usado apenas como fallback se inventário não tem datas)
      */
     public Map<String, Object> buscarEvolucaoColetas(Integer inventarioId, int dias) throws SQLException {
-        logger.info("Buscando evolução de coletas para inventário: {}", inventarioId);
+        logger.debug("Buscando evolução de coletas para inventário: {}", inventarioId);
         
         // Obter inventário
         Inventario inventario;
@@ -132,7 +130,7 @@ public class MobileDashboardService {
                 dataFimEfetiva = hoje;
             }
             
-            logger.info("Usando período do inventário: {} a {}", 
+            logger.debug("Usando período do inventário: {} a {}", 
                     sdfLog.format(dataInicio), sdfLog.format(dataFimEfetiva));
             
             // Buscar coletas no período do inventário
@@ -154,7 +152,7 @@ public class MobileDashboardService {
             }
         } else {
             // Fallback: usar últimos N dias (comportamento anterior)
-            logger.info("Inventário sem data de início definida, usando últimos {} dias", dias);
+            logger.debug("Inventário sem data de início definida, usando últimos {} dias", dias);
             
             evolucaoDados = coletaDAO.buscarEvolucaoColetasPorDia(inventario.getId(), dias);
             diasPeriodo = dias;
@@ -204,8 +202,7 @@ public class MobileDashboardService {
             resultado.put("usandoDatasInventario", false);
         }
         
-        logger.info("Evolução carregada: {} dias, {} registros com dados", 
-                diasPeriodo, evolucaoDados.size());
+        logger.debug("Evolução carregada: {} dias, {} registros", diasPeriodo, evolucaoDados.size());
         
         return resultado;
     }
@@ -214,7 +211,7 @@ public class MobileDashboardService {
      * Busca top itens mais coletados
      */
     public Map<String, Object> buscarTopItens(Integer inventarioId, int limit) throws SQLException {
-        logger.info("Buscando top {} itens", limit);
+        logger.debug("Buscando top {} itens", limit);
         
         // Obter inventário
         Inventario inventario;
@@ -246,7 +243,7 @@ public class MobileDashboardService {
         resultado.put("topItens", topItens);
         resultado.put("total", topItens.size());
         
-        logger.info("Top itens carregados: {} itens encontrados", topItens.size());
+        logger.debug("Top itens carregados: {} itens", topItens.size());
         
         return resultado;
     }
@@ -255,7 +252,7 @@ public class MobileDashboardService {
      * Busca estatísticas por status de coleta
      */
     public Map<String, Object> buscarEstatisticasPorStatus(Integer inventarioId) throws SQLException {
-        logger.info("Buscando estatísticas por status");
+        logger.debug("Buscando estatísticas por status");
         
         // Obter inventário
         Inventario inventario;
@@ -286,7 +283,7 @@ public class MobileDashboardService {
         resultado.put("statusDistribuicao", statusMap);
         resultado.put("total", statusMap.values().stream().mapToInt(Integer::intValue).sum());
         
-        logger.info("Estatísticas por status carregadas: {} status diferentes", statusMap.size());
+        logger.debug("Estatísticas por status carregadas: {} status", statusMap.size());
         
         return resultado;
     }
@@ -295,7 +292,7 @@ public class MobileDashboardService {
      * Busca distribuição de coletas por sala
      */
     public Map<String, Object> buscarDistribuicaoPorSala(Integer inventarioId, int limit) throws SQLException {
-        logger.info("Buscando distribuição por sala (top {})", limit);
+        logger.debug("Buscando distribuição por sala (top {})", limit);
         
         // Obter inventário
         Inventario inventario;
@@ -327,7 +324,7 @@ public class MobileDashboardService {
         resultado.put("distribuicaoPorSala", salaMap);
         resultado.put("total", salaMap.size());
         
-        logger.info("Distribuição por sala carregada: {} salas", salaMap.size());
+        logger.debug("Distribuição por sala carregada: {} salas", salaMap.size());
         
         return resultado;
     }

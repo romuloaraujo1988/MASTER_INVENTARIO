@@ -1,6 +1,6 @@
 1<?xml version="1.0" encoding="utf-8"?>
 2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-3    package="com.inventario.mobile.debug"
+3    package="com.inventario.mobile"
 4    android:versionCode="4"
 5    android:versionName="2.1.0" >
 6
@@ -133,12 +133,12 @@
 73
 74    <permission
 74-->[androidx.core:core:1.12.0] C:\Users\Romulo\.gradle\caches\transforms-3\99ce4198dc17315bb9a78336ed2ffe09\transformed\core-1.12.0\AndroidManifest.xml:22:5-24:47
-75        android:name="com.inventario.mobile.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+75        android:name="com.inventario.mobile.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
 75-->[androidx.core:core:1.12.0] C:\Users\Romulo\.gradle\caches\transforms-3\99ce4198dc17315bb9a78336ed2ffe09\transformed\core-1.12.0\AndroidManifest.xml:23:9-81
 76        android:protectionLevel="signature" />
 76-->[androidx.core:core:1.12.0] C:\Users\Romulo\.gradle\caches\transforms-3\99ce4198dc17315bb9a78336ed2ffe09\transformed\core-1.12.0\AndroidManifest.xml:24:9-44
 77
-78    <uses-permission android:name="com.inventario.mobile.debug.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+78    <uses-permission android:name="com.inventario.mobile.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
 78-->[androidx.core:core:1.12.0] C:\Users\Romulo\.gradle\caches\transforms-3\99ce4198dc17315bb9a78336ed2ffe09\transformed\core-1.12.0\AndroidManifest.xml:26:5-97
 78-->[androidx.core:core:1.12.0] C:\Users\Romulo\.gradle\caches\transforms-3\99ce4198dc17315bb9a78336ed2ffe09\transformed\core-1.12.0\AndroidManifest.xml:26:22-94
 79
@@ -156,7 +156,7 @@
 85-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:44:9-33
 86
 87    <application
-87-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:64:5-257:19
+87-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:64:5-265:19
 88        android:name="com.inventario.mobile.InventarioMobileApplication"
 88-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:65:9-52
 89        android:allowBackup="true"
@@ -403,11 +403,11 @@
 226            android:windowSoftInputMode="adjustPan" />
 226-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:201:13-52
 227
-228        <!-- Filtros Activity -->
+228        <!-- Inventario Tabs Activity (Por Responsável / Por Sala) -->
 229        <activity
 229-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:204:9-209:58
-230            android:name="com.inventario.mobile.presentation.inventario.FiltrosActivity"
-230-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:205:13-68
+230            android:name="com.inventario.mobile.presentation.inventario.InventarioTabsActivity"
+230-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:205:13-75
 231            android:exported="false"
 231-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:206:13-37
 232            android:screenOrientation="portrait"
@@ -417,11 +417,11 @@
 234            android:windowSoftInputMode="adjustResize" />
 234-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:209:13-55
 235
-236        <!-- Coletas Activity Clean (Clean Architecture) -->
+236        <!-- Filtros Activity -->
 237        <activity
 237-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:212:9-217:58
-238            android:name="com.inventario.mobile.presentation.coletas.ColetasActivityClean"
-238-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:213:13-70
+238            android:name="com.inventario.mobile.presentation.inventario.FiltrosActivity"
+238-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:213:13-68
 239            android:exported="false"
 239-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:214:13-37
 240            android:screenOrientation="portrait"
@@ -431,11 +431,11 @@
 242            android:windowSoftInputMode="adjustResize" />
 242-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:217:13-55
 243
-244        <!-- Item Sem Etiqueta Activity -->
+244        <!-- Coletas Activity Clean (Clean Architecture) -->
 245        <activity
 245-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:220:9-225:58
-246            android:name="com.inventario.mobile.presentation.coleta.ItemSemEtiquetaActivity"
-246-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:221:13-72
+246            android:name="com.inventario.mobile.presentation.coletas.ColetasActivityClean"
+246-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:221:13-70
 247            android:exported="false"
 247-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:222:13-37
 248            android:screenOrientation="portrait"
@@ -445,322 +445,336 @@
 250            android:windowSoftInputMode="adjustResize" />
 250-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:225:13-55
 251
-252        <!-- Work Manager para sincronização -->
-253        <service
-253-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:228:9-231:34
-254            android:name="androidx.work.impl.foreground.SystemForegroundService"
-254-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:229:13-81
-255            android:directBootAware="false"
-255-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:55:13-44
-256            android:enabled="@bool/enable_system_foreground_service_default"
-256-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:56:13-77
-257            android:exported="false"
-257-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:57:13-37
-258            android:foregroundServiceType="dataSync" />
-258-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:230:13-53
+252        <!-- Item Sem Etiqueta Activity -->
+253        <activity
+253-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:228:9-233:58
+254            android:name="com.inventario.mobile.presentation.coleta.ItemSemEtiquetaActivity"
+254-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:229:13-72
+255            android:exported="false"
+255-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:230:13-37
+256            android:screenOrientation="portrait"
+256-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:231:13-49
+257            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+257-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:232:13-70
+258            android:windowSoftInputMode="adjustResize" />
+258-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:233:13-55
 259
-260        <!-- File Provider para compartilhamento de arquivos -->
-261        <provider
-262            android:name="androidx.core.content.FileProvider"
-262-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:235:13-62
-263            android:authorities="com.inventario.mobile.debug.fileprovider"
-263-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:236:13-64
-264            android:exported="false"
-264-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:237:13-37
-265            android:grantUriPermissions="true" >
-265-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:238:13-47
-266            <meta-data
-266-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:239:13-241:54
-267                android:name="android.support.FILE_PROVIDER_PATHS"
-267-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:240:17-67
-268                android:resource="@xml/file_paths" />
-268-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:241:17-51
-269        </provider>
-270
-271        <!-- Desabilitar inicialização automática do WorkManager -->
-272        <!-- Necessário para usar HiltWorkerFactory customizado -->
-273        <provider
-274            android:name="androidx.startup.InitializationProvider"
-274-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:247:13-67
-275            android:authorities="com.inventario.mobile.debug.androidx-startup"
-275-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:248:13-68
-276            android:exported="false" >
-276-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:249:13-37
-277            <meta-data
-277-->[androidx.emoji2:emoji2:1.2.0] C:\Users\Romulo\.gradle\caches\transforms-3\9453c601123cf8d7cb6885cadc312d33\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:29:13-31:52
-278                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-278-->[androidx.emoji2:emoji2:1.2.0] C:\Users\Romulo\.gradle\caches\transforms-3\9453c601123cf8d7cb6885cadc312d33\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:30:17-75
-279                android:value="androidx.startup" />
-279-->[androidx.emoji2:emoji2:1.2.0] C:\Users\Romulo\.gradle\caches\transforms-3\9453c601123cf8d7cb6885cadc312d33\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:31:17-49
-280            <meta-data
-280-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\Romulo\.gradle\caches\transforms-3\ed630a516e1920b78542f95ae7b53a19\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:29:13-31:52
-281                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-281-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\Romulo\.gradle\caches\transforms-3\ed630a516e1920b78542f95ae7b53a19\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:30:17-78
-282                android:value="androidx.startup" />
-282-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\Romulo\.gradle\caches\transforms-3\ed630a516e1920b78542f95ae7b53a19\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:31:17-49
-283            <meta-data
-283-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:29:13-31:52
-284                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-284-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:30:17-85
-285                android:value="androidx.startup" />
-285-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:31:17-49
-286        </provider>
-287
-288        <activity
-288-->[pub.devrel:easypermissions:3.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\0c9b111747a19d0b796b7a20f655a5d2\transformed\jetified-easypermissions-3.0.0\AndroidManifest.xml:12:9-16:66
-289            android:name="pub.devrel.easypermissions.AppSettingsDialogHolderActivity"
-289-->[pub.devrel:easypermissions:3.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\0c9b111747a19d0b796b7a20f655a5d2\transformed\jetified-easypermissions-3.0.0\AndroidManifest.xml:13:13-86
-290            android:exported="false"
-290-->[pub.devrel:easypermissions:3.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\0c9b111747a19d0b796b7a20f655a5d2\transformed\jetified-easypermissions-3.0.0\AndroidManifest.xml:14:13-37
-291            android:label=""
-291-->[pub.devrel:easypermissions:3.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\0c9b111747a19d0b796b7a20f655a5d2\transformed\jetified-easypermissions-3.0.0\AndroidManifest.xml:15:13-29
-292            android:theme="@style/EasyPermissions.Transparent" />
-292-->[pub.devrel:easypermissions:3.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\0c9b111747a19d0b796b7a20f655a5d2\transformed\jetified-easypermissions-3.0.0\AndroidManifest.xml:16:13-63
-293
-294        <service
-294-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:39:9-45:35
-295            android:name="androidx.work.impl.background.systemalarm.SystemAlarmService"
-295-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:40:13-88
-296            android:directBootAware="false"
-296-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:41:13-44
-297            android:enabled="@bool/enable_system_alarm_service_default"
-297-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:42:13-72
-298            android:exported="false" />
-298-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:43:13-37
-299        <service
-299-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:46:9-52:35
-300            android:name="androidx.work.impl.background.systemjob.SystemJobService"
-300-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:47:13-84
-301            android:directBootAware="false"
-301-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:48:13-44
-302            android:enabled="@bool/enable_system_job_service_default"
-302-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:49:13-70
-303            android:exported="true"
-303-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:50:13-36
-304            android:permission="android.permission.BIND_JOB_SERVICE" />
-304-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:51:13-69
-305
-306        <receiver
-306-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:61:9-66:35
-307            android:name="androidx.work.impl.utils.ForceStopRunnable$BroadcastReceiver"
-307-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:62:13-88
-308            android:directBootAware="false"
-308-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:63:13-44
-309            android:enabled="true"
-309-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:64:13-35
-310            android:exported="false" />
-310-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:65:13-37
-311        <receiver
-311-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:67:9-77:20
-312            android:name="androidx.work.impl.background.systemalarm.ConstraintProxy$BatteryChargingProxy"
-312-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:68:13-106
-313            android:directBootAware="false"
-313-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:69:13-44
-314            android:enabled="false"
-314-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:70:13-36
-315            android:exported="false" >
-315-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:71:13-37
-316            <intent-filter>
-316-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:73:13-76:29
-317                <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
-317-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:74:17-87
-317-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:74:25-84
-318                <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED" />
-318-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:75:17-90
-318-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:75:25-87
-319            </intent-filter>
-320        </receiver>
-321        <receiver
-321-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:78:9-88:20
-322            android:name="androidx.work.impl.background.systemalarm.ConstraintProxy$BatteryNotLowProxy"
-322-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:79:13-104
-323            android:directBootAware="false"
-323-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:80:13-44
-324            android:enabled="false"
-324-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:81:13-36
-325            android:exported="false" >
-325-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:82:13-37
-326            <intent-filter>
-326-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:84:13-87:29
-327                <action android:name="android.intent.action.BATTERY_OKAY" />
-327-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:85:17-77
-327-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:85:25-74
-328                <action android:name="android.intent.action.BATTERY_LOW" />
-328-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:86:17-76
-328-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:86:25-73
-329            </intent-filter>
-330        </receiver>
-331        <receiver
-331-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:89:9-99:20
-332            android:name="androidx.work.impl.background.systemalarm.ConstraintProxy$StorageNotLowProxy"
-332-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:90:13-104
-333            android:directBootAware="false"
-333-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:91:13-44
-334            android:enabled="false"
-334-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:92:13-36
-335            android:exported="false" >
-335-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:93:13-37
-336            <intent-filter>
-336-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:95:13-98:29
-337                <action android:name="android.intent.action.DEVICE_STORAGE_LOW" />
-337-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:96:17-83
-337-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:96:25-80
-338                <action android:name="android.intent.action.DEVICE_STORAGE_OK" />
-338-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:97:17-82
-338-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:97:25-79
-339            </intent-filter>
-340        </receiver>
-341        <receiver
-341-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:100:9-109:20
-342            android:name="androidx.work.impl.background.systemalarm.ConstraintProxy$NetworkStateProxy"
-342-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:101:13-103
-343            android:directBootAware="false"
-343-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:102:13-44
-344            android:enabled="false"
-344-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:103:13-36
-345            android:exported="false" >
-345-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:104:13-37
-346            <intent-filter>
-346-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:106:13-108:29
-347                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
-347-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:107:17-79
-347-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:107:25-76
-348            </intent-filter>
-349        </receiver>
-350        <receiver
-350-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:110:9-121:20
-351            android:name="androidx.work.impl.background.systemalarm.RescheduleReceiver"
-351-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:111:13-88
-352            android:directBootAware="false"
-352-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:112:13-44
-353            android:enabled="false"
-353-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:113:13-36
-354            android:exported="false" >
-354-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:114:13-37
-355            <intent-filter>
-355-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:116:13-120:29
-356                <action android:name="android.intent.action.BOOT_COMPLETED" />
-356-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:117:17-79
-356-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:117:25-76
-357                <action android:name="android.intent.action.TIME_SET" />
-357-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:118:17-73
-357-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:118:25-70
-358                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
-358-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:119:17-81
-358-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:119:25-78
-359            </intent-filter>
-360        </receiver>
-361        <receiver
-361-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:122:9-131:20
-362            android:name="androidx.work.impl.background.systemalarm.ConstraintProxyUpdateReceiver"
-362-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:123:13-99
-363            android:directBootAware="false"
-363-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:124:13-44
-364            android:enabled="@bool/enable_system_alarm_service_default"
-364-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:125:13-72
-365            android:exported="false" >
-365-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:126:13-37
-366            <intent-filter>
-366-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:128:13-130:29
-367                <action android:name="androidx.work.impl.background.systemalarm.UpdateProxies" />
-367-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:129:17-98
-367-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:129:25-95
-368            </intent-filter>
-369        </receiver>
-370        <receiver
-370-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:132:9-142:20
-371            android:name="androidx.work.impl.diagnostics.DiagnosticsReceiver"
-371-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:133:13-78
-372            android:directBootAware="false"
-372-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:134:13-44
-373            android:enabled="true"
-373-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:135:13-35
-374            android:exported="true"
-374-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:136:13-36
-375            android:permission="android.permission.DUMP" >
-375-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:137:13-57
-376            <intent-filter>
-376-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:139:13-141:29
-377                <action android:name="androidx.work.diagnostics.REQUEST_DIAGNOSTICS" />
-377-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:140:17-88
-377-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:140:25-85
-378            </intent-filter>
-379        </receiver>
-380
-381        <service
-381-->[androidx.room:room-runtime:2.6.1] C:\Users\Romulo\.gradle\caches\transforms-3\6c51dba7cabe48f764b02e6adfe1783e\transformed\room-runtime-2.6.1\AndroidManifest.xml:24:9-28:63
-382            android:name="androidx.room.MultiInstanceInvalidationService"
-382-->[androidx.room:room-runtime:2.6.1] C:\Users\Romulo\.gradle\caches\transforms-3\6c51dba7cabe48f764b02e6adfe1783e\transformed\room-runtime-2.6.1\AndroidManifest.xml:25:13-74
-383            android:directBootAware="true"
-383-->[androidx.room:room-runtime:2.6.1] C:\Users\Romulo\.gradle\caches\transforms-3\6c51dba7cabe48f764b02e6adfe1783e\transformed\room-runtime-2.6.1\AndroidManifest.xml:26:13-43
-384            android:exported="false" />
-384-->[androidx.room:room-runtime:2.6.1] C:\Users\Romulo\.gradle\caches\transforms-3\6c51dba7cabe48f764b02e6adfe1783e\transformed\room-runtime-2.6.1\AndroidManifest.xml:27:13-37
-385
-386        <uses-library
-386-->[androidx.window:window:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\8f3ed43d24507b782ffc48ded471c2f2\transformed\jetified-window-1.0.0\AndroidManifest.xml:25:9-27:40
-387            android:name="androidx.window.extensions"
-387-->[androidx.window:window:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\8f3ed43d24507b782ffc48ded471c2f2\transformed\jetified-window-1.0.0\AndroidManifest.xml:26:13-54
-388            android:required="false" />
-388-->[androidx.window:window:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\8f3ed43d24507b782ffc48ded471c2f2\transformed\jetified-window-1.0.0\AndroidManifest.xml:27:13-37
-389        <uses-library
-389-->[androidx.window:window:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\8f3ed43d24507b782ffc48ded471c2f2\transformed\jetified-window-1.0.0\AndroidManifest.xml:28:9-30:40
-390            android:name="androidx.window.sidecar"
-390-->[androidx.window:window:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\8f3ed43d24507b782ffc48ded471c2f2\transformed\jetified-window-1.0.0\AndroidManifest.xml:29:13-51
-391            android:required="false" />
-391-->[androidx.window:window:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\8f3ed43d24507b782ffc48ded471c2f2\transformed\jetified-window-1.0.0\AndroidManifest.xml:30:13-37
-392
-393        <activity
-393-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:47:9-53:63
-394            android:name="com.journeyapps.barcodescanner.CaptureActivity"
-394-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:48:13-74
-395            android:clearTaskOnLaunch="true"
-395-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:49:13-45
-396            android:screenOrientation="sensorLandscape"
-396-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:50:13-56
-397            android:stateNotNeeded="true"
-397-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:51:13-42
-398            android:theme="@style/zxing_CaptureTheme"
-398-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:52:13-54
-399            android:windowSoftInputMode="stateAlwaysHidden" />
-399-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:53:13-60
+260        <!-- Work Manager para sincronização -->
+261        <service
+261-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:236:9-239:34
+262            android:name="androidx.work.impl.foreground.SystemForegroundService"
+262-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:237:13-81
+263            android:directBootAware="false"
+263-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:55:13-44
+264            android:enabled="@bool/enable_system_foreground_service_default"
+264-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:56:13-77
+265            android:exported="false"
+265-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:57:13-37
+266            android:foregroundServiceType="dataSync" />
+266-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:238:13-53
+267
+268        <!-- File Provider para compartilhamento de arquivos -->
+269        <provider
+270            android:name="androidx.core.content.FileProvider"
+270-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:243:13-62
+271            android:authorities="com.inventario.mobile.fileprovider"
+271-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:244:13-64
+272            android:exported="false"
+272-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:245:13-37
+273            android:grantUriPermissions="true" >
+273-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:246:13-47
+274            <meta-data
+274-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:247:13-249:54
+275                android:name="android.support.FILE_PROVIDER_PATHS"
+275-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:248:17-67
+276                android:resource="@xml/file_paths" />
+276-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:249:17-51
+277        </provider>
+278
+279        <!-- Desabilitar inicialização automática do WorkManager -->
+280        <!-- Necessário para usar HiltWorkerFactory customizado -->
+281        <provider
+282            android:name="androidx.startup.InitializationProvider"
+282-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:255:13-67
+283            android:authorities="com.inventario.mobile.androidx-startup"
+283-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:256:13-68
+284            android:exported="false" >
+284-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:257:13-37
+285            <meta-data
+285-->[androidx.emoji2:emoji2:1.2.0] C:\Users\Romulo\.gradle\caches\transforms-3\9453c601123cf8d7cb6885cadc312d33\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:29:13-31:52
+286                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+286-->[androidx.emoji2:emoji2:1.2.0] C:\Users\Romulo\.gradle\caches\transforms-3\9453c601123cf8d7cb6885cadc312d33\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:30:17-75
+287                android:value="androidx.startup" />
+287-->[androidx.emoji2:emoji2:1.2.0] C:\Users\Romulo\.gradle\caches\transforms-3\9453c601123cf8d7cb6885cadc312d33\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:31:17-49
+288            <meta-data
+288-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\Romulo\.gradle\caches\transforms-3\ed630a516e1920b78542f95ae7b53a19\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:29:13-31:52
+289                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+289-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\Romulo\.gradle\caches\transforms-3\ed630a516e1920b78542f95ae7b53a19\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:30:17-78
+290                android:value="androidx.startup" />
+290-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\Romulo\.gradle\caches\transforms-3\ed630a516e1920b78542f95ae7b53a19\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:31:17-49
+291            <meta-data
+291-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:29:13-31:52
+292                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+292-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:30:17-85
+293                android:value="androidx.startup" />
+293-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:31:17-49
+294        </provider>
+295
+296        <activity
+296-->[pub.devrel:easypermissions:3.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\0c9b111747a19d0b796b7a20f655a5d2\transformed\jetified-easypermissions-3.0.0\AndroidManifest.xml:12:9-16:66
+297            android:name="pub.devrel.easypermissions.AppSettingsDialogHolderActivity"
+297-->[pub.devrel:easypermissions:3.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\0c9b111747a19d0b796b7a20f655a5d2\transformed\jetified-easypermissions-3.0.0\AndroidManifest.xml:13:13-86
+298            android:exported="false"
+298-->[pub.devrel:easypermissions:3.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\0c9b111747a19d0b796b7a20f655a5d2\transformed\jetified-easypermissions-3.0.0\AndroidManifest.xml:14:13-37
+299            android:label=""
+299-->[pub.devrel:easypermissions:3.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\0c9b111747a19d0b796b7a20f655a5d2\transformed\jetified-easypermissions-3.0.0\AndroidManifest.xml:15:13-29
+300            android:theme="@style/EasyPermissions.Transparent" />
+300-->[pub.devrel:easypermissions:3.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\0c9b111747a19d0b796b7a20f655a5d2\transformed\jetified-easypermissions-3.0.0\AndroidManifest.xml:16:13-63
+301
+302        <service
+302-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:39:9-45:35
+303            android:name="androidx.work.impl.background.systemalarm.SystemAlarmService"
+303-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:40:13-88
+304            android:directBootAware="false"
+304-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:41:13-44
+305            android:enabled="@bool/enable_system_alarm_service_default"
+305-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:42:13-72
+306            android:exported="false" />
+306-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:43:13-37
+307        <service
+307-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:46:9-52:35
+308            android:name="androidx.work.impl.background.systemjob.SystemJobService"
+308-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:47:13-84
+309            android:directBootAware="false"
+309-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:48:13-44
+310            android:enabled="@bool/enable_system_job_service_default"
+310-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:49:13-70
+311            android:exported="true"
+311-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:50:13-36
+312            android:permission="android.permission.BIND_JOB_SERVICE" />
+312-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:51:13-69
+313
+314        <receiver
+314-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:61:9-66:35
+315            android:name="androidx.work.impl.utils.ForceStopRunnable$BroadcastReceiver"
+315-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:62:13-88
+316            android:directBootAware="false"
+316-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:63:13-44
+317            android:enabled="true"
+317-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:64:13-35
+318            android:exported="false" />
+318-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:65:13-37
+319        <receiver
+319-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:67:9-77:20
+320            android:name="androidx.work.impl.background.systemalarm.ConstraintProxy$BatteryChargingProxy"
+320-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:68:13-106
+321            android:directBootAware="false"
+321-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:69:13-44
+322            android:enabled="false"
+322-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:70:13-36
+323            android:exported="false" >
+323-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:71:13-37
+324            <intent-filter>
+324-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:73:13-76:29
+325                <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
+325-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:74:17-87
+325-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:74:25-84
+326                <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED" />
+326-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:75:17-90
+326-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:75:25-87
+327            </intent-filter>
+328        </receiver>
+329        <receiver
+329-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:78:9-88:20
+330            android:name="androidx.work.impl.background.systemalarm.ConstraintProxy$BatteryNotLowProxy"
+330-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:79:13-104
+331            android:directBootAware="false"
+331-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:80:13-44
+332            android:enabled="false"
+332-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:81:13-36
+333            android:exported="false" >
+333-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:82:13-37
+334            <intent-filter>
+334-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:84:13-87:29
+335                <action android:name="android.intent.action.BATTERY_OKAY" />
+335-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:85:17-77
+335-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:85:25-74
+336                <action android:name="android.intent.action.BATTERY_LOW" />
+336-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:86:17-76
+336-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:86:25-73
+337            </intent-filter>
+338        </receiver>
+339        <receiver
+339-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:89:9-99:20
+340            android:name="androidx.work.impl.background.systemalarm.ConstraintProxy$StorageNotLowProxy"
+340-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:90:13-104
+341            android:directBootAware="false"
+341-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:91:13-44
+342            android:enabled="false"
+342-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:92:13-36
+343            android:exported="false" >
+343-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:93:13-37
+344            <intent-filter>
+344-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:95:13-98:29
+345                <action android:name="android.intent.action.DEVICE_STORAGE_LOW" />
+345-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:96:17-83
+345-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:96:25-80
+346                <action android:name="android.intent.action.DEVICE_STORAGE_OK" />
+346-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:97:17-82
+346-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:97:25-79
+347            </intent-filter>
+348        </receiver>
+349        <receiver
+349-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:100:9-109:20
+350            android:name="androidx.work.impl.background.systemalarm.ConstraintProxy$NetworkStateProxy"
+350-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:101:13-103
+351            android:directBootAware="false"
+351-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:102:13-44
+352            android:enabled="false"
+352-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:103:13-36
+353            android:exported="false" >
+353-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:104:13-37
+354            <intent-filter>
+354-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:106:13-108:29
+355                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+355-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:107:17-79
+355-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:107:25-76
+356            </intent-filter>
+357        </receiver>
+358        <receiver
+358-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:110:9-121:20
+359            android:name="androidx.work.impl.background.systemalarm.RescheduleReceiver"
+359-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:111:13-88
+360            android:directBootAware="false"
+360-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:112:13-44
+361            android:enabled="false"
+361-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:113:13-36
+362            android:exported="false" >
+362-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:114:13-37
+363            <intent-filter>
+363-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:116:13-120:29
+364                <action android:name="android.intent.action.BOOT_COMPLETED" />
+364-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:117:17-79
+364-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:117:25-76
+365                <action android:name="android.intent.action.TIME_SET" />
+365-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:118:17-73
+365-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:118:25-70
+366                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+366-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:119:17-81
+366-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:119:25-78
+367            </intent-filter>
+368        </receiver>
+369        <receiver
+369-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:122:9-131:20
+370            android:name="androidx.work.impl.background.systemalarm.ConstraintProxyUpdateReceiver"
+370-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:123:13-99
+371            android:directBootAware="false"
+371-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:124:13-44
+372            android:enabled="@bool/enable_system_alarm_service_default"
+372-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:125:13-72
+373            android:exported="false" >
+373-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:126:13-37
+374            <intent-filter>
+374-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:128:13-130:29
+375                <action android:name="androidx.work.impl.background.systemalarm.UpdateProxies" />
+375-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:129:17-98
+375-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:129:25-95
+376            </intent-filter>
+377        </receiver>
+378        <receiver
+378-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:132:9-142:20
+379            android:name="androidx.work.impl.diagnostics.DiagnosticsReceiver"
+379-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:133:13-78
+380            android:directBootAware="false"
+380-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:134:13-44
+381            android:enabled="true"
+381-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:135:13-35
+382            android:exported="true"
+382-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:136:13-36
+383            android:permission="android.permission.DUMP" >
+383-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:137:13-57
+384            <intent-filter>
+384-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:139:13-141:29
+385                <action android:name="androidx.work.diagnostics.REQUEST_DIAGNOSTICS" />
+385-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:140:17-88
+385-->[androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:140:25-85
+386            </intent-filter>
+387        </receiver>
+388
+389        <service
+389-->[androidx.room:room-runtime:2.6.1] C:\Users\Romulo\.gradle\caches\transforms-3\6c51dba7cabe48f764b02e6adfe1783e\transformed\room-runtime-2.6.1\AndroidManifest.xml:24:9-28:63
+390            android:name="androidx.room.MultiInstanceInvalidationService"
+390-->[androidx.room:room-runtime:2.6.1] C:\Users\Romulo\.gradle\caches\transforms-3\6c51dba7cabe48f764b02e6adfe1783e\transformed\room-runtime-2.6.1\AndroidManifest.xml:25:13-74
+391            android:directBootAware="true"
+391-->[androidx.room:room-runtime:2.6.1] C:\Users\Romulo\.gradle\caches\transforms-3\6c51dba7cabe48f764b02e6adfe1783e\transformed\room-runtime-2.6.1\AndroidManifest.xml:26:13-43
+392            android:exported="false" />
+392-->[androidx.room:room-runtime:2.6.1] C:\Users\Romulo\.gradle\caches\transforms-3\6c51dba7cabe48f764b02e6adfe1783e\transformed\room-runtime-2.6.1\AndroidManifest.xml:27:13-37
+393
+394        <uses-library
+394-->[androidx.window:window:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\8f3ed43d24507b782ffc48ded471c2f2\transformed\jetified-window-1.0.0\AndroidManifest.xml:25:9-27:40
+395            android:name="androidx.window.extensions"
+395-->[androidx.window:window:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\8f3ed43d24507b782ffc48ded471c2f2\transformed\jetified-window-1.0.0\AndroidManifest.xml:26:13-54
+396            android:required="false" />
+396-->[androidx.window:window:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\8f3ed43d24507b782ffc48ded471c2f2\transformed\jetified-window-1.0.0\AndroidManifest.xml:27:13-37
+397        <uses-library
+397-->[androidx.window:window:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\8f3ed43d24507b782ffc48ded471c2f2\transformed\jetified-window-1.0.0\AndroidManifest.xml:28:9-30:40
+398            android:name="androidx.window.sidecar"
+398-->[androidx.window:window:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\8f3ed43d24507b782ffc48ded471c2f2\transformed\jetified-window-1.0.0\AndroidManifest.xml:29:13-51
+399            android:required="false" />
+399-->[androidx.window:window:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\8f3ed43d24507b782ffc48ded471c2f2\transformed\jetified-window-1.0.0\AndroidManifest.xml:30:13-37
 400
-401        <receiver
-401-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:34:9-52:20
-402            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-402-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:35:13-76
-403            android:directBootAware="false"
-403-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:36:13-44
-404            android:enabled="true"
-404-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:37:13-35
-405            android:exported="true"
-405-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:38:13-36
-406            android:permission="android.permission.DUMP" >
-406-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:39:13-57
-407            <intent-filter>
-407-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:40:13-42:29
-408                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-408-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:41:17-91
-408-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:41:25-88
-409            </intent-filter>
-410            <intent-filter>
-410-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:43:13-45:29
-411                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-411-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:44:17-85
-411-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:44:25-82
-412            </intent-filter>
-413            <intent-filter>
-413-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:46:13-48:29
-414                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-414-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:47:17-88
-414-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:47:25-85
-415            </intent-filter>
-416            <intent-filter>
-416-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:49:13-51:29
-417                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-417-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:50:17-95
-417-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:50:25-92
-418            </intent-filter>
-419        </receiver>
-420    </application>
-421
-422</manifest>
+401        <activity
+401-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:47:9-53:63
+402            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+402-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:48:13-74
+403            android:clearTaskOnLaunch="true"
+403-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:49:13-45
+404            android:screenOrientation="sensorLandscape"
+404-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:50:13-56
+405            android:stateNotNeeded="true"
+405-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:51:13-42
+406            android:theme="@style/zxing_CaptureTheme"
+406-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:52:13-54
+407            android:windowSoftInputMode="stateAlwaysHidden" />
+407-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:53:13-60
+408
+409        <receiver
+409-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:34:9-52:20
+410            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+410-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:35:13-76
+411            android:directBootAware="false"
+411-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:36:13-44
+412            android:enabled="true"
+412-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:37:13-35
+413            android:exported="true"
+413-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:38:13-36
+414            android:permission="android.permission.DUMP" >
+414-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:39:13-57
+415            <intent-filter>
+415-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:40:13-42:29
+416                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+416-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:41:17-91
+416-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:41:25-88
+417            </intent-filter>
+418            <intent-filter>
+418-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:43:13-45:29
+419                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+419-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:44:17-85
+419-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:44:25-82
+420            </intent-filter>
+421            <intent-filter>
+421-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:46:13-48:29
+422                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+422-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:47:17-88
+422-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:47:25-85
+423            </intent-filter>
+424            <intent-filter>
+424-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:49:13-51:29
+425                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+425-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:50:17-95
+425-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\c62f4d1bdd8d7d974f7d8f44b938380a\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:50:25-92
+426            </intent-filter>
+427        </receiver>
+428    </application>
+429
+430</manifest>

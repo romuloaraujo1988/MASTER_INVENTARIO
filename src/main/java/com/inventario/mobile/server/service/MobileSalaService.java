@@ -3,6 +3,7 @@ package com.inventario.mobile.server.service;
 import com.inventario.dao.SalaDAO;
 import com.inventario.model.Sala;
 import com.inventario.mobile.server.dto.MobileSalaDTO;
+import com.inventario.mobile.server.dto.MobileSalaComProgressoDTO;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,7 @@ public class MobileSalaService {
     
     public MobileSalaService() {
         // Não mantém instância do DAO - cria nova a cada chamada
-        logger.info("MobileSalaService inicializado");
+        logger.debug("MobileSalaService inicializado");
     }
     
     /**
@@ -40,7 +41,7 @@ public class MobileSalaService {
      * Salas com coleta_finalizada = true NÃO aparecem na lista de seleção
      */
     public List<MobileSalaDTO> listarTodasSalas() throws SQLException {
-        logger.info("Listando TODAS as salas ativas (excluindo salas com coleta finalizada)");
+        logger.debug("Listando salas ativas");
         
         long startTime = System.currentTimeMillis();
         
@@ -97,7 +98,7 @@ public class MobileSalaService {
         }
         
         long endTime = System.currentTimeMillis();
-        logger.info("✓ Retornadas {} salas em {}ms", dtos.size(), (endTime - startTime));
+        logger.debug("Retornadas {} salas em {}ms", dtos.size(), (endTime - startTime));
         
         return dtos;
     }
@@ -113,7 +114,7 @@ public class MobileSalaService {
      * @return Lista de salas paginadas
      */
     public List<MobileSalaDTO> listarSalasPaginado(int page, int size) throws SQLException {
-        logger.info("Listando salas paginadas (page: {}, size: {}) - excluindo finalizadas", page, size);
+        logger.debug("Listando salas paginadas (page: {}, size: {})", page, size);
         
         long startTime = System.currentTimeMillis();
         
@@ -172,7 +173,7 @@ public class MobileSalaService {
         }
         
         long endTime = System.currentTimeMillis();
-        logger.info("✓ Retornadas {} salas em {}ms", dtos.size(), (endTime - startTime));
+        logger.debug("Retornadas {} salas em {}ms", dtos.size(), (endTime - startTime));
         
         return dtos;
     }
@@ -265,12 +266,110 @@ public class MobileSalaService {
     }
     
     /**
+     * Lista todas as salas com estatísticas de progresso de coleta.
+     * Retorna total de patrimônios, coletados, pendentes e percentual.
+     * 
+     * @param idInventario ID do inventário (null = inventário ativo)
+     * @return Lista de salas com progresso
+     */
+    public List<MobileSalaComProgressoDTO> listarSalasComProgresso(Integer idInventario) throws SQLException {
+        logger.info("Listando salas com progresso para inventário: {}", 
+            idInventario != null ? idInventario : "ATIVO");
+        
+        long startTime = System.currentTimeMillis();
+        
+        // Se não informou inventário, buscar o ativo
+        Integer idInv = idInventario;
+        if (idInv == null) {
+            idInv = buscarIdInventarioAtivo();
+            if (idInv == null) {
+                logger.warn("Nenhum inventário ativo encontrado");
+                return new ArrayList<>();
+            }
+        }
+        
+        // Query que retorna salas com contagem de patrimônios e coletas
+        String sql = """
+            SELECT 
+                s.ID_SALA,
+                s.NUMERO_SALA,
+                s.DESCRICAO,
+                s.ANDAR,
+                s.BLOCO,
+                s.ATIVO,
+                COUNT(DISTINCT p.ID) as total_patrimonios,
+                COUNT(DISTINCT c.ID) as coletados
+            FROM TABELA_SALA s
+            LEFT JOIN TABELA_PATRIMONIO p ON p.ID_SALA = s.ID_SALA
+            LEFT JOIN TABELA_COLETA c ON c.ID_PATRIMONIO = p.ID AND c.ID_INVENTARIO = ?
+            WHERE s.ATIVO = true
+            GROUP BY s.ID_SALA, s.NUMERO_SALA, s.DESCRICAO, s.ANDAR, s.BLOCO, s.ATIVO
+            ORDER BY s.NUMERO_SALA, s.DESCRICAO
+            """;
+        
+        List<MobileSalaComProgressoDTO> dtos = new ArrayList<>();
+        
+        try (java.sql.Connection conn = com.inventario.util.DatabaseConnection.getConnection();
+             java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idInv);
+            
+            try (java.sql.ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    MobileSalaComProgressoDTO dto = new MobileSalaComProgressoDTO();
+                    dto.setId(rs.getInt("ID_SALA"));
+                    
+                    String numeroSala = rs.getString("NUMERO_SALA");
+                    String descricao = rs.getString("DESCRICAO");
+                    String nomeExibicao = (numeroSala != null && !numeroSala.trim().isEmpty()) 
+                        ? numeroSala 
+                        : descricao;
+                    
+                    dto.setNumeroSala(numeroSala);
+                    dto.setNome(nomeExibicao);
+                    dto.setDescricao(descricao);
+                    dto.setAndar(rs.getString("ANDAR"));
+                    dto.setBloco(rs.getString("BLOCO"));
+                    dto.setAtiva(rs.getBoolean("ATIVO"));
+                    dto.setTotalPatrimonios(rs.getInt("total_patrimonios"));
+                    dto.setColetados(rs.getInt("coletados"));
+                    dto.calcularEstatisticas();
+                    
+                    dtos.add(dto);
+                }
+            }
+        }
+        
+        long endTime = System.currentTimeMillis();
+        logger.info("✓ Retornadas {} salas com progresso em {}ms", dtos.size(), (endTime - startTime));
+        
+        return dtos;
+    }
+    
+    /**
+     * Busca o ID do inventário ativo (EM_ANDAMENTO)
+     */
+    private Integer buscarIdInventarioAtivo() throws SQLException {
+        String sql = "SELECT ID FROM TABELA_INVENTARIO WHERE STATUS_INVENTARIO = 'EM_ANDAMENTO' ORDER BY DATA_INICIO DESC LIMIT 1";
+        
+        try (java.sql.Connection conn = com.inventario.util.DatabaseConnection.getConnection();
+             java.sql.PreparedStatement stmt = conn.prepareStatement(sql);
+             java.sql.ResultSet rs = stmt.executeQuery()) {
+            
+            if (rs.next()) {
+                return rs.getInt("ID");
+            }
+        }
+        return null;
+    }
+    
+    /**
      * Busca sala por ID
      * 
      * CORREÇÃO 26/11/2025: Cria nova instância do DAO a cada chamada
      */
     public MobileSalaDTO buscarPorId(Integer id) throws SQLException {
-        logger.info("Buscando sala por ID: {}", id);
+        logger.debug("Buscando sala por ID: {}", id);
         
         try {
             // Criar nova instância do DAO para esta operação
@@ -278,15 +377,14 @@ public class MobileSalaService {
             Sala sala = salaDAO.buscarSalaPorId(id);
             
             if (sala != null) {
-                logger.info("✓ Sala encontrada: {}", sala.getDescricao());
                 return converterParaDTO(sala);
             }
             
-            logger.warn("Sala não encontrada com ID: {}", id);
+            logger.debug("Sala não encontrada com ID: {}", id);
             return null;
             
         } catch (SQLException e) {
-            logger.error("❌ ERRO SQL ao buscar sala {}: {}", id, e.getMessage());
+            logger.error("Erro SQL ao buscar sala {}: {}", id, e.getMessage());
             throw e;
         }
     }

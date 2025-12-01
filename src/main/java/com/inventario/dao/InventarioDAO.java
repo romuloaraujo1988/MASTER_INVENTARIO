@@ -1,7 +1,6 @@
 package com.inventario.dao;
 
 import com.inventario.model.Inventario;
-import com.inventario.util.DatabaseConnection;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
@@ -23,7 +22,7 @@ import java.util.List;
  */
 @Repository
 public class InventarioDAO extends BaseDAO<Inventario, Integer> {
-    
+
     /**
      * Detecta se está usando SQLite
      * NOTA: Para operações do desktop/servidor, sempre usar PostgreSQL
@@ -33,7 +32,7 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         // O modo offline SQLite é apenas para o app Android
         return false;
     }
-    
+
     /**
      * Retorna o nome correto da tabela de inventário
      * NOTA: Sempre usa TABELA_INVENTARIO (PostgreSQL)
@@ -42,9 +41,9 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         // CORREÇÃO: Sempre usar tabela PostgreSQL
         return "TABELA_INVENTARIO";
     }
-    
+
     // ==================== MÉTODOS ABSTRATOS IMPLEMENTADOS ====================
-    
+
     @Override
     protected String getTableName() {
         try {
@@ -53,19 +52,19 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
             return "TABELA_INVENTARIO"; // Fallback
         }
     }
-    
+
     @Override
     protected String getInsertSQL() {
         return "INSERT INTO TABELA_INVENTARIO (NOME, DATA_INICIO, DATA_FIM, STATUS_INVENTARIO, " +
-               "RESPONSAVEL_INVENTARIO, PERCENTUAL_CONCLUSAO) VALUES (?, ?, ?, ?, ?, ?)";
+                "RESPONSAVEL_INVENTARIO, PERCENTUAL_CONCLUSAO) VALUES (?, ?, ?, ?, ?, ?)";
     }
-    
+
     @Override
     protected String getUpdateSQL() {
         return "UPDATE TABELA_INVENTARIO SET NOME = ?, DATA_INICIO = ?, DATA_FIM = ?, " +
-               "STATUS_INVENTARIO = ?, RESPONSAVEL_INVENTARIO = ?, PERCENTUAL_CONCLUSAO = ? WHERE ID = ?";
+                "STATUS_INVENTARIO = ?, RESPONSAVEL_INVENTARIO = ?, PERCENTUAL_CONCLUSAO = ? WHERE ID = ?";
     }
-    
+
     @Override
     protected void setInsertParameters(PreparedStatement stmt, Inventario inventario) throws SQLException {
         stmt.setString(1, inventario.getNome());
@@ -75,20 +74,20 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         stmt.setString(5, inventario.getResponsavelInventario());
         stmt.setBigDecimal(6, inventario.getPercentualConclusao());
     }
-    
+
     @Override
     protected void setUpdateParameters(PreparedStatement stmt, Inventario inventario) throws SQLException {
         setInsertParameters(stmt, inventario);
         stmt.setInt(7, inventario.getId());
     }
-    
+
     @Override
     protected Inventario mapResultSetToEntity(ResultSet rs) throws SQLException {
         Inventario inventario = new Inventario();
-        
+
         inventario.setId(rs.getInt("ID"));
         inventario.setNome(rs.getString("NOME"));
-        
+
         // Ler DATA_INICIO com tratamento robusto
         try {
             try {
@@ -110,7 +109,7 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         } catch (Exception e) {
             // Ignorar erros
         }
-        
+
         // Ler DATA_FIM com tratamento robusto
         try {
             try {
@@ -132,11 +131,11 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         } catch (Exception e) {
             // Ignorar erros
         }
-        
+
         inventario.setStatusInventario(rs.getString("STATUS_INVENTARIO"));
         inventario.setResponsavelInventario(rs.getString("RESPONSAVEL_INVENTARIO"));
         inventario.setPercentualConclusao(rs.getBigDecimal("PERCENTUAL_CONCLUSAO"));
-        
+
         // Campos opcionais
         try {
             Timestamp dataCriacao = rs.getTimestamp("DATA_CRIACAO");
@@ -146,17 +145,17 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         } catch (SQLException e) {
             // Campo pode não existir
         }
-        
+
         return inventario;
     }
-    
+
     @Override
     protected void setGeneratedId(Inventario inventario, int id) {
         inventario.setId(id);
     }
-    
+
     // ==================== MÉTODOS ESPECÍFICOS ====================
-    
+
     /**
      * Lista todos os inventários ordenados por nome
      */
@@ -165,18 +164,18 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         String sql = "SELECT * FROM TABELA_INVENTARIO ORDER BY NOME";
         return executeQuery(sql);
     }
-    
+
     /**
      * Busca inventários por filtro (nome ou status)
      */
     public List<Inventario> buscarPorFiltro(String filtro) throws SQLException {
         String sql = "SELECT * FROM TABELA_INVENTARIO " +
-                    "WHERE UPPER(NOME) LIKE UPPER(?) OR UPPER(STATUS_INVENTARIO) LIKE UPPER(?) " +
-                    "ORDER BY NOME";
+                "WHERE UPPER(NOME) LIKE UPPER(?) OR UPPER(STATUS_INVENTARIO) LIKE UPPER(?) " +
+                "ORDER BY NOME";
         String filtroLike = "%" + filtro + "%";
         return executeQuery(sql, filtroLike, filtroLike);
     }
-    
+
     /**
      * Busca inventário por status (retorna o mais recente)
      * Compatível com PostgreSQL (TABELA_INVENTARIO) e SQLite (local_inventario)
@@ -184,25 +183,25 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
     public Inventario buscarPorStatus(String status) throws SQLException {
         String tableName = getInventarioTableName();
         boolean isSqlite = tableName.equals("local_inventario");
-        
+
         String sql;
         if (isSqlite) {
             sql = "SELECT id as ID, nome_inventario as NOME, data_inicio as DATA_INICIO, " +
-                  "data_fim as DATA_FIM, status as STATUS_INVENTARIO, " +
-                  "responsavel as RESPONSAVEL_INVENTARIO, percentual_conclusao as PERCENTUAL_CONCLUSAO, " +
-                  "local_created_at as DATA_CRIACAO " +
-                  "FROM " + tableName + " " +
-                  "WHERE status = ? " +
-                  "ORDER BY local_created_at DESC LIMIT 1";
+                    "data_fim as DATA_FIM, status as STATUS_INVENTARIO, " +
+                    "responsavel as RESPONSAVEL_INVENTARIO, percentual_conclusao as PERCENTUAL_CONCLUSAO, " +
+                    "local_created_at as DATA_CRIACAO " +
+                    "FROM " + tableName + " " +
+                    "WHERE status = ? " +
+                    "ORDER BY local_created_at DESC LIMIT 1";
         } else {
             sql = "SELECT * FROM " + tableName + " " +
-                  "WHERE STATUS_INVENTARIO = ? " +
-                  "ORDER BY DATA_CRIACAO DESC LIMIT 1";
+                    "WHERE STATUS_INVENTARIO = ? " +
+                    "ORDER BY DATA_CRIACAO DESC LIMIT 1";
         }
-        
+
         return executeQuerySingle(sql, status);
     }
-    
+
     /**
      * Busca o inventário ativo (em andamento)
      * Retorna o inventário com status EM_ANDAMENTO mais recente
@@ -211,54 +210,54 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
     public Inventario buscarInventarioAtivo() throws SQLException {
         String tableName = getInventarioTableName();
         boolean isSqlite = tableName.equals("local_inventario");
-        
+
         String sql;
         if (isSqlite) {
             sql = "SELECT id as ID, nome_inventario as NOME, data_inicio as DATA_INICIO, " +
-                  "data_fim as DATA_FIM, status as STATUS_INVENTARIO, " +
-                  "responsavel as RESPONSAVEL_INVENTARIO, percentual_conclusao as PERCENTUAL_CONCLUSAO, " +
-                  "local_created_at as DATA_CRIACAO " +
-                  "FROM " + tableName + " " +
-                  "WHERE status = 'EM_ANDAMENTO' " +
-                  "ORDER BY data_inicio DESC LIMIT 1";
+                    "data_fim as DATA_FIM, status as STATUS_INVENTARIO, " +
+                    "responsavel as RESPONSAVEL_INVENTARIO, percentual_conclusao as PERCENTUAL_CONCLUSAO, " +
+                    "local_created_at as DATA_CRIACAO " +
+                    "FROM " + tableName + " " +
+                    "WHERE status = 'EM_ANDAMENTO' " +
+                    "ORDER BY data_inicio DESC LIMIT 1";
         } else {
             sql = "SELECT * FROM " + tableName + " " +
-                  "WHERE STATUS_INVENTARIO = 'EM_ANDAMENTO' " +
-                  "ORDER BY DATA_INICIO DESC LIMIT 1";
+                    "WHERE STATUS_INVENTARIO = 'EM_ANDAMENTO' " +
+                    "ORDER BY DATA_INICIO DESC LIMIT 1";
         }
-        
+
         Inventario inventario = executeQuerySingle(sql);
-        
+
         if (inventario == null) {
             // Fallback: buscar o inventário mais recente independente do status
             if (isSqlite) {
                 sql = "SELECT id as ID, nome_inventario as NOME, data_inicio as DATA_INICIO, " +
-                      "data_fim as DATA_FIM, status as STATUS_INVENTARIO, " +
-                      "responsavel as RESPONSAVEL_INVENTARIO, percentual_conclusao as PERCENTUAL_CONCLUSAO, " +
-                      "local_created_at as DATA_CRIACAO " +
-                      "FROM " + tableName + " " +
-                      "ORDER BY data_inicio DESC LIMIT 1";
+                        "data_fim as DATA_FIM, status as STATUS_INVENTARIO, " +
+                        "responsavel as RESPONSAVEL_INVENTARIO, percentual_conclusao as PERCENTUAL_CONCLUSAO, " +
+                        "local_created_at as DATA_CRIACAO " +
+                        "FROM " + tableName + " " +
+                        "ORDER BY data_inicio DESC LIMIT 1";
             } else {
                 sql = "SELECT * FROM " + tableName + " " +
-                      "ORDER BY DATA_INICIO DESC LIMIT 1";
+                        "ORDER BY DATA_INICIO DESC LIMIT 1";
             }
-            
+
             inventario = executeQuerySingle(sql);
         }
-        
+
         return inventario;
     }
-    
+
     /**
      * Busca inventários por status (todos)
      */
     public List<Inventario> buscarTodosPorStatus(String status) throws SQLException {
         String sql = "SELECT * FROM TABELA_INVENTARIO " +
-                    "WHERE STATUS_INVENTARIO = ? " +
-                    "ORDER BY DATA_CRIACAO DESC";
+                "WHERE STATUS_INVENTARIO = ? " +
+                "ORDER BY DATA_CRIACAO DESC";
         return executeQuery(sql, status);
     }
-    
+
     /**
      * Finaliza um inventário (altera status para CONCLUIDO)
      */
@@ -266,7 +265,7 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         String sql = "UPDATE TABELA_INVENTARIO SET STATUS_INVENTARIO = ?, PERCENTUAL_CONCLUSAO = ? WHERE ID = ?";
         return executeUpdate(sql, "CONCLUIDO", new java.math.BigDecimal("100.00"), id) > 0;
     }
-    
+
     /**
      * Atualiza o percentual de conclusão
      */
@@ -274,7 +273,7 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         String sql = "UPDATE TABELA_INVENTARIO SET PERCENTUAL_CONCLUSAO = ? WHERE ID = ?";
         return executeUpdate(sql, percentual, id) > 0;
     }
-    
+
     /**
      * Atualiza o status do inventário
      */
@@ -282,7 +281,7 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         String sql = "UPDATE TABELA_INVENTARIO SET STATUS_INVENTARIO = ? WHERE ID = ?";
         return executeUpdate(sql, status, id) > 0;
     }
-    
+
     /**
      * Conta inventários por status
      */
@@ -291,7 +290,7 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         Integer count = executeScalar(sql, Integer.class, status);
         return count != null ? count : 0;
     }
-    
+
     /**
      * Verifica se existe inventário ativo (EM_ANDAMENTO)
      */
@@ -300,11 +299,9 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         Integer count = executeScalar(sql, Integer.class);
         return count != null && count > 0;
     }
-    
 
-    
     // ==================== MÉTODOS LEGADOS (COMPATIBILIDADE) ====================
-    
+
     /**
      * @deprecated Use insert() do BaseDAO que retorna void
      */
@@ -318,7 +315,7 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
             return null;
         }
     }
-    
+
     /**
      * @deprecated Use update() do BaseDAO
      */
@@ -332,7 +329,7 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
             return false;
         }
     }
-    
+
     /**
      * @deprecated Use delete() do BaseDAO
      */
@@ -346,7 +343,7 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
             return false;
         }
     }
-    
+
     /**
      * @deprecated Use findAll() do BaseDAO
      */
@@ -359,7 +356,7 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
             return new java.util.ArrayList<>();
         }
     }
-    
+
     /**
      * @deprecated Use findById() do BaseDAO
      */
@@ -372,7 +369,7 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
             return null;
         }
     }
-    
+
     /**
      * @deprecated Use buscarPorFiltro()
      */
@@ -385,7 +382,7 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
             return new java.util.ArrayList<>();
         }
     }
-    
+
     /**
      * @deprecated Use buscarPorStatus()
      */
@@ -398,24 +395,25 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
             return null;
         }
     }
-    
+
     /**
      * Método auxiliar para parsear data de String em diferentes formatos
-     * Necessário para compatibilidade com SQLite que pode retornar timestamps em formatos variados
+     * Necessário para compatibilidade com SQLite que pode retornar timestamps em
+     * formatos variados
      */
     private java.sql.Date parseDataFromString(String dataStr) throws Exception {
         if (dataStr == null || dataStr.trim().isEmpty()) {
             return null;
         }
-        
+
         String[] formatos = {
-            "yyyy-MM-dd HH:mm:ss.SSS",
-            "yyyy-MM-dd HH:mm:ss",
-            "yyyy-MM-dd",
-            "dd/MM/yyyy HH:mm:ss",
-            "dd/MM/yyyy"
+                "yyyy-MM-dd HH:mm:ss.SSS",
+                "yyyy-MM-dd HH:mm:ss",
+                "yyyy-MM-dd",
+                "dd/MM/yyyy HH:mm:ss",
+                "dd/MM/yyyy"
         };
-        
+
         for (String formato : formatos) {
             try {
                 java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(formato);
@@ -426,7 +424,7 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
                 // Tentar próximo formato
             }
         }
-        
+
         // Se nenhum formato funcionou, tentar parsear como long (milissegundos)
         try {
             long millis = Long.parseLong(dataStr);
@@ -434,12 +432,13 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         } catch (NumberFormatException e) {
             // Não é um número
         }
-        
+
         throw new Exception("Não foi possível parsear a data: " + dataStr);
     }
-    
+
     /**
-     * Busca múltiplos inventários por IDs em uma única query (otimização de performance)
+     * Busca múltiplos inventários por IDs em uma única query (otimização de
+     * performance)
      * 
      * @param ids lista de IDs dos inventários
      * @return lista de inventários encontrados
@@ -449,32 +448,32 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         if (ids == null || ids.isEmpty()) {
             return new java.util.ArrayList<>();
         }
-        
+
         String tableName = getInventarioTableName();
         String placeholders = String.join(",", java.util.Collections.nCopies(ids.size(), "?"));
         String sql = "SELECT * FROM " + tableName + " WHERE id IN (" + placeholders + ")";
-        
+
         List<Inventario> inventarios = new java.util.ArrayList<>();
-        
+
         Connection conn = null;
         try {
             conn = com.inventario.util.DatabaseConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql);
-            
+
             for (int i = 0; i < ids.size(); i++) {
                 stmt.setInt(i + 1, ids.get(i));
             }
-            
+
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 inventarios.add(mapResultSetToEntity(rs));
             }
-            
+
             // Log: Buscados X inventários em batch
         } finally {
             com.inventario.util.ConnectionManager.closeConnection(conn);
         }
-        
+
         return inventarios;
     }
 }

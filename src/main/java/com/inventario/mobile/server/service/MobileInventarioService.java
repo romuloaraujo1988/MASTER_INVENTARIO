@@ -37,12 +37,12 @@ public class MobileInventarioService {
      * Busca o inventário ativo (em andamento)
      */
     public MobileInventarioDTO buscarInventarioAtivo() throws SQLException {
-        logger.info("Buscando inventário ativo");
+        logger.debug("Buscando inventário ativo");
         
         Inventario inventario = inventarioDAO.buscarInventarioAtivo();
         
         if (inventario == null) {
-            logger.warn("Nenhum inventário ativo encontrado");
+            logger.debug("Nenhum inventário ativo encontrado");
             return null;
         }
         
@@ -53,7 +53,7 @@ public class MobileInventarioService {
      * Busca inventário por ID
      */
     public MobileInventarioDTO buscarPorId(Integer id) throws SQLException {
-        logger.info("Buscando inventário por ID: {}", id);
+        logger.debug("Buscando inventário por ID: {}", id);
         
         Inventario inventario = inventarioDAO.findById(id);
         
@@ -68,7 +68,7 @@ public class MobileInventarioService {
      * Lista todos os inventários
      */
     public List<MobileInventarioDTO> listarInventarios() throws SQLException {
-        logger.info("Listando todos os inventários");
+        logger.debug("Listando inventários");
         
         List<Inventario> inventarios = inventarioDAO.findAll();
         List<MobileInventarioDTO> dtos = new ArrayList<>();
@@ -77,7 +77,7 @@ public class MobileInventarioService {
             dtos.add(converterParaDTO(inventario));
         }
         
-        logger.info("Encontrados {} inventários", dtos.size());
+        logger.debug("Encontrados {} inventários", dtos.size());
         
         return dtos;
     }
@@ -86,7 +86,7 @@ public class MobileInventarioService {
      * Busca estatísticas do inventário
      */
     public Map<String, Object> buscarEstatisticas(Integer idInventario) throws SQLException {
-        logger.info("Buscando estatísticas do inventário: {}", idInventario);
+        logger.debug("Buscando estatísticas do inventário: {}", idInventario);
         
         Inventario inventario = inventarioDAO.findById(idInventario);
         
@@ -119,7 +119,7 @@ public class MobileInventarioService {
         estatisticas.put("dataInicio", inventario.getDataInicio());
         estatisticas.put("dataFim", inventario.getDataFim());
         
-        logger.info("Estatísticas: {}% concluído ({}/{})", 
+        logger.debug("Estatísticas: {}% concluído ({}/{})", 
                 Math.round(percentualConclusao), totalColetados, totalPatrimonios);
         
         return estatisticas;

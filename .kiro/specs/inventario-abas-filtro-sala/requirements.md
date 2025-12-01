@@ -2,78 +2,86 @@
 
 ## Introduction
 
-Este documento especifica os requisitos para a implementação de um sistema de abas na tela de visualização de inventário do app Android (`InventarioActivity`), permitindo múltiplas formas de consulta e filtro dos patrimônios coletados. A funcionalidade principal é adicionar uma nova aba com filtro por sala, complementando a aba existente de filtro por responsável, para facilitar o acompanhamento do progresso da coleta por localização física.
+Este documento especifica os requisitos para a implementação de uma nova aba na tela de Inventário do aplicativo Android, permitindo a visualização de patrimônios filtrados por sala. Atualmente, a tela de inventário possui apenas filtro por responsável. A nova funcionalidade adicionará uma segunda aba para filtrar patrimônios por sala, exibindo estatísticas de coleta (encontrados vs. não coletados) para cada sala selecionada.
 
 ## Glossary
 
-- **Inventário**: Processo de levantamento e verificação de patrimônios em um determinado período
-- **Coleta**: Registro de verificação de um patrimônio durante o inventário
+- **Inventário**: Processo de levantamento e verificação de patrimônios de uma instituição
+- **Patrimônio**: Bem material pertencente à instituição, identificado por número único
 - **Sala**: Localização física onde os patrimônios estão alocados
-- **Patrimônio**: Bem patrimonial da instituição identificado por número único
-- **Status de Coleta**: Indica se um patrimônio foi coletado (verificado) ou está pendente
-- **TabLayout**: Componente Material Design do Android que permite organizar conteúdo em abas
-- **ViewPager2**: Componente Android para navegação entre fragmentos via swipe
-- **InventarioActivity**: Tela de visualização de patrimônios do inventário no app Android
-- **RecyclerView**: Componente Android para exibição de listas com reciclagem de views
-- **ChipGroup**: Componente Material Design para filtros com chips selecionáveis
+- **Coleta**: Ato de registrar que um patrimônio foi encontrado durante o inventário
+- **Patrimônio Coletado/Encontrado**: Patrimônio que já foi verificado e registrado no inventário atual
+- **Patrimônio Não Coletado/Pendente**: Patrimônio que ainda não foi verificado no inventário atual
+- **TabLayout**: Componente Android para navegação entre abas
+- **ViewPager2**: Componente Android para exibição de conteúdo paginado com suporte a swipe
 
 ## Requirements
 
 ### Requirement 1
 
-**User Story:** As a mobile inventory operator, I want to view collection progress by room on my Android device, so that I can identify which physical locations still need verification while in the field.
+**User Story:** As a inventory collector, I want to filter assets by room, so that I can see which assets have been collected and which are still pending in each room.
 
 #### Acceptance Criteria
 
-1. WHEN the user opens the InventarioActivity THEN the system SHALL display a TabLayout with two tabs: "Por Responsável" and "Por Sala"
-2. WHEN the user selects the "Por Sala" tab THEN the system SHALL display a dropdown (AutoCompleteTextView) with all rooms from the current inventory
-3. WHEN the user selects a room from the dropdown THEN the system SHALL display a RecyclerView showing all assets in that room with their collection status
-4. WHEN displaying assets by room THEN the system SHALL show: Número Patrimônio, Descrição, Status indicator (green check for collected, yellow warning for pending)
-5. WHEN a room has uncollected assets THEN the system SHALL display pending items with a yellow/orange background color in the list item
+1. WHEN the user opens the Inventory screen THEN the System SHALL display a TabLayout with two tabs: "Por Responsável" and "Por Sala"
+2. WHEN the user selects the "Por Sala" tab THEN the System SHALL display a dropdown/spinner with all available rooms
+3. WHEN the user selects a room from the dropdown THEN the System SHALL load and display all assets assigned to that room
+4. WHEN assets are displayed for a selected room THEN the System SHALL show a summary card with the count of collected assets and pending assets
+5. WHEN the user switches between tabs THEN the System SHALL preserve the filter state of each tab independently
 
 ### Requirement 2
 
-**User Story:** As a mobile inventory operator, I want to filter collected and pending assets separately on my phone, so that I can focus on items that still need verification.
+**User Story:** As a inventory collector, I want to see collection statistics for each room, so that I can track my progress and prioritize rooms with more pending assets.
 
 #### Acceptance Criteria
 
-1. WHEN viewing assets by room THEN the system SHALL provide a ChipGroup with filter options: "Todos", "Coletados", "Pendentes"
-2. WHEN the user selects "Coletados" chip THEN the system SHALL display only assets that have been collected in the current inventory
-3. WHEN the user selects "Pendentes" chip THEN the system SHALL display only assets that have not been collected yet
-4. WHEN the filter changes THEN the system SHALL update the RecyclerView immediately using DiffUtil for smooth animations
-5. WHEN displaying filtered results THEN the system SHALL show a count summary in a TextView: "Exibindo X de Y patrimônios"
+1. WHEN a room is selected THEN the System SHALL display a statistics card showing: total assets, collected count, pending count, and collection percentage
+2. WHEN the statistics are displayed THEN the System SHALL use visual indicators (colors/icons) to differentiate collected from pending counts
+3. WHEN the collection percentage is below 50% THEN the System SHALL display the percentage in a warning color (orange/yellow)
+4. WHEN the collection percentage is 100% THEN the System SHALL display a completion indicator (green checkmark)
+5. WHEN no room is selected THEN the System SHALL display a message prompting the user to select a room
 
 ### Requirement 3
 
-**User Story:** As a mobile inventory manager, I want to see room-level statistics on my device, so that I can quickly assess collection progress per location.
+**User Story:** As a inventory collector, I want to filter the asset list by collection status within a room, so that I can focus on pending assets or review collected ones.
 
 #### Acceptance Criteria
 
-1. WHEN the user views the "Por Sala" tab THEN the system SHALL display a summary CardView showing: total rooms, rooms completed (100%), rooms in progress
-2. WHEN a room has all assets collected THEN the system SHALL display a green checkmark icon next to the room name in the dropdown
-3. WHEN a room has partial collection THEN the system SHALL show the percentage completed (e.g., "Sala 101 - 75%") next to the room name
-4. WHEN the user long-presses a room in the dropdown THEN the system SHALL display a Toast or Snackbar with: total assets, collected count, pending count
+1. WHEN a room is selected THEN the System SHALL display filter chips: "Todos", "Coletados", "Não Coletados"
+2. WHEN the user selects "Coletados" chip THEN the System SHALL display only assets that have been collected in the current inventory
+3. WHEN the user selects "Não Coletados" chip THEN the System SHALL display only assets that have not been collected yet
+4. WHEN the user selects "Todos" chip THEN the System SHALL display all assets in the selected room
+5. WHEN the filter changes THEN the System SHALL update the statistics card to reflect the filtered count
 
 ### Requirement 4
 
-**User Story:** As a mobile inventory operator, I want to search for specific assets within a room on my phone, so that I can quickly locate items by number or description.
+**User Story:** As a inventory collector, I want the room list to show collection progress, so that I can quickly identify which rooms need attention.
 
 #### Acceptance Criteria
 
-1. WHEN viewing the "Por Sala" tab THEN the system SHALL provide a SearchView in the toolbar or a TextInputLayout above the RecyclerView
-2. WHEN the user types in the search field THEN the system SHALL filter the RecyclerView to show only assets matching the search term (by number or description)
-3. WHEN the search field is cleared THEN the system SHALL restore the full list of assets for the selected room
-4. WHEN no results match the search THEN the system SHALL display an empty state view with message "Nenhum patrimônio encontrado"
+1. WHEN the room dropdown is displayed THEN the System SHALL show each room name with its collection progress (e.g., "Sala 101 - 15/20 coletados")
+2. WHEN a room has 100% collection THEN the System SHALL display a visual indicator (checkmark icon) next to the room name
+3. WHEN a room has 0% collection THEN the System SHALL display a visual indicator (warning icon) next to the room name
+4. WHEN the user types in the room search field THEN the System SHALL filter the room list by name or number
 
 ### Requirement 5
 
-**User Story:** As a mobile user, I want the app to remember my tab selection, so that I can continue where I left off when returning to the screen.
+**User Story:** As a inventory collector, I want the interface to work offline, so that I can view room statistics even without internet connection.
 
 #### Acceptance Criteria
 
-1. WHEN the user switches between tabs THEN the system SHALL preserve the selected filters and search terms for each tab using ViewModel
-2. WHEN the user navigates away and returns to InventarioActivity THEN the system SHALL restore the last active tab using SavedStateHandle
-3. WHEN the user selects a different inventory THEN the system SHALL reset all filters to default values
+1. WHEN the device is offline THEN the System SHALL load room and asset data from local database
+2. WHEN the device is offline THEN the System SHALL display an offline indicator in the toolbar
+3. WHEN the device reconnects THEN the System SHALL synchronize any pending changes automatically
+4. WHEN local data is stale (older than 24 hours) THEN the System SHALL display a warning message suggesting synchronization
 
+### Requirement 6
 
+**User Story:** As a inventory collector, I want to see a visual representation of collection progress, so that I can quickly understand the overall status.
 
+#### Acceptance Criteria
+
+1. WHEN a room is selected THEN the System SHALL display a progress bar showing collection percentage
+2. WHEN the progress bar is displayed THEN the System SHALL use color coding: red (0-25%), orange (26-50%), yellow (51-75%), green (76-100%)
+3. WHEN the user taps on the progress bar THEN the System SHALL display a detailed breakdown of collection statistics
+4. WHEN the statistics are displayed THEN the System SHALL include: total assets, collected today, collected this week, remaining

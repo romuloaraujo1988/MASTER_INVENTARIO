@@ -42,4 +42,40 @@ interface PatrimonioRepository {
     suspend fun buscarPorNumero(numero: String): Patrimonio?
     suspend fun buscarDescricoesNaoColetadas(): List<String>
     suspend fun buscarPorDescricaoNaoColetados(descricao: String): List<Patrimonio>
+    
+    // ========================================
+    // Métodos para Inventário por Sala
+    // ========================================
+    
+    /**
+     * Busca patrimônios por sala com filtro opcional de status de coleta e paginação.
+     * 
+     * @param salaId ID da sala
+     * @param coletado Filtro de status: null = todos, true = coletados, false = não coletados
+     * @param page Número da página (0-indexed)
+     * @param pageSize Quantidade de itens por página
+     * @return Result com lista de patrimônios ou erro
+     */
+    suspend fun buscarPorSala(
+        salaId: Int,
+        coletado: Boolean? = null,
+        page: Int = 0,
+        pageSize: Int = 20
+    ): Result<List<Patrimonio>>
+    
+    /**
+     * Conta total de patrimônios em uma sala.
+     * 
+     * @param salaId ID da sala
+     * @return Result com total de patrimônios ou erro
+     */
+    suspend fun contarPorSala(salaId: Int): Result<Int>
+    
+    /**
+     * Conta patrimônios coletados em uma sala.
+     * 
+     * @param salaId ID da sala
+     * @return Result com total de patrimônios coletados ou erro
+     */
+    suspend fun contarColetadosPorSala(salaId: Int): Result<Int>
 }

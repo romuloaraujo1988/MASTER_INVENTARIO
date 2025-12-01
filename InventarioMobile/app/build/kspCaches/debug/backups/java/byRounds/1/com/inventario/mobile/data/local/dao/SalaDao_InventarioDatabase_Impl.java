@@ -12,6 +12,7 @@ import androidx.room.SharedSQLiteStatement;
 import androidx.room.util.CursorUtil;
 import androidx.room.util.DBUtil;
 import androidx.sqlite.db.SupportSQLiteStatement;
+import com.inventario.mobile.data.local.entity.SalaComEstatisticasEntity;
 import com.inventario.mobile.data.local.entity.SalaEntity;
 import java.lang.Class;
 import java.lang.Exception;
@@ -529,6 +530,142 @@ public final class SalaDao_InventarioDatabase_Impl implements SalaDao {
             _result = _tmp;
           } else {
             _result = 0;
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object buscarComEstatisticas(
+      final Continuation<? super List<SalaComEstatisticasEntity>> $completion) {
+    final String _sql = "\n"
+            + "        SELECT s.*, \n"
+            + "               COUNT(p.id) as total_patrimonios,\n"
+            + "               SUM(CASE WHEN p.coletado = 1 THEN 1 ELSE 0 END) as coletados\n"
+            + "        FROM sala s\n"
+            + "        LEFT JOIN patrimonio p ON p.idSala = s.id\n"
+            + "        WHERE s.ativa = 1\n"
+            + "        GROUP BY s.id\n"
+            + "        ORDER BY s.nome ASC\n"
+            + "    ";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<SalaComEstatisticasEntity>>() {
+      @Override
+      @NonNull
+      public List<SalaComEstatisticasEntity> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfNome = CursorUtil.getColumnIndexOrThrow(_cursor, "nome");
+          final int _cursorIndexOfIdSetor = CursorUtil.getColumnIndexOrThrow(_cursor, "idSetor");
+          final int _cursorIndexOfNomeSetor = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSetor");
+          final int _cursorIndexOfAtiva = CursorUtil.getColumnIndexOrThrow(_cursor, "ativa");
+          final int _cursorIndexOfDataUltimaAtualizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "dataUltimaAtualizacao");
+          final int _cursorIndexOfTotalPatrimonios = CursorUtil.getColumnIndexOrThrow(_cursor, "total_patrimonios");
+          final int _cursorIndexOfColetados = CursorUtil.getColumnIndexOrThrow(_cursor, "coletados");
+          final List<SalaComEstatisticasEntity> _result = new ArrayList<SalaComEstatisticasEntity>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final SalaComEstatisticasEntity _item;
+            final int _tmpTotalPatrimonios;
+            _tmpTotalPatrimonios = _cursor.getInt(_cursorIndexOfTotalPatrimonios);
+            final int _tmpColetados;
+            _tmpColetados = _cursor.getInt(_cursorIndexOfColetados);
+            final SalaEntity _tmpSala;
+            final int _tmpId;
+            _tmpId = _cursor.getInt(_cursorIndexOfId);
+            final String _tmpNome;
+            _tmpNome = _cursor.getString(_cursorIndexOfNome);
+            final Integer _tmpIdSetor;
+            if (_cursor.isNull(_cursorIndexOfIdSetor)) {
+              _tmpIdSetor = null;
+            } else {
+              _tmpIdSetor = _cursor.getInt(_cursorIndexOfIdSetor);
+            }
+            final String _tmpNomeSetor;
+            if (_cursor.isNull(_cursorIndexOfNomeSetor)) {
+              _tmpNomeSetor = null;
+            } else {
+              _tmpNomeSetor = _cursor.getString(_cursorIndexOfNomeSetor);
+            }
+            final boolean _tmpAtiva;
+            final int _tmp;
+            _tmp = _cursor.getInt(_cursorIndexOfAtiva);
+            _tmpAtiva = _tmp != 0;
+            final long _tmpDataUltimaAtualizacao;
+            _tmpDataUltimaAtualizacao = _cursor.getLong(_cursorIndexOfDataUltimaAtualizacao);
+            _tmpSala = new SalaEntity(_tmpId,_tmpNome,_tmpIdSetor,_tmpNomeSetor,_tmpAtiva,_tmpDataUltimaAtualizacao);
+            _item = new SalaComEstatisticasEntity(_tmpSala,_tmpTotalPatrimonios,_tmpColetados);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object buscarPorNomeOuNumero(final String query,
+      final Continuation<? super List<SalaEntity>> $completion) {
+    final String _sql = "\n"
+            + "        SELECT * FROM sala \n"
+            + "        WHERE ativa = 1 \n"
+            + "        AND (nome LIKE '%' || ? || '%' OR id LIKE '%' || ? || '%')\n"
+            + "        ORDER BY nome ASC\n"
+            + "    ";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 2);
+    int _argIndex = 1;
+    _statement.bindString(_argIndex, query);
+    _argIndex = 2;
+    _statement.bindString(_argIndex, query);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<SalaEntity>>() {
+      @Override
+      @NonNull
+      public List<SalaEntity> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfNome = CursorUtil.getColumnIndexOrThrow(_cursor, "nome");
+          final int _cursorIndexOfIdSetor = CursorUtil.getColumnIndexOrThrow(_cursor, "idSetor");
+          final int _cursorIndexOfNomeSetor = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSetor");
+          final int _cursorIndexOfAtiva = CursorUtil.getColumnIndexOrThrow(_cursor, "ativa");
+          final int _cursorIndexOfDataUltimaAtualizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "dataUltimaAtualizacao");
+          final List<SalaEntity> _result = new ArrayList<SalaEntity>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final SalaEntity _item;
+            final int _tmpId;
+            _tmpId = _cursor.getInt(_cursorIndexOfId);
+            final String _tmpNome;
+            _tmpNome = _cursor.getString(_cursorIndexOfNome);
+            final Integer _tmpIdSetor;
+            if (_cursor.isNull(_cursorIndexOfIdSetor)) {
+              _tmpIdSetor = null;
+            } else {
+              _tmpIdSetor = _cursor.getInt(_cursorIndexOfIdSetor);
+            }
+            final String _tmpNomeSetor;
+            if (_cursor.isNull(_cursorIndexOfNomeSetor)) {
+              _tmpNomeSetor = null;
+            } else {
+              _tmpNomeSetor = _cursor.getString(_cursorIndexOfNomeSetor);
+            }
+            final boolean _tmpAtiva;
+            final int _tmp;
+            _tmp = _cursor.getInt(_cursorIndexOfAtiva);
+            _tmpAtiva = _tmp != 0;
+            final long _tmpDataUltimaAtualizacao;
+            _tmpDataUltimaAtualizacao = _cursor.getLong(_cursorIndexOfDataUltimaAtualizacao);
+            _item = new SalaEntity(_tmpId,_tmpNome,_tmpIdSetor,_tmpNomeSetor,_tmpAtiva,_tmpDataUltimaAtualizacao);
+            _result.add(_item);
           }
           return _result;
         } finally {

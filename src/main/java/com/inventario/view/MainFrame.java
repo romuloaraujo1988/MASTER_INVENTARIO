@@ -739,7 +739,16 @@ public class MainFrame extends JFrame {
         statusTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
+                // Verificar servidor mobile em background (não bloqueia UI)
+                boolean mobileOnline = verificarServidorMobile();
+                
                 SwingUtilities.invokeLater(() -> {
+                    // Atualizar status do servidor mobile
+                    if (mobileOnline != servidorMobileAtivo) {
+                        servidorMobileAtivo = mobileOnline;
+                        atualizarIndicadorServidorMobile();
+                    }
+                    
                     // Verifica se está em estado INITIALIZING e força transição se conectividade
                     // detectada
                     if (offlineManager.getCurrentState() == OfflineManager.OfflineState.INITIALIZING) {
@@ -1514,14 +1523,28 @@ public class MainFrame extends JFrame {
      */
     private boolean verificarServidorMobile() {
         try {
-            java.net.URI uri = java.net.URI.create("http://localhost:8081/inventario/actuator/health");
+            // Primeiro tenta o endpoint de info (não depende do status do banco)
+            java.net.URI uri = java.net.URI.create("http://localhost:8081/inventario/actuator/info");
             java.net.HttpURLConnection conn = (java.net.HttpURLConnection) uri.toURL().openConnection();
             conn.setRequestMethod("GET");
             conn.setConnectTimeout(2000);
             conn.setReadTimeout(2000);
 
             int responseCode = conn.getResponseCode();
-            return responseCode == 200;
+            if (responseCode == 200) {
+                return true;
+            }
+            
+            // Fallback: tenta o health (aceita 200 ou 503 - servidor está rodando)
+            uri = java.net.URI.create("http://localhost:8081/inventario/actuator/health");
+            conn = (java.net.HttpURLConnection) uri.toURL().openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(2000);
+            conn.setReadTimeout(2000);
+            
+            responseCode = conn.getResponseCode();
+            // 200 = UP, 503 = DOWN (mas servidor está rodando)
+            return responseCode == 200 || responseCode == 503;
         } catch (Exception e) {
             return false;
         }

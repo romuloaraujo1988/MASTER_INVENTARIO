@@ -2,6 +2,7 @@ package com.inventario.mobile.api
 
 import com.inventario.mobile.data.remote.dto.ApiResponse
 import com.inventario.mobile.data.remote.dto.PagedResponse
+import com.inventario.mobile.data.remote.dto.SalaComProgressoDTO
 import com.inventario.mobile.data.model.Sala
 import retrofit2.Response
 import retrofit2.http.GET
@@ -64,4 +65,16 @@ interface SalaApi {
         @Query("page") page: Int,
         @Query("size") size: Int
     ): Response<PagedResponse<Sala>>
+    
+    /**
+     * Lista salas com estatísticas de progresso de coleta.
+     * Retorna total de patrimônios, coletados, pendentes e percentual.
+     * 
+     * @param inventarioId ID do inventário (opcional, usa ativo se não informado)
+     * @return Lista de salas com progresso
+     */
+    @GET("api/mobile/salas/com-progresso")
+    suspend fun listarSalasComProgresso(
+        @Query("inventarioId") inventarioId: Int? = null
+    ): Response<ApiResponse<List<SalaComProgressoDTO>>>
 }

@@ -235,4 +235,87 @@ class LocalDataSourceStrategy(
     }
     
     override fun getSourceType(): DataSourceType = DataSourceType.LOCAL
+    
+    // ========================================
+    // Métodos para Inventário por Sala
+    // ========================================
+    
+    /**
+     * Busca patrimônios por sala com filtro opcional de status de coleta e paginação.
+     */
+    suspend fun buscarPorSala(
+        salaId: Int,
+        coletado: Boolean?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<Patrimonio>> = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "Buscando patrimônios da sala $salaId (coletado=$coletado, page=$page)")
+            
+            val offset = page * pageSize
+            val entities = patrimonioDao.buscarPorSala(salaId, coletado, pageSize, offset)
+            
+            val patrimonios = entities.map { entity ->
+                Patrimonio(
+                    id = entity.id.toLong(),
+                    numeroPatrimonio = entity.numero,
+                    descricao = entity.descricao,
+                    marca = null,
+                    modelo = null,
+                    numeroSerie = null,
+                    estado = entity.status,
+                    valor = null,
+                    setorId = null,
+                    setorNome = null,
+                    salaId = entity.idSala?.toLong(),
+                    salaNome = entity.nomeSala,
+                    responsavelId = entity.idResponsavel?.toLong(),
+                    responsavelNome = entity.nomeResponsavel,
+                    qrCode = entity.numero,
+                    observacoes = null,
+                    coletado = entity.coletado,
+                    dataColeta = null,
+                    coletadoPor = null,
+                    dataColetaFormatada = null,
+                    observacoesColeta = null,
+                    sincronizado = true,
+                    servidorId = null
+                )
+            }
+            
+            Log.d(TAG, "✓ ${patrimonios.size} patrimônios encontrados na sala $salaId")
+            Result.success(patrimonios)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao buscar patrimônios da sala", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Conta total de patrimônios em uma sala.
+     */
+    suspend fun contarPorSala(salaId: Int): Result<Int> = withContext(Dispatchers.IO) {
+        try {
+            val total = patrimonioDao.contarPorSala(salaId)
+            Log.d(TAG, "✓ Total: $total patrimônios na sala $salaId")
+            Result.success(total)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao contar patrimônios da sala", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Conta patrimônios coletados em uma sala.
+     */
+    suspend fun contarColetadosPorSala(salaId: Int): Result<Int> = withContext(Dispatchers.IO) {
+        try {
+            val total = patrimonioDao.contarColetadosPorSala(salaId)
+            Log.d(TAG, "✓ Total coletados: $total na sala $salaId")
+            Result.success(total)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao contar patrimônios coletados", e)
+            Result.failure(e)
+        }
+    }
 }

@@ -1,305 +1,355 @@
-# Design Document - Inventário com Abas e Filtro por Sala (Android)
+# Design Document - Inventário com Abas e Filtro por Sala
 
 ## Overview
 
-Este documento descreve o design para implementação de um sistema de abas na `InventarioActivity` do app Android, adicionando uma nova aba "Por Sala" que permite visualizar e filtrar patrimônios por localização física. A implementação segue Clean Architecture + MVVM conforme as diretrizes do projeto.
+Esta funcionalidade adiciona uma nova aba na tela de Inventário do aplicativo Android, permitindo filtrar patrimônios por sala. A implementação segue Clean Architecture + MVVM, reutilizando componentes existentes e adicionando novos Use Cases e ViewModels específicos para a funcionalidade de filtro por sala.
+
+A tela atual de Inventário será refatorada para usar TabLayout + ViewPager2, com duas abas:
+1. **Por Responsável** - Funcionalidade existente (mantida)
+2. **Por Sala** - Nova funcionalidade
 
 ## Architecture
-
-### Padrão Arquitetural
-- **MVVM** (Model-View-ViewModel) com StateFlow
-- **Clean Architecture** com separação em camadas (presentation, domain, data)
-- **Hilt** para injeção de dependência
-
-### Diagrama de Componentes
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    InventarioActivity                            │
 │  ┌─────────────────────────────────────────────────────────┐    │
-│  │                    TabLayout                             │    │
-│  │  ┌──────────────────┐  ┌──────────────────┐             │    │
-│  │  │ Por Responsável  │  │    Por Sala      │             │    │
-│  │  └──────────────────┘  └──────────────────┘             │    │
+│  │                     TabLayout                            │    │
+│  │  [Por Responsável]  [Por Sala]                          │    │
 │  └─────────────────────────────────────────────────────────┘    │
 │  ┌─────────────────────────────────────────────────────────┐    │
 │  │                    ViewPager2                            │    │
-│  │  ┌─────────────────────────────────────────────────┐    │    │
-│  │  │  ResponsavelFragment  │  SalaFragment           │    │    │
-│  │  └─────────────────────────────────────────────────┘    │    │
+│  │  ┌─────────────────┐  ┌─────────────────┐               │    │
+│  │  │ ResponsavelFrag │  │   SalaFragment  │               │    │
+│  │  │  (existente)    │  │     (novo)      │               │    │
+│  │  └─────────────────┘  └─────────────────┘               │    │
 │  └─────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
+```
+
+### Clean Architecture Layers
+
+```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    InventarioViewModel                           │
-│  - salasState: StateFlow<SalasUiState>                          │
-│  - patrimoniosPorSalaState: StateFlow<PatrimoniosSalaState>     │
-│  - loadSalas()                                                   │
-│  - loadPatrimoniosBySala(salaId, coletado?)                     │
-│  - filterPatrimonios(query)                                      │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Use Cases                                     │
-│  - BuscarSalasUseCase                                           │
-│  - BuscarPatrimoniosPorSalaUseCase                              │
-│  - BuscarEstatisticasSalaUseCase                                │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Repository                                    │
-│  - SalaRepository                                                │
-│  - PatrimonioRepository                                          │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Data Sources                                  │
-│  - SalaApi (GET /api/mobile/salas)                              │
-│  - PatrimonioApi (GET /api/mobile/patrimonio/sala/{salaId})     │
+│                    Presentation Layer                            │
+│  - InventarioActivity (refatorada com TabLayout)                │
+│  - InventarioPorResponsavelFragment (extraído do existente)     │
+│  - InventarioPorSalaFragment (novo)                             │
+│  - InventarioPorSalaViewModel (novo)                            │
+│  - InventarioPorSalaState (novo)                                │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────────┐
+│                      Domain Layer                                │
+│  - BuscarPatrimoniosPorSalaUseCase (novo)                       │
+│  - BuscarEstatisticasSalaUseCase (novo)                         │
+│  - BuscarSalasComProgressoUseCase (novo)                        │
+│  - SalaComProgresso (novo model)                                │
+│  - EstatisticasSala (novo model)                                │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────────┐
+│                       Data Layer                                 │
+│  - SalaRepositoryImpl (atualizado)                              │
+│  - PatrimonioRepositoryImpl (atualizado)                        │
+│  - SalaDao (atualizado com novas queries)                       │
+│  - PatrimonioDao (atualizado com novas queries)                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ## Components and Interfaces
 
-### 1. UI Components
-
-#### SalaFragment
-```kotlin
-@AndroidEntryPoint
-class SalaFragment : Fragment() {
-    private val viewModel: InventarioViewModel by activityViewModels()
-    
-    // UI Components
-    - spinnerSala: AutoCompleteTextView
-    - chipGroupStatus: ChipGroup (Todos, Coletados, Pendentes)
-    - searchView: SearchView
-    - recyclerView: RecyclerView
-    - cardEstatisticas: CardView
-    - tvTotalCount: TextView
-    - emptyView: View
-}
-```
-
-#### SalaAdapter (para dropdown)
-```kotlin
-class SalaDropdownAdapter(
-    context: Context,
-    salas: List<SalaComEstatisticas>
-) : ArrayAdapter<SalaComEstatisticas> {
-    // Exibe: "Sala 101 - 75% ✓" ou "Sala 102 - 30%"
-}
-```
-
-#### PatrimonioSalaAdapter (para RecyclerView)
-```kotlin
-class PatrimonioSalaAdapter(
-    private val onItemClick: (Patrimonio) -> Unit
-) : ListAdapter<Patrimonio, PatrimonioSalaViewHolder>(PatrimonioDiffCallback()) {
-    // Exibe patrimônios com indicador de status (verde/amarelo)
-}
-```
-
-### 2. ViewModel States
+### 1. Domain Models (Novos)
 
 ```kotlin
-// Estado das salas
-sealed class SalasUiState {
-    object Idle : SalasUiState()
-    object Loading : SalasUiState()
-    data class Success(
-        val salas: List<SalaComEstatisticas>,
-        val totalSalas: Int,
-        val salasCompletas: Int,
-        val salasEmProgresso: Int
-    ) : SalasUiState()
-    data class Error(val message: String) : SalasUiState()
-}
-
-// Estado dos patrimônios por sala
-sealed class PatrimoniosSalaState {
-    object Idle : PatrimoniosSalaState()
-    object Loading : PatrimoniosSalaState()
-    data class Success(
-        val patrimonios: List<Patrimonio>,
-        val patrimoniosFiltrados: List<Patrimonio>,
-        val totalPatrimonios: Int,
-        val coletados: Int,
-        val pendentes: Int,
-        val searchQuery: String,
-        val filtroStatus: FiltroStatus
-    ) : PatrimoniosSalaState()
-    data class Error(val message: String) : PatrimoniosSalaState()
-}
-
-enum class FiltroStatus { TODOS, COLETADOS, PENDENTES }
-```
-
-### 3. Domain Models
-
-```kotlin
-data class SalaComEstatisticas(
+// domain/model/SalaComProgresso.kt
+data class SalaComProgresso(
     val id: Int,
     val nome: String,
     val numero: String?,
-    val setorNome: String?,
     val totalPatrimonios: Int,
     val coletados: Int,
     val pendentes: Int,
-    val percentualConcluido: Float,
-    val isCompleta: Boolean
-)
-```
-
-### 4. API Endpoints (já existentes)
-
-| Endpoint | Método | Descrição |
-|----------|--------|-----------|
-| `/api/mobile/salas` | GET | Lista todas as salas |
-| `/api/mobile/patrimonio/sala/{salaId}` | GET | Patrimônios por sala |
-
-### 5. Novo Endpoint Necessário
-
-```java
-// MobilePatrimonioController.java
-@GetMapping("/sala/{salaId}/estatisticas")
-public ResponseEntity<ApiResponse<SalaEstatisticasDTO>> buscarEstatisticasSala(
-    @PathVariable Integer salaId,
-    @RequestParam(required = false) Integer inventarioId
+    val percentualColeta: Float
 ) {
-    // Retorna: totalPatrimonios, coletados, pendentes, percentual
+    val isCompleta: Boolean get() = percentualColeta >= 100f
+    val isVazia: Boolean get() = totalPatrimonios == 0
+    val temPendentes: Boolean get() = pendentes > 0
 }
-```
 
-## Data Models
-
-### API DTOs
-
-```kotlin
-// Resposta do endpoint de salas com estatísticas
-data class SalaEstatisticasDTO(
+// domain/model/EstatisticasSala.kt
+data class EstatisticasSala(
     val salaId: Int,
     val salaNome: String,
     val totalPatrimonios: Int,
     val coletados: Int,
     val pendentes: Int,
-    val percentualConcluido: Float
+    val percentualColeta: Float,
+    val coletadosHoje: Int,
+    val coletadosSemana: Int
 )
 ```
 
-### Room Entities (para cache offline)
+### 2. Use Cases (Novos)
 
 ```kotlin
-@Entity(tableName = "sala_estatisticas")
-data class SalaEstatisticasEntity(
-    @PrimaryKey val salaId: Int,
-    val salaNome: String,
-    val totalPatrimonios: Int,
-    val coletados: Int,
-    val pendentes: Int,
-    val percentualConcluido: Float,
-    val lastUpdated: Long
+// domain/usecase/BuscarPatrimoniosPorSalaUseCase.kt
+class BuscarPatrimoniosPorSalaUseCase @Inject constructor(
+    private val patrimonioRepository: PatrimonioRepository
+) {
+    suspend operator fun invoke(
+        salaId: Int,
+        coletado: Boolean? = null,
+        page: Int = 0,
+        pageSize: Int = 20
+    ): Result<List<Patrimonio>>
+}
+
+// domain/usecase/BuscarEstatisticasSalaUseCase.kt
+class BuscarEstatisticasSalaUseCase @Inject constructor(
+    private val patrimonioRepository: PatrimonioRepository,
+    private val coletaRepository: ColetaRepository
+) {
+    suspend operator fun invoke(salaId: Int): Result<EstatisticasSala>
+}
+
+// domain/usecase/BuscarSalasComProgressoUseCase.kt
+class BuscarSalasComProgressoUseCase @Inject constructor(
+    private val salaRepository: SalaRepository,
+    private val patrimonioRepository: PatrimonioRepository
+) {
+    suspend operator fun invoke(): Result<List<SalaComProgresso>>
+}
+```
+
+### 3. Repository Interfaces (Atualizações)
+
+```kotlin
+// domain/repository/PatrimonioRepository.kt (adicionar)
+interface PatrimonioRepository {
+    // ... métodos existentes ...
+    
+    suspend fun buscarPorSala(
+        salaId: Int,
+        coletado: Boolean? = null,
+        page: Int = 0,
+        pageSize: Int = 20
+    ): Result<List<Patrimonio>>
+    
+    suspend fun contarPorSala(salaId: Int): Result<Int>
+    suspend fun contarColetadosPorSala(salaId: Int): Result<Int>
+}
+
+// domain/repository/SalaRepository.kt (adicionar)
+interface SalaRepository {
+    // ... métodos existentes ...
+    
+    suspend fun buscarComProgresso(): Result<List<SalaComProgresso>>
+    suspend fun buscarPorNomeOuNumero(query: String): Result<List<Sala>>
+}
+```
+
+### 4. DAO Queries (Novas)
+
+```kotlin
+// data/local/dao/PatrimonioDao.kt (adicionar)
+@Query("""
+    SELECT * FROM patrimonio 
+    WHERE id_sala = :salaId 
+    AND (:coletado IS NULL OR coletado = :coletado)
+    ORDER BY numero_patrimonio
+    LIMIT :pageSize OFFSET :offset
+""")
+suspend fun buscarPorSala(
+    salaId: Int, 
+    coletado: Boolean?, 
+    pageSize: Int, 
+    offset: Int
+): List<PatrimonioEntity>
+
+@Query("SELECT COUNT(*) FROM patrimonio WHERE id_sala = :salaId")
+suspend fun contarPorSala(salaId: Int): Int
+
+@Query("SELECT COUNT(*) FROM patrimonio WHERE id_sala = :salaId AND coletado = 1")
+suspend fun contarColetadosPorSala(salaId: Int): Int
+
+// data/local/dao/SalaDao.kt (adicionar)
+@Query("""
+    SELECT s.*, 
+           COUNT(p.id) as total_patrimonios,
+           SUM(CASE WHEN p.coletado = 1 THEN 1 ELSE 0 END) as coletados
+    FROM sala s
+    LEFT JOIN patrimonio p ON p.id_sala = s.id
+    GROUP BY s.id
+    ORDER BY s.nome
+""")
+suspend fun buscarComEstatisticas(): List<SalaComEstatisticasEntity>
+
+@Query("""
+    SELECT * FROM sala 
+    WHERE nome LIKE '%' || :query || '%' 
+    OR numero LIKE '%' || :query || '%'
+    ORDER BY nome
+""")
+suspend fun buscarPorNomeOuNumero(query: String): List<SalaEntity>
+```
+
+### 5. ViewModel e State
+
+```kotlin
+// presentation/inventario/InventarioPorSalaViewModel.kt
+@HiltViewModel
+class InventarioPorSalaViewModel @Inject constructor(
+    private val buscarPatrimoniosPorSalaUseCase: BuscarPatrimoniosPorSalaUseCase,
+    private val buscarEstatisticasSalaUseCase: BuscarEstatisticasSalaUseCase,
+    private val buscarSalasComProgressoUseCase: BuscarSalasComProgressoUseCase
+) : ViewModel() {
+    
+    private val _state = MutableStateFlow<InventarioPorSalaState>(InventarioPorSalaState.Idle)
+    val state: StateFlow<InventarioPorSalaState> = _state.asStateFlow()
+    
+    fun carregarSalas()
+    fun selecionarSala(salaId: Int)
+    fun aplicarFiltro(coletado: Boolean?)
+    fun buscarSala(query: String)
+    fun carregarMaisPatrimonios()
+}
+
+// presentation/state/InventarioPorSalaState.kt
+sealed class InventarioPorSalaState {
+    object Idle : InventarioPorSalaState()
+    object Loading : InventarioPorSalaState()
+    
+    data class SalasCarregadas(
+        val salas: List<SalaComProgresso>,
+        val salasFiltradas: List<SalaComProgresso> = salas
+    ) : InventarioPorSalaState()
+    
+    data class SalaSelecionada(
+        val sala: SalaComProgresso,
+        val estatisticas: EstatisticasSala,
+        val patrimonios: List<Patrimonio>,
+        val filtroAtual: FiltroColeta = FiltroColeta.TODOS,
+        val hasMorePages: Boolean = false,
+        val isLoadingMore: Boolean = false
+    ) : InventarioPorSalaState()
+    
+    data class Error(val message: String) : InventarioPorSalaState()
+}
+
+enum class FiltroColeta { TODOS, COLETADOS, NAO_COLETADOS }
+```
+
+## Data Models
+
+### Entity para Sala com Estatísticas
+
+```kotlin
+// data/local/entity/SalaComEstatisticasEntity.kt
+data class SalaComEstatisticasEntity(
+    @Embedded val sala: SalaEntity,
+    @ColumnInfo(name = "total_patrimonios") val totalPatrimonios: Int,
+    @ColumnInfo(name = "coletados") val coletados: Int
 )
+```
+
+### Mapper
+
+```kotlin
+// data/mapper/SalaComProgressoMapper.kt
+fun SalaComEstatisticasEntity.toDomain(): SalaComProgresso {
+    val pendentes = totalPatrimonios - coletados
+    val percentual = if (totalPatrimonios > 0) {
+        (coletados.toFloat() / totalPatrimonios) * 100
+    } else 0f
+    
+    return SalaComProgresso(
+        id = sala.id,
+        nome = sala.nome,
+        numero = sala.numero,
+        totalPatrimonios = totalPatrimonios,
+        coletados = coletados,
+        pendentes = pendentes,
+        percentualColeta = percentual
+    )
+}
 ```
 
 ## Correctness Properties
 
 *A property is a characteristic or behavior that should hold true across all valid executions of a system-essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
 
-### Property 1: Room selection loads correct assets
-*For any* room selected from the dropdown, the displayed list should contain only assets where `salaId` equals the selected room's ID.
-**Validates: Requirements 1.3**
+### Property 1: Filter Correctness
+*For any* room and filter selection (TODOS, COLETADOS, NAO_COLETADOS), all displayed assets should match the filter criteria: if COLETADOS, all assets have coletado=true; if NAO_COLETADOS, all assets have coletado=false; if TODOS, the count equals total assets in room.
+**Validates: Requirements 3.2, 3.3, 3.4**
 
-### Property 2: Status indicator matches collection state
-*For any* asset displayed in the list, if `coletado == true` then the status indicator should be green, otherwise it should be yellow/orange.
-**Validates: Requirements 1.4, 1.5**
+### Property 2: Statistics Calculation Consistency
+*For any* room, the statistics should satisfy: total = coletados + pendentes, and percentual = (coletados / total) * 100 when total > 0, otherwise percentual = 0.
+**Validates: Requirements 1.4, 2.1**
 
-### Property 3: Coletados filter shows only collected
-*For any* list of assets, when "Coletados" filter is selected, all displayed items should have `coletado == true`.
-**Validates: Requirements 2.2**
+### Property 3: Color Mapping Correctness
+*For any* collection percentage, the color should match the defined ranges: red for 0-25%, orange for 26-50%, yellow for 51-75%, green for 76-100%.
+**Validates: Requirements 2.3, 6.2**
 
-### Property 4: Pendentes filter shows only pending
-*For any* list of assets, when "Pendentes" filter is selected, all displayed items should have `coletado == false`.
-**Validates: Requirements 2.3**
+### Property 4: Room Search Filtering
+*For any* search query, all displayed rooms should contain the query string in either their name or number (case-insensitive).
+**Validates: Requirements 4.4**
 
-### Property 5: Count summary is accurate
-*For any* filtered list, the count summary "Exibindo X de Y" should have X equal to the filtered list size and Y equal to the total unfiltered list size.
-**Validates: Requirements 2.5**
+### Property 5: Room Progress Display Consistency
+*For any* room in the dropdown, the displayed progress text (e.g., "15/20 coletados") should match the actual collected and total counts from the database.
+**Validates: Requirements 4.1**
 
-### Property 6: Room statistics are correct
-*For any* room, the percentage completed should equal `(coletados / totalPatrimonios) * 100`, and `isCompleta` should be true only when `coletados == totalPatrimonios`.
-**Validates: Requirements 3.1, 3.2, 3.3**
+### Property 6: Tab State Preservation
+*For any* sequence of tab switches, the filter state (selected room, selected filter chip) of each tab should be preserved when returning to that tab.
+**Validates: Requirements 1.5**
 
-### Property 7: Search filters by number or description
-*For any* search query, all displayed items should contain the query string in either `numeroPatrimonio` or `descricao` (case-insensitive).
-**Validates: Requirements 4.2**
-
-### Property 8: Clear search restores full list
-*For any* room, after clearing the search field, the displayed list should equal the original unfiltered list for that room.
-**Validates: Requirements 4.3**
-
-### Property 9: Tab state preservation
-*For any* tab switch, returning to the previous tab should restore the same filter selections and search query that were active before switching.
+### Property 7: Offline Data Loading
+*For any* offline state, the system should load room and asset data from the local database, and the loaded data should be consistent with the last synchronized state.
 **Validates: Requirements 5.1**
 
-### Property 10: Inventory change resets filters
-*For any* inventory change, all filters should be reset to default values (Todos, empty search, no room selected).
-**Validates: Requirements 5.3**
+### Property 8: Data Staleness Detection
+*For any* local data with last sync timestamp older than 24 hours, the system should display a warning message.
+**Validates: Requirements 5.4**
 
 ## Error Handling
 
 ### Network Errors
-- Exibir Snackbar com mensagem de erro e botão "Tentar novamente"
-- Manter dados em cache se disponíveis
-- Usar estratégia offline-first quando possível
+- Quando offline, carregar dados do banco local
+- Exibir indicador de modo offline
+- Permitir todas as operações de leitura
 
-### Empty States
-- Sala sem patrimônios: "Esta sala não possui patrimônios cadastrados"
-- Busca sem resultados: "Nenhum patrimônio encontrado"
-- Erro de carregamento: "Erro ao carregar dados. Toque para tentar novamente"
+### Data Errors
+- Se sala não encontrada, exibir mensagem de erro
+- Se patrimônios não carregarem, exibir estado vazio com opção de retry
+- Validar dados antes de exibir estatísticas
 
-### Loading States
-- Shimmer effect durante carregamento inicial
-- SwipeRefreshLayout para pull-to-refresh
-- ProgressBar inline para carregamento de mais itens
+### UI Errors
+- Tratar estados de loading para evitar múltiplos cliques
+- Preservar estado durante rotação de tela
+- Tratar lista vazia com mensagem apropriada
 
 ## Testing Strategy
 
-### Dual Testing Approach
+### Unit Tests
+- Testar cálculo de estatísticas (total, coletados, pendentes, percentual)
+- Testar mapeamento de cores por percentual
+- Testar filtro de busca de salas
+- Testar Use Cases com mocks de repository
 
-#### Unit Tests
-- Testar cálculo de estatísticas de sala
-- Testar lógica de filtros (Todos, Coletados, Pendentes)
-- Testar lógica de busca (case-insensitive, número ou descrição)
-- Testar mapeamento de DTOs para domain models
+### Property-Based Tests (usando Kotest)
+- **Property 1**: Gerar listas aleatórias de patrimônios com diferentes status de coleta, aplicar filtros e verificar que todos os itens retornados satisfazem o critério
+- **Property 2**: Gerar estatísticas aleatórias e verificar que total = coletados + pendentes e percentual está correto
+- **Property 3**: Gerar percentuais aleatórios (0-100) e verificar que a cor retornada está na faixa correta
+- **Property 4**: Gerar queries e listas de salas aleatórias, verificar que todas as salas retornadas contêm a query
+- **Property 5**: Gerar salas com contagens aleatórias e verificar que o texto de progresso está formatado corretamente
 
-#### Property-Based Tests (fast-check ou similar)
-- **Property 1**: Room selection loads correct assets
-- **Property 2**: Status indicator matches collection state
-- **Property 3-4**: Filter correctness (Coletados/Pendentes)
-- **Property 5**: Count summary accuracy
-- **Property 6**: Room statistics calculation
-- **Property 7-8**: Search functionality
-- **Property 9-10**: State management
+### Integration Tests
+- Testar fluxo completo de seleção de sala e carregamento de patrimônios
+- Testar persistência de estado entre abas
+- Testar comportamento offline
 
-### Testing Framework
-- **JUnit 5** para testes unitários
-- **Kotest** com property-based testing para Kotlin
-- **Mockk** para mocking de dependências
-- **Turbine** para testar StateFlow
-
-### Test Annotations
-Cada property-based test deve incluir:
-```kotlin
-/**
- * **Feature: inventario-abas-filtro-sala, Property 1: Room selection loads correct assets**
- * **Validates: Requirements 1.3**
- */
-@Test
-fun `room selection should load only assets from selected room`() {
-    // Property-based test implementation
-}
-```
+### UI Tests
+- Testar navegação entre abas
+- Testar seleção de sala no dropdown
+- Testar chips de filtro
+- Testar scroll infinito na lista de patrimônios

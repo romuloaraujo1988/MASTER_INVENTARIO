@@ -46,7 +46,7 @@ public class MobilePatrimonioService {
      * ⚠️ IMPORTANTE: Cache removido para garantir que o status de coleta seja sempre atual
      */
     public MobilePatrimonioDTO buscarPorQRCode(String qrCode) throws SQLException {
-        logger.info("Buscando patrimônio por QR Code: {}", qrCode);
+        logger.debug("Buscando patrimônio por QR Code: {}", qrCode);
         
         // QR Code geralmente contém o número do patrimônio
         Patrimonio patrimonio = patrimonioDAO.buscarPorNumero(qrCode);
@@ -60,20 +60,18 @@ public class MobilePatrimonioService {
                 if (inventarioAtivo != null) {
                     boolean foiColetado = coletaDAO.coletaExiste(inventarioAtivo.getId(), patrimonio.getId());
                     dto.setColetado(foiColetado);
-                    logger.info("✓ Patrimônio {} (QR) - coletado: {} (inventário {})", qrCode, foiColetado, inventarioAtivo.getId());
                 } else {
-                    logger.warn("⚠ Nenhum inventário ativo encontrado para verificar coleta do patrimônio {}", qrCode);
                     dto.setColetado(false);
                 }
             } catch (Exception e) {
-                logger.error("❌ Erro ao verificar coleta do patrimônio {}: {}", qrCode, e.getMessage(), e);
-                dto.setColetado(false); // Em caso de erro, assume não coletado
+                logger.error("Erro ao verificar coleta do patrimônio {}: {}", qrCode, e.getMessage());
+                dto.setColetado(false);
             }
             
             return dto;
         }
         
-        logger.warn("Patrimônio {} não encontrado no banco", qrCode);
+        logger.debug("Patrimônio {} não encontrado", qrCode);
         return null;
     }
     
@@ -84,7 +82,7 @@ public class MobilePatrimonioService {
      * ⚠️ IMPORTANTE: Cache removido para garantir que o status de coleta seja sempre atual
      */
     public MobilePatrimonioDTO buscarPorNumero(String numero) throws SQLException {
-        logger.info("Buscando patrimônio por número: {}", numero);
+        logger.debug("Buscando patrimônio por número: {}", numero);
         
         Patrimonio patrimonio = patrimonioDAO.buscarPorNumero(numero);
         
@@ -97,20 +95,18 @@ public class MobilePatrimonioService {
                 if (inventarioAtivo != null) {
                     boolean foiColetado = coletaDAO.coletaExiste(inventarioAtivo.getId(), patrimonio.getId());
                     dto.setColetado(foiColetado);
-                    logger.info("✓ Patrimônio {} - coletado: {} (inventário {})", numero, foiColetado, inventarioAtivo.getId());
                 } else {
-                    logger.warn("⚠ Nenhum inventário ativo encontrado para verificar coleta do patrimônio {}", numero);
                     dto.setColetado(false);
                 }
             } catch (Exception e) {
-                logger.error("❌ Erro ao verificar coleta do patrimônio {}: {}", numero, e.getMessage(), e);
-                dto.setColetado(false); // Em caso de erro, assume não coletado
+                logger.error("Erro ao verificar coleta do patrimônio {}: {}", numero, e.getMessage());
+                dto.setColetado(false);
             }
             
             return dto;
         }
         
-        logger.warn("Patrimônio {} não encontrado no banco", numero);
+        logger.debug("Patrimônio {} não encontrado", numero);
         return null;
     }
     
@@ -118,7 +114,7 @@ public class MobilePatrimonioService {
      * Busca patrimônios por sala
      */
     public List<MobilePatrimonioDTO> buscarPorSala(Integer salaId) throws SQLException {
-        logger.info("Buscando patrimônios da sala: {}", salaId);
+        logger.debug("Buscando patrimônios da sala: {}", salaId);
         
         List<Patrimonio> patrimonios = patrimonioDAO.buscarPorSala(salaId);
         List<MobilePatrimonioDTO> dtos = new ArrayList<>();
@@ -127,7 +123,7 @@ public class MobilePatrimonioService {
             dtos.add(converterParaDTO(patrimonio));
         }
         
-        logger.info("Encontrados {} patrimônios na sala {}", dtos.size(), salaId);
+        logger.debug("Retornados {} patrimônios da sala {}", dtos.size(), salaId);
         
         return dtos;
     }
@@ -136,7 +132,7 @@ public class MobilePatrimonioService {
      * Busca patrimônios por setor
      */
     public List<MobilePatrimonioDTO> buscarPorSetor(Integer setorId) throws SQLException {
-        logger.info("Buscando patrimônios do setor: {}", setorId);
+        logger.debug("Buscando patrimônios do setor: {}", setorId);
         
         // Buscar todas as salas
         List<com.inventario.model.Sala> todasSalas = salaDAO.listarSalas();
@@ -152,7 +148,7 @@ public class MobilePatrimonioService {
             }
         }
         
-        logger.info("Encontrados {} patrimônios no setor {}", dtos.size(), setorId);
+        logger.debug("Retornados {} patrimônios do setor {}", dtos.size(), setorId);
         
         return dtos;
     }
@@ -164,15 +160,10 @@ public class MobilePatrimonioService {
      * Usa paginação no banco de dados ao invés de carregar tudo em memória
      */
     public List<MobilePatrimonioDTO> listarPatrimonios(int page, int size) throws SQLException {
-        logger.info("═══════════════════════════════════════════");
-        logger.info("LISTANDO PATRIMÔNIOS (OTIMIZADO)");
-        logger.info("Page: {}, Size: {}", page, size);
-        logger.info("═══════════════════════════════════════════");
+        logger.debug("Listando patrimônios (page: {}, size: {})", page, size);
         
         // Buscar patrimônios com paginação no banco (OTIMIZADO)
         List<Patrimonio> patrimonios = patrimonioDAO.listarComPaginacao(page, size);
-        
-        logger.info("✓ {} patrimônios retornados do banco (página {})", patrimonios.size(), page);
         
         List<MobilePatrimonioDTO> dtos = new ArrayList<>();
         
@@ -180,8 +171,7 @@ public class MobilePatrimonioService {
             dtos.add(converterParaDTO(patrimonio));
         }
         
-        logger.info("✓ {} DTOs convertidos e prontos para retornar", dtos.size());
-        logger.info("═══════════════════════════════════════════");
+        logger.debug("Retornados {} patrimônios (página {})", dtos.size(), page);
         
         return dtos;
     }
@@ -190,7 +180,7 @@ public class MobilePatrimonioService {
      * Busca patrimônio por ID
      */
     public MobilePatrimonioDTO buscarPorId(Integer id) throws SQLException {
-        logger.info("Buscando patrimônio por ID: {}", id);
+        logger.debug("Buscando patrimônio por ID: {}", id);
         
         Patrimonio patrimonio = null;
         try {
@@ -217,16 +207,14 @@ public class MobilePatrimonioService {
      * @return lista de patrimônios filtrados e paginados
      */
     public List<MobilePatrimonioDTO> buscarPorResponsavel(Integer idResponsavel, int page, int size, Boolean coletado) throws SQLException {
-        logger.info("Buscando patrimônios do responsável {} (page: {}, size: {}, coletado: {})", idResponsavel, page, size, coletado);
+        logger.debug("Buscando patrimônios do responsável {} (page: {}, size: {}, coletado: {})", idResponsavel, page, size, coletado);
         
         // Obter inventário ativo para verificar coletas
         Inventario inventarioAtivo = null;
         try {
             inventarioAtivo = inventarioDAO.buscarInventarioAtivo();
-            if (inventarioAtivo != null) {
-                logger.info("Inventário ativo encontrado: ID={}, Nome={}", inventarioAtivo.getId(), inventarioAtivo.getNome());
-            } else {
-                logger.warn("Nenhum inventário ativo encontrado");
+            if (inventarioAtivo == null) {
+                logger.debug("Nenhum inventário ativo encontrado");
             }
         } catch (Exception e) {
             logger.warn("Erro ao obter inventário ativo: {}", e.getMessage());
@@ -238,11 +226,11 @@ public class MobilePatrimonioService {
         if (coletado != null) {
             // Buscar todos os patrimônios do responsável (sem paginação)
             patrimonios = patrimonioDAO.buscarPorResponsavel(idResponsavel);
-            logger.info("Encontrados {} patrimônios do responsável {} no banco (sem filtro)", patrimonios.size(), idResponsavel);
+            logger.debug("Encontrados {} patrimônios do responsável {} (sem filtro)", patrimonios.size(), idResponsavel);
         } else {
             // Se não há filtro, usar paginação no DAO (mais eficiente)
             patrimonios = patrimonioDAO.buscarPorResponsavelComPaginacao(idResponsavel, page, size);
-            logger.info("Encontrados {} patrimônios do responsável {} (página {})", patrimonios.size(), idResponsavel, page);
+            logger.debug("Encontrados {} patrimônios do responsável {} (página {})", patrimonios.size(), idResponsavel, page);
         }
         
         List<MobilePatrimonioDTO> dtos = new ArrayList<>();
@@ -275,7 +263,7 @@ public class MobilePatrimonioService {
             dtos.add(dto);
         }
         
-        logger.info("Após filtro de coleta: {} patrimônios", dtos.size());
+        logger.debug("Após filtro de coleta: {} patrimônios", dtos.size());
         
         // Se aplicamos filtro de coleta, precisamos paginar manualmente
         if (coletado != null) {
@@ -287,13 +275,13 @@ public class MobilePatrimonioService {
                 paginados.add(dtos.get(i));
             }
             
-            logger.info("✓ Retornando {} patrimônios do responsável {} (página {}, total filtrado: {})", 
-                    paginados.size(), idResponsavel, page, dtos.size());
+            logger.debug("Retornando {} patrimônios do responsável {} (página {})", 
+                    paginados.size(), idResponsavel, page);
             
             return paginados;
         }
         
-        logger.info("✓ Retornando {} patrimônios do responsável {} (página {})", dtos.size(), idResponsavel, page);
+        logger.debug("Retornando {} patrimônios do responsável {} (página {})", dtos.size(), idResponsavel, page);
         
         return dtos;
     }
@@ -302,11 +290,11 @@ public class MobilePatrimonioService {
      * Conta total de patrimônios por responsável
      */
     public int contarPatrimoniosPorResponsavel(Integer idResponsavel) throws SQLException {
-        logger.info("Contando patrimônios do responsável: {}", idResponsavel);
+        logger.debug("Contando patrimônios do responsável: {}", idResponsavel);
         
         int total = patrimonioDAO.contarPatrimoniosPorResponsavel(idResponsavel);
         
-        logger.info("Total de patrimônios do responsável {}: {}", idResponsavel, total);
+        logger.debug("Total de patrimônios do responsável {}: {}", idResponsavel, total);
         
         return total;
     }
@@ -319,7 +307,7 @@ public class MobilePatrimonioService {
      * @return informações sobre a coleta
      */
     public java.util.Map<String, Object> verificarSePatrimonioFoiColetado(String numeroPatrimonio, Integer inventarioId) throws SQLException {
-        logger.info("Verificando se patrimônio {} foi coletado no inventário {}", numeroPatrimonio, inventarioId);
+        logger.debug("Verificando se patrimônio {} foi coletado no inventário {}", numeroPatrimonio, inventarioId);
         
         // Buscar patrimônio
         Patrimonio patrimonio = patrimonioDAO.buscarPorNumero(numeroPatrimonio);
@@ -371,7 +359,7 @@ public class MobilePatrimonioService {
             }
         }
         
-        logger.info("Patrimônio {} {} coletado no inventário {}", 
+        logger.debug("Patrimônio {} {} coletado no inventário {}", 
                 numeroPatrimonio, coletado ? "JÁ FOI" : "NÃO FOI", inventario.getId());
         
         return resultado;
@@ -385,7 +373,7 @@ public class MobilePatrimonioService {
      * @return informações de validação
      */
     public java.util.Map<String, Object> validarPatrimonio(String numeroPatrimonio) throws SQLException {
-        logger.info("Validando patrimônio: {}", numeroPatrimonio);
+        logger.debug("Validando patrimônio: {}", numeroPatrimonio);
         
         java.util.Map<String, Object> resultado = new java.util.HashMap<>();
         
@@ -449,7 +437,7 @@ public class MobilePatrimonioService {
             resultado.put("dataColeta", dataColeta);
         }
         
-        logger.info("Patrimônio {} é válido (já coletado: {})", numeroPatrimonio, jaColetado);
+        logger.debug("Patrimônio {} é válido (já coletado: {})", numeroPatrimonio, jaColetado);
         
         return resultado;
     }
@@ -462,7 +450,7 @@ public class MobilePatrimonioService {
      * @return informações sobre duplicação
      */
     public java.util.Map<String, Object> verificarDuplicataColeta(String numeroPatrimonio, Integer inventarioId) throws SQLException {
-        logger.info("Verificando duplicata de coleta: patrimônio={}, inventário={}", numeroPatrimonio, inventarioId);
+        logger.debug("Verificando duplicata de coleta: patrimônio={}, inventário={}", numeroPatrimonio, inventarioId);
         
         java.util.Map<String, Object> resultado = new java.util.HashMap<>();
         
@@ -528,7 +516,7 @@ public class MobilePatrimonioService {
                     numeroPatrimonio, inventario.getId());
         } else {
             resultado.put("mensagem", "Patrimônio pode ser coletado");
-            logger.info("Patrimônio {} pode ser coletado no inventário {}", numeroPatrimonio, inventario.getId());
+            logger.debug("Patrimônio {} pode ser coletado no inventário {}", numeroPatrimonio, inventario.getId());
         }
         
         return resultado;
@@ -543,7 +531,7 @@ public class MobilePatrimonioService {
      * @return lista de patrimônios não coletados com essa descrição
      */
     public List<MobilePatrimonioDTO> buscarPorDescricaoNaoColetados(String descricao, Integer inventarioId) throws SQLException {
-        logger.info("Buscando patrimônios não coletados com descrição: '{}'", descricao);
+        logger.debug("Buscando patrimônios não coletados com descrição: '{}'", descricao);
         
         // Obter inventário
         Inventario inventario;
@@ -560,7 +548,7 @@ public class MobilePatrimonioService {
         
         // Buscar todos os patrimônios com essa descrição
         List<Patrimonio> todosPatrimonios = patrimonioDAO.buscarPorDescricao(descricao);
-        logger.info("Encontrados {} patrimônios com descrição '{}'", todosPatrimonios.size(), descricao);
+        logger.debug("Encontrados {} patrimônios com descrição '{}'", todosPatrimonios.size(), descricao);
         
         // Filtrar apenas os não coletados
         List<MobilePatrimonioDTO> naoColetados = new ArrayList<>();
@@ -575,9 +563,122 @@ public class MobilePatrimonioService {
             }
         }
         
-        logger.info("✓ {} patrimônios NÃO coletados com descrição '{}'", naoColetados.size(), descricao);
+        logger.debug("{} patrimônios NÃO coletados com descrição '{}'", naoColetados.size(), descricao);
         
         return naoColetados;
+    }
+    
+    /**
+     * Busca patrimônios por sala com paginação e filtro de coleta.
+     * 
+     * @param salaId ID da sala
+     * @param page número da página (0-based)
+     * @param size tamanho da página
+     * @param coletado filtro de coleta (true=coletados, false=não coletados, null=todos)
+     * @param inventarioId ID do inventário (opcional, usa ativo se null)
+     * @return lista de patrimônios filtrados e paginados
+     */
+    public List<MobilePatrimonioDTO> buscarPorSalaComFiltro(Integer salaId, int page, int size, Boolean coletado, Integer inventarioId) throws SQLException {
+        logger.debug("Buscando patrimônios da sala {} (page: {}, size: {}, coletado: {}, inventário: {})", 
+                salaId, page, size, coletado, inventarioId);
+        
+        // Obter inventário
+        Inventario inventario;
+        if (inventarioId != null) {
+            inventario = inventarioDAO.findById(inventarioId);
+        } else {
+            inventario = inventarioDAO.buscarInventarioAtivo();
+        }
+        
+        if (inventario == null) {
+            logger.warn("Nenhum inventário encontrado para busca por sala");
+        }
+        
+        // Buscar todos os patrimônios da sala
+        List<Patrimonio> patrimonios = patrimonioDAO.buscarPorSala(salaId);
+        logger.debug("Encontrados {} patrimônios na sala {}", patrimonios.size(), salaId);
+        
+        List<MobilePatrimonioDTO> dtos = new ArrayList<>();
+        
+        // Processar cada patrimônio
+        for (Patrimonio patrimonio : patrimonios) {
+            // Verificar se foi coletado no inventário
+            boolean foiColetado = false;
+            if (inventario != null) {
+                try {
+                    foiColetado = coletaDAO.coletaExiste(inventario.getId(), patrimonio.getId());
+                } catch (Exception e) {
+                    logger.warn("Erro ao verificar coleta do patrimônio {}: {}", patrimonio.getId(), e.getMessage());
+                }
+            }
+            
+            // Aplicar filtro de coleta se especificado
+            if (coletado != null) {
+                if (coletado && !foiColetado) {
+                    continue; // Pular se queremos coletados mas não foi coletado
+                }
+                if (!coletado && foiColetado) {
+                    continue; // Pular se queremos não coletados mas foi coletado
+                }
+            }
+            
+            // Converter para DTO
+            MobilePatrimonioDTO dto = converterParaDTOSimples(patrimonio);
+            dto.setColetado(foiColetado);
+            dtos.add(dto);
+        }
+        
+        logger.debug("Após filtro de coleta: {} patrimônios", dtos.size());
+        
+        // Aplicar paginação
+        int start = page * size;
+        int end = Math.min(start + size, dtos.size());
+        
+        List<MobilePatrimonioDTO> paginados = new ArrayList<>();
+        for (int i = start; i < end && i < dtos.size(); i++) {
+            paginados.add(dtos.get(i));
+        }
+        
+        logger.debug("Retornando {} patrimônios da sala {} (página {})", paginados.size(), salaId, page);
+        
+        return paginados;
+    }
+    
+    /**
+     * Converte Patrimonio para DTO sem verificar status de coleta (mais rápido).
+     * Usado quando o status de coleta já foi verificado externamente.
+     */
+    private MobilePatrimonioDTO converterParaDTOSimples(Patrimonio patrimonio) {
+        MobilePatrimonioDTO dto = new MobilePatrimonioDTO();
+        
+        dto.setId(patrimonio.getId() > 0 ? Long.valueOf(patrimonio.getId()) : 0L);
+        dto.setCodigo(patrimonio.getNumero() != null ? patrimonio.getNumero() : "");
+        dto.setDescricao(patrimonio.getDescricao() != null ? patrimonio.getDescricao() : "Sem descrição");
+        
+        if (patrimonio.getMarca() != null && !patrimonio.getMarca().trim().isEmpty()) {
+            dto.setMarca(patrimonio.getMarca());
+        }
+        if (patrimonio.getModelo() != null && !patrimonio.getModelo().trim().isEmpty()) {
+            dto.setModelo(patrimonio.getModelo());
+        }
+        if (patrimonio.getEstadoConservacao() != null && !patrimonio.getEstadoConservacao().trim().isEmpty()) {
+            dto.setEstado(patrimonio.getEstadoConservacao());
+        }
+        if (patrimonio.getIdSala() > 0) {
+            dto.setSalaId(Long.valueOf(patrimonio.getIdSala()));
+        }
+        if (patrimonio.getNomeSala() != null && !patrimonio.getNomeSala().trim().isEmpty()) {
+            dto.setSalaNome(patrimonio.getNomeSala());
+        }
+        if (patrimonio.getIdResponsavel() > 0) {
+            dto.setResponsavelId(Long.valueOf(patrimonio.getIdResponsavel()));
+        }
+        if (patrimonio.getNomeResponsavel() != null && !patrimonio.getNomeResponsavel().trim().isEmpty()) {
+            dto.setResponsavelNome(patrimonio.getNomeResponsavel());
+        }
+        dto.setQrCode(patrimonio.getNumero() != null ? patrimonio.getNumero() : "");
+        
+        return dto;
     }
     
     // Método auxiliar para converter Patrimonio para DTO

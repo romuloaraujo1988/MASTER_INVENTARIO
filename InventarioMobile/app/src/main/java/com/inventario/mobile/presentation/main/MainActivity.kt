@@ -155,7 +155,8 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_inventory -> {
-                    val intent = Intent(this, com.inventario.mobile.presentation.inventario.InventarioActivity::class.java)
+                    // Usar nova tela com abas (Por Responsável / Por Sala)
+                    val intent = Intent(this, com.inventario.mobile.presentation.inventario.InventarioTabsActivity::class.java)
                     startActivity(intent)
                     true
                 }
@@ -217,7 +218,8 @@ class MainActivity : AppCompatActivity() {
             }
             
             R.id.nav_inventario -> {
-                val intent = Intent(this, com.inventario.mobile.presentation.inventario.InventarioActivity::class.java)
+                // Usar nova tela com abas (Por Responsável / Por Sala)
+                val intent = Intent(this, com.inventario.mobile.presentation.inventario.InventarioTabsActivity::class.java)
                 startActivity(intent)
                 true
             }

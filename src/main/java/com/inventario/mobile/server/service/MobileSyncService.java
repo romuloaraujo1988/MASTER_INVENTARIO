@@ -15,12 +15,18 @@ import java.util.stream.Collectors;
  * Prepara pacotes de dados otimizados para o app mobile
  * 
  * @author Sistema de Inventário
- * @version 2.0.0
+ * @version 2.1.0 - Adicionado controle de memória
  */
 @Service
 public class MobileSyncService {
     
     private static final Logger logger = LoggerFactory.getLogger(MobileSyncService.class);
+    
+    // Limites para evitar sobrecarga de memória
+    private static final int MAX_PATRIMONIOS = 10000;
+    private static final int MAX_SALAS = 1000;
+    private static final int MAX_RESPONSAVEIS = 500;
+    private static final int MAX_SETORES = 200;
     
     private final PatrimonioDAO patrimonioDAO;
     private final com.inventario.service.InventarioService inventarioService;
@@ -45,7 +51,7 @@ public class MobileSyncService {
      * Sincronização completa de todos os dados necessários
      */
     public Map<String, Object> sincronizacaoCompleta(Integer idInventario) throws SQLException {
-        logger.info("Iniciando sincronização completa");
+        logger.debug("Iniciando sincronização completa");
         
         long inicio = System.currentTimeMillis();
         
@@ -57,18 +63,51 @@ public class MobileSyncService {
             }
         }
         
-        // Buscar todos os dados
+        // Buscar dados com limites para evitar sobrecarga de memória
         List<Patrimonio> patrimonios = patrimonioDAO.findAll();
+        if (patrimonios.size() > MAX_PATRIMONIOS) {
+            logger.warn("Limite de patrimônios atingido: {} > {}. Truncando.", patrimonios.size(), MAX_PATRIMONIOS);
+            patrimonios = patrimonios.subList(0, MAX_PATRIMONIOS);
+        }
+        
         List<com.inventario.model.Sala> salas = salaService.listarTodas();
+        if (salas.size() > MAX_SALAS) {
+            logger.warn("Limite de salas atingido: {} > {}. Truncando.", salas.size(), MAX_SALAS);
+            salas = salas.subList(0, MAX_SALAS);
+        }
+        
         List<com.inventario.model.Responsavel> responsaveis = responsavelService.listarTodos();
+        if (responsaveis.size() > MAX_RESPONSAVEIS) {
+            logger.warn("Limite de responsáveis atingido: {} > {}. Truncando.", responsaveis.size(), MAX_RESPONSAVEIS);
+            responsaveis = responsaveis.subList(0, MAX_RESPONSAVEIS);
+        }
+        
         List<com.inventario.model.Setor> setores = setorService.listarTodos();
+        if (setores.size() > MAX_SETORES) {
+            logger.warn("Limite de setores atingido: {} > {}. Truncando.", setores.size(), MAX_SETORES);
+            setores = setores.subList(0, MAX_SETORES);
+        }
+        
         Inventario inventario = idInventario != null ? inventarioService.buscarPorId(idInventario) : null;
         
         // Converter para formato otimizado
         List<Map<String, Object>> patrimoniosSimplificados = simplificarPatrimonios(patrimonios);
+        patrimonios = null; // Liberar memória
+        
         List<Map<String, Object>> salasSimplificadas = simplificarSalas(salas);
+        salas = null; // Liberar memória
+        
         List<Map<String, Object>> responsaveisSimplificados = simplificarResponsaveis(responsaveis);
+        responsaveis = null; // Liberar memória
+        
         List<Map<String, Object>> setoresSimplificados = simplificarSetores(setores);
+        setores = null; // Liberar memória
+        
+        // Guardar tamanhos antes de liberar memória
+        int totalPatrimonios = patrimoniosSimplificados.size();
+        int totalSalas = salasSimplificadas.size();
+        int totalResponsaveis = responsaveisSimplificados.size();
+        int totalSetores = setoresSimplificados.size();
         
         long duracao = System.currentTimeMillis() - inicio;
         
@@ -78,15 +117,15 @@ public class MobileSyncService {
         resultado.put("responsaveis", responsaveisSimplificados);
         resultado.put("setores", setoresSimplificados);
         resultado.put("inventario", inventario != null ? simplificarInventario(inventario) : null);
-        resultado.put("totalPatrimonios", patrimonios.size());
-        resultado.put("totalSalas", salas.size());
-        resultado.put("totalResponsaveis", responsaveis.size());
-        resultado.put("totalSetores", setores.size());
+        resultado.put("totalPatrimonios", totalPatrimonios);
+        resultado.put("totalSalas", totalSalas);
+        resultado.put("totalResponsaveis", totalResponsaveis);
+        resultado.put("totalSetores", totalSetores);
         resultado.put("timestamp", System.currentTimeMillis());
         resultado.put("duracaoMs", duracao);
-        resultado.put("versao", "2.0.0");
+        resultado.put("versao", "2.1.0");
         
-        logger.info("Sincronização completa finalizada em {}ms", duracao);
+        logger.debug("Sincronização completa finalizada em {}ms", duracao);
         
         return resultado;
     }

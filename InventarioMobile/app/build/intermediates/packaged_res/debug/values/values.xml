@@ -38,12 +38,14 @@
     <color name="material_grey_900">#212121</color>
     <color name="material_orange_600">#FB8C00</color>
     <color name="material_red_600">#E53935</color>
+    <color name="overlay_background">#80000000</color>
     <color name="primary">#1976D2</color>
     <color name="primary_color">#1976D2</color>
     <color name="primary_color_light">#BBDEFB</color>
     <color name="primary_dark">#1565C0</color>
     <color name="primary_light">#BBDEFB</color>
     <color name="primary_text">#212121</color>
+    <color name="progress_background">#E0E0E0</color>
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
@@ -72,6 +74,7 @@
     <color name="warning_dark">#E65100</color>
     <color name="warning_light">#FFF3E0</color>
     <color name="white">#FFFFFF</color>
+    <color name="white_70">#B3FFFFFF</color>
     <dimen name="action_button_min_height">44dp</dimen>
     <dimen name="action_button_padding">8dp</dimen>
     <dimen name="margin_large">12dp</dimen>
@@ -256,6 +259,11 @@
         <item name="android:textSize">24sp</item>
         <item name="android:textStyle">bold</item>
         <item name="backgroundTint">@color/purple_200</item>
+    </style>
+    <style name="TabTextAppearance" parent="TextAppearance.MaterialComponents.Button">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">false</item>
     </style>
     <style name="Theme.InventarioMobile" parent="Theme.Material3.DayNight">
         

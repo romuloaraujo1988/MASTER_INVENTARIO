@@ -24,7 +24,7 @@ public class MobileResponsavelService {
     
     public MobileResponsavelService() {
         // Não mantém instância do DAO - cria nova a cada chamada
-        logger.info("MobileResponsavelService inicializado");
+        logger.debug("MobileResponsavelService inicializado");
     }
     
     /**
@@ -42,18 +42,13 @@ public class MobileResponsavelService {
      * para evitar problemas de conexão fechada
      */
     public List<MobileResponsavelDTO> listarResponsaveis() throws SQLException {
-        logger.info("═══════════════════════════════════════════════════════════");
-        logger.info("INICIANDO LISTAGEM DE RESPONSÁVEIS");
-        logger.info("═══════════════════════════════════════════════════════════");
+        logger.debug("Listando responsáveis...");
         
         try {
             // Criar nova instância do DAO para esta operação
             ResponsavelDAO responsavelDAO = getResponsavelDAO();
             
-            logger.info("Executando findAll() no ResponsavelDAO...");
             List<Responsavel> responsaveis = responsavelDAO.findAll();
-            
-            logger.info("findAll() retornou {} responsáveis", responsaveis.size());
             
             List<MobileResponsavelDTO> dtos = new ArrayList<>();
             
@@ -66,8 +61,7 @@ public class MobileResponsavelService {
                 }
             }
             
-            logger.info("✓ Encontrados {} responsáveis ativos", dtos.size());
-            logger.info("═══════════════════════════════════════════════════════════");
+            logger.debug("Retornados {} responsáveis ativos", dtos.size());
             
             return dtos;
             
@@ -87,7 +81,7 @@ public class MobileResponsavelService {
      * CORREÇÃO 26/11/2025: Cria nova instância do DAO a cada chamada
      */
     public MobileResponsavelDTO buscarPorId(Integer id) throws SQLException {
-        logger.info("Buscando responsável por ID: {}", id);
+        logger.debug("Buscando responsável por ID: {}", id);
         
         try {
             // Criar nova instância do DAO para esta operação
@@ -96,11 +90,10 @@ public class MobileResponsavelService {
             Responsavel responsavel = responsavelDAO.findById(id);
             
             if (responsavel != null) {
-                logger.info("✓ Responsável encontrado: {}", responsavel.getNome());
                 return converterParaDTO(responsavel);
             }
             
-            logger.warn("Responsável não encontrado com ID: {}", id);
+            logger.debug("Responsável não encontrado com ID: {}", id);
             return null;
             
         } catch (SQLException e) {

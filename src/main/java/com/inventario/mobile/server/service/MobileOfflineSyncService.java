@@ -25,13 +25,18 @@ import java.util.stream.Collectors;
  * CRÍTICO: Endpoint otimizado para baixar TODOS os dados necessários
  * para o app funcionar offline com 10.000+ patrimônios
  * 
- * v2.2: Service dedicado para sincronização offline
+ * v2.3: Adicionado controle de memória e paginação
  */
 @Service
 public class MobileOfflineSyncService {
     
     private static final Logger logger = LoggerFactory.getLogger(MobileOfflineSyncService.class);
-    private static final String VERSAO_SERVIDOR = "2.2.0";
+    private static final String VERSAO_SERVIDOR = "2.3.0";
+    
+    // Limites para evitar sobrecarga de memória
+    private static final int MAX_PATRIMONIOS_POR_SYNC = 10000;
+    private static final int MAX_SALAS_POR_SYNC = 1000;
+    private static final int MAX_RESPONSAVEIS_POR_SYNC = 500;
     
     @Autowired
     private PatrimonioDAO patrimonioDAO;
@@ -59,8 +64,7 @@ public class MobileOfflineSyncService {
      */
     @Transactional(readOnly = true)
     public MobileOfflineDataDTO buscarDadosOffline(Integer inventarioId) {
-        logger.info("═══════════════════════════════════════════");
-        logger.info("🔄 INICIANDO SINCRONIZAÇÃO OFFLINE COMPLETA");
+        logger.debug("Iniciando sincronização offline");
         long startTime = System.currentTimeMillis();
         
         try {
@@ -74,49 +78,82 @@ public class MobileOfflineSyncService {
             }
             
             if (inventarioAtivo != null) {
-                logger.info("📋 Inventário ativo: {} (ID: {})", 
+                logger.debug("Inventário ativo: {} (ID: {})", 
                     inventarioAtivo.getNome(), inventarioAtivo.getId());
             } else {
-                logger.warn("⚠️ Nenhum inventário ativo encontrado");
+                logger.warn("Nenhum inventário ativo encontrado");
             }
             
-            // 2. Buscar TODOS os patrimônios (otimizado)
-            logger.info("1️⃣ Buscando patrimônios...");
+            // 2. Buscar patrimônios (com limite para evitar sobrecarga)
+            logger.debug("Buscando patrimônios...");
             long patrimoniosStart = System.currentTimeMillis();
             
             List<Patrimonio> patrimonios = patrimonioDAO.listarTodosComJoins();
+            
+            // Aplicar limite para evitar sobrecarga de memória
+            if (patrimonios.size() > MAX_PATRIMONIOS_POR_SYNC) {
+                logger.warn("Limite de patrimônios atingido: {} > {}. Truncando lista.", 
+                    patrimonios.size(), MAX_PATRIMONIOS_POR_SYNC);
+                patrimonios = patrimonios.subList(0, MAX_PATRIMONIOS_POR_SYNC);
+            }
+            
             List<PatrimonioOfflineDTO> patrimoniosDTO = patrimonios.stream()
                 .map(this::converterPatrimonioParaDTO)
                 .collect(Collectors.toList());
             
+            // Liberar memória da lista original
+            patrimonios = null;
+            
             long patrimoniosTime = System.currentTimeMillis() - patrimoniosStart;
-            logger.info("✅ {} patrimônios carregados em {}ms", 
+            logger.debug("{} patrimônios carregados em {}ms", 
                 patrimoniosDTO.size(), patrimoniosTime);
             
-            // 3. Buscar TODAS as salas (otimizado)
-            logger.info("2️⃣ Buscando salas...");
+            // 3. Buscar salas (com limite)
+            logger.debug("Buscando salas...");
             long salasStart = System.currentTimeMillis();
             
             List<Sala> salas = salaDAO.findAll();
+            
+            // Aplicar limite
+            if (salas.size() > MAX_SALAS_POR_SYNC) {
+                logger.warn("Limite de salas atingido: {} > {}. Truncando lista.", 
+                    salas.size(), MAX_SALAS_POR_SYNC);
+                salas = salas.subList(0, MAX_SALAS_POR_SYNC);
+            }
+            
             List<SalaOfflineDTO> salasDTO = salas.stream()
                 .map(this::converterSalaParaDTO)
                 .collect(Collectors.toList());
             
+            // Liberar memória
+            salas = null;
+            
             long salasTime = System.currentTimeMillis() - salasStart;
-            logger.info("✅ {} salas carregadas em {}ms", 
+            logger.debug("{} salas carregadas em {}ms", 
                 salasDTO.size(), salasTime);
             
-            // 4. Buscar TODOS os responsáveis (otimizado)
-            logger.info("3️⃣ Buscando responsáveis...");
+            // 4. Buscar responsáveis (com limite)
+            logger.debug("Buscando responsáveis...");
             long responsaveisStart = System.currentTimeMillis();
             
             List<Responsavel> responsaveis = responsavelDAO.findAll();
+            
+            // Aplicar limite
+            if (responsaveis.size() > MAX_RESPONSAVEIS_POR_SYNC) {
+                logger.warn("Limite de responsáveis atingido: {} > {}. Truncando lista.", 
+                    responsaveis.size(), MAX_RESPONSAVEIS_POR_SYNC);
+                responsaveis = responsaveis.subList(0, MAX_RESPONSAVEIS_POR_SYNC);
+            }
+            
             List<ResponsavelOfflineDTO> responsaveisDTO = responsaveis.stream()
                 .map(this::converterResponsavelParaDTO)
                 .collect(Collectors.toList());
             
+            // Liberar memória
+            responsaveis = null;
+            
             long responsaveisTime = System.currentTimeMillis() - responsaveisStart;
-            logger.info("✅ {} responsáveis carregados em {}ms", 
+            logger.debug("{} responsáveis carregados em {}ms", 
                 responsaveisDTO.size(), responsaveisTime);
             
             // 5. Criar metadados
@@ -141,21 +178,14 @@ public class MobileOfflineSyncService {
             );
             
             long totalTime = System.currentTimeMillis() - startTime;
-            double totalTimeSec = totalTime / 1000.0;
             
-            logger.info("═══════════════════════════════════════════");
-            logger.info("✅ SINCRONIZAÇÃO OFFLINE CONCLUÍDA");
-            logger.info("📊 Patrimônios: {}", patrimoniosDTO.size());
-            logger.info("🏢 Salas: {}", salasDTO.size());
-            logger.info("👤 Responsáveis: {}", responsaveisDTO.size());
-            logger.info("⏱️ Tempo total: {}s ({}ms)", totalTimeSec, totalTime);
-            logger.info("📦 Tamanho estimado: ~{}KB", estimarTamanhoResposta(response));
-            logger.info("═══════════════════════════════════════════");
+            logger.debug("Sincronização offline concluída: {} patrimônios, {} salas, {} responsáveis em {}ms", 
+                patrimoniosDTO.size(), salasDTO.size(), responsaveisDTO.size(), totalTime);
             
             return response;
             
         } catch (Exception e) {
-            logger.error("❌ ERRO CRÍTICO na sincronização offline", e);
+            logger.error("Erro na sincronização offline", e);
             throw new RuntimeException("Erro ao buscar dados offline: " + e.getMessage(), e);
         }
     }

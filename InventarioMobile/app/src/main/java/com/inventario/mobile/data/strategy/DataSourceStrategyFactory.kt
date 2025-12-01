@@ -78,12 +78,13 @@ class DataSourceStrategyFactory @Inject constructor(
     /**
      * Retorna estratégia remota (forçado)
      */
-    fun getRemoteStrategy(): DataSourceStrategy = remoteStrategy
+    fun getRemoteDataSource(): RemoteDataSourceStrategy = remoteStrategy
     
     /**
      * Retorna estratégia local (forçado)
+     * Retorna tipo concreto para acesso a métodos específicos
      */
-    fun getLocalStrategy(): DataSourceStrategy = localStrategy
+    fun getLocalDataSource(): LocalDataSourceStrategy = localStrategy
     
     /**
      * Verifica qual estratégia está disponível

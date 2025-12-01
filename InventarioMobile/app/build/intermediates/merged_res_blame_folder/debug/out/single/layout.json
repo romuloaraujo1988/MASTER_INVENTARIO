@@ -32,6 +32,10 @@
         "source": "com.inventario.mobile.app-main-69:/layout/fragment_inventory.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_inventario_por_sala.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_inventario_por_sala.xml"
+    },
+    {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_descricao_selection.xml",
         "source": "com.inventario.mobile.app-main-69:/layout/activity_descricao_selection.xml"
     },
@@ -42,6 +46,14 @@
     {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_splash.xml",
         "source": "com.inventario.mobile.app-main-69:/layout/activity_splash.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_inventario_por_responsavel.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_inventario_por_responsavel.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_sala_dropdown.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_sala_dropdown.xml"
     },
     {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_statistics_rankings.xml",
@@ -152,6 +164,10 @@
         "source": "com.inventario.mobile.app-main-69:/layout/activity_coletas.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_estatisticas_sala.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_estatisticas_sala.xml"
+    },
+    {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_sync.xml",
         "source": "com.inventario.mobile.app-main-69:/layout/activity_sync.xml"
     },
@@ -166,6 +182,10 @@
     {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_collection_view.xml",
         "source": "com.inventario.mobile.app-main-69:/layout/activity_collection_view.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_inventario_tabs.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_inventario_tabs.xml"
     },
     {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_main.xml",

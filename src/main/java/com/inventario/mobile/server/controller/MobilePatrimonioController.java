@@ -107,20 +107,33 @@ public class MobilePatrimonioController {
     }
     
     /**
-     * Buscar patrimônios por sala
+     * Buscar patrimônios por sala com paginação e filtro de coleta
      * 
      * @param salaId ID da sala
+     * @param page página (padrão: 0)
+     * @param size tamanho da página (padrão: 50)
+     * @param coletado filtro de status de coleta (opcional: true=coletados, false=não coletados, null=todos)
+     * @param inventarioId ID do inventário (opcional, usa ativo se não informado)
      * @return lista de patrimônios
      */
     @GetMapping("/sala/{salaId}")
-    public ResponseEntity<ApiResponse<List<MobilePatrimonioDTO>>> buscarPorSala(@PathVariable Integer salaId) {
+    public ResponseEntity<ApiResponse<List<MobilePatrimonioDTO>>> buscarPorSala(
+            @PathVariable Integer salaId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(required = false) Boolean coletado,
+            @RequestParam(required = false) Integer inventarioId) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
             
-            logger.info("Buscando patrimônios da sala {} para usuário: {}", salaId, username);
+            logger.info("Buscando patrimônios da sala {} (page: {}, size: {}, coletado: {}, inventário: {}) para usuário: {}", 
+                    salaId, page, size, coletado, inventarioId, username);
             
-            List<MobilePatrimonioDTO> patrimonios = patrimonioService.buscarPorSala(salaId);
+            List<MobilePatrimonioDTO> patrimonios = patrimonioService.buscarPorSalaComFiltro(
+                    salaId, page, size, coletado, inventarioId);
+            
+            logger.info("✓ {} patrimônio(s) encontrado(s) na sala {}", patrimonios.size(), salaId);
             
             return ResponseEntity.ok(
                     ApiResponse.success(patrimonios, 
@@ -129,7 +142,7 @@ public class MobilePatrimonioController {
         } catch (Exception e) {
             logger.error("Erro ao buscar patrimônios por sala", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Erro ao buscar patrimônios", "FETCH_ERROR"));
+                    .body(ApiResponse.error("Erro ao buscar patrimônios: " + e.getMessage(), "FETCH_ERROR"));
         }
     }
     
