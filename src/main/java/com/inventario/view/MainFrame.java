@@ -1342,6 +1342,24 @@ public class MainFrame extends JFrame {
 
                     ProcessBuilder processBuilder = new ProcessBuilder(
                             javaBin,
+                            // ===== CONFIGURAÇÕES DE MEMÓRIA (CRÍTICO!) =====
+                            "-Xms256m",              // Memória inicial: 256MB
+                            "-Xmx1g",                // Memória máxima: 1GB
+                            "-XX:MaxMetaspaceSize=192m", // Metaspace: 192MB
+                            "-Xss256k",              // Stack de threads: 256KB
+                            // G1GC com coleta eficiente
+                            "-XX:+UseG1GC",
+                            "-XX:MaxGCPauseMillis=100",
+                            "-XX:InitiatingHeapOccupancyPercent=45",
+                            "-XX:G1ReservePercent=15",
+                            // Otimizações de memória
+                            "-XX:+UseStringDeduplication",
+                            "-XX:+UseCompressedOops",
+                            // Diagnóstico
+                            "-XX:+HeapDumpOnOutOfMemoryError",
+                            "-XX:HeapDumpPath=logs/",
+                            "-XX:+ExitOnOutOfMemoryError",
+                            // ===== FIM CONFIGURAÇÕES DE MEMÓRIA =====
                             "-cp", classpath,
                             // Propriedades do sistema Java (ANTES da classe)
                             "-Dspring.profiles.active=mobile",
@@ -1351,6 +1369,8 @@ public class MainFrame extends JFrame {
                             "-Dserver.address=0.0.0.0",
                             "-Dserver.servlet.context-path=/inventario",
                             "-Dspring.jmx.enabled=false",
+                            "-Dspring.main.lazy-initialization=true", // Lazy loading
+                            "-Dspring.data.jpa.repositories.bootstrap-mode=lazy",
                             "-Dcom.sun.management.jmxremote=false",
                             // Classe principal
                             "com.inventario.MobileApiApplication",

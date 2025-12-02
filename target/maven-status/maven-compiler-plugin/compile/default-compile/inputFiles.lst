@@ -176,6 +176,7 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\dao\ParticipanteInventarioDAO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\RelatorioExcelGenerator.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\offline\SQLiteConnection.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\config\SchedulingConfig.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\notification\NotificationUtils.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\DataImportServiceTest.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\ConfiguracaoBancoDialog.java
@@ -249,6 +250,7 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileLoginRequest.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\sync\model\SyncResult.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\StatusBarPanel.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileHealthController.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\ImageUtils.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileColetaBatchRequest.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\offline\OfflineManager.java
@@ -265,6 +267,8 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\itemcomposto\dao\ItemCompostoDAO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\config\DAOConfiguration.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\sync\model\Conflict.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\MemoryMonitorService.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\config\MemoryOptimizationConfig.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\sync\model\RetryPolicy.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\test\TesteAutorizacaoColeta.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\CampusFormDialog.java

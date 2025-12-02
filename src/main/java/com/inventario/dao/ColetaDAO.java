@@ -2549,6 +2549,160 @@ public class ColetaDAO {
     }
     
     /**
+     * MÉTODO OTIMIZADO: Busca coletas com paginação REAL no banco de dados
+     * Evita carregar todas as coletas em memória
+     * 
+     * PROBLEMA RESOLVIDO: Vazamento de memória (200MB → 4GB)
+     * ANTES: Carregava TODAS as coletas e paginava em memória
+     * DEPOIS: Paginação no SQL com LIMIT/OFFSET
+     * 
+     * @param page número da página (0-based)
+     * @param size tamanho da página
+     * @return lista de coletas da página
+     */
+    public List<Coleta> buscarColetasComPaginacao(int page, int size) throws SQLException {
+        String sql = "SELECT c.*, p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
+                    "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO " +
+                    "FROM TABELA_COLETA c " +
+                    "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
+                    "LEFT JOIN TABELA_PARTICIPANTE_INVENTARIO pi ON c.ID_PARTICIPANTE_INVENTARIO = pi.id_participante " +
+                    "LEFT JOIN TABELA_USUARIO u ON pi.ID_USUARIO = u.ID " +
+                    "LEFT JOIN TABELA_INVENTARIO i ON c.ID_INVENTARIO = i.ID " +
+                    "ORDER BY c.DATA_COLETA DESC " +
+                    "LIMIT ? OFFSET ?";
+        
+        List<Coleta> coletas = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, size);
+            stmt.setInt(2, page * size);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    coletas.add(criarColetaFromResultSet(rs));
+                }
+            }
+        }
+        
+        return coletas;
+    }
+    
+    /**
+     * MÉTODO OTIMIZADO: Conta total de coletas (para paginação)
+     * Query leve apenas para contagem
+     */
+    public int contarTotalColetas() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM TABELA_COLETA";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        
+        return 0;
+    }
+    
+    /**
+     * MÉTODO OTIMIZADO: Busca coletas por usuário com paginação REAL
+     */
+    public List<Coleta> buscarColetasPorUsuarioComPaginacao(int idUsuario, int page, int size) throws SQLException {
+        String sql = "SELECT c.*, p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
+                    "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO " +
+                    "FROM TABELA_COLETA c " +
+                    "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
+                    "LEFT JOIN TABELA_PARTICIPANTE_INVENTARIO pi ON c.ID_PARTICIPANTE_INVENTARIO = pi.id_participante " +
+                    "LEFT JOIN TABELA_USUARIO u ON pi.ID_USUARIO = u.ID " +
+                    "LEFT JOIN TABELA_INVENTARIO i ON c.ID_INVENTARIO = i.ID " +
+                    "WHERE c.ID_COLETOR = ? " +
+                    "ORDER BY c.DATA_COLETA DESC " +
+                    "LIMIT ? OFFSET ?";
+        
+        List<Coleta> coletas = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idUsuario);
+            stmt.setInt(2, size);
+            stmt.setInt(3, page * size);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    coletas.add(criarColetaFromResultSet(rs));
+                }
+            }
+        }
+        
+        return coletas;
+    }
+    
+    /**
+     * MÉTODO OTIMIZADO: Conta coletas por usuário
+     */
+    public int contarColetasPorUsuario(int idUsuario) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM TABELA_COLETA WHERE ID_COLETOR = ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idUsuario);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        
+        return 0;
+    }
+
+    /**
+     * MÉTODO OTIMIZADO: Busca uma coleta específica por patrimônio e inventário
+     * Evita carregar TODAS as coletas do inventário para encontrar uma específica
+     * 
+     * PROBLEMA RESOLVIDO: Vazamento de memória ao buscar coletas
+     * ANTES: buscarPorInventario() carregava TODAS as coletas (milhares)
+     * DEPOIS: Query direta retorna apenas 1 registro
+     * 
+     * @param idInventario ID do inventário
+     * @param idPatrimonio ID do patrimônio
+     * @return Coleta encontrada ou null
+     */
+    public Coleta buscarColetaPorPatrimonioEInventario(int idInventario, int idPatrimonio) throws SQLException {
+        String sql = "SELECT c.*, p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
+                    "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO " +
+                    "FROM TABELA_COLETA c " +
+                    "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
+                    "LEFT JOIN TABELA_PARTICIPANTE_INVENTARIO pi ON c.ID_PARTICIPANTE_INVENTARIO = pi.id_participante " +
+                    "LEFT JOIN TABELA_USUARIO u ON pi.ID_USUARIO = u.ID " +
+                    "LEFT JOIN TABELA_INVENTARIO i ON c.ID_INVENTARIO = i.ID " +
+                    "WHERE c.ID_INVENTARIO = ? AND c.ID_PATRIMONIO = ? " +
+                    "ORDER BY c.DATA_COLETA DESC LIMIT 1";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idInventario);
+            stmt.setInt(2, idPatrimonio);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return criarColetaFromResultSet(rs);
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
      * MÉTODO OTIMIZADO: Conta o total de coletas de uma sala SEM trazer os dados
      * Query leve apenas para contagem - usado para exibir contador correto
      * 

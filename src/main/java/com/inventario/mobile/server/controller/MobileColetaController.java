@@ -154,47 +154,26 @@ public class MobileColetaController {
                 }
             }
             
-            logger.info("Buscando coletas (page={}, size={})", page, size);
+            logger.info("Buscando coletas com PAGINAÇÃO REAL (page={}, size={})", page, size);
             
-            // Buscar coletas - se tiver username, busca do usuário, senão busca todas do sistema
-            List<MobileColetaResponse> todasColetas;
+            // OTIMIZAÇÃO: Usar paginação REAL no banco de dados
+            // ANTES: Carregava TODAS as coletas em memória (vazamento de memória)
+            // DEPOIS: LIMIT/OFFSET no SQL (máximo 100 registros por vez)
+            Map<String, Object> response;
             if (username != null) {
-                logger.info("Buscando coletas do usuário: {}", username);
-                todasColetas = mobileColetaService.buscarTodasColetas(username);
+                logger.info("Buscando coletas do usuário: {} (paginação real)", username);
+                response = mobileColetaService.buscarColetasUsuarioComPaginacaoReal(username, page, size);
             } else {
-                logger.info("Buscando todas as coletas do sistema (método simples)");
-                todasColetas = mobileColetaService.buscarTodasColetasDoSistema();
+                logger.info("Buscando coletas do sistema (paginação real)");
+                response = mobileColetaService.buscarColetasComPaginacaoReal(page, size);
             }
             
-            // Calcular paginação
-            int totalElements = todasColetas.size();
-            int totalPages = (int) Math.ceil((double) totalElements / size);
-            int fromIndex = page * size;
-            int toIndex = Math.min(fromIndex + size, totalElements);
-            
-            // Validar página
-            if (fromIndex > totalElements) {
-                fromIndex = 0;
-                toIndex = Math.min(size, totalElements);
-            }
-            
-            List<MobileColetaResponse> coletasPaginadas = fromIndex < totalElements 
-                ? todasColetas.subList(fromIndex, toIndex)
-                : List.of();
-            
-            // Montar resposta paginada
-            Map<String, Object> response = Map.of(
-                "content", coletasPaginadas,
-                "page", page,
-                "size", size,
-                "totalElements", totalElements,
-                "totalPages", totalPages,
-                "first", page == 0,
-                "last", page >= totalPages - 1
-            );
+            int totalElements = (int) response.get("totalElements");
+            int totalPages = (int) response.get("totalPages");
+            List<?> content = (List<?>) response.get("content");
             
             logger.info("Retornando {} coletas (página {}/{}, total: {})", 
-                coletasPaginadas.size(), page + 1, totalPages, totalElements);
+                content.size(), page + 1, totalPages, totalElements);
             
             return ResponseEntity.ok(
                     ApiResponse.success(response, "Coletas carregadas com sucesso"));
@@ -241,21 +220,37 @@ public class MobileColetaController {
      * 
      * @return lista completa de coletas
      */
+    /**
+     * @deprecated Este endpoint foi DESABILITADO para evitar vazamento de memória.
+     * Use GET /api/mobile/coletas com paginação (page, size).
+     * 
+     * PROBLEMA: Carregava TODAS as coletas em memória (200MB → 4GB)
+     * SOLUÇÃO: Usar paginação obrigatória
+     */
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<MobileColetaResponse>>> buscarTodasColetasSemPaginacao(
+    @Deprecated
+    public ResponseEntity<ApiResponse<Map<String, Object>>> buscarTodasColetasSemPaginacao(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
             long startTime = System.currentTimeMillis();
-            logger.info("🚀 Buscando todas as coletas do sistema (OTIMIZADO)");
+            logger.warn("⚠️ Endpoint /all DEPRECADO - Redirecionando para paginação (máx 100 registros)");
             
-            // Usar método otimizado com cache e batch queries
-            List<MobileColetaResponse> coletas = mobileColetaService.buscarTodasColetasDoSistemaOtimizado();
+            // OTIMIZAÇÃO: Limitar a 100 registros para evitar vazamento de memória
+            Map<String, Object> response = mobileColetaService.buscarColetasComPaginacaoReal(0, 100);
             
             long duration = System.currentTimeMillis() - startTime;
-            logger.info("✓ Retornando {} coletas em {}ms", coletas.size(), duration);
+            int total = (int) response.get("totalElements");
+            List<?> content = (List<?>) response.get("content");
+            
+            logger.info("✓ Retornando {} de {} coletas em {}ms (limitado para evitar vazamento)", 
+                    content.size(), total, duration);
+            
+            // Adicionar aviso na resposta
+            response.put("aviso", "Este endpoint está deprecado. Use GET /api/mobile/coletas?page=0&size=20 para paginação.");
             
             return ResponseEntity.ok(
-                    ApiResponse.success(coletas, String.format("%d coletas carregadas em %dms", coletas.size(), duration)));
+                    ApiResponse.success(response, String.format("%d coletas (de %d total) em %dms - USE PAGINAÇÃO!", 
+                            content.size(), total, duration)));
             
         } catch (Exception e) {
             logger.error("❌ Erro ao buscar coletas", e);

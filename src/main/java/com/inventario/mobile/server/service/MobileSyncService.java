@@ -132,16 +132,21 @@ public class MobileSyncService {
     
     /**
      * Sincronizar apenas patrimônios (com filtro de data)
+     * OTIMIZADO: Usa query SQL com filtro ao invés de carregar todos
      */
     public Map<String, Object> sincronizarPatrimonios(Long ultimaAtualizacao) throws SQLException {
-        List<Patrimonio> patrimonios = patrimonioDAO.findAll();
+        List<Patrimonio> patrimonios;
         
-        // Filtrar por data se fornecida
-        if (ultimaAtualizacao != null) {
-            patrimonios = patrimonios.stream()
-                .filter(p -> p.getDataCarga() != null && 
-                            p.getDataCarga().getTime() > ultimaAtualizacao)
-                .collect(Collectors.toList());
+        // Se tem data de última atualização, buscar apenas os atualizados
+        if (ultimaAtualizacao != null && ultimaAtualizacao > 0) {
+            patrimonios = buscarPatrimoniosAtualizados(ultimaAtualizacao);
+        } else {
+            // Primeira sincronização - carregar com limite
+            patrimonios = patrimonioDAO.findAll();
+            if (patrimonios.size() > MAX_PATRIMONIOS) {
+                logger.warn("Muitos patrimônios ({}). Limitando a {}.", patrimonios.size(), MAX_PATRIMONIOS);
+                patrimonios = patrimonios.subList(0, MAX_PATRIMONIOS);
+            }
         }
         
         List<Map<String, Object>> simplificados = simplificarPatrimonios(patrimonios);
@@ -151,6 +156,45 @@ public class MobileSyncService {
         resultado.put("total", simplificados.size());
         resultado.put("timestamp", System.currentTimeMillis());
         
+        // Liberar memória imediatamente
+        patrimonios = null;
+        
+        return resultado;
+    }
+    
+    /**
+     * Busca patrimônios atualizados desde uma data (query otimizada)
+     */
+    private List<Patrimonio> buscarPatrimoniosAtualizados(Long ultimaAtualizacao) throws SQLException {
+        List<Patrimonio> resultado = new ArrayList<>();
+        String sql = """
+            SELECT * FROM TABELA_PATRIMONIO 
+            WHERE DATA_CARGA > ? 
+            AND (STATUS IS NULL OR UPPER(STATUS) = 'ATIVO' OR STATUS = '')
+            ORDER BY ID
+            LIMIT ?
+            """;
+        
+        try (java.sql.Connection conn = com.inventario.util.DatabaseConnection.getConnection();
+             java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setTimestamp(1, new java.sql.Timestamp(ultimaAtualizacao));
+            stmt.setInt(2, MAX_PATRIMONIOS);
+            
+            try (java.sql.ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Patrimonio p = new Patrimonio();
+                    p.setId(rs.getInt("ID"));
+                    p.setNumero(rs.getString("NUMERO"));
+                    p.setDescricao(rs.getString("DESCRICAO"));
+                    p.setIdSala(rs.getObject("ID_SALA") != null ? rs.getInt("ID_SALA") : null);
+                    p.setIdResponsavel(rs.getObject("ID_RESPONSAVEL") != null ? rs.getInt("ID_RESPONSAVEL") : null);
+                    p.setStatus(rs.getString("STATUS"));
+                    resultado.add(p);
+                }
+            }
+        }
+        
+        logger.debug("Encontrados {} patrimônios atualizados desde {}", resultado.size(), ultimaAtualizacao);
         return resultado;
     }
     
@@ -201,11 +245,16 @@ public class MobileSyncService {
     /**
      * Obter metadados da sincronização
      */
+    /**
+     * Obter metadados da sincronização
+     * OTIMIZADO: Usa COUNT ao invés de carregar todos os registros
+     */
     public Map<String, Object> obterMetadados() throws SQLException {
         Map<String, Object> metadata = new HashMap<>();
-        metadata.put("totalPatrimonios", patrimonioDAO.findAll().size());
-        metadata.put("totalSalas", salaService.listarTodas().size());
-        metadata.put("totalResponsaveis", responsavelService.listarTodos().size());
+        // OTIMIZADO: Usar contagem ao invés de findAll().size()
+        metadata.put("totalPatrimonios", patrimonioDAO.contarPatrimoniosAtivos());
+        metadata.put("totalSalas", salaService.listarTodas().size()); // Salas são poucas
+        metadata.put("totalResponsaveis", responsavelService.listarTodos().size()); // Responsáveis são poucos
         metadata.put("versao", "2.0.0");
         metadata.put("timestamp", System.currentTimeMillis());
         
@@ -297,11 +346,26 @@ public class MobileSyncService {
         return map;
     }
     
+    /**
+     * Conta patrimônios atualizados desde última sincronização
+     * OTIMIZADO: Usa query SQL ao invés de carregar todos em memória
+     */
     private int contarPatrimoniosAtualizados(Long ultimaSincronizacao) throws SQLException {
-        List<Patrimonio> todos = patrimonioDAO.findAll();
-        return (int) todos.stream()
-            .filter(p -> p.getDataCarga() != null && 
-                        p.getDataCarga().getTime() > ultimaSincronizacao)
-            .count();
+        if (ultimaSincronizacao == null || ultimaSincronizacao == 0) {
+            return patrimonioDAO.contarPatrimoniosAtivos();
+        }
+        
+        // Usar query SQL direta para contar (mais eficiente)
+        String sql = "SELECT COUNT(*) FROM TABELA_PATRIMONIO WHERE DATA_CARGA > ? AND (STATUS IS NULL OR UPPER(STATUS) = 'ATIVO' OR STATUS = '')";
+        try (java.sql.Connection conn = com.inventario.util.DatabaseConnection.getConnection();
+             java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setTimestamp(1, new java.sql.Timestamp(ultimaSincronizacao));
+            try (java.sql.ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
     }
 }

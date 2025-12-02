@@ -4,6 +4,37 @@ Este arquivo registra todas as compilações do APK Android para rastreabilidade
 
 ---
 
+## Build #006 - 01/12/2025 16:18
+
+- **Tipo:** Debug + Desktop JAR (thin-jar)
+- **Versão:** 2.1.0
+- **Build Code:** 6
+- **Arquivos:** 
+  - APK: `InventarioMobile/app/build/outputs/apk/debug/app-debug.apk`
+  - JAR: `target/mobile-server/sistema-inventario-2.0.0.jar`
+- **Tamanho:** ~11 MB (APK)
+- **Mudanças:** 
+  - **Servidor:** Timeouts ajustados para redes móveis instáveis
+    - `keep-alive-timeout`: 60s → 300s (5 min)
+    - `connection-timeout`: 30s → 60s
+    - `hikari.connection-timeout`: 10s → 30s
+    - `hikari.keepalive-time`: 30s → 120s
+    - `hikari.maximum-pool-size`: 8 → 10
+  - **Android:** Timeouts HTTP aumentados
+    - `connectTimeout`: 10s → 30s
+    - `readTimeout`: 15s → 60s
+    - `writeTimeout`: 15s → 60s
+    - `callTimeout`: 30s → 90s
+    - `retryOnConnectionFailure`: true
+  - **Correção de logs:** System.out/err substituídos por SLF4J em:
+    - ConnectedDevicesManager.java
+    - ConnectionManager.java
+    - NetworkUtils.java
+    - DatabaseConfigLoader.java
+- **Status:** ✅ Sucesso
+
+---
+
 ## Build #005 - 01/12/2025
 
 - **Tipo:** Debug

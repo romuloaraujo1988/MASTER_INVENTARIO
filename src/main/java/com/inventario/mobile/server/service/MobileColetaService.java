@@ -269,37 +269,154 @@ public class MobileColetaService {
     
     /**
      * Busca TODAS as coletas do sistema (não apenas do usuário)
-     * Usado para visualização geral de coletas
+     * 
+     * @deprecated Use buscarColetasComPaginacaoReal() para evitar vazamento de memória
      */
+    @Deprecated
+    @SuppressWarnings("unchecked")
     public List<MobileColetaResponse> buscarTodasColetasDoSistema() throws SQLException {
-        logger.debug("Buscando todas as coletas do sistema");
-
-        List<Coleta> coletas = coletaDAO.buscarTodas();
+        logger.warn("⚠️ MÉTODO DEPRECADO: buscarTodasColetasDoSistema() - Use buscarColetasComPaginacaoReal()");
+        // Limitar a 100 registros para evitar vazamento de memória
+        Map<String, Object> resultado = buscarColetasComPaginacaoReal(0, 100);
+        return (List<MobileColetaResponse>) resultado.get("content");
+    }
+    
+    /**
+     * MÉTODO OTIMIZADO: Busca coletas com paginação REAL no banco de dados
+     * 
+     * PROBLEMA RESOLVIDO: Vazamento de memória (200MB → 4GB)
+     * ANTES: Carregava TODAS as coletas em memória
+     * DEPOIS: Paginação no SQL com LIMIT/OFFSET
+     * 
+     * @param page número da página (0-based)
+     * @param size tamanho da página (máximo 100)
+     * @return Map com content, totalElements, totalPages
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> buscarColetasComPaginacaoReal(int page, int size) throws SQLException {
+        long startTime = System.currentTimeMillis();
+        
+        // Limitar tamanho máximo da página para evitar sobrecarga
+        if (size > 100) {
+            logger.warn("Tamanho de página {} excede máximo de 100, limitando", size);
+            size = 100;
+        }
+        
+        logger.debug("Buscando coletas com paginação REAL (page={}, size={})", page, size);
+        
+        // 1. Contar total (query leve)
+        int totalElements = coletaDAO.contarTotalColetas();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        
+        // 2. Buscar apenas a página solicitada (LIMIT/OFFSET no SQL)
+        List<Coleta> coletas = coletaDAO.buscarColetasComPaginacao(page, size);
+        
+        // 3. Converter para response (os dados já vêm com JOINs, sem N+1)
         List<MobileColetaResponse> responses = new ArrayList<>();
-
         for (Coleta coleta : coletas) {
             try {
-                Inventario inventario = inventarioDAO.findById(coleta.getIdInventario());
-                // Buscar o usuário que fez a coleta
-                Usuario coletor = usuarioDAO.findById(coleta.getIdColetor());
-                
-                // Se coletor não encontrado, criar um usuário temporário para não perder a coleta
-                if (coletor == null) {
-                    logger.warn("Coletor ID {} não encontrado para coleta ID {}, usando nome padrão", 
-                            coleta.getIdColetor(), coleta.getId());
-                    coletor = new Usuario();
-                    coletor.setId(coleta.getIdColetor());
-                    coletor.setNomeCompleto("Usuário ID " + coleta.getIdColetor() + " (não encontrado)");
-                }
-                
-                responses.add(converterParaResponse(coleta, coletor, inventario));
+                MobileColetaResponse response = converterColetaParaResponseSimples(coleta);
+                responses.add(response);
             } catch (Exception e) {
                 logger.error("Erro ao processar coleta ID {}: {}", coleta.getId(), e.getMessage());
             }
         }
-
-        logger.debug("Encontradas {} coletas no sistema", responses.size());
-        return responses;
+        
+        long duration = System.currentTimeMillis() - startTime;
+        logger.info("✓ {} coletas carregadas em {}ms (página {}/{}, total: {})", 
+                responses.size(), duration, page + 1, totalPages, totalElements);
+        
+        // 4. Montar resposta paginada
+        Map<String, Object> result = new HashMap<>();
+        result.put("content", responses);
+        result.put("page", page);
+        result.put("size", size);
+        result.put("totalElements", totalElements);
+        result.put("totalPages", totalPages);
+        result.put("first", page == 0);
+        result.put("last", page >= totalPages - 1);
+        
+        return result;
+    }
+    
+    /**
+     * MÉTODO OTIMIZADO: Busca coletas do usuário com paginação REAL
+     */
+    public Map<String, Object> buscarColetasUsuarioComPaginacaoReal(String username, int page, int size) throws SQLException {
+        long startTime = System.currentTimeMillis();
+        
+        // Limitar tamanho máximo
+        if (size > 100) size = 100;
+        
+        Usuario usuario = usuarioDAO.buscarPorLogin(username);
+        if (usuario == null) {
+            throw new IllegalArgumentException("Usuário não encontrado: " + username);
+        }
+        
+        // Contar total do usuário
+        int totalElements = coletaDAO.contarColetasPorUsuario(usuario.getId());
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        
+        // Buscar página com LIMIT/OFFSET
+        List<Coleta> coletas = coletaDAO.buscarColetasPorUsuarioComPaginacao(usuario.getId(), page, size);
+        
+        // Converter
+        List<MobileColetaResponse> responses = new ArrayList<>();
+        for (Coleta coleta : coletas) {
+            try {
+                MobileColetaResponse response = converterColetaParaResponseSimples(coleta);
+                responses.add(response);
+            } catch (Exception e) {
+                logger.error("Erro ao processar coleta ID {}: {}", coleta.getId(), e.getMessage());
+            }
+        }
+        
+        long duration = System.currentTimeMillis() - startTime;
+        logger.info("✓ {} coletas do usuário {} em {}ms", responses.size(), username, duration);
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("content", responses);
+        result.put("page", page);
+        result.put("size", size);
+        result.put("totalElements", totalElements);
+        result.put("totalPages", totalPages);
+        result.put("first", page == 0);
+        result.put("last", page >= totalPages - 1);
+        
+        return result;
+    }
+    
+    /**
+     * Converte Coleta para Response usando dados já carregados pelo JOIN
+     * Evita queries adicionais (N+1 problem)
+     */
+    private MobileColetaResponse converterColetaParaResponseSimples(Coleta coleta) {
+        MobileColetaResponse response = new MobileColetaResponse();
+        
+        response.setId((long) coleta.getId());
+        response.setIdInventario(coleta.getIdInventario());
+        response.setPatrimonioId(coleta.getIdPatrimonio());
+        response.setUsuarioId(coleta.getIdColetor());
+        response.setStatusColeta(coleta.getStatusColeta());
+        response.setObservacaoColeta(coleta.getObservacaoColeta());
+        response.setLocalizacaoEncontrada(coleta.getLocalizacaoEncontrada());
+        response.setEstadoEncontrado(coleta.getEstadoEncontrado());
+        response.setSemEtiqueta(coleta.isSemEtiqueta());
+        response.setDescricaoItemSemEtiqueta(coleta.getDescricaoItemSemEtiqueta());
+        response.setCategoriaItemSemEtiqueta(coleta.getCategoriaItemSemEtiqueta());
+        
+        // Dados já carregados pelo JOIN (sem queries adicionais)
+        response.setNumeroPatrimonio(coleta.getNumeroPatrimonio());
+        response.setDescricaoPatrimonio(coleta.getDescricaoPatrimonio());
+        response.setNomeColetor(coleta.getNomeColetor());
+        response.setNomeInventario(coleta.getDescricaoInventario());
+        
+        // Formatar data
+        if (coleta.getDataColeta() != null) {
+            response.setDataColeta(coleta.getDataColetaFormatada());
+        }
+        
+        return response;
     }
     
     /**

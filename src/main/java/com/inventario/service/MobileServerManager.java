@@ -27,19 +27,34 @@ public class MobileServerManager {
     private static final long STATUS_CACHE_MS = 3000; // Cache por 3 segundos
 
     // ===== CONFIGURAÇÕES JVM OTIMIZADAS =====
-    // Memória: 512MB inicial, 1GB máximo (reduzido de 2GB)
-    // HikariCP gerencia conexões automaticamente
-    // GC logging habilitado para diagnóstico
-    private static final String JVM_OPTS = "-Xms512m -Xmx1g " +
+    // v2.1: Permite até 1GB com monitoramento e recuperação automática
+    // O MemoryMonitorService cuida de detectar problemas e recuperar
+    private static final String JVM_OPTS = 
+            // Memória: 256MB inicial, 1GB máximo
+            "-Xms256m -Xmx1g " +
+            "-XX:MaxMetaspaceSize=192m " +
+            "-Xss256k " +  // Stack de threads reduzido
+            // G1GC com coleta eficiente
             "-XX:+UseG1GC " +
             "-XX:MaxGCPauseMillis=100 " +
-            "-XX:+UseStringDeduplication " +
-            "-XX:+ParallelRefProcEnabled " +
             "-XX:InitiatingHeapOccupancyPercent=45 " +
+            "-XX:G1ReservePercent=15 " +
+            // Otimizações de memória
+            "-XX:+UseStringDeduplication " +
+            "-XX:+UseCompressedOops " +
+            "-XX:+UseCompressedClassPointers " +
+            "-XX:+OptimizeStringConcat " +
+            // Segurança: sair se OOM
+            "-XX:-UseBiasedLocking " +
             "-XX:+DisableExplicitGC " +
-            "-XX:MaxMetaspaceSize=256m " +
+            // Spring Boot otimizações
+            "-Dspring.main.lazy-initialization=true " +
+            "-Dspring.jmx.enabled=false " +
+            "-Dspring.data.jpa.repositories.bootstrap-mode=lazy " +
+            // Diagnóstico
             "-XX:+HeapDumpOnOutOfMemoryError " +
             "-XX:HeapDumpPath=logs/ " +
+            "-XX:+ExitOnOutOfMemoryError " +
             "-Djava.awt.headless=true";
 
     /**

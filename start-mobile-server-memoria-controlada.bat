@@ -52,7 +52,6 @@ set JAVA_OPTS=%JAVA_OPTS% -XX:HeapDumpPath=logs/
 set JAVA_OPTS=%JAVA_OPTS% -XX:+ExitOnOutOfMemoryError
 
 REM Desabilitar features que consomem memória
-set JAVA_OPTS=%JAVA_OPTS% -XX:-UseBiasedLocking
 set JAVA_OPTS=%JAVA_OPTS% -XX:+DisableExplicitGC
 
 REM Encoding e profile

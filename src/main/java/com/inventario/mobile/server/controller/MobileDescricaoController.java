@@ -33,36 +33,28 @@ public class MobileDescricaoController {
      * 
      * @return lista de descrições
      */
+    /**
+     * Listar descrições únicas de patrimônios
+     * 
+     * OTIMIZADO: Usa GROUP BY no SQL ao invés de carregar todos os patrimônios
+     * ANTES: findAll() + stream().groupBy() (vazamento de memória)
+     * DEPOIS: Query SQL com GROUP BY (retorna apenas descrições únicas)
+     */
     @GetMapping
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> listarDescricoes() {
         try {
-            logger.info("Buscando descrições únicas de patrimônios");
+            long startTime = System.currentTimeMillis();
+            logger.info("Buscando descrições únicas (OTIMIZADO - GROUP BY no SQL)");
             
-            // Buscar todos os patrimônios
-            List<Patrimonio> patrimonios = patrimonioDAO.findAll();
+            // OTIMIZAÇÃO: Buscar descrições agrupadas diretamente no banco
+            List<Map<String, Object>> descricoes = patrimonioDAO.buscarDescricoesAgrupadas();
             
-            // Agrupar por descrição e contar
-            Map<String, Long> descricoesAgrupadas = patrimonios.stream()
-                    .filter(p -> p.getDescricao() != null && !p.getDescricao().trim().isEmpty())
-                    .collect(Collectors.groupingBy(
-                            Patrimonio::getDescricao,
-                            Collectors.counting()
-                    ));
-            
-            // Converter para lista de mapas
-            List<Map<String, Object>> descricoes = descricoesAgrupadas.entrySet().stream()
-                    .map(entry -> Map.of(
-                            "descricao", (Object) entry.getKey(),
-                            "quantidade", (Object) entry.getValue()
-                    ))
-                    .sorted((a, b) -> ((String) a.get("descricao")).compareTo((String) b.get("descricao")))
-                    .collect(Collectors.toList());
-            
-            logger.info("{} descrições únicas encontradas", descricoes.size());
+            long duration = System.currentTimeMillis() - startTime;
+            logger.info("✓ {} descrições únicas em {}ms", descricoes.size(), duration);
             
             return ResponseEntity.ok(
                     ApiResponse.success(descricoes, 
-                            String.format("%d descrição(ões) encontrada(s)", descricoes.size())));
+                            String.format("%d descrição(ões) em %dms", descricoes.size(), duration)));
             
         } catch (Exception e) {
             logger.error("Erro ao buscar descrições", e);
@@ -74,6 +66,8 @@ public class MobileDescricaoController {
     /**
      * Buscar descrições por termo
      * 
+     * OTIMIZADO: Usa GROUP BY + LIKE no SQL (máximo 100 resultados)
+     * 
      * @param termo termo de busca
      * @return lista de descrições filtradas
      */
@@ -81,33 +75,18 @@ public class MobileDescricaoController {
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> buscarDescricoes(
             @RequestParam String termo) {
         try {
-            logger.info("Buscando descrições com termo: {}", termo);
+            long startTime = System.currentTimeMillis();
+            logger.info("Buscando descrições com termo: {} (OTIMIZADO)", termo);
             
-            // Buscar patrimônios por descrição
-            List<Patrimonio> patrimonios = patrimonioDAO.buscarPorDescricaoAbrangente(termo);
+            // OTIMIZAÇÃO: Buscar descrições agrupadas por termo diretamente no banco
+            List<Map<String, Object>> descricoes = patrimonioDAO.buscarDescricoesAgrupadasPorTermo(termo);
             
-            // Agrupar por descrição e contar
-            Map<String, Long> descricoesAgrupadas = patrimonios.stream()
-                    .filter(p -> p.getDescricao() != null && !p.getDescricao().trim().isEmpty())
-                    .collect(Collectors.groupingBy(
-                            Patrimonio::getDescricao,
-                            Collectors.counting()
-                    ));
-            
-            // Converter para lista de mapas
-            List<Map<String, Object>> descricoes = descricoesAgrupadas.entrySet().stream()
-                    .map(entry -> Map.of(
-                            "descricao", (Object) entry.getKey(),
-                            "quantidade", (Object) entry.getValue()
-                    ))
-                    .sorted((a, b) -> ((String) a.get("descricao")).compareTo((String) b.get("descricao")))
-                    .collect(Collectors.toList());
-            
-            logger.info("{} descrições encontradas para o termo '{}'", descricoes.size(), termo);
+            long duration = System.currentTimeMillis() - startTime;
+            logger.info("✓ {} descrições para '{}' em {}ms", descricoes.size(), termo, duration);
             
             return ResponseEntity.ok(
                     ApiResponse.success(descricoes, 
-                            String.format("%d descrição(ões) encontrada(s)", descricoes.size())));
+                            String.format("%d descrição(ões) em %dms", descricoes.size(), duration)));
             
         } catch (Exception e) {
             logger.error("Erro ao buscar descrições por termo", e);
@@ -118,37 +97,48 @@ public class MobileDescricaoController {
     
     /**
      * Listar descrições únicas de patrimônios NÃO COLETADOS
-     * Facilita a coleta sem etiqueta mostrando apenas itens pendentes
+     * 
+     * OTIMIZADO: Usa NOT EXISTS no SQL ao invés de carregar todos os patrimônios
+     * ANTES: findAll() + stream().filter() (vazamento de memória)
+     * DEPOIS: Query SQL com NOT EXISTS (máximo 200 resultados)
      * 
      * @param idInventario ID do inventário ativo
      * @return lista de descrições não coletadas
      */
     @GetMapping("/nao-coletadas")
-    public ResponseEntity<ApiResponse<List<String>>> listarDescricoesNaoColetadas(
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> listarDescricoesNaoColetadas(
             @RequestParam(required = false) Integer idInventario) {
         try {
-            logger.info("Buscando descrições de patrimônios não coletados");
+            long startTime = System.currentTimeMillis();
+            logger.info("Buscando descrições não coletadas (OTIMIZADO - NOT EXISTS no SQL)");
             
-            // Buscar todos os patrimônios
-            List<Patrimonio> patrimonios = patrimonioDAO.findAll();
+            // Obter inventário ativo se não informado
+            if (idInventario == null) {
+                try {
+                    com.inventario.dao.InventarioDAO inventarioDAO = new com.inventario.dao.InventarioDAO();
+                    com.inventario.model.Inventario inventarioAtivo = inventarioDAO.buscarInventarioAtivo();
+                    if (inventarioAtivo != null) {
+                        idInventario = inventarioAtivo.getId();
+                    }
+                } catch (Exception e) {
+                    logger.warn("Erro ao buscar inventário ativo: {}", e.getMessage());
+                }
+            }
             
-            // Buscar patrimônios já coletados no inventário atual
-            List<Integer> idsColetados = patrimonioDAO.buscarPatrimoniosColetados(idInventario);
+            if (idInventario == null) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("Nenhum inventário ativo encontrado", "NO_INVENTORY"));
+            }
             
-            // Filtrar apenas não coletados e extrair descrições únicas
-            List<String> descricoesNaoColetadas = patrimonios.stream()
-                    .filter(p -> !idsColetados.contains(p.getId()))
-                    .filter(p -> p.getDescricao() != null && !p.getDescricao().trim().isEmpty())
-                    .map(Patrimonio::getDescricao)
-                    .distinct()
-                    .sorted()
-                    .collect(Collectors.toList());
+            // OTIMIZAÇÃO: Buscar descrições não coletadas diretamente no banco
+            List<Map<String, Object>> descricoes = patrimonioDAO.buscarDescricoesNaoColetadasAgrupadas(idInventario);
             
-            logger.info("{} descrições não coletadas encontradas", descricoesNaoColetadas.size());
+            long duration = System.currentTimeMillis() - startTime;
+            logger.info("✓ {} descrições não coletadas em {}ms", descricoes.size(), duration);
             
             return ResponseEntity.ok(
-                    ApiResponse.success(descricoesNaoColetadas, 
-                            String.format("%d descrição(ões) não coletada(s)", descricoesNaoColetadas.size())));
+                    ApiResponse.success(descricoes, 
+                            String.format("%d descrição(ões) não coletada(s) em %dms", descricoes.size(), duration)));
             
         } catch (Exception e) {
             logger.error("Erro ao buscar descrições não coletadas", e);

@@ -10,12 +10,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import com.inventario.util.DatabaseConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Gerenciador de dispositivos móveis conectados
  * Rastreia quais smartphones estão conectados ao servidor
+ * 
+ * v2.0: Otimizado para baixo consumo de memória
+ * - Usa SLF4J ao invés de System.out
+ * - Limpeza automática de dispositivos inativos
  */
 public class ConnectedDevicesManager {
+    
+    private static final Logger logger = LoggerFactory.getLogger(ConnectedDevicesManager.class);
 
     private static final Map<String, ConnectedDevice> connectedDevices = new ConcurrentHashMap<>();
     private static final long TIMEOUT_MINUTES = 5; // Considera desconectado após 5 minutos sem atividade
@@ -197,7 +205,7 @@ public class ConnectedDevicesManager {
     public static void removeDevice(String deviceId) {
         ConnectedDevice device = connectedDevices.remove(deviceId);
         if (device != null) {
-            System.out.println("Dispositivo desconectado: " + device);
+            logger.debug("Dispositivo desconectado: {}", device);
             updateDeviceDisconnection(deviceId);
         }
     }
@@ -264,7 +272,7 @@ public class ConnectedDevicesManager {
             stmt.executeUpdate();
 
         } catch (Exception e) {
-            System.err.println("Erro ao salvar conexão do dispositivo: " + e.getMessage());
+            logger.warn("Erro ao salvar conexão do dispositivo: {}", e.getMessage());
             // Não falhar se a tabela não existir
         }
     }
@@ -284,7 +292,7 @@ public class ConnectedDevicesManager {
             stmt.executeUpdate();
 
         } catch (Exception e) {
-            System.err.println("Erro ao atualizar desconexão: " + e.getMessage());
+            logger.warn("Erro ao atualizar desconexão: {}", e.getMessage());
         }
     }
 
@@ -319,10 +327,10 @@ public class ConnectedDevicesManager {
                 }
             }
 
-            System.out.println("Carregados " + connectedDevices.size() + " dispositivos do banco");
+            logger.debug("Carregados {} dispositivos do banco", connectedDevices.size());
 
         } catch (Exception e) {
-            System.err.println("Erro ao carregar dispositivos do banco: " + e.getMessage());
+            logger.warn("Erro ao carregar dispositivos do banco: {}", e.getMessage());
         }
     }
 

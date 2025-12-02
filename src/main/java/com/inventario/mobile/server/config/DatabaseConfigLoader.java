@@ -4,7 +4,8 @@ import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEven
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
-import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileReader;
@@ -16,9 +17,11 @@ import java.util.Map;
  * Isso permite que o servidor mobile use as mesmas credenciais do desktop
  * 
  * @author Sistema de Inventário
- * @version 1.0.0
+ * @version 1.1.0 - Usa SLF4J ao invés de System.out
  */
 public class DatabaseConfigLoader implements ApplicationListener<ApplicationEnvironmentPreparedEvent> {
+    
+    private static final Logger logger = LoggerFactory.getLogger(DatabaseConfigLoader.class);
     
     @Override
     public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
@@ -32,17 +35,13 @@ public class DatabaseConfigLoader implements ApplicationListener<ApplicationEnvi
                 // Adiciona com alta prioridade (antes das properties do Spring)
                 environment.getPropertySources().addFirst(propertySource);
                 
-                System.out.println("╔════════════════════════════════════════════════════════════════╗");
-                System.out.println("║  ✅ Servidor Mobile: Credenciais carregadas de                ║");
-                System.out.println("║     configuracao_banco.json                                    ║");
-                System.out.println("╠════════════════════════════════════════════════════════════════╣");
-                System.out.println("║  Host: " + props.get("spring.datasource.url"));
-                System.out.println("║  User: " + props.get("spring.datasource.username"));
-                System.out.println("╚════════════════════════════════════════════════════════════════╝");
+                logger.info("✅ Servidor Mobile: Credenciais carregadas de configuracao_banco.json");
+                logger.info("   Host: {}", props.get("spring.datasource.url"));
+                logger.info("   User: {}", props.get("spring.datasource.username"));
             }
         } catch (Exception e) {
-            System.err.println("Aviso: Não foi possível carregar configuracao_banco.json: " + e.getMessage());
-            System.err.println("Usando configurações do application-mobile.properties");
+            logger.warn("Aviso: Não foi possível carregar configuracao_banco.json: {}", e.getMessage());
+            logger.info("Usando configurações do application-mobile.properties");
         }
     }
     
@@ -62,13 +61,13 @@ public class DatabaseConfigLoader implements ApplicationListener<ApplicationEnvi
             File f = new File(path);
             if (f.exists() && f.canRead()) {
                 jsonFile = f;
-                System.out.println("DatabaseConfigLoader: Encontrado arquivo em: " + f.getAbsolutePath());
+                logger.debug("DatabaseConfigLoader: Encontrado arquivo em: {}", f.getAbsolutePath());
                 break;
             }
         }
         
         if (jsonFile == null) {
-            System.out.println("DatabaseConfigLoader: Arquivo configuracao_banco.json não encontrado");
+            logger.debug("DatabaseConfigLoader: Arquivo configuracao_banco.json não encontrado");
             return props;
         }
         
@@ -100,11 +99,11 @@ public class DatabaseConfigLoader implements ApplicationListener<ApplicationEnvi
                 props.put("spring.datasource.username", user);
                 props.put("spring.datasource.password", password);
                 
-                System.out.println("DatabaseConfigLoader: Configuração carregada com sucesso!");
+                logger.debug("DatabaseConfigLoader: Configuração carregada com sucesso!");
             }
             
         } catch (Exception e) {
-            System.err.println("DatabaseConfigLoader: Erro ao ler arquivo: " + e.getMessage());
+            logger.warn("DatabaseConfigLoader: Erro ao ler arquivo: {}", e.getMessage());
         }
         
         return props;

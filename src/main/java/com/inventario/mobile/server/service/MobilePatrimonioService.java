@@ -339,20 +339,22 @@ public class MobilePatrimonioService {
         resultado.put("inventarioId", inventario.getId());
         resultado.put("inventarioNome", inventario.getNome());
         
-        // Se foi coletado, buscar informações da coleta
+        // Se foi coletado, buscar informações da coleta (OTIMIZADO - busca apenas 1 registro)
         if (coletado) {
             try {
-                List<com.inventario.model.Coleta> coletas = coletaDAO.buscarPorInventario(inventario.getId());
-                for (com.inventario.model.Coleta coleta : coletas) {
-                    if (coleta.getIdPatrimonio() == patrimonio.getId()) {
-                        resultado.put("dataColeta", coleta.getDataColetaFormatada());
-                        resultado.put("coletadoPor", coleta.getNomeColetor());
-                        resultado.put("coletaId", coleta.getId());
-                        resultado.put("observacoes", coleta.getObservacaoColeta());
-                        resultado.put("localizacaoEncontrada", coleta.getLocalizacaoEncontrada());
-                        resultado.put("estadoEncontrado", coleta.getEstadoEncontrado());
-                        break;
-                    }
+                // OTIMIZAÇÃO: Usar método que busca apenas a coleta específica
+                // ANTES: buscarPorInventario() carregava TODAS as coletas (vazamento de memória)
+                // DEPOIS: buscarColetaPorPatrimonioEInventario() retorna apenas 1 registro
+                com.inventario.model.Coleta coleta = coletaDAO.buscarColetaPorPatrimonioEInventario(
+                        inventario.getId(), patrimonio.getId());
+                
+                if (coleta != null) {
+                    resultado.put("dataColeta", coleta.getDataColetaFormatada());
+                    resultado.put("coletadoPor", coleta.getNomeColetor());
+                    resultado.put("coletaId", coleta.getId());
+                    resultado.put("observacoes", coleta.getObservacaoColeta());
+                    resultado.put("localizacaoEncontrada", coleta.getLocalizacaoEncontrada());
+                    resultado.put("estadoEncontrado", coleta.getEstadoEncontrado());
                 }
             } catch (Exception e) {
                 logger.warn("Erro ao buscar detalhes da coleta: {}", e.getMessage());
@@ -414,14 +416,16 @@ public class MobilePatrimonioService {
             jaColetado = coletaDAO.coletaExiste(inventarioAtivo.getId(), patrimonio.getId());
             
             if (jaColetado) {
-                // Buscar informações de quem coletou
-                List<com.inventario.model.Coleta> coletas = coletaDAO.buscarPorInventario(inventarioAtivo.getId());
-                for (com.inventario.model.Coleta coleta : coletas) {
-                    if (coleta.getIdPatrimonio() == patrimonio.getId()) {
+                // OTIMIZAÇÃO: Buscar apenas a coleta específica (não todas do inventário)
+                try {
+                    com.inventario.model.Coleta coleta = coletaDAO.buscarColetaPorPatrimonioEInventario(
+                            inventarioAtivo.getId(), patrimonio.getId());
+                    if (coleta != null) {
                         coletadoPor = coleta.getNomeColetor();
                         dataColeta = coleta.getDataColetaFormatada();
-                        break;
                     }
+                } catch (Exception e) {
+                    logger.warn("Erro ao buscar coleta: {}", e.getMessage());
                 }
             }
         }
@@ -435,6 +439,20 @@ public class MobilePatrimonioService {
             resultado.put("avisoColeta", "Este patrimônio já foi coletado anteriormente");
             resultado.put("coletadoPor", coletadoPor);
             resultado.put("dataColeta", dataColeta);
+            
+            // OTIMIZAÇÃO: Buscar informações completas da coleta específica (não todas)
+            try {
+                com.inventario.model.Coleta coleta = coletaDAO.buscarColetaPorPatrimonioEInventario(
+                        inventarioAtivo.getId(), patrimonio.getId());
+                if (coleta != null) {
+                    resultado.put("coletaId", coleta.getId());
+                    resultado.put("localizacaoEncontrada", coleta.getLocalizacaoEncontrada());
+                    resultado.put("estadoEncontrado", coleta.getEstadoEncontrado());
+                    resultado.put("observacoes", coleta.getObservacaoColeta());
+                }
+            } catch (Exception e) {
+                logger.warn("Erro ao buscar detalhes completos da coleta: {}", e.getMessage());
+            }
         }
         
         logger.debug("Patrimônio {} é válido (já coletado: {})", numeroPatrimonio, jaColetado);
@@ -493,20 +511,18 @@ public class MobilePatrimonioService {
             resultado.put("mensagem", "Este patrimônio já foi coletado neste inventário");
             resultado.put("motivo", "COLETA_DUPLICADA");
             
-            // Buscar informações da coleta existente
+            // OTIMIZAÇÃO: Buscar apenas a coleta específica (não todas do inventário)
             try {
-                List<com.inventario.model.Coleta> coletas = coletaDAO.buscarPorInventario(inventario.getId());
-                for (com.inventario.model.Coleta coleta : coletas) {
-                    if (coleta.getIdPatrimonio() == patrimonio.getId()) {
-                        resultado.put("coletaExistente", new java.util.HashMap<String, Object>() {{
-                            put("id", coleta.getId());
-                            put("dataColeta", coleta.getDataColetaFormatada());
-                            put("coletadoPor", coleta.getNomeColetor());
-                            put("localizacao", coleta.getLocalizacaoEncontrada());
-                            put("estado", coleta.getEstadoEncontrado());
-                        }});
-                        break;
-                    }
+                com.inventario.model.Coleta coleta = coletaDAO.buscarColetaPorPatrimonioEInventario(
+                        inventario.getId(), patrimonio.getId());
+                if (coleta != null) {
+                    java.util.Map<String, Object> coletaExistente = new java.util.HashMap<>();
+                    coletaExistente.put("id", coleta.getId());
+                    coletaExistente.put("dataColeta", coleta.getDataColetaFormatada());
+                    coletaExistente.put("coletadoPor", coleta.getNomeColetor());
+                    coletaExistente.put("localizacao", coleta.getLocalizacaoEncontrada());
+                    coletaExistente.put("estado", coleta.getEstadoEncontrado());
+                    resultado.put("coletaExistente", coletaExistente);
                 }
             } catch (Exception e) {
                 logger.warn("Erro ao buscar coleta existente: {}", e.getMessage());

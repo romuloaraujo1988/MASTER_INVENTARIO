@@ -248,12 +248,12 @@ object NetworkModule {
             .addInterceptor(deviceInfoInterceptor)  // Device info
             .addInterceptor(authInterceptor)  // Auth
             .addInterceptor(loggingInterceptor)  // Log por último para ver todos os headers
-            // Timeouts ajustados para permitir carregamento de coletas
-            .connectTimeout(5, TimeUnit.SECONDS)   // 5s para conectar
-            .readTimeout(30, TimeUnit.SECONDS)     // 30s para ler dados (aumentado para coletas)
-            .writeTimeout(15, TimeUnit.SECONDS)    // 15s para escrever
-            .callTimeout(35, TimeUnit.SECONDS)     // 35s timeout total
-            .retryOnConnectionFailure(false)       // Não retry automático (fallback manual)
+            // TIMEOUTS AJUSTADOS PARA REDES MÓVEIS INSTÁVEIS (WiFi/4G)
+            .connectTimeout(30, TimeUnit.SECONDS)  // 30s para conectar (era 5s)
+            .readTimeout(60, TimeUnit.SECONDS)     // 60s para ler dados (era 30s)
+            .writeTimeout(60, TimeUnit.SECONDS)    // 60s para escrever (era 15s)
+            .callTimeout(90, TimeUnit.SECONDS)     // 90s timeout total (era 35s)
+            .retryOnConnectionFailure(true)        // Retry automático em falha de conexão
             // Configurações adicionais para Android 14
             .followRedirects(true)
             .followSslRedirects(true)

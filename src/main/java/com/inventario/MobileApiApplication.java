@@ -15,15 +15,29 @@ import org.springframework.context.annotation.ComponentScan;
  * @author Sistema de Inventário
  * @version 1.0.0
  */
-@SpringBootApplication
-@ComponentScan(basePackages = {
-    "com.inventario.mobile.server",
-    "com.inventario.service",
-    "com.inventario.dao",
-    "com.inventario.config",
-    "com.inventario.util",
-    "com.inventario.security"
+@SpringBootApplication(exclude = {
+    // Excluir auto-configurações que não são necessárias para o servidor mobile
+    org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration.class,
+    org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration.class
 })
+@ComponentScan(
+    basePackages = {
+        "com.inventario.mobile.server",
+        "com.inventario.service",
+        "com.inventario.dao",
+        "com.inventario.util",
+        "com.inventario.security"
+    },
+    // CRÍTICO: Excluir configurações do desktop que causam alto consumo de recursos
+    excludeFilters = {
+        @ComponentScan.Filter(type = org.springframework.context.annotation.FilterType.REGEX, 
+            pattern = "com\\.inventario\\.config\\.WebSocketConfig"),
+        @ComponentScan.Filter(type = org.springframework.context.annotation.FilterType.REGEX, 
+            pattern = "com\\.inventario\\.config\\.AsyncConfig"),
+        @ComponentScan.Filter(type = org.springframework.context.annotation.FilterType.REGEX, 
+            pattern = "com\\.inventario\\.config\\.CacheConfig")
+    }
+)
 @EntityScan(basePackages = "com.inventario.model")
 public class MobileApiApplication {
     

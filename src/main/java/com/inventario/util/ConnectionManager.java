@@ -5,13 +5,19 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Gerenciador centralizado de conexões com banco de dados
  * Usa HikariCP para connection pooling eficiente
  * Elimina código de conexão espalhado
+ * 
+ * v2.0: Usa SLF4J ao invés de System.out
  */
 public class ConnectionManager {
+    
+    private static final Logger logger = LoggerFactory.getLogger(ConnectionManager.class);
     
     private static HikariDataSource dataSource;
     private static boolean initialized = false;
@@ -30,29 +36,29 @@ public class ConnectionManager {
             config.setUsername(username);
             config.setPassword(password);
             
-            // Configurações de pool
-            config.setMaximumPoolSize(10);
-            config.setMinimumIdle(2);
-            config.setConnectionTimeout(30000); // 30 segundos
-            config.setIdleTimeout(600000); // 10 minutos
-            config.setMaxLifetime(1800000); // 30 minutos
+            // Configurações de pool - OTIMIZADO para baixo consumo de memória
+            config.setMaximumPoolSize(5);   // Era: 10 - Reduzido para economizar memória
+            config.setMinimumIdle(1);       // Era: 2 - Mínimo necessário
+            config.setConnectionTimeout(20000); // 20 segundos
+            config.setIdleTimeout(300000);  // 5 minutos (era 10)
+            config.setMaxLifetime(900000);  // 15 minutos (era 30)
             
             // Configurações de validação
             config.setConnectionTestQuery("SELECT 1");
-            config.setValidationTimeout(5000);
+            config.setValidationTimeout(3000);
             
-            // Configurações de performance
+            // Configurações de performance - REDUZIDO cache
             config.addDataSourceProperty("cachePrepStmts", "true");
-            config.addDataSourceProperty("prepStmtCacheSize", "250");
-            config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+            config.addDataSourceProperty("prepStmtCacheSize", "100");  // Era: 250
+            config.addDataSourceProperty("prepStmtCacheSqlLimit", "1024"); // Era: 2048
             
             dataSource = new HikariDataSource(config);
             initialized = true;
             
-            System.out.println("✓ Connection pool inicializado com sucesso");
+            logger.info("✓ Connection pool inicializado com sucesso");
             
         } catch (Exception e) {
-            System.err.println("✗ Erro ao inicializar connection pool: " + e.getMessage());
+            logger.error("✗ Erro ao inicializar connection pool: {}", e.getMessage());
             throw new RuntimeException("Falha ao inicializar pool de conexões", e);
         }
     }
@@ -69,7 +75,7 @@ public class ConnectionManager {
         try {
             return dataSource.getConnection();
         } catch (SQLException e) {
-            System.err.println("Erro ao obter conexão do pool: " + e.getMessage());
+            logger.error("Erro ao obter conexão do pool: {}", e.getMessage());
             throw e;
         }
     }
@@ -82,7 +88,7 @@ public class ConnectionManager {
             try {
                 conn.close(); // HikariCP retorna ao pool automaticamente
             } catch (SQLException e) {
-                System.err.println("Erro ao fechar conexão: " + e.getMessage());
+                logger.warn("Erro ao fechar conexão: {}", e.getMessage());
             }
         }
     }
@@ -94,7 +100,7 @@ public class ConnectionManager {
         if (dataSource != null && !dataSource.isClosed()) {
             dataSource.close();
             initialized = false;
-            System.out.println("✓ Connection pool fechado");
+            logger.info("✓ Connection pool fechado");
         }
     }
     
@@ -129,7 +135,7 @@ public class ConnectionManager {
         try (Connection conn = getConnection()) {
             return conn != null && !conn.isClosed();
         } catch (SQLException e) {
-            System.err.println("Erro ao testar conexão: " + e.getMessage());
+            logger.warn("Erro ao testar conexão: {}", e.getMessage());
             return false;
         }
     }

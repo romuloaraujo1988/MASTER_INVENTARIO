@@ -54,27 +54,26 @@ public class MobileDataSourceConfig {
         config.setPassword(password);
         config.setDriverClassName(driverClassName);
         
-        // Configurações do pool
-        config.setMaximumPoolSize(maximumPoolSize);
-        config.setMinimumIdle(minimumIdle);
+        // Configurações do pool - OTIMIZADO para baixo consumo de memória
+        config.setMaximumPoolSize(Math.min(maximumPoolSize, 5)); // Máximo 5 conexões
+        config.setMinimumIdle(Math.min(minimumIdle, 1));         // Mínimo 1 conexão
         config.setConnectionTimeout(connectionTimeout);
-        config.setIdleTimeout(idleTimeout);
-        config.setMaxLifetime(maxLifetime);
+        config.setIdleTimeout(Math.min(idleTimeout, 300000));    // Máximo 5 minutos
+        config.setMaxLifetime(Math.min(maxLifetime, 900000));    // Máximo 15 minutos
         
         // Configurações adicionais
         config.setConnectionTestQuery("SELECT 1");
-        config.setPoolName("InventarioMobilePool");
+        config.setPoolName("MobilePool");
         config.setAutoCommit(true);
         
         // Configurações de validação
-        config.setValidationTimeout(5000);
-        config.setLeakDetectionThreshold(60000);
+        config.setValidationTimeout(3000);
+        config.setLeakDetectionThreshold(30000); // Detectar vazamentos mais rápido
         
-        // Propriedades específicas do PostgreSQL
+        // Propriedades específicas do PostgreSQL - REDUZIDO cache
         config.addDataSourceProperty("cachePrepStmts", "true");
-        config.addDataSourceProperty("prepStmtCacheSize", "250");
-        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-        config.addDataSourceProperty("useServerPrepStmts", "true");
+        config.addDataSourceProperty("prepStmtCacheSize", "100");   // Era: 250
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", "1024"); // Era: 2048
         
         return new HikariDataSource(config);
     }

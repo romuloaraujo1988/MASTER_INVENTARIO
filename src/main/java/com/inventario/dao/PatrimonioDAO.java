@@ -1040,4 +1040,109 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
         
         return patrimonios;
     }
+    
+    /**
+     * MÉTODO OTIMIZADO: Busca descrições agrupadas diretamente no banco
+     * 
+     * PROBLEMA RESOLVIDO: Vazamento de memória ao carregar todos os patrimônios
+     * ANTES: findAll() + stream().groupBy() em memória (milhares de objetos)
+     * DEPOIS: GROUP BY no SQL (retorna apenas descrições únicas)
+     * 
+     * @return lista de mapas com descricao e quantidade
+     */
+    public List<java.util.Map<String, Object>> buscarDescricoesAgrupadas() throws SQLException {
+        String sql = "SELECT DESCRICAO, COUNT(*) as quantidade " +
+                    "FROM TABELA_PATRIMONIO " +
+                    "WHERE DESCRICAO IS NOT NULL AND TRIM(DESCRICAO) != '' " +
+                    "AND (STATUS IS NULL OR UPPER(STATUS) = 'ATIVO' OR STATUS = '') " +
+                    "GROUP BY DESCRICAO " +
+                    "ORDER BY DESCRICAO";
+        
+        List<java.util.Map<String, Object>> resultado = new java.util.ArrayList<>();
+        
+        try (Connection conn = com.inventario.util.ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                java.util.Map<String, Object> item = new java.util.HashMap<>();
+                item.put("descricao", rs.getString("DESCRICAO"));
+                item.put("quantidade", rs.getLong("quantidade"));
+                resultado.add(item);
+            }
+        }
+        
+        return resultado;
+    }
+    
+    /**
+     * MÉTODO OTIMIZADO: Busca descrições agrupadas por termo
+     * Usa LIKE no SQL ao invés de carregar tudo em memória
+     */
+    public List<java.util.Map<String, Object>> buscarDescricoesAgrupadasPorTermo(String termo) throws SQLException {
+        String sql = "SELECT DESCRICAO, COUNT(*) as quantidade " +
+                    "FROM TABELA_PATRIMONIO " +
+                    "WHERE DESCRICAO IS NOT NULL AND TRIM(DESCRICAO) != '' " +
+                    "AND (STATUS IS NULL OR UPPER(STATUS) = 'ATIVO' OR STATUS = '') " +
+                    "AND UPPER(DESCRICAO) LIKE UPPER(?) " +
+                    "GROUP BY DESCRICAO " +
+                    "ORDER BY quantidade DESC, DESCRICAO " +
+                    "LIMIT 100";
+        
+        List<java.util.Map<String, Object>> resultado = new java.util.ArrayList<>();
+        
+        try (Connection conn = com.inventario.util.ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, "%" + termo + "%");
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    java.util.Map<String, Object> item = new java.util.HashMap<>();
+                    item.put("descricao", rs.getString("DESCRICAO"));
+                    item.put("quantidade", rs.getLong("quantidade"));
+                    resultado.add(item);
+                }
+            }
+        }
+        
+        return resultado;
+    }
+    
+    /**
+     * MÉTODO OTIMIZADO: Busca descrições NÃO coletadas agrupadas
+     * Usado para coleta por descrição (sem etiqueta)
+     */
+    public List<java.util.Map<String, Object>> buscarDescricoesNaoColetadasAgrupadas(Integer idInventario) throws SQLException {
+        String sql = "SELECT p.DESCRICAO, COUNT(*) as quantidade " +
+                    "FROM TABELA_PATRIMONIO p " +
+                    "WHERE p.DESCRICAO IS NOT NULL AND TRIM(p.DESCRICAO) != '' " +
+                    "AND (p.STATUS IS NULL OR UPPER(p.STATUS) = 'ATIVO' OR p.STATUS = '') " +
+                    "AND NOT EXISTS (" +
+                    "    SELECT 1 FROM TABELA_COLETA c " +
+                    "    WHERE c.ID_PATRIMONIO = p.ID AND c.ID_INVENTARIO = ?" +
+                    ") " +
+                    "GROUP BY p.DESCRICAO " +
+                    "ORDER BY quantidade DESC, p.DESCRICAO " +
+                    "LIMIT 200";
+        
+        List<java.util.Map<String, Object>> resultado = new java.util.ArrayList<>();
+        
+        try (Connection conn = com.inventario.util.ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idInventario);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    java.util.Map<String, Object> item = new java.util.HashMap<>();
+                    item.put("descricao", rs.getString("DESCRICAO"));
+                    item.put("quantidade", rs.getLong("quantidade"));
+                    resultado.add(item);
+                }
+            }
+        }
+        
+        return resultado;
+    }
 }

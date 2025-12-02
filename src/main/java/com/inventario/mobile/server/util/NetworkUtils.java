@@ -4,11 +4,15 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Enumeration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utilitários de rede para o servidor mobile
  */
 public class NetworkUtils {
+    
+    private static final Logger logger = LoggerFactory.getLogger(NetworkUtils.class);
     
     /**
      * Obtém o endereço IP local da rede
@@ -46,7 +50,7 @@ public class NetworkUtils {
                 }
             }
         } catch (Exception e) {
-            System.err.println("Erro ao obter IP local: " + e.getMessage());
+            logger.warn("Erro ao obter IP local: {}", e.getMessage());
         }
         return "localhost";
     }

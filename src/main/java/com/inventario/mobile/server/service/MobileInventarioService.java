@@ -94,8 +94,8 @@ public class MobileInventarioService {
             throw new IllegalArgumentException("Inventário não encontrado");
         }
         
-        // Contar patrimônios totais
-        int totalPatrimonios = patrimonioDAO.findAll().size();
+        // Contar patrimônios totais (OTIMIZADO: usa COUNT ao invés de carregar todos)
+        int totalPatrimonios = patrimonioDAO.contarPatrimoniosAtivos();
         
         // Contar coletas realizadas
         int totalColetados = coletaDAO.contarColetasPorInventario(idInventario);
@@ -147,7 +147,7 @@ public class MobileInventarioService {
             int totalColetados = coletaDAO.contarColetasPorInventario(inventario.getId());
             dto.setTotalColetados(totalColetados);
             
-            int totalPatrimonios = patrimonioDAO.findAll().size();
+            int totalPatrimonios = patrimonioDAO.contarPatrimoniosAtivos();
             dto.setTotalPatrimonios(totalPatrimonios);
             
             double percentual = totalPatrimonios > 0 

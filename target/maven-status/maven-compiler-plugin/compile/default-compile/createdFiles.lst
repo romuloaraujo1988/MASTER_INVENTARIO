@@ -50,6 +50,7 @@ com\inventario\sync\model\BackupInfo.class
 com\inventario\offline\DataSynchronizer$SyncResult.class
 com\inventario\ui\ConfiguracaoBancoController$2.class
 com\inventario\util\CadastrarItensCompostosMassa$Componente.class
+com\inventario\config\SchedulingConfig.class
 com\inventario\mobile\server\controller\MobileSyncController.class
 com\inventario\offline\SyncFrame$8.class
 com\inventario\presentation\state\RelatorioState$Idle.class
@@ -210,6 +211,7 @@ com\inventario\siads\service\SiadsIntegrationService.class
 com\inventario\siads\test\SiadsExportTest.class
 com\inventario\view\ResponsavelFrame$3.class
 com\inventario\config\DatabaseConfig.class
+com\inventario\mobile\server\controller\MobileHealthController.class
 com\inventario\view\MobileMonitorFrameV2$6.class
 com\inventario\view\ui\ButtonStyleFactory$3.class
 com\inventario\util\ImportacaoExcel$ImportacaoCSVConstants.class
@@ -245,7 +247,6 @@ com\inventario\dao\SalaDAO.class
 com\inventario\mobile\server\dto\MobileSyncRequest.class
 com\inventario\view\RelatorioItensCompostosFrame$2.class
 com\inventario\siads\config\SiadsConfig.class
-com\inventario\mobile\server\service\MobilePatrimonioService$1.class
 com\inventario\ui\ConfiguracaoBancoController$3.class
 com\inventario\mobile\server\controller\MobileSalaController.class
 com\inventario\offline\DataSynchronizer$IntegrityReport.class
@@ -325,6 +326,7 @@ com\inventario\mobile\server\service\MobilePatrimonioService.class
 com\inventario\model\QRCode.class
 com\inventario\view\CampusFormDialog.class
 com\inventario\view\RelatorioFrame$2.class
+com\inventario\mobile\server\config\MemoryOptimizationConfig.class
 com\inventario\view\StatusBarPanel.class
 com\inventario\mobile\server\service\MobileSalaService.class
 com\inventario\mobile\server\dto\ApiResponse.class
@@ -374,6 +376,7 @@ com\inventario\view\InventarioFrame$5.class
 com\inventario\view\RelatorioDivergenciasFrame$2.class
 com\inventario\dao\SetorDAO.class
 com\inventario\view\ItemCompostoFrame$3.class
+com\inventario\service\MemoryMonitorService.class
 com\inventario\util\PortManager.class
 com\inventario\chart\InventarioChartService.class
 com\inventario\presentation\state\RelatorioState.class
@@ -463,6 +466,7 @@ com\inventario\view\InventarioFormDialog$2.class
 com\inventario\view\InventarioFrame$4.class
 com\inventario\view\MainFrame$9.class
 com\inventario\mobile\server\dto\MobileSalaDTO.class
+com\inventario\service\MemoryMonitorService$MemoryStatus.class
 com\inventario\view\InventarioFrame$3.class
 com\inventario\mobile\server\dto\MobileInventarioInfo.class
 com\inventario\view\ColetaFrame_v2$14.class
