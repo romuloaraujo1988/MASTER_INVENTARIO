@@ -167,6 +167,19 @@ public class MobileColetaService {
             }
             coleta.setIdPatrimonio(patrimonio.getId());
             coleta.setLocalizacaoAtual(patrimonio.getNomeSala());
+            
+            // VERIFICAÇÃO DE DUPLICATA: Verificar se já existe coleta para este patrimônio neste inventário
+            Coleta coletaExistente = verificarColetaDuplicada(inventario.getId(), patrimonio.getId());
+            if (coletaExistente != null) {
+                logger.warn("⚠️ COLETA DUPLICADA DETECTADA: Patrimônio {} já foi coletado no inventário {} por {} em {}",
+                        request.getNumeroPatrimonio(), 
+                        inventario.getId(),
+                        coletaExistente.getNomeColetor(),
+                        coletaExistente.getDataColeta());
+                
+                // Retornar resposta de duplicata ao invés de lançar exceção
+                return criarRespostaDuplicada(coletaExistente, request);
+            }
         } else {
             // Item sem etiqueta - validar que tem descrição
             if (request.getDescricaoItemSemEtiqueta() == null || request.getDescricaoItemSemEtiqueta().trim().isEmpty()) {
@@ -201,22 +214,33 @@ public class MobileColetaService {
 
     /**
      * Registra múltiplas coletas em lote
+     * Trata duplicatas separadamente sem interromper o processamento
      */
     public Map<String, Object> registrarColetasEmLote(List<MobileColetaRequest> coletas, String username) {
         logger.debug("Registrando {} coletas em lote para usuário: {}", coletas.size(), username);
 
         int sucesso = 0;
         int falhas = 0;
+        int duplicadas = 0;
         List<String> erros = new ArrayList<>();
+        List<String> coletasDuplicadas = new ArrayList<>();
 
         for (MobileColetaRequest request : coletas) {
             try {
-                registrarColeta(request, username);
-                sucesso++;
+                MobileColetaResponse response = registrarColeta(request, username);
+                
+                // Verificar se a resposta indica duplicata
+                if (response.getDuplicada() != null && response.getDuplicada()) {
+                    duplicadas++;
+                    coletasDuplicadas.add(request.getNumeroPatrimonio());
+                    logger.debug("Coleta duplicada detectada no lote: {}", request.getNumeroPatrimonio());
+                } else {
+                    sucesso++;
+                }
             } catch (Exception e) {
                 falhas++;
                 erros.add("Patrimônio " + request.getNumeroPatrimonio() + ": " + e.getMessage());
-                logger.error("Erro ao registrar coleta em lote", e);
+                logger.error("Erro ao registrar coleta em lote: {}", e.getMessage());
             }
         }
 
@@ -224,9 +248,11 @@ public class MobileColetaService {
         resultado.put("total", coletas.size());
         resultado.put("sucesso", sucesso);
         resultado.put("falhas", falhas);
+        resultado.put("duplicadas", duplicadas);
         resultado.put("erros", erros);
+        resultado.put("coletasDuplicadas", coletasDuplicadas);
 
-        logger.debug("Lote processado: {} sucesso, {} falhas", sucesso, falhas);
+        logger.debug("Lote processado: {} sucesso, {} falhas, {} duplicadas", sucesso, falhas, duplicadas);
 
         return resultado;
     }
@@ -1130,5 +1156,56 @@ public class MobileColetaService {
         }
         
         return resultado;
+    }
+    
+    // ==================== MÉTODOS PARA TRATAMENTO DE COLETA DUPLICADA ====================
+    
+    /**
+     * Verifica se já existe uma coleta para o patrimônio no inventário
+     * 
+     * @param idInventario ID do inventário
+     * @param idPatrimonio ID do patrimônio
+     * @return Coleta existente ou null se não houver duplicata
+     */
+    private Coleta verificarColetaDuplicada(Integer idInventario, Integer idPatrimonio) {
+        if (idInventario == null || idPatrimonio == null || idPatrimonio <= 0) {
+            return null;
+        }
+        
+        try {
+            return coletaDAO.buscarColetaExistente(idInventario, idPatrimonio);
+        } catch (SQLException e) {
+            logger.error("Erro ao verificar coleta duplicada: {}", e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * Cria uma resposta indicando que a coleta é duplicada
+     * Inclui informações da coleta original para o usuário
+     * 
+     * @param coletaExistente Coleta que já existe no banco
+     * @param request Request original que tentou criar a duplicata
+     * @return Response com status de duplicada
+     */
+    private MobileColetaResponse criarRespostaDuplicada(Coleta coletaExistente, MobileColetaRequest request) {
+        MobileColetaResponse response = new MobileColetaResponse();
+        
+        // Marcar como duplicada
+        response.setDuplicada(true);
+        response.setMensagemDuplicada("Este patrimônio já foi coletado neste inventário. Exclua a coleta local para evitar duplicação.");
+        
+        // Dados da coleta original
+        response.setColetaOriginalId((long) coletaExistente.getId());
+        response.setDataColetaOriginal(formatDataColeta(coletaExistente.getDataColeta()));
+        response.setColetorOriginal(coletaExistente.getNomeColetor());
+        
+        // Dados do request para referência
+        response.setNumeroPatrimonio(request.getNumeroPatrimonio());
+        response.setIdInventario(request.getIdInventario());
+        response.setStatusColeta("DUPLICADA");
+        response.setSincronizado(false);
+        
+        return response;
     }
 }

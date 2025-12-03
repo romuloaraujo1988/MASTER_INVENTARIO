@@ -67,9 +67,26 @@ public class MobileColetaResponse {
     @JsonProperty("sincronizado")
     private Boolean sincronizado;
     
+    // Campos para tratamento de coleta duplicada
+    @JsonProperty("duplicada")
+    private Boolean duplicada;
+    
+    @JsonProperty("mensagemDuplicada")
+    private String mensagemDuplicada;
+    
+    @JsonProperty("coletaOriginalId")
+    private Long coletaOriginalId;
+    
+    @JsonProperty("dataColetaOriginal")
+    private String dataColetaOriginal;
+    
+    @JsonProperty("coletorOriginal")
+    private String coletorOriginal;
+    
     // Construtores
     public MobileColetaResponse() {
         this.sincronizado = true;
+        this.duplicada = false;
     }
     
     // Getters e Setters
@@ -223,5 +240,47 @@ public class MobileColetaResponse {
     
     public void setSincronizado(Boolean sincronizado) {
         this.sincronizado = sincronizado;
+    }
+    
+    // Getters e Setters para campos de duplicata
+    
+    public Boolean getDuplicada() {
+        return duplicada;
+    }
+    
+    public void setDuplicada(Boolean duplicada) {
+        this.duplicada = duplicada;
+    }
+    
+    public String getMensagemDuplicada() {
+        return mensagemDuplicada;
+    }
+    
+    public void setMensagemDuplicada(String mensagemDuplicada) {
+        this.mensagemDuplicada = mensagemDuplicada;
+    }
+    
+    public Long getColetaOriginalId() {
+        return coletaOriginalId;
+    }
+    
+    public void setColetaOriginalId(Long coletaOriginalId) {
+        this.coletaOriginalId = coletaOriginalId;
+    }
+    
+    public String getDataColetaOriginal() {
+        return dataColetaOriginal;
+    }
+    
+    public void setDataColetaOriginal(String dataColetaOriginal) {
+        this.dataColetaOriginal = dataColetaOriginal;
+    }
+    
+    public String getColetorOriginal() {
+        return coletorOriginal;
+    }
+    
+    public void setColetorOriginal(String coletorOriginal) {
+        this.coletorOriginal = coletorOriginal;
     }
 }

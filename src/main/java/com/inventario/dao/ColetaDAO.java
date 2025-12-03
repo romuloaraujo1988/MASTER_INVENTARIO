@@ -1014,6 +1014,73 @@ public class ColetaDAO {
         return false;
     }
     
+    /**
+     * Busca coleta existente por inventário e patrimônio
+     * Retorna a coleta com dados do coletor para tratamento de duplicatas
+     * 
+     * @param idInventario ID do inventário
+     * @param idPatrimonio ID do patrimônio
+     * @return Coleta existente com dados do coletor ou null se não existir
+     */
+    public Coleta buscarColetaExistente(int idInventario, int idPatrimonio) throws SQLException {
+        boolean sqlite = isSQLite();
+        
+        String sql;
+        if (sqlite) {
+            sql = "SELECT c.*, u.nome_completo as nome_coletor " +
+                  "FROM " + getColetaTableName() + " c " +
+                  "LEFT JOIN " + getParticipanteTableName() + " pi ON c.id_participante_inventario = pi.id_participante " +
+                  "LEFT JOIN tabela_usuario u ON pi.id_usuario = u.id " +
+                  "WHERE c.id_inventario = ? AND c.id_patrimonio = ? " +
+                  "LIMIT 1";
+        } else {
+            sql = "SELECT c.*, u.nome_completo as nome_coletor " +
+                  "FROM " + getColetaTableName() + " c " +
+                  "LEFT JOIN " + getParticipanteTableName() + " pi ON c.id_participante_inventario = pi.id " +
+                  "LEFT JOIN tabela_usuario u ON pi.id_usuario = u.id " +
+                  "WHERE c.id_inventario = ? AND c.id_patrimonio = ? AND c.status_coleta = 'COLETADO' " +
+                  "LIMIT 1";
+        }
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idInventario);
+            stmt.setInt(2, idPatrimonio);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Coleta coleta = new Coleta();
+                    coleta.setId(rs.getInt("id"));
+                    coleta.setIdInventario(rs.getInt("id_inventario"));
+                    coleta.setIdPatrimonio(rs.getInt("id_patrimonio"));
+                    coleta.setDataColeta(rs.getTimestamp("data_coleta"));
+                    
+                    // Nome do coletor (do JOIN)
+                    String nomeColetor = rs.getString("nome_coletor");
+                    coleta.setNomeColetor(nomeColetor);
+                    
+                    // Campos adicionais se existirem
+                    try {
+                        coleta.setStatusColeta(rs.getString("status_coleta"));
+                    } catch (SQLException e) {
+                        coleta.setStatusColeta("COLETADO");
+                    }
+                    
+                    try {
+                        coleta.setIdColetor(rs.getInt("id_coletor"));
+                    } catch (SQLException e) {
+                        // Campo pode não existir em SQLite
+                    }
+                    
+                    return coleta;
+                }
+            }
+        }
+        
+        return null;
+    }
+    
     public int contarColetasPorInventario(int idInventario) throws SQLException {
         boolean sqlite = isSQLite();
         
