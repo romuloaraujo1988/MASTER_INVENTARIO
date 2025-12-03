@@ -3,7 +3,7 @@
     <!-- App -->
     <string name="app_name">SIHCP Mobile</string>
     <string name="app_logo">Logo do aplicativo</string>
-    <string name="app_version">Versão 2.1.0</string>
+    <string name="app_version">Versão 1.2.16</string>
 
     <!-- Login -->
     <string name="login_title">SIHCP Mobile</string>
