@@ -16,10 +16,10 @@ object PatrimonioMapper {
      */
     fun dtoToEntity(dto: MobilePatrimonioDto): PatrimonioEntity {
         return PatrimonioEntity(
-            id = dto.id, // Long → Long (agora compatível)
-            numero = dto.codigo, // DTO usa 'codigo', Entity usa 'numero'
-            numeroPatrimonio = dto.codigo, // Campo obrigatório adicionado
-            descricao = dto.descricao,
+            id = dto.id ?: 0L, // Long? → Long
+            numero = dto.codigo ?: "", // String? → String
+            numeroPatrimonio = dto.codigo ?: "", // Campo obrigatório
+            descricao = dto.descricao ?: "",
             marca = dto.marca,
             modelo = dto.modelo,
             numeroSerie = dto.numeroSerie,

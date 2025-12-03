@@ -175,10 +175,11 @@ class ColetasViewModel(
             val response = api.buscarTodasColetasSemPaginacao()
             
             if (response.isSuccessful && response.body() != null) {
-                val apiResponse = response.body()!!
-                if (apiResponse.success && apiResponse.data != null) {
-                    android.util.Log.d("ColetasViewModel", "✓ Resposta do servidor: ${apiResponse.data.size} coletas")
-                    apiResponse.data.map { dto ->
+                val coletasAllResponse = response.body()!!
+                if (coletasAllResponse.success && coletasAllResponse.data != null) {
+                    val pagedData = coletasAllResponse.data
+                    android.util.Log.d("ColetasViewModel", "✓ Resposta do servidor: ${pagedData.content.size} coletas de ${pagedData.totalElements} total")
+                    pagedData.content.map { dto ->
                         ColetaResponse(
                             id = dto.id,
                             idPatrimonio = dto.patrimonioId,

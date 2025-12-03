@@ -227,30 +227,40 @@ public class MobileColetaController {
      * PROBLEMA: Carregava TODAS as coletas em memória (200MB → 4GB)
      * SOLUÇÃO: Usar paginação obrigatória
      */
+    /**
+     * Buscar todas as coletas sem paginação
+     * Endpoint: GET /api/mobile/coletas/all
+     * 
+     * NOTA: Retorna TODAS as coletas do inventário ativo.
+     * Use com cuidado em inventários com muitas coletas.
+     * 
+     * @return lista completa de coletas
+     */
     @GetMapping("/all")
-    @Deprecated
     public ResponseEntity<ApiResponse<Map<String, Object>>> buscarTodasColetasSemPaginacao(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
             long startTime = System.currentTimeMillis();
-            logger.warn("⚠️ Endpoint /all DEPRECADO - Redirecionando para paginação (máx 100 registros)");
+            logger.info("📥 Buscando TODAS as coletas (sem limite)...");
             
-            // OTIMIZAÇÃO: Limitar a 100 registros para evitar vazamento de memória
-            Map<String, Object> response = mobileColetaService.buscarColetasComPaginacaoReal(0, 100);
+            // Buscar TODAS as coletas (sem limite)
+            // Primeiro conta o total para saber quantas páginas buscar
+            int totalColetas = mobileColetaService.contarTotalColetas();
+            logger.info("Total de coletas no banco: {}", totalColetas);
+            
+            // Buscar todas de uma vez (tamanho = total)
+            Map<String, Object> response = mobileColetaService.buscarColetasComPaginacaoReal(0, Math.max(totalColetas, 1000));
             
             long duration = System.currentTimeMillis() - startTime;
             int total = (int) response.get("totalElements");
             List<?> content = (List<?>) response.get("content");
             
-            logger.info("✓ Retornando {} de {} coletas em {}ms (limitado para evitar vazamento)", 
-                    content.size(), total, duration);
+            logger.info("✓ Retornando {} coletas em {}ms", content.size(), duration);
             
-            // Adicionar aviso na resposta
-            response.put("aviso", "Este endpoint está deprecado. Use GET /api/mobile/coletas?page=0&size=20 para paginação.");
-            
+            // Retornar objeto paginado completo
             return ResponseEntity.ok(
-                    ApiResponse.success(response, String.format("%d coletas (de %d total) em %dms - USE PAGINAÇÃO!", 
-                            content.size(), total, duration)));
+                    ApiResponse.success(response, String.format("%d coletas em %dms", 
+                            content.size(), duration)));
             
         } catch (Exception e) {
             logger.error("❌ Erro ao buscar coletas", e);
@@ -475,6 +485,38 @@ public class MobileColetaController {
             logger.error("Erro ao verificar duplicata de coleta", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro ao verificar duplicata: " + e.getMessage(), "CHECK_ERROR"));
+        }
+    }
+    
+    /**
+     * Buscar todas as salas onde há coletas registradas
+     * Útil para filtros na tela de itens coletados
+     * 
+     * @param inventarioId ID do inventário (opcional, usa o ativo se não informado)
+     * @return lista de salas distintas com coletas
+     */
+    @GetMapping("/salas-com-coletas")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> buscarSalasComColetas(
+            @RequestParam(required = false) Integer inventarioId) {
+        try {
+            logger.info("Buscando salas com coletas para inventário: {}", 
+                    inventarioId != null ? inventarioId : "ATIVO");
+            
+            long startTime = System.currentTimeMillis();
+            
+            List<Map<String, Object>> salas = mobileColetaService.buscarSalasComColetas(inventarioId);
+            
+            long duration = System.currentTimeMillis() - startTime;
+            logger.info("✓ {} salas com coletas encontradas em {}ms", salas.size(), duration);
+            
+            return ResponseEntity.ok(
+                    ApiResponse.success(salas, 
+                            String.format("%d sala(s) com coletas", salas.size())));
+            
+        } catch (Exception e) {
+            logger.error("Erro ao buscar salas com coletas", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao buscar salas: " + e.getMessage(), "FETCH_ERROR"));
         }
     }
     

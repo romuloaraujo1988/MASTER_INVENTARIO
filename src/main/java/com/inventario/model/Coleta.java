@@ -39,6 +39,7 @@ public class Coleta {
     private String descricaoPatrimonio;
     private String nomeColetor;
     private String descricaoInventario;
+    private String nomeSala;  // Nome da sala original do patrimônio (do JOIN)
     
     // Formatação de datas centralizada em DateFormatUtils
     
@@ -261,6 +262,14 @@ public class Coleta {
     
     public void setDescricaoInventario(String descricaoInventario) {
         this.descricaoInventario = descricaoInventario;
+    }
+    
+    public String getNomeSala() {
+        return nomeSala;
+    }
+    
+    public void setNomeSala(String nomeSala) {
+        this.nomeSala = nomeSala;
     }
     
     // Métodos utilitários

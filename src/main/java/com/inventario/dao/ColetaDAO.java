@@ -5,6 +5,7 @@ import com.inventario.util.DatabaseConnection;
 import org.springframework.stereotype.Repository;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -1651,6 +1652,21 @@ public class ColetaDAO {
             coleta.setDescricaoInventario(null);
         }
         
+        // CORREÇÃO 02/12/2025: Ler NOME_SALA do JOIN para exibição no app Android
+        // Setar nomeSala diretamente (campo separado de localizacaoAtual)
+        try {
+            String nomeSala = rs.getString("NOME_SALA");
+            coleta.setNomeSala(nomeSala);
+            
+            // Se localizacaoAtual estiver vazio, usar nomeSala como fallback
+            if ((coleta.getLocalizacaoAtual() == null || coleta.getLocalizacaoAtual().isEmpty()) 
+                && nomeSala != null && !nomeSala.isEmpty()) {
+                coleta.setLocalizacaoAtual(nomeSala);
+            }
+        } catch (SQLException e) {
+            // Campo não existe na query, ignorar
+        }
+        
         return coleta;
     }
     
@@ -2561,10 +2577,13 @@ public class ColetaDAO {
      * @return lista de coletas da página
      */
     public List<Coleta> buscarColetasComPaginacao(int page, int size) throws SQLException {
+        // CORREÇÃO 01/12/2025: Adicionado JOIN com TABELA_SALA para trazer nomeSala
         String sql = "SELECT c.*, p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
-                    "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO " +
+                    "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO, " +
+                    "COALESCE(s.NUMERO_SALA, s.DESCRICAO) as NOME_SALA " +
                     "FROM TABELA_COLETA c " +
                     "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
+                    "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
                     "LEFT JOIN TABELA_PARTICIPANTE_INVENTARIO pi ON c.ID_PARTICIPANTE_INVENTARIO = pi.id_participante " +
                     "LEFT JOIN TABELA_USUARIO u ON pi.ID_USUARIO = u.ID " +
                     "LEFT JOIN TABELA_INVENTARIO i ON c.ID_INVENTARIO = i.ID " +
@@ -2612,10 +2631,13 @@ public class ColetaDAO {
      * MÉTODO OTIMIZADO: Busca coletas por usuário com paginação REAL
      */
     public List<Coleta> buscarColetasPorUsuarioComPaginacao(int idUsuario, int page, int size) throws SQLException {
+        // CORREÇÃO 01/12/2025: Adicionado JOIN com TABELA_SALA para trazer nomeSala
         String sql = "SELECT c.*, p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
-                    "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO " +
+                    "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO, " +
+                    "COALESCE(s.NUMERO_SALA, s.DESCRICAO) as NOME_SALA " +
                     "FROM TABELA_COLETA c " +
                     "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
+                    "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
                     "LEFT JOIN TABELA_PARTICIPANTE_INVENTARIO pi ON c.ID_PARTICIPANTE_INVENTARIO = pi.id_participante " +
                     "LEFT JOIN TABELA_USUARIO u ON pi.ID_USUARIO = u.ID " +
                     "LEFT JOIN TABELA_INVENTARIO i ON c.ID_INVENTARIO = i.ID " +
@@ -2742,6 +2764,68 @@ public class ColetaDAO {
         }
         
         return total;
+    }
+    
+    /**
+     * Busca todas as salas distintas onde há coletas registradas
+     * Retorna lista de salas com contagem de coletas para filtros
+     * 
+     * @param inventarioId ID do inventário (pode ser null para buscar de todos)
+     * @return Lista de mapas com id, nome e quantidade de coletas por sala
+     */
+    public List<Map<String, Object>> buscarSalasComColetas(Integer inventarioId) throws SQLException {
+        System.out.println("[DEBUG ColetaDAO] buscarSalasComColetas - Inventário: " + inventarioId);
+        
+        List<Map<String, Object>> salas = new ArrayList<>();
+        
+        // Query que busca salas distintas com coletas
+        // Usa LOCALIZACAO_ENCONTRADA pois é onde o item foi realmente encontrado
+        String sql;
+        if (inventarioId != null) {
+            sql = "SELECT DISTINCT " +
+                  "    COALESCE(c.LOCALIZACAO_ENCONTRADA, s.NUMERO, 'Sem Sala') as nome_sala, " +
+                  "    COUNT(*) as quantidade " +
+                  "FROM " + getColetaTableName() + " c " +
+                  "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
+                  "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID " +
+                  "WHERE c.ID_INVENTARIO = ? " +
+                  "GROUP BY COALESCE(c.LOCALIZACAO_ENCONTRADA, s.NUMERO, 'Sem Sala') " +
+                  "ORDER BY quantidade DESC, nome_sala";
+        } else {
+            sql = "SELECT DISTINCT " +
+                  "    COALESCE(c.LOCALIZACAO_ENCONTRADA, s.NUMERO, 'Sem Sala') as nome_sala, " +
+                  "    COUNT(*) as quantidade " +
+                  "FROM " + getColetaTableName() + " c " +
+                  "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
+                  "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID " +
+                  "GROUP BY COALESCE(c.LOCALIZACAO_ENCONTRADA, s.NUMERO, 'Sem Sala') " +
+                  "ORDER BY quantidade DESC, nome_sala";
+        }
+        
+        long inicio = System.currentTimeMillis();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            if (inventarioId != null) {
+                stmt.setInt(1, inventarioId);
+            }
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> sala = new HashMap<>();
+                    sala.put("nome", rs.getString("nome_sala"));
+                    sala.put("quantidade", rs.getInt("quantidade"));
+                    salas.add(sala);
+                }
+            }
+        }
+        
+        long tempo = System.currentTimeMillis() - inicio;
+        System.out.println("[DEBUG ColetaDAO] buscarSalasComColetas - " + salas.size() + 
+                         " salas encontradas em " + tempo + "ms");
+        
+        return salas;
     }
 
 }

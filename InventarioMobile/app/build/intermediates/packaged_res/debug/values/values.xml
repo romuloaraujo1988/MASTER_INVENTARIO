@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:ns1="http://schemas.android.com/tools">
     <string-array name="suggested_server_ips">
+        <item>10.14.250.214</item>
         <item>10.14.250.228</item>
         <item>192.168.11.136</item>
-        <item>10.14.250.238</item>
         <item>192.168.10.107</item>
         <item>192.168.1.100</item>
         <item>192.168.0.100</item>
@@ -24,6 +24,7 @@
     <color name="error">#F44336</color>
     <color name="error_dark">#C62828</color>
     <color name="error_light">#FFEBEE</color>
+    <color name="error_red">#F44336</color>
     <color name="info">#2196F3</color>
     <color name="info_color">#2196F3</color>
     <color name="info_dark">#1565C0</color>
@@ -54,6 +55,9 @@
     <color name="secondary_dark">#FFA000</color>
     <color name="secondary_light">#FFF8E1</color>
     <color name="secondary_text">#757575</color>
+    <color name="status_background_error">#FFEBEE</color>
+    <color name="status_background_success">#E8F5E9</color>
+    <color name="status_background_warning">#FFF3E0</color>
     <color name="status_error">#F44336</color>
     <color name="status_pending">#FF9800</color>
     <color name="status_synced">#4CAF50</color>
@@ -121,7 +125,7 @@
     <string name="dados_coleta">Dados da Coleta</string>
     <string name="dashboard_title">Dashboard</string>
     <string name="default_context_path">/inventario</string>
-    <string name="default_server_ip">192.168.10.107</string>
+    <string name="default_server_ip">10.14.250.214</string>
     <string name="delete">Excluir</string>
     <string name="descricao">Descrição</string>
     <string name="description_collection_button">Coleta por Descrição</string>

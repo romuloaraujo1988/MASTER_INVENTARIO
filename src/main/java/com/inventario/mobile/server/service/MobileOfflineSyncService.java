@@ -31,12 +31,14 @@ import java.util.stream.Collectors;
 public class MobileOfflineSyncService {
     
     private static final Logger logger = LoggerFactory.getLogger(MobileOfflineSyncService.class);
-    private static final String VERSAO_SERVIDOR = "2.3.0";
+    private static final String VERSAO_SERVIDOR = "2.4.0";  // Atualizado: limites aumentados
     
     // Limites para evitar sobrecarga de memória
-    private static final int MAX_PATRIMONIOS_POR_SYNC = 10000;
-    private static final int MAX_SALAS_POR_SYNC = 1000;
-    private static final int MAX_RESPONSAVEIS_POR_SYNC = 500;
+    // AUMENTADO: Com servidor em processo separado (1GB dedicado), podemos carregar mais dados
+    // v2.4: Removida limitação artificial - servidor standalone suporta carga maior
+    private static final int MAX_PATRIMONIOS_POR_SYNC = 50000;  // Aumentado de 5000 para 50000
+    private static final int MAX_SALAS_POR_SYNC = 2000;         // Aumentado de 500 para 2000
+    private static final int MAX_RESPONSAVEIS_POR_SYNC = 1000;  // Aumentado de 300 para 1000
     
     @Autowired
     private PatrimonioDAO patrimonioDAO;
@@ -64,6 +66,11 @@ public class MobileOfflineSyncService {
      */
     @Transactional(readOnly = true)
     public MobileOfflineDataDTO buscarDadosOffline(Integer inventarioId) {
+        // Log de memória ANTES
+        Runtime runtime = Runtime.getRuntime();
+        long memBefore = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+        logger.info("📊 Memória ANTES do sync offline: {}MB", memBefore);
+        
         logger.debug("Iniciando sincronização offline");
         long startTime = System.currentTimeMillis();
         
@@ -179,7 +186,11 @@ public class MobileOfflineSyncService {
             
             long totalTime = System.currentTimeMillis() - startTime;
             
-            logger.debug("Sincronização offline concluída: {} patrimônios, {} salas, {} responsáveis em {}ms", 
+            // Log de memória DEPOIS
+            long memAfter = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+            logger.info("📊 Memória DEPOIS do sync offline: {}MB (delta: +{}MB)", memAfter, memAfter - memBefore);
+            
+            logger.info("✅ Sincronização offline concluída: {} patrimônios, {} salas, {} responsáveis em {}ms", 
                 patrimoniosDTO.size(), salasDTO.size(), responsaveisDTO.size(), totalTime);
             
             return response;
@@ -252,5 +263,67 @@ public class MobileOfflineSyncService {
         int responsaveisSize = response.getResponsaveis().size() * 50;
         
         return (patrimoniosSize + salasSize + responsaveisSize) / 1024;
+    }
+    
+    /**
+     * Busca patrimônios PAGINADOS para modo offline
+     * 
+     * USO: Quando há mais de 5.000 patrimônios, o app deve fazer múltiplas
+     * requisições para baixar todos os dados em partes.
+     * 
+     * @param page número da página (0-based)
+     * @param size tamanho da página (máximo 2000)
+     * @param inventarioId ID do inventário (opcional)
+     * @return Map com content, totalElements, totalPages, page, size
+     */
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Object> buscarPatrimoniosPaginados(int page, int size, Integer inventarioId) {
+        // Log de memória
+        Runtime runtime = Runtime.getRuntime();
+        long memBefore = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+        logger.debug("📊 Memória ANTES: {}MB", memBefore);
+        
+        try {
+            // Limitar tamanho máximo
+            if (size > 2000) {
+                size = 2000;
+            }
+            
+            // Contar total de patrimônios
+            int totalElements = patrimonioDAO.contarTotalPatrimonios();
+            int totalPages = (int) Math.ceil((double) totalElements / size);
+            
+            // Buscar página de patrimônios
+            List<Patrimonio> patrimonios = patrimonioDAO.buscarPatrimoniosComPaginacao(page, size);
+            
+            // Converter para DTOs
+            List<PatrimonioOfflineDTO> patrimoniosDTO = patrimonios.stream()
+                .map(this::converterPatrimonioParaDTO)
+                .collect(Collectors.toList());
+            
+            // Liberar memória
+            patrimonios = null;
+            
+            // Log de memória
+            long memAfter = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+            logger.debug("📊 Memória DEPOIS: {}MB (delta: +{}MB)", memAfter, memAfter - memBefore);
+            
+            // Montar resposta
+            java.util.Map<String, Object> result = new java.util.HashMap<>();
+            result.put("content", patrimoniosDTO);
+            result.put("page", page);
+            result.put("size", size);
+            result.put("totalElements", totalElements);
+            result.put("totalPages", totalPages);
+            result.put("first", page == 0);
+            result.put("last", page >= totalPages - 1);
+            result.put("hasMore", page < totalPages - 1);
+            
+            return result;
+            
+        } catch (Exception e) {
+            logger.error("Erro ao buscar patrimônios paginados", e);
+            throw new RuntimeException("Erro ao buscar patrimônios: " + e.getMessage(), e);
+        }
     }
 }

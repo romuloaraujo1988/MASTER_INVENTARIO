@@ -79,9 +79,9 @@ class InventarioRepository(
                 if (apiResponse.success && apiResponse.data != null) {
                     val patrimonios = apiResponse.data.map { dto ->
                         Patrimonio(
-                            id = dto.id,
-                            numeroPatrimonio = dto.codigo,
-                            descricao = dto.descricao,
+                            id = dto.id ?: 0L,
+                            numeroPatrimonio = dto.codigo ?: "",
+                            descricao = dto.descricao ?: "",
                             marca = dto.marca,
                             modelo = dto.modelo,
                             numeroSerie = dto.numeroSerie,
@@ -194,9 +194,9 @@ class InventarioRepository(
                     val dto = apiResponse.data
                     
                     val patrimonio = Patrimonio(
-                        id = dto.id,
-                        numeroPatrimonio = dto.codigo,
-                        descricao = dto.descricao,
+                        id = dto.id ?: 0L,
+                        numeroPatrimonio = dto.codigo ?: "",
+                        descricao = dto.descricao ?: "",
                         marca = dto.marca,
                         modelo = dto.modelo,
                         numeroSerie = dto.numeroSerie,
@@ -638,9 +638,9 @@ class InventarioRepository(
                 if (apiResponse.success && apiResponse.data != null) {
                     val patrimonios = apiResponse.data.map { dto ->
                         Patrimonio(
-                            id = dto.id,
-                            numeroPatrimonio = dto.codigo,
-                            descricao = dto.descricao,
+                            id = dto.id ?: 0L,
+                            numeroPatrimonio = dto.codigo ?: "",
+                            descricao = dto.descricao ?: "",
                             marca = dto.marca,
                             modelo = dto.modelo,
                             numeroSerie = dto.numeroSerie,

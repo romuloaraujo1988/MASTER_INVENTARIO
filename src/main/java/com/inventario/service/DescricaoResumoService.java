@@ -13,8 +13,15 @@ public class DescricaoResumoService {
     private static final int TAMANHO_MAXIMO_RESUMO = 50;
     private static final int PALAVRAS_MAXIMAS = 4;
     
-    // Cache para evitar recálculos
-    private static final Map<String, String> cacheResumos = new HashMap<>();
+    // Cache para evitar recálculos - LIMITE REDUZIDO para baixo consumo de memória
+    // CRÍTICO: Cache grande causava vazamento de memória no servidor mobile
+    private static final int MAX_CACHE_SIZE = 100;  // Reduzido de 500
+    private static final Map<String, String> cacheResumos = new java.util.LinkedHashMap<String, String>(MAX_CACHE_SIZE, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
+            return size() > MAX_CACHE_SIZE;
+        }
+    };
     
     // Dicionário de categorias principais
     private static final Map<String, List<String>> CATEGORIAS = new HashMap<>();

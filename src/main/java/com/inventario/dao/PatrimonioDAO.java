@@ -496,6 +496,37 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
     }
     
     /**
+     * Conta total de patrimônios
+     * Usado para paginação no sync offline
+     */
+    public int contarTotalPatrimonios() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM TABELA_PATRIMONIO";
+        Integer count = executeScalar(sql, Integer.class);
+        return count != null ? count : 0;
+    }
+    
+    /**
+     * Busca patrimônios com paginação (LIMIT/OFFSET)
+     * Usado para sync offline em partes para evitar sobrecarga de memória
+     * 
+     * @param page número da página (0-based)
+     * @param size tamanho da página
+     * @return lista de patrimônios da página
+     */
+    public List<Patrimonio> buscarPatrimoniosComPaginacao(int page, int size) throws SQLException {
+        int offset = page * size;
+        
+        String sql = "SELECT p.*, r.NOME as nome_responsavel, s.DESCRICAO as nome_sala " +
+                    "FROM TABELA_PATRIMONIO p " +
+                    "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
+                    "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
+                    "ORDER BY p.ID " +
+                    "LIMIT ? OFFSET ?";
+        
+        return executeQuery(sql, size, offset);
+    }
+    
+    /**
      * Busca por ID com joins
      */
     public Patrimonio buscarPorIdComJoins(int id) throws SQLException {

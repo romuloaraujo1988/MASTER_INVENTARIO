@@ -53,7 +53,7 @@ class RegistrarColetaUseCase @Inject constructor(
             // 4. Criar coleta com número do patrimônio
             val coleta = Coleta(
                 id = 0,
-                patrimonioId = patrimonio.id,
+                patrimonioId = patrimonio.id.toLong(),
                 numeroPatrimonio = numeroPatrimonio,
                 usuarioId = usuarioIdFinal,
                 salaId = salaId,

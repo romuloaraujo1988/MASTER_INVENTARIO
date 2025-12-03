@@ -22,7 +22,7 @@ class PatrimonioRepositoryAdapter @Inject constructor(
     // Conversão de data.model.Patrimonio para domain.model.Patrimonio
     private fun DataPatrimonio.toDomain(): DomainPatrimonio {
         return DomainPatrimonio(
-            id = this.id,
+            id = this.id.toInt(),
             numeroPatrimonio = this.numeroPatrimonio,
             descricao = this.descricao,
             marca = this.marca,
@@ -32,8 +32,8 @@ class PatrimonioRepositoryAdapter @Inject constructor(
             valor = this.valor,
             dataAquisicao = null, // data.model não tem este campo
             observacoes = this.observacoes,
-            setorId = this.setorId ?: 0L,
-            salaId = this.salaId ?: 0L,
+            idSetor = this.setorId?.toInt(),
+            idSala = this.salaId?.toInt(),
             qrCode = this.qrCode ?: this.numeroPatrimonio,
             sincronizado = this.sincronizado,
             coletado = this.coletado,
@@ -49,26 +49,26 @@ class PatrimonioRepositoryAdapter @Inject constructor(
     // Conversão de domain.model.Patrimonio para data.model.Patrimonio
     private fun DomainPatrimonio.toData(): DataPatrimonio {
         return DataPatrimonio(
-            id = this.id,
+            id = this.id.toLong(),
             numeroPatrimonio = this.numeroPatrimonio,
-            descricao = this.descricao,
+            descricao = this.descricao ?: "",
             marca = this.marca,
             modelo = this.modelo,
             numeroSerie = this.numeroSerie,
             estado = this.estado,
             valor = this.valor,
-            setorId = this.setorId,
-            setorNome = null,
-            salaId = this.salaId,
-            salaNome = null,
+            setorId = this.idSetor?.toLong(),
+            setorNome = this.nomeSetor,
+            salaId = this.idSala?.toLong(),
+            salaNome = this.nomeSala,
             responsavelId = this.coletorId,
-            responsavelNome = null,
+            responsavelNome = this.nomeResponsavel,
             qrCode = this.qrCode,
             observacoes = this.observacoes,
             coletado = this.coletado,
             dataColeta = this.dataColeta,
-            coletadoPor = null,
-            dataColetaFormatada = null,
+            coletadoPor = this.coletadoPor,
+            dataColetaFormatada = this.dataColetaFormatada,
             observacoesColeta = null,
             sincronizado = this.sincronizado,
             servidorId = this.servidorId

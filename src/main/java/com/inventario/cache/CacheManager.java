@@ -27,7 +27,11 @@ public class CacheManager {
     // TTL padrão: 5 minutos
     private static final long DEFAULT_TTL_MILLIS = 5 * 60 * 1000;
     
-    // Caches thread-safe
+    // LIMITES para evitar vazamento de memória
+    private static final int MAX_SALAS_CACHE = 200;
+    private static final int MAX_PATRIMONIOS_POR_SALA_CACHE = 50;
+    
+    // Caches thread-safe COM LIMITE
     private final Map<Integer, CachedData<Sala>> salasCache;
     private final Map<Integer, CachedData<List<Patrimonio>>> patrimoniosPorSalaCache;
     private CachedData<Inventario> inventarioAtivoCache;
@@ -35,11 +39,27 @@ public class CacheManager {
     
     /**
      * Construtor privado - Singleton
+     * CORREÇÃO: Caches com limite para evitar vazamento de memória
      */
     private CacheManager() {
-        this.salasCache = new ConcurrentHashMap<>();
-        this.patrimoniosPorSalaCache = new ConcurrentHashMap<>();
-        logger.info("CacheManager inicializado com TTL de {}ms", DEFAULT_TTL_MILLIS);
+        // Cache de salas com limite LRU
+        this.salasCache = new java.util.LinkedHashMap<Integer, CachedData<Sala>>(MAX_SALAS_CACHE, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<Integer, CachedData<Sala>> eldest) {
+                return size() > MAX_SALAS_CACHE;
+            }
+        };
+        
+        // Cache de patrimônios por sala com limite LRU
+        this.patrimoniosPorSalaCache = new java.util.LinkedHashMap<Integer, CachedData<List<Patrimonio>>>(MAX_PATRIMONIOS_POR_SALA_CACHE, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<Integer, CachedData<List<Patrimonio>>> eldest) {
+                return size() > MAX_PATRIMONIOS_POR_SALA_CACHE;
+            }
+        };
+        
+        logger.info("CacheManager inicializado com TTL de {}ms (limites: {} salas, {} patrimônios/sala)", 
+            DEFAULT_TTL_MILLIS, MAX_SALAS_CACHE, MAX_PATRIMONIOS_POR_SALA_CACHE);
     }
     
     /**

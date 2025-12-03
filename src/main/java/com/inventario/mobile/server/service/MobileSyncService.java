@@ -22,11 +22,13 @@ public class MobileSyncService {
     
     private static final Logger logger = LoggerFactory.getLogger(MobileSyncService.class);
     
-    // Limites para evitar sobrecarga de memória
-    private static final int MAX_PATRIMONIOS = 10000;
-    private static final int MAX_SALAS = 1000;
-    private static final int MAX_RESPONSAVEIS = 500;
-    private static final int MAX_SETORES = 200;
+    // Limites DRASTICAMENTE REDUZIDOS para evitar vazamento de memória
+    // CRÍTICO: Servidor estava usando 1GB por usuário!
+    // Sincronização deve ser PAGINADA, não carregar tudo de uma vez
+    private static final int MAX_PATRIMONIOS = 1000;  // Reduzido de 10000
+    private static final int MAX_SALAS = 200;         // Reduzido de 1000
+    private static final int MAX_RESPONSAVEIS = 100;  // Reduzido de 500
+    private static final int MAX_SETORES = 50;        // Reduzido de 200
     
     private final PatrimonioDAO patrimonioDAO;
     private final com.inventario.service.InventarioService inventarioService;

@@ -300,6 +300,20 @@ public class MobilePatrimonioService {
     }
     
     /**
+     * Conta total de patrimônios ativos
+     * Usado para paginação (retornar totalElements)
+     */
+    public long contarPatrimoniosAtivos() throws SQLException {
+        logger.debug("Contando patrimônios ativos");
+        
+        int total = patrimonioDAO.contarPatrimoniosAtivos();
+        
+        logger.debug("Total de patrimônios ativos: {}", total);
+        
+        return total;
+    }
+    
+    /**
      * Verifica se um patrimônio já foi coletado no inventário
      * 
      * @param numeroPatrimonio número do patrimônio

@@ -322,7 +322,21 @@ public class MemoryMonitorService {
             // Ignorar
         }
         
-        // 3. GC agressivo
+        // 3. Limpar cache de descrições resumidas
+        try {
+            com.inventario.service.DescricaoResumoService.limparCache();
+        } catch (Exception e) {
+            // Ignorar
+        }
+        
+        // 4. Limpar todos os dispositivos (não apenas inativos)
+        try {
+            ConnectedDevicesManager.clearAll();
+        } catch (Exception e) {
+            // Ignorar
+        }
+        
+        // 5. GC agressivo
         for (int i = 0; i < 5; i++) {
             System.gc();
             try {
@@ -362,8 +376,21 @@ public class MemoryMonitorService {
     private void clearAllCaches() {
         clearCaches();
         
-        // Limpar cache de prepared statements do HikariCP (indiretamente via GC)
-        // Outros caches específicos podem ser adicionados aqui
+        // Limpar cache customizado do sistema
+        try {
+            com.inventario.cache.CacheManager.getInstance().clear();
+            logger.debug("Cache customizado limpo");
+        } catch (Exception e) {
+            logger.debug("Erro ao limpar cache customizado: {}", e.getMessage());
+        }
+        
+        // Limpar cache de descrições resumidas
+        try {
+            com.inventario.service.DescricaoResumoService.limparCache();
+            logger.debug("Cache de descrições limpo");
+        } catch (Exception e) {
+            logger.debug("Erro ao limpar cache de descrições: {}", e.getMessage());
+        }
     }
     
     /**

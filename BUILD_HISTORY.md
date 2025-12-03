@@ -4,6 +4,182 @@ Este arquivo registra todas as compilações do APK Android para rastreabilidade
 
 ---
 
+## Build #016 - 02/12/2025 19:31
+
+- **Tipo:** Debug
+- **Versão:** 2.1.0
+- **Build Code:** 16
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** 11.09 MB
+- **Mudanças:** 
+  - **Backend:** Removida limitação de 100 coletas no endpoint `/api/mobile/coletas/all`
+  - **Backend:** Agora retorna TODAS as coletas do inventário
+  - **Backend:** Adicionado método `contarTotalColetas()` no MobileColetaService
+  - **Android:** Logs de diagnóstico no CollectionViewViewModelClean
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #015 - 02/12/2025 19:24
+
+- **Tipo:** Debug
+- **Versão:** 2.1.0
+- **Build Code:** 15
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~11.4 MB
+- **Mudanças:** 
+  - **Diagnóstico do filtro de salas:**
+    - Logs adicionais no CollectionViewViewModelClean para debug
+    - Log do total de coletas recebidas do servidor
+    - Log detalhado das salas extraídas
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #014 - 02/12/2025 18:30
+
+- **Tipo:** Debug
+- **Versão:** 2.1.0
+- **Build Code:** 14
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~12.4 MB
+- **Mudanças:** 
+  - **Correção do filtro de salas na tela "Itens Coletados":**
+    - Novo endpoint `GET /api/mobile/coletas/salas-com-coletas` no backend
+    - Novo Use Case `BuscarSalasComColetasUseCase` no Android
+    - ViewModel atualizado para buscar salas do servidor (não mais limitado a 100 coletas)
+    - Agora mostra TODAS as salas que possuem coletas registradas
+  - **Backend:** Método `buscarSalasComColetas()` no MobileColetaService
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #013 - 02/12/2025 17:45
+
+- **Tipo:** Debug (Clean Build)
+- **Versão:** 2.1.0
+- **Build Code:** 13
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~12.4 MB
+- **Mudanças:** 
+  - **Clean build completo** para garantir que todas as funcionalidades estejam incluídas
+  - **Tela de Inventário com Abas:** InventarioTabsActivity com TabLayout
+    - Aba "Por Responsável" - InventarioPorResponsavelFragment
+    - Aba "Por Sala" - InventarioPorSalaFragment
+  - Navegação via BottomNavigation e NavigationDrawer apontando para InventarioTabsActivity
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #012 - 02/12/2025 17:15
+
+- **Tipo:** Debug
+- **Versão:** 2.1.0
+- **Build Code:** 12
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** 12.4 MB
+- **Mudanças:** 
+  - Atualização geral do APK para teste de carregamento de patrimônios por responsável
+  - Verificação de funcionalidades implementadas anteriormente
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #011 - 02/12/2025 16:30
+
+- **Tipo:** Debug
+- **Versão:** 2.1.0
+- **Build Code:** 11
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~11 MB
+- **Mudanças:** 
+  - **Tela de Coletas - Melhoria de Performance:**
+    - Spinner de salas: Trocado "Todas as Salas" por "Selecionar sala..."
+    - Não carrega todas as coletas ao abrir - evita sobrecarga
+    - Novo estado visual "Selecione uma sala" quando nenhuma sala está selecionada
+    - Mensagem específica quando sala selecionada não tem coletas
+  - **ViewModel:** Adicionado método `limparFiltroSala()` para gerenciar estado inicial
+  - **Layout:** Adicionado `layoutSelectSala` para estado de seleção de sala
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #010 - 02/12/2025 16:00
+
+- **Tipo:** Debug
+- **Versão:** 2.1.0
+- **Build Code:** 10
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~11 MB
+- **Mudanças:** 
+  - **IP padrão corrigido:** Alterado de `192.168.10.107` para `10.14.250.214`
+  - **Lista de IPs sugeridos:** Adicionado `10.14.250.214` como primeira opção
+  - **Removido IP incorreto:** `10.14.250.238` removido da lista de sugestões
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #009 - 02/12/2025 15:30
+
+- **Tipo:** Debug
+- **Versão:** 2.1.0
+- **Build Code:** 9
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~11 MB
+- **Mudanças:** 
+  - **Correção de tipos:** Incompatibilidades entre `Int` e `Long` nos modelos de domínio e data
+  - **PatrimonioRepositoryAdapter:** Conversões `.toInt()` e `.toLong()` para compatibilidade
+  - **RegistrarColetaUseCase:** Conversão `patrimonio.id.toLong()` para `patrimonioId`
+  - **ManualCollectionViewModel:** Conversões de tipos corrigidas
+  - **DescricaoSelectionViewModelClean:** Campos `idSetor` e `idSala` corrigidos
+  - **SalaPagingSource:** Corrigido para usar `PagedResponse.content` ao invés de `ApiResponse.data`
+  - **MobilePatrimonioDto:** Renomeado de `MobilePatrimonioDTO` para consistência
+  - **PatrimonioMapper:** Tratamento de nulls com `?: 0L` e `?: ""`
+  - **BaseOfflineActivity:** Removido `@AndroidEntryPoint` de classe abstrata
+  - **Cores adicionadas:** `error_red`, `status_background_success`, `status_background_warning`
+  - **Layout:** Adicionado `tvEndOfList` em `item_load_state.xml`
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #008 - 02/12/2025 10:15
+
+- **Tipo:** Debug
+- **Versão:** 2.1.0
+- **Build Code:** 8
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~11 MB
+- **Mudanças:** 
+  - **Correção crítica:** Endpoint `/api/mobile/coletas/all` agora retorna resposta paginada
+  - **Novo DTO:** `ColetasPagedResponse.kt` para deserializar resposta paginada do servidor
+  - **ApiService:** Atualizado tipo de retorno de `List<MobileColetaResponseDto>` para `ColetasPagedResponse`
+  - **UseCases atualizados:**
+    - `BuscarColetasComFallbackUseCase` - extrai coletas de `pagedResponse.content`
+    - `BuscarColetasUseCase` - extrai coletas de `pagedResponse.content`
+    - `SincronizarColetasDoServidorUseCase` - extrai coletas de `pagedResponse.content`
+  - **ColetasViewModel:** Atualizado para processar resposta paginada
+  - **MockApiService:** Atualizado para retornar `ColetasPagedResponse`
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #007 - 01/12/2025 23:50
+
+- **Tipo:** Debug
+- **Versão:** 2.1.0
+- **Build Code:** 7
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** 11.2 MB
+- **Mudanças:** 
+  - **Pull-to-Refresh:** Adicionado SwipeRefreshLayout na tela de Itens Coletados
+    - Usuário pode arrastar para baixo para atualizar a lista
+    - Indicador visual de refresh com cores do tema
+    - Integração com ViewModel para recarregar coletas
+  - **Layout:** RecyclerView agora está dentro do SwipeRefreshLayout
+- **Status:** ✅ Sucesso
+
+---
+
 ## Build #006 - 01/12/2025 16:18
 
 - **Tipo:** Debug + Desktop JAR (thin-jar)

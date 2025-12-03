@@ -26,12 +26,12 @@ public class ConnectedDevicesManager {
     private static final Logger logger = LoggerFactory.getLogger(ConnectedDevicesManager.class);
 
     private static final Map<String, ConnectedDevice> connectedDevices = new ConcurrentHashMap<>();
-    private static final long TIMEOUT_MINUTES = 5; // Considera desconectado após 5 minutos sem atividade
-    private static final int MAX_DEVICES = 50; // Limite máximo de dispositivos em memória
+    private static final long TIMEOUT_MINUTES = 3; // Reduzido de 5 para 3 minutos
+    private static final int MAX_DEVICES = 20; // Reduzido de 50 para 20 dispositivos
 
-    // Contador para limpeza periódica
+    // Contador para limpeza periódica - mais frequente
     private static int operationCount = 0;
-    private static final int CLEANUP_INTERVAL = 100; // Limpar a cada 100 operações
+    private static final int CLEANUP_INTERVAL = 50; // Reduzido de 100 para 50 operações
 
     /**
      * Representa um dispositivo conectado

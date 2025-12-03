@@ -1,6 +1,7 @@
 package com.inventario.mobile.api
 
 import com.inventario.mobile.data.remote.dto.ApiResponse
+import com.inventario.mobile.data.remote.dto.PagedResponse
 import com.inventario.mobile.data.model.Patrimonio
 import retrofit2.Response
 import retrofit2.http.GET
@@ -20,6 +21,16 @@ interface PatrimonioApi {
         @Query("page") page: Int,
         @Query("size") size: Int
     ): Response<ApiResponse<List<Patrimonio>>>
+    
+    /**
+     * Lista patrimônios com paginação e metadados (total, páginas, etc)
+     * Retorna PagedResponse com totalElements para scroll infinito
+     */
+    @GET("api/mobile/patrimonio/paged")
+    suspend fun listarPatrimoniosComTotal(
+        @Query("page") page: Int,
+        @Query("size") size: Int
+    ): Response<ApiResponse<PagedResponse<Patrimonio>>>
     
     @GET("api/mobile/patrimonio/{id}")
     suspend fun buscarPorId(

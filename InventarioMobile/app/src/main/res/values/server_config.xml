@@ -14,7 +14,7 @@
     -->
     
     <!-- IP padrão do servidor (pode ser alterado aqui) -->
-    <string name="default_server_ip">192.168.10.107</string>
+    <string name="default_server_ip">10.14.250.214</string>
     
     <!-- Porta padrão do servidor -->
     <integer name="default_server_port">8081</integer>
@@ -30,9 +30,9 @@
         Adicione aqui IPs comuns da sua rede
     -->
     <string-array name="suggested_server_ips">
+        <item>10.14.250.214</item>
         <item>10.14.250.228</item>
         <item>192.168.11.136</item>
-        <item>10.14.250.238</item>
         <item>192.168.10.107</item>
         <item>192.168.1.100</item>
         <item>192.168.0.100</item>

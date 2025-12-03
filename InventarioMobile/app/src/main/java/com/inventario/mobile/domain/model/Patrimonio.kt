@@ -33,24 +33,28 @@ package com.inventario.mobile.domain.model
 // )
 data class Patrimonio(
     // @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    val id: Int = 0,
     
     val numeroPatrimonio: String,
-    val descricao: String,
+    val descricao: String? = null,
     val marca: String? = null,
     val modelo: String? = null,
     val numeroSerie: String? = null,
-    val estado: String, // ATIVO, INATIVO, BAIXADO
+    val estado: String? = null, // ATIVO, INATIVO, BAIXADO
     val valor: Double? = null,
     val dataAquisicao: Long? = null,
     val observacoes: String? = null,
     
     // Relacionamentos
-    val setorId: Long,
-    val salaId: Long,
+    val idSala: Int? = null,
+    val nomeSala: String? = null,
+    val idResponsavel: Int? = null,
+    val nomeResponsavel: String? = null,
+    val idSetor: Int? = null,
+    val nomeSetor: String? = null,
     
     // QR Code
-    val qrCode: String,
+    val qrCode: String? = null,
     
     // Controle de sincronização
     val sincronizado: Boolean = false,
@@ -68,4 +72,11 @@ data class Patrimonio(
     val dataColetaFormatada: String? = null,
     val localizacaoEncontrada: String? = null,
     val estadoEncontrado: String? = null
-)
+) {
+    // Compatibilidade com código antigo
+    @Deprecated("Use idSala", ReplaceWith("idSala"))
+    val salaId: Long get() = idSala?.toLong() ?: 0L
+    
+    @Deprecated("Use idSetor", ReplaceWith("idSetor"))
+    val setorId: Long get() = idSetor?.toLong() ?: 0L
+}

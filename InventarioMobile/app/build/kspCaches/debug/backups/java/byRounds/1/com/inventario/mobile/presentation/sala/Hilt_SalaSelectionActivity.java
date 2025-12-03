@@ -2,9 +2,13 @@ package com.inventario.mobile.presentation.sala;
 
 import android.content.Context;
 import androidx.activity.contextaware.OnContextAvailableListener;
+import androidx.lifecycle.ViewModelProvider;
 import com.inventario.mobile.ui.base.BaseOfflineActivity;
+import dagger.hilt.android.internal.lifecycle.DefaultViewModelFactories;
+import dagger.hilt.android.internal.managers.ActivityComponentManager;
 import dagger.hilt.internal.GeneratedComponentManagerHolder;
 import dagger.hilt.internal.UnsafeCasts;
+import java.lang.Object;
 import java.lang.Override;
 import javax.annotation.processing.Generated;
 
@@ -12,7 +16,11 @@ import javax.annotation.processing.Generated;
  * A generated base class to be extended by the @dagger.hilt.android.AndroidEntryPoint annotated class. If using the Gradle plugin, this is swapped as the base class via bytecode transformation.
  */
 @Generated("dagger.hilt.android.processor.internal.androidentrypoint.ActivityGenerator")
-public abstract class Hilt_SalaSelectionActivity extends BaseOfflineActivity {
+public abstract class Hilt_SalaSelectionActivity extends BaseOfflineActivity implements GeneratedComponentManagerHolder {
+  private volatile ActivityComponentManager componentManager;
+
+  private final Object componentManagerLock = new Object();
+
   private boolean injected = false;
 
   Hilt_SalaSelectionActivity() {
@@ -29,10 +37,36 @@ public abstract class Hilt_SalaSelectionActivity extends BaseOfflineActivity {
     });
   }
 
+  @Override
+  public final Object generatedComponent() {
+    return this.componentManager().generatedComponent();
+  }
+
+  protected ActivityComponentManager createComponentManager() {
+    return new ActivityComponentManager(this);
+  }
+
+  @Override
+  public final ActivityComponentManager componentManager() {
+    if (componentManager == null) {
+      synchronized (componentManagerLock) {
+        if (componentManager == null) {
+          componentManager = createComponentManager();
+        }
+      }
+    }
+    return componentManager;
+  }
+
   protected void inject() {
     if (!injected) {
       injected = true;
-      ((SalaSelectionActivity_GeneratedInjector) UnsafeCasts.<GeneratedComponentManagerHolder>unsafeCast(this).generatedComponent()).injectSalaSelectionActivity(UnsafeCasts.<SalaSelectionActivity>unsafeCast(this));
+      ((SalaSelectionActivity_GeneratedInjector) this.generatedComponent()).injectSalaSelectionActivity(UnsafeCasts.<SalaSelectionActivity>unsafeCast(this));
     }
+  }
+
+  @Override
+  public ViewModelProvider.Factory getDefaultViewModelProviderFactory() {
+    return DefaultViewModelFactories.getActivityFactory(this, super.getDefaultViewModelProviderFactory());
   }
 }

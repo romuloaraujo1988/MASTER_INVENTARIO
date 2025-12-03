@@ -259,24 +259,72 @@
 
     </LinearLayout>
 
-    <!-- RecyclerView for Collections -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewColetas"
+    <!-- SwipeRefreshLayout para Pull-to-Refresh -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="16dp"
-        android:clipToPadding="false"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layoutFilters"
-        tools:listitem="@layout/item_coleta" />
+        app:layout_constraintTop_toBottomOf="@id/layoutFilters">
 
-    <!-- Empty State -->
+        <!-- RecyclerView for Collections -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewColetas"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            tools:listitem="@layout/item_coleta" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- Empty State - Nenhuma sala selecionada -->
+    <LinearLayout
+        android:id="@+id/layoutSelectSala"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layoutFilters">
+
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@drawable/ic_location"
+            android:alpha="0.5"
+            app:tint="@color/colorPrimary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Selecione uma sala"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Use o filtro acima para escolher uma sala\ne visualizar as coletas"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:gravity="center" />
+
+    </LinearLayout>
+
+    <!-- Empty State - Nenhum item coletado na sala -->
     <LinearLayout
         android:id="@+id/layoutEmptyState"
         android:layout_width="wrap_content"
@@ -287,7 +335,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/layoutFilters">
 
         <ImageView
             android:layout_width="80dp"
@@ -309,7 +357,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Comece coletando itens do inventário"
+            android:text="Nenhuma coleta encontrada nesta sala"
             android:textSize="14sp"
             android:textColor="@color/text_hint"
             android:gravity="center" />

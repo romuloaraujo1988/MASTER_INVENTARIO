@@ -268,6 +268,15 @@ public class MobileColetaService {
     }
     
     /**
+     * Conta o total de coletas no banco de dados
+     * 
+     * @return número total de coletas
+     */
+    public int contarTotalColetas() throws SQLException {
+        return coletaDAO.contarTotalColetas();
+    }
+    
+    /**
      * Busca TODAS as coletas do sistema (não apenas do usuário)
      * 
      * @deprecated Use buscarColetasComPaginacaoReal() para evitar vazamento de memória
@@ -276,8 +285,9 @@ public class MobileColetaService {
     @SuppressWarnings("unchecked")
     public List<MobileColetaResponse> buscarTodasColetasDoSistema() throws SQLException {
         logger.warn("⚠️ MÉTODO DEPRECADO: buscarTodasColetasDoSistema() - Use buscarColetasComPaginacaoReal()");
-        // Limitar a 100 registros para evitar vazamento de memória
-        Map<String, Object> resultado = buscarColetasComPaginacaoReal(0, 100);
+        // Buscar todas as coletas
+        int total = contarTotalColetas();
+        Map<String, Object> resultado = buscarColetasComPaginacaoReal(0, Math.max(total, 1000));
         return (List<MobileColetaResponse>) resultado.get("content");
     }
     
@@ -297,9 +307,10 @@ public class MobileColetaService {
         long startTime = System.currentTimeMillis();
         
         // Limitar tamanho máximo da página para evitar sobrecarga
-        if (size > 100) {
-            logger.warn("Tamanho de página {} excede máximo de 100, limitando", size);
-            size = 100;
+        // Permitir tamanhos maiores para o endpoint /all
+        // Apenas logar aviso se for muito grande
+        if (size > 5000) {
+            logger.warn("⚠️ Tamanho de página muito grande: {}. Considere usar paginação.", size);
         }
         
         logger.debug("Buscando coletas com paginação REAL (page={}, size={})", page, size);
@@ -389,6 +400,8 @@ public class MobileColetaService {
     /**
      * Converte Coleta para Response usando dados já carregados pelo JOIN
      * Evita queries adicionais (N+1 problem)
+     * 
+     * CORREÇÃO 01/12/2025: Adicionado nomeSala para exibição correta no app Android
      */
     private MobileColetaResponse converterColetaParaResponseSimples(Coleta coleta) {
         MobileColetaResponse response = new MobileColetaResponse();
@@ -410,6 +423,20 @@ public class MobileColetaService {
         response.setDescricaoPatrimonio(coleta.getDescricaoPatrimonio());
         response.setNomeColetor(coleta.getNomeColetor());
         response.setNomeInventario(coleta.getDescricaoInventario());
+        
+        // CORREÇÃO 02/12/2025: nomeSala no response deve ser onde o item FOI ENCONTRADO
+        // Prioridade: localizacaoEncontrada > nomeSala (original) > localizacaoAtual
+        // Isso garante que o filtro por sala no app Android funcione corretamente
+        String salaParaExibir = coleta.getLocalizacaoEncontrada();
+        if (salaParaExibir == null || salaParaExibir.isEmpty()) {
+            // Fallback: usar nomeSala (sala original do patrimônio)
+            salaParaExibir = coleta.getNomeSala();
+        }
+        if (salaParaExibir == null || salaParaExibir.isEmpty()) {
+            // Último fallback: usar localizacaoAtual
+            salaParaExibir = coleta.getLocalizacaoAtual();
+        }
+        response.setNomeSala(salaParaExibir);
         
         // Formatar data
         if (coleta.getDataColeta() != null) {
@@ -583,6 +610,9 @@ public class MobileColetaService {
             response.setDescricaoItemSemEtiqueta(coleta.getDescricaoItemSemEtiqueta());
             response.setCategoriaItemSemEtiqueta(coleta.getCategoriaItemSemEtiqueta());
             logger.debug("Coleta {} é SEM ETIQUETA", coleta.getId());
+            
+            // Para itens sem etiqueta, usar localizacaoEncontrada como nomeSala
+            response.setNomeSala(localizacaoEncontrada);
         } else {
             // Buscar dados do patrimônio - SEMPRE buscar se não for sem etiqueta
             if (coleta.getIdPatrimonio() > 0) {
@@ -593,17 +623,30 @@ public class MobileColetaService {
                         response.setNumeroPatrimonio(patrimonio.getNumero());
                         response.setDescricaoPatrimonio(patrimonio.getDescricao());
                         response.setIdSala(patrimonio.getIdSala());
-                        response.setNomeSala(patrimonio.getNomeSala());
+                        
+                        // CORREÇÃO 02/12/2025: nomeSala deve ser onde o item FOI ENCONTRADO
+                        // Prioridade: localizacaoEncontrada > nomeSala original do patrimônio
+                        String salaParaExibir = localizacaoEncontrada;
+                        if (salaParaExibir == null || salaParaExibir.isEmpty()) {
+                            salaParaExibir = patrimonio.getNomeSala();
+                        }
+                        response.setNomeSala(salaParaExibir);
                     } else {
                         logger.error("Patrimônio não encontrado para ID: {} (Coleta ID: {})", 
                                 coleta.getIdPatrimonio(), coleta.getId());
+                        // Fallback: usar localizacaoEncontrada
+                        response.setNomeSala(localizacaoEncontrada);
                     }
                 } catch (Exception e) {
                     logger.error("Erro ao buscar patrimônio ID {}: {}", coleta.getIdPatrimonio(), e.getMessage());
+                    // Fallback: usar localizacaoEncontrada
+                    response.setNomeSala(localizacaoEncontrada);
                 }
             } else {
                 logger.warn("ID do patrimônio inválido: {} (Coleta ID: {})", 
                         coleta.getIdPatrimonio(), coleta.getId());
+                // Fallback: usar localizacaoEncontrada
+                response.setNomeSala(localizacaoEncontrada);
             }
         }
 
@@ -1015,5 +1058,77 @@ public class MobileColetaService {
         }
 
         return response;
+    }
+    
+    /**
+     * Busca todas as salas que possuem coletas registradas
+     * Útil para popular o filtro de salas na tela de itens coletados
+     * 
+     * @param inventarioId ID do inventário (opcional, usa o ativo se não informado)
+     * @return lista de salas com coletas (nome e quantidade)
+     */
+    public List<Map<String, Object>> buscarSalasComColetas(Integer inventarioId) throws SQLException {
+        long startTime = System.currentTimeMillis();
+        logger.info("Buscando salas com coletas para inventário: {}", 
+                inventarioId != null ? inventarioId : "ATIVO");
+        
+        List<Map<String, Object>> resultado = new ArrayList<>();
+        
+        try {
+            // Se não informou inventário, buscar o ativo
+            int idInventario = inventarioId != null ? inventarioId : 0;
+            if (idInventario == 0) {
+                Inventario ativo = inventarioDAO.buscarInventarioAtivo();
+                if (ativo != null) {
+                    idInventario = ativo.getId();
+                }
+            }
+            
+            // Query para buscar salas distintas com coletas
+            // Prioriza localizacao_encontrada (onde foi encontrado) sobre nome_sala (localização original)
+            String sql = """
+                SELECT DISTINCT 
+                    COALESCE(c.localizacao_encontrada, p.nome_sala) as nome_sala,
+                    COUNT(*) as total_coletas
+                FROM tabela_coleta c
+                LEFT JOIN tabela_patrimonio p ON c.id_patrimonio = p.id
+                WHERE c.id_inventario = ?
+                AND (c.localizacao_encontrada IS NOT NULL AND c.localizacao_encontrada != '' 
+                     OR p.nome_sala IS NOT NULL AND p.nome_sala != '')
+                GROUP BY COALESCE(c.localizacao_encontrada, p.nome_sala)
+                ORDER BY nome_sala
+                """;
+            
+            try (java.sql.Connection conn = com.inventario.util.DatabaseConnection.getConnection();
+                 java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
+                
+                stmt.setInt(1, idInventario);
+                
+                try (java.sql.ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        String nomeSala = rs.getString("nome_sala");
+                        int totalColetas = rs.getInt("total_coletas");
+                        
+                        if (nomeSala != null && !nomeSala.trim().isEmpty()) {
+                            Map<String, Object> sala = new HashMap<>();
+                            sala.put("nome", nomeSala.trim());
+                            sala.put("nomeSala", nomeSala.trim());
+                            sala.put("localizacaoEncontrada", nomeSala.trim());
+                            sala.put("totalColetas", totalColetas);
+                            resultado.add(sala);
+                        }
+                    }
+                }
+            }
+            
+            long duration = System.currentTimeMillis() - startTime;
+            logger.info("✓ {} salas com coletas encontradas em {}ms", resultado.size(), duration);
+            
+        } catch (Exception e) {
+            logger.error("Erro ao buscar salas com coletas", e);
+            throw new SQLException("Erro ao buscar salas com coletas: " + e.getMessage(), e);
+        }
+        
+        return resultado;
     }
 }

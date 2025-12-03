@@ -40,9 +40,9 @@ data class Patrimonio(
          */
         fun fromMobileDto(dto: com.inventario.mobile.data.remote.dto.MobilePatrimonioDto): Patrimonio {
             return Patrimonio(
-                id = dto.id,
-                numeroPatrimonio = dto.codigo,
-                descricao = dto.descricao,
+                id = dto.id ?: 0L,
+                numeroPatrimonio = dto.codigo ?: "",
+                descricao = dto.descricao ?: "",
                 marca = dto.marca,
                 modelo = dto.modelo,
                 numeroSerie = dto.numeroSerie,

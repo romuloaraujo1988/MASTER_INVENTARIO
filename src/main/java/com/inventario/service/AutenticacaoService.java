@@ -17,8 +17,18 @@ import java.util.Map;
 @Service
 public class AutenticacaoService {
 
-    // Simulação de banco de dados em memória
-    private static Map<String, Usuario> usuarios = new HashMap<>();
+    // Simulação de banco de dados em memória - COM LIMITE para evitar vazamento
+    private static final int MAX_USUARIOS_CACHE = 100;
+    private static Map<String, Usuario> usuarios = new java.util.LinkedHashMap<String, Usuario>(MAX_USUARIOS_CACHE, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, Usuario> eldest) {
+            // Nunca remover o admin
+            if (size() > MAX_USUARIOS_CACHE && !"admin".equals(eldest.getKey())) {
+                return true;
+            }
+            return false;
+        }
+    };
     private static final int MAX_TENTATIVAS_LOGIN = 5;
     
     // Constantes para usuário padrão

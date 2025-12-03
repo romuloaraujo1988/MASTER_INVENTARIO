@@ -18,6 +18,7 @@ color divider
 color error
 color error_dark
 color error_light
+color error_red
 color info
 color info_color
 color info_dark
@@ -48,6 +49,9 @@ color secondary
 color secondary_dark
 color secondary_light
 color secondary_text
+color status_background_error
+color status_background_success
+color status_background_warning
 color status_error
 color status_pending
 color status_synced
@@ -299,6 +303,7 @@ id chipFiltroUsuario
 id chipFiltrosAvancados
 id chipGroupFilters
 id chipGroupFiltro
+id chipGroupFiltros
 id chipGroupPeriod
 id chipGroupStatus
 id chipGroupUser
@@ -360,6 +365,7 @@ id layoutErro
 id layoutError
 id layoutEstado
 id layoutFilters
+id layoutHeader
 id layoutInfoColeta
 id layoutLocalizacao
 id layoutLocation
@@ -370,6 +376,7 @@ id layoutOfflineStatus
 id layoutPatrimonioInfo
 id layoutResponsavel
 id layoutSalaFixada
+id layoutSelectSala
 id layoutSyncCount
 id layoutSyncInterval
 id layoutTemporais
@@ -406,6 +413,7 @@ id pinDot4
 id progressBar
 id progressBarGrafico
 id progressBarInventario
+id progressBarMore
 id progressBarSync
 id progressConclusao
 id progressOverlay
@@ -463,7 +471,9 @@ id textViewCount
 id textViewDataColeta
 id textViewDescricao
 id textViewEmpty
+id textViewError
 id textViewEstadoEncontrado
+id textViewHasMore
 id textViewLocalizacaoEncontrada
 id textViewMarca
 id textViewModelo
@@ -474,6 +484,7 @@ id textViewSala
 id textViewSetor
 id textViewStatus
 id textViewTitle
+id textViewTotal
 id tilCodigo
 id tilDescricao
 id tilLocalizacao
@@ -656,6 +667,8 @@ layout fragment_dashboard_backup
 layout fragment_inventario_por_responsavel
 layout fragment_inventario_por_sala
 layout fragment_inventory
+layout fragment_patrimonio_list
+layout fragment_patrimonio_list_paging
 layout fragment_statistics_charts
 layout fragment_statistics_export
 layout fragment_statistics_overview

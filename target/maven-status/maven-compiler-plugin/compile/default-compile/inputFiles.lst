@@ -39,6 +39,7 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\service\MobileSyncService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\config\CacheConfig.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\ImportacaoExcel.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\PagedResponse.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\InventarioService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\print\ImpressoraTermicaService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\dao\SalaDAO.java
@@ -205,6 +206,7 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\SyncStatusManager.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\UsuarioService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\notification\NotificationType.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileMemoryController.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\config\WebMvcConfig.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\repository\RepositoryException.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileUserInfo.java
@@ -288,8 +290,10 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\ColetaService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\ExecutarScriptSQL.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\ModernDialog.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\service\MemoryCleanupService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\chart\InventarioChartService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\siads\model\SiadsRegistro.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\MobileServerProcessManager.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\DashboardService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\config\DatabaseConfig.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\RelatorioFrame.java

@@ -19,38 +19,54 @@ public class MobileServerManager {
     private static final String PROFILE_MOBILE = "mobile";
     private static Process serverProcess = null;
     private static boolean isStarting = false;
-    private static List<ServerStatusListener> listeners = new ArrayList<>();
+    // CORREÇÃO: Usar WeakReference para evitar vazamento de memória com listeners
+    private static final List<java.lang.ref.WeakReference<ServerStatusListener>> listeners = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     // Cache para status do servidor (evitar chamadas excessivas ao netstat)
     private static long lastStatusCheck = 0;
     private static boolean cachedStatus = false;
     private static final long STATUS_CACHE_MS = 3000; // Cache por 3 segundos
 
-    // ===== CONFIGURAÇÕES JVM OTIMIZADAS =====
-    // v2.1: Permite até 1GB com monitoramento e recuperação automática
-    // O MemoryMonitorService cuida de detectar problemas e recuperar
+    // ===== CONFIGURAÇÕES JVM OTIMIZADAS v4.0 - BAIXO CONSUMO =====
+    // CRÍTICO: Heap MUITO REDUZIDO para evitar 1GB por usuário
+    // Servidor mobile é LEVE - não precisa de muita memória
+    // Alvo: 150-300MB total para 10 usuários simultâneos
     private static final String JVM_OPTS = 
-            // Memória: 256MB inicial, 1GB máximo
-            "-Xms256m -Xmx1g " +
-            "-XX:MaxMetaspaceSize=192m " +
-            "-Xss256k " +  // Stack de threads reduzido
-            // G1GC com coleta eficiente
+            // Memória: 128MB inicial, 384MB máximo (DRASTICAMENTE REDUZIDO)
+            "-Xms128m -Xmx384m " +
+            "-XX:MaxMetaspaceSize=64m " +  // Reduzido de 128m
+            "-Xss192k " +  // Stack mínimo por thread
+            // G1GC com coleta MUITO AGRESSIVA
             "-XX:+UseG1GC " +
-            "-XX:MaxGCPauseMillis=100 " +
-            "-XX:InitiatingHeapOccupancyPercent=45 " +
-            "-XX:G1ReservePercent=15 " +
-            // Otimizações de memória
+            "-XX:MaxGCPauseMillis=50 " +  // Pausas curtas
+            "-XX:InitiatingHeapOccupancyPercent=20 " +  // GC inicia com 20% do heap
+            "-XX:G1ReservePercent=25 " +  // Mais reserva para evitar OOM
+            "-XX:G1HeapWastePercent=3 " +  // Menos desperdício
+            "-XX:G1MixedGCCountTarget=4 " +  // GC misto mais frequente
+            "-XX:G1HeapRegionSize=1m " +  // Regiões menores
+            // Otimizações de memória AGRESSIVAS
             "-XX:+UseStringDeduplication " +
             "-XX:+UseCompressedOops " +
             "-XX:+UseCompressedClassPointers " +
             "-XX:+OptimizeStringConcat " +
-            // Segurança: sair se OOM
             "-XX:-UseBiasedLocking " +
-            "-XX:+DisableExplicitGC " +
-            // Spring Boot otimizações
+            "-XX:+AlwaysPreTouch " +  // Alocar memória no início
+            "-XX:SoftRefLRUPolicyMSPerMB=50 " +  // Limpar soft refs mais rápido
+            // Spring Boot otimizações MÁXIMAS
             "-Dspring.main.lazy-initialization=true " +
             "-Dspring.jmx.enabled=false " +
             "-Dspring.data.jpa.repositories.bootstrap-mode=lazy " +
+            "-Dspring.main.banner-mode=off " +
+            "-Dspring.output.ansi.enabled=never " +
+            // HikariCP MÍNIMO (5 conexões máximo)
+            "-Dspring.datasource.hikari.maximum-pool-size=5 " +
+            "-Dspring.datasource.hikari.minimum-idle=1 " +
+            "-Dspring.datasource.hikari.idle-timeout=120000 " +
+            "-Dspring.datasource.hikari.max-lifetime=300000 " +
+            // Tomcat MÍNIMO
+            "-Dserver.tomcat.threads.max=10 " +
+            "-Dserver.tomcat.threads.min-spare=2 " +
+            "-Dserver.tomcat.max-connections=20 " +
             // Diagnóstico
             "-XX:+HeapDumpOnOutOfMemoryError " +
             "-XX:HeapDumpPath=logs/ " +
@@ -87,27 +103,49 @@ public class MobileServerManager {
 
     /**
      * Adiciona um listener para receber notificações
+     * CORREÇÃO: Usa WeakReference para evitar vazamento de memória
      */
     public static void addStatusListener(ServerStatusListener listener) {
-        if (!listeners.contains(listener)) {
-            listeners.add(listener);
+        // Limpar referências mortas antes de adicionar
+        cleanupDeadListeners();
+        
+        // Verificar se já existe
+        for (java.lang.ref.WeakReference<ServerStatusListener> ref : listeners) {
+            if (ref.get() == listener) {
+                return;
+            }
         }
+        listeners.add(new java.lang.ref.WeakReference<>(listener));
     }
 
     /**
      * Remove um listener
      */
     public static void removeStatusListener(ServerStatusListener listener) {
-        listeners.remove(listener);
+        listeners.removeIf(ref -> ref.get() == null || ref.get() == listener);
+    }
+    
+    /**
+     * Limpa referências mortas de listeners
+     */
+    private static void cleanupDeadListeners() {
+        listeners.removeIf(ref -> ref.get() == null);
     }
 
     /**
      * Notifica todos os listeners sobre mudança de status
+     * CORREÇÃO: Limpa referências mortas durante notificação
      */
     private static void notifyStatusChanged(ServerStatus status, String message) {
         SwingUtilities.invokeLater(() -> {
-            for (ServerStatusListener listener : listeners) {
-                listener.onStatusChanged(status, message);
+            java.util.Iterator<java.lang.ref.WeakReference<ServerStatusListener>> it = listeners.iterator();
+            while (it.hasNext()) {
+                java.lang.ref.WeakReference<ServerStatusListener> ref = it.next();
+                ServerStatusListener listener = ref.get();
+                if (listener != null) {
+                    listener.onStatusChanged(status, message);
+                }
+                // Referências mortas serão limpas na próxima chamada de cleanupDeadListeners
             }
         });
     }

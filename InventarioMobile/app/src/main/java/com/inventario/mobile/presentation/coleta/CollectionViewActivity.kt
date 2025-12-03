@@ -53,6 +53,7 @@ class CollectionViewActivity : AppCompatActivity() {
         com.inventario.mobile.ui.components.OfflineIndicator.setup(this)
 
         setupRecyclerView()
+        setupSwipeRefresh()
         setupFilters()
         setupBackButton()
         observeViewModel()
@@ -66,6 +67,27 @@ class CollectionViewActivity : AppCompatActivity() {
         binding.recyclerViewColetas.apply {
             layoutManager = LinearLayoutManager(this@CollectionViewActivity)
             adapter = this@CollectionViewActivity.adapter
+        }
+    }
+    
+    /**
+     * Configura o SwipeRefreshLayout para pull-to-refresh
+     */
+    private fun setupSwipeRefresh() {
+        Log.d(TAG, "setupSwipeRefresh: configurando pull-to-refresh")
+        binding.swipeRefreshLayout.apply {
+            // Cores do indicador de refresh
+            setColorSchemeResources(
+                R.color.colorPrimary,
+                R.color.colorSecondary,
+                R.color.primary_dark
+            )
+            
+            // Listener para quando o usuário arrasta para baixo
+            setOnRefreshListener {
+                Log.d(TAG, "Pull-to-refresh: recarregando coletas...")
+                viewModel.carregarColetas()
+            }
         }
     }
     
@@ -118,7 +140,9 @@ class CollectionViewActivity : AppCompatActivity() {
     }
     
     private fun setupSalaSpinner(salas: List<String>) {
-        val salaOptions = mutableListOf("Todas as Salas")
+        // ✅ MELHORIA: Usar "Selecionar sala" ao invés de "Todas as Salas"
+        // Isso evita sobrecarga de carregar todas as coletas de uma vez
+        val salaOptions = mutableListOf("Selecionar sala...")
         salaOptions.addAll(salas)
         
         val spinnerAdapter = android.widget.ArrayAdapter(
@@ -132,8 +156,8 @@ class CollectionViewActivity : AppCompatActivity() {
         binding.spinnerSalas.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if (position == 0) {
-                    // "Todas as Salas" selecionado
-                    viewModel.filtrarPorSala(null)
+                    // "Selecionar sala..." - não carregar nada, mostrar mensagem
+                    viewModel.limparFiltroSala()
                 } else {
                     // Sala específica selecionada
                     val sala = salas[position - 1]
@@ -142,7 +166,7 @@ class CollectionViewActivity : AppCompatActivity() {
             }
             
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {
-                viewModel.filtrarPorSala(null)
+                viewModel.limparFiltroSala()
             }
         }
     }
@@ -194,10 +218,13 @@ class CollectionViewActivity : AppCompatActivity() {
     
     private fun showLoading() {
         binding.progressBar.visibility = View.VISIBLE
+        // Não mostrar o indicador do SwipeRefresh se já estiver mostrando o ProgressBar
     }
     
     private fun hideLoading() {
         binding.progressBar.visibility = View.GONE
+        // Parar o indicador de refresh quando terminar
+        binding.swipeRefreshLayout.isRefreshing = false
     }
     
     private fun updateUI(state: CollectionViewState.Success) {
@@ -210,16 +237,38 @@ class CollectionViewActivity : AppCompatActivity() {
         binding.tvPendingSync.text = state.pendentes.toString()
         
         // Configurar spinner de salas (apenas uma vez)
+        Log.d(TAG, "updateUI: salas recebidas=${state.salas.size}, adapter=${binding.spinnerSalas.adapter != null}")
+        Log.d(TAG, "updateUI: salas=${state.salas}")
         if (state.salas.isNotEmpty() && binding.spinnerSalas.adapter == null) {
-            Log.d(TAG, "updateUI: configurando spinner com ${state.salas.size} salas")
+            Log.d(TAG, "updateUI: configurando spinner com ${state.salas.size} salas: ${state.salas}")
             setupSalaSpinner(state.salas)
+        } else if (state.salas.isEmpty()) {
+            Log.w(TAG, "updateUI: NENHUMA SALA ENCONTRADA nas coletas!")
         }
         
-        // Estado vazio
-        val showEmptyState = state.filteredColetas.isEmpty()
-        Log.d(TAG, "updateUI: showEmptyState=$showEmptyState")
-        binding.layoutEmptyState.visibility = 
-            if (showEmptyState) View.VISIBLE else View.GONE
+        // Verificar se uma sala está selecionada
+        val salaPosition = binding.spinnerSalas.selectedItemPosition
+        val salaSelecionada = salaPosition > 0
+        
+        Log.d(TAG, "updateUI: salaPosition=$salaPosition, salaSelecionada=$salaSelecionada")
+        
+        // Gerenciar visibilidade dos estados
+        if (!salaSelecionada) {
+            // Nenhuma sala selecionada - mostrar mensagem para selecionar
+            binding.layoutSelectSala.visibility = View.VISIBLE
+            binding.layoutEmptyState.visibility = View.GONE
+            binding.swipeRefreshLayout.visibility = View.GONE
+        } else if (state.filteredColetas.isEmpty()) {
+            // Sala selecionada mas sem coletas
+            binding.layoutSelectSala.visibility = View.GONE
+            binding.layoutEmptyState.visibility = View.VISIBLE
+            binding.swipeRefreshLayout.visibility = View.GONE
+        } else {
+            // Sala selecionada com coletas
+            binding.layoutSelectSala.visibility = View.GONE
+            binding.layoutEmptyState.visibility = View.GONE
+            binding.swipeRefreshLayout.visibility = View.VISIBLE
+        }
     }
     
     private fun showError(message: String) {

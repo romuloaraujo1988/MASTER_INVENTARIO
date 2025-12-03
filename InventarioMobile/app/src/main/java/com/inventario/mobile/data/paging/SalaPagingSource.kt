@@ -32,9 +32,9 @@ class SalaPagingSource(
                 salaApi.buscarSalasPorNome(query, page, pageSize)
             }
             
-            if (response.isSuccessful && response.body()?.success == true) {
+            if (response.isSuccessful && response.body() != null) {
                 val body = response.body()!!
-                val salas = body.data
+                val salas = body.content
                 val totalPages = body.totalPages
                 
                 android.util.Log.d(TAG, "✓ ${salas.size} salas carregadas (página $page de $totalPages)")
@@ -45,7 +45,7 @@ class SalaPagingSource(
                     nextKey = if (page < totalPages - 1) page + 1 else null
                 )
             } else {
-                val errorMsg = response.body()?.message ?: "Erro ao carregar salas"
+                val errorMsg = "Erro ao carregar salas"
                 android.util.Log.e(TAG, "✗ Erro na resposta: $errorMsg")
                 LoadResult.Error(Exception(errorMsg))
             }

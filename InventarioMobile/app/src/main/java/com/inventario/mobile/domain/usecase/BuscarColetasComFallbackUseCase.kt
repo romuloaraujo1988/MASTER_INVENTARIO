@@ -59,12 +59,21 @@ class BuscarColetasComFallbackUseCase @Inject constructor(
             val response = apiService.buscarTodasColetasSemPaginacao()
             
             if (response.isSuccessful && response.body() != null) {
-                val apiResponse = response.body()!!
+                val coletasAllResponse = response.body()!!
                 
-                if (apiResponse.success && apiResponse.data != null) {
+                if (coletasAllResponse.success && coletasAllResponse.data != null) {
+                    val pagedData = coletasAllResponse.data
+                    Log.d(TAG, "Resposta do servidor: ${pagedData.content.size} coletas de ${pagedData.totalElements} total")
+                    
                     // Coletas do servidor (sincronizadas)
-                    val coletasServidor = apiResponse.data.map { dto ->
-                        Log.d(TAG, "Mapeando DTO: id=${dto.id}, localizacaoEncontrada='${dto.localizacaoEncontrada}', nomeSala='${dto.nomeSala}'")
+                    val coletasServidor = pagedData.content.map { dto ->
+                        Log.d(TAG, "═══════════════════════════════════════")
+                        Log.d(TAG, "Mapeando DTO: id=${dto.id}")
+                        Log.d(TAG, "  numeroPatrimonio='${dto.numeroPatrimonio}'")
+                        Log.d(TAG, "  localizacaoEncontrada='${dto.localizacaoEncontrada}'")
+                        Log.d(TAG, "  nomeSala='${dto.nomeSala}'")
+                        Log.d(TAG, "  localizacaoAtual='${dto.localizacaoAtual}'")
+                        Log.d(TAG, "═══════════════════════════════════════")
                         Coleta(
                             id = dto.id?.toInt(),
                             patrimonioId = dto.patrimonioId,

@@ -172,6 +172,10 @@
         "source": "com.inventario.mobile.app-main-69:/layout/item_loading.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-merged_res-67:/layout_fragment_patrimonio_list.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_patrimonio_list.xml"
+    },
+    {
         "merged": "com.inventario.mobile.app-merged_res-67:/layout_fragment_inventario_por_responsavel.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/layout/fragment_inventario_por_responsavel.xml"
     },
@@ -606,6 +610,10 @@
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/layout_activity_consulta_patrimonio.xml.flat",
         "source": "com.inventario.mobile.app-main-69:/layout/activity_consulta_patrimonio.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-merged_res-67:/layout_fragment_patrimonio_list_paging.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_patrimonio_list_paging.xml"
     },
     {
         "merged": "com.inventario.mobile.app-merged_res-67:/layout_activity_main.xml.flat",

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.inventario.mobile.server.dto.PagedResponse;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -290,6 +291,57 @@ public class MobilePatrimonioController {
             logger.error("═══════════════════════════════════════════");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro ao listar patrimônios", "FETCH_ERROR"));
+        }
+    }
+    
+    /**
+     * Listar patrimônios com paginação e metadados (total, páginas, etc)
+     * 
+     * GET /api/mobile/patrimonio/paged?page=0&size=20
+     * 
+     * Retorna PagedResponse com:
+     * - content: lista de patrimônios
+     * - totalElements: total de patrimônios no banco
+     * - totalPages: total de páginas
+     * - first/last: indicadores de primeira/última página
+     * - hasNext/hasPrevious: indicadores de navegação
+     * 
+     * @param page página (padrão: 0)
+     * @param size tamanho da página (padrão: 20)
+     * @return resposta paginada com metadados
+     */
+    @GetMapping("/paged")
+    public ResponseEntity<ApiResponse<PagedResponse<MobilePatrimonioDTO>>> listarPatrimoniosPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            
+            logger.info("Listando patrimônios paginados (page: {}, size: {}) para usuário: {}", page, size, username);
+            
+            // Buscar dados da página
+            List<MobilePatrimonioDTO> patrimonios = patrimonioService.listarPatrimonios(page, size);
+            
+            // Buscar total de patrimônios
+            long totalElements = patrimonioService.contarPatrimoniosAtivos();
+            
+            // Criar resposta paginada
+            PagedResponse<MobilePatrimonioDTO> pagedResponse = PagedResponse.of(
+                    patrimonios, page, size, totalElements);
+            
+            logger.info("Retornando página {} de {} ({} itens, total: {})", 
+                    page, pagedResponse.getTotalPages(), patrimonios.size(), totalElements);
+            
+            return ResponseEntity.ok(
+                    ApiResponse.success(pagedResponse, 
+                            String.format("Página %d de %d (%d itens)", 
+                                    page + 1, pagedResponse.getTotalPages(), patrimonios.size())));
+            
+        } catch (Exception e) {
+            logger.error("Erro ao listar patrimônios paginados", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao listar patrimônios: " + e.getMessage(), "FETCH_ERROR"));
         }
     }
     

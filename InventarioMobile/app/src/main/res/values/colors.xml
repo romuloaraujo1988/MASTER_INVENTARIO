@@ -89,5 +89,13 @@
     <color name="progress_background">#E0E0E0</color>
     <color name="white_70">#B3FFFFFF</color>
     <color name="overlay_background">#80000000</color>
+    
+    <!-- Error Colors -->
+    <color name="error_red">#F44336</color>
+    
+    <!-- Status Background Colors -->
+    <color name="status_background_success">#E8F5E9</color>
+    <color name="status_background_warning">#FFF3E0</color>
+    <color name="status_background_error">#FFEBEE</color>
      
 </resources>

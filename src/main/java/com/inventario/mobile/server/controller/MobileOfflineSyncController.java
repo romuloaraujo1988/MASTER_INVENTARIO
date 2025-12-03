@@ -92,6 +92,75 @@ public class MobileOfflineSyncController {
     }
     
     /**
+     * Busca patrimônios PAGINADOS para modo offline
+     * 
+     * USO: Quando há mais de 5.000 patrimônios, o app deve fazer múltiplas
+     * requisições para baixar todos os dados em partes.
+     * 
+     * Exemplo:
+     * - 1ª requisição: /offline-data/patrimonios?page=0&size=2000 → patrimônios 0-1999
+     * - 2ª requisição: /offline-data/patrimonios?page=1&size=2000 → patrimônios 2000-3999
+     * - 3ª requisição: /offline-data/patrimonios?page=2&size=2000 → patrimônios 4000-5999
+     * - etc.
+     * 
+     * @param page número da página (0-based)
+     * @param size tamanho da página (máximo 2000)
+     * @param inventarioId ID do inventário (opcional)
+     * @return página de patrimônios
+     */
+    @GetMapping("/offline-data/patrimonios")
+    @Operation(
+        summary = "Buscar patrimônios paginados para modo offline",
+        description = "Retorna patrimônios em páginas para evitar sobrecarga de memória. Use quando há mais de 5.000 patrimônios."
+    )
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> buscarPatrimoniosPaginados(
+        @Parameter(description = "Número da página (0-based)")
+        @RequestParam(defaultValue = "0") int page,
+        @Parameter(description = "Tamanho da página (máximo 2000)")
+        @RequestParam(defaultValue = "2000") int size,
+        @Parameter(description = "ID do inventário (opcional)")
+        @RequestParam(required = false) Integer inventarioId
+    ) {
+        try {
+            // Limitar tamanho máximo
+            if (size > 2000) {
+                size = 2000;
+                logger.warn("Tamanho de página limitado a 2000");
+            }
+            
+            logger.info("📱 Requisição de patrimônios paginados: page={}, size={}", page, size);
+            
+            long startTime = System.currentTimeMillis();
+            
+            // Buscar patrimônios paginados
+            java.util.Map<String, Object> resultado = offlineSyncService.buscarPatrimoniosPaginados(page, size, inventarioId);
+            
+            long tempoMs = System.currentTimeMillis() - startTime;
+            
+            int totalElements = (int) resultado.get("totalElements");
+            int totalPages = (int) resultado.get("totalPages");
+            @SuppressWarnings("unchecked")
+            java.util.List<?> content = (java.util.List<?>) resultado.get("content");
+            
+            logger.info("✅ Página {}/{} carregada: {} patrimônios em {}ms", 
+                page + 1, totalPages, content.size(), tempoMs);
+            
+            return ResponseEntity.ok(
+                ApiResponse.success(
+                    resultado,
+                    String.format("Página %d/%d: %d patrimônios (total: %d)", 
+                        page + 1, totalPages, content.size(), totalElements)
+                )
+            );
+            
+        } catch (Exception e) {
+            logger.error("❌ Erro ao buscar patrimônios paginados", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("Erro ao buscar patrimônios: " + e.getMessage()));
+        }
+    }
+    
+    /**
      * Verifica status do servidor e dados disponíveis
      * Endpoint leve para verificar se servidor está respondendo
      */

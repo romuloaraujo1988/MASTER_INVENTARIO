@@ -122,13 +122,21 @@ class CollectionViewViewModelClean @Inject constructor(
                         
                         // Extrair salas únicas
                         // Prioridade: localizacaoEncontrada (onde o item FOI ENCONTRADO) > nomeSala (localização ORIGINAL)
+                        Log.d(TAG, "═══════════════════════════════════════════")
+                        Log.d(TAG, "EXTRAINDO SALAS DAS COLETAS")
+                        Log.d(TAG, "Total de coletas recebidas: ${coletas.size}")
+                        coletas.take(10).forEach { coleta ->
+                            Log.d(TAG, "  Coleta ${coleta.id}: localizacaoEncontrada='${coleta.localizacaoEncontrada}', nomeSala='${coleta.nomeSala}', localizacaoAtual='${coleta.localizacaoAtual}'")
+                        }
+                        
                         val salasUnicas = coletas
-                            .mapNotNull { it.localizacaoEncontrada ?: it.nomeSala }
+                            .mapNotNull { it.localizacaoEncontrada ?: it.nomeSala ?: it.localizacaoAtual }
                             .filter { it.isNotBlank() }
                             .distinct()
                             .sorted()
                         
-                        Log.d(TAG, "Salas extraídas (localizacaoEncontrada): $salasUnicas")
+                        Log.d(TAG, "Salas extraídas (${salasUnicas.size}): $salasUnicas")
+                        Log.d(TAG, "═══════════════════════════════════════════")
                         
                         Log.d(TAG, "Estatísticas:")
                         Log.d(TAG, "  Total: ${coletas.size}")
@@ -188,8 +196,8 @@ class CollectionViewViewModelClean @Inject constructor(
     fun filtrarPorSala(sala: String?) {
         Log.d(TAG, "═══════════════════════════════════════")
         Log.d(TAG, "FILTRAR POR SALA")
-        Log.d(TAG, "Sala selecionada: '${sala ?: "TODAS"}'")
-        Log.d(TAG, "Sala anterior: '${salaSelecionada ?: "TODAS"}'")
+        Log.d(TAG, "Sala selecionada: '${sala ?: "NENHUMA"}'")
+        Log.d(TAG, "Sala anterior: '${salaSelecionada ?: "NENHUMA"}'")
         
         salaSelecionada = sala
         
@@ -211,6 +219,25 @@ class CollectionViewViewModelClean @Inject constructor(
         Log.d(TAG, "═══════════════════════════════════════")
         
         atualizarFiltros()
+    }
+    
+    /**
+     * Limpa o filtro de sala (volta para estado inicial sem carregar tudo)
+     */
+    fun limparFiltroSala() {
+        Log.d(TAG, "limparFiltroSala: Limpando filtro de sala")
+        salaSelecionada = null
+        
+        // Quando nenhuma sala está selecionada, mostrar lista vazia com mensagem
+        val currentState = _state.value
+        if (currentState is CollectionViewState.Success) {
+            _state.value = currentState.copy(
+                filteredColetas = emptyList(),
+                totalColetas = 0,
+                sincronizadas = 0,
+                pendentes = 0
+            )
+        }
     }
     
     /**
@@ -431,14 +458,14 @@ class CollectionViewViewModelClean @Inject constructor(
                         val pendentes = result.coletas.size - sincronizadas
                         
                         // Extrair salas únicas
-                        // Prioridade: localizacaoEncontrada (onde o item FOI ENCONTRADO) > nomeSala (localização ORIGINAL)
+                        // Prioridade: localizacaoEncontrada (onde o item FOI ENCONTRADO) > nomeSala (localização ORIGINAL) > localizacaoAtual
                         val salasUnicas = result.coletas
-                            .mapNotNull { it.localizacaoEncontrada ?: it.nomeSala }
+                            .mapNotNull { it.localizacaoEncontrada ?: it.nomeSala ?: it.localizacaoAtual }
                             .filter { it.isNotBlank() }
                             .distinct()
                             .sorted()
                         
-                        Log.d(TAG, "Salas extraídas (localizacaoEncontrada): $salasUnicas")
+                        Log.d(TAG, "Salas extraídas (localizacaoEncontrada/nomeSala/localizacaoAtual): $salasUnicas")
                         
                         Log.d(TAG, "Estatísticas:")
                         Log.d(TAG, "  Total: ${result.coletas.size}")

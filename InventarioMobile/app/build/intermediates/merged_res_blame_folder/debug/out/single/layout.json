@@ -12,6 +12,10 @@
         "source": "com.inventario.mobile.app-main-69:/layout/dialog_pin_login.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_patrimonio_list_paging.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_patrimonio_list_paging.xml"
+    },
+    {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/dialog_pin_setup.xml",
         "source": "com.inventario.mobile.app-main-69:/layout/dialog_pin_setup.xml"
     },
@@ -76,12 +80,12 @@
         "source": "com.inventario.mobile.app-main-69:/layout/fragment_statistics_overview.xml"
     },
     {
-        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_quick_search.xml",
-        "source": "com.inventario.mobile.app-main-69:/layout/activity_quick_search.xml"
-    },
-    {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_coleta.xml",
         "source": "com.inventario.mobile.app-main-69:/layout/activity_coleta.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_quick_search.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_quick_search.xml"
     },
     {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/view_offline_indicator.xml",
@@ -134,6 +138,10 @@
     {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_statistics_export.xml",
         "source": "com.inventario.mobile.app-main-69:/layout/fragment_statistics_export.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_patrimonio_list.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_patrimonio_list.xml"
     },
     {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_offline_manager.xml",

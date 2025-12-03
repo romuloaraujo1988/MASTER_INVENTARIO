@@ -171,8 +171,8 @@ class DescricaoSelectionViewModelClean @Inject constructor(
                         numeroPatrimonio = "SEM ETIQUETA",
                         descricao = descricao,
                         estado = estadoConservacao,
-                        setorId = 0,
-                        salaId = salaId.toLong(),
+                        idSetor = 0,
+                        idSala = salaId,
                         qrCode = ""
                     )
                     _coletaState.value = ColetaState.Success(patrimonioFake)

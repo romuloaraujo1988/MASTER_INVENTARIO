@@ -37,9 +37,9 @@ import javax.inject.Inject
  * }
  * ```
  */
-@AndroidEntryPoint
 abstract class BaseOfflineActivity : AppCompatActivity() {
     
+    // Injeção será feita pelas subclasses que têm @AndroidEntryPoint
     @Inject
     lateinit var connectionStateManager: ConnectionStateManager
     

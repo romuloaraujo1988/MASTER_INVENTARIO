@@ -47,6 +47,7 @@ com\inventario\view\SalaFrame$1.class
 com\inventario\offline\StatusBarPanel$3.class
 com\inventario\view\ui\ModernComboBox$ModernComboBoxUI$3.class
 com\inventario\sync\model\BackupInfo.class
+com\inventario\cache\CacheManager$1.class
 com\inventario\offline\DataSynchronizer$SyncResult.class
 com\inventario\ui\ConfiguracaoBancoController$2.class
 com\inventario\util\CadastrarItensCompostosMassa$Componente.class
@@ -112,6 +113,7 @@ com\inventario\view\ColetaFrame_v2$4.class
 com\inventario\view\JLogin$1.class
 com\inventario\util\ImportacaoExcel$1.class
 com\inventario\view\InventarioFrame$8.class
+com\inventario\util\MobileServerProcessManager.class
 com\inventario\presentation\state\RelatorioState$ResponsaveisCarregados.class
 com\inventario\service\SetorService.class
 com\inventario\view\ImportacaoCSVFrame$1.class
@@ -188,6 +190,7 @@ com\inventario\mobile\server\controller\MobileUsuarioController.class
 com\inventario\mobile\server\dto\MobileSalaComProgressoDTO.class
 com\inventario\view\components\PaginationPanelTest.class
 com\inventario\dao\SetorDAO$SetorComEstatisticas.class
+com\inventario\mobile\server\controller\MobileMemoryController.class
 com\inventario\view\CampusFormDialog$1.class
 com\inventario\mobile\server\controller\MobileAuthController.class
 com\inventario\view\RelatorioItensCompostosFrame$1.class
@@ -285,6 +288,7 @@ com\inventario\view\StatusSalasFrame$2.class
 com\inventario\view\MobileMonitorFrameV2$9.class
 com\inventario\mobile\server\service\MobileDashboardService.class
 com\inventario\view\MainFrame$7.class
+com\inventario\cache\CacheManager$2.class
 com\inventario\view\MobileServerPanel$1.class
 com\inventario\SistemaInventarioApplication.class
 com\inventario\mobile\server\dto\MobileLoginResponse.class
@@ -350,6 +354,7 @@ com\inventario\service\AutenticacaoServiceAPI.class
 com\inventario\util\IconManager.class
 com\inventario\view\PatrimonioFrame$5.class
 com\inventario\view\ItemCompostoFrame$1.class
+com\inventario\service\DescricaoResumoService$1.class
 com\inventario\view\UsuarioFrame.class
 com\inventario\security\JwtAuthenticationEntryPoint.class
 com\inventario\view\ColetaFrame_v2$13.class
@@ -435,6 +440,7 @@ com\inventario\view\helper\ColetaFrameCacheHelper.class
 com\inventario\util\SingleInstanceLock.class
 com\inventario\dao\InventarioDAO.class
 com\inventario\service\SalaService.class
+com\inventario\mobile\server\dto\PagedResponse.class
 com\inventario\model\Setor.class
 com\inventario\mobile\server\dto\MobileUserInfo.class
 com\inventario\view\ComponenteDialog$1.class
@@ -518,6 +524,7 @@ com\inventario\mobile\server\service\MobileOfflineSyncService.class
 com\inventario\view\AlterarSenhaDialog.class
 com\inventario\view\ui\ModernButtons.class
 com\inventario\model\Usuario.class
+com\inventario\mobile\server\service\MemoryCleanupService.class
 com\inventario\dao\BaseDAO$TransactionCallback.class
 com\inventario\util\ExceptionHandler$ThrowingSupplier.class
 com\inventario\util\ImportacaoExcel.class
@@ -529,6 +536,7 @@ com\inventario\service\UnifiedAuthService.class
 com\inventario\view\InventarioFrame$1.class
 com\inventario\mobile\server\dto\DispositivoRegistroDTO.class
 com\inventario\dao\CampusDAO.class
+com\inventario\service\AutenticacaoService$1.class
 com\inventario\siads\service\SiadsConverterService.class
 com\inventario\view\MainFrame$6.class
 com\inventario\mobile\server\service\MobileAuthService$1.class

@@ -311,13 +311,22 @@ class MockApiService : ApiService {
         return Response.success(apiResponse)
     }
     
-    override suspend fun buscarTodasColetasSemPaginacao(): Response<ApiResponse<List<MobileColetaResponseDto>>> {
-        val apiResponse = ApiResponse(
+    override suspend fun buscarTodasColetasSemPaginacao(): Response<ColetasAllResponse> {
+        val pagedData = ColetasPagedData(
+            content = emptyList(),
+            page = 0,
+            size = 100,
+            totalElements = 0,
+            totalPages = 0,
+            first = true,
+            last = true
+        )
+        val response = ColetasAllResponse(
             success = true,
             message = "Mock data",
-            data = emptyList<MobileColetaResponseDto>()
+            data = pagedData
         )
-        return Response.success(apiResponse)
+        return Response.success(response)
     }
     
     override suspend fun getColetasPaginadas(
@@ -325,5 +334,14 @@ class MockApiService : ApiService {
         size: Int
     ): Response<ApiResponse<PagedResponse<ColetaDto>>> {
         throw NotImplementedError("Mock implementation - not available offline")
+    }
+    
+    override suspend fun buscarSalasComColetas(inventarioId: Int?): Response<ApiResponse<List<Map<String, Any>>>> {
+        val apiResponse = ApiResponse(
+            success = true,
+            message = "Mock data",
+            data = emptyList<Map<String, Any>>()
+        )
+        return Response.success(apiResponse)
     }
 }

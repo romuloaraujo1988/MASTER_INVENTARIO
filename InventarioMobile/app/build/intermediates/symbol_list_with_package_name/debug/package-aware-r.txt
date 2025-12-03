@@ -1498,6 +1498,7 @@ color error_color_material_dark
 color error_color_material_light
 color error_dark
 color error_light
+color error_red
 color foreground_material_dark
 color foreground_material_light
 color highlighted_text_material_dark
@@ -2168,6 +2169,9 @@ color secondary_text_default_material_dark
 color secondary_text_default_material_light
 color secondary_text_disabled_material_dark
 color secondary_text_disabled_material_light
+color status_background_error
+color status_background_success
+color status_background_warning
 color status_error
 color status_pending
 color status_synced
@@ -3538,6 +3542,7 @@ id chipFiltroUsuario
 id chipFiltrosAvancados
 id chipGroupFilters
 id chipGroupFiltro
+id chipGroupFiltros
 id chipGroupPeriod
 id chipGroupStatus
 id chipGroupUser
@@ -3724,6 +3729,7 @@ id layoutErro
 id layoutError
 id layoutEstado
 id layoutFilters
+id layoutHeader
 id layoutInfoColeta
 id layoutLocalizacao
 id layoutLocation
@@ -3734,6 +3740,7 @@ id layoutOfflineStatus
 id layoutPatrimonioInfo
 id layoutResponsavel
 id layoutSalaFixada
+id layoutSelectSala
 id layoutSyncCount
 id layoutSyncInterval
 id layoutTemporais
@@ -3897,6 +3904,7 @@ id pressed
 id progressBar
 id progressBarGrafico
 id progressBarInventario
+id progressBarMore
 id progressBarSync
 id progressConclusao
 id progressOverlay
@@ -4051,7 +4059,9 @@ id textViewCount
 id textViewDataColeta
 id textViewDescricao
 id textViewEmpty
+id textViewError
 id textViewEstadoEncontrado
+id textViewHasMore
 id textViewLocalizacaoEncontrada
 id textViewMarca
 id textViewModelo
@@ -4062,6 +4072,7 @@ id textViewSala
 id textViewSetor
 id textViewStatus
 id textViewTitle
+id textViewTotal
 id textWatcher
 id text_input_end_icon
 id text_input_error_icon
@@ -4438,6 +4449,8 @@ layout fragment_dashboard_backup
 layout fragment_inventario_por_responsavel
 layout fragment_inventario_por_sala
 layout fragment_inventory
+layout fragment_patrimonio_list
+layout fragment_patrimonio_list_paging
 layout fragment_statistics_charts
 layout fragment_statistics_export
 layout fragment_statistics_overview

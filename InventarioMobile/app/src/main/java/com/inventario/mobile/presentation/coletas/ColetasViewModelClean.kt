@@ -7,6 +7,7 @@ import com.inventario.mobile.data.model.Coleta
 import com.inventario.mobile.domain.model.StatusFiltro
 import com.inventario.mobile.domain.usecase.AgruparColetasPorSalaUseCase
 import com.inventario.mobile.domain.usecase.BuscarColetasUseCase
+import com.inventario.mobile.domain.usecase.BuscarSalasComColetasUseCase
 import com.inventario.mobile.domain.usecase.FiltrarColetasUseCase
 import com.inventario.mobile.domain.usecase.ObterUsuarioAtualUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,7 +33,8 @@ class ColetasViewModelClean @Inject constructor(
     private val buscarColetasUseCase: BuscarColetasUseCase,
     private val filtrarColetasUseCase: FiltrarColetasUseCase,
     private val agruparColetasPorSalaUseCase: AgruparColetasPorSalaUseCase,
-    private val obterUsuarioAtualUseCase: ObterUsuarioAtualUseCase
+    private val obterUsuarioAtualUseCase: ObterUsuarioAtualUseCase,
+    private val buscarSalasComColetasUseCase: BuscarSalasComColetasUseCase
 ) : ViewModel() {
     
     companion object {
@@ -45,6 +47,9 @@ class ColetasViewModelClean @Inject constructor(
     
     // Cache de todas as coletas (antes de filtrar)
     private var todasColetas: List<Coleta> = emptyList()
+    
+    // Cache de salas com coletas (do servidor)
+    private var salasComColetas: List<String> = emptyList()
     
     // Filtros ativos
     private var filtroUsuarioAtivo = true
@@ -74,6 +79,18 @@ class ColetasViewModelClean @Inject constructor(
                 val usuario = obterUsuarioAtualUseCase()
                 usuarioAtual = usuario?.nome
                 Log.d(TAG, "Usuário atual: $usuarioAtual")
+                
+                // Buscar salas com coletas do servidor (para o filtro)
+                buscarSalasComColetasUseCase().fold(
+                    onSuccess = { salas ->
+                        Log.d(TAG, "✓ ${salas.size} salas com coletas carregadas do servidor")
+                        salasComColetas = salas
+                    },
+                    onFailure = { erro ->
+                        Log.w(TAG, "⚠ Erro ao buscar salas do servidor, usando fallback: ${erro.message}")
+                        // Fallback: extrair salas das coletas locais
+                    }
+                )
                 
                 // Buscar coletas
                 val resultado = buscarColetasUseCase()
@@ -212,8 +229,14 @@ class ColetasViewModelClean @Inject constructor(
         )
         val (totalColetados, totalPendentes) = filtrarColetasUseCase.calcularContadores(coletasParaContagem)
         
-        // Extrair salas disponíveis
-        val salasDisponiveis = filtrarColetasUseCase.extrairSalasDisponiveis(todasColetas)
+        // Usar salas do servidor se disponíveis, senão extrair das coletas locais
+        val salasDisponiveis = if (salasComColetas.isNotEmpty()) {
+            Log.d(TAG, "Usando ${salasComColetas.size} salas do servidor")
+            salasComColetas
+        } else {
+            Log.d(TAG, "Usando salas extraídas das coletas locais")
+            filtrarColetasUseCase.extrairSalasDisponiveis(todasColetas)
+        }
         
         // Agrupar se necessário
         val coletasAgrupadas = if (visualizacaoAgrupadaAtiva) {
@@ -224,6 +247,7 @@ class ColetasViewModelClean @Inject constructor(
         
         Log.d(TAG, "Coletas filtradas: ${coletasFiltradas.size}")
         Log.d(TAG, "Total coletados: $totalColetados, pendentes: $totalPendentes")
+        Log.d(TAG, "Salas disponíveis: ${salasDisponiveis.size}")
         
         // Atualizar estado
         _state.value = ColetasState.Success(

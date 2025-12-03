@@ -31,10 +31,13 @@ class BuscarColetasUseCase @Inject constructor(
             val response = apiService.buscarTodasColetasSemPaginacao()
             
             if (response.isSuccessful && response.body() != null) {
-                val apiResponse = response.body()!!
+                val coletasAllResponse = response.body()!!
                 
-                if (apiResponse.success && apiResponse.data != null) {
-                    val coletas = apiResponse.data.map { dto ->
+                if (coletasAllResponse.success && coletasAllResponse.data != null) {
+                    val pagedData = coletasAllResponse.data
+                    Log.d(TAG, "Resposta do servidor: ${pagedData.content.size} coletas de ${pagedData.totalElements} total")
+                    
+                    val coletas = pagedData.content.map { dto ->
                         Log.d(TAG, "═══════════════════════════════════════")
                         Log.d(TAG, "DTO Recebido - ID: ${dto.id}")
                         Log.d(TAG, "  numeroPatrimonio: '${dto.numeroPatrimonio}'")

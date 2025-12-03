@@ -44,15 +44,15 @@ class SincronizarColetasDoServidorUseCase @Inject constructor(
                 return Result.failure(Exception("Erro ao buscar coletas: HTTP ${response.code()}"))
             }
             
-            val apiResponse = response.body()!!
+            val coletasAllResponse = response.body()!!
             
-            if (!apiResponse.success || apiResponse.data == null) {
+            if (!coletasAllResponse.success || coletasAllResponse.data == null) {
                 Log.w(TAG, "API retornou success=false ou data=null")
                 return Result.failure(Exception("Erro na resposta da API"))
             }
             
-            val coletasServidor = apiResponse.data
-            Log.d(TAG, "✓ ${coletasServidor.size} coletas recebidas do servidor")
+            val coletasServidor = coletasAllResponse.data.content
+            Log.d(TAG, "✓ ${coletasServidor.size} coletas recebidas do servidor (de ${coletasAllResponse.data.totalElements} total)")
             
             // 2. Buscar coletas locais existentes
             val coletasLocais = coletaDao.buscarTodas()

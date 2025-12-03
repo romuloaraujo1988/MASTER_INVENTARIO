@@ -32,6 +32,10 @@ import com.inventario.mobile.presentation.inventario.InventarioPorSalaFragment_G
 import com.inventario.mobile.presentation.inventario.InventarioPorSalaViewModel_HiltModules;
 import com.inventario.mobile.presentation.inventario.InventarioTabsActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.main.MainActivity_GeneratedInjector;
+import com.inventario.mobile.presentation.patrimonio.PatrimonioListFragment_GeneratedInjector;
+import com.inventario.mobile.presentation.patrimonio.PatrimonioListPagingFragment_GeneratedInjector;
+import com.inventario.mobile.presentation.patrimonio.PatrimonioListViewModelPaging_HiltModules;
+import com.inventario.mobile.presentation.patrimonio.PatrimonioListViewModel_HiltModules;
 import com.inventario.mobile.presentation.sala.SalaSelectionActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.scanner.ScannerActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.statistics.ExportFragment_GeneratedInjector;
@@ -43,7 +47,6 @@ import com.inventario.mobile.presentation.sync.SyncViewModel_HiltModules;
 import com.inventario.mobile.presentation.validation.ValidationExampleFragment_GeneratedInjector;
 import com.inventario.mobile.presentation.validation.ValidationViewModel_HiltModules;
 import com.inventario.mobile.ui.base.BaseActivity_GeneratedInjector;
-import com.inventario.mobile.ui.base.BaseOfflineActivity_GeneratedInjector;
 import com.inventario.mobile.ui.coleta.ColetaActivity_GeneratedInjector;
 import com.inventario.mobile.ui.splash.SplashActivity_GeneratedInjector;
 import com.inventario.mobile.worker.BackupWorker_HiltModule;
@@ -216,6 +219,8 @@ public final class InventarioMobileApplication_HiltComponents {
           InventarioPorSalaViewModel_HiltModules.KeyModule.class,
           ItemSemEtiquetaViewModel_HiltModules.KeyModule.class,
           ManualCollectionViewModel_HiltModules.KeyModule.class,
+          PatrimonioListViewModelPaging_HiltModules.KeyModule.class,
+          PatrimonioListViewModel_HiltModules.KeyModule.class,
           SyncViewModel_HiltModules.KeyModule.class,
           ValidationViewModel_HiltModules.KeyModule.class
       }
@@ -253,7 +258,6 @@ public final class InventarioMobileApplication_HiltComponents {
       StatisticsActivity_GeneratedInjector,
       SyncActivity_GeneratedInjector,
       BaseActivity_GeneratedInjector,
-      BaseOfflineActivity_GeneratedInjector,
       ColetaActivity_GeneratedInjector,
       SplashActivity_GeneratedInjector,
       ActivityComponent,
@@ -279,6 +283,8 @@ public final class InventarioMobileApplication_HiltComponents {
           InventarioPorSalaViewModel_HiltModules.BindsModule.class,
           ItemSemEtiquetaViewModel_HiltModules.BindsModule.class,
           ManualCollectionViewModel_HiltModules.BindsModule.class,
+          PatrimonioListViewModelPaging_HiltModules.BindsModule.class,
+          PatrimonioListViewModel_HiltModules.BindsModule.class,
           SyncViewModel_HiltModules.BindsModule.class,
           ValidationViewModel_HiltModules.BindsModule.class
       }
@@ -309,6 +315,8 @@ public final class InventarioMobileApplication_HiltComponents {
       DashboardFragment_GeneratedInjector,
       InventarioPorResponsavelFragment_GeneratedInjector,
       InventarioPorSalaFragment_GeneratedInjector,
+      PatrimonioListFragment_GeneratedInjector,
+      PatrimonioListPagingFragment_GeneratedInjector,
       com.inventario.mobile.presentation.statistics.ChartsFragment_GeneratedInjector,
       ExportFragment_GeneratedInjector,
       OverviewFragment_GeneratedInjector,

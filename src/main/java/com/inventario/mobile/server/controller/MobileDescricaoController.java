@@ -102,11 +102,13 @@ public class MobileDescricaoController {
      * ANTES: findAll() + stream().filter() (vazamento de memória)
      * DEPOIS: Query SQL com NOT EXISTS (máximo 200 resultados)
      * 
+     * CORREÇÃO 01/12/2025: Retorna List<String> para compatibilidade com app Android
+     * 
      * @param idInventario ID do inventário ativo
-     * @return lista de descrições não coletadas
+     * @return lista de descrições não coletadas (apenas strings)
      */
     @GetMapping("/nao-coletadas")
-    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> listarDescricoesNaoColetadas(
+    public ResponseEntity<ApiResponse<List<String>>> listarDescricoesNaoColetadas(
             @RequestParam(required = false) Integer idInventario) {
         try {
             long startTime = System.currentTimeMillis();
@@ -131,7 +133,13 @@ public class MobileDescricaoController {
             }
             
             // OTIMIZAÇÃO: Buscar descrições não coletadas diretamente no banco
-            List<Map<String, Object>> descricoes = patrimonioDAO.buscarDescricoesNaoColetadasAgrupadas(idInventario);
+            List<Map<String, Object>> descricoesMap = patrimonioDAO.buscarDescricoesNaoColetadasAgrupadas(idInventario);
+            
+            // CORREÇÃO: Extrair apenas as descrições (strings) para compatibilidade com app Android
+            List<String> descricoes = descricoesMap.stream()
+                    .map(m -> (String) m.get("descricao"))
+                    .filter(d -> d != null && !d.trim().isEmpty())
+                    .collect(Collectors.toList());
             
             long duration = System.currentTimeMillis() - startTime;
             logger.info("✓ {} descrições não coletadas em {}ms", descricoes.size(), duration);

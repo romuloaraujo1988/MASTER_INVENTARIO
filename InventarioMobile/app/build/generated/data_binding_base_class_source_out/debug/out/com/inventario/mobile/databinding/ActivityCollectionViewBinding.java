@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.google.android.material.card.MaterialCardView;
@@ -68,6 +69,9 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
   public final LinearLayout layoutFilters;
 
   @NonNull
+  public final LinearLayout layoutSelectSala;
+
+  @NonNull
   public final ProgressBar progressBar;
 
   @NonNull
@@ -75,6 +79,9 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
 
   @NonNull
   public final Spinner spinnerSalas;
+
+  @NonNull
+  public final SwipeRefreshLayout swipeRefreshLayout;
 
   @NonNull
   public final Toolbar toolbar;
@@ -91,8 +98,9 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
       @NonNull ChipGroup chipGroupUser, @NonNull Chip chipMyCollections, @NonNull Chip chipPending,
       @NonNull Chip chipSemEtiqueta, @NonNull Chip chipSynced,
       @NonNull FloatingActionButton fabBackToDashboard, @NonNull LinearLayout layoutEmptyState,
-      @NonNull LinearLayout layoutFilters, @NonNull ProgressBar progressBar,
-      @NonNull RecyclerView recyclerViewColetas, @NonNull Spinner spinnerSalas,
+      @NonNull LinearLayout layoutFilters, @NonNull LinearLayout layoutSelectSala,
+      @NonNull ProgressBar progressBar, @NonNull RecyclerView recyclerViewColetas,
+      @NonNull Spinner spinnerSalas, @NonNull SwipeRefreshLayout swipeRefreshLayout,
       @NonNull Toolbar toolbar, @NonNull TextView tvPendingSync, @NonNull TextView tvTotalColetas) {
     this.rootView = rootView;
     this.cardHeader = cardHeader;
@@ -108,9 +116,11 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
     this.fabBackToDashboard = fabBackToDashboard;
     this.layoutEmptyState = layoutEmptyState;
     this.layoutFilters = layoutFilters;
+    this.layoutSelectSala = layoutSelectSala;
     this.progressBar = progressBar;
     this.recyclerViewColetas = recyclerViewColetas;
     this.spinnerSalas = spinnerSalas;
+    this.swipeRefreshLayout = swipeRefreshLayout;
     this.toolbar = toolbar;
     this.tvPendingSync = tvPendingSync;
     this.tvTotalColetas = tvTotalColetas;
@@ -221,6 +231,12 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.layoutSelectSala;
+      LinearLayout layoutSelectSala = ViewBindings.findChildViewById(rootView, id);
+      if (layoutSelectSala == null) {
+        break missingId;
+      }
+
       id = R.id.progressBar;
       ProgressBar progressBar = ViewBindings.findChildViewById(rootView, id);
       if (progressBar == null) {
@@ -236,6 +252,12 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
       id = R.id.spinnerSalas;
       Spinner spinnerSalas = ViewBindings.findChildViewById(rootView, id);
       if (spinnerSalas == null) {
+        break missingId;
+      }
+
+      id = R.id.swipeRefreshLayout;
+      SwipeRefreshLayout swipeRefreshLayout = ViewBindings.findChildViewById(rootView, id);
+      if (swipeRefreshLayout == null) {
         break missingId;
       }
 
@@ -260,8 +282,8 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
       return new ActivityCollectionViewBinding((ConstraintLayout) rootView, cardHeader,
           cardSalaFilter, chipAll, chipAllUsers, chipGroupFilters, chipGroupUser, chipMyCollections,
           chipPending, chipSemEtiqueta, chipSynced, fabBackToDashboard, layoutEmptyState,
-          layoutFilters, progressBar, recyclerViewColetas, spinnerSalas, toolbar, tvPendingSync,
-          tvTotalColetas);
+          layoutFilters, layoutSelectSala, progressBar, recyclerViewColetas, spinnerSalas,
+          swipeRefreshLayout, toolbar, tvPendingSync, tvTotalColetas);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));
