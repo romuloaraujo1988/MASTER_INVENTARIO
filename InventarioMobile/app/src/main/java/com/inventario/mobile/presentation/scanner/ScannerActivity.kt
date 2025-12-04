@@ -46,9 +46,13 @@ class ScannerActivity : AppCompatActivity() {
     private val maxRetries = 3
     private var hasScannedOnce = false // ✅ Flag para evitar reiniciar scanner após primeira leitura
     
-    // ✅ Injetar Use Case via Hilt
+    // ✅ Injetar Use Cases via Hilt
     @Inject
     lateinit var registrarColetaUseCase: com.inventario.mobile.domain.usecase.RegistrarColetaUseCase
+    
+    // ✅ v2.8: Injetar BuscarPatrimonioUseCase para suporte OFFLINE
+    @Inject
+    lateinit var buscarPatrimonioUseCase: com.inventario.mobile.domain.usecase.BuscarPatrimonioUseCase
     
     // Launcher para solicitar permissão de câmera
     private val requestCameraPermissionLauncher = registerForActivityResult(
@@ -146,13 +150,18 @@ class ScannerActivity : AppCompatActivity() {
             android14CameraHelper = Android14CameraHelper(this)
             android.util.Log.d("ScannerActivity", "Android14CameraHelper inicializado com sucesso")
             
-            // ✅ Inicializar ViewModel com Use Case injetado via Hilt
-            android.util.Log.d("ScannerActivity", "Inicializando ViewModel com Hilt...")
+            // ✅ v2.8: Inicializar ViewModel com Use Cases injetados via Hilt
+            android.util.Log.d("ScannerActivity", "Inicializando ViewModel com Hilt (MODO OFFLINE SUPORTADO)...")
             val apiService = NetworkModule.getApiService(this)
             val repository = InventarioRepository.getInstance(this, apiService)
-            val factory = ScannerViewModelFactory(repository, preferencesManager, registrarColetaUseCase)
+            val factory = ScannerViewModelFactory(
+                repository, 
+                preferencesManager, 
+                registrarColetaUseCase,
+                buscarPatrimonioUseCase // ✅ NOVO: Use Case para busca offline
+            )
             viewModel = ViewModelProvider(this, factory)[ScannerViewModel::class.java]
-            android.util.Log.d("ScannerActivity", "✓ ViewModel inicializado com sucesso (com RegistrarColetaUseCase via Hilt)")
+            android.util.Log.d("ScannerActivity", "✓ ViewModel inicializado com sucesso (com BuscarPatrimonioUseCase + RegistrarColetaUseCase via Hilt)")
             
             setupToolbar()
             setupObservers()

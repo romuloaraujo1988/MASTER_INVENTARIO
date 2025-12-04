@@ -48,6 +48,7 @@ inclusion: always
   - `ManualCollectionActivity` → usa `BuscarPatrimonioUseCase` ✅
   - `CollectionViewActivity` → usa `CollectionViewViewModelClean` ✅
   - `SalaSelectionActivity` → `@AndroidEntryPoint` adicionado ✅ **FASE 2**
+  - `ScannerActivity` → usa `BuscarPatrimonioUseCase` ✅ **v2.8 - MODO OFFLINE**
   - `DashboardFragment` → usa `DashboardViewModelClean` ✅ **FASE 2**
   - `ScannerActivity` → `@AndroidEntryPoint` já presente ✅
 

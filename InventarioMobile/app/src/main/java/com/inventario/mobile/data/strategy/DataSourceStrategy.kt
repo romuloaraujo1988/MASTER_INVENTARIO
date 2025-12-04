@@ -47,6 +47,58 @@ interface DataSourceStrategy {
      * Retorna o tipo de fonte de dados
      */
     fun getSourceType(): DataSourceType
+    
+    // ========================================
+    // Métodos para Inventário por Sala
+    // ========================================
+    
+    /**
+     * Busca patrimônios por sala com filtro opcional de status de coleta e paginação.
+     */
+    suspend fun buscarPorSala(
+        salaId: Int,
+        coletado: Boolean? = null,
+        page: Int = 0,
+        pageSize: Int = 20
+    ): Result<List<Patrimonio>>
+    
+    /**
+     * Conta total de patrimônios em uma sala.
+     */
+    suspend fun contarPorSala(salaId: Int): Result<Int>
+    
+    /**
+     * Conta patrimônios coletados em uma sala.
+     */
+    suspend fun contarColetadosPorSala(salaId: Int): Result<Int>
+    
+    // ========================================
+    // Métodos para Busca Rápida de Patrimônio
+    // ========================================
+    
+    /**
+     * Busca patrimônios por query (número, descrição ou nome da sala)
+     * @see Requirements 1.1
+     */
+    suspend fun buscarPorQuery(query: String): Result<List<Patrimonio>>
+    
+    /**
+     * Busca patrimônios coletados por query
+     * @see Requirements 3.1
+     */
+    suspend fun buscarColetadosPorQuery(query: String): Result<List<Patrimonio>>
+    
+    /**
+     * Busca patrimônios pendentes (não coletados) por query
+     * @see Requirements 3.2
+     */
+    suspend fun buscarPendentesPorQuery(query: String): Result<List<Patrimonio>>
+    
+    /**
+     * Busca patrimônios com divergência por query
+     * @see Requirements 3.3
+     */
+    suspend fun buscarDivergenciasPorQuery(query: String, inventarioId: Int): Result<List<Patrimonio>>
 }
 
 /**

@@ -529,17 +529,73 @@ public class ItemCompostoFrame extends JFrame {
         }
         
         try {
-            // Verificar se já existe e remover componentes antigos
-            if (itemCompostoDAO.isItemComposto(patrimonioAtual.getId())) {
-                int opcao = JOptionPane.showConfirmDialog(this,
-                    "Este patrimônio já possui componentes cadastrados.\n" +
-                    "Deseja substituir pelos novos componentes?",
-                    "Confirmar Substituição",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE);
+            boolean jaEraItemComposto = itemCompostoDAO.isItemComposto(patrimonioAtual.getId());
+            java.util.Map<String, Object> infoColetas = null;
+            int componentesAntigos = 0;
+            
+            // Verificar se já existe e se há coletas no inventário ativo
+            if (jaEraItemComposto) {
+                // Verificar coletas existentes
+                infoColetas = itemCompostoDAO.verificarColetasExistentes(patrimonioAtual.getId(), null);
+                boolean temColetas = (Boolean) infoColetas.get("temColetas");
+                componentesAntigos = (Integer) infoColetas.get("totalComponentes");
+                int componentesColetados = (Integer) infoColetas.get("componentesColetados");
+                String inventarioNome = (String) infoColetas.get("inventarioNome");
                 
-                if (opcao != JOptionPane.YES_OPTION) {
-                    return;
+                // Verificar se está adicionando novos componentes (mais do que tinha antes)
+                boolean adicionandoNovos = componentes.size() > componentesAntigos;
+                int novosComponentes = componentes.size() - componentesAntigos;
+                
+                if (temColetas && adicionandoNovos) {
+                    // Aviso especial: há coletas e está adicionando novos componentes
+                    StringBuilder mensagem = new StringBuilder();
+                    mensagem.append("⚠️ ATENÇÃO: Este item composto já possui coletas registradas!\n\n");
+                    mensagem.append("📋 Inventário: ").append(inventarioNome).append("\n");
+                    mensagem.append("📊 Componentes coletados: ").append(componentesColetados)
+                            .append("/").append(componentesAntigos).append("\n\n");
+                    mensagem.append("Você está adicionando ").append(novosComponentes)
+                            .append(" novo(s) componente(s).\n\n");
+                    mensagem.append("⚡ Os novos componentes precisarão ser coletados\n");
+                    mensagem.append("   na tela 'Coleta de Itens Compostos' para que\n");
+                    mensagem.append("   o status do item fique COMPLETO.\n\n");
+                    mensagem.append("Deseja continuar?");
+                    
+                    int opcao = JOptionPane.showConfirmDialog(this,
+                        mensagem.toString(),
+                        "Aviso - Novos Componentes Pendentes de Coleta",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE);
+                    
+                    if (opcao != JOptionPane.YES_OPTION) {
+                        return;
+                    }
+                } else if (temColetas) {
+                    // Aviso: há coletas mas não está adicionando novos
+                    int opcao = JOptionPane.showConfirmDialog(this,
+                        "Este patrimônio já possui componentes cadastrados e coletas registradas.\n" +
+                        "Inventário: " + inventarioNome + "\n" +
+                        "Componentes coletados: " + componentesColetados + "/" + componentesAntigos + "\n\n" +
+                        "Deseja substituir os componentes?\n" +
+                        "⚠️ As coletas existentes serão mantidas para componentes equivalentes.",
+                        "Confirmar Substituição",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE);
+                    
+                    if (opcao != JOptionPane.YES_OPTION) {
+                        return;
+                    }
+                } else {
+                    // Sem coletas, apenas confirmar substituição
+                    int opcao = JOptionPane.showConfirmDialog(this,
+                        "Este patrimônio já possui componentes cadastrados.\n" +
+                        "Deseja substituir pelos novos componentes?",
+                        "Confirmar Substituição",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE);
+                    
+                    if (opcao != JOptionPane.YES_OPTION) {
+                        return;
+                    }
                 }
                 
                 // Remover componentes antigos
@@ -562,10 +618,22 @@ public class ItemCompostoFrame extends JFrame {
                 );
             }
             
+            // Mensagem de sucesso com aviso sobre coleta se necessário
+            StringBuilder msgSucesso = new StringBuilder();
+            msgSucesso.append("Item composto salvo com sucesso!\n");
+            msgSucesso.append("Patrimônio: ").append(patrimonioAtual.getNumero()).append("\n");
+            msgSucesso.append("Componentes: ").append(componentes.size());
+            
+            if (jaEraItemComposto && infoColetas != null && (Boolean) infoColetas.get("temColetas")) {
+                int novos = componentes.size() - componentesAntigos;
+                if (novos > 0) {
+                    msgSucesso.append("\n\n💡 Lembre-se: ").append(novos)
+                              .append(" novo(s) componente(s) precisam ser coletados!");
+                }
+            }
+            
             JOptionPane.showMessageDialog(this,
-                "Item composto salvo com sucesso!\n" +
-                "Patrimônio: " + patrimonioAtual.getNumero() + "\n" +
-                "Componentes: " + componentes.size(),
+                msgSucesso.toString(),
                 "Sucesso",
                 JOptionPane.INFORMATION_MESSAGE);
             

@@ -130,35 +130,67 @@ class SplashActivity : AppCompatActivity() {
                 val isLoggedIn = preferencesManager.isLoggedIn()
                 Log.d(TAG, "navigateToNextScreen: isLoggedIn = $isLoggedIn")
                 
+                // Log de debug dos tokens
+                Log.d(TAG, tokenManager.getTokenDebugInfo())
+                
                 val intent = if (isLoggedIn) {
-                    // ✅ Verificar se token é válido (em background)
-                    val isTokenValid = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        tokenManager.isTokenValid()
+                    // ✅ Verificar se precisa fazer login novamente (em background)
+                    val needsRelogin = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        tokenManager.needsRelogin()
                     }
                     
-                    val canRefresh = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        tokenManager.canRefreshToken()
-                    }
-                    
-                    if (isTokenValid) {
-                        Log.d(TAG, "✓ Token válido, navegando para MainActivity")
-                        Intent(this@SplashActivity, MainActivity::class.java)
-                    } else if (canRefresh) {
-                        Log.d(TAG, "⚠️ Token expirado mas pode renovar, navegando para MainActivity")
-                        // Token será renovado automaticamente pelo RefreshTokenInterceptor
-                        Intent(this@SplashActivity, MainActivity::class.java)
+                    if (!needsRelogin) {
+                        // Token válido OU pode ser renovado automaticamente
+                        val isTokenValid = tokenManager.isTokenValid()
+                        val tokenTimeRemaining = preferencesManager.getTokenTimeRemaining()
+                        
+                        if (isTokenValid) {
+                            Log.d(TAG, "✓ Token válido (expira em: $tokenTimeRemaining)")
+                        } else {
+                            Log.d(TAG, "⚠️ Token expirado mas pode renovar")
+                            Log.d(TAG, "   → RefreshTokenInterceptor irá renovar automaticamente")
+                        }
+                        
+                        // ✅ VERIFICAR SE BIOMETRIA OU PIN ESTÁ HABILITADO
+                        val biometricEnabled = preferencesManager.isBiometricEnabled()
+                        val pinAuthManager = com.inventario.mobile.security.PinAuthManager(this@SplashActivity)
+                        val pinEnabled = pinAuthManager.isPinEnabled()
+                        
+                        Log.d(TAG, "═══════════════════════════════════════════")
+                        Log.d(TAG, "VERIFICAÇÃO DE AUTENTICAÇÃO LOCAL")
+                        Log.d(TAG, "Biometria habilitada: $biometricEnabled")
+                        Log.d(TAG, "PIN habilitado: $pinEnabled")
+                        Log.d(TAG, "═══════════════════════════════════════════")
+                        
+                        if (biometricEnabled || pinEnabled) {
+                            // ✅ Usuário tem biometria/PIN habilitado
+                            // Redirecionar para LoginActivity para autenticar
+                            Log.d(TAG, "→ Redirecionando para LoginActivity para autenticação biométrica/PIN")
+                            Intent(this@SplashActivity, LoginActivity::class.java).apply {
+                                putExtra("require_local_auth", true)
+                                putExtra("biometric_enabled", biometricEnabled)
+                                putExtra("pin_enabled", pinEnabled)
+                            }
+                        } else {
+                            // Sem biometria/PIN, ir direto para MainActivity
+                            Log.d(TAG, "→ Sem autenticação local, navegando para MainActivity")
+                            Intent(this@SplashActivity, MainActivity::class.java)
+                        }
                     } else {
-                        Log.d(TAG, "❌ Token inválido e não pode renovar, navegando para LoginActivity")
+                        Log.d(TAG, "❌ Sessão expirada completamente (refresh token também expirou)")
+                        Log.d(TAG, "   → Redirecionando para login")
+                        
                         // Limpar sessão
                         preferencesManager.clearSavedUser()
                         preferencesManager.clearSessionData()
+                        
                         Intent(this@SplashActivity, LoginActivity::class.java).apply {
                             putExtra("token_expired", true)
-                            putExtra("message", "Sua sessão expirou. Faça login novamente.")
+                            putExtra("message", "Sua sessão expirou após 14 dias. Faça login novamente.")
                         }
                     }
                 } else {
-                    Log.d(TAG, "navigateToNextScreen: Navegando para LoginActivity")
+                    Log.d(TAG, "navigateToNextScreen: Usuário não logado, navegando para LoginActivity")
                     Intent(this@SplashActivity, LoginActivity::class.java)
                 }
                 

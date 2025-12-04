@@ -38,3 +38,41 @@
 2025-12-03 14:39:53.625 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=0, Total=1
 2025-12-03 14:40:02.867 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=4, Total=5
 2025-12-03 14:40:02.951 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=4, Total=5
+2025-12-03 18:45:59.790 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool - ═══════════════════════════════════════════════════════════════
+2025-12-03 18:45:59.798 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool - 🚀 Inicializando HikariCP Connection Pool
+2025-12-03 18:45:59.798 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool - ═══════════════════════════════════════════════════════════════
+2025-12-03 18:45:59.820 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.HikariDataSource - InventarioPool - Starting...
+2025-12-03 18:45:59.932 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.pool.HikariPool - InventarioPool - Added connection org.postgresql.jdbc.PgConnection@598280c4
+2025-12-03 18:45:59.957 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.HikariDataSource - InventarioPool - Start completed.
+2025-12-03 18:45:59.992 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool - ✅ Pool inicializado com sucesso!
+2025-12-03 18:46:00.025 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool -    URL: jdbc:postgresql://localhost:5432/sispatrimonio
+2025-12-03 18:46:00.044 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool -    Pool Size: 15 (min: 5)
+2025-12-03 18:46:00.046 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool -    Leak Detection: 30000ms
+2025-12-03 18:46:00.062 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool - ═══════════════════════════════════════════════════════════════
+2025-12-03 18:46:00.063 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=0, Total=1
+2025-12-03 18:46:03.701 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=4, Total=5
+2025-12-03 18:46:03.796 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=4, Total=5
+2025-12-03 18:46:11.618 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=4, Total=5
+2025-12-03 18:46:11.657 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=4, Total=5
+2025-12-03 18:46:11.741 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=4, Total=5
+2025-12-03 18:46:12.033 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=4, Total=5
+2025-12-03 18:51:52.663 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool - ═══════════════════════════════════════════════════════════════
+2025-12-03 18:51:52.669 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool - 🚀 Inicializando HikariCP Connection Pool
+2025-12-03 18:51:52.670 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool - ═══════════════════════════════════════════════════════════════
+2025-12-03 18:51:52.682 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.HikariDataSource - InventarioPool - Starting...
+2025-12-03 18:51:52.748 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.pool.HikariPool - InventarioPool - Added connection org.postgresql.jdbc.PgConnection@598280c4
+2025-12-03 18:51:52.752 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.HikariDataSource - InventarioPool - Start completed.
+2025-12-03 18:51:52.756 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool - ✅ Pool inicializado com sucesso!
+2025-12-03 18:51:52.756 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool -    URL: jdbc:postgresql://localhost:5432/sispatrimonio
+2025-12-03 18:51:52.757 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool -    Pool Size: 15 (min: 5)
+2025-12-03 18:51:52.757 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool -    Leak Detection: 30000ms
+2025-12-03 18:51:52.766 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool - ═══════════════════════════════════════════════════════════════
+2025-12-03 18:51:52.767 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=0, Total=1
+2025-12-03 18:51:56.163 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=4, Total=5
+2025-12-03 18:51:56.240 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=4, Total=5
+2025-12-03 18:52:03.693 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=4, Total=5
+2025-12-03 18:52:03.710 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=4, Total=5
+2025-12-03 18:52:03.722 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=4, Total=5
+2025-12-03 18:52:03.857 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=4, Total=5
+2025-12-03 18:52:14.705 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=4, Total=5
+2025-12-03 18:52:14.754 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=4, Total=5

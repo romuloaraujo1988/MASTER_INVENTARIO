@@ -4,6 +4,10 @@
         "source": "com.inventario.mobile.app-main-69:/layout/activity_offline_sync.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_patrimonio_detail.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_patrimonio_detail.xml"
+    },
+    {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_settings.xml",
         "source": "com.inventario.mobile.app-main-69:/layout/activity_settings.xml"
     },
@@ -94,6 +98,10 @@
     {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_statistics_charts.xml",
         "source": "com.inventario.mobile.app-main-69:/layout/fragment_statistics_charts.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_patrimonio_search.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_patrimonio_search.xml"
     },
     {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_timeline_coleta.xml",

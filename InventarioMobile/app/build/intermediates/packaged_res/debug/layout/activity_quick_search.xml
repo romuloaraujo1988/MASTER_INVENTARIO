@@ -161,6 +161,76 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <!-- Indicador de última sincronização -->
+            <LinearLayout
+                android:id="@+id/layoutSyncIndicator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/ivSyncIcon"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginEnd="4dp"
+                    android:src="@drawable/ic_sync"
+                    app:tint="@color/text_secondary" />
+
+                <TextView
+                    android:id="@+id/tvLastSync"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:textColor="@color/text_secondary"
+                    tools:text="Última sincronização: 27/11/2025 10:30" />
+
+            </LinearLayout>
+
+            <!-- Alerta de dados desatualizados -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardSyncWarning"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="8dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="#FFF3E0"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="0dp"
+                tools:visibility="visible">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="12dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginEnd="8dp"
+                        android:src="@drawable/ic_warning"
+                        app:tint="@android:color/holo_orange_dark" />
+
+                    <TextView
+                        android:id="@+id/tvSyncWarning"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Dados desatualizados. Sincronize para obter informações recentes."
+                        android:textAppearance="?attr/textAppearanceCaption"
+                        android:textColor="@android:color/holo_orange_dark" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Estatísticas da busca -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardSearchStats"

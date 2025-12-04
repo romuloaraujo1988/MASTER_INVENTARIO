@@ -395,6 +395,81 @@ public class ItemCompostoDAO {
     }
     
     /**
+     * Verifica se um item composto possui coletas em um inventário específico
+     * Retorna informações sobre as coletas existentes
+     * 
+     * @param idPatrimonio ID do patrimônio principal
+     * @param idInventario ID do inventário (null para buscar inventário ativo)
+     * @return Map com informações: temColetas, totalComponentes, componentesColetados, inventarioNome
+     */
+    public Map<String, Object> verificarColetasExistentes(int idPatrimonio, Integer idInventario) throws SQLException {
+        Map<String, Object> resultado = new HashMap<>();
+        resultado.put("temColetas", false);
+        resultado.put("totalComponentes", 0);
+        resultado.put("componentesColetados", 0);
+        resultado.put("inventarioNome", "");
+        
+        // Se não foi informado inventário, buscar o ativo
+        String sqlInventario = idInventario != null 
+            ? "SELECT id, nome FROM tabela_inventario WHERE id = ?"
+            : "SELECT id, nome FROM tabela_inventario WHERE status_inventario = 'EM_ANDAMENTO' LIMIT 1";
+        
+        int invId = 0;
+        String invNome = "";
+        
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            // Buscar inventário
+            try (PreparedStatement stmt = conn.prepareStatement(sqlInventario)) {
+                if (idInventario != null) {
+                    stmt.setInt(1, idInventario);
+                }
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        invId = rs.getInt("id");
+                        invNome = rs.getString("nome");
+                    }
+                }
+            }
+            
+            if (invId == 0) {
+                return resultado; // Sem inventário ativo
+            }
+            
+            resultado.put("inventarioNome", invNome);
+            
+            // Contar componentes e coletas
+            String sql = """
+                SELECT 
+                    COUNT(ic.id) as total_componentes,
+                    COUNT(cc.id) as componentes_coletados
+                FROM tabela_item_composto ic
+                LEFT JOIN tabela_coleta_componente cc 
+                    ON ic.id = cc.id_item_composto 
+                    AND cc.id_inventario = ?
+                WHERE ic.id_patrimonio_principal = ?
+                """;
+            
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, invId);
+                stmt.setInt(2, idPatrimonio);
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        int total = rs.getInt("total_componentes");
+                        int coletados = rs.getInt("componentes_coletados");
+                        
+                        resultado.put("totalComponentes", total);
+                        resultado.put("componentesColetados", coletados);
+                        resultado.put("temColetas", coletados > 0);
+                    }
+                }
+            }
+        }
+        
+        return resultado;
+    }
+    
+    /**
      * Lista todos os itens compostos cadastrados
      */
     public List<Map<String, Object>> listarItensCompostos() throws SQLException {

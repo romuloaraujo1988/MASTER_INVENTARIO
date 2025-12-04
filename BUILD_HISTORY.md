@@ -4,6 +4,224 @@ Este arquivo registra todas as compilações do APK Android para rastreabilidade
 
 ---
 
+## Build #027 - 04/12/2025
+
+- **Tipo:** Debug
+- **Versão:** 1.2.21
+- **Build Code:** 21
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~11 MB
+- **Mudanças:** 
+  - **Correção: App não respeitava biometria/PIN ao abrir**
+    - `SplashActivity`: Agora verifica se biometria ou PIN está habilitado
+    - Se habilitado, redireciona para `LoginActivity` com flag `require_local_auth`
+    - `LoginActivity`: Trata flag e inicia autenticação automaticamente
+    - Fluxo: Splash → verifica auth local → Login (biometria/PIN) → MainActivity
+  - **Comportamento anterior:** App ia direto para MainActivity se token válido
+  - **Comportamento novo:** Se biometria/PIN habilitado, exige autenticação local
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #026 - 04/12/2025
+
+- **Tipo:** Debug
+- **Versão:** 1.2.21
+- **Build Code:** 21
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~11 MB
+- **Mudanças:** 
+  - **Correção: Tela de detalhes do patrimônio exibia erro**
+    - `ObterDetalhePatrimonioUseCase`: Removida validação rígida de estados de conservação
+    - Antes: Exigia estados "BOM", "REGULAR", "RUIM", "INUTILIZADO" (incorretos)
+    - Agora: Aceita qualquer valor de estado (flexível)
+    - Estados críticos atualizados: "IRRECUPERÁVEL", "ANTIECONÔMICO"
+  - **Estados de conservação corretos do sistema:**
+    - BOM, OCIOSO, ANTIECONÔMICO, RECUPERÁVEL, IRRECUPERÁVEL
+  - **Feature: Long press para copiar número do patrimônio**
+    - `PatrimonioSearchAdapter`: Adicionado `onLongClickListener`
+    - Ao manter pressionado um item na busca rápida, copia o número para clipboard
+    - Feedback tátil (vibração) ao copiar
+    - Toast de confirmação "Número XXXXX copiado!"
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #025 - 04/12/2025
+
+- **Tipo:** Debug
+- **Versão:** 1.2.21
+- **Build Code:** 21
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~11 MB
+- **Mudanças:** 
+  - **Correção de Coroutines na Busca Rápida:**
+    - Adicionado tratamento de `CancellationException` no `BuscarPatrimoniosUseCase`
+    - Adicionado tratamento de `CancellationException` no `QuickSearchViewModel`
+    - Re-throw de `CancellationException` para não quebrar fluxo de coroutines
+    - Logs informativos para cancelamentos (debounce/navegação)
+    - Correção de tipo nullable em `temDivergencia`
+  - **Benefícios:**
+    - Evita erros de "Job was cancelled" durante debounce
+    - Navegação entre telas não causa crashes
+    - Melhor tratamento de lifecycle do ViewModel
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #024 - 03/12/2025
+
+- **Tipo:** Debug
+- **Versão:** 1.2.21
+- **Build Code:** 21
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~11 MB
+- **Mudanças:** 
+  - **Busca Rápida com Servidor (Server-First):**
+    - **Backend:** Novo endpoint `GET /api/mobile/patrimonio/buscar`
+      - Parâmetros: `query`, `filtro` (ALL/COLETADOS/PENDENTES/DIVERGENCIAS), `inventarioId`, `limit`
+      - Busca por número, descrição, sala ou responsável
+      - Retorna status de coleta e divergências
+    - **Backend:** Novo método `buscarPorQueryTexto()` no `PatrimonioDAO.java`
+    - **Backend:** Novo método `buscarPorQuery()` no `MobilePatrimonioService.java`
+    - **Backend:** Campo `temDivergencia` adicionado ao `MobilePatrimonioDTO.java`
+    - **Android:** Endpoint `buscarPorQuery()` adicionado ao `PatrimonioApi.kt`
+    - **Android:** `BuscarPatrimoniosUseCase` atualizado para usar servidor com fallback local
+    - **Android:** Campo `temDivergencia` adicionado ao `MobilePatrimonioDto.kt`
+  - **Estratégia:** Servidor primeiro, fallback para banco local se offline
+- **Status:** ✅ Sucesso
+- **Requer:** Nova versão do servidor (compilar com `mvnw compile`)
+
+---
+
+## Build #023 - 03/12/2025
+
+- **Tipo:** Debug
+- **Versão:** 1.2.21
+- **Build Code:** 21
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** 11.13 MB
+- **Mudanças:** 
+  - **Correção IP padrão:** Atualizado para `10.14.250.214` em todos os arquivos
+    - `ServerValidator.kt` - Lista de IPs sugeridos e mensagem de ajuda
+    - `NetworkDiagnosticActivity.kt` - IP de fallback para diagnóstico
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #022 - 03/12/2025
+
+- **Tipo:** Debug
+- **Versão:** 1.2.21
+- **Build Code:** 21
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** 11.13 MB
+- **Mudanças:** 
+  - **Link do menu para Busca Rápida:**
+    - `MainActivity.handleNavigationItemSelected()` - Adicionado handler para `nav_quick_search`
+    - Menu "Busca Rápida" agora abre `QuickSearchActivity`
+    - Menu "Busca por Voz" abre `QuickSearchActivity` com busca por voz automática
+    - `QuickSearchActivity.handleIntent()` - Suporte ao intent `START_VOICE_SEARCH`
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #021 - 03/12/2025
+
+- **Tipo:** Debug
+- **Versão:** 1.2.21
+- **Build Code:** 21
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** 11.13 MB
+- **Mudanças:** 
+  - **Atualização de versão:** 1.2.18 → 1.2.21
+  - Feature Busca Rápida de Patrimônio completa
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #020 - 03/12/2025
+
+- **Tipo:** Debug
+- **Versão:** 1.2.18
+- **Build Code:** 18
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~11 MB
+- **Mudanças:** 
+  - **Feature: Busca Rápida de Patrimônio**
+    - Nova `QuickSearchActivity` com busca por número, descrição ou sala
+    - Nova `PatrimonioDetailActivity` para exibir detalhes completos do patrimônio
+    - `QuickSearchViewModel` com debounce e filtros (coletados, pendentes, divergências)
+    - `PatrimonioDetailViewModel` para carregar detalhes do patrimônio
+    - `BuscarPatrimoniosUseCase` para busca com filtros
+    - Queries no `PatrimonioDao`: `buscarPorQuery`, `buscarColetadosPorQuery`, `buscarPendentesPorQuery`, `buscarDivergenciasPorQuery`
+    - Layouts: `activity_quick_search.xml`, `activity_patrimonio_detail.xml`
+    - Adapter: `PatrimonioSearchAdapter` para lista de resultados
+    - Indicador de última sincronização e alerta de dados desatualizados
+    - Busca por voz integrada
+  - **Correções:**
+    - `PatrimonioDao.buscarDivergenciasPorQuery` - Corrigido nome da coluna `c.nomeSala` (era `c.localizacaoEncontrada`)
+    - `PatrimonioRepositoryAdapter` - Adicionados métodos de busca rápida
+    - `DatabaseModule` - Adicionado provider para `SincronizacaoDao`
+    - Criado drawable `ic_visibility.xml`
+    - Criado drawable `bg_warning.xml`
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #019 - 03/12/2025
+
+- **Tipo:** Debug
+- **Versão:** 1.2.18
+- **Build Code:** 18
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~11 MB
+- **Mudanças:** 
+  - **Correção de versão:** Atualizado versionName e versionCode no build.gradle
+  - **Correção de versão na UI:** Atualizado strings.xml para exibir "Versão 1.2.18" na splash screen e login
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #018 - 03/12/2025
+
+- **Tipo:** Debug
+- **Versão:** 1.2.18
+- **Build Code:** 18
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~11 MB
+- **Mudanças:** 
+  - **Correção: Exibição de dados de coleta no modo offline**
+    - `LocalDataSourceStrategy.getPatrimonios()` - Agora usa campos da entity (coletadoPor, dataColeta, observacoesColeta)
+    - `LocalDataSourceStrategy.buscarPorDescricaoNaoColetados()` - Mesma correção
+    - `LocalDataSourceStrategy.buscarPorSala()` - Mesma correção
+    - Formatação de data da coleta (dd/MM/yyyy HH:mm) em todos os métodos
+    - Campos adicionais: marca, modelo, numeroSerie, valor, setorId, setorNome
+  - **Resultado:** Scanner e Coleta Manual agora exibem corretamente os dados de itens já coletados
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #017 - 03/12/2025 
+
+- **Tipo:** Debug
+- **Versão:** 2.1.0
+- **Build Code:** 17
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~11 MB
+- **Mudanças:** 
+  - **Correção crítica: Modo Offline no Scanner (Coleta Rápida)**
+    - `ScannerViewModel` agora usa `BuscarPatrimonioUseCase` (Clean Architecture)
+    - Busca de patrimônios funciona offline igual à coleta manual
+    - Injeção do `BuscarPatrimonioUseCase` via Hilt na `ScannerActivity`
+    - `ScannerViewModelFactory` atualizada para receber o novo Use Case
+    - Método `convertToDataModel()` para converter domain → data model
+  - **Unificação:** Scanner e Coleta Manual agora usam a mesma estratégia offline-first
+  - **Logs:** Adicionados logs detalhados para debug do modo offline
+- **Status:** ✅ Sucesso
+
+---
+
 ## Build #016 - 02/12/2025 19:31
 
 - **Tipo:** Debug

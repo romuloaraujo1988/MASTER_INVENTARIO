@@ -84,7 +84,7 @@ class NetworkDiagnosticActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val result = Android14NetworkConfig.testServerConnectivity(
-                    serverConfigManager.getServerIp() ?: "192.168.10.107",
+                    serverConfigManager.getServerIp() ?: "10.14.250.214",
                     serverConfigManager.getServerPort(),
                     10000
                 )

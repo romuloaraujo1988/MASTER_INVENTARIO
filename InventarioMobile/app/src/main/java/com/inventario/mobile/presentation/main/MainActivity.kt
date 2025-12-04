@@ -254,9 +254,17 @@ class MainActivity : AppCompatActivity() {
                 true
             }
             
+            R.id.nav_quick_search -> {
+                val intent = Intent(this, com.inventario.mobile.presentation.search.QuickSearchActivity::class.java)
+                startActivity(intent)
+                true
+            }
+            
             R.id.nav_voice_search -> {
-                // TODO: Abrir busca por voz
-                Snackbar.make(binding.root, "Use o botão de microfone no Dashboard", Snackbar.LENGTH_SHORT).show()
+                // Abrir busca rápida com foco no campo de busca por voz
+                val intent = Intent(this, com.inventario.mobile.presentation.search.QuickSearchActivity::class.java)
+                intent.putExtra("START_VOICE_SEARCH", true)
+                startActivity(intent)
                 true
             }
             

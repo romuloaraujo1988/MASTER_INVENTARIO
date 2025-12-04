@@ -1036,7 +1036,7 @@ public class ColetaDAO {
         } else {
             sql = "SELECT c.*, u.nome_completo as nome_coletor " +
                   "FROM " + getColetaTableName() + " c " +
-                  "LEFT JOIN " + getParticipanteTableName() + " pi ON c.id_participante_inventario = pi.id " +
+                  "LEFT JOIN " + getParticipanteTableName() + " pi ON c.id_participante_inventario = pi.id_participante " +
                   "LEFT JOIN tabela_usuario u ON pi.id_usuario = u.id " +
                   "WHERE c.id_inventario = ? AND c.id_patrimonio = ? AND c.status_coleta = 'COLETADO' " +
                   "LIMIT 1";

@@ -94,6 +94,9 @@ public class MobilePatrimonioDTO {
     @JsonProperty("estadoEncontrado")
     private String estadoEncontrado;
     
+    @JsonProperty("temDivergencia")
+    private Boolean temDivergencia = false;
+    
     // Construtores
     public MobilePatrimonioDTO() {}
     
@@ -296,5 +299,13 @@ public class MobilePatrimonioDTO {
     
     public void setEstadoEncontrado(String estadoEncontrado) {
         this.estadoEncontrado = estadoEncontrado;
+    }
+    
+    public Boolean getTemDivergencia() {
+        return temDivergencia;
+    }
+
+    public void setTemDivergencia(Boolean temDivergencia) {
+        this.temDivergencia = temDivergencia;
     }
 }

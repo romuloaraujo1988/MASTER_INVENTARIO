@@ -1141,6 +1141,71 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
     }
     
     /**
+     * MÉTODO: Busca patrimônios por query de texto livre
+     * Busca por número, descrição ou nome da sala
+     * 
+     * @param query termo de busca (já em lowercase)
+     * @param limit limite de resultados
+     * @return lista de patrimônios encontrados
+     */
+    public List<Patrimonio> buscarPorQueryTexto(String query, int limit) throws SQLException {
+        String sql = "SELECT p.*, " +
+                    "COALESCE(s.DESCRICAO, s.NUMERO_SALA) as nome_sala, " +
+                    "r.NOME as nome_responsavel " +
+                    "FROM TABELA_PATRIMONIO p " +
+                    "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
+                    "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
+                    "WHERE (p.STATUS IS NULL OR UPPER(p.STATUS) = 'ATIVO' OR p.STATUS = '') " +
+                    "AND (" +
+                    "    LOWER(p.NUMERO) LIKE ? " +
+                    "    OR LOWER(p.DESCRICAO) LIKE ? " +
+                    "    OR LOWER(COALESCE(s.DESCRICAO, s.NUMERO_SALA, '')) LIKE ? " +
+                    "    OR LOWER(COALESCE(r.NOME, '')) LIKE ? " +
+                    ") " +
+                    "ORDER BY p.NUMERO " +
+                    "LIMIT ?";
+        
+        List<Patrimonio> resultado = new ArrayList<>();
+        String queryPattern = "%" + query + "%";
+        
+        try (Connection conn = com.inventario.util.ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, queryPattern);
+            stmt.setString(2, queryPattern);
+            stmt.setString(3, queryPattern);
+            stmt.setString(4, queryPattern);
+            stmt.setInt(5, limit);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Patrimonio p = mapResultSetToEntity(rs);
+                    // Garantir que nomeSala e nomeResponsavel sejam populados
+                    try {
+                        String nomeSala = rs.getString("nome_sala");
+                        if (nomeSala != null && !nomeSala.isEmpty()) {
+                            p.setNomeSala(nomeSala);
+                        }
+                    } catch (SQLException e) {
+                        // Ignorar se coluna não existir
+                    }
+                    try {
+                        String nomeResponsavel = rs.getString("nome_responsavel");
+                        if (nomeResponsavel != null && !nomeResponsavel.isEmpty()) {
+                            p.setNomeResponsavel(nomeResponsavel);
+                        }
+                    } catch (SQLException e) {
+                        // Ignorar se coluna não existir
+                    }
+                    resultado.add(p);
+                }
+            }
+        }
+        
+        return resultado;
+    }
+
+    /**
      * MÉTODO OTIMIZADO: Busca descrições NÃO coletadas agrupadas
      * Usado para coleta por descrição (sem etiqueta)
      */

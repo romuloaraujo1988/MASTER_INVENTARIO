@@ -104,6 +104,7 @@ drawable bg_badge
 drawable bg_error_light
 drawable bg_info_coleta
 drawable bg_spinner
+drawable bg_warning
 drawable circle_background
 drawable circle_background_primary
 drawable error_background
@@ -162,6 +163,7 @@ drawable ic_sync_error
 drawable ic_today
 drawable ic_trending_up
 drawable ic_update
+drawable ic_visibility
 drawable ic_warning
 drawable ic_warning_circle
 drawable info_background
@@ -211,6 +213,7 @@ id btnClear
 id btnClearData
 id btnClearSearch
 id btnClose
+id btnColetar
 id btnCollect
 id btnConfirmar
 id btnDecreaseSyncCount
@@ -255,6 +258,7 @@ id btnTestServer
 id btnTestSync
 id btnTirarFoto
 id btnUsarSalaFixada
+id btnVerColeta
 id btnViewCollections
 id btnViewPending
 id btnViewStatistics
@@ -291,6 +295,7 @@ id cardStatisticsSummary
 id cardStats
 id cardSync
 id cardSyncProgress
+id cardSyncWarning
 id chartEvolucao
 id chartProgresso
 id chartStatus
@@ -356,6 +361,7 @@ id ivLogo
 id ivMicAnimation
 id ivStatus
 id ivStatusIcon
+id ivSyncIcon
 id ivUserAvatar
 id layoutButtons
 id layoutDicas
@@ -375,9 +381,11 @@ id layoutOfflineIndicator
 id layoutOfflineStatus
 id layoutPatrimonioInfo
 id layoutResponsavel
+id layoutSala
 id layoutSalaFixada
 id layoutSelectSala
 id layoutSyncCount
+id layoutSyncIndicator
 id layoutSyncInterval
 id layoutTemporais
 id layoutUserInfo
@@ -470,6 +478,7 @@ id textViewColetadosCount
 id textViewCount
 id textViewDataColeta
 id textViewDescricao
+id textViewDivergencia
 id textViewEmpty
 id textViewError
 id textViewEstadoEncontrado
@@ -517,6 +526,7 @@ id tvConnectionType
 id tvCurrentCollectionCount
 id tvDataColeta
 id tvDescricao
+id tvDivergencia
 id tvDivergencias
 id tvEmpty
 id tvEmptyMessage
@@ -524,7 +534,9 @@ id tvEndOfList
 id tvErroSincronizacao
 id tvError
 id tvErrorCount
+id tvErrorMessage
 id tvEstado
+id tvEstadoEncontrado
 id tvFotoStatus
 id tvGraficoError
 id tvHorario
@@ -540,14 +552,17 @@ id tvLastSyncDetails
 id tvLastSyncResult
 id tvLastSyncStatus
 id tvLocalizacao
+id tvLocalizacaoEncontrada
 id tvMarca
 id tvMessage
 id tvModelo
 id tvNetworkStatus
 id tvNoOfflineMethod
 id tvNoResultsMessage
+id tvNumero
 id tvNumeroSerie
 id tvObservacoes
+id tvObservacoesColeta
 id tvOfflineDetails
 id tvOfflineInfo
 id tvOfflineMessage
@@ -590,6 +605,7 @@ id tvSalasCount
 id tvSavedUser
 id tvScanInstruction
 id tvSearchTime
+id tvSetor
 id tvStatus
 id tvStatusColeta
 id tvStatusMessage
@@ -602,6 +618,7 @@ id tvSummaryPendentes
 id tvSyncCount
 id tvSyncInterval
 id tvSyncProgress
+id tvSyncWarning
 id tvSyncedCount
 id tvTitle
 id tvTotal
@@ -645,6 +662,7 @@ layout activity_manual_collection
 layout activity_network_diagnostic
 layout activity_offline_manager
 layout activity_offline_sync
+layout activity_patrimonio_detail
 layout activity_pending_collections
 layout activity_quick_search
 layout activity_sala_selection
@@ -680,6 +698,7 @@ layout item_estatisticas_sala
 layout item_load_state
 layout item_loading
 layout item_patrimonio
+layout item_patrimonio_search
 layout item_pending_coleta
 layout item_sala
 layout item_sala_dropdown

@@ -161,10 +161,20 @@ class PreferencesManager(context: Context) {
     fun getDispositivoStatus(): String = getString("dispositivo_status", "PENDENTE")
     fun saveDispositivoStatus(status: String) = putString("dispositivo_status", status)
     fun saveTokens(accessToken: String, refreshToken: String, expiresIn: Long) {
+        val now = System.currentTimeMillis()
         putString("access_token", accessToken)
         putString("refresh_token", refreshToken)
-        putLong("token_expires_at", System.currentTimeMillis() + (expiresIn * 1000))
+        putLong("token_expires_at", now + (expiresIn * 1000))
         putBoolean("token_valid", true)
+        
+        // Salvar timestamp de login apenas se for um novo login (não renovação)
+        // Se já existe um login_timestamp recente (menos de 1 hora), não sobrescrever
+        val existingLoginTimestamp = getLong("login_timestamp", 0L)
+        val oneHour = 60 * 60 * 1000L
+        if (existingLoginTimestamp == 0L || (now - existingLoginTimestamp) > oneHour) {
+            putLong("login_timestamp", now)
+            android.util.Log.d("PreferencesManager", "✓ Novo login registrado em: ${java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault()).format(java.util.Date(now))}")
+        }
     }
     fun saveUserData(usuario: Any) {
         // Implementação simplificada - pode ser expandida conforme necessário
@@ -528,6 +538,40 @@ class PreferencesManager(context: Context) {
     fun isTokenExpired(): Boolean {
         val expiresAt = getLong("token_expires_at", 0L)
         return System.currentTimeMillis() >= expiresAt
+    }
+    
+    /**
+     * Obtém timestamp do último login bem-sucedido
+     */
+    fun getLoginTimestamp(): Long {
+        return getLong("login_timestamp", 0L)
+    }
+    
+    /**
+     * Salva timestamp do login
+     */
+    fun setLoginTimestamp(timestamp: Long) {
+        putLong("login_timestamp", timestamp)
+    }
+    
+    /**
+     * Obtém tempo restante do token em formato legível
+     */
+    fun getTokenTimeRemaining(): String {
+        val expiresAt = getLong("token_expires_at", 0L)
+        val now = System.currentTimeMillis()
+        val remaining = expiresAt - now
+        
+        if (remaining <= 0) return "Expirado"
+        
+        val hours = remaining / (60 * 60 * 1000)
+        val minutes = (remaining % (60 * 60 * 1000)) / (60 * 1000)
+        
+        return when {
+            hours > 24 -> "${hours / 24} dias"
+            hours > 0 -> "${hours}h ${minutes}min"
+            else -> "${minutes} minutos"
+        }
     }
     
     /**

@@ -68,4 +68,9 @@ object DatabaseModule {
     fun provideDashboardDao(database: AppDatabase): DashboardDao {
         return database.dashboardDao()
     }
+    
+    @Provides
+    fun provideSincronizacaoDao(database: AppDatabase): SincronizacaoDao {
+        return database.sincronizacaoDao()
+    }
 }

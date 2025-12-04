@@ -204,4 +204,87 @@ interface PatrimonioDao {
     @Query("SELECT COUNT(*) FROM patrimonio WHERE idSala = :salaId AND coletado = 0")
     suspend fun contarNaoColetadosPorSala(salaId: Int): Int
     
+    // ========================================
+    // Queries para Busca Rápida de Patrimônio
+    // ========================================
+    
+    /**
+     * Busca patrimônios por query (número, descrição ou nome da sala)
+     * Retorna todos os patrimônios que correspondem ao termo de busca
+     * 
+     * @param query Termo de busca
+     * @return Lista de patrimônios que correspondem à busca (máximo 100)
+     * @see Requirements 1.1
+     */
+    @Query("""
+        SELECT * FROM patrimonio 
+        WHERE numeroPatrimonio LIKE '%' || :query || '%' 
+           OR descricao LIKE '%' || :query || '%'
+           OR nomeSala LIKE '%' || :query || '%'
+        ORDER BY numeroPatrimonio ASC
+        LIMIT 100
+    """)
+    suspend fun buscarPorQuery(query: String): List<PatrimonioEntity>
+    
+    /**
+     * Busca patrimônios coletados por query
+     * Filtra apenas patrimônios que já foram coletados
+     * 
+     * @param query Termo de busca
+     * @return Lista de patrimônios coletados que correspondem à busca (máximo 100)
+     * @see Requirements 3.1
+     */
+    @Query("""
+        SELECT * FROM patrimonio 
+        WHERE (numeroPatrimonio LIKE '%' || :query || '%' 
+           OR descricao LIKE '%' || :query || '%'
+           OR nomeSala LIKE '%' || :query || '%')
+           AND coletado = 1
+        ORDER BY numeroPatrimonio ASC
+        LIMIT 100
+    """)
+    suspend fun buscarColetadosPorQuery(query: String): List<PatrimonioEntity>
+    
+    /**
+     * Busca patrimônios pendentes (não coletados) por query
+     * Filtra apenas patrimônios que ainda não foram coletados
+     * 
+     * @param query Termo de busca
+     * @return Lista de patrimônios pendentes que correspondem à busca (máximo 100)
+     * @see Requirements 3.2
+     */
+    @Query("""
+        SELECT * FROM patrimonio 
+        WHERE (numeroPatrimonio LIKE '%' || :query || '%' 
+           OR descricao LIKE '%' || :query || '%'
+           OR nomeSala LIKE '%' || :query || '%')
+           AND coletado = 0
+        ORDER BY numeroPatrimonio ASC
+        LIMIT 100
+    """)
+    suspend fun buscarPendentesPorQuery(query: String): List<PatrimonioEntity>
+    
+    /**
+     * Busca patrimônios com divergência por query
+     * Divergência: sala da coleta diferente da sala cadastrada no patrimônio
+     * 
+     * @param query Termo de busca
+     * @param inventarioId ID do inventário ativo
+     * @return Lista de patrimônios com divergência (máximo 100)
+     * @see Requirements 3.3
+     */
+    @Query("""
+        SELECT p.* FROM patrimonio p
+        INNER JOIN coleta c ON c.idPatrimonio = p.id
+        WHERE (p.numeroPatrimonio LIKE '%' || :query || '%' 
+           OR p.descricao LIKE '%' || :query || '%'
+           OR p.nomeSala LIKE '%' || :query || '%')
+           AND c.idInventario = :inventarioId
+           AND c.nomeSala IS NOT NULL
+           AND c.nomeSala != p.nomeSala
+        ORDER BY p.numeroPatrimonio ASC
+        LIMIT 100
+    """)
+    suspend fun buscarDivergenciasPorQuery(query: String, inventarioId: Int): List<PatrimonioEntity>
+    
 }

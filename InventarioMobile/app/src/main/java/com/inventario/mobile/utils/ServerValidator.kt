@@ -235,7 +235,7 @@ object ServerValidator {
      */
     fun suggestCommonIps(): List<String> {
         return listOf(
-            "10.14.250.238",  // IP atual do servidor
+            "10.14.250.214",  // IP atual do servidor
             "192.168.1.1",
             "192.168.0.1",
             "192.168.1.100",
@@ -257,7 +257,7 @@ object ServerValidator {
             
             2. Configure no app:
                - Vá em Configurações
-               - Digite o IP do servidor (ex: 10.14.250.238)
+               - Digite o IP do servidor (ex: 10.14.250.214)
                - Porta padrão: 8081
             
             3. Teste a conexão:

@@ -93,4 +93,21 @@ interface PatrimonioApi {
         @Path("descricao") descricao: String,
         @Query("inventarioId") inventarioId: Int? = null
     ): ApiResponse<List<MobilePatrimonioDto>>
+    
+    /**
+     * Busca rápida de patrimônios por query de texto livre
+     * Busca por número, descrição, nome da sala ou responsável
+     * 
+     * @param query termo de busca (mínimo 3 caracteres)
+     * @param filtro filtro de status: ALL, COLETADOS, PENDENTES, DIVERGENCIAS
+     * @param inventarioId ID do inventário (opcional)
+     * @param limit limite de resultados (default: 100)
+     */
+    @GET("api/mobile/patrimonio/buscar")
+    suspend fun buscarPorQuery(
+        @Query("query") query: String,
+        @Query("filtro") filtro: String = "ALL",
+        @Query("inventarioId") inventarioId: Int? = null,
+        @Query("limit") limit: Int = 100
+    ): ApiResponse<List<MobilePatrimonioDto>>
 }

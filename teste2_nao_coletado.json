@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "data": {
+    "inventarioId": 2,
+    "duplicado": false,
+    "mensagem": "Patrimônio pode ser coletado",
+    "podeRegistrar": true,
+    "numeroPatrimonio": "3241",
+    "patrimonioId": 2
+  },
+  "message": "Patrimônio pode ser coletado"
+}

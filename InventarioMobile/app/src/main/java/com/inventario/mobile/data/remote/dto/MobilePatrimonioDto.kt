@@ -80,7 +80,10 @@ data class MobilePatrimonioDto(
     val localizacaoEncontrada: String? = null,
     
     @SerializedName("estadoEncontrado")
-    val estadoEncontrado: String? = null
+    val estadoEncontrado: String? = null,
+    
+    @SerializedName("temDivergencia")
+    val temDivergencia: Boolean? = false
 ) {
     /**
      * Converte para modelo de domínio

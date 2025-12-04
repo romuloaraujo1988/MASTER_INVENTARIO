@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -42,6 +43,9 @@ public final class ActivityQuickSearchBinding implements ViewBinding {
   public final MaterialCardView cardSearchStats;
 
   @NonNull
+  public final MaterialCardView cardSyncWarning;
+
+  @NonNull
   public final Chip chipColetados;
 
   @NonNull
@@ -60,10 +64,16 @@ public final class ActivityQuickSearchBinding implements ViewBinding {
   public final EditText etSearch;
 
   @NonNull
+  public final ImageView ivSyncIcon;
+
+  @NonNull
   public final LinearLayout layoutEmptyState;
 
   @NonNull
   public final LinearLayout layoutNoResults;
+
+  @NonNull
+  public final LinearLayout layoutSyncIndicator;
 
   @NonNull
   public final ProgressBar progressBar;
@@ -75,6 +85,9 @@ public final class ActivityQuickSearchBinding implements ViewBinding {
   public final Toolbar toolbar;
 
   @NonNull
+  public final TextView tvLastSync;
+
+  @NonNull
   public final TextView tvNoResultsMessage;
 
   @NonNull
@@ -83,35 +96,45 @@ public final class ActivityQuickSearchBinding implements ViewBinding {
   @NonNull
   public final TextView tvSearchTime;
 
+  @NonNull
+  public final TextView tvSyncWarning;
+
   private ActivityQuickSearchBinding(@NonNull CoordinatorLayout rootView,
       @NonNull AppBarLayout appBarLayout, @NonNull ImageButton btnClearSearch,
       @NonNull ImageButton btnVoiceSearch, @NonNull MaterialCardView cardSearchStats,
-      @NonNull Chip chipColetados, @NonNull Chip chipDivergencias,
-      @NonNull Chip chipFiltrosAvancados, @NonNull ChipGroup chipGroupFilters,
-      @NonNull Chip chipPendentes, @NonNull EditText etSearch,
-      @NonNull LinearLayout layoutEmptyState, @NonNull LinearLayout layoutNoResults,
+      @NonNull MaterialCardView cardSyncWarning, @NonNull Chip chipColetados,
+      @NonNull Chip chipDivergencias, @NonNull Chip chipFiltrosAvancados,
+      @NonNull ChipGroup chipGroupFilters, @NonNull Chip chipPendentes, @NonNull EditText etSearch,
+      @NonNull ImageView ivSyncIcon, @NonNull LinearLayout layoutEmptyState,
+      @NonNull LinearLayout layoutNoResults, @NonNull LinearLayout layoutSyncIndicator,
       @NonNull ProgressBar progressBar, @NonNull RecyclerView rvSearchResults,
-      @NonNull Toolbar toolbar, @NonNull TextView tvNoResultsMessage,
-      @NonNull TextView tvResultCount, @NonNull TextView tvSearchTime) {
+      @NonNull Toolbar toolbar, @NonNull TextView tvLastSync, @NonNull TextView tvNoResultsMessage,
+      @NonNull TextView tvResultCount, @NonNull TextView tvSearchTime,
+      @NonNull TextView tvSyncWarning) {
     this.rootView = rootView;
     this.appBarLayout = appBarLayout;
     this.btnClearSearch = btnClearSearch;
     this.btnVoiceSearch = btnVoiceSearch;
     this.cardSearchStats = cardSearchStats;
+    this.cardSyncWarning = cardSyncWarning;
     this.chipColetados = chipColetados;
     this.chipDivergencias = chipDivergencias;
     this.chipFiltrosAvancados = chipFiltrosAvancados;
     this.chipGroupFilters = chipGroupFilters;
     this.chipPendentes = chipPendentes;
     this.etSearch = etSearch;
+    this.ivSyncIcon = ivSyncIcon;
     this.layoutEmptyState = layoutEmptyState;
     this.layoutNoResults = layoutNoResults;
+    this.layoutSyncIndicator = layoutSyncIndicator;
     this.progressBar = progressBar;
     this.rvSearchResults = rvSearchResults;
     this.toolbar = toolbar;
+    this.tvLastSync = tvLastSync;
     this.tvNoResultsMessage = tvNoResultsMessage;
     this.tvResultCount = tvResultCount;
     this.tvSearchTime = tvSearchTime;
+    this.tvSyncWarning = tvSyncWarning;
   }
 
   @Override
@@ -165,6 +188,12 @@ public final class ActivityQuickSearchBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.cardSyncWarning;
+      MaterialCardView cardSyncWarning = ViewBindings.findChildViewById(rootView, id);
+      if (cardSyncWarning == null) {
+        break missingId;
+      }
+
       id = R.id.chipColetados;
       Chip chipColetados = ViewBindings.findChildViewById(rootView, id);
       if (chipColetados == null) {
@@ -201,6 +230,12 @@ public final class ActivityQuickSearchBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.ivSyncIcon;
+      ImageView ivSyncIcon = ViewBindings.findChildViewById(rootView, id);
+      if (ivSyncIcon == null) {
+        break missingId;
+      }
+
       id = R.id.layoutEmptyState;
       LinearLayout layoutEmptyState = ViewBindings.findChildViewById(rootView, id);
       if (layoutEmptyState == null) {
@@ -210,6 +245,12 @@ public final class ActivityQuickSearchBinding implements ViewBinding {
       id = R.id.layoutNoResults;
       LinearLayout layoutNoResults = ViewBindings.findChildViewById(rootView, id);
       if (layoutNoResults == null) {
+        break missingId;
+      }
+
+      id = R.id.layoutSyncIndicator;
+      LinearLayout layoutSyncIndicator = ViewBindings.findChildViewById(rootView, id);
+      if (layoutSyncIndicator == null) {
         break missingId;
       }
 
@@ -231,6 +272,12 @@ public final class ActivityQuickSearchBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.tvLastSync;
+      TextView tvLastSync = ViewBindings.findChildViewById(rootView, id);
+      if (tvLastSync == null) {
+        break missingId;
+      }
+
       id = R.id.tvNoResultsMessage;
       TextView tvNoResultsMessage = ViewBindings.findChildViewById(rootView, id);
       if (tvNoResultsMessage == null) {
@@ -249,11 +296,18 @@ public final class ActivityQuickSearchBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.tvSyncWarning;
+      TextView tvSyncWarning = ViewBindings.findChildViewById(rootView, id);
+      if (tvSyncWarning == null) {
+        break missingId;
+      }
+
       return new ActivityQuickSearchBinding((CoordinatorLayout) rootView, appBarLayout,
-          btnClearSearch, btnVoiceSearch, cardSearchStats, chipColetados, chipDivergencias,
-          chipFiltrosAvancados, chipGroupFilters, chipPendentes, etSearch, layoutEmptyState,
-          layoutNoResults, progressBar, rvSearchResults, toolbar, tvNoResultsMessage, tvResultCount,
-          tvSearchTime);
+          btnClearSearch, btnVoiceSearch, cardSearchStats, cardSyncWarning, chipColetados,
+          chipDivergencias, chipFiltrosAvancados, chipGroupFilters, chipPendentes, etSearch,
+          ivSyncIcon, layoutEmptyState, layoutNoResults, layoutSyncIndicator, progressBar,
+          rvSearchResults, toolbar, tvLastSync, tvNoResultsMessage, tvResultCount, tvSearchTime,
+          tvSyncWarning);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

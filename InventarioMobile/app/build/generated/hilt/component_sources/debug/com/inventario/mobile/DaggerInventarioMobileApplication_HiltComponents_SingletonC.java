@@ -27,17 +27,22 @@ import com.inventario.mobile.data.local.dao.LogColetaDao;
 import com.inventario.mobile.data.local.dao.PatrimonioDao;
 import com.inventario.mobile.data.local.dao.ResponsavelDao;
 import com.inventario.mobile.data.local.dao.SalaDao;
+import com.inventario.mobile.data.local.dao.SincronizacaoDao;
 import com.inventario.mobile.data.local.database.AppDatabase;
 import com.inventario.mobile.data.mapper.ColetaMapper;
 import com.inventario.mobile.data.mapper.DashboardMapper;
+import com.inventario.mobile.data.mapper.PatrimonioConsultaMapper;
+import com.inventario.mobile.data.mapper.PatrimonioDetalheMapper;
 import com.inventario.mobile.data.migration.ColetaMigration;
 import com.inventario.mobile.data.remote.api.ApiService;
 import com.inventario.mobile.data.remote.api.ColetaApi;
 import com.inventario.mobile.data.remote.api.OfflineSyncApi;
 import com.inventario.mobile.data.remote.api.PatrimonioApi;
+import com.inventario.mobile.data.remote.api.PatrimonioConsultaApi;
 import com.inventario.mobile.data.repository.ColetaRepositoryImpl;
 import com.inventario.mobile.data.repository.DashboardRepositoryImpl;
 import com.inventario.mobile.data.repository.InventarioRepository;
+import com.inventario.mobile.data.repository.PatrimonioConsultaRepositoryImpl;
 import com.inventario.mobile.data.repository.PatrimonioRepositoryAdapter;
 import com.inventario.mobile.data.repository.PatrimonioRepositoryImpl;
 import com.inventario.mobile.data.repository.SalaRepositoryImpl;
@@ -54,6 +59,7 @@ import com.inventario.mobile.di.ApiModule_ProvideOfflineSyncApiFactory;
 import com.inventario.mobile.di.ApiModule_ProvideOkHttpClientFactory;
 import com.inventario.mobile.di.ApiModule_ProvidePatrimonioApiFactory;
 import com.inventario.mobile.di.ApiModule_ProvidePatrimonioApiLegacyFactory;
+import com.inventario.mobile.di.ApiModule_ProvidePatrimonioConsultaApiFactory;
 import com.inventario.mobile.di.ApiModule_ProvideRetrofitFactory;
 import com.inventario.mobile.di.ApiModule_ProvideSalaApiFactory;
 import com.inventario.mobile.di.AppModule;
@@ -70,8 +76,11 @@ import com.inventario.mobile.di.DatabaseModule_ProvideLogColetaDaoFactory;
 import com.inventario.mobile.di.DatabaseModule_ProvidePatrimonioDaoFactory;
 import com.inventario.mobile.di.DatabaseModule_ProvideResponsavelDaoFactory;
 import com.inventario.mobile.di.DatabaseModule_ProvideSalaDaoFactory;
+import com.inventario.mobile.di.DatabaseModule_ProvideSincronizacaoDaoFactory;
 import com.inventario.mobile.di.MapperModule;
 import com.inventario.mobile.di.MapperModule_ProvideColetaMapperFactory;
+import com.inventario.mobile.di.MapperModule_ProvidePatrimonioConsultaMapperFactory;
+import com.inventario.mobile.di.MapperModule_ProvidePatrimonioDetalheMapperFactory;
 import com.inventario.mobile.di.NotificationModule;
 import com.inventario.mobile.di.NotificationModule_ProvideNetworkMonitorFactory;
 import com.inventario.mobile.di.NotificationModule_ProvideOfflineNotificationManagerFactory;
@@ -82,6 +91,7 @@ import com.inventario.mobile.di.UseCaseModule_ProvideRegistrarColetaUseCaseFacto
 import com.inventario.mobile.di.UtilModule;
 import com.inventario.mobile.di.UtilModule_ProvideNetworkCheckerFactory;
 import com.inventario.mobile.domain.repository.DashboardRepository;
+import com.inventario.mobile.domain.repository.PatrimonioConsultaRepository;
 import com.inventario.mobile.domain.usecase.AgruparColetasPorSalaUseCase;
 import com.inventario.mobile.domain.usecase.BuscarColetasComFallbackUseCase;
 import com.inventario.mobile.domain.usecase.BuscarColetasUseCase;
@@ -93,10 +103,12 @@ import com.inventario.mobile.domain.usecase.BuscarPatrimonioUseCase;
 import com.inventario.mobile.domain.usecase.BuscarPatrimoniosPaginadoUseCase;
 import com.inventario.mobile.domain.usecase.BuscarPatrimoniosPorDescricaoUseCase;
 import com.inventario.mobile.domain.usecase.BuscarPatrimoniosPorSalaUseCase;
+import com.inventario.mobile.domain.usecase.BuscarPatrimoniosUseCase;
 import com.inventario.mobile.domain.usecase.BuscarSalasComColetasUseCase;
 import com.inventario.mobile.domain.usecase.BuscarSalasComProgressoUseCase;
 import com.inventario.mobile.domain.usecase.ExcluirColetaPendenteUseCase;
 import com.inventario.mobile.domain.usecase.FiltrarColetasUseCase;
+import com.inventario.mobile.domain.usecase.ObterDetalhePatrimonioUseCase;
 import com.inventario.mobile.domain.usecase.ObterUsuarioAtualUseCase;
 import com.inventario.mobile.domain.usecase.ReenviarColetaUseCase;
 import com.inventario.mobile.domain.usecase.RegistrarColetaPorDescricaoUseCase;
@@ -138,6 +150,7 @@ import com.inventario.mobile.presentation.dashboard.DashboardViewModelClean_Hilt
 import com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity;
 import com.inventario.mobile.presentation.descricao.DescricaoSelectionViewModelClean;
 import com.inventario.mobile.presentation.descricao.DescricaoSelectionViewModelClean_HiltModules_KeyModule_ProvideFactory;
+import com.inventario.mobile.presentation.detail.PatrimonioDetailActivity;
 import com.inventario.mobile.presentation.inventario.InventarioActivity;
 import com.inventario.mobile.presentation.inventario.InventarioPorResponsavelFragment;
 import com.inventario.mobile.presentation.inventario.InventarioPorSalaFragment;
@@ -155,6 +168,7 @@ import com.inventario.mobile.presentation.sala.SalaSelectionActivity;
 import com.inventario.mobile.presentation.sala.SalaSelectionActivity_MembersInjector;
 import com.inventario.mobile.presentation.scanner.ScannerActivity;
 import com.inventario.mobile.presentation.scanner.ScannerActivity_MembersInjector;
+import com.inventario.mobile.presentation.search.QuickSearchActivity;
 import com.inventario.mobile.presentation.statistics.ChartsFragment_MembersInjector;
 import com.inventario.mobile.presentation.statistics.ExportFragment;
 import com.inventario.mobile.presentation.statistics.OverviewFragment;
@@ -166,6 +180,10 @@ import com.inventario.mobile.presentation.sync.SyncViewModel_HiltModules_KeyModu
 import com.inventario.mobile.presentation.validation.ValidationExampleFragment;
 import com.inventario.mobile.presentation.validation.ValidationViewModel;
 import com.inventario.mobile.presentation.validation.ValidationViewModel_HiltModules_KeyModule_ProvideFactory;
+import com.inventario.mobile.presentation.viewmodel.PatrimonioDetailViewModel;
+import com.inventario.mobile.presentation.viewmodel.PatrimonioDetailViewModel_HiltModules_KeyModule_ProvideFactory;
+import com.inventario.mobile.presentation.viewmodel.QuickSearchViewModel;
+import com.inventario.mobile.presentation.viewmodel.QuickSearchViewModel_HiltModules_KeyModule_ProvideFactory;
 import com.inventario.mobile.sync.SyncManager;
 import com.inventario.mobile.sync.SyncScheduler;
 import com.inventario.mobile.ui.base.BaseActivity;
@@ -686,6 +704,10 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
 
     }
 
+    private BuscarPatrimonioUseCase buscarPatrimonioUseCase() {
+      return new BuscarPatrimonioUseCase(singletonCImpl.patrimonioRepositoryAdapterProvider.get());
+    }
+
     @SuppressWarnings("unchecked")
     private void initialize(final Activity activityParam) {
       this.provideRegistrarColetaUseCaseProvider = DoubleCheck.provider(new SwitchingProvider<RegistrarColetaUseCase>(singletonCImpl, activityRetainedCImpl, activityCImpl, 0));
@@ -714,6 +736,10 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
     }
 
     @Override
+    public void injectPatrimonioDetailActivity(PatrimonioDetailActivity patrimonioDetailActivity) {
+    }
+
+    @Override
     public void injectInventarioActivity(InventarioActivity inventarioActivity) {
     }
 
@@ -733,6 +759,10 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
     @Override
     public void injectScannerActivity(ScannerActivity scannerActivity) {
       injectScannerActivity2(scannerActivity);
+    }
+
+    @Override
+    public void injectQuickSearchActivity(QuickSearchActivity quickSearchActivity) {
     }
 
     @Override
@@ -765,7 +795,7 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
 
     @Override
     public Set<String> getViewModelKeys() {
-      return SetBuilder.<String>newSetBuilder(13).add(ChartsViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(ColetaViewModelClean_HiltModules_KeyModule_ProvideFactory.provide()).add(ColetasViewModelClean_HiltModules_KeyModule_ProvideFactory.provide()).add(CollectionViewViewModelClean_HiltModules_KeyModule_ProvideFactory.provide()).add(DashboardViewModelClean_HiltModules_KeyModule_ProvideFactory.provide()).add(DescricaoSelectionViewModelClean_HiltModules_KeyModule_ProvideFactory.provide()).add(InventarioPorSalaViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(ItemSemEtiquetaViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(ManualCollectionViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(PatrimonioListViewModelPaging_HiltModules_KeyModule_ProvideFactory.provide()).add(PatrimonioListViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(SyncViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(ValidationViewModel_HiltModules_KeyModule_ProvideFactory.provide()).build();
+      return SetBuilder.<String>newSetBuilder(15).add(ChartsViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(ColetaViewModelClean_HiltModules_KeyModule_ProvideFactory.provide()).add(ColetasViewModelClean_HiltModules_KeyModule_ProvideFactory.provide()).add(CollectionViewViewModelClean_HiltModules_KeyModule_ProvideFactory.provide()).add(DashboardViewModelClean_HiltModules_KeyModule_ProvideFactory.provide()).add(DescricaoSelectionViewModelClean_HiltModules_KeyModule_ProvideFactory.provide()).add(InventarioPorSalaViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(ItemSemEtiquetaViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(ManualCollectionViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(PatrimonioDetailViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(PatrimonioListViewModelPaging_HiltModules_KeyModule_ProvideFactory.provide()).add(PatrimonioListViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(QuickSearchViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(SyncViewModel_HiltModules_KeyModule_ProvideFactory.provide()).add(ValidationViewModel_HiltModules_KeyModule_ProvideFactory.provide()).build();
     }
 
     @Override
@@ -802,6 +832,7 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
     @CanIgnoreReturnValue
     private ScannerActivity injectScannerActivity2(ScannerActivity instance) {
       ScannerActivity_MembersInjector.injectRegistrarColetaUseCase(instance, provideRegistrarColetaUseCaseProvider.get());
+      ScannerActivity_MembersInjector.injectBuscarPatrimonioUseCase(instance, buscarPatrimonioUseCase());
       return instance;
     }
 
@@ -879,9 +910,13 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
 
     private Provider<ManualCollectionViewModel> manualCollectionViewModelProvider;
 
+    private Provider<PatrimonioDetailViewModel> patrimonioDetailViewModelProvider;
+
     private Provider<PatrimonioListViewModelPaging> patrimonioListViewModelPagingProvider;
 
     private Provider<PatrimonioListViewModel> patrimonioListViewModelProvider;
+
+    private Provider<QuickSearchViewModel> quickSearchViewModelProvider;
 
     private Provider<SyncViewModel> syncViewModelProvider;
 
@@ -977,8 +1012,16 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
       return new BuscarEstatisticasSalaUseCase(singletonCImpl.patrimonioRepositoryImplProvider.get(), singletonCImpl.coletaRepositoryImplProvider.get());
     }
 
+    private ObterDetalhePatrimonioUseCase obterDetalhePatrimonioUseCase() {
+      return new ObterDetalhePatrimonioUseCase(singletonCImpl.bindPatrimonioConsultaRepositoryProvider.get());
+    }
+
     private BuscarPatrimoniosPaginadoUseCase buscarPatrimoniosPaginadoUseCase() {
       return new BuscarPatrimoniosPaginadoUseCase(singletonCImpl.providePatrimonioApiProvider.get());
+    }
+
+    private BuscarPatrimoniosUseCase buscarPatrimoniosUseCase() {
+      return new BuscarPatrimoniosUseCase(singletonCImpl.patrimonioRepositoryImplProvider.get(), singletonCImpl.providePatrimonioApiProvider.get(), singletonCImpl.providePreferencesManagerProvider.get());
     }
 
     private SincronizarDadosUseCase sincronizarDadosUseCase() {
@@ -1009,15 +1052,17 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
       this.inventarioPorSalaViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 6);
       this.itemSemEtiquetaViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 7);
       this.manualCollectionViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 8);
-      this.patrimonioListViewModelPagingProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 9);
-      this.patrimonioListViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 10);
-      this.syncViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 11);
-      this.validationViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 12);
+      this.patrimonioDetailViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 9);
+      this.patrimonioListViewModelPagingProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 10);
+      this.patrimonioListViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 11);
+      this.quickSearchViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 12);
+      this.syncViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 13);
+      this.validationViewModelProvider = new SwitchingProvider<>(singletonCImpl, activityRetainedCImpl, viewModelCImpl, 14);
     }
 
     @Override
     public Map<String, Provider<ViewModel>> getHiltViewModelMap() {
-      return MapBuilder.<String, Provider<ViewModel>>newMapBuilder(13).put("com.inventario.mobile.presentation.charts.ChartsViewModel", ((Provider) chartsViewModelProvider)).put("com.inventario.mobile.presentation.coleta.ColetaViewModelClean", ((Provider) coletaViewModelCleanProvider)).put("com.inventario.mobile.presentation.coletas.ColetasViewModelClean", ((Provider) coletasViewModelCleanProvider)).put("com.inventario.mobile.presentation.coleta.CollectionViewViewModelClean", ((Provider) collectionViewViewModelCleanProvider)).put("com.inventario.mobile.presentation.dashboard.DashboardViewModelClean", ((Provider) dashboardViewModelCleanProvider)).put("com.inventario.mobile.presentation.descricao.DescricaoSelectionViewModelClean", ((Provider) descricaoSelectionViewModelCleanProvider)).put("com.inventario.mobile.presentation.inventario.InventarioPorSalaViewModel", ((Provider) inventarioPorSalaViewModelProvider)).put("com.inventario.mobile.presentation.coleta.ItemSemEtiquetaViewModel", ((Provider) itemSemEtiquetaViewModelProvider)).put("com.inventario.mobile.presentation.coleta.ManualCollectionViewModel", ((Provider) manualCollectionViewModelProvider)).put("com.inventario.mobile.presentation.patrimonio.PatrimonioListViewModelPaging", ((Provider) patrimonioListViewModelPagingProvider)).put("com.inventario.mobile.presentation.patrimonio.PatrimonioListViewModel", ((Provider) patrimonioListViewModelProvider)).put("com.inventario.mobile.presentation.sync.SyncViewModel", ((Provider) syncViewModelProvider)).put("com.inventario.mobile.presentation.validation.ValidationViewModel", ((Provider) validationViewModelProvider)).build();
+      return MapBuilder.<String, Provider<ViewModel>>newMapBuilder(15).put("com.inventario.mobile.presentation.charts.ChartsViewModel", ((Provider) chartsViewModelProvider)).put("com.inventario.mobile.presentation.coleta.ColetaViewModelClean", ((Provider) coletaViewModelCleanProvider)).put("com.inventario.mobile.presentation.coletas.ColetasViewModelClean", ((Provider) coletasViewModelCleanProvider)).put("com.inventario.mobile.presentation.coleta.CollectionViewViewModelClean", ((Provider) collectionViewViewModelCleanProvider)).put("com.inventario.mobile.presentation.dashboard.DashboardViewModelClean", ((Provider) dashboardViewModelCleanProvider)).put("com.inventario.mobile.presentation.descricao.DescricaoSelectionViewModelClean", ((Provider) descricaoSelectionViewModelCleanProvider)).put("com.inventario.mobile.presentation.inventario.InventarioPorSalaViewModel", ((Provider) inventarioPorSalaViewModelProvider)).put("com.inventario.mobile.presentation.coleta.ItemSemEtiquetaViewModel", ((Provider) itemSemEtiquetaViewModelProvider)).put("com.inventario.mobile.presentation.coleta.ManualCollectionViewModel", ((Provider) manualCollectionViewModelProvider)).put("com.inventario.mobile.presentation.viewmodel.PatrimonioDetailViewModel", ((Provider) patrimonioDetailViewModelProvider)).put("com.inventario.mobile.presentation.patrimonio.PatrimonioListViewModelPaging", ((Provider) patrimonioListViewModelPagingProvider)).put("com.inventario.mobile.presentation.patrimonio.PatrimonioListViewModel", ((Provider) patrimonioListViewModelProvider)).put("com.inventario.mobile.presentation.viewmodel.QuickSearchViewModel", ((Provider) quickSearchViewModelProvider)).put("com.inventario.mobile.presentation.sync.SyncViewModel", ((Provider) syncViewModelProvider)).put("com.inventario.mobile.presentation.validation.ValidationViewModel", ((Provider) validationViewModelProvider)).build();
     }
 
     private static final class SwitchingProvider<T> implements Provider<T> {
@@ -1068,16 +1113,22 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
           case 8: // com.inventario.mobile.presentation.coleta.ManualCollectionViewModel 
           return (T) new ManualCollectionViewModel(viewModelCImpl.buscarPatrimonioUseCase(), viewModelCImpl.registrarColetaUseCase(), singletonCImpl.provideInventarioRepositoryProvider.get(), singletonCImpl.coletaDao());
 
-          case 9: // com.inventario.mobile.presentation.patrimonio.PatrimonioListViewModelPaging 
+          case 9: // com.inventario.mobile.presentation.viewmodel.PatrimonioDetailViewModel 
+          return (T) new PatrimonioDetailViewModel(viewModelCImpl.obterDetalhePatrimonioUseCase());
+
+          case 10: // com.inventario.mobile.presentation.patrimonio.PatrimonioListViewModelPaging 
           return (T) new PatrimonioListViewModelPaging(viewModelCImpl.buscarPatrimoniosPaginadoUseCase(), viewModelCImpl.buscarEstatisticasDashboardUseCase());
 
-          case 10: // com.inventario.mobile.presentation.patrimonio.PatrimonioListViewModel 
+          case 11: // com.inventario.mobile.presentation.patrimonio.PatrimonioListViewModel 
           return (T) new PatrimonioListViewModel(singletonCImpl.providePatrimonioApiLegacyProvider.get());
 
-          case 11: // com.inventario.mobile.presentation.sync.SyncViewModel 
+          case 12: // com.inventario.mobile.presentation.viewmodel.QuickSearchViewModel 
+          return (T) new QuickSearchViewModel(viewModelCImpl.buscarPatrimoniosUseCase(), singletonCImpl.sincronizacaoDao());
+
+          case 13: // com.inventario.mobile.presentation.sync.SyncViewModel 
           return (T) new SyncViewModel(viewModelCImpl.sincronizarDadosUseCase(), singletonCImpl.sincronizarColetasPendentesUseCase(), singletonCImpl.provideSyncManagerProvider.get());
 
-          case 12: // com.inventario.mobile.presentation.validation.ValidationViewModel 
+          case 14: // com.inventario.mobile.presentation.validation.ValidationViewModel 
           return (T) new ValidationViewModel(viewModelCImpl.validarPatrimonioUseCase(), viewModelCImpl.verificarDuplicataColetaUseCase(), viewModelCImpl.verificarSePatrimonioFoiColetadoUseCase());
 
           default: throw new AssertionError(id);
@@ -1239,6 +1290,16 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
 
     private Provider<InventarioRepository> provideInventarioRepositoryProvider;
 
+    private Provider<PatrimonioConsultaApi> providePatrimonioConsultaApiProvider;
+
+    private Provider<PatrimonioConsultaMapper> providePatrimonioConsultaMapperProvider;
+
+    private Provider<PatrimonioDetalheMapper> providePatrimonioDetalheMapperProvider;
+
+    private Provider<PatrimonioConsultaRepositoryImpl> patrimonioConsultaRepositoryImplProvider;
+
+    private Provider<PatrimonioConsultaRepository> bindPatrimonioConsultaRepositoryProvider;
+
     private Provider<OfflineSyncApi> provideOfflineSyncApiProvider;
 
     private Provider<SyncRepository> syncRepositoryProvider;
@@ -1282,6 +1343,10 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
 
     private DashboardDao dashboardDao() {
       return DatabaseModule_ProvideDashboardDaoFactory.provideDashboardDao(provideAppDatabaseProvider.get());
+    }
+
+    private SincronizacaoDao sincronizacaoDao() {
+      return DatabaseModule_ProvideSincronizacaoDaoFactory.provideSincronizacaoDao(provideAppDatabaseProvider.get());
     }
 
     private ResponsavelDao responsavelDao() {
@@ -1330,9 +1395,14 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
       this.provideNetworkCheckerProvider = DoubleCheck.provider(new SwitchingProvider<NetworkChecker>(singletonCImpl, 37));
       this.salaRepositoryImplProvider = DoubleCheck.provider(new SwitchingProvider<SalaRepositoryImpl>(singletonCImpl, 38));
       this.provideInventarioRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<InventarioRepository>(singletonCImpl, 39));
-      this.provideOfflineSyncApiProvider = DoubleCheck.provider(new SwitchingProvider<OfflineSyncApi>(singletonCImpl, 41));
-      this.syncRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<SyncRepository>(singletonCImpl, 40));
-      this.provideSyncManagerProvider = DoubleCheck.provider(new SwitchingProvider<SyncManager>(singletonCImpl, 42));
+      this.providePatrimonioConsultaApiProvider = DoubleCheck.provider(new SwitchingProvider<PatrimonioConsultaApi>(singletonCImpl, 41));
+      this.providePatrimonioConsultaMapperProvider = DoubleCheck.provider(new SwitchingProvider<PatrimonioConsultaMapper>(singletonCImpl, 42));
+      this.providePatrimonioDetalheMapperProvider = DoubleCheck.provider(new SwitchingProvider<PatrimonioDetalheMapper>(singletonCImpl, 43));
+      this.patrimonioConsultaRepositoryImplProvider = new SwitchingProvider<>(singletonCImpl, 40);
+      this.bindPatrimonioConsultaRepositoryProvider = DoubleCheck.provider((Provider) patrimonioConsultaRepositoryImplProvider);
+      this.provideOfflineSyncApiProvider = DoubleCheck.provider(new SwitchingProvider<OfflineSyncApi>(singletonCImpl, 45));
+      this.syncRepositoryProvider = DoubleCheck.provider(new SwitchingProvider<SyncRepository>(singletonCImpl, 44));
+      this.provideSyncManagerProvider = DoubleCheck.provider(new SwitchingProvider<SyncManager>(singletonCImpl, 46));
     }
 
     @Override
@@ -1519,13 +1589,25 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
           case 39: // com.inventario.mobile.data.repository.InventarioRepository 
           return (T) RepositoryModule_Companion_ProvideInventarioRepositoryFactory.provideInventarioRepository(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule), singletonCImpl.provideApiServiceProvider.get());
 
-          case 40: // com.inventario.mobile.data.repository.SyncRepository 
+          case 40: // com.inventario.mobile.data.repository.PatrimonioConsultaRepositoryImpl 
+          return (T) new PatrimonioConsultaRepositoryImpl(singletonCImpl.providePatrimonioConsultaApiProvider.get(), singletonCImpl.providePatrimonioConsultaMapperProvider.get(), singletonCImpl.providePatrimonioDetalheMapperProvider.get());
+
+          case 41: // com.inventario.mobile.data.remote.api.PatrimonioConsultaApi 
+          return (T) ApiModule_ProvidePatrimonioConsultaApiFactory.providePatrimonioConsultaApi(singletonCImpl.provideRetrofitProvider.get());
+
+          case 42: // com.inventario.mobile.data.mapper.PatrimonioConsultaMapper 
+          return (T) MapperModule_ProvidePatrimonioConsultaMapperFactory.providePatrimonioConsultaMapper();
+
+          case 43: // com.inventario.mobile.data.mapper.PatrimonioDetalheMapper 
+          return (T) MapperModule_ProvidePatrimonioDetalheMapperFactory.providePatrimonioDetalheMapper();
+
+          case 44: // com.inventario.mobile.data.repository.SyncRepository 
           return (T) new SyncRepository(singletonCImpl.patrimonioDao(), singletonCImpl.salaDao(), singletonCImpl.responsavelDao(), singletonCImpl.coletaDao(), singletonCImpl.providePatrimonioApiLegacyProvider.get(), singletonCImpl.provideSalaApiProvider.get(), singletonCImpl.provideColetaApiProvider.get(), singletonCImpl.provideApiServiceProvider.get(), singletonCImpl.provideOfflineSyncApiProvider.get());
 
-          case 41: // com.inventario.mobile.data.remote.api.OfflineSyncApi 
+          case 45: // com.inventario.mobile.data.remote.api.OfflineSyncApi 
           return (T) ApiModule_ProvideOfflineSyncApiFactory.provideOfflineSyncApi(singletonCImpl.provideRetrofitProvider.get());
 
-          case 42: // com.inventario.mobile.sync.SyncManager 
+          case 46: // com.inventario.mobile.sync.SyncManager 
           return (T) SyncModule_ProvideSyncManagerFactory.provideSyncManager(ApplicationContextModule_ProvideContextFactory.provideContext(singletonCImpl.applicationContextModule));
 
           default: throw new AssertionError(id);

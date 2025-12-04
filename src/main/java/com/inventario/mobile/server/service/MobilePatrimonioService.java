@@ -196,6 +196,115 @@ public class MobilePatrimonioService {
         
         return null;
     }
+    
+    /**
+     * Busca patrimônios por query (texto livre) com filtros
+     * Busca por número, descrição ou nome da sala
+     * 
+     * @param query termo de busca (mínimo 3 caracteres)
+     * @param filtro filtro de status: ALL, COLETADOS, PENDENTES, DIVERGENCIAS
+     * @param inventarioId ID do inventário (opcional, usa ativo se não informado)
+     * @param limit limite de resultados (padrão 100)
+     * @return lista de patrimônios encontrados
+     */
+    public List<MobilePatrimonioDTO> buscarPorQuery(String query, String filtro, Integer inventarioId, int limit) throws SQLException {
+        logger.info("Buscando patrimônios por query: '{}', filtro: {}, inventarioId: {}, limit: {}", 
+                query, filtro, inventarioId, limit);
+        
+        if (query == null || query.trim().length() < 3) {
+            logger.warn("Query muito curta: '{}'", query);
+            return new ArrayList<>();
+        }
+        
+        String queryLimpa = query.trim().toLowerCase();
+        
+        // Obter inventário ativo se não foi informado
+        Inventario inventario = null;
+        try {
+            if (inventarioId != null && inventarioId > 0) {
+                inventario = inventarioDAO.findById(inventarioId);
+            } else {
+                inventario = inventarioDAO.buscarInventarioAtivo();
+            }
+        } catch (Exception e) {
+            logger.warn("Erro ao obter inventário: {}", e.getMessage());
+        }
+        
+        // Buscar patrimônios que correspondem à query
+        List<Patrimonio> patrimonios = patrimonioDAO.buscarPorQueryTexto(queryLimpa, limit);
+        logger.debug("Encontrados {} patrimônios para query '{}'", patrimonios.size(), queryLimpa);
+        
+        List<MobilePatrimonioDTO> resultados = new ArrayList<>();
+        
+        for (Patrimonio patrimonio : patrimonios) {
+            // Verificar status de coleta
+            boolean foiColetado = false;
+            String coletadoPor = null;
+            String dataColeta = null;
+            String localizacaoEncontrada = null;
+            String estadoEncontrado = null;
+            boolean temDivergencia = false;
+            
+            if (inventario != null) {
+                try {
+                    foiColetado = coletaDAO.coletaExiste(inventario.getId(), patrimonio.getId());
+                    
+                    if (foiColetado) {
+                        // Buscar detalhes da coleta
+                        com.inventario.model.Coleta coleta = coletaDAO.buscarColetaPorPatrimonioEInventario(
+                                inventario.getId(), patrimonio.getId());
+                        if (coleta != null) {
+                            coletadoPor = coleta.getNomeColetor();
+                            dataColeta = coleta.getDataColetaFormatada();
+                            localizacaoEncontrada = coleta.getLocalizacaoEncontrada();
+                            estadoEncontrado = coleta.getEstadoEncontrado();
+                            
+                            // Verificar divergência (localização encontrada diferente da cadastrada)
+                            if (localizacaoEncontrada != null && patrimonio.getNomeSala() != null) {
+                                temDivergencia = !localizacaoEncontrada.equalsIgnoreCase(patrimonio.getNomeSala());
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.warn("Erro ao verificar coleta do patrimônio {}: {}", patrimonio.getId(), e.getMessage());
+                }
+            }
+            
+            // Aplicar filtro
+            boolean incluir = true;
+            if (filtro != null) {
+                switch (filtro.toUpperCase()) {
+                    case "COLETADOS":
+                        incluir = foiColetado;
+                        break;
+                    case "PENDENTES":
+                        incluir = !foiColetado;
+                        break;
+                    case "DIVERGENCIAS":
+                        incluir = foiColetado && temDivergencia;
+                        break;
+                    case "ALL":
+                    default:
+                        incluir = true;
+                        break;
+                }
+            }
+            
+            if (incluir) {
+                MobilePatrimonioDTO dto = converterParaDTO(patrimonio);
+                dto.setColetado(foiColetado);
+                dto.setColetadoPor(coletadoPor);
+                dto.setDataColetaFormatada(dataColeta);
+                dto.setLocalizacaoEncontrada(localizacaoEncontrada);
+                dto.setEstadoEncontrado(estadoEncontrado);
+                dto.setTemDivergencia(temDivergencia);
+                resultados.add(dto);
+            }
+        }
+        
+        logger.info("Retornando {} patrimônios após filtro '{}'", resultados.size(), filtro);
+        return resultados;
+    }
 
     /**
      * Busca patrimônios por responsável com paginação e filtro de coleta

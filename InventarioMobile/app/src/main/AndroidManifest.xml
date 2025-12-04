@@ -232,6 +232,22 @@
             android:theme="@style/Theme.InventarioMobile.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
         
+        <!-- Quick Search Activity -->
+        <activity
+            android:name=".presentation.search.QuickSearchActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
+        <!-- Patrimonio Detail Activity -->
+        <activity
+            android:name=".presentation.detail.PatrimonioDetailActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
         <!-- Work Manager para sincronização -->
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"

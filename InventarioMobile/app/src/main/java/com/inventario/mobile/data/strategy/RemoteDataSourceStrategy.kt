@@ -160,4 +160,52 @@ class RemoteDataSourceStrategy(
     }
     
     override fun getSourceType(): DataSourceType = DataSourceType.REMOTE
+    
+    // ========================================
+    // Métodos para Inventário por Sala (offline-first, não implementado no servidor)
+    // ========================================
+    
+    override suspend fun buscarPorSala(
+        salaId: Int,
+        coletado: Boolean?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<Patrimonio>> {
+        Log.w(TAG, "buscarPorSala não implementado no servidor - usar fonte local")
+        return Result.failure(Exception("Busca por sala deve ser feita localmente"))
+    }
+    
+    override suspend fun contarPorSala(salaId: Int): Result<Int> {
+        Log.w(TAG, "contarPorSala não implementado no servidor - usar fonte local")
+        return Result.failure(Exception("Contagem por sala deve ser feita localmente"))
+    }
+    
+    override suspend fun contarColetadosPorSala(salaId: Int): Result<Int> {
+        Log.w(TAG, "contarColetadosPorSala não implementado no servidor - usar fonte local")
+        return Result.failure(Exception("Contagem de coletados deve ser feita localmente"))
+    }
+    
+    // ========================================
+    // Métodos para Busca Rápida (offline-first, não implementado no servidor)
+    // ========================================
+    
+    override suspend fun buscarPorQuery(query: String): Result<List<Patrimonio>> {
+        Log.w(TAG, "buscarPorQuery não implementado no servidor - usar fonte local")
+        return Result.failure(Exception("Busca rápida deve ser feita localmente"))
+    }
+    
+    override suspend fun buscarColetadosPorQuery(query: String): Result<List<Patrimonio>> {
+        Log.w(TAG, "buscarColetadosPorQuery não implementado no servidor - usar fonte local")
+        return Result.failure(Exception("Busca de coletados deve ser feita localmente"))
+    }
+    
+    override suspend fun buscarPendentesPorQuery(query: String): Result<List<Patrimonio>> {
+        Log.w(TAG, "buscarPendentesPorQuery não implementado no servidor - usar fonte local")
+        return Result.failure(Exception("Busca de pendentes deve ser feita localmente"))
+    }
+    
+    override suspend fun buscarDivergenciasPorQuery(query: String, inventarioId: Int): Result<List<Patrimonio>> {
+        Log.w(TAG, "buscarDivergenciasPorQuery não implementado no servidor - usar fonte local")
+        return Result.failure(Exception("Busca de divergências deve ser feita localmente"))
+    }
 }

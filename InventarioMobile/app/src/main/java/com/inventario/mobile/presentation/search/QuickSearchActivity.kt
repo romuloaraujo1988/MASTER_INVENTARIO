@@ -4,49 +4,50 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.inventario.mobile.R
 import com.inventario.mobile.databinding.ActivityQuickSearchBinding
-import com.inventario.mobile.data.local.database.InventarioDatabase
-import com.inventario.mobile.data.model.Patrimonio
-import com.inventario.mobile.presentation.adapter.PatrimonioAdapter
-import com.inventario.mobile.presentation.filtros.FiltrosActivity
-import com.inventario.mobile.utils.VoiceSearchManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.inventario.mobile.domain.model.PatrimonioComColeta
+import com.inventario.mobile.domain.model.SearchFilter
+import com.inventario.mobile.presentation.adapter.PatrimonioSearchAdapter
 
+import com.inventario.mobile.presentation.detail.PatrimonioDetailActivity
+import com.inventario.mobile.presentation.filtros.FiltrosActivity
+import com.inventario.mobile.presentation.state.QuickSearchState
+import com.inventario.mobile.presentation.viewmodel.QuickSearchViewModel
+import com.inventario.mobile.utils.VoiceSearchManager
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+
+/**
+ * Activity para busca rápida de patrimônios
+ * 
+ * Refatorada para Clean Architecture + MVVM
+ * 
+ * @see Requirements 1.1, 1.2, 1.3, 1.4
+ */
+@AndroidEntryPoint
 class QuickSearchActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityQuickSearchBinding
-    private lateinit var adapter: PatrimonioAdapter
-    private lateinit var database: InventarioDatabase
+    private lateinit var adapter: PatrimonioSearchAdapter
     private lateinit var voiceSearchManager: VoiceSearchManager
     
-    private var searchJob: Job? = null
-    private var currentFilter: SearchFilter = SearchFilter.ALL
+    private val viewModel: QuickSearchViewModel by viewModels()
     
     companion object {
         private const val TAG = "QuickSearchActivity"
-        private const val SEARCH_DELAY_MS = 300L
         const val REQUEST_FILTERS = 1001
-    }
-    
-    enum class SearchFilter {
-        ALL, COLETADOS, PENDENTES, DIVERGENCIAS
     }
     
     // Launcher para solicitar permissão de áudio
@@ -69,7 +70,6 @@ class QuickSearchActivity : AppCompatActivity() {
         binding = ActivityQuickSearchBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
-        database = InventarioDatabase.getDatabase(this)
         voiceSearchManager = VoiceSearchManager(this)
         
         setupToolbar()
@@ -77,6 +77,7 @@ class QuickSearchActivity : AppCompatActivity() {
         setupSearchField()
         setupFilters()
         setupVoiceSearch()
+        observeViewModel()
         
         // Processar intent se veio de busca por voz
         handleIntent(intent)
@@ -90,10 +91,18 @@ class QuickSearchActivity : AppCompatActivity() {
     private fun handleIntent(intent: Intent) {
         val searchQuery = intent.getStringExtra("SEARCH_QUERY")
         val autoSearch = intent.getBooleanExtra("AUTO_SEARCH", false)
+        val startVoiceSearch = intent.getBooleanExtra("START_VOICE_SEARCH", false)
         
         if (searchQuery != null && autoSearch) {
             binding.etSearch.setText(searchQuery)
-            performSearch(searchQuery)
+            viewModel.buscar(searchQuery)
+        }
+        
+        // Se veio do menu "Busca por Voz", iniciar busca por voz automaticamente
+        if (startVoiceSearch) {
+            binding.etSearch.postDelayed({
+                requestAudioPermissionIfNeeded()
+            }, 500) // Pequeno delay para garantir que a UI está pronta
         }
     }
     
@@ -106,10 +115,9 @@ class QuickSearchActivity : AppCompatActivity() {
     }
     
     private fun setupRecyclerView() {
-        adapter = PatrimonioAdapter(
+        adapter = PatrimonioSearchAdapter(
             onItemClick = { patrimonio ->
-                // TODO: Abrir detalhes do patrimônio
-                Toast.makeText(this, "Patrimônio: ${patrimonio.numeroPatrimonio}", Toast.LENGTH_SHORT).show()
+                navegarParaDetalhes(patrimonio)
             }
         )
         
@@ -127,18 +135,8 @@ class QuickSearchActivity : AppCompatActivity() {
                 // Mostrar/ocultar botão de limpar
                 binding.btnClearSearch.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
                 
-                // Cancelar busca anterior
-                searchJob?.cancel()
-                
-                // Agendar nova busca com delay
-                if (query.isNotEmpty()) {
-                    searchJob = lifecycleScope.launch {
-                        delay(SEARCH_DELAY_MS)
-                        performSearch(query)
-                    }
-                } else {
-                    showEmptyState()
-                }
+                // Delegar busca para ViewModel
+                viewModel.buscar(query)
             }
             
             override fun afterTextChanged(s: Editable?) {}
@@ -146,6 +144,7 @@ class QuickSearchActivity : AppCompatActivity() {
         
         binding.btnClearSearch.setOnClickListener {
             binding.etSearch.text.clear()
+            viewModel.limparBusca()
         }
         
         // Focar no campo de busca
@@ -155,37 +154,31 @@ class QuickSearchActivity : AppCompatActivity() {
     private fun setupFilters() {
         binding.chipColetados.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                currentFilter = SearchFilter.COLETADOS
                 binding.chipPendentes.isChecked = false
                 binding.chipDivergencias.isChecked = false
-                performSearch(binding.etSearch.text.toString())
-            } else if (currentFilter == SearchFilter.COLETADOS) {
-                currentFilter = SearchFilter.ALL
-                performSearch(binding.etSearch.text.toString())
+                viewModel.alterarFiltro(SearchFilter.COLETADOS)
+            } else if (!binding.chipPendentes.isChecked && !binding.chipDivergencias.isChecked) {
+                viewModel.alterarFiltro(SearchFilter.ALL)
             }
         }
         
         binding.chipPendentes.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                currentFilter = SearchFilter.PENDENTES
                 binding.chipColetados.isChecked = false
                 binding.chipDivergencias.isChecked = false
-                performSearch(binding.etSearch.text.toString())
-            } else if (currentFilter == SearchFilter.PENDENTES) {
-                currentFilter = SearchFilter.ALL
-                performSearch(binding.etSearch.text.toString())
+                viewModel.alterarFiltro(SearchFilter.PENDENTES)
+            } else if (!binding.chipColetados.isChecked && !binding.chipDivergencias.isChecked) {
+                viewModel.alterarFiltro(SearchFilter.ALL)
             }
         }
         
         binding.chipDivergencias.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                currentFilter = SearchFilter.DIVERGENCIAS
                 binding.chipColetados.isChecked = false
                 binding.chipPendentes.isChecked = false
-                performSearch(binding.etSearch.text.toString())
-            } else if (currentFilter == SearchFilter.DIVERGENCIAS) {
-                currentFilter = SearchFilter.ALL
-                performSearch(binding.etSearch.text.toString())
+                viewModel.alterarFiltro(SearchFilter.DIVERGENCIAS)
+            } else if (!binding.chipColetados.isChecked && !binding.chipPendentes.isChecked) {
+                viewModel.alterarFiltro(SearchFilter.ALL)
             }
         }
         
@@ -199,6 +192,50 @@ class QuickSearchActivity : AppCompatActivity() {
         binding.btnVoiceSearch.setOnClickListener {
             requestAudioPermissionIfNeeded()
         }
+    }
+    
+    /**
+     * Observa mudanças no ViewModel e atualiza a UI
+     */
+    private fun observeViewModel() {
+        // Observar estado da busca
+        lifecycleScope.launch {
+            viewModel.state.collect { state ->
+                when (state) {
+                    is QuickSearchState.Idle -> showEmptyState()
+                    is QuickSearchState.Loading -> showLoading()
+                    is QuickSearchState.Success -> showResults(state)
+                    is QuickSearchState.Empty -> showNoResults(state.query)
+                    is QuickSearchState.Error -> showError(state.message)
+                }
+            }
+        }
+        
+        // Observar última sincronização
+        lifecycleScope.launch {
+            viewModel.lastSyncTime.collect { lastSync ->
+                if (lastSync != null) {
+                    binding.layoutSyncIndicator.visibility = View.VISIBLE
+                    binding.tvLastSync.text = lastSync
+                } else {
+                    binding.layoutSyncIndicator.visibility = View.GONE
+                }
+            }
+        }
+        
+        // Observar se dados estão desatualizados
+        lifecycleScope.launch {
+            viewModel.isSyncOutdated.collect { isOutdated ->
+                binding.cardSyncWarning.visibility = if (isOutdated) View.VISIBLE else View.GONE
+            }
+        }
+    }
+    
+    private fun navegarParaDetalhes(patrimonio: PatrimonioComColeta) {
+        val intent = Intent(this, PatrimonioDetailActivity::class.java).apply {
+            putExtra(PatrimonioDetailActivity.EXTRA_PATRIMONIO_ID, patrimonio.id.toInt())
+        }
+        startActivity(intent)
     }
     
     private fun requestAudioPermissionIfNeeded() {
@@ -238,7 +275,7 @@ class QuickSearchActivity : AppCompatActivity() {
         voiceSearchManager.startListening(object : VoiceSearchManager.VoiceSearchListener {
             override fun onResults(text: String) {
                 binding.etSearch.setText(text)
-                performSearch(text)
+                viewModel.buscar(text)
             }
             
             override fun onError(error: String) {
@@ -257,102 +294,26 @@ class QuickSearchActivity : AppCompatActivity() {
         })
     }
     
-    private fun performSearch(query: String) {
-        if (query.isEmpty()) {
-            showEmptyState()
-            return
-        }
-        
-        showLoading()
-        
-        val startTime = System.currentTimeMillis()
-        
-        lifecycleScope.launch {
-            try {
-                val results = withContext(Dispatchers.IO) {
-                    searchPatrimonios(query)
-                }
-                
-                val searchTime = System.currentTimeMillis() - startTime
-                
-                withContext(Dispatchers.Main) {
-                    hideLoading()
-                    displayResults(results, searchTime)
-                }
-                
-            } catch (e: Exception) {
-                Log.e(TAG, "Erro ao buscar patrimônios", e)
-                withContext(Dispatchers.Main) {
-                    hideLoading()
-                    showError("Erro ao buscar: ${e.message}")
-                }
-            }
-        }
-    }
-    
-    private suspend fun searchPatrimonios(query: String): List<Patrimonio> {
-        val dao = database.patrimonioDao()
-        
-        // Buscar todos os patrimônios e filtrar localmente
-        val allPatrimonios = when (currentFilter) {
-            SearchFilter.ALL -> dao.getAllPatrimoniosList()
-            SearchFilter.COLETADOS -> emptyList() // TODO: Implementar getPatrimoniosColetados
-            SearchFilter.PENDENTES -> emptyList() // TODO: Implementar getPatrimoniosNaoColetados
-            SearchFilter.DIVERGENCIAS -> dao.getAllPatrimoniosList() // TODO: implementar filtro de divergências
-        }
-        
-        // Converter PatrimonioEntity para Patrimonio e filtrar por query
-        return allPatrimonios.map { entity ->
-            Patrimonio(
-                id = entity.id.toLong(),
-                numeroPatrimonio = entity.numero,
-                descricao = entity.descricao,
-                marca = "", // TODO: Adicionar campo ao Entity
-                modelo = "", // TODO: Adicionar campo ao Entity
-                numeroSerie = "", // TODO: Adicionar campo ao Entity
-                estado = entity.status,
-                valor = 0.0, // TODO: Adicionar campo ao Entity
-                salaId = entity.idSala?.toLong(),
-                salaNome = entity.nomeSala,
-                qrCode = "", // TODO: Adicionar campo ao Entity
-                coletado = entity.coletado,
-                sincronizado = false, // TODO: Adicionar campo ao Entity
-                servidorId = null // TODO: Adicionar campo ao Entity
-            )
-        }.filter { patrimonio ->
-            patrimonio.numeroPatrimonio.contains(query, ignoreCase = true) ||
-            patrimonio.descricao.contains(query, ignoreCase = true) ||
-            patrimonio.salaNome?.contains(query, ignoreCase = true) == true
-        }
-    }
-    
-    private fun displayResults(results: List<Patrimonio>, searchTime: Long) {
-        if (results.isEmpty()) {
-            showNoResults()
-        } else {
-            showResults(results, searchTime)
-        }
-    }
-    
-    private fun showResults(results: List<Patrimonio>, searchTime: Long) {
+    private fun showResults(state: QuickSearchState.Success) {
         binding.layoutEmptyState.visibility = View.GONE
         binding.layoutNoResults.visibility = View.GONE
         binding.cardSearchStats.visibility = View.VISIBLE
         binding.rvSearchResults.visibility = View.VISIBLE
+        binding.progressBar.visibility = View.GONE
         
-        binding.tvResultCount.text = results.size.toString()
-        binding.tvSearchTime.text = "${searchTime}ms"
+        binding.tvResultCount.text = state.resultados.size.toString()
+        binding.tvSearchTime.text = "${state.tempoMs}ms"
         
-        adapter.submitList(results)
+        adapter.submitList(state.resultados)
     }
     
-    private fun showNoResults() {
+    private fun showNoResults(query: String) {
         binding.layoutEmptyState.visibility = View.GONE
         binding.cardSearchStats.visibility = View.GONE
         binding.rvSearchResults.visibility = View.GONE
         binding.layoutNoResults.visibility = View.VISIBLE
+        binding.progressBar.visibility = View.GONE
         
-        val query = binding.etSearch.text.toString()
         binding.tvNoResultsMessage.text = "Nenhum resultado para \"$query\""
     }
     
@@ -361,6 +322,7 @@ class QuickSearchActivity : AppCompatActivity() {
         binding.rvSearchResults.visibility = View.GONE
         binding.layoutNoResults.visibility = View.GONE
         binding.layoutEmptyState.visibility = View.VISIBLE
+        binding.progressBar.visibility = View.GONE
         
         adapter.submitList(emptyList())
     }
@@ -369,11 +331,8 @@ class QuickSearchActivity : AppCompatActivity() {
         binding.progressBar.visibility = View.VISIBLE
     }
     
-    private fun hideLoading() {
-        binding.progressBar.visibility = View.GONE
-    }
-    
     private fun showError(message: String) {
+        binding.progressBar.visibility = View.GONE
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
         showEmptyState()
     }

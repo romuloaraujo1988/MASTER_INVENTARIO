@@ -26,6 +26,7 @@ import com.inventario.mobile.presentation.dashboard.DashboardFragment_GeneratedI
 import com.inventario.mobile.presentation.dashboard.DashboardViewModelClean_HiltModules;
 import com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.descricao.DescricaoSelectionViewModelClean_HiltModules;
+import com.inventario.mobile.presentation.detail.PatrimonioDetailActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.inventario.InventarioActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.inventario.InventarioPorResponsavelFragment_GeneratedInjector;
 import com.inventario.mobile.presentation.inventario.InventarioPorSalaFragment_GeneratedInjector;
@@ -38,6 +39,7 @@ import com.inventario.mobile.presentation.patrimonio.PatrimonioListViewModelPagi
 import com.inventario.mobile.presentation.patrimonio.PatrimonioListViewModel_HiltModules;
 import com.inventario.mobile.presentation.sala.SalaSelectionActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.scanner.ScannerActivity_GeneratedInjector;
+import com.inventario.mobile.presentation.search.QuickSearchActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.statistics.ExportFragment_GeneratedInjector;
 import com.inventario.mobile.presentation.statistics.OverviewFragment_GeneratedInjector;
 import com.inventario.mobile.presentation.statistics.RankingsFragment_GeneratedInjector;
@@ -46,6 +48,8 @@ import com.inventario.mobile.presentation.sync.SyncActivity_GeneratedInjector;
 import com.inventario.mobile.presentation.sync.SyncViewModel_HiltModules;
 import com.inventario.mobile.presentation.validation.ValidationExampleFragment_GeneratedInjector;
 import com.inventario.mobile.presentation.validation.ValidationViewModel_HiltModules;
+import com.inventario.mobile.presentation.viewmodel.PatrimonioDetailViewModel_HiltModules;
+import com.inventario.mobile.presentation.viewmodel.QuickSearchViewModel_HiltModules;
 import com.inventario.mobile.ui.base.BaseActivity_GeneratedInjector;
 import com.inventario.mobile.ui.coleta.ColetaActivity_GeneratedInjector;
 import com.inventario.mobile.ui.splash.SplashActivity_GeneratedInjector;
@@ -219,8 +223,10 @@ public final class InventarioMobileApplication_HiltComponents {
           InventarioPorSalaViewModel_HiltModules.KeyModule.class,
           ItemSemEtiquetaViewModel_HiltModules.KeyModule.class,
           ManualCollectionViewModel_HiltModules.KeyModule.class,
+          PatrimonioDetailViewModel_HiltModules.KeyModule.class,
           PatrimonioListViewModelPaging_HiltModules.KeyModule.class,
           PatrimonioListViewModel_HiltModules.KeyModule.class,
+          QuickSearchViewModel_HiltModules.KeyModule.class,
           SyncViewModel_HiltModules.KeyModule.class,
           ValidationViewModel_HiltModules.KeyModule.class
       }
@@ -250,11 +256,13 @@ public final class InventarioMobileApplication_HiltComponents {
       ManualCollectionActivity_GeneratedInjector,
       ColetasActivityClean_GeneratedInjector,
       DescricaoSelectionActivity_GeneratedInjector,
+      PatrimonioDetailActivity_GeneratedInjector,
       InventarioActivity_GeneratedInjector,
       InventarioTabsActivity_GeneratedInjector,
       MainActivity_GeneratedInjector,
       SalaSelectionActivity_GeneratedInjector,
       ScannerActivity_GeneratedInjector,
+      QuickSearchActivity_GeneratedInjector,
       StatisticsActivity_GeneratedInjector,
       SyncActivity_GeneratedInjector,
       BaseActivity_GeneratedInjector,
@@ -283,8 +291,10 @@ public final class InventarioMobileApplication_HiltComponents {
           InventarioPorSalaViewModel_HiltModules.BindsModule.class,
           ItemSemEtiquetaViewModel_HiltModules.BindsModule.class,
           ManualCollectionViewModel_HiltModules.BindsModule.class,
+          PatrimonioDetailViewModel_HiltModules.BindsModule.class,
           PatrimonioListViewModelPaging_HiltModules.BindsModule.class,
           PatrimonioListViewModel_HiltModules.BindsModule.class,
+          QuickSearchViewModel_HiltModules.BindsModule.class,
           SyncViewModel_HiltModules.BindsModule.class,
           ValidationViewModel_HiltModules.BindsModule.class
       }

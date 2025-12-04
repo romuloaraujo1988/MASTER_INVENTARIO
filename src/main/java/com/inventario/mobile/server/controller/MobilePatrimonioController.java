@@ -33,6 +33,61 @@ public class MobilePatrimonioController {
     private MobilePatrimonioService patrimonioService;
     
     /**
+     * Buscar patrimônios por query de texto livre (busca rápida)
+     * Busca por número, descrição, nome da sala ou responsável
+     * 
+     * GET /api/mobile/patrimonio/buscar?query=termo&filtro=ALL&inventarioId=1&limit=100
+     * 
+     * @param query termo de busca (mínimo 3 caracteres)
+     * @param filtro filtro de status: ALL, COLETADOS, PENDENTES, DIVERGENCIAS (default: ALL)
+     * @param inventarioId ID do inventário (opcional, usa ativo se não informado)
+     * @param limit limite de resultados (default: 100)
+     * @return lista de patrimônios encontrados
+     */
+    @GetMapping("/buscar")
+    public ResponseEntity<ApiResponse<List<MobilePatrimonioDTO>>> buscarPorQuery(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "ALL") String filtro,
+            @RequestParam(required = false) Integer inventarioId,
+            @RequestParam(defaultValue = "100") int limit) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            
+            logger.info("Busca rápida: query='{}', filtro={}, inventarioId={}, limit={}, usuário={}", 
+                    query, filtro, inventarioId, limit, username);
+            
+            // Validar query
+            if (query == null || query.trim().length() < 3) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("Digite ao menos 3 caracteres para buscar", "QUERY_TOO_SHORT"));
+            }
+            
+            // Limitar o limite máximo
+            if (limit > 500) {
+                limit = 500;
+            }
+            
+            List<MobilePatrimonioDTO> patrimonios = patrimonioService.buscarPorQuery(query, filtro, inventarioId, limit);
+            
+            logger.info("✓ Busca rápida retornou {} patrimônios para query '{}'", patrimonios.size(), query);
+            
+            return ResponseEntity.ok(
+                    ApiResponse.success(patrimonios, "Busca realizada com sucesso")
+            );
+            
+        } catch (SQLException e) {
+            logger.error("Erro SQL na busca rápida: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro de banco de dados: " + e.getMessage(), "DATABASE_ERROR"));
+        } catch (Exception e) {
+            logger.error("Erro na busca rápida: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao buscar patrimônios: " + e.getMessage(), "SEARCH_ERROR"));
+        }
+    }
+    
+    /**
      * Buscar patrimônio por QR Code
      * 
      * @param qrCode código QR do patrimônio

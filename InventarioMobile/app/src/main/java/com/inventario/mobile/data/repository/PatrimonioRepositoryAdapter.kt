@@ -219,4 +219,36 @@ class PatrimonioRepositoryAdapter @Inject constructor(
     override suspend fun contarColetadosPorSala(salaId: Int): Result<Int> {
         return impl.contarColetadosPorSala(salaId)
     }
+    
+    // ========================================
+    // Métodos para Busca Rápida de Patrimônio
+    // ========================================
+    
+    override suspend fun buscarPorQuery(query: String): Result<List<DomainPatrimonio>> {
+        val result = impl.buscarPorQuery(query)
+        return result.map { dataList ->
+            dataList.map { it.toDomain() }
+        }
+    }
+    
+    override suspend fun buscarColetadosPorQuery(query: String): Result<List<DomainPatrimonio>> {
+        val result = impl.buscarColetadosPorQuery(query)
+        return result.map { dataList ->
+            dataList.map { it.toDomain() }
+        }
+    }
+    
+    override suspend fun buscarPendentesPorQuery(query: String): Result<List<DomainPatrimonio>> {
+        val result = impl.buscarPendentesPorQuery(query)
+        return result.map { dataList ->
+            dataList.map { it.toDomain() }
+        }
+    }
+    
+    override suspend fun buscarDivergenciasPorQuery(query: String, inventarioId: Int): Result<List<DomainPatrimonio>> {
+        val result = impl.buscarDivergenciasPorQuery(query, inventarioId)
+        return result.map { dataList ->
+            dataList.map { it.toDomain() }
+        }
+    }
 }

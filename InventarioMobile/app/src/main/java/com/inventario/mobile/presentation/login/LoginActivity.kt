@@ -91,6 +91,28 @@ class LoginActivity : AppCompatActivity() {
                 com.google.android.material.snackbar.Snackbar.LENGTH_LONG
             ).show()
         }
+        
+        // ✅ VERIFICAR SE PRECISA DE AUTENTICAÇÃO LOCAL (biometria/PIN)
+        val requireLocalAuth = intent.getBooleanExtra("require_local_auth", false)
+        val biometricEnabledFromIntent = intent.getBooleanExtra("biometric_enabled", false)
+        val pinEnabledFromIntent = intent.getBooleanExtra("pin_enabled", false)
+        
+        if (requireLocalAuth) {
+            android.util.Log.d("LoginActivity", "═══════════════════════════════════════════")
+            android.util.Log.d("LoginActivity", "AUTENTICAÇÃO LOCAL REQUERIDA")
+            android.util.Log.d("LoginActivity", "Biometria: $biometricEnabledFromIntent")
+            android.util.Log.d("LoginActivity", "PIN: $pinEnabledFromIntent")
+            android.util.Log.d("LoginActivity", "═══════════════════════════════════════════")
+            
+            // Iniciar autenticação automaticamente após um pequeno delay
+            binding.root.postDelayed({
+                if (biometricEnabledFromIntent) {
+                    authenticateWithBiometric()
+                } else if (pinEnabledFromIntent) {
+                    showPinLoginDialog()
+                }
+            }, 500)
+        }
 
         // Configurar listeners dos campos de texto
         binding.etServerIp.addTextChangedListener { editable: android.text.Editable? ->

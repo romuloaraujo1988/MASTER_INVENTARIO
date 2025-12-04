@@ -369,4 +369,130 @@ class PatrimonioRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+    
+    // ========================================
+    // Métodos para Busca Rápida de Patrimônio
+    // ========================================
+    
+    /**
+     * Busca patrimônios por query (número, descrição ou nome da sala)
+     * Usa estratégia offline-first (banco local)
+     * 
+     * @param query Termo de busca
+     * @return Result com lista de patrimônios ou erro
+     * @see Requirements 1.1
+     */
+    suspend fun buscarPorQuery(query: String): Result<List<Patrimonio>> {
+        return try {
+            Log.d(TAG, "Buscando patrimônios por query: $query")
+            
+            val localStrategy = strategyFactory.getLocalDataSource()
+            _currentDataSource.value = DataSourceType.LOCAL
+            
+            val result = localStrategy.buscarPorQuery(query)
+            
+            if (result.isSuccess) {
+                val patrimonios = result.getOrDefault(emptyList())
+                Log.d(TAG, "✓ ${patrimonios.size} patrimônios encontrados para '$query'")
+            } else {
+                Log.e(TAG, "✗ Erro ao buscar patrimônios: ${result.exceptionOrNull()?.message}")
+            }
+            
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro inesperado ao buscar patrimônios por query", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Busca patrimônios coletados por query
+     * 
+     * @param query Termo de busca
+     * @return Result com lista de patrimônios coletados ou erro
+     * @see Requirements 3.1
+     */
+    suspend fun buscarColetadosPorQuery(query: String): Result<List<Patrimonio>> {
+        return try {
+            Log.d(TAG, "Buscando patrimônios COLETADOS por query: $query")
+            
+            val localStrategy = strategyFactory.getLocalDataSource()
+            _currentDataSource.value = DataSourceType.LOCAL
+            
+            val result = localStrategy.buscarColetadosPorQuery(query)
+            
+            if (result.isSuccess) {
+                val patrimonios = result.getOrDefault(emptyList())
+                Log.d(TAG, "✓ ${patrimonios.size} patrimônios coletados encontrados para '$query'")
+            } else {
+                Log.e(TAG, "✗ Erro ao buscar patrimônios coletados: ${result.exceptionOrNull()?.message}")
+            }
+            
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro inesperado ao buscar patrimônios coletados", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Busca patrimônios pendentes (não coletados) por query
+     * 
+     * @param query Termo de busca
+     * @return Result com lista de patrimônios pendentes ou erro
+     * @see Requirements 3.2
+     */
+    suspend fun buscarPendentesPorQuery(query: String): Result<List<Patrimonio>> {
+        return try {
+            Log.d(TAG, "Buscando patrimônios PENDENTES por query: $query")
+            
+            val localStrategy = strategyFactory.getLocalDataSource()
+            _currentDataSource.value = DataSourceType.LOCAL
+            
+            val result = localStrategy.buscarPendentesPorQuery(query)
+            
+            if (result.isSuccess) {
+                val patrimonios = result.getOrDefault(emptyList())
+                Log.d(TAG, "✓ ${patrimonios.size} patrimônios pendentes encontrados para '$query'")
+            } else {
+                Log.e(TAG, "✗ Erro ao buscar patrimônios pendentes: ${result.exceptionOrNull()?.message}")
+            }
+            
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro inesperado ao buscar patrimônios pendentes", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Busca patrimônios com divergência por query
+     * 
+     * @param query Termo de busca
+     * @param inventarioId ID do inventário ativo
+     * @return Result com lista de patrimônios com divergência ou erro
+     * @see Requirements 3.3
+     */
+    suspend fun buscarDivergenciasPorQuery(query: String, inventarioId: Int): Result<List<Patrimonio>> {
+        return try {
+            Log.d(TAG, "Buscando patrimônios com DIVERGÊNCIA por query: $query")
+            
+            val localStrategy = strategyFactory.getLocalDataSource()
+            _currentDataSource.value = DataSourceType.LOCAL
+            
+            val result = localStrategy.buscarDivergenciasPorQuery(query, inventarioId)
+            
+            if (result.isSuccess) {
+                val patrimonios = result.getOrDefault(emptyList())
+                Log.d(TAG, "✓ ${patrimonios.size} patrimônios com divergência encontrados para '$query'")
+            } else {
+                Log.e(TAG, "✗ Erro ao buscar patrimônios com divergência: ${result.exceptionOrNull()?.message}")
+            }
+            
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro inesperado ao buscar patrimônios com divergência", e)
+            Result.failure(e)
+        }
+    }
 }

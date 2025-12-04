@@ -58,13 +58,8 @@ class ObterDetalhePatrimonioUseCase @Inject constructor(
             require(valor.signum() >= 0) { "Valor do patrimônio não pode ser negativo" }
         }
         
-        // Validar estado se presente
-        detalhe.estado?.let { estado ->
-            val estadosValidos = listOf("BOM", "REGULAR", "RUIM", "INUTILIZADO")
-            require(estado.uppercase() in estadosValidos) { 
-                "Estado inválido: $estado. Estados válidos: ${estadosValidos.joinToString()}" 
-            }
-        }
+        // Estado é opcional e pode ter qualquer valor
+        // Não validamos mais pois o banco pode ter valores diversos
     }
     
     /**
@@ -101,11 +96,19 @@ class ObterDetalhePatrimonioUseCase @Inject constructor(
     
     /**
      * Verifica se o patrimônio precisa de atenção
+     * 
+     * Estados de conservação válidos:
+     * - BOM: Patrimônio em boas condições
+     * - OCIOSO: Patrimônio sem uso
+     * - ANTIECONÔMICO: Manutenção mais cara que o valor
+     * - RECUPERÁVEL: Pode ser recuperado
+     * - IRRECUPERÁVEL: Não pode ser recuperado (crítico)
      */
     fun precisaAtencao(detalhe: PatrimonioDetalhe): Boolean {
+        val estadosCriticos = listOf("IRRECUPERÁVEL", "IRRECUPERAVEL", "ANTIECONÔMICO", "ANTIECONOMICO")
         return detalhe.temDivergencias() || 
                !detalhe.temInformacoesCompletas() ||
-               detalhe.estado?.uppercase() in listOf("RUIM", "INUTILIZADO")
+               detalhe.estado?.uppercase() in estadosCriticos
     }
     
     /**

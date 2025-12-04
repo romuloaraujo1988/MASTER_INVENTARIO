@@ -90,6 +90,22 @@ class RefreshTokenInterceptor @Inject constructor(
                 return false
             }
             
+            // Verificar se refresh token não expirou (14 dias desde o login)
+            val loginTimestamp = preferencesManager.getLoginTimestamp()
+            val refreshTokenExpirationMs = 14L * 24 * 60 * 60 * 1000 // 14 dias
+            
+            if (loginTimestamp > 0) {
+                val now = System.currentTimeMillis()
+                val refreshTokenExpiresAt = loginTimestamp + refreshTokenExpirationMs
+                
+                if (now >= refreshTokenExpiresAt) {
+                    val daysExpired = (now - refreshTokenExpiresAt) / (24 * 60 * 60 * 1000)
+                    Log.e(TAG, "❌ Refresh token expirou há $daysExpired dias (mais de 14 dias desde o login)")
+                    tokenExpiredListener?.onTokenExpired()
+                    return false
+                }
+            }
+            
             Log.d(TAG, "Enviando requisição de refresh token...")
             
             // Construir requisição de refresh
@@ -108,18 +124,26 @@ class RefreshTokenInterceptor @Inject constructor(
                     val json = JSONObject(responseBody)
                     val newAccessToken = json.optString("accessToken")
                     val newRefreshToken = json.optString("refreshToken")
-                    val expiresIn = json.optLong("expiresIn", 86400L)
+                    // Usar 172800 (2 dias) como padrão, conforme configuração do backend
+                    val expiresIn = json.optLong("expiresIn", 172800L)
                     
                     if (newAccessToken.isNotEmpty()) {
                         // Salvar novos tokens
                         preferencesManager.saveTokens(newAccessToken, newRefreshToken, expiresIn)
                         
-                        Log.d(TAG, "✓ Token renovado com sucesso!")
+                        val tokenTimeRemaining = preferencesManager.getTokenTimeRemaining()
+                        Log.d(TAG, "✓ Token renovado com sucesso! Expira em: $tokenTimeRemaining")
                         return true
                     }
                 }
             } else {
                 Log.e(TAG, "❌ Falha ao renovar token: ${refreshResponse.code}")
+                
+                // Se o servidor retornou 401, o refresh token é inválido
+                if (refreshResponse.code == 401) {
+                    Log.e(TAG, "   → Refresh token inválido ou expirado no servidor")
+                }
+                
                 // Notificar que token expirou (não pode ser renovado)
                 tokenExpiredListener?.onTokenExpired()
             }

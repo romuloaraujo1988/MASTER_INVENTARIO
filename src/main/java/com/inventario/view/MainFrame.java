@@ -180,6 +180,12 @@ public class MainFrame extends JFrame {
             itemRelDivergencias.addActionListener(e -> abrirRelatorioDivergencias());
             menuRelatorios.add(itemRelDivergencias);
 
+            JMenuItem itemRelItensCompostos = new JMenuItem("Relatório de Itens Compostos");
+            itemRelItensCompostos.setFont(new Font("Arial", Font.PLAIN, 13));
+            itemRelItensCompostos.setToolTipText("Relatório de integridade dos conjuntos patrimoniais");
+            itemRelItensCompostos.addActionListener(e -> abrirRelatorioItensCompostos());
+            menuRelatorios.add(itemRelItensCompostos);
+
             menuRelatorios.addSeparator();
 
             // Item SIADS
@@ -992,6 +998,20 @@ public class MainFrame extends JFrame {
         } catch (Exception e) {
             ModernDialog.showMessage(this,
                     "Erro ao abrir relatório de divergências: " + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * Abre o relatório de integridade de itens compostos
+     */
+    private void abrirRelatorioItensCompostos() {
+        try {
+            RelatorioItensCompostosFrame relatorioFrame = new RelatorioItensCompostosFrame();
+            relatorioFrame.setVisible(true);
+        } catch (Exception e) {
+            ModernDialog.showMessage(this,
+                    "Erro ao abrir relatório de itens compostos: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }

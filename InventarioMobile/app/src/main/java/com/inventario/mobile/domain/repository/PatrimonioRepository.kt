@@ -78,4 +78,45 @@ interface PatrimonioRepository {
      * @return Result com total de patrimônios coletados ou erro
      */
     suspend fun contarColetadosPorSala(salaId: Int): Result<Int>
+    
+    // ========================================
+    // Métodos para Busca Rápida de Patrimônio
+    // ========================================
+    
+    /**
+     * Busca patrimônios por query (número, descrição ou nome da sala)
+     * 
+     * @param query Termo de busca
+     * @return Result com lista de patrimônios ou erro
+     * @see Requirements 1.1
+     */
+    suspend fun buscarPorQuery(query: String): Result<List<Patrimonio>>
+    
+    /**
+     * Busca patrimônios coletados por query
+     * 
+     * @param query Termo de busca
+     * @return Result com lista de patrimônios coletados ou erro
+     * @see Requirements 3.1
+     */
+    suspend fun buscarColetadosPorQuery(query: String): Result<List<Patrimonio>>
+    
+    /**
+     * Busca patrimônios pendentes (não coletados) por query
+     * 
+     * @param query Termo de busca
+     * @return Result com lista de patrimônios pendentes ou erro
+     * @see Requirements 3.2
+     */
+    suspend fun buscarPendentesPorQuery(query: String): Result<List<Patrimonio>>
+    
+    /**
+     * Busca patrimônios com divergência por query
+     * 
+     * @param query Termo de busca
+     * @param inventarioId ID do inventário ativo
+     * @return Result com lista de patrimônios com divergência ou erro
+     * @see Requirements 3.3
+     */
+    suspend fun buscarDivergenciasPorQuery(query: String, inventarioId: Int): Result<List<Patrimonio>>
 }

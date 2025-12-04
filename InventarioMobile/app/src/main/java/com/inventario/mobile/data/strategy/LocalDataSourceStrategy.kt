@@ -47,28 +47,38 @@ class LocalDataSourceStrategy(
             
             val entities = patrimonioDao.getAllPatrimoniosList()
             val patrimonios = entities.map { entity ->
+                // ✅ v2.8: Formatar data da coleta se existir
+                val dataColetaFormatada = entity.dataColeta?.let { timestamp ->
+                    try {
+                        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+                        sdf.format(java.util.Date(timestamp))
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                
                 Patrimonio(
                     id = entity.id.toLong(),
                     numeroPatrimonio = entity.numero,
                     descricao = entity.descricao,
-                    marca = null,
-                    modelo = null,
-                    numeroSerie = null,
-                    estado = entity.status,
-                    valor = null,
-                    setorId = null,
-                    setorNome = null,
-                    salaId = entity.idSala?.toLong(),
-                    salaNome = entity.nomeSala,
-                    responsavelId = entity.idResponsavel?.toLong(),
-                    responsavelNome = entity.nomeResponsavel,
+                    marca = entity.marca,
+                    modelo = entity.modelo,
+                    numeroSerie = entity.numeroSerie,
+                    estado = entity.status ?: entity.estado,
+                    valor = entity.valor,
+                    setorId = entity.setorId?.toLong(),
+                    setorNome = entity.setorNome,
+                    salaId = entity.idSala?.toLong() ?: entity.salaId?.toLong(),
+                    salaNome = entity.nomeSala ?: entity.salaNome,
+                    responsavelId = entity.idResponsavel?.toLong() ?: entity.responsavelId?.toLong(),
+                    responsavelNome = entity.nomeResponsavel ?: entity.responsavelNome,
                     qrCode = entity.numero,
-                    observacoes = null,
+                    observacoes = entity.observacoes,
                     coletado = entity.coletado,
-                    dataColeta = null,
-                    coletadoPor = null,
-                    dataColetaFormatada = null,
-                    observacoesColeta = null,
+                    dataColeta = entity.dataColeta?.toString(),
+                    coletadoPor = entity.coletadoPor,  // ✅ CORREÇÃO: Usar campo da entity
+                    dataColetaFormatada = dataColetaFormatada,  // ✅ CORREÇÃO: Formatar data
+                    observacoesColeta = entity.observacoesColeta,  // ✅ CORREÇÃO: Usar campo da entity
                     sincronizado = true,
                     servidorId = null
                 )
@@ -89,33 +99,46 @@ class LocalDataSourceStrategy(
             val entity = patrimonioDao.buscarPorNumero(numero)
             
             if (entity != null) {
+                // ✅ v2.8: Formatar data da coleta se existir
+                val dataColetaFormatada = entity.dataColeta?.let { timestamp ->
+                    try {
+                        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+                        sdf.format(java.util.Date(timestamp))
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                
                 val patrimonio = Patrimonio(
                     id = entity.id.toLong(),
                     numeroPatrimonio = entity.numero,
                     descricao = entity.descricao,
-                    marca = null,
-                    modelo = null,
-                    numeroSerie = null,
-                    estado = entity.status,
-                    valor = null,
-                    setorId = null,
-                    setorNome = null,
-                    salaId = entity.idSala?.toLong(),
-                    salaNome = entity.nomeSala,
-                    responsavelId = entity.idResponsavel?.toLong(),
-                    responsavelNome = entity.nomeResponsavel,
+                    marca = entity.marca,
+                    modelo = entity.modelo,
+                    numeroSerie = entity.numeroSerie,
+                    estado = entity.status ?: entity.estado,
+                    valor = entity.valor,
+                    setorId = entity.setorId?.toLong(),
+                    setorNome = entity.setorNome,
+                    salaId = entity.idSala?.toLong() ?: entity.salaId?.toLong(),
+                    salaNome = entity.nomeSala ?: entity.salaNome,
+                    responsavelId = entity.idResponsavel?.toLong() ?: entity.responsavelId?.toLong(),
+                    responsavelNome = entity.nomeResponsavel ?: entity.responsavelNome,
                     qrCode = entity.numero,
-                    observacoes = null,
+                    observacoes = entity.observacoes,
                     coletado = entity.coletado,
-                    dataColeta = null,
-                    coletadoPor = null,
-                    dataColetaFormatada = null,
-                    observacoesColeta = null,
+                    dataColeta = entity.dataColeta?.toString(),
+                    coletadoPor = entity.coletadoPor,  // ✅ CORREÇÃO: Usar campo da entity
+                    dataColetaFormatada = dataColetaFormatada,  // ✅ CORREÇÃO: Formatar data
+                    observacoesColeta = entity.observacoesColeta,  // ✅ CORREÇÃO: Usar campo da entity
                     sincronizado = true,
                     servidorId = null
                 )
                 
                 Log.d(TAG, "✓ Patrimônio encontrado no banco local")
+                Log.d(TAG, "  Coletado: ${entity.coletado}")
+                Log.d(TAG, "  Coletado por: ${entity.coletadoPor}")
+                Log.d(TAG, "  Data coleta: $dataColetaFormatada")
                 Result.success(patrimonio)
             } else {
                 Log.w(TAG, "Patrimônio não encontrado no banco local")
@@ -199,28 +222,38 @@ class LocalDataSourceStrategy(
             
             val entities = patrimonioDao.buscarPorDescricaoNaoColetados(descricao)
             val patrimonios = entities.map { entity ->
+                // ✅ v2.8: Formatar data da coleta se existir
+                val dataColetaFormatada = entity.dataColeta?.let { timestamp ->
+                    try {
+                        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+                        sdf.format(java.util.Date(timestamp))
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                
                 Patrimonio(
                     id = entity.id.toLong(),
                     numeroPatrimonio = entity.numero,
                     descricao = entity.descricao,
-                    marca = null,
-                    modelo = null,
-                    numeroSerie = null,
-                    estado = entity.status,
-                    valor = null,
-                    setorId = null,
-                    setorNome = null,
-                    salaId = entity.idSala?.toLong(),
-                    salaNome = entity.nomeSala,
-                    responsavelId = entity.idResponsavel?.toLong(),
-                    responsavelNome = entity.nomeResponsavel,
+                    marca = entity.marca,
+                    modelo = entity.modelo,
+                    numeroSerie = entity.numeroSerie,
+                    estado = entity.status ?: entity.estado,
+                    valor = entity.valor,
+                    setorId = entity.setorId?.toLong(),
+                    setorNome = entity.setorNome,
+                    salaId = entity.idSala?.toLong() ?: entity.salaId?.toLong(),
+                    salaNome = entity.nomeSala ?: entity.salaNome,
+                    responsavelId = entity.idResponsavel?.toLong() ?: entity.responsavelId?.toLong(),
+                    responsavelNome = entity.nomeResponsavel ?: entity.responsavelNome,
                     qrCode = entity.numero,
-                    observacoes = null,
+                    observacoes = entity.observacoes,
                     coletado = entity.coletado,
-                    dataColeta = null,
-                    coletadoPor = null,
-                    dataColetaFormatada = null,
-                    observacoesColeta = null,
+                    dataColeta = entity.dataColeta?.toString(),
+                    coletadoPor = entity.coletadoPor,  // ✅ CORREÇÃO: Usar campo da entity
+                    dataColetaFormatada = dataColetaFormatada,  // ✅ CORREÇÃO: Formatar data
+                    observacoesColeta = entity.observacoesColeta,  // ✅ CORREÇÃO: Usar campo da entity
                     sincronizado = true,
                     servidorId = null
                 )
@@ -243,7 +276,7 @@ class LocalDataSourceStrategy(
     /**
      * Busca patrimônios por sala com filtro opcional de status de coleta e paginação.
      */
-    suspend fun buscarPorSala(
+    override suspend fun buscarPorSala(
         salaId: Int,
         coletado: Boolean?,
         page: Int,
@@ -256,28 +289,38 @@ class LocalDataSourceStrategy(
             val entities = patrimonioDao.buscarPorSala(salaId, coletado, pageSize, offset)
             
             val patrimonios = entities.map { entity ->
+                // ✅ v2.8: Formatar data da coleta se existir
+                val dataColetaFormatada = entity.dataColeta?.let { timestamp ->
+                    try {
+                        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+                        sdf.format(java.util.Date(timestamp))
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                
                 Patrimonio(
                     id = entity.id.toLong(),
                     numeroPatrimonio = entity.numero,
                     descricao = entity.descricao,
-                    marca = null,
-                    modelo = null,
-                    numeroSerie = null,
-                    estado = entity.status,
-                    valor = null,
-                    setorId = null,
-                    setorNome = null,
-                    salaId = entity.idSala?.toLong(),
-                    salaNome = entity.nomeSala,
-                    responsavelId = entity.idResponsavel?.toLong(),
-                    responsavelNome = entity.nomeResponsavel,
+                    marca = entity.marca,
+                    modelo = entity.modelo,
+                    numeroSerie = entity.numeroSerie,
+                    estado = entity.status ?: entity.estado,
+                    valor = entity.valor,
+                    setorId = entity.setorId?.toLong(),
+                    setorNome = entity.setorNome,
+                    salaId = entity.idSala?.toLong() ?: entity.salaId?.toLong(),
+                    salaNome = entity.nomeSala ?: entity.salaNome,
+                    responsavelId = entity.idResponsavel?.toLong() ?: entity.responsavelId?.toLong(),
+                    responsavelNome = entity.nomeResponsavel ?: entity.responsavelNome,
                     qrCode = entity.numero,
-                    observacoes = null,
+                    observacoes = entity.observacoes,
                     coletado = entity.coletado,
-                    dataColeta = null,
-                    coletadoPor = null,
-                    dataColetaFormatada = null,
-                    observacoesColeta = null,
+                    dataColeta = entity.dataColeta?.toString(),
+                    coletadoPor = entity.coletadoPor,  // ✅ CORREÇÃO: Usar campo da entity
+                    dataColetaFormatada = dataColetaFormatada,  // ✅ CORREÇÃO: Formatar data
+                    observacoesColeta = entity.observacoesColeta,  // ✅ CORREÇÃO: Usar campo da entity
                     sincronizado = true,
                     servidorId = null
                 )
@@ -294,7 +337,7 @@ class LocalDataSourceStrategy(
     /**
      * Conta total de patrimônios em uma sala.
      */
-    suspend fun contarPorSala(salaId: Int): Result<Int> = withContext(Dispatchers.IO) {
+    override suspend fun contarPorSala(salaId: Int): Result<Int> = withContext(Dispatchers.IO) {
         try {
             val total = patrimonioDao.contarPorSala(salaId)
             Log.d(TAG, "✓ Total: $total patrimônios na sala $salaId")
@@ -308,7 +351,7 @@ class LocalDataSourceStrategy(
     /**
      * Conta patrimônios coletados em uma sala.
      */
-    suspend fun contarColetadosPorSala(salaId: Int): Result<Int> = withContext(Dispatchers.IO) {
+    override suspend fun contarColetadosPorSala(salaId: Int): Result<Int> = withContext(Dispatchers.IO) {
         try {
             val total = patrimonioDao.contarColetadosPorSala(salaId)
             Log.d(TAG, "✓ Total coletados: $total na sala $salaId")
@@ -316,6 +359,128 @@ class LocalDataSourceStrategy(
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao contar patrimônios coletados", e)
             Result.failure(e)
+        }
+    }
+    
+    // ========================================
+    // Métodos para Busca Rápida de Patrimônio
+    // ========================================
+    
+    /**
+     * Busca patrimônios por query (número, descrição ou nome da sala)
+     * @see Requirements 1.1
+     */
+    override suspend fun buscarPorQuery(query: String): Result<List<Patrimonio>> = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "Buscando patrimônios por query: $query")
+            
+            val entities = patrimonioDao.buscarPorQuery(query)
+            val patrimonios = mapEntitiesToPatrimonios(entities)
+            
+            Log.d(TAG, "✓ ${patrimonios.size} patrimônios encontrados para '$query'")
+            Result.success(patrimonios)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao buscar patrimônios por query", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Busca patrimônios coletados por query
+     * @see Requirements 3.1
+     */
+    override suspend fun buscarColetadosPorQuery(query: String): Result<List<Patrimonio>> = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "Buscando patrimônios COLETADOS por query: $query")
+            
+            val entities = patrimonioDao.buscarColetadosPorQuery(query)
+            val patrimonios = mapEntitiesToPatrimonios(entities)
+            
+            Log.d(TAG, "✓ ${patrimonios.size} patrimônios coletados encontrados para '$query'")
+            Result.success(patrimonios)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao buscar patrimônios coletados", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Busca patrimônios pendentes (não coletados) por query
+     * @see Requirements 3.2
+     */
+    override suspend fun buscarPendentesPorQuery(query: String): Result<List<Patrimonio>> = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "Buscando patrimônios PENDENTES por query: $query")
+            
+            val entities = patrimonioDao.buscarPendentesPorQuery(query)
+            val patrimonios = mapEntitiesToPatrimonios(entities)
+            
+            Log.d(TAG, "✓ ${patrimonios.size} patrimônios pendentes encontrados para '$query'")
+            Result.success(patrimonios)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao buscar patrimônios pendentes", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Busca patrimônios com divergência por query
+     * @see Requirements 3.3
+     */
+    override suspend fun buscarDivergenciasPorQuery(query: String, inventarioId: Int): Result<List<Patrimonio>> = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "Buscando patrimônios com DIVERGÊNCIA por query: $query")
+            
+            val entities = patrimonioDao.buscarDivergenciasPorQuery(query, inventarioId)
+            val patrimonios = mapEntitiesToPatrimonios(entities)
+            
+            Log.d(TAG, "✓ ${patrimonios.size} patrimônios com divergência encontrados para '$query'")
+            Result.success(patrimonios)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao buscar patrimônios com divergência", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Função auxiliar para mapear entities para domain models
+     */
+    private fun mapEntitiesToPatrimonios(entities: List<com.inventario.mobile.data.local.entity.PatrimonioEntity>): List<Patrimonio> {
+        return entities.map { entity ->
+            val dataColetaFormatada = entity.dataColeta?.let { timestamp ->
+                try {
+                    val sdf = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+                    sdf.format(java.util.Date(timestamp))
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            
+            Patrimonio(
+                id = entity.id.toLong(),
+                numeroPatrimonio = entity.numero,
+                descricao = entity.descricao,
+                marca = entity.marca,
+                modelo = entity.modelo,
+                numeroSerie = entity.numeroSerie,
+                estado = entity.status ?: entity.estado,
+                valor = entity.valor,
+                setorId = entity.setorId?.toLong(),
+                setorNome = entity.setorNome,
+                salaId = entity.idSala?.toLong() ?: entity.salaId?.toLong(),
+                salaNome = entity.nomeSala ?: entity.salaNome,
+                responsavelId = entity.idResponsavel?.toLong() ?: entity.responsavelId?.toLong(),
+                responsavelNome = entity.nomeResponsavel ?: entity.responsavelNome,
+                qrCode = entity.numero,
+                observacoes = entity.observacoes,
+                coletado = entity.coletado,
+                dataColeta = entity.dataColeta?.toString(),
+                coletadoPor = entity.coletadoPor,
+                dataColetaFormatada = dataColetaFormatada,
+                observacoesColeta = entity.observacoesColeta,
+                sincronizado = true,
+                servidorId = null
+            )
         }
     }
 }

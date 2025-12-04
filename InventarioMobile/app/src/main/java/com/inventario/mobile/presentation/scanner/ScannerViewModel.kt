@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inventario.mobile.data.model.Patrimonio
 import com.inventario.mobile.data.repository.InventarioRepository
+import com.inventario.mobile.domain.usecase.BuscarPatrimonioUseCase
+import com.inventario.mobile.domain.usecase.RegistrarColetaUseCase
 import com.inventario.mobile.utils.PreferencesManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,12 +15,14 @@ import kotlinx.coroutines.launch
 
 /**
  * ViewModel para Scanner de QR Code
- * ✅ Agora usa RegistrarColetaUseCase obrigatório (UNIFICADO com coleta manual)
+ * ✅ v2.8: Agora usa BuscarPatrimonioUseCase para suporte OFFLINE (UNIFICADO com coleta manual)
+ * ✅ Usa RegistrarColetaUseCase obrigatório (UNIFICADO com coleta manual)
  */
 class ScannerViewModel(
     private val inventarioRepository: InventarioRepository,
     private val preferencesManager: PreferencesManager,
-    private val registrarColetaUseCase: com.inventario.mobile.domain.usecase.RegistrarColetaUseCase
+    private val registrarColetaUseCase: RegistrarColetaUseCase,
+    private val buscarPatrimonioUseCase: BuscarPatrimonioUseCase // ✅ NOVO: Use Case para busca offline
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(ScannerUiState())
@@ -28,6 +32,10 @@ class ScannerViewModel(
         loadColetasCount()
     }
     
+    /**
+     * Busca patrimônio por ID e código
+     * ✅ v2.8: Agora usa BuscarPatrimonioUseCase com suporte OFFLINE
+     */
     fun searchPatrimonio(patrimonioId: Long, codigo: String) {
         viewModelScope.launch {
             try {
@@ -38,53 +46,55 @@ class ScannerViewModel(
                     scanResult = null // Limpar resultado anterior
                 )
                 
-                Log.d("ScannerViewModel", "Buscando patrimônio - ID: $patrimonioId, Código: $codigo")
+                Log.d("ScannerViewModel", "═══════════════════════════════════════")
+                Log.d("ScannerViewModel", "BUSCA DE PATRIMÔNIO (MODO OFFLINE SUPORTADO)")
+                Log.d("ScannerViewModel", "═══════════════════════════════════════")
+                Log.d("ScannerViewModel", "ID: $patrimonioId, Código: $codigo")
+                Log.d("ScannerViewModel", "Usando BuscarPatrimonioUseCase (Clean Architecture)")
                 
-                // Buscar patrimônio no repositório
-                val result = inventarioRepository.findPatrimonioByNumero(codigo)
+                // ✅ CORREÇÃO: Usar BuscarPatrimonioUseCase ao invés de inventarioRepository
+                // Isso garante suporte offline igual à coleta manual
+                val result = buscarPatrimonioUseCase(codigo)
                 
                 result.fold(
-                    onSuccess = { patrimonio ->
-                        if (patrimonio != null) {
-                            Log.d("ScannerViewModel", "Patrimônio encontrado - ID: ${patrimonio.id}, Número: ${patrimonio.numeroPatrimonio}")
-                            
-                            // Verificar se já foi coletado
-                            val jaColetado = patrimonio.coletado
-                            Log.d("ScannerViewModel", "Patrimônio já coletado: $jaColetado")
-                            
-                            _uiState.value = _uiState.value.copy(
-                                isLoading = false,
-                                statusMessage = if (jaColetado) 
-                                    "Patrimônio ${patrimonio.numeroPatrimonio} já foi coletado" 
-                                else 
-                                    "Patrimônio encontrado: ${patrimonio.numeroPatrimonio}",
-                                scanResult = ScanResult(
-                                    qrContent = "PATRIMONIO:${patrimonio.id}:${patrimonio.numeroPatrimonio}",
-                                    patrimonioId = patrimonio.id,
-                                    patrimonioCodigo = patrimonio.numeroPatrimonio,
-                                    patrimonio = patrimonio,
-                                    jaColetado = jaColetado,
-                                    coletadoPor = patrimonio.coletadoPor,
-                                    dataColetaFormatada = patrimonio.dataColetaFormatada
-                                ),
-                                errorMessage = null
-                            )
-                        } else {
-                            Log.w("ScannerViewModel", "Patrimônio não encontrado - Código: $codigo")
-                            _uiState.value = _uiState.value.copy(
-                                isLoading = false,
-                                statusMessage = "Patrimônio não encontrado",
-                                errorMessage = "Patrimônio '$codigo' não foi encontrado no sistema. Verifique o código e tente novamente.",
-                                scanResult = null
-                            )
-                        }
-                    },
-                    onFailure = { exception ->
-                        Log.e("ScannerViewModel", "Erro ao buscar patrimônio", exception)
+                    onSuccess = { domainPatrimonio ->
+                        Log.d("ScannerViewModel", "✓ Patrimônio encontrado!")
+                        Log.d("ScannerViewModel", "  ID: ${domainPatrimonio.id}")
+                        Log.d("ScannerViewModel", "  Número: ${domainPatrimonio.numeroPatrimonio}")
+                        Log.d("ScannerViewModel", "  Descrição: ${domainPatrimonio.descricao}")
+                        
+                        // Converter domain model para data model
+                        val patrimonio = convertToDataModel(domainPatrimonio)
+                        
+                        // Verificar se já foi coletado
+                        val jaColetado = domainPatrimonio.coletado
+                        Log.d("ScannerViewModel", "  Já coletado: $jaColetado")
+                        
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
-                            statusMessage = "Erro na busca",
-                            errorMessage = "Erro ao buscar patrimônio: ${exception.message}\n\nTente escanear novamente.",
+                            statusMessage = if (jaColetado) 
+                                "Patrimônio ${patrimonio.numeroPatrimonio} já foi coletado" 
+                            else 
+                                "Patrimônio encontrado: ${patrimonio.numeroPatrimonio}",
+                            scanResult = ScanResult(
+                                qrContent = "PATRIMONIO:${patrimonio.id}:${patrimonio.numeroPatrimonio}",
+                                patrimonioId = patrimonio.id,
+                                patrimonioCodigo = patrimonio.numeroPatrimonio,
+                                patrimonio = patrimonio,
+                                jaColetado = jaColetado,
+                                coletadoPor = patrimonio.coletadoPor,
+                                dataColetaFormatada = patrimonio.dataColetaFormatada
+                            ),
+                            errorMessage = null
+                        )
+                    },
+                    onFailure = { exception ->
+                        Log.w("ScannerViewModel", "✗ Patrimônio não encontrado - Código: $codigo")
+                        Log.w("ScannerViewModel", "  Erro: ${exception.message}")
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            statusMessage = "Patrimônio não encontrado",
+                            errorMessage = "Patrimônio '$codigo' não foi encontrado.\n\n${exception.message}",
                             scanResult = null
                         )
                     }
@@ -102,6 +112,10 @@ class ScannerViewModel(
         }
     }
     
+    /**
+     * Busca patrimônio apenas por código (usado quando QR code contém só o número)
+     * ✅ v2.8: Agora usa BuscarPatrimonioUseCase com suporte OFFLINE
+     */
     fun searchPatrimonioByCodigo(codigo: String) {
         viewModelScope.launch {
             try {
@@ -123,53 +137,54 @@ class ScannerViewModel(
                     return@launch
                 }
                 
-                Log.d("ScannerViewModel", "Buscando patrimônio por código: $codigo")
+                Log.d("ScannerViewModel", "═══════════════════════════════════════")
+                Log.d("ScannerViewModel", "BUSCA POR CÓDIGO (MODO OFFLINE SUPORTADO)")
+                Log.d("ScannerViewModel", "═══════════════════════════════════════")
+                Log.d("ScannerViewModel", "Código: $codigo")
+                Log.d("ScannerViewModel", "Usando BuscarPatrimonioUseCase (Clean Architecture)")
                 
-                // Buscar patrimônio no repositório
-                val result = inventarioRepository.findPatrimonioByNumero(codigo)
+                // ✅ CORREÇÃO: Usar BuscarPatrimonioUseCase ao invés de inventarioRepository
+                // Isso garante suporte offline igual à coleta manual
+                val result = buscarPatrimonioUseCase(codigo)
                 
                 result.fold(
-                    onSuccess = { patrimonio ->
-                        if (patrimonio != null) {
-                            Log.d("ScannerViewModel", "Patrimônio encontrado por código - ID: ${patrimonio.id}, Número: ${patrimonio.numeroPatrimonio}")
-                            
-                            // Verificar se já foi coletado
-                            val jaColetado = patrimonio.coletado
-                            Log.d("ScannerViewModel", "Patrimônio já coletado: $jaColetado")
-                            
-                            _uiState.value = _uiState.value.copy(
-                                isLoading = false,
-                                statusMessage = if (jaColetado) 
-                                    "Patrimônio $codigo já foi coletado" 
-                                else 
-                                    "Patrimônio encontrado: $codigo",
-                                scanResult = ScanResult(
-                                    qrContent = "PATRIMONIO:${patrimonio.id}:$codigo",
-                                    patrimonioId = patrimonio.id,
-                                    patrimonioCodigo = codigo,
-                                    patrimonio = patrimonio,
-                                    jaColetado = jaColetado,
-                                    coletadoPor = patrimonio.coletadoPor,
-                                    dataColetaFormatada = patrimonio.dataColetaFormatada
-                                ),
-                                errorMessage = null
-                            )
-                        } else {
-                            Log.w("ScannerViewModel", "Patrimônio não encontrado - Código: $codigo")
-                            _uiState.value = _uiState.value.copy(
-                                isLoading = false,
-                                statusMessage = "Patrimônio não encontrado",
-                                errorMessage = "Patrimônio '$codigo' não foi encontrado no sistema. Verifique o código e tente novamente.",
-                                scanResult = null
-                            )
-                        }
-                    },
-                    onFailure = { exception ->
-                        Log.e("ScannerViewModel", "Erro ao buscar patrimônio por código", exception)
+                    onSuccess = { domainPatrimonio ->
+                        Log.d("ScannerViewModel", "✓ Patrimônio encontrado por código!")
+                        Log.d("ScannerViewModel", "  ID: ${domainPatrimonio.id}")
+                        Log.d("ScannerViewModel", "  Número: ${domainPatrimonio.numeroPatrimonio}")
+                        
+                        // Converter domain model para data model
+                        val patrimonio = convertToDataModel(domainPatrimonio)
+                        
+                        // Verificar se já foi coletado
+                        val jaColetado = domainPatrimonio.coletado
+                        Log.d("ScannerViewModel", "  Já coletado: $jaColetado")
+                        
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
-                            statusMessage = "Erro na busca",
-                            errorMessage = "Erro ao buscar patrimônio: ${exception.message}\n\nTente escanear novamente.",
+                            statusMessage = if (jaColetado) 
+                                "Patrimônio $codigo já foi coletado" 
+                            else 
+                                "Patrimônio encontrado: $codigo",
+                            scanResult = ScanResult(
+                                qrContent = "PATRIMONIO:${patrimonio.id}:$codigo",
+                                patrimonioId = patrimonio.id,
+                                patrimonioCodigo = codigo,
+                                patrimonio = patrimonio,
+                                jaColetado = jaColetado,
+                                coletadoPor = patrimonio.coletadoPor,
+                                dataColetaFormatada = patrimonio.dataColetaFormatada
+                            ),
+                            errorMessage = null
+                        )
+                    },
+                    onFailure = { exception ->
+                        Log.w("ScannerViewModel", "✗ Patrimônio não encontrado - Código: $codigo")
+                        Log.w("ScannerViewModel", "  Erro: ${exception.message}")
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            statusMessage = "Patrimônio não encontrado",
+                            errorMessage = "Patrimônio '$codigo' não foi encontrado.\n\n${exception.message}",
                             scanResult = null
                         )
                     }
@@ -414,6 +429,40 @@ class ScannerViewModel(
                 )
             }
         }
+    }
+    
+    /**
+     * Converte domain model para data model
+     * Necessário para compatibilidade com código existente
+     */
+    private fun convertToDataModel(domain: com.inventario.mobile.domain.model.Patrimonio): Patrimonio {
+        return Patrimonio(
+            id = domain.id.toLong(),
+            numeroPatrimonio = domain.numeroPatrimonio,
+            descricao = domain.descricao ?: "",
+            marca = domain.marca,
+            modelo = domain.modelo,
+            numeroSerie = domain.numeroSerie,
+            estado = domain.estado,
+            valor = domain.valor,
+            setorId = domain.idSetor?.toLong(),
+            setorNome = domain.nomeSetor,
+            salaId = domain.idSala?.toLong(),
+            salaNome = domain.nomeSala,
+            responsavelId = domain.coletorId,
+            responsavelNome = domain.nomeResponsavel,
+            qrCode = domain.qrCode,
+            observacoes = domain.observacoes,
+            coletado = domain.coletado,
+            dataColeta = domain.dataColeta,
+            coletadoPor = domain.coletadoPor,
+            dataColetaFormatada = domain.dataColetaFormatada,
+            localizacaoEncontrada = domain.localizacaoEncontrada,
+            estadoEncontrado = domain.estadoEncontrado,
+            observacoesColeta = null,
+            sincronizado = domain.sincronizado,
+            servidorId = domain.servidorId
+        )
     }
 }
 
