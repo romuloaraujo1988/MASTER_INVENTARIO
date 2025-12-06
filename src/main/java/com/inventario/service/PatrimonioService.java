@@ -2,6 +2,9 @@ package com.inventario.service;
 
 import com.inventario.model.Patrimonio;
 import com.inventario.repository.PatrimonioRepository;
+import com.inventario.event.DashboardEvent;
+import com.inventario.event.DashboardEventBus;
+import com.inventario.event.DashboardEventType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -79,7 +82,34 @@ public class PatrimonioService {
             throw new IllegalArgumentException("Número do patrimônio é obrigatório");
         }
         
-        return patrimonioRepository.save(patrimonio);
+        boolean isNovo = patrimonio.getId() == 0;
+        Patrimonio salvo = patrimonioRepository.save(patrimonio);
+        
+        // Publicar evento para atualização da dashboard
+        publicarEventoPatrimonioAtualizado(salvo, isNovo ? "CRIADO" : "ATUALIZADO");
+        
+        return salvo;
+    }
+    
+    /**
+     * Publica evento de patrimônio atualizado para a dashboard.
+     * Este método não lança exceções para não afetar a transação principal.
+     */
+    private void publicarEventoPatrimonioAtualizado(Patrimonio patrimonio, String operacao) {
+        try {
+            DashboardEvent event = DashboardEvent.builder(DashboardEventType.PATRIMONIO_ATUALIZADO)
+                .source("PatrimonioService")
+                .addMetadata("patrimonioId", patrimonio.getId())
+                .addMetadata("numero", patrimonio.getNumero())
+                .addMetadata("operacao", operacao)
+                .addAffectedEntityId(patrimonio.getId())
+                .build();
+            
+            DashboardEventBus.getInstance().publish(event);
+            logger.debug("Evento PATRIMONIO_ATUALIZADO publicado para patrimônio: {}", patrimonio.getNumero());
+        } catch (Exception e) {
+            logger.warn("Falha ao publicar evento de patrimônio atualizado: {}", e.getMessage());
+        }
     }
     
     /**

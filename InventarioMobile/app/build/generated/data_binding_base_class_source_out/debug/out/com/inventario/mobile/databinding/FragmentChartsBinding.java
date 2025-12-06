@@ -8,7 +8,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.widget.NestedScrollView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.github.mikephil.charting.charts.BarChart;
@@ -21,7 +21,7 @@ import java.lang.String;
 
 public final class FragmentChartsBinding implements ViewBinding {
   @NonNull
-  private final NestedScrollView rootView;
+  private final SwipeRefreshLayout rootView;
 
   @NonNull
   public final LineChart chartEvolucao;
@@ -39,6 +39,9 @@ public final class FragmentChartsBinding implements ViewBinding {
   public final ProgressBar progressBar;
 
   @NonNull
+  public final SwipeRefreshLayout swipeRefresh;
+
+  @NonNull
   public final TextView tvColetados;
 
   @NonNull
@@ -50,11 +53,11 @@ public final class FragmentChartsBinding implements ViewBinding {
   @NonNull
   public final TextView tvTotalPatrimonios;
 
-  private FragmentChartsBinding(@NonNull NestedScrollView rootView,
+  private FragmentChartsBinding(@NonNull SwipeRefreshLayout rootView,
       @NonNull LineChart chartEvolucao, @NonNull BarChart chartProgresso,
       @NonNull PieChart chartStatus, @NonNull BarChart chartTopItens,
-      @NonNull ProgressBar progressBar, @NonNull TextView tvColetados,
-      @NonNull TextView tvPendentes, @NonNull TextView tvPercentual,
+      @NonNull ProgressBar progressBar, @NonNull SwipeRefreshLayout swipeRefresh,
+      @NonNull TextView tvColetados, @NonNull TextView tvPendentes, @NonNull TextView tvPercentual,
       @NonNull TextView tvTotalPatrimonios) {
     this.rootView = rootView;
     this.chartEvolucao = chartEvolucao;
@@ -62,6 +65,7 @@ public final class FragmentChartsBinding implements ViewBinding {
     this.chartStatus = chartStatus;
     this.chartTopItens = chartTopItens;
     this.progressBar = progressBar;
+    this.swipeRefresh = swipeRefresh;
     this.tvColetados = tvColetados;
     this.tvPendentes = tvPendentes;
     this.tvPercentual = tvPercentual;
@@ -70,7 +74,7 @@ public final class FragmentChartsBinding implements ViewBinding {
 
   @Override
   @NonNull
-  public NestedScrollView getRoot() {
+  public SwipeRefreshLayout getRoot() {
     return rootView;
   }
 
@@ -125,6 +129,8 @@ public final class FragmentChartsBinding implements ViewBinding {
         break missingId;
       }
 
+      SwipeRefreshLayout swipeRefresh = (SwipeRefreshLayout) rootView;
+
       id = R.id.tvColetados;
       TextView tvColetados = ViewBindings.findChildViewById(rootView, id);
       if (tvColetados == null) {
@@ -149,9 +155,9 @@ public final class FragmentChartsBinding implements ViewBinding {
         break missingId;
       }
 
-      return new FragmentChartsBinding((NestedScrollView) rootView, chartEvolucao, chartProgresso,
-          chartStatus, chartTopItens, progressBar, tvColetados, tvPendentes, tvPercentual,
-          tvTotalPatrimonios);
+      return new FragmentChartsBinding((SwipeRefreshLayout) rootView, chartEvolucao, chartProgresso,
+          chartStatus, chartTopItens, progressBar, swipeRefresh, tvColetados, tvPendentes,
+          tvPercentual, tvTotalPatrimonios);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

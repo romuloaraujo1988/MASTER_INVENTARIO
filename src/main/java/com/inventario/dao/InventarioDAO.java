@@ -1,7 +1,12 @@
 package com.inventario.dao;
 
 import com.inventario.model.Inventario;
+import com.inventario.event.DashboardEvent;
+import com.inventario.event.DashboardEventBus;
+import com.inventario.event.DashboardEventType;
 import org.springframework.stereotype.Repository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.List;
@@ -22,16 +27,6 @@ import java.util.List;
  */
 @Repository
 public class InventarioDAO extends BaseDAO<Inventario, Integer> {
-
-    /**
-     * Detecta se está usando SQLite
-     * NOTA: Para operações do desktop/servidor, sempre usar PostgreSQL
-     */
-    private boolean isSQLite() throws SQLException {
-        // CORREÇÃO: Sempre retornar false para forçar uso do PostgreSQL
-        // O modo offline SQLite é apenas para o app Android
-        return false;
-    }
 
     /**
      * Retorna o nome correto da tabela de inventário
@@ -274,12 +269,41 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
         return executeUpdate(sql, percentual, id) > 0;
     }
 
+    private static final Logger logger = LoggerFactory.getLogger(InventarioDAO.class);
+    
     /**
      * Atualiza o status do inventário
      */
     public boolean atualizarStatus(int id, String status) throws SQLException {
         String sql = "UPDATE TABELA_INVENTARIO SET STATUS_INVENTARIO = ? WHERE ID = ?";
-        return executeUpdate(sql, status, id) > 0;
+        boolean atualizado = executeUpdate(sql, status, id) > 0;
+        
+        if (atualizado) {
+            // Publicar evento para atualização da dashboard
+            publicarEventoInventarioAlterado(id, status);
+        }
+        
+        return atualizado;
+    }
+    
+    /**
+     * Publica evento de inventário alterado para a dashboard.
+     * Este método não lança exceções para não afetar a operação principal.
+     */
+    private void publicarEventoInventarioAlterado(int inventarioId, String novoStatus) {
+        try {
+            DashboardEvent event = DashboardEvent.builder(DashboardEventType.INVENTARIO_ALTERADO)
+                .source("InventarioDAO")
+                .addMetadata("inventarioId", inventarioId)
+                .addMetadata("status", novoStatus)
+                .addAffectedEntityId(inventarioId)
+                .build();
+            
+            DashboardEventBus.getInstance().publish(event);
+            logger.debug("Evento INVENTARIO_ALTERADO publicado para inventário ID: {}", inventarioId);
+        } catch (Exception e) {
+            logger.warn("Falha ao publicar evento de inventário alterado: {}", e.getMessage());
+        }
     }
 
     /**

@@ -209,7 +209,7 @@ public class MobileApiClient {
     }
     
     private String doDelete(String urlString) throws Exception {
-        URL url = new URL(urlString);
+        URL url = URI.create(urlString).toURL();
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         
         try {

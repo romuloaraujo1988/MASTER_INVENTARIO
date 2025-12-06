@@ -41,6 +41,10 @@ class InventarioMobileApplication : Application(), Configuration.Provider, Token
         Log.d(TAG, "Inventário Mobile App iniciando...")
         Log.d(TAG, "═══════════════════════════════════")
         
+        // ✅ APLICAR TEMA SALVO (Dark Mode) - DEVE SER ANTES DE QUALQUER UI
+        com.inventario.mobile.utils.ThemeHelper.applyTheme(this)
+        Log.d(TAG, "✓ Tema aplicado: ${com.inventario.mobile.utils.ThemeHelper.getCurrentThemeName(this)}")
+        
         // Inicializar ThreeTenABP para manipulação de datas
         AndroidThreeTen.init(this)
         

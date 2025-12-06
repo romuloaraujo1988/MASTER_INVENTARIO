@@ -8,10 +8,6 @@ import android.content.SharedPreferences
  */
 class PreferencesManager(context: Context) {
     
-    companion object {
-        private const val PREFS_NAME = "inventario_mobile_prefs"
-    }
-    
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     
     fun putString(key: String, value: String) {
@@ -587,5 +583,67 @@ class PreferencesManager(context: Context) {
      */
     fun saveUserId(userId: Int) {
         putInt("user_id", userId)
+    }
+    
+    // ===== DARK MODE =====
+    
+    companion object {
+        private const val PREFS_NAME = "inventario_mobile_prefs"
+        
+        // Constantes para Dark Mode
+        const val THEME_MODE_SYSTEM = 0  // Seguir sistema
+        const val THEME_MODE_LIGHT = 1   // Sempre claro
+        const val THEME_MODE_DARK = 2    // Sempre escuro
+    }
+    
+    /**
+     * Obtém o modo de tema atual
+     * @return THEME_MODE_SYSTEM (0), THEME_MODE_LIGHT (1) ou THEME_MODE_DARK (2)
+     */
+    fun getThemeMode(): Int {
+        return getInt("theme_mode", THEME_MODE_SYSTEM)
+    }
+    
+    /**
+     * Define o modo de tema
+     * @param mode THEME_MODE_SYSTEM (0), THEME_MODE_LIGHT (1) ou THEME_MODE_DARK (2)
+     */
+    fun setThemeMode(mode: Int) {
+        putInt("theme_mode", mode)
+        android.util.Log.d("PreferencesManager", "Tema alterado para: ${getThemeModeName(mode)}")
+    }
+    
+    /**
+     * Verifica se Dark Mode está habilitado
+     */
+    fun isDarkModeEnabled(): Boolean {
+        return getThemeMode() == THEME_MODE_DARK
+    }
+    
+    /**
+     * Habilita ou desabilita Dark Mode diretamente
+     * @param enabled true para Dark Mode, false para Light Mode
+     */
+    fun setDarkModeEnabled(enabled: Boolean) {
+        setThemeMode(if (enabled) THEME_MODE_DARK else THEME_MODE_LIGHT)
+    }
+    
+    /**
+     * Verifica se está usando tema do sistema
+     */
+    fun isSystemTheme(): Boolean {
+        return getThemeMode() == THEME_MODE_SYSTEM
+    }
+    
+    /**
+     * Obtém nome legível do modo de tema
+     */
+    fun getThemeModeName(mode: Int = getThemeMode()): String {
+        return when (mode) {
+            THEME_MODE_SYSTEM -> "Automático (Sistema)"
+            THEME_MODE_LIGHT -> "Claro"
+            THEME_MODE_DARK -> "Escuro"
+            else -> "Desconhecido"
+        }
     }
 }

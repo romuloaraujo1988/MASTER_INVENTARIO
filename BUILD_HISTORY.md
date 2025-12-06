@@ -4,6 +4,64 @@ Este arquivo registra todas as compilações do APK Android para rastreabilidade
 
 ---
 
+## Build #029 - 06/12/2025
+
+- **Tipo:** Debug
+- **Versão:** 1.2.29
+- **Build Code:** 29
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** 11.15 MB
+- **Mudanças:** 
+  - **Correção: Estatísticas não atualizavam na tela de Estatísticas**
+    - `DashboardViewModel.refreshData()`: Agora invalida cache antes de recarregar
+    - `ChartsFragment`: Adicionado SwipeRefreshLayout para pull-to-refresh
+    - `ChartsFragment`: Usa inventário ativo do PreferencesManager quando idInventario=0
+    - `ChartDataProvider.getProgressData()`: Passa null ao invés de 0 para usar inventário ativo
+    - `ChartsViewModel.loadStatusData()`: Corrigido para passar idInventario
+    - `fragment_charts.xml`: Adicionado SwipeRefreshLayout envolvendo o conteúdo
+  - **Feature: Informações do desenvolvedor e versão**
+    - Splash screen: Exibe versão (1.2.29)
+    - Tela de Configurações: Nova seção "Sobre o Aplicativo" com:
+      - Logo do app
+      - Nome: SIHCP Mobile
+      - Nome completo: Sistema de Histórico e Coleta Patrimonial
+      - Versão: 1.2.29
+      - Desenvolvedor: Romulo Araujo
+      - Copyright: © 2025 - Todos os direitos reservados
+    - `strings.xml`: Novas strings para versão, desenvolvedor e copyright
+    - `activity_settings.xml`: Card "Sobre o Aplicativo" completo
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #028 - 05/12/2025
+
+- **Tipo:** Debug
+- **Versão:** 1.2.21
+- **Build Code:** 21
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~11 MB
+- **Mudanças:** 
+  - **Feature: Dark Mode (Tema Escuro)**
+    - Nova opção na tela de Configurações para escolher tema
+    - 3 opções: Automático (seguir sistema), Claro, Escuro
+    - `ThemeHelper.kt` - Helper para gerenciar tema do app
+    - `PreferencesManager.kt` - Métodos para salvar/carregar preferência de tema
+    - `SettingsViewModel.kt` - Métodos para aplicar tema
+    - `SettingsActivity.kt` - RadioGroup para seleção de tema
+    - `values-night/colors.xml` - Cores otimizadas para tema escuro
+    - `values-night/themes.xml` - Tema escuro completo
+    - `activity_settings.xml` - Seção "Aparência" com opções de tema
+    - `strings.xml` - Strings para Dark Mode
+    - `InventarioMobileApplication.kt` - Aplica tema salvo na inicialização
+  - **Benefícios:**
+    - Reduz fadiga visual em ambientes escuros
+    - Economia de bateria em telas OLED
+    - Segue preferência do sistema automaticamente
+- **Status:** ✅ Sucesso
+
+---
+
 ## Build #027 - 04/12/2025
 
 - **Tipo:** Debug

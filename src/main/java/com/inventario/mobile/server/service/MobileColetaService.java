@@ -12,6 +12,9 @@ import com.inventario.model.Usuario;
 import com.inventario.util.SoundNotification;
 import com.inventario.mobile.server.dto.MobileColetaRequest;
 import com.inventario.mobile.server.dto.MobileColetaResponse;
+import com.inventario.event.DashboardEvent;
+import com.inventario.event.DashboardEventBus;
+import com.inventario.event.DashboardEventType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Isolation;
@@ -207,6 +210,9 @@ public class MobileColetaService {
         SoundNotification.playColetaSalvaSound();
 
         logger.debug("Coleta registrada com sucesso. ID: {}", coleta.getId());
+        
+        // Publicar evento para atualização da dashboard (não afeta a transação se falhar)
+        publicarEventoColetaSincronizada(coleta, inventario, usuario);
 
         // Retornar resposta
         return converterParaResponse(coleta, usuario, inventario);
@@ -253,8 +259,58 @@ public class MobileColetaService {
         resultado.put("coletasDuplicadas", coletasDuplicadas);
 
         logger.debug("Lote processado: {} sucesso, {} falhas, {} duplicadas", sucesso, falhas, duplicadas);
+        
+        // Publicar evento de batch para atualização da dashboard
+        if (sucesso > 0) {
+            publicarEventoBatchSincronizado(sucesso, coletas.size());
+        }
 
         return resultado;
+    }
+    
+    /**
+     * Publica evento de coleta sincronizada para a dashboard.
+     * Este método não lança exceções para não afetar a transação principal.
+     */
+    private void publicarEventoColetaSincronizada(Coleta coleta, Inventario inventario, Usuario usuario) {
+        try {
+            DashboardEvent event = DashboardEvent.builder(DashboardEventType.COLETA_SINCRONIZADA)
+                .source("MobileColetaService")
+                .addMetadata("coletaId", coleta.getId())
+                .addMetadata("patrimonioId", coleta.getIdPatrimonio())
+                .addMetadata("inventarioId", inventario != null ? inventario.getId() : null)
+                .addMetadata("coletorNome", usuario != null ? usuario.getNomeCompleto() : "Desconhecido")
+                .addMetadata("numeroPatrimonio", coleta.getNumeroPatrimonio())
+                .addAffectedEntityId(coleta.getIdPatrimonio())
+                .build();
+            
+            DashboardEventBus.getInstance().publish(event);
+            logger.debug("Evento COLETA_SINCRONIZADA publicado para coleta ID: {}", coleta.getId());
+        } catch (Exception e) {
+            // Log do erro mas não propaga - não deve afetar a operação principal
+            logger.warn("Falha ao publicar evento de coleta sincronizada: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * Publica evento de batch sincronizado para a dashboard.
+     * Este método não lança exceções para não afetar a transação principal.
+     */
+    private void publicarEventoBatchSincronizado(int quantidadeSucesso, int totalLote) {
+        try {
+            DashboardEvent event = DashboardEvent.builder(DashboardEventType.COLETA_SINCRONIZADA)
+                .source("MobileColetaService")
+                .addMetadata("batchSize", quantidadeSucesso)
+                .addMetadata("totalLote", totalLote)
+                .addMetadata("isBatch", true)
+                .build();
+            
+            DashboardEventBus.getInstance().publish(event);
+            logger.debug("Evento COLETA_SINCRONIZADA (batch) publicado: {} coletas", quantidadeSucesso);
+        } catch (Exception e) {
+            // Log do erro mas não propaga - não deve afetar a operação principal
+            logger.warn("Falha ao publicar evento de batch sincronizado: {}", e.getMessage());
+        }
     }
 
     /**
@@ -328,7 +384,6 @@ public class MobileColetaService {
      * @param size tamanho da página (máximo 100)
      * @return Map com content, totalElements, totalPages
      */
-    @SuppressWarnings("unchecked")
     public Map<String, Object> buscarColetasComPaginacaoReal(int page, int size) throws SQLException {
         long startTime = System.currentTimeMillis();
         

@@ -147,8 +147,6 @@ public class ColetaFrame_v2 extends JFrame {
     private StringBuilder bufferCodigoBarras = new StringBuilder();
     private List<Sala> todasSalas = new ArrayList<>();
     private Usuario usuarioLogado; // Usuário logado para verificar permissões
-    private JFrame mainFrame; // Referência ao MainFrame para ocultar/mostrar
-
     // Lista de componentes que devem ser desabilitados até a seleção da sala
     private java.util.List<Component> componentesParaDesabilitar = new ArrayList<>();
 
@@ -170,8 +168,6 @@ public class ColetaFrame_v2 extends JFrame {
 
     public ColetaFrame_v2(Usuario usuarioLogado, JFrame mainFrame) {
         this.usuarioLogado = usuarioLogado;
-        this.mainFrame = mainFrame;
-
         // Debug: verificar se o usuário foi passado corretamente
         System.out.println("DEBUG: Usuario logado no ColetaFrame_v2: " +
                 (usuarioLogado != null ? usuarioLogado.getNomeCompleto() + " (" + usuarioLogado.getPerfil() + ")"
@@ -3350,18 +3346,19 @@ public class ColetaFrame_v2 extends JFrame {
             List<Object[]> itensAgrupados = coletaDAO.agruparItensSemEtiquetaPorDescricao();
 
             for (Object[] item : itensAgrupados) {
-                // item[0] = DESCRICAO_NORMALIZADA
-                // item[1] = QUANTIDADE
-                // item[2] = CATEGORIAS
-                // item[3] = PRIMEIRA_COLETA
-                // item[4] = ULTIMA_COLETA
-
+                // Estrutura retornada pelo DAO (4 colunas):
+                // item[0] = descricao
+                // item[1] = categoria
+                // item[2] = quantidade
+                // item[3] = ultima_coleta
+                
+                // Tabela espera 5 colunas: Descrição, Quantidade, Categorias, Primeira Coleta, Última Coleta
                 Object[] linha = {
-                        item[0], // Descrição
-                        item[1], // Quantidade
-                        item[2] != null ? item[2] : "N/A", // Categorias
-                        item[3] != null ? item[3].toString() : "N/A", // Primeira Coleta
-                        item[4] != null ? item[4].toString() : "N/A" // Última Coleta
+                        item[0] != null ? item[0] : "N/A",              // Descrição
+                        item[2] != null ? item[2] : 0,                  // Quantidade
+                        item[1] != null ? item[1] : "N/A",              // Categorias
+                        "N/A",                                          // Primeira Coleta (não disponível no DAO)
+                        item[3] != null ? item[3].toString() : "N/A"    // Última Coleta
                 };
                 modeloTabelaItensAgrupados.addRow(linha);
             }

@@ -222,22 +222,56 @@ object ChartHelper {
     }
 
     /**
-     * Cria gráfico de status (pizza)
+     * Cria gráfico de estado de conservação (pizza)
+     * Mostra: Bom, Regular, Ruim, Péssimo, Sem Info
      */
     fun createStatusPieData(
-        ativos: Int,
-        inativos: Int,
-        manutencao: Int,
-        baixados: Int
+        bom: Int,
+        regular: Int,
+        ruim: Int,
+        pessimo: Int,
+        semInfo: Int = 0
     ): PieData {
         val entries = mutableListOf<PieEntry>()
         
-        if (ativos > 0) entries.add(PieEntry(ativos.toFloat(), "Ativos"))
-        if (inativos > 0) entries.add(PieEntry(inativos.toFloat(), "Inativos"))
-        if (manutencao > 0) entries.add(PieEntry(manutencao.toFloat(), "Manutenção"))
-        if (baixados > 0) entries.add(PieEntry(baixados.toFloat(), "Baixados"))
+        // Cores específicas para cada estado
+        val colors = mutableListOf<Int>()
         
-        val dataSet = createPieDataSet(entries, "Status")
+        if (bom > 0) {
+            entries.add(PieEntry(bom.toFloat(), "Bom"))
+            colors.add(Color.parseColor("#4CAF50")) // Verde
+        }
+        if (regular > 0) {
+            entries.add(PieEntry(regular.toFloat(), "Regular"))
+            colors.add(Color.parseColor("#FFC107")) // Amarelo
+        }
+        if (ruim > 0) {
+            entries.add(PieEntry(ruim.toFloat(), "Ruim"))
+            colors.add(Color.parseColor("#FF9800")) // Laranja
+        }
+        if (pessimo > 0) {
+            entries.add(PieEntry(pessimo.toFloat(), "Péssimo"))
+            colors.add(Color.parseColor("#F44336")) // Vermelho
+        }
+        if (semInfo > 0) {
+            entries.add(PieEntry(semInfo.toFloat(), "Sem Info"))
+            colors.add(Color.parseColor("#9E9E9E")) // Cinza
+        }
+        
+        // Se não houver dados, mostrar placeholder
+        if (entries.isEmpty()) {
+            entries.add(PieEntry(1f, "Sem dados"))
+            colors.add(Color.parseColor("#BDBDBD"))
+        }
+        
+        val dataSet = PieDataSet(entries, "Estado de Conservação").apply {
+            this.colors = colors
+            sliceSpace = 3f
+            selectionShift = 5f
+            valueLinePart1OffsetPercentage = 80f
+            valueLinePart1Length = 0.3f
+            valueLinePart2Length = 0.4f
+        }
         
         return PieData(dataSet).apply {
             setValueFormatter(PercentFormatter())

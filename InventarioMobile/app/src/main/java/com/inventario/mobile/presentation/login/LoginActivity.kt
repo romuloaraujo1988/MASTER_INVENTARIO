@@ -163,15 +163,12 @@ class LoginActivity : AppCompatActivity() {
         }
         
         // Configurar botão de biometria (será mostrado/ocultado pelo ViewModel)
-        binding.btnBiometric?.setOnClickListener {
-            authenticateWithBiometric()
-        }
-        binding.cardBiometric?.setOnClickListener {
+        binding.cardBiometric.setOnClickListener {
             authenticateWithBiometric()
         }
         
         // ========== CONFIGURAR FAB DE BIOMETRIA ==========
-        binding.fabBiometric?.setOnClickListener {
+        binding.fabBiometric.setOnClickListener {
             authenticateWithBiometric()
         }
 
@@ -264,7 +261,7 @@ class LoginActivity : AppCompatActivity() {
      */
     private fun showPinSetupDialog() {
         val dialog = PinSetupDialog.newInstance()
-        dialog.setOnPinCreatedListener { pin ->
+        dialog.setOnPinCreatedListener { _ ->
             android.widget.Toast.makeText(
                 this,
                 "✅ PIN criado com sucesso!",
@@ -401,16 +398,16 @@ class LoginActivity : AppCompatActivity() {
         // Mostrar/ocultar botão de biometria
         if (state.showBiometricButton) {
             // Mostrar FAB de biometria (ícone flutuante)
-            binding.fabBiometric?.visibility = View.VISIBLE
-            binding.fabBiometric?.show()
+            binding.fabBiometric.visibility = View.VISIBLE
+            binding.fabBiometric.show()
             
             // Também manter o card para compatibilidade
-            binding.cardBiometric?.visibility = View.VISIBLE
-            binding.tvBiometricHint?.visibility = View.VISIBLE
-            binding.dividerBiometric?.visibility = View.VISIBLE
+            binding.cardBiometric.visibility = View.VISIBLE
+            binding.tvBiometricHint.visibility = View.VISIBLE
+            binding.dividerBiometric.visibility = View.VISIBLE
             
             // Atualizar texto do hint baseado no status de conexão
-            binding.tvBiometricHint?.text = if (state.isOnline) {
+            binding.tvBiometricHint.text = if (state.isOnline) {
                 "Ou use biometria para login rápido"
             } else {
                 "⚠️ Sem conexão. Use biometria para continuar"
@@ -418,19 +415,19 @@ class LoginActivity : AppCompatActivity() {
             
             // Mostrar nome do usuário salvo
             if (state.savedUserName != null) {
-                binding.tvSavedUser?.visibility = View.VISIBLE
-                binding.tvSavedUser?.text = "Bem-vindo, ${state.savedUserName}"
+                binding.tvSavedUser.visibility = View.VISIBLE
+                binding.tvSavedUser.text = "Bem-vindo, ${state.savedUserName}"
             } else {
-                binding.tvSavedUser?.visibility = View.GONE
+                binding.tvSavedUser.visibility = View.GONE
             }
         } else {
             // Ocultar FAB e card
-            binding.fabBiometric?.visibility = View.GONE
-            binding.fabBiometric?.hide()
-            binding.cardBiometric?.visibility = View.GONE
-            binding.tvBiometricHint?.visibility = View.GONE
-            binding.dividerBiometric?.visibility = View.GONE
-            binding.tvSavedUser?.visibility = View.GONE
+            binding.fabBiometric.visibility = View.GONE
+            binding.fabBiometric.hide()
+            binding.cardBiometric.visibility = View.GONE
+            binding.tvBiometricHint.visibility = View.GONE
+            binding.dividerBiometric.visibility = View.GONE
+            binding.tvSavedUser.visibility = View.GONE
         }
         
         // ========== MOSTRAR LOGIN COM PIN SE DISPONÍVEL ==========
@@ -454,10 +451,10 @@ class LoginActivity : AppCompatActivity() {
         
         // Mostrar indicador de modo offline
         if (state.offlineMode) {
-            binding.tvOfflineMode?.visibility = View.VISIBLE
-            binding.tvOfflineMode?.text = "📴 Modo Offline"
+            binding.tvOfflineMode.visibility = View.VISIBLE
+            binding.tvOfflineMode.text = "📴 Modo Offline"
         } else {
-            binding.tvOfflineMode?.visibility = View.GONE
+            binding.tvOfflineMode.visibility = View.GONE
         }
 
         // Navegar para MainActivity se login bem-sucedido
@@ -591,7 +588,7 @@ class LoginActivity : AppCompatActivity() {
      */
     private fun showPinSetupDialogAndNavigate() {
         val dialog = PinSetupDialog.newInstance()
-        dialog.setOnPinCreatedListener { pin ->
+        dialog.setOnPinCreatedListener { _ ->
             android.widget.Toast.makeText(
                 this,
                 "✅ PIN criado com sucesso!",

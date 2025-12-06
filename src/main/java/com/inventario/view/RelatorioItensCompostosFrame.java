@@ -9,7 +9,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
@@ -413,6 +412,7 @@ public class RelatorioItensCompostosFrame extends JFrame {
         
         // Setor -> Sala (cascata)
         cmbSetor.addActionListener(e -> {
+            @SuppressWarnings("unchecked")
             ComboItem<Setor> selected = (ComboItem<Setor>) cmbSetor.getSelectedItem();
             if (selected != null && selected.getValue() != null) {
                 viewModel.carregarSalas(selected.getValue().getId());
@@ -455,6 +455,7 @@ public class RelatorioItensCompostosFrame extends JFrame {
     
     // ========== MÉTODOS DE AÇÃO ==========
     
+    @SuppressWarnings("unchecked")
     private void aplicarFiltros() {
         FiltroRelatorioItemComposto filtro = new FiltroRelatorioItemComposto();
         

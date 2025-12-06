@@ -641,29 +641,6 @@ public class SyncFrame extends JFrame {
     }
     
     /**
-     * Cria um ícone simples a partir de texto.
-     */
-    private Icon createIcon(String text) {
-        return new Icon() {
-            @Override
-            public void paintIcon(Component c, Graphics g, int x, int y) {
-                g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
-                g.drawString(text, x, y + 12);
-            }
-            
-            @Override
-            public int getIconWidth() {
-                return 16;
-            }
-            
-            @Override
-            public int getIconHeight() {
-                return 16;
-            }
-        };
-    }
-    
-    /**
      * Método para mostrar a janela.
      */
     public void showFrame() {

@@ -139,7 +139,6 @@ public class MobileOfflineSyncController {
             
             int totalElements = (int) resultado.get("totalElements");
             int totalPages = (int) resultado.get("totalPages");
-            @SuppressWarnings("unchecked")
             java.util.List<?> content = (java.util.List<?>) resultado.get("content");
             
             logger.info("✅ Página {}/{} carregada: {} patrimônios em {}ms", 

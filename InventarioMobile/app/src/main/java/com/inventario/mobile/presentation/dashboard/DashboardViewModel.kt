@@ -61,6 +61,8 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun refreshData() {
+        // Invalidar cache antes de recarregar para forçar busca de dados novos
+        repository.invalidarCacheEstatisticas()
         loadDashboardData()
     }
 

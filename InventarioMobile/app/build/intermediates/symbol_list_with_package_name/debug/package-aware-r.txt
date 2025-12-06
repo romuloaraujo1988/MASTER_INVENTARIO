@@ -3921,6 +3921,10 @@ id progress_circular
 id progress_horizontal
 id radio
 id radioGroupEstado
+id radioGroupTheme
+id radioThemeDark
+id radioThemeLight
+id radioThemeSystem
 id ratio
 id rectangles
 id recyclerView
@@ -4595,6 +4599,9 @@ string abc_toolbar_collapse_description
 string about
 string add_item
 string androidx_startup
+string app_copyright
+string app_developer
+string app_full_name
 string app_logo
 string app_name
 string app_version
@@ -4903,6 +4910,13 @@ string sync_title
 string synced
 string test_network
 string testing_network
+string theme_changed
+string theme_dark
+string theme_description
+string theme_light
+string theme_settings
+string theme_system
+string theme_title
 string title_settings_dialog
 string total_collections
 string total_patrimonios

@@ -30,7 +30,7 @@ import java.beans.PropertyChangeSupport;
  */
 public class RelatorioViewModel {
 
-    // DAOs - Acesso temporário direto (TODO: migrar para Use Cases)
+    // DAOs - Acesso direto (padrão atual do projeto desktop)
     private final RelatorioColetaDAO relatorioDAO;
     private final InventarioDAO inventarioDAO;
     private final SetorDAO setorDAO;

@@ -2,7 +2,6 @@ package com.inventario.mobile.server.controller;
 
 import com.inventario.mobile.server.dto.ApiResponse;
 import com.inventario.dao.PatrimonioDAO;
-import com.inventario.model.Patrimonio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

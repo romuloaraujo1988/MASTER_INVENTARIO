@@ -3,6 +3,11 @@ package com.inventario.view;
 import com.inventario.model.Inventario;
 import com.inventario.service.DashboardService;
 import com.inventario.view.ui.ButtonStyleFactory;
+import com.inventario.event.DashboardEvent;
+import com.inventario.event.DashboardEventBus;
+import com.inventario.event.DashboardEventType;
+import com.inventario.event.DashboardObserver;
+import com.inventario.event.CircularEventBuffer;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -22,18 +27,40 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Dashboard gráfico em tempo real para monitoramento da coleta de inventário
  * Versão melhorada com interface em abas e gráficos mais interativos
+ * 
+ * REFATORADO: Implementa DashboardObserver para receber eventos em tempo real
+ * ao invés de usar polling com Timer de 30 segundos.
  */
-public class DashboardColetaFrame extends JFrame {
+public class DashboardColetaFrame extends JFrame implements DashboardObserver {
 
     private final DashboardService dashboardService;
-    private Timer timer;
+    private Timer timer;  // Mantido como fallback, mas com intervalo maior
     private int idInventarioAtivo = -1;
     private String nomeInventarioAtivo = "Nenhum inventário ativo";
+    
+    // Observer Pattern - Controle de eventos
+    private final CircularEventBuffer eventLog = new CircularEventBuffer(10);
+    private final Queue<DashboardEvent> pendingEvents = new ConcurrentLinkedQueue<>();
+    private volatile boolean isPaused = false;
+    private volatile boolean isVisible = true;
+    private Timer autoResumeTimer;
+    private static final int AUTO_RESUME_DELAY_MS = 5 * 60 * 1000; // 5 minutos
+    
+    // Indicadores visuais
+    private JLabel lblUpdateIndicator;
+    private JToggleButton btnPauseResume;
 
     // Componentes principais
     private JTabbedPane tabbedPane;
@@ -73,8 +100,227 @@ public class DashboardColetaFrame extends JFrame {
         obterInventarioAtivo();
         initializeComponents();
         aplicarTemaModerno();
+        registrarNoEventBus();
         iniciarAtualizacaoAutomatica();
         atualizarDados();
+        
+        // Listener para detectar quando a janela é minimizada/restaurada
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowIconified(WindowEvent e) {
+                isVisible = false;
+            }
+            
+            @Override
+            public void windowDeiconified(WindowEvent e) {
+                isVisible = true;
+                processarEventosPendentes();
+            }
+            
+            @Override
+            public void windowClosing(WindowEvent e) {
+                desregistrarDoEventBus();
+            }
+        });
+    }
+    
+    // ==================== IMPLEMENTAÇÃO DO DASHBOARD OBSERVER ====================
+    
+    /**
+     * Registra este frame no EventBus para receber eventos.
+     */
+    private void registrarNoEventBus() {
+        DashboardEventBus.getInstance().register(this);
+        System.out.println("DashboardColetaFrame registrado no EventBus");
+    }
+    
+    /**
+     * Remove este frame do EventBus ao fechar.
+     */
+    private void desregistrarDoEventBus() {
+        DashboardEventBus.getInstance().unregister(this);
+        System.out.println("DashboardColetaFrame desregistrado do EventBus");
+    }
+    
+    @Override
+    public void onDashboardEvent(DashboardEvent event) {
+        // Adicionar ao log de eventos
+        eventLog.add(event);
+        
+        // Se pausado ou não visível, enfileirar para processamento posterior
+        if (isPaused || !isVisible) {
+            pendingEvents.add(event);
+            return;
+        }
+        
+        // Processar evento na thread da UI
+        SwingUtilities.invokeLater(() -> {
+            mostrarIndicadorAtualizacao();
+            atualizarDadosPorEvento(event);
+            ocultarIndicadorAtualizacao();
+        });
+    }
+    
+    @Override
+    public void onDashboardEventBatch(List<DashboardEvent> events) {
+        // Adicionar todos ao log
+        for (DashboardEvent event : events) {
+            eventLog.add(event);
+        }
+        
+        // Se pausado ou não visível, enfileirar
+        if (isPaused || !isVisible) {
+            pendingEvents.addAll(events);
+            return;
+        }
+        
+        // Processar batch - atualizar uma única vez
+        SwingUtilities.invokeLater(() -> {
+            mostrarIndicadorAtualizacao();
+            atualizarDados(); // Atualização completa para batch
+            ocultarIndicadorAtualizacao();
+        });
+    }
+    
+    @Override
+    public Set<DashboardEventType> getSubscribedEventTypes() {
+        // Interessado em eventos de coleta e inventário
+        return EnumSet.of(
+            DashboardEventType.COLETA_SINCRONIZADA,
+            DashboardEventType.INVENTARIO_ALTERADO,
+            DashboardEventType.PATRIMONIO_ATUALIZADO
+        );
+    }
+    
+    @Override
+    public String getObserverName() {
+        return "DashboardColetaFrame";
+    }
+    
+    /**
+     * Atualiza dados específicos baseado no tipo de evento.
+     */
+    private void atualizarDadosPorEvento(DashboardEvent event) {
+        switch (event.getType()) {
+            case COLETA_SINCRONIZADA:
+                // Atualizar estatísticas de coleta
+                atualizarEstatisticasColeta();
+                break;
+            case INVENTARIO_ALTERADO:
+                // Recarregar inventário ativo
+                obterInventarioAtivo();
+                atualizarTitulosInterface();
+                atualizarDados();
+                break;
+            case PATRIMONIO_ATUALIZADO:
+                // Atualizar gráficos de patrimônio
+                atualizarEstatisticasColeta();
+                break;
+            default:
+                atualizarDados();
+        }
+    }
+    
+    /**
+     * Atualiza apenas as estatísticas de coleta (mais leve que atualização completa).
+     */
+    private void atualizarEstatisticasColeta() {
+        try {
+            if (idInventarioAtivo <= 0) return;
+            
+            Map<String, Object> estatisticasObj = dashboardService.obterEstatisticasGerais(idInventarioAtivo);
+            if (estatisticasObj != null) {
+                Map<String, Integer> estatisticas = converterMapaEstatisticas(estatisticasObj);
+                atualizarInformacoesGerais(estatisticas);
+                atualizarGraficos(estatisticas);
+            }
+        } catch (Exception e) {
+            System.err.println("Erro ao atualizar estatísticas: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Processa eventos que foram enfileirados enquanto a janela estava oculta/pausada.
+     */
+    private void processarEventosPendentes() {
+        if (pendingEvents.isEmpty()) return;
+        
+        SwingUtilities.invokeLater(() -> {
+            mostrarIndicadorAtualizacao();
+            // Limpar fila e fazer uma única atualização
+            pendingEvents.clear();
+            atualizarDados();
+            ocultarIndicadorAtualizacao();
+        });
+    }
+    
+    /**
+     * Mostra indicador visual de que dados estão sendo atualizados.
+     */
+    private void mostrarIndicadorAtualizacao() {
+        if (lblUpdateIndicator != null) {
+            lblUpdateIndicator.setText("🔄 Atualizando...");
+            lblUpdateIndicator.setVisible(true);
+        }
+    }
+    
+    /**
+     * Oculta indicador de atualização após 500ms.
+     */
+    private void ocultarIndicadorAtualizacao() {
+        Timer hideTimer = new Timer(500, e -> {
+            if (lblUpdateIndicator != null) {
+                lblUpdateIndicator.setVisible(false);
+            }
+        });
+        hideTimer.setRepeats(false);
+        hideTimer.start();
+    }
+    
+    /**
+     * Pausa as atualizações automáticas.
+     */
+    private void pausarAtualizacoes() {
+        isPaused = true;
+        if (btnPauseResume != null) {
+            btnPauseResume.setText("▶ Resumir");
+            btnPauseResume.setSelected(true);
+        }
+        
+        // Iniciar timer de auto-resume
+        if (autoResumeTimer != null) {
+            autoResumeTimer.stop();
+        }
+        autoResumeTimer = new Timer(AUTO_RESUME_DELAY_MS, e -> resumirAtualizacoes());
+        autoResumeTimer.setRepeats(false);
+        autoResumeTimer.start();
+    }
+    
+    /**
+     * Resume as atualizações automáticas.
+     */
+    private void resumirAtualizacoes() {
+        isPaused = false;
+        if (btnPauseResume != null) {
+            btnPauseResume.setText("⏸ Pausar");
+            btnPauseResume.setSelected(false);
+        }
+        
+        // Cancelar timer de auto-resume
+        if (autoResumeTimer != null) {
+            autoResumeTimer.stop();
+        }
+        
+        // Processar eventos pendentes e atualizar
+        processarEventosPendentes();
+        atualizarDados();
+    }
+    
+    /**
+     * Retorna o histórico de eventos para exibição em tooltip.
+     */
+    public String getEventHistoryTooltip() {
+        return eventLog.toHistoryString();
     }
 
     private void initializeComponents() {
@@ -469,14 +715,46 @@ public class DashboardColetaFrame extends JFrame {
         JButton btnFechar = ButtonStyleFactory.createDangerButton("Fechar");
         btnFechar.addActionListener(e -> {
             pararAtualizacaoAutomatica();
+            desregistrarDoEventBus();
             dispose();
         });
+        
+        // Botão Pause/Resume para atualizações automáticas
+        btnPauseResume = new JToggleButton("⏸ Pausar");
+        btnPauseResume.setFont(new Font("Segoe UI Emoji", Font.BOLD, 12));
+        btnPauseResume.setBackground(new Color(241, 196, 15));
+        btnPauseResume.setForeground(Color.BLACK);
+        btnPauseResume.setFocusPainted(false);
+        btnPauseResume.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        btnPauseResume.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnPauseResume.addActionListener(e -> {
+            if (btnPauseResume.isSelected()) {
+                pausarAtualizacoes();
+            } else {
+                resumirAtualizacoes();
+            }
+        });
+        
+        // Indicador de atualização
+        lblUpdateIndicator = new JLabel("🔄 Atualizando...");
+        lblUpdateIndicator.setForeground(new Color(46, 204, 113));
+        lblUpdateIndicator.setFont(new Font("Segoe UI Emoji", Font.BOLD, 12));
+        lblUpdateIndicator.setVisible(false);
 
-        JLabel labelAtualizacao = new JLabel("Atualização automática a cada 30 segundos");
+        JLabel labelAtualizacao = new JLabel("Atualização em tempo real via eventos");
         labelAtualizacao.setForeground(Color.WHITE);
         labelAtualizacao.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        labelAtualizacao.setToolTipText(getEventHistoryTooltip());
+        
+        // Atualizar tooltip periodicamente
+        Timer tooltipTimer = new Timer(5000, e -> labelAtualizacao.setToolTipText(getEventHistoryTooltip()));
+        tooltipTimer.start();
 
         painel.add(btnAtualizar);
+        painel.add(Box.createHorizontalStrut(10));
+        painel.add(btnPauseResume);
+        painel.add(Box.createHorizontalStrut(10));
+        painel.add(lblUpdateIndicator);
         painel.add(Box.createHorizontalStrut(20));
 
         JButton btnStatusSalas = ButtonStyleFactory.createPrimaryButton("Status das Salas");
@@ -1078,17 +1356,39 @@ public class DashboardColetaFrame extends JFrame {
                 return;
             }
 
+            // Preservar seleção atual antes de atualizar
+            String selecaoAtual = (String) comboUsuarios.getSelectedItem();
+            String nomeUsuarioSelecionado = null;
+            if (selecaoAtual != null && !"Todos os Usuários".equals(selecaoAtual)) {
+                // Extrair nome do usuário (remover contagem entre parênteses)
+                nomeUsuarioSelecionado = selecaoAtual.replaceAll("\\s*\\(.*\\)\\s*$", "").trim();
+            }
+
             // Atualizar lista de usuários no combobox
             Map<String, Integer> usuarios = dashboardService.obterEstatisticasColetores(idInventarioAtivo);
 
             comboUsuarios.removeAllItems();
             comboUsuarios.addItem("Todos os Usuários");
 
+            int indiceParaSelecionar = 0; // Default: "Todos os Usuários"
+            int indiceAtual = 1;
+
             // Adicionar usuários que fizeram coletas
             for (String usuario : usuarios.keySet()) {
                 if (usuario != null && !usuario.trim().isEmpty()) {
                     comboUsuarios.addItem(usuario + " (" + usuarios.get(usuario) + " itens)");
+                    
+                    // Verificar se este era o item selecionado anteriormente
+                    if (nomeUsuarioSelecionado != null && usuario.equals(nomeUsuarioSelecionado)) {
+                        indiceParaSelecionar = indiceAtual;
+                    }
+                    indiceAtual++;
                 }
+            }
+
+            // Restaurar seleção anterior
+            if (indiceParaSelecionar < comboUsuarios.getItemCount()) {
+                comboUsuarios.setSelectedIndex(indiceParaSelecionar);
             }
 
             atualizarGraficosUsuarios();
@@ -1392,6 +1692,14 @@ public class DashboardColetaFrame extends JFrame {
                 return;
             }
 
+            // Preservar seleção atual antes de atualizar
+            String selecaoAtual = (String) comboResponsaveis.getSelectedItem();
+            String nomeResponsavelSelecionado = null;
+            if (selecaoAtual != null && !"Todos os Responsáveis".equals(selecaoAtual)) {
+                // Extrair nome do responsável (remover contagem entre parênteses)
+                nomeResponsavelSelecionado = selecaoAtual.replaceAll("\\s*\\(.*\\)\\s*$", "").trim();
+            }
+
             // Converter List<Map> para Map<String, Map>
             java.util.List<Map<String, Object>> listaResponsaveis = dashboardService
                     .obterEstatisticasPorResponsavel(idInventarioAtivo);
@@ -1401,12 +1709,26 @@ public class DashboardColetaFrame extends JFrame {
             comboResponsaveis.removeAllItems();
             comboResponsaveis.addItem("Todos os Responsáveis");
 
+            int indiceParaSelecionar = 0; // Default: "Todos os Responsáveis"
+            int indiceAtual = 1;
+
             for (String responsavel : dadosResponsaveis.keySet()) {
                 if (responsavel != null && !responsavel.trim().isEmpty() && !"Sem Responsável".equals(responsavel)) {
                     Map<String, Integer> dados = dadosResponsaveis.get(responsavel);
                     int coletados = dados.get("itens_coletados");
                     comboResponsaveis.addItem(responsavel + " (" + coletados + " itens)");
+                    
+                    // Verificar se este era o item selecionado anteriormente
+                    if (nomeResponsavelSelecionado != null && responsavel.equals(nomeResponsavelSelecionado)) {
+                        indiceParaSelecionar = indiceAtual;
+                    }
+                    indiceAtual++;
                 }
+            }
+
+            // Restaurar seleção anterior
+            if (indiceParaSelecionar < comboResponsaveis.getItemCount()) {
+                comboResponsaveis.setSelectedIndex(indiceParaSelecionar);
             }
 
             // Atualizar gráficos
@@ -1482,6 +1804,14 @@ public class DashboardColetaFrame extends JFrame {
                 return;
             }
 
+            // Preservar seleção atual antes de atualizar
+            String selecaoAtual = (String) comboSetores.getSelectedItem();
+            String nomeSetorSelecionado = null;
+            if (selecaoAtual != null && !"Todos os Setores".equals(selecaoAtual)) {
+                // Extrair nome do setor (remover contagem entre parênteses)
+                nomeSetorSelecionado = selecaoAtual.replaceAll("\\s*\\(.*\\)\\s*$", "").trim();
+            }
+
             // Converter List<Map> para Map<String, Map>
             java.util.List<Map<String, Object>> listaSetores = dashboardService
                     .obterProgressoPorSetor(idInventarioAtivo);
@@ -1491,12 +1821,26 @@ public class DashboardColetaFrame extends JFrame {
             comboSetores.removeAllItems();
             comboSetores.addItem("Todos os Setores");
 
+            int indiceParaSelecionar = 0; // Default: "Todos os Setores"
+            int indiceAtual = 1;
+
             for (String setor : dadosSetores.keySet()) {
                 if (setor != null && !setor.trim().isEmpty() && !"Sem Setor".equals(setor)) {
                     Map<String, Integer> dados = dadosSetores.get(setor);
                     int coletados = dados.get("itens_coletados");
                     comboSetores.addItem(setor + " (" + coletados + " itens)");
+                    
+                    // Verificar se este era o item selecionado anteriormente
+                    if (nomeSetorSelecionado != null && setor.equals(nomeSetorSelecionado)) {
+                        indiceParaSelecionar = indiceAtual;
+                    }
+                    indiceAtual++;
                 }
+            }
+
+            // Restaurar seleção anterior
+            if (indiceParaSelecionar < comboSetores.getItemCount()) {
+                comboSetores.setSelectedIndex(indiceParaSelecionar);
             }
 
             // Atualizar gráficos
@@ -1563,10 +1907,14 @@ public class DashboardColetaFrame extends JFrame {
     // Métodos auxiliares
 
     private void iniciarAtualizacaoAutomatica() {
-        timer = new Timer(30000, new ActionListener() {
+        // Timer como fallback - intervalo maior pois eventos são recebidos em tempo real
+        // Mantido para garantir consistência caso eventos não sejam recebidos
+        timer = new Timer(120000, new ActionListener() { // 2 minutos ao invés de 30 segundos
             @Override
             public void actionPerformed(ActionEvent e) {
-                atualizarDados();
+                if (!isPaused) {
+                    atualizarDados();
+                }
             }
         });
         timer.start();

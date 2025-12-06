@@ -46,7 +46,7 @@ class ChartsViewModel @Inject constructor(
             try {
                 // Carregar dados em paralelo
                 launch { loadProgressData(idInventario) }
-                launch { loadStatusData() }
+                launch { loadStatusData(idInventario) }
                 launch { loadEvolutionData(idInventario) }
                 launch { loadTopItemsData(idInventario) }
             } catch (e: Exception) {
@@ -66,9 +66,9 @@ class ChartsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun loadStatusData() {
+    private suspend fun loadStatusData(idInventario: Int) {
         try {
-            val data = chartDataProvider.getStatusData()
+            val data = chartDataProvider.getStatusData(idInventario)
             _statusData.value = data
         } catch (e: Exception) {
             // Log error

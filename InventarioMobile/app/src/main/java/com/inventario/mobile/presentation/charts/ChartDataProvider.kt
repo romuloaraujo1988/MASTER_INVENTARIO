@@ -21,35 +21,69 @@ class ChartDataProvider @Inject constructor(
     }
 
     /**
-     * Busca dados de status dos patrimônios
-     * TODO: Implementar endpoint no backend
+     * Busca dados de estado de conservação dos patrimônios coletados
+     * Agrupa por: BOM, REGULAR, RUIM, PÉSSIMO, SEM INFO
      */
-    suspend fun getStatusData(): StatusData = withContext(Dispatchers.IO) {
+    suspend fun getStatusData(idInventario: Int = 0): StatusData = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "Buscando dados de status (mock)")
+            val inventarioIdParam = if (idInventario == 0) null else idInventario
+            Log.d(TAG, "Buscando dados de estado de conservação para inventário $inventarioIdParam")
             
-            // TODO: Buscar do backend quando endpoint estiver disponível
-            // Por enquanto, retorna dados mockados
-            StatusData(
-                ativos = 100,
-                inativos = 0,
-                manutencao = 0,
-                baixados = 0
+            val result = dashboardRepository.buscarEstatisticasPorStatus(inventarioIdParam)
+            
+            result.fold(
+                onSuccess = { estatisticas ->
+                    Log.d(TAG, "Estatísticas por estado recebidas: ${estatisticas.size} estados")
+                    
+                    // Mapear os estados de conservação
+                    var bom = 0
+                    var regular = 0
+                    var ruim = 0
+                    var pessimo = 0
+                    var semInfo = 0
+                    
+                    estatisticas.forEach { stat ->
+                        when (stat.status.uppercase()) {
+                            "BOM", "OTIMO", "ÓTIMO", "EXCELENTE" -> bom += stat.quantidade
+                            "REGULAR", "RAZOAVEL", "RAZOÁVEL" -> regular += stat.quantidade
+                            "RUIM", "MAU" -> ruim += stat.quantidade
+                            "PESSIMO", "PÉSSIMO", "INSERVIVEL", "INSERVÍVEL" -> pessimo += stat.quantidade
+                            else -> semInfo += stat.quantidade
+                        }
+                    }
+                    
+                    Log.d(TAG, "Estados: Bom=$bom, Regular=$regular, Ruim=$ruim, Péssimo=$pessimo, Sem Info=$semInfo")
+                    
+                    StatusData(
+                        bom = bom,
+                        regular = regular,
+                        ruim = ruim,
+                        pessimo = pessimo,
+                        semInfo = semInfo
+                    )
+                },
+                onFailure = { error ->
+                    Log.e(TAG, "Erro ao buscar estados de conservação", error)
+                    StatusData(0, 0, 0, 0, 0)
+                }
             )
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao buscar dados de status", e)
-            StatusData(0, 0, 0, 0)
+            Log.e(TAG, "Exceção ao buscar estados de conservação", e)
+            StatusData(0, 0, 0, 0, 0)
         }
     }
 
     /**
      * Busca dados de progresso da coleta do backend
+     * Se idInventario for 0 ou null, busca do inventário ativo
      */
     suspend fun getProgressData(idInventario: Int): ProgressData = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "Buscando dados de progresso para inventário $idInventario")
+            // Se idInventario for 0, passar null para usar inventário ativo
+            val inventarioIdParam = if (idInventario == 0) null else idInventario
+            Log.d(TAG, "Buscando dados de progresso para inventário $inventarioIdParam (original: $idInventario)")
             
-            val result = dashboardRepository.buscarEstatisticas(idInventario)
+            val result = dashboardRepository.buscarEstatisticas(inventarioIdParam)
             
             result.fold(
                 onSuccess = { stats ->
@@ -174,10 +208,11 @@ class ChartDataProvider @Inject constructor(
  * Data classes para dados dos gráficos
  */
 data class StatusData(
-    val ativos: Int,
-    val inativos: Int,
-    val manutencao: Int,
-    val baixados: Int
+    val bom: Int,
+    val regular: Int,
+    val ruim: Int,
+    val pessimo: Int,
+    val semInfo: Int = 0
 )
 
 data class ProgressData(

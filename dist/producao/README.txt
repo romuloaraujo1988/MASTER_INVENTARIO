@@ -4,7 +4,7 @@ SISTEMA DE INVENTARIO - PRODUCAO
 Este diretorio contem o sistema completo com JARs separados (thin JARs).
 
 ESTRUTURA:
-- desktop.jar: Aplicacao desktop Swing (~1.6 MB)
+- sihcp-desktop.jar: Aplicacao desktop Swing (~1.6 MB)
 - mobile-server.jar: Servidor mobile API (~1.6 MB)
 - lib/: Dependencias compartilhadas (~134 MB)
 - logs/: Diretorio de logs
@@ -18,9 +18,6 @@ EXECUCAO:
 2. APENAS SERVIDOR MOBILE:
    .\iniciar-servidor-mobile.ps1
    ou iniciar-servidor-mobile.bat
-
-3. AMBOS (Desktop + Servidor):
-   iniciar-tudo.bat
 
 PORTAS:
 - Desktop: Aplicacao local (sem porta)

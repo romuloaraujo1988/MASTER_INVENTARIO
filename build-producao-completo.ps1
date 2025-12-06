@@ -53,8 +53,8 @@ Write-Host "[4/5] Criando JARs separados..." -ForegroundColor Yellow
 $baseJar = Get-ChildItem -Path "target\mobile-server" -Filter "sistema-inventario*.jar" | Select-Object -First 1
 if ($baseJar) {
     # JAR Desktop
-    Copy-Item $baseJar.FullName "$outputDir\desktop.jar" -Force
-    Write-Host "  - desktop.jar criado" -ForegroundColor Green
+    Copy-Item $baseJar.FullName "$outputDir\sihcp-desktop.jar" -Force
+    Write-Host "  - sihcp-desktop.jar criado" -ForegroundColor Green
     
     # JAR Servidor Mobile (mesmo JAR, classe principal diferente no script)
     Copy-Item $baseJar.FullName "$outputDir\mobile-server.jar" -Force
@@ -88,7 +88,7 @@ set JAVA_OPTS=%JAVA_OPTS% -XX:MaxGCPauseMillis=200
 set JAVA_OPTS=%JAVA_OPTS% -XX:+UseStringDeduplication
 
 echo Iniciando aplicacao desktop...
-java %JAVA_OPTS% -cp "desktop.jar;lib\*" com.inventario.SistemaInventarioApplication
+java %JAVA_OPTS% -cp "sihcp-desktop.jar;lib\*" com.inventario.SistemaInventarioApplication
 pause
 '@ | Set-Content "$outputDir\iniciar-desktop.bat" -Encoding ASCII
 
@@ -102,7 +102,7 @@ Write-Host "╚═════════════════════�
 
 $javaOpts = @("-Xms512m", "-Xmx2g", "-XX:MaxMetaspaceSize=256m", "-XX:+UseG1GC", "-XX:MaxGCPauseMillis=200", "-XX:+UseStringDeduplication")
 Write-Host "Iniciando aplicacao desktop..." -ForegroundColor Green
-& java $javaOpts -cp "desktop.jar;lib\*" com.inventario.SistemaInventarioApplication
+& java $javaOpts -cp "sihcp-desktop.jar;lib\*" com.inventario.SistemaInventarioApplication
 '@ | Set-Content "$outputDir\iniciar-desktop.ps1" -Encoding UTF8
 
 # Script Servidor Mobile - BAT
@@ -161,17 +161,6 @@ Write-Host "Pressione Ctrl+C para parar." -ForegroundColor Yellow
 & java $javaOpts -cp "mobile-server.jar;lib\*" com.inventario.MobileApiApplication $serverOpts
 '@ | Set-Content "$outputDir\iniciar-servidor-mobile.ps1" -Encoding UTF8
 
-# Script para iniciar ambos
-@'
-@echo off
-echo Iniciando Desktop e Servidor Mobile...
-echo.
-
-start "Servidor Mobile" cmd /c iniciar-servidor-mobile.bat
-timeout /t 5 /nobreak > nul
-start "Desktop" cmd /c iniciar-desktop.bat
-'@ | Set-Content "$outputDir\iniciar-tudo.bat" -Encoding ASCII
-
 # README
 @"
 SISTEMA DE INVENTARIO - PRODUCAO
@@ -180,7 +169,7 @@ SISTEMA DE INVENTARIO - PRODUCAO
 Este diretorio contem o sistema completo com JARs separados (thin JARs).
 
 ESTRUTURA:
-- desktop.jar: Aplicacao desktop Swing (~1.6 MB)
+- sihcp-desktop.jar: Aplicacao desktop Swing (~1.6 MB)
 - mobile-server.jar: Servidor mobile API (~1.6 MB)
 - lib/: Dependencias compartilhadas (~134 MB)
 - logs/: Diretorio de logs
@@ -194,9 +183,6 @@ EXECUCAO:
 2. APENAS SERVIDOR MOBILE:
    .\iniciar-servidor-mobile.ps1
    ou iniciar-servidor-mobile.bat
-
-3. AMBOS (Desktop + Servidor):
-   iniciar-tudo.bat
 
 PORTAS:
 - Desktop: Aplicacao local (sem porta)
@@ -225,14 +211,14 @@ Write-Host "║  BUILD CONCLUIDO COM SUCESSO!                                  �
 Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Green
 Write-Host ""
 
-$desktopSize = [math]::Round((Get-Item "$outputDir\desktop.jar").Length/1MB, 2)
+$desktopSize = [math]::Round((Get-Item "$outputDir\sihcp-desktop.jar").Length/1MB, 2)
 $mobileSize = [math]::Round((Get-Item "$outputDir\mobile-server.jar").Length/1MB, 2)
 $libCount = (Get-ChildItem "$outputDir\lib" | Measure-Object).Count
 $libSize = [math]::Round((Get-ChildItem "$outputDir\lib" | Measure-Object -Property Length -Sum).Sum/1MB, 2)
 
 Write-Host "Arquivos gerados em: dist\producao\" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "  desktop.jar:        $desktopSize MB" -ForegroundColor White
+Write-Host "  sihcp-desktop.jar:  $desktopSize MB" -ForegroundColor White
 Write-Host "  mobile-server.jar:  $mobileSize MB" -ForegroundColor White
 Write-Host "  lib/ ($libCount JARs):      $libSize MB" -ForegroundColor White
 Write-Host "  ─────────────────────────────" -ForegroundColor Gray
@@ -242,5 +228,4 @@ Write-Host "Para executar:" -ForegroundColor Cyan
 Write-Host "  cd dist\producao" -ForegroundColor White
 Write-Host "  .\iniciar-desktop.ps1          # Apenas desktop" -ForegroundColor White
 Write-Host "  .\iniciar-servidor-mobile.ps1  # Apenas servidor" -ForegroundColor White
-Write-Host "  .\iniciar-tudo.bat             # Ambos" -ForegroundColor White
 Write-Host ""

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cores Primárias - Dark Mode -->
+    <color name="primary">#90CAF9</color>
+    <color name="colorPrimary">#90CAF9</color>
+    <color name="primary_dark">#42A5F5</color>
+    <color name="primary_light">#1E3A5F</color>
+    <color name="primary_color">#90CAF9</color>
+    <color name="primary_color_light">#1E3A5F</color>
+    
+    <!-- Cores Secundárias - Dark Mode -->
+    <color name="secondary">#FFD54F</color>
+    <color name="colorSecondary">#FFD54F</color>
+    <color name="secondary_dark">#FFC107</color>
+    <color name="secondary_light">#3D3000</color>
+    
+    <!-- Cores de Estado - Dark Mode -->
+    <color name="success">#81C784</color>
+    <color name="warning">#FFB74D</color>
+    <color name="error">#EF5350</color>
+    <color name="info">#64B5F6</color>
+    
+    <!-- Cores de Texto - Dark Mode -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B0B0B0</color>
+    <color name="text_hint">#757575</color>
+    <color name="text_disabled">#616161</color>
+    
+    <!-- Cores de Fundo - Dark Mode -->
+    <color name="background">#121212</color>
+    <color name="background_color">#121212</color>
+    <color name="background_light">#1E1E1E</color>
+    <color name="surface">#1E1E1E</color>
+    <color name="divider">#2C2C2C</color>
+    <color name="card_stroke_color">#2C2C2C</color>
+    
+    <!-- Cores Padrão - Dark Mode -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="transparent">#00000000</color>
+    
+    <!-- Cores de Status - Dark Mode -->
+    <color name="status_pending">#FFB74D</color>
+    <color name="status_synced">#81C784</color>
+    <color name="status_error">#EF5350</color>
+    
+    <!-- Cores para Scanner - Dark Mode -->
+    <color name="black_transparent">#80000000</color>
+    <color name="scanner_overlay">#66000000</color>
+    
+    <!-- Material Design Colors - Dark Mode -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    
+    <!-- Additional Material Design Colors - Dark Mode -->
+    <color name="material_blue_600">#42A5F5</color>
+    <color name="material_blue_700">#2196F3</color>
+    <color name="material_blue_800">#1E88E5</color>
+    <color name="material_green_600">#66BB6A</color>
+    <color name="material_red_600">#EF5350</color>
+    <color name="material_orange_600">#FFA726</color>
+    <color name="material_grey_300">#424242</color>
+    <color name="material_grey_600">#9E9E9E</color>
+    <color name="material_grey_800">#BDBDBD</color>
+    <color name="material_grey_900">#E0E0E0</color>
+
+    <!-- Additional Colors for Collection View - Dark Mode -->
+    <color name="warning_light">#3D2800</color>
+    <color name="warning_dark">#FFB74D</color>
+    <color name="success_light">#1B3D1B</color>
+    <color name="success_dark">#81C784</color>
+    <color name="error_light">#3D1B1B</color>
+    <color name="error_dark">#EF5350</color>
+    <color name="info_light">#1B2D3D</color>
+    <color name="info_dark">#64B5F6</color>
+    <color name="background_secondary">#1E1E1E</color>
+    
+    <!-- Chart Colors - Dark Mode -->
+    <color name="success_color">#81C784</color>
+    <color name="warning_color">#FFB74D</color>
+    <color name="info_color">#64B5F6</color>
+    <color name="primary_text">#FFFFFF</color>
+    <color name="secondary_text">#B0B0B0</color>
+    
+    <!-- Progress Bar Colors - Dark Mode -->
+    <color name="progress_background">#2C2C2C</color>
+    <color name="white_70">#B3FFFFFF</color>
+    <color name="overlay_background">#80000000</color>
+    
+    <!-- Error Colors - Dark Mode -->
+    <color name="error_red">#EF5350</color>
+    
+    <!-- Status Background Colors - Dark Mode -->
+    <color name="status_background_success">#1B3D1B</color>
+    <color name="status_background_warning">#3D2800</color>
+    <color name="status_background_error">#3D1B1B</color>
+</resources>

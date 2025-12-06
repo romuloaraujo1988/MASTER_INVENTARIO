@@ -186,18 +186,7 @@ public class DeteccaoEmLoteService {
         return ids;
     }
     
-    /**
-     * Clona lista de componentes (para evitar compartilhamento de referências)
-     */
-    private List<Componente> clonarComponentes(List<Componente> componentes) {
-        List<Componente> clones = new ArrayList<>();
-        for (Componente comp : componentes) {
-            Componente clone = new Componente(comp.getTipo(), comp.getDescricao(), comp.getQuantidadeEsperada());
-            clone.setOrdem(comp.getOrdem());
-            clones.add(clone);
-        }
-        return clones;
-    }
+    
     
     // ==================== CLASSES AUXILIARES ====================
     

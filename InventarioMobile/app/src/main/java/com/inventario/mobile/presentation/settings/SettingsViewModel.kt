@@ -146,4 +146,50 @@ class SettingsViewModel(
         val newCount = current - if (current <= 10) 1 else 5
         setSyncCollectionInterval(maxOf(newCount, 1)) // Min 1 collection
     }
+    
+    // ===== DARK MODE =====
+    
+    /**
+     * Obtém o modo de tema atual
+     */
+    fun getThemeMode(): Int = preferencesManager.getThemeMode()
+    
+    /**
+     * Define o modo de tema e aplica imediatamente
+     */
+    fun setThemeMode(mode: Int) {
+        preferencesManager.setThemeMode(mode)
+        applyTheme(mode)
+    }
+    
+    /**
+     * Verifica se Dark Mode está habilitado
+     */
+    fun isDarkModeEnabled(): Boolean = preferencesManager.isDarkModeEnabled()
+    
+    /**
+     * Habilita ou desabilita Dark Mode
+     */
+    fun setDarkModeEnabled(enabled: Boolean) {
+        preferencesManager.setDarkModeEnabled(enabled)
+        applyTheme(preferencesManager.getThemeMode())
+    }
+    
+    /**
+     * Obtém nome legível do modo de tema
+     */
+    fun getThemeModeName(): String = preferencesManager.getThemeModeName()
+    
+    /**
+     * Aplica o tema baseado no modo selecionado
+     */
+    private fun applyTheme(mode: Int) {
+        val nightMode = when (mode) {
+            PreferencesManager.THEME_MODE_LIGHT -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+            PreferencesManager.THEME_MODE_DARK -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
+            else -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+        }
+        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(nightMode)
+        android.util.Log.d("SettingsViewModel", "Tema aplicado: ${preferencesManager.getThemeModeName(mode)}")
+    }
 }

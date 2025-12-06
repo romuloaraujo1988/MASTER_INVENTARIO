@@ -427,6 +427,10 @@ id progressConclusao
 id progressOverlay
 id progress_bar
 id radioGroupEstado
+id radioGroupTheme
+id radioThemeDark
+id radioThemeLight
+id radioThemeSystem
 id recyclerView
 id recyclerViewColetas
 id recyclerViewPatrimonios
@@ -718,6 +722,9 @@ mipmap ic_launcher
 mipmap ic_launcher_round
 string about
 string add_item
+string app_copyright
+string app_developer
+string app_full_name
 string app_logo
 string app_name
 string app_version
@@ -853,6 +860,13 @@ string sync_title
 string synced
 string test_network
 string testing_network
+string theme_changed
+string theme_dark
+string theme_description
+string theme_light
+string theme_settings
+string theme_system
+string theme_title
 string total_collections
 string total_patrimonios
 string user_avatar

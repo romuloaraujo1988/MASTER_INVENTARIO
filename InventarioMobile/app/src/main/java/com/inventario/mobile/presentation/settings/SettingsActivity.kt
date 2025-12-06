@@ -5,9 +5,11 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.inventario.mobile.data.repository.InventarioRepository
+import com.inventario.mobile.R
 import com.inventario.mobile.databinding.ActivitySettingsBinding
 import com.inventario.mobile.utils.PreferencesManager
 import com.inventario.mobile.utils.NavigationHelper
+import com.inventario.mobile.utils.ThemeHelper
 
 class SettingsActivity : AppCompatActivity() {
     
@@ -53,6 +55,24 @@ class SettingsActivity : AppCompatActivity() {
     
     private fun setupUI() {
         binding.apply {
+            // ===== DARK MODE / TEMA =====
+            radioGroupTheme.setOnCheckedChangeListener { _, checkedId ->
+                val mode = when (checkedId) {
+                    R.id.radioThemeLight -> PreferencesManager.THEME_MODE_LIGHT
+                    R.id.radioThemeDark -> PreferencesManager.THEME_MODE_DARK
+                    else -> PreferencesManager.THEME_MODE_SYSTEM
+                }
+                viewModel.setThemeMode(mode)
+                
+                // Mostrar feedback ao usuário
+                val themeName = viewModel.getThemeModeName()
+                Toast.makeText(
+                    this@SettingsActivity, 
+                    "Tema alterado para: $themeName", 
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            
             // Modo Offline Forçado
             switchForceOffline.setOnCheckedChangeListener { _, isChecked ->
                 viewModel.setForceOfflineMode(isChecked)
@@ -140,7 +160,15 @@ class SettingsActivity : AppCompatActivity() {
     
     private fun loadCurrentSettings() {
         binding.apply {
-            // Carregar configurações atuais
+            // ===== CARREGAR TEMA ATUAL =====
+            val currentTheme = viewModel.getThemeMode()
+            when (currentTheme) {
+                PreferencesManager.THEME_MODE_LIGHT -> radioThemeLight.isChecked = true
+                PreferencesManager.THEME_MODE_DARK -> radioThemeDark.isChecked = true
+                else -> radioThemeSystem.isChecked = true
+            }
+            
+            // Carregar outras configurações
             switchForceOffline.isChecked = viewModel.isForceOfflineMode()
             switchAutoSync.isChecked = viewModel.isAutoSyncEnabled()
             switchWifiOnly.isChecked = viewModel.isWifiOnlyEnabled()

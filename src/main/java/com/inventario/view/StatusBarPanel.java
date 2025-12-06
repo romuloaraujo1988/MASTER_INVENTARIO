@@ -31,6 +31,9 @@ public class StatusBarPanel extends JPanel implements OfflineModeListener {
     private JLabel lblPendingCount;
     private JButton btnSync;
     
+    // Listener externo para sincronização (delegado ao MainFrame)
+    private java.awt.event.ActionListener syncListener;
+    
     public StatusBarPanel() {
         this.offlineModeManager = OfflineModeManager.getInstance();
         
@@ -196,33 +199,97 @@ public class StatusBarPanel extends JPanel implements OfflineModeListener {
     
     /**
      * Inicia sincronização
+     * Delega para o listener externo (MainFrame) que possui acesso ao OfflineManager
      */
     private void sincronizarAgora() {
+        if (syncListener != null) {
+            // Delegar para o MainFrame que possui a lógica de sincronização
+            syncListener.actionPerformed(new java.awt.event.ActionEvent(
+                btnSync, java.awt.event.ActionEvent.ACTION_PERFORMED, "sync"));
+        } else {
+            // Fallback: mostrar mensagem se não houver listener configurado
+            JOptionPane.showMessageDialog(
+                this,
+                "Sincronização não configurada.\nUse o menu Sistema > Sincronizar.",
+                "Aviso",
+                JOptionPane.WARNING_MESSAGE
+            );
+        }
+    }
+    
+    /**
+     * Adiciona listener para o botão de sincronização
+     * Permite que o MainFrame gerencie a sincronização real
+     * 
+     * @param listener ActionListener que será chamado ao clicar em sincronizar
+     */
+    public void addSincronizarListener(java.awt.event.ActionListener listener) {
+        this.syncListener = listener;
+    }
+    
+    /**
+     * Atualiza o status visual para "sincronizando"
+     * Chamado pelo MainFrame durante a sincronização
+     */
+    public void mostrarSincronizando() {
         lblStatus.setText("🔄 SINCRONIZANDO");
         lblStatus.setForeground(SYNCING_COLOR);
         btnSync.setEnabled(false);
-        
-        // TODO: Implementar sincronização real
-        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() throws Exception {
-                Thread.sleep(2000); // Simular sincronização
-                return null;
-            }
-            
-            @Override
-            protected void done() {
-                updateStatus();
-                JOptionPane.showMessageDialog(
-                    StatusBarPanel.this,
-                    "Sincronização concluída com sucesso!",
-                    "Sincronização",
-                    JOptionPane.INFORMATION_MESSAGE
-                );
-            }
-        };
-        
-        worker.execute();
+    }
+    
+    /**
+     * Atualiza a última sincronização manualmente
+     * Chamado pelo MainFrame após sincronização bem-sucedida
+     * 
+     * @param timestamp Data/hora da sincronização
+     */
+    public void atualizarUltimaSincronizacao(java.time.LocalDateTime timestamp) {
+        if (timestamp != null) {
+            java.time.format.DateTimeFormatter formatter = 
+                java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            lblLastSync.setText("Última sync: " + timestamp.format(formatter));
+            lblLastSync.setForeground(new Color(127, 140, 141));
+        }
+    }
+    
+    /**
+     * Atualiza o contador de coletas pendentes
+     * Chamado pelo MainFrame quando o status muda
+     * 
+     * @param count Número de coletas pendentes
+     */
+    public void atualizarColetasPendentes(int count) {
+        if (count > 0) {
+            lblPendingCount.setText(String.format("📤 %d coleta%s pendente%s", 
+                count, count > 1 ? "s" : "", count > 1 ? "s" : ""));
+            lblPendingCount.setVisible(true);
+            lblPendingCount.setForeground(OFFLINE_COLOR);
+        } else {
+            lblPendingCount.setVisible(false);
+        }
+    }
+    
+    /**
+     * Atualiza o status visual baseado no estado do OfflineManager
+     * 
+     * @param state Estado atual (ONLINE, OFFLINE, etc)
+     */
+    public void atualizarStatus(com.inventario.offline.OfflineManager.OfflineState state) {
+        switch (state) {
+            case ONLINE:
+                lblStatus.setText("🟢 ONLINE");
+                lblStatus.setForeground(ONLINE_COLOR);
+                btnSync.setEnabled(true);
+                break;
+            case OFFLINE:
+                lblStatus.setText("🟡 MODO OFFLINE");
+                lblStatus.setForeground(OFFLINE_COLOR);
+                btnSync.setEnabled(false);
+                break;
+            default:
+                lblStatus.setText("⚪ DESCONHECIDO");
+                lblStatus.setForeground(Color.GRAY);
+        }
     }
     
     @Override

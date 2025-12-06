@@ -358,10 +358,8 @@ public class ItemCompostoFrame extends JFrame {
                 return;
             }
             
-            // Carregar dados do patrimônio
+            // Carregar dados do patrimônio (já verifica se é item composto e carrega componentes)
             carregarPatrimonio(patrimonio);
-            
-            // TODO: Verificar se já é item composto e carregar componentes
             
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this,
@@ -494,13 +492,81 @@ public class ItemCompostoFrame extends JFrame {
     private void detectarPadroes() {
         if (patrimonioAtual == null) return;
         
-        // TODO: Implementar detecção automática de padrões
-        JOptionPane.showMessageDialog(this,
-            "Funcionalidade de detecção automática em desenvolvimento.\n" +
-            "Em breve será possível detectar componentes automaticamente\n" +
-            "baseado na descrição do patrimônio.",
-            "Em Desenvolvimento",
-            JOptionPane.INFORMATION_MESSAGE);
+        String descricao = patrimonioAtual.getDescricao().toUpperCase();
+        List<ComponenteItem> sugestoes = new ArrayList<>();
+        
+        // Detectar padrões baseados na descrição
+        if (descricao.contains("COMPUTADOR") || descricao.contains("DESKTOP") || descricao.contains("PC")) {
+            sugestoes.add(new ComponenteItem("GABINETE", "Gabinete/CPU", 1, 1));
+            sugestoes.add(new ComponenteItem("MONITOR", "Monitor", 1, 2));
+            sugestoes.add(new ComponenteItem("TECLADO", "Teclado", 1, 3));
+            sugestoes.add(new ComponenteItem("MOUSE", "Mouse", 1, 4));
+        } else if (descricao.contains("NOTEBOOK") || descricao.contains("LAPTOP")) {
+            sugestoes.add(new ComponenteItem("NOTEBOOK", "Notebook", 1, 1));
+            sugestoes.add(new ComponenteItem("CARREGADOR", "Carregador/Fonte", 1, 2));
+            sugestoes.add(new ComponenteItem("MOUSE", "Mouse (opcional)", 1, 3));
+        } else if (descricao.contains("IMPRESSORA") || descricao.contains("MULTIFUNCIONAL")) {
+            sugestoes.add(new ComponenteItem("IMPRESSORA", "Impressora", 1, 1));
+            sugestoes.add(new ComponenteItem("CABO_FORCA", "Cabo de Força", 1, 2));
+            sugestoes.add(new ComponenteItem("CABO_USB", "Cabo USB", 1, 3));
+        } else if (descricao.contains("PROJETOR") || descricao.contains("DATASHOW")) {
+            sugestoes.add(new ComponenteItem("PROJETOR", "Projetor", 1, 1));
+            sugestoes.add(new ComponenteItem("CONTROLE", "Controle Remoto", 1, 2));
+            sugestoes.add(new ComponenteItem("CABO_FORCA", "Cabo de Força", 1, 3));
+            sugestoes.add(new ComponenteItem("CABO_HDMI", "Cabo HDMI/VGA", 1, 4));
+        } else if (descricao.contains("AR CONDICIONADO") || descricao.contains("SPLIT")) {
+            sugestoes.add(new ComponenteItem("EVAPORADORA", "Unidade Evaporadora (interna)", 1, 1));
+            sugestoes.add(new ComponenteItem("CONDENSADORA", "Unidade Condensadora (externa)", 1, 2));
+            sugestoes.add(new ComponenteItem("CONTROLE", "Controle Remoto", 1, 3));
+        } else if (descricao.contains("MESA") && descricao.contains("CADEIRA")) {
+            sugestoes.add(new ComponenteItem("MESA", "Mesa", 1, 1));
+            sugestoes.add(new ComponenteItem("CADEIRA", "Cadeira", 1, 2));
+        } else if (descricao.contains("ESTAÇÃO DE TRABALHO")) {
+            sugestoes.add(new ComponenteItem("MESA", "Mesa/Bancada", 1, 1));
+            sugestoes.add(new ComponenteItem("GAVETEIRO", "Gaveteiro", 1, 2));
+            sugestoes.add(new ComponenteItem("CADEIRA", "Cadeira", 1, 3));
+        }
+        
+        if (sugestoes.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                "Não foi possível detectar padrões automaticamente para:\n\"" + 
+                patrimonioAtual.getDescricao() + "\"\n\n" +
+                "Adicione os componentes manualmente.",
+                "Nenhum Padrão Detectado",
+                JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        
+        // Perguntar se deseja adicionar as sugestões
+        StringBuilder msg = new StringBuilder();
+        msg.append("Foram detectados os seguintes componentes sugeridos:\n\n");
+        for (ComponenteItem comp : sugestoes) {
+            msg.append("• ").append(comp.getTipo()).append(": ").append(comp.getDescricao()).append("\n");
+        }
+        msg.append("\nDeseja adicionar estes componentes?");
+        
+        int opcao = JOptionPane.showConfirmDialog(this,
+            msg.toString(),
+            "Componentes Detectados",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.QUESTION_MESSAGE);
+        
+        if (opcao == JOptionPane.YES_OPTION) {
+            for (ComponenteItem comp : sugestoes) {
+                comp.setOrdem(componentes.size() + 1);
+                componentes.add(comp);
+                modelComponentes.addRow(new Object[]{
+                    comp.getTipo(),
+                    comp.getDescricao(),
+                    comp.getQuantidadeEsperada(),
+                    comp.getOrdem()
+                });
+            }
+            JOptionPane.showMessageDialog(this,
+                sugestoes.size() + " componente(s) adicionado(s) com sucesso!",
+                "Sucesso",
+                JOptionPane.INFORMATION_MESSAGE);
+        }
     }
     
     private void salvarItemComposto() {

@@ -28,6 +28,82 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <!-- Aparência / Dark Mode -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Aparência"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Tema do aplicativo"
+                        android:textSize="14sp"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+
+                    <RadioGroup
+                        android:id="@+id/radioGroupTheme"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="vertical">
+
+                        <RadioButton
+                            android:id="@+id/radioThemeSystem"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Automático (seguir sistema)"
+                            android:textColor="?attr/colorOnSurface"
+                            android:paddingVertical="8dp" />
+
+                        <RadioButton
+                            android:id="@+id/radioThemeLight"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Claro"
+                            android:textColor="?attr/colorOnSurface"
+                            android:paddingVertical="8dp" />
+
+                        <RadioButton
+                            android:id="@+id/radioThemeDark"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Escuro"
+                            android:textColor="?attr/colorOnSurface"
+                            android:paddingVertical="8dp" />
+
+                    </RadioGroup>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="O tema escuro reduz o brilho da tela e pode economizar bateria em dispositivos com tela OLED."
+                        android:textSize="12sp"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:lineSpacingExtra="2dp" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Modo Offline Forçado -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
@@ -48,7 +124,7 @@
                         android:text="Modo Offline"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_primary" />
+                        android:textColor="?attr/colorOnSurface" />
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/switchForceOffline"
@@ -56,7 +132,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="Forçar modo offline"
-                        android:textColor="@color/text_primary" />
+                        android:textColor="?attr/colorOnSurface" />
 
                     <TextView
                         android:layout_width="match_parent"
@@ -64,7 +140,7 @@
                         android:layout_marginTop="8dp"
                         android:text="Quando ativado, o app trabalhará apenas com dados locais, sem tentar conectar ao servidor. Útil para economizar dados ou trabalhar em áreas sem conexão."
                         android:textSize="12sp"
-                        android:textColor="@color/text_secondary"
+                        android:textColor="?attr/colorOnSurfaceVariant"
                         android:lineSpacingExtra="2dp" />
 
                     <!-- Indicador de status -->
@@ -121,13 +197,14 @@
                         android:text="Sincronização por Tempo"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_primary" />
+                        android:textColor="?attr/colorOnSurface" />
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/switchAutoSync"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
+                        android:textColor="?attr/colorOnSurface"
                         android:text="Ativar sincronização automática por tempo" />
 
                     <LinearLayout
@@ -143,7 +220,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Intervalo de sincronização:"
-                            android:textColor="@color/text_secondary" />
+                            android:textColor="?attr/colorOnSurfaceVariant" />
 
                         <Button
                             android:id="@+id/btnDecreaseSyncInterval"
@@ -161,7 +238,7 @@
                             android:text="30min"
                             android:textSize="16sp"
                             android:textStyle="bold"
-                            android:textColor="@color/text_primary" />
+                            android:textColor="?attr/colorOnSurface" />
 
                         <Button
                             android:id="@+id/btnIncreaseSyncInterval"
@@ -197,13 +274,14 @@
                         android:text="Sincronização por Coletas"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_primary" />
+                        android:textColor="?attr/colorOnSurface" />
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/switchAutoSyncByCount"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
+                        android:textColor="?attr/colorOnSurface"
                         android:text="Ativar sincronização automática por número de coletas" />
 
                     <LinearLayout
@@ -219,7 +297,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Sincronizar a cada:"
-                            android:textColor="@color/text_secondary" />
+                            android:textColor="?attr/colorOnSurfaceVariant" />
 
                         <Button
                             android:id="@+id/btnDecreaseSyncCount"
@@ -237,7 +315,7 @@
                             android:text="10 coletas"
                             android:textSize="16sp"
                             android:textStyle="bold"
-                            android:textColor="@color/text_primary" />
+                            android:textColor="?attr/colorOnSurface" />
 
                         <Button
                             android:id="@+id/btnIncreaseSyncCount"
@@ -262,7 +340,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Coletas realizadas:"
-                            android:textColor="@color/text_secondary" />
+                            android:textColor="?attr/colorOnSurfaceVariant" />
 
                         <TextView
                             android:id="@+id/tvCurrentCollectionCount"
@@ -271,7 +349,7 @@
                             android:text="0 / 10"
                             android:textSize="16sp"
                             android:textStyle="bold"
-                            android:textColor="@color/text_primary" />
+                            android:textColor="?attr/colorOnSurface" />
 
                     </LinearLayout>
 
@@ -307,13 +385,14 @@
                         android:text="Configurações de Rede"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_primary" />
+                        android:textColor="?attr/colorOnSurface" />
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/switchWifiOnly"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
+                        android:textColor="?attr/colorOnSurface"
                         android:text="Sincronizar apenas via Wi-Fi" />
 
                 </LinearLayout>
@@ -324,6 +403,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="4dp">
 
@@ -339,7 +419,7 @@
                         android:text="Ações"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_primary" />
+                        android:textColor="?attr/colorOnSurface" />
 
                     <Button
                         android:id="@+id/btnTestSync"
@@ -348,6 +428,90 @@
                         android:layout_marginTop="16dp"
                         android:text="Testar Sincronização"
                         style="@style/Widget.Material3.Button" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Sobre o Aplicativo -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:gravity="center_horizontal">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Sobre o Aplicativo"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <ImageView
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:layout_marginTop="16dp"
+                        android:src="@mipmap/ic_launcher"
+                        android:contentDescription="@string/app_logo" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/app_name"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/primary_color"
+                        android:gravity="center" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/app_full_name"
+                        android:textSize="14sp"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:gravity="center" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/app_version"
+                        android:textSize="16sp"
+                        android:textColor="?attr/colorOnSurface"
+                        android:gravity="center" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="16dp"
+                        android:background="?attr/colorOutline" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/app_developer"
+                        android:textSize="14sp"
+                        android:textColor="?attr/colorOnSurface"
+                        android:gravity="center" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/app_copyright"
+                        android:textSize="12sp"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:gravity="center" />
 
                 </LinearLayout>
 

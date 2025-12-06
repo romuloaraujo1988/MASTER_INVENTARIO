@@ -5,11 +5,9 @@ import com.inventario.offline.OfflineManager;
 import com.inventario.offline.StatusBarPanel;
 import com.inventario.offline.SyncStatusManager;
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.geom.RoundRectangle2D;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -89,6 +87,7 @@ public class MainFrame extends JFrame {
         // Verificar se é usuário CONSULTA - só tem acesso ao dashboard
         boolean isConsulta = usuarioLogado.getPerfil().name().equals("CONSULTA");
         boolean isAdmin = usuarioLogado.getPerfil().name().equals("ADMIN");
+        boolean isGestor = usuarioLogado.getPerfil().name().equals("GESTOR");
 
         // Menu Administração (apenas para administradores) - SEGUNDO na ordem
         JMenu menuAdmin = null;
@@ -210,6 +209,31 @@ public class MainFrame extends JFrame {
         menuDashboard.add(itemDashboardColeta);
         menuDashboard.add(itemStatusSalas);
 
+        // Menu Analytics (disponível para ADMIN e GESTOR)
+        JMenu menuAnalytics = null;
+        if (isAdmin || isGestor) {
+            menuAnalytics = new JMenu("Analytics");
+            menuAnalytics.setFont(new Font("Arial", Font.BOLD, 14));
+            
+            JMenuItem itemAnalyticsDashboard = new JMenuItem("Dashboard de KPIs");
+            itemAnalyticsDashboard.setFont(new Font("Arial", Font.PLAIN, 13));
+            itemAnalyticsDashboard.setAccelerator(KeyStroke.getKeyStroke("control shift A"));
+            itemAnalyticsDashboard.addActionListener(e -> abrirAnalyticsDashboard());
+            
+            JMenuItem itemDivergenciasAnalytics = new JMenuItem("Análise de Divergências");
+            itemDivergenciasAnalytics.setFont(new Font("Arial", Font.PLAIN, 13));
+            itemDivergenciasAnalytics.addActionListener(e -> abrirDivergenciasAnalytics());
+            
+            JMenuItem itemMetricasTempoAnalytics = new JMenuItem("Métricas de Tempo");
+            itemMetricasTempoAnalytics.setFont(new Font("Arial", Font.PLAIN, 13));
+            itemMetricasTempoAnalytics.addActionListener(e -> abrirMetricasTempoAnalytics());
+            
+            menuAnalytics.add(itemAnalyticsDashboard);
+            menuAnalytics.addSeparator();
+            menuAnalytics.add(itemDivergenciasAnalytics);
+            menuAnalytics.add(itemMetricasTempoAnalytics);
+        }
+
         // Menu Sistema (para controles offline/online)
         JMenu menuSistema = new JMenu("Sistema");
         menuSistema.setFont(new Font("Arial", Font.BOLD, 14));
@@ -282,6 +306,11 @@ public class MainFrame extends JFrame {
 
         // Dashboard (disponível para todos)
         menuBar.add(menuDashboard);
+
+        // Analytics (disponível para ADMIN e GESTOR)
+        if (menuAnalytics != null) {
+            menuBar.add(menuAnalytics);
+        }
 
         // Sistema (disponível para todos)
         menuBar.add(menuSistema);
@@ -590,70 +619,6 @@ public class MainFrame extends JFrame {
         return button;
     }
 
-    private JButton createModernDashboardButton(String titulo, String descricao, Color cor) {
-        JButton button = new JButton() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                // Gradiente suave
-                GradientPaint gradient = new GradientPaint(0, 0, cor, 0, getHeight(),
-                        new Color(cor.getRed(), cor.getGreen(), cor.getBlue(), 180));
-                g2d.setPaint(gradient);
-                g2d.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 15, 15));
-
-                // Borda sutil
-                g2d.setColor(new Color(255, 255, 255, 100));
-                g2d.setStroke(new BasicStroke(1.5f));
-                g2d.draw(new RoundRectangle2D.Float(1, 1, getWidth() - 2, getHeight() - 2, 15, 15));
-            }
-        };
-
-        button.setLayout(new BorderLayout());
-        button.setPreferredSize(new Dimension(220, 140));
-        button.setContentAreaFilled(false);
-        button.setBorderPainted(false);
-        button.setFocusPainted(false);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        // Painel interno para o conteúdo
-        JPanel conteudo = new JPanel(new BorderLayout());
-        conteudo.setOpaque(false);
-        conteudo.setBorder(new EmptyBorder(20, 15, 20, 15));
-
-        JLabel lblTitulo = new JLabel(titulo);
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        lblTitulo.setForeground(Color.WHITE);
-        lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
-
-        JLabel lblDescricao = new JLabel("<html><center>" + descricao + "</center></html>");
-        lblDescricao.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        lblDescricao.setForeground(new Color(255, 255, 255, 200));
-        lblDescricao.setHorizontalAlignment(SwingConstants.CENTER);
-
-        conteudo.add(lblTitulo, BorderLayout.CENTER);
-        conteudo.add(lblDescricao, BorderLayout.SOUTH);
-        button.add(conteudo, BorderLayout.CENTER);
-
-        // Efeito hover
-        button.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                button.setPreferredSize(new Dimension(225, 145));
-                button.revalidate();
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                button.setPreferredSize(new Dimension(220, 140));
-                button.revalidate();
-            }
-        });
-
-        return button;
-    }
-
     private void setupEventListeners() {
         addWindowListener(new WindowAdapter() {
             @Override
@@ -661,74 +626,6 @@ public class MainFrame extends JFrame {
                 sairSistema();
             }
         });
-    }
-
-    private JPanel createBottomPanel() {
-        JPanel panelBottom = new JPanel(new BorderLayout());
-        panelBottom.setBackground(new Color(44, 62, 80));
-        panelBottom.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-
-        // Painel esquerdo - Status da conexão
-        JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        statusPanel.setBackground(new Color(44, 62, 80));
-
-        lblStatusConexao = new JLabel("Sistema de Inventário - Inicializando...");
-        lblStatusConexao.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblStatusConexao.setForeground(new Color(236, 240, 241));
-        statusPanel.add(lblStatusConexao);
-
-        // Painel direito - Controles offline/online
-        JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        controlPanel.setBackground(new Color(44, 62, 80));
-
-        btnModoOffline = createModernSmallButton("Forçar Offline");
-        btnModoOffline.addActionListener(e -> forcarModoOffline());
-
-        btnTentarOnline = createModernSmallButton("Tentar Online");
-        btnTentarOnline.addActionListener(e -> tentarModoOnline());
-
-        controlPanel.add(btnModoOffline);
-        controlPanel.add(Box.createHorizontalStrut(10));
-        controlPanel.add(btnTentarOnline);
-
-        panelBottom.add(statusPanel, BorderLayout.WEST);
-        panelBottom.add(controlPanel, BorderLayout.EAST);
-
-        return panelBottom;
-    }
-
-    private JButton createModernSmallButton(String text) {
-        JButton button = new JButton(text) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2d = (Graphics2D) g.create();
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                Color bgColor = new Color(52, 152, 219);
-                if (getModel().isPressed()) {
-                    g2d.setColor(bgColor.darker());
-                } else if (getModel().isRollover()) {
-                    g2d.setColor(bgColor.brighter());
-                } else {
-                    g2d.setColor(bgColor);
-                }
-
-                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 6, 6);
-                g2d.dispose();
-
-                super.paintComponent(g);
-            }
-        };
-
-        button.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        button.setForeground(Color.WHITE);
-        button.setPreferredSize(new Dimension(120, 30));
-        button.setBorderPainted(false);
-        button.setContentAreaFilled(false);
-        button.setFocusPainted(false);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        return button;
     }
 
     private void setupOfflineControls() {
@@ -1035,6 +932,66 @@ public class MainFrame extends JFrame {
         } catch (Exception e) {
             ModernDialog.showMessage(this,
                     "Erro ao abrir dashboard de coleta: " + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void abrirAnalyticsDashboard() {
+        try {
+            com.inventario.analytics.view.AnalyticsDashboardFrame analyticsFrame = 
+                new com.inventario.analytics.view.AnalyticsDashboardFrame();
+            analyticsFrame.setVisible(true);
+        } catch (Exception e) {
+            ModernDialog.showMessage(this,
+                    "Erro ao abrir Analytics Dashboard: " + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void abrirDivergenciasAnalytics() {
+        try {
+            // Buscar inventário ativo
+            com.inventario.dao.InventarioDAO inventarioDAO = new com.inventario.dao.InventarioDAO();
+            com.inventario.model.Inventario inventarioAtivo = inventarioDAO.buscarInventarioAtivo();
+            
+            if (inventarioAtivo == null) {
+                ModernDialog.showMessage(this,
+                        "Nenhum inventário ativo encontrado. Selecione um inventário no Dashboard de Analytics.",
+                        "Aviso", JOptionPane.WARNING_MESSAGE);
+                abrirAnalyticsDashboard();
+                return;
+            }
+            
+            com.inventario.analytics.view.DivergenciasAnalyticsFrame frame = 
+                new com.inventario.analytics.view.DivergenciasAnalyticsFrame(inventarioAtivo.getId());
+            frame.setVisible(true);
+        } catch (Exception e) {
+            ModernDialog.showMessage(this,
+                    "Erro ao abrir Análise de Divergências: " + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void abrirMetricasTempoAnalytics() {
+        try {
+            // Buscar inventário ativo
+            com.inventario.dao.InventarioDAO inventarioDAO = new com.inventario.dao.InventarioDAO();
+            com.inventario.model.Inventario inventarioAtivo = inventarioDAO.buscarInventarioAtivo();
+            
+            if (inventarioAtivo == null) {
+                ModernDialog.showMessage(this,
+                        "Nenhum inventário ativo encontrado. Selecione um inventário no Dashboard de Analytics.",
+                        "Aviso", JOptionPane.WARNING_MESSAGE);
+                abrirAnalyticsDashboard();
+                return;
+            }
+            
+            com.inventario.analytics.view.MetricasTempoAnalyticsFrame frame = 
+                new com.inventario.analytics.view.MetricasTempoAnalyticsFrame(inventarioAtivo.getId());
+            frame.setVisible(true);
+        } catch (Exception e) {
+            ModernDialog.showMessage(this,
+                    "Erro ao abrir Métricas de Tempo: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }

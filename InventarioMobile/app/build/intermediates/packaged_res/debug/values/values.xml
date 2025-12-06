@@ -109,9 +109,12 @@
     <integer name="default_server_port">8081</integer>
     <string name="about">Sobre</string>
     <string name="add_item">Adicionar Item</string>
+    <string name="app_copyright">© 2025 - Todos os direitos reservados</string>
+    <string name="app_developer">Desenvolvido por Romulo Araujo</string>
+    <string name="app_full_name">Sistema de Histórico e Coleta Patrimonial</string>
     <string name="app_logo">Logo do aplicativo</string>
     <string name="app_name">SIHCP Mobile</string>
-    <string name="app_version">Versão 1.2.21</string>
+    <string name="app_version">Versão 1.2.29</string>
     <string name="cancel">Cancelar</string>
     <string name="cancelar">Cancelar</string>
     <string name="clear_filters">Limpar Filtros</string>
@@ -251,6 +254,13 @@
     <string name="synced">Sincronizado</string>
     <string name="test_network">Testar Rede</string>
     <string name="testing_network">Testando...</string>
+    <string name="theme_changed">Tema alterado para: %s</string>
+    <string name="theme_dark">Escuro</string>
+    <string name="theme_description">O tema escuro reduz o brilho da tela e pode economizar bateria em dispositivos com tela OLED.</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_settings">Aparência</string>
+    <string name="theme_system">Automático (seguir sistema)</string>
+    <string name="theme_title">Tema do aplicativo</string>
     <string name="total_collections">Total de Coletas</string>
     <string name="total_patrimonios">Total de Patrimônios</string>
     <string name="user_avatar">Avatar do usuário</string>

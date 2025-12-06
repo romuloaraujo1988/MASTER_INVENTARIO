@@ -127,6 +127,7 @@ import com.inventario.mobile.network.OfflineFallbackInterceptor;
 import com.inventario.mobile.network.RefreshTokenInterceptor;
 import com.inventario.mobile.presentation.charts.ChartDataProvider;
 import com.inventario.mobile.presentation.charts.ChartsFragment;
+import com.inventario.mobile.presentation.charts.ChartsFragment_MembersInjector;
 import com.inventario.mobile.presentation.charts.ChartsViewModel;
 import com.inventario.mobile.presentation.charts.ChartsViewModel_HiltModules_KeyModule_ProvideFactory;
 import com.inventario.mobile.presentation.coleta.ColetaViewModelClean;
@@ -169,7 +170,6 @@ import com.inventario.mobile.presentation.sala.SalaSelectionActivity_MembersInje
 import com.inventario.mobile.presentation.scanner.ScannerActivity;
 import com.inventario.mobile.presentation.scanner.ScannerActivity_MembersInjector;
 import com.inventario.mobile.presentation.search.QuickSearchActivity;
-import com.inventario.mobile.presentation.statistics.ChartsFragment_MembersInjector;
 import com.inventario.mobile.presentation.statistics.ExportFragment;
 import com.inventario.mobile.presentation.statistics.OverviewFragment;
 import com.inventario.mobile.presentation.statistics.RankingsFragment;
@@ -591,12 +591,13 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
 
     @Override
     public void injectChartsFragment(ChartsFragment chartsFragment) {
+      injectChartsFragment2(chartsFragment);
     }
 
     @Override
     public void injectChartsFragment(
         com.inventario.mobile.presentation.statistics.ChartsFragment chartsFragment) {
-      injectChartsFragment2(chartsFragment);
+      injectChartsFragment3(chartsFragment);
     }
 
     @Override
@@ -651,10 +652,16 @@ public final class DaggerInventarioMobileApplication_HiltComponents_SingletonC {
     }
 
     @CanIgnoreReturnValue
-    private com.inventario.mobile.presentation.statistics.ChartsFragment injectChartsFragment2(
-        com.inventario.mobile.presentation.statistics.ChartsFragment instance) {
-      ChartsFragment_MembersInjector.injectChartDataProvider(instance, singletonCImpl.chartDataProvider.get());
+    private ChartsFragment injectChartsFragment2(ChartsFragment instance) {
       ChartsFragment_MembersInjector.injectPreferencesManager(instance, singletonCImpl.providePreferencesManagerProvider.get());
+      return instance;
+    }
+
+    @CanIgnoreReturnValue
+    private com.inventario.mobile.presentation.statistics.ChartsFragment injectChartsFragment3(
+        com.inventario.mobile.presentation.statistics.ChartsFragment instance) {
+      com.inventario.mobile.presentation.statistics.ChartsFragment_MembersInjector.injectChartDataProvider(instance, singletonCImpl.chartDataProvider.get());
+      com.inventario.mobile.presentation.statistics.ChartsFragment_MembersInjector.injectPreferencesManager(instance, singletonCImpl.providePreferencesManagerProvider.get());
       return instance;
     }
 

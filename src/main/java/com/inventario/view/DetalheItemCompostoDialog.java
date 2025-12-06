@@ -1,8 +1,6 @@
 package com.inventario.view;
 
 import com.inventario.model.ComponenteDetalhe;
-import com.inventario.model.StatusComponente;
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;

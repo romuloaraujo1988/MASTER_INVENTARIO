@@ -6,6 +6,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -50,6 +52,18 @@ public final class ActivitySettingsBinding implements ViewBinding {
   public final LinearLayout layoutSyncInterval;
 
   @NonNull
+  public final RadioGroup radioGroupTheme;
+
+  @NonNull
+  public final RadioButton radioThemeDark;
+
+  @NonNull
+  public final RadioButton radioThemeLight;
+
+  @NonNull
+  public final RadioButton radioThemeSystem;
+
+  @NonNull
   public final SwitchMaterial switchAutoSync;
 
   @NonNull
@@ -78,7 +92,9 @@ public final class ActivitySettingsBinding implements ViewBinding {
       @NonNull Button btnIncreaseSyncCount, @NonNull Button btnIncreaseSyncInterval,
       @NonNull Button btnResetCollectionCount, @NonNull Button btnTestSync,
       @NonNull LinearLayout layoutOfflineStatus, @NonNull LinearLayout layoutSyncCount,
-      @NonNull LinearLayout layoutSyncInterval, @NonNull SwitchMaterial switchAutoSync,
+      @NonNull LinearLayout layoutSyncInterval, @NonNull RadioGroup radioGroupTheme,
+      @NonNull RadioButton radioThemeDark, @NonNull RadioButton radioThemeLight,
+      @NonNull RadioButton radioThemeSystem, @NonNull SwitchMaterial switchAutoSync,
       @NonNull SwitchMaterial switchAutoSyncByCount, @NonNull SwitchMaterial switchForceOffline,
       @NonNull SwitchMaterial switchWifiOnly, @NonNull Toolbar toolbar,
       @NonNull TextView tvCurrentCollectionCount, @NonNull TextView tvSyncCount,
@@ -93,6 +109,10 @@ public final class ActivitySettingsBinding implements ViewBinding {
     this.layoutOfflineStatus = layoutOfflineStatus;
     this.layoutSyncCount = layoutSyncCount;
     this.layoutSyncInterval = layoutSyncInterval;
+    this.radioGroupTheme = radioGroupTheme;
+    this.radioThemeDark = radioThemeDark;
+    this.radioThemeLight = radioThemeLight;
+    this.radioThemeSystem = radioThemeSystem;
     this.switchAutoSync = switchAutoSync;
     this.switchAutoSyncByCount = switchAutoSyncByCount;
     this.switchForceOffline = switchForceOffline;
@@ -184,6 +204,30 @@ public final class ActivitySettingsBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.radioGroupTheme;
+      RadioGroup radioGroupTheme = ViewBindings.findChildViewById(rootView, id);
+      if (radioGroupTheme == null) {
+        break missingId;
+      }
+
+      id = R.id.radioThemeDark;
+      RadioButton radioThemeDark = ViewBindings.findChildViewById(rootView, id);
+      if (radioThemeDark == null) {
+        break missingId;
+      }
+
+      id = R.id.radioThemeLight;
+      RadioButton radioThemeLight = ViewBindings.findChildViewById(rootView, id);
+      if (radioThemeLight == null) {
+        break missingId;
+      }
+
+      id = R.id.radioThemeSystem;
+      RadioButton radioThemeSystem = ViewBindings.findChildViewById(rootView, id);
+      if (radioThemeSystem == null) {
+        break missingId;
+      }
+
       id = R.id.switchAutoSync;
       SwitchMaterial switchAutoSync = ViewBindings.findChildViewById(rootView, id);
       if (switchAutoSync == null) {
@@ -235,8 +279,9 @@ public final class ActivitySettingsBinding implements ViewBinding {
       return new ActivitySettingsBinding((LinearLayout) rootView, btnDecreaseSyncCount,
           btnDecreaseSyncInterval, btnIncreaseSyncCount, btnIncreaseSyncInterval,
           btnResetCollectionCount, btnTestSync, layoutOfflineStatus, layoutSyncCount,
-          layoutSyncInterval, switchAutoSync, switchAutoSyncByCount, switchForceOffline,
-          switchWifiOnly, toolbar, tvCurrentCollectionCount, tvSyncCount, tvSyncInterval);
+          layoutSyncInterval, radioGroupTheme, radioThemeDark, radioThemeLight, radioThemeSystem,
+          switchAutoSync, switchAutoSyncByCount, switchForceOffline, switchWifiOnly, toolbar,
+          tvCurrentCollectionCount, tvSyncCount, tvSyncInterval);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));
