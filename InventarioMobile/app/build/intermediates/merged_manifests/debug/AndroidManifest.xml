@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.inventario.mobile"
-    android:versionCode="29"
-    android:versionName="1.2.29" >
+    android:versionCode="34"
+    android:versionName="1.2.34" >
 
     <uses-sdk
         android:minSdkVersion="23"
@@ -235,7 +235,7 @@
 
         <!-- Filtros Activity -->
         <activity
-            android:name="com.inventario.mobile.presentation.inventario.FiltrosActivity"
+            android:name="com.inventario.mobile.presentation.filtros.FiltrosActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.InventarioMobile.NoActionBar"

@@ -410,7 +410,6 @@ id nav_settings
 id nav_statistics
 id nav_sync
 id nav_view
-id nav_voice_search
 id offline_icon
 id offline_indicator
 id offline_text

@@ -260,14 +260,6 @@ class MainActivity : AppCompatActivity() {
                 true
             }
             
-            R.id.nav_voice_search -> {
-                // Abrir busca rápida com foco no campo de busca por voz
-                val intent = Intent(this, com.inventario.mobile.presentation.search.QuickSearchActivity::class.java)
-                intent.putExtra("START_VOICE_SEARCH", true)
-                startActivity(intent)
-                true
-            }
-            
             R.id.nav_relatorios -> {
                 val intent = Intent(this, com.inventario.mobile.presentation.statistics.StatisticsActivity::class.java)
                 startActivity(intent)

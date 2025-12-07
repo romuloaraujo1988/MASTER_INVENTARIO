@@ -1,36 +1,16 @@
-2025-12-06 13:46:53.969 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Classificando divergência de estado: cadastrado='BOM', encontrado='BOM'
-2025-12-06 13:46:54.085 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Classificando divergência de estado: cadastrado='REGULAR', encontrado='BOM'
-2025-12-06 13:46:54.088 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Diferença de níveis: -1 (cadastrado=3, encontrado=4)
-2025-12-06 13:46:54.088 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Divergência BAIXA: estado melhorou ou igual
-2025-12-06 13:46:54.088 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Classificando divergência de estado: cadastrado='RUIM', encontrado='EXCELENTE'
-2025-12-06 13:46:54.088 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Diferença de níveis: -3 (cadastrado=2, encontrado=5)
-2025-12-06 13:46:54.088 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Divergência BAIXA: estado melhorou ou igual
-2025-12-06 13:46:54.103 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Classificando divergência de estado: cadastrado='null', encontrado='BOM'
-2025-12-06 13:46:54.104 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Diferença de níveis: -1 (cadastrado=3, encontrado=4)
-2025-12-06 13:46:54.104 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Divergência BAIXA: estado melhorou ou igual
-2025-12-06 13:46:54.104 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Classificando divergência de estado: cadastrado='BOM', encontrado='null'
-2025-12-06 13:46:54.110 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Diferença de níveis: 1 (cadastrado=4, encontrado=3)
-2025-12-06 13:46:54.110 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Divergência ALTA: estado piorou 1 nível
-2025-12-06 13:46:54.122 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Classificando divergência de estado: cadastrado='BOM', encontrado='REGULAR'
-2025-12-06 13:46:54.123 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Diferença de níveis: 1 (cadastrado=4, encontrado=3)
-2025-12-06 13:46:54.123 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Divergência ALTA: estado piorou 1 nível
-2025-12-06 13:46:54.123 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Classificando divergência de estado: cadastrado='EXCELENTE', encontrado='BOM'
-2025-12-06 13:46:54.123 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Diferença de níveis: 1 (cadastrado=5, encontrado=4)
-2025-12-06 13:46:54.123 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Divergência ALTA: estado piorou 1 nível
-2025-12-06 13:46:54.136 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Classificando divergência de estado: cadastrado='BOM', encontrado='RUIM'
-2025-12-06 13:46:54.138 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Diferença de níveis: 2 (cadastrado=4, encontrado=2)
-2025-12-06 13:46:54.138 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Divergência CRÍTICA: estado piorou 2 níveis
-2025-12-06 13:46:54.138 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Classificando divergência de estado: cadastrado='EXCELENTE', encontrado='RUIM'
-2025-12-06 13:46:54.138 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Diferença de níveis: 3 (cadastrado=5, encontrado=2)
-2025-12-06 13:46:54.138 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Divergência CRÍTICA: estado piorou 3 níveis
-2025-12-06 13:46:54.138 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Classificando divergência de estado: cadastrado='BOM', encontrado='INSERVIVEL'
-2025-12-06 13:46:54.138 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Diferença de níveis: 4 (cadastrado=4, encontrado=0)
-2025-12-06 13:46:54.138 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Divergência CRÍTICA: estado piorou 4 níveis
-2025-12-06 13:46:54.171 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Classificando divergência de localização: cadastrado='Sala 101' (setor=1), encontrado='Sala 201' (setor=2)
-2025-12-06 13:46:54.171 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Divergência ALTA: mudou de setor 1 para 2
-2025-12-06 13:46:54.171 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Classificando divergência de localização: cadastrado='Sala 101' (setor=1), encontrado='Sala 101 - Bloco A' (setor=1)
-2025-12-06 13:46:54.178 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Divergência BAIXA: apenas descrição difere
-2025-12-06 13:46:54.187 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Classificando divergência de localização: cadastrado='null' (setor=null), encontrado='Sala 101' (setor=1)
-2025-12-06 13:46:54.188 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Classificando divergência de localização: cadastrado='Sala 101' (setor=1), encontrado='Sala 101' (setor=1)
-2025-12-06 13:46:54.188 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Classificando divergência de localização: cadastrado='Sala 101' (setor=1), encontrado='Sala 102' (setor=1)
-2025-12-06 13:46:54.188 [main] DEBUG com.inventario.analytics.service.DivergenciaClassificadorService - Divergência MÉDIA: mudou de sala no mesmo setor
+2025-12-07 07:03:58.196 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool - ═══════════════════════════════════════════════════════════════
+2025-12-07 07:03:58.214 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool - 🚀 Inicializando HikariCP Connection Pool
+2025-12-07 07:03:58.215 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool - ═══════════════════════════════════════════════════════════════
+2025-12-07 07:03:58.253 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.HikariDataSource - InventarioPool - Starting...
+2025-12-07 07:03:58.451 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.pool.HikariPool - InventarioPool - Added connection org.postgresql.jdbc.PgConnection@47e563f4
+2025-12-07 07:03:58.502 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.HikariDataSource - InventarioPool - Start completed.
+2025-12-07 07:03:58.528 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool - ✅ Pool inicializado com sucesso!
+2025-12-07 07:03:58.530 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool -    URL: jdbc:postgresql://localhost:5432/sispatrimonio
+2025-12-07 07:03:58.531 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool -    Pool Size: 15 (min: 5)
+2025-12-07 07:03:58.533 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool -    Leak Detection: 30000ms
+2025-12-07 07:03:58.567 [AWT-EventQueue-0] INFO  com.inventario.config.HikariConnectionPool - ═══════════════════════════════════════════════════════════════
+2025-12-07 07:03:58.569 [AWT-EventQueue-0] DEBUG com.inventario.config.HikariConnectionPool - ✓ HikariCP: Ativas=1, Ociosas=0, Total=1
+2025-12-07 07:04:23.251 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2025-12-07 07:04:23.359 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@65947586
+2025-12-07 07:04:23.360 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2025-12-07 07:04:23.362 [AWT-EventQueue-0] INFO  com.inventario.util.ConnectionManager - ✓ Connection pool inicializado com sucesso

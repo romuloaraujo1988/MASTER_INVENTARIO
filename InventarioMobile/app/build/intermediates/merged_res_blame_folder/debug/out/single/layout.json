@@ -1,262 +1,258 @@
 [
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\fragment_statistics_export.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\fragment_statistics_export.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_offline_sync.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_offline_sync.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_item_sem_etiqueta.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_item_sem_etiqueta.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_patrimonio_detail.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_patrimonio_detail.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_settings.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_settings.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_settings.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_settings.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\dialog_pin_login.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\dialog_pin_login.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/dialog_pin_login.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/dialog_pin_login.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_inventario_tabs.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_inventario_tabs.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_patrimonio_list_paging.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_patrimonio_list_paging.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_network_diagnostic.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_network_diagnostic.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/dialog_pin_setup.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/dialog_pin_setup.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\view_connection_status_bar.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\view_connection_status_bar.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_manual_collection.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_manual_collection.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_inventario.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_inventario.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_dashboard.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_dashboard.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\fragment_statistics_rankings.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\fragment_statistics_rankings.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_dashboard_backup.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_dashboard_backup.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\fragment_statistics_overview.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\fragment_statistics_overview.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_inventory.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_inventory.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\fragment_patrimonio_list.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\fragment_patrimonio_list.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_inventario_por_sala.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_inventario_por_sala.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\item_pending_coleta.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\item_pending_coleta.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_descricao_selection.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_descricao_selection.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_developer_settings.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_developer_settings.xml"
-    },
-    {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_consulta_patrimonio.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_consulta_patrimonio.xml"
-    },
-    {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\fragment_patrimonio_list_paging.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\fragment_patrimonio_list_paging.xml"
-    },
-    {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\fragment_dashboard.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\fragment_dashboard.xml"
-    },
-    {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\dialog_pin_setup.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\dialog_pin_setup.xml"
-    },
-    {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_login.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_login.xml"
-    },
-    {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_offline_manager.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_offline_manager.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_filtros.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_filtros.xml"
     },
     {
         "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_splash.xml",
         "source": "com.inventario.mobile.app-main-69:/layout/activity_splash.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\fragment_inventario_por_responsavel.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\fragment_inventario_por_responsavel.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_inventario_por_responsavel.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_inventario_por_responsavel.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_sala_selection.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_sala_selection.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_sala_dropdown.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_sala_dropdown.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_collection_view.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_collection_view.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_statistics_rankings.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_statistics_rankings.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\numeric_keypad.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\numeric_keypad.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_patrimonio.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_patrimonio.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\item_loading.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\item_loading.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_sala_selection_paging.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_sala_selection_paging.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\fragment_charts.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\fragment_charts.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_descricao.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_descricao.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_pending_collections.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_pending_collections.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_statistics_overview.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_statistics_overview.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_scanner.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_scanner.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_coleta.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_coleta.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\view_offline_indicator.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\view_offline_indicator.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_quick_search.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_quick_search.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_sync.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_sync.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/view_offline_indicator.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/view_offline_indicator.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_filtros.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_filtros.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_statistics_charts.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_statistics_charts.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_coletas_clean.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_coletas_clean.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_patrimonio_search.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_patrimonio_search.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_coletas.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_coletas.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_timeline_coleta.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_timeline_coleta.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\item_patrimonio_search.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\item_patrimonio_search.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_developer_settings.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_developer_settings.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\fragment_dashboard_backup.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\fragment_dashboard_backup.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_simple_sala_selection.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_simple_sala_selection.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_simple_sala_selection.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_simple_sala_selection.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/view_connection_status_bar.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/view_connection_status_bar.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_collection_history.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_collection_history.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_smoke_test.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_smoke_test.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_patrimonio_detail.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_patrimonio_detail.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/dialog_estado_patrimonio.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/dialog_estado_patrimonio.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_sync_manual.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_sync_manual.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_coletas_clean.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_coletas_clean.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_sala_selection_paging.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_sala_selection_paging.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_pending_collections.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_pending_collections.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_offline_sync.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_offline_sync.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_sala_selection.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_sala_selection.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\fragment_inventory.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\fragment_inventory.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_load_state.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_load_state.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\fragment_inventario_por_sala.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\fragment_inventario_por_sala.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_statistics_export.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_statistics_export.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\item_estatisticas_sala.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\item_estatisticas_sala.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_patrimonio_list.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_patrimonio_list.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\item_sala_dropdown.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\item_sala_dropdown.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_offline_manager.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_offline_manager.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\item_timeline_coleta.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\item_timeline_coleta.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_inventario.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_inventario.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\fragment_statistics_charts.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\fragment_statistics_charts.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_collection_history.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_collection_history.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\item_load_state.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\item_load_state.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_scanner.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_scanner.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_splash.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_splash.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_consulta_patrimonio.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_consulta_patrimonio.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_statistics.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_statistics.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/numeric_keypad.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/numeric_keypad.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_smoke_test.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_smoke_test.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_coletas.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_coletas.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\dialog_estado_patrimonio.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\dialog_estado_patrimonio.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_estatisticas_sala.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_estatisticas_sala.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\nav_header_main.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\nav_header_main.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_sync.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_sync.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_quick_search.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_quick_search.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/nav_header_main.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/nav_header_main.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\fragment_biometric_settings.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\fragment_biometric_settings.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_coleta_header.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_coleta_header.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_descricao_selection.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_descricao_selection.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_collection_view.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_collection_view.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_coleta.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_coleta.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_inventario_tabs.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_inventario_tabs.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_detalhe_patrimonio.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_detalhe_patrimonio.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_main.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_main.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\item_coleta.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\item_coleta.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_loading.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_loading.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\item_sala.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\item_sala.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_coleta.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_coleta.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_manual_collection.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_manual_collection.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_network_diagnostic.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_network_diagnostic.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_main.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_main.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_statistics.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_statistics.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\item_descricao.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\item_descricao.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_charts.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_charts.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\item_patrimonio.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\item_patrimonio.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_sala.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_sala.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\item_coleta_header.xml",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\item_coleta_header.xml"
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_biometric_settings.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_biometric_settings.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_pending_coleta.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/item_pending_coleta.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_login.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_login.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_detalhe_patrimonio.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_detalhe_patrimonio.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_sync_manual.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_sync_manual.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/activity_item_sem_etiqueta.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/activity_item_sem_etiqueta.xml"
     }
 ]

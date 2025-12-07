@@ -164,6 +164,14 @@ public class MainFrame extends JFrame {
             menuInventario.add(itemColeta);
             menuInventario.add(itemColetaItensCompostos);
             menuInventario.addSeparator();
+            
+            JMenuItem itemReconciliacao = new JMenuItem("Reconciliação de Patrimônios");
+            itemReconciliacao.setFont(new Font("Arial", Font.PLAIN, 13));
+            itemReconciliacao.setToolTipText("Relacionar itens não encontrados com itens sem etiqueta");
+            itemReconciliacao.addActionListener(e -> abrirReconciliacao());
+            menuInventario.add(itemReconciliacao);
+            
+            menuInventario.addSeparator();
             menuInventario.add(itemImportarCSV);
 
             // Menu Relatórios
@@ -803,6 +811,22 @@ public class MainFrame extends JFrame {
         } catch (Exception e) {
             ModernDialog.showMessage(this,
                     "Erro ao abrir coleta de itens compostos: " + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Abre a tela de reconciliação de patrimônios
+     * Relaciona itens não encontrados com itens sem etiqueta
+     */
+    private void abrirReconciliacao() {
+        try {
+            ReconciliacaoFrame frame = new ReconciliacaoFrame(usuarioLogado);
+            frame.setVisible(true);
+        } catch (Exception e) {
+            ModernDialog.showMessage(this,
+                    "Erro ao abrir reconciliação de patrimônios: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }

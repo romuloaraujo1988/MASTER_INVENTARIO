@@ -245,18 +245,6 @@ class MockApiService : ApiService {
         return Response.success(apiResponse)
     }
     
-    override suspend fun getEstatisticasPorStatus(): Response<ApiResponse<Map<String, Any>>> {
-        val mockData: Map<String, Any> = mapOf(
-            "statusDistribuicao" to emptyMap<String, Int>()
-        )
-        val apiResponse = ApiResponse(
-            success = true,
-            message = "Mock data",
-            data = mockData
-        )
-        return Response.success(apiResponse)
-    }
-
     override suspend fun getDescricoes(): Response<ApiResponse<List<Map<String, Any>>>> {
         val apiResponse = ApiResponse(
             success = true,
@@ -341,6 +329,18 @@ class MockApiService : ApiService {
             success = true,
             message = "Mock data",
             data = emptyList<Map<String, Any>>()
+        )
+        return Response.success(apiResponse)
+    }
+    
+    override suspend fun getEstatisticasPorStatus(inventarioId: Int?): Response<ApiResponse<Map<String, Any>>> {
+        val mockData: Map<String, Any> = mapOf(
+            "statusDistribuicao" to emptyMap<String, Int>()
+        )
+        val apiResponse = ApiResponse(
+            success = true,
+            message = "Mock data",
+            data = mockData
         )
         return Response.success(apiResponse)
     }

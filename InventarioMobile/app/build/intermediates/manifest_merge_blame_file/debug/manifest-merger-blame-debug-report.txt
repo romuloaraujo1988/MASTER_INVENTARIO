@@ -1,8 +1,8 @@
 1<?xml version="1.0" encoding="utf-8"?>
 2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
 3    package="com.inventario.mobile"
-4    android:versionCode="29"
-5    android:versionName="1.2.29" >
+4    android:versionCode="34"
+5    android:versionName="1.2.34" >
 6
 7    <uses-sdk
 8        android:minSdkVersion="23"
@@ -420,8 +420,8 @@
 236        <!-- Filtros Activity -->
 237        <activity
 237-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:212:9-217:58
-238            android:name="com.inventario.mobile.presentation.inventario.FiltrosActivity"
-238-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:213:13-68
+238            android:name="com.inventario.mobile.presentation.filtros.FiltrosActivity"
+238-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:213:13-65
 239            android:exported="false"
 239-->C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:214:13-37
 240            android:screenOrientation="portrait"

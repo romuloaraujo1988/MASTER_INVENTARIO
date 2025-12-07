@@ -526,7 +526,7 @@ ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile
 		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:208:13-70
 	android:name
 		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:205:13-75
-activity#com.inventario.mobile.presentation.inventario.FiltrosActivity
+activity#com.inventario.mobile.presentation.filtros.FiltrosActivity
 ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:212:9-217:58
 	android:screenOrientation
 		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:215:13-49
@@ -537,7 +537,7 @@ ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile
 	android:theme
 		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:216:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:213:13-68
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:213:13-65
 activity#com.inventario.mobile.presentation.coletas.ColetasActivityClean
 ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:220:9-225:58
 	android:screenOrientation

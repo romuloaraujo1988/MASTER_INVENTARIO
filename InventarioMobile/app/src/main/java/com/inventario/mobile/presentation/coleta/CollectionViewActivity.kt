@@ -250,21 +250,25 @@ class CollectionViewActivity : AppCompatActivity() {
         val salaPosition = binding.spinnerSalas.selectedItemPosition
         val salaSelecionada = salaPosition > 0
         
-        Log.d(TAG, "updateUI: salaPosition=$salaPosition, salaSelecionada=$salaSelecionada")
+        // Verificar se o filtro "Sem Etiqueta" está ativo
+        val filtroSemEtiquetaAtivo = binding.chipSemEtiqueta.isChecked
+        
+        Log.d(TAG, "updateUI: salaPosition=$salaPosition, salaSelecionada=$salaSelecionada, filtroSemEtiquetaAtivo=$filtroSemEtiquetaAtivo")
         
         // Gerenciar visibilidade dos estados
-        if (!salaSelecionada) {
-            // Nenhuma sala selecionada - mostrar mensagem para selecionar
+        // CORREÇÃO: Mostrar lista quando filtro "Sem Etiqueta" está ativo, mesmo sem sala selecionada
+        if (!salaSelecionada && !filtroSemEtiquetaAtivo) {
+            // Nenhuma sala selecionada E filtro "Sem Etiqueta" não está ativo - mostrar mensagem para selecionar
             binding.layoutSelectSala.visibility = View.VISIBLE
             binding.layoutEmptyState.visibility = View.GONE
             binding.swipeRefreshLayout.visibility = View.GONE
         } else if (state.filteredColetas.isEmpty()) {
-            // Sala selecionada mas sem coletas
+            // Sala selecionada OU filtro "Sem Etiqueta" ativo, mas sem coletas
             binding.layoutSelectSala.visibility = View.GONE
             binding.layoutEmptyState.visibility = View.VISIBLE
             binding.swipeRefreshLayout.visibility = View.GONE
         } else {
-            // Sala selecionada com coletas
+            // Sala selecionada OU filtro "Sem Etiqueta" ativo, com coletas
             binding.layoutSelectSala.visibility = View.GONE
             binding.layoutEmptyState.visibility = View.GONE
             binding.swipeRefreshLayout.visibility = View.VISIBLE

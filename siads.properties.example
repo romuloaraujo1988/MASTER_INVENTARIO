@@ -1,22 +1,133 @@
-# Configurações SIADS - Sistema Integrado de Administração de Serviços
-# Copie este arquivo para siads.properties e configure com os dados da sua instituição
+# ============================================================
+# CONFIGURAÇÕES SIADS - Sistema de Inventário IFMT
+# ============================================================
+# Adequado às normas federais:
+# - IN SGD/ME nº 1/2019 (Gestão de Patrimônio)
+# - Decreto nº 9.373/2018 (Alienação de Bens)
+# - Manual SIADS v6.2.11
+# - NBC TSP 07 (Depreciação)
+# ============================================================
 
-# Código do Órgão (fornecido pelo governo federal)
-# Exemplo: 25000 para IFMT
+# ============================================================
+# IDENTIFICAÇÃO INSTITUCIONAL
+# ============================================================
+
+# Código do Órgão Superior (5 dígitos)
+# Exemplo: 25000 = Ministério da Educação (MEC)
 siads.codigo.orgao=25000
 
-# Código da Unidade Gestora
-# Exemplo: 158000 para IFMT Campus Cuiabá
-siads.codigo.ug=00001
+# Código da Unidade Gestora (6 dígitos)
+# Consultar no SIAFI ou SIORG
+# Exemplo: 158497 = IFMT Campus Cuiabá
+siads.codigo.ug=158497
 
-# CPF do responsável pelo sistema (11 dígitos, sem pontuação)
-# Este CPF será usado como responsável pela geração dos arquivos
+# CNPJ da Instituição (14 dígitos, sem pontuação)
+siads.cnpj=10784782000127
+
+# Nome completo da instituição
+siads.nome.instituicao=Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso
+
+# Sigla da instituição
+siads.sigla.instituicao=IFMT
+
+# ============================================================
+# RESPONSÁVEL PELO SISTEMA
+# ============================================================
+
+# CPF do responsável (11 dígitos, sem pontuação)
+# OBRIGATÓRIO - Deve ser servidor autorizado
 siads.cpf.responsavel=00000000000
 
-# Nome da instituição (para referência)
-siads.nome.instituicao=IFMT - Instituto Federal de Mato Grosso
+# Nome completo do responsável
+siads.nome.responsavel=Nome do Responsável
 
-# Observações:
-# - Os códigos devem ser obtidos junto ao órgão responsável pelo SIADS
-# - O CPF deve ser de um servidor autorizado
-# - Mantenha este arquivo seguro e não compartilhe publicamente
+# Cargo do responsável
+siads.cargo.responsavel=Coordenador de Patrimônio
+
+# Matrícula SIAPE do responsável
+siads.matricula.responsavel=0000000
+
+# ============================================================
+# CONFIGURAÇÕES DE DEPRECIAÇÃO (NBC TSP 07)
+# ============================================================
+
+# Método de depreciação
+# Valores: LINEAR, SOMA_DIGITOS, UNIDADES_PRODUZIDAS
+siads.depreciacao.metodo=LINEAR
+
+# Valor residual percentual (%)
+# Padrão: 10% conforme NBC TSP 07
+siads.depreciacao.valor.residual.percentual=10
+
+# ============================================================
+# CONFIGURAÇÕES DE EXPORTAÇÃO
+# ============================================================
+
+# Encoding do arquivo (não alterar)
+siads.exportacao.encoding=UTF-8
+
+# Delimitador de campo (símbolo do iene - não alterar)
+siads.exportacao.delimitador.campo=¥
+
+# Delimitador de linha (símbolo da libra - não alterar)
+siads.exportacao.delimitador.linha=£
+
+# Versão do layout SIADS
+siads.versao.layout=6.2.11
+
+# ============================================================
+# CONFIGURAÇÕES DE VALIDAÇÃO
+# ============================================================
+
+# CPF do responsável é obrigatório?
+siads.validacao.cpf.obrigatorio=true
+
+# Valor de aquisição é obrigatório?
+siads.validacao.valor.obrigatorio=true
+
+# Data de aquisição é obrigatória?
+siads.validacao.data.obrigatoria=true
+
+# ============================================================
+# MAPEAMENTO DE CÓDIGOS CATMAT (Opcional)
+# ============================================================
+# Códigos do Catálogo de Materiais do Governo Federal
+# Consultar em: https://www.gov.br/compras/pt-br/sistemas/catmat-catser
+
+# siads.catmat.INFORMATICA=254602152
+# siads.catmat.MOBILIARIO=234567890
+# siads.catmat.ELETRODOMESTICO=345678901
+# siads.catmat.VEICULO=456789012
+# siads.catmat.EQUIPAMENTO_LABORATORIO=567890123
+
+# ============================================================
+# MAPEAMENTO DE UNIDADES ORGANIZACIONAIS (UOrg)
+# ============================================================
+# Códigos das UOrgs por setor/campus
+# Consultar no SIORG: https://siorg.gov.br
+
+# siads.uorg.campus.cuiaba=1584970001
+# siads.uorg.campus.rondonopolis=1584970002
+# siads.uorg.campus.caceres=1584970003
+# siads.uorg.reitoria=1584970000
+
+# ============================================================
+# VIDA ÚTIL POR CATEGORIA (em anos) - NBC TSP 07
+# ============================================================
+
+# siads.vidautil.INFORMATICA=5
+# siads.vidautil.MOBILIARIO=10
+# siads.vidautil.ELETRODOMESTICO=10
+# siads.vidautil.VEICULO=5
+# siads.vidautil.EQUIPAMENTO_LABORATORIO=10
+# siads.vidautil.OUTROS=10
+
+# ============================================================
+# INSTRUÇÕES DE USO
+# ============================================================
+# 1. Copie este arquivo para 'siads.properties' (sem .example)
+# 2. Preencha os campos obrigatórios marcados acima
+# 3. Obtenha os códigos corretos junto ao setor de patrimônio
+# 4. Teste a exportação com dados de exemplo antes de produção
+# 5. Mantenha backup das configurações
+# ============================================================

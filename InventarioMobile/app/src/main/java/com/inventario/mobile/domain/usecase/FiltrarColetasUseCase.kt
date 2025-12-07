@@ -56,8 +56,9 @@ class FiltrarColetasUseCase @Inject constructor() {
             StatusFiltro.COLETADOS -> resultado.filter { it.sincronizado }
             StatusFiltro.PENDENTES -> resultado.filter { !it.sincronizado }
             StatusFiltro.SEM_ETIQUETA -> resultado.filter { coleta ->
-                // Coletas sem etiqueta: numeroPatrimonio vazio e descricaoPatrimonio preenchido
-                coleta.numeroPatrimonio.isNullOrBlank() && !coleta.descricaoPatrimonio.isNullOrBlank()
+                // CORREÇÃO: Usar campo semEtiqueta=true OU (numeroPatrimonio vazio E descricaoItemSemEtiqueta preenchido)
+                coleta.semEtiqueta || 
+                (coleta.numeroPatrimonio.isNullOrBlank() && !coleta.descricaoItemSemEtiqueta.isNullOrBlank())
             }
             StatusFiltro.TODOS -> resultado
         }

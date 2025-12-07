@@ -103,11 +103,21 @@ class ColetasAdapter(
         fun bind(coleta: Coleta) {
             val context = binding.root.context
             
-            // Número do patrimônio
-            binding.tvPatrimonioNumber.text = coleta.numeroPatrimonio ?: "N/A"
+            // Número do patrimônio - Para itens sem etiqueta, mostrar categoria ou "SEM ETIQUETA"
+            val numeroExibicao = if (coleta.semEtiqueta) {
+                coleta.categoriaItemSemEtiqueta ?: "SEM ETIQUETA"
+            } else {
+                coleta.numeroPatrimonio ?: "N/A"
+            }
+            binding.tvPatrimonioNumber.text = numeroExibicao
             
-            // Descrição
-            binding.tvPatrimonioDescricao.text = coleta.descricaoPatrimonio ?: "Sem descrição"
+            // Descrição - Para itens sem etiqueta, usar descricaoItemSemEtiqueta
+            val descricaoExibicao = if (coleta.semEtiqueta) {
+                coleta.descricaoItemSemEtiqueta ?: coleta.descricaoPatrimonio ?: "Item sem etiqueta"
+            } else {
+                coleta.descricaoPatrimonio ?: "Sem descrição"
+            }
+            binding.tvPatrimonioDescricao.text = descricaoExibicao
             
             // Data da coleta
             binding.tvDataColeta.text = formatarData(coleta.dataColeta)

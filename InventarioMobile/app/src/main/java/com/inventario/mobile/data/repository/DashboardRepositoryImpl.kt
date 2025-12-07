@@ -33,11 +33,14 @@ class DashboardRepositoryImpl @Inject constructor(
             Log.d(TAG, "═══ BUSCAR ESTATÍSTICAS ═══")
             Log.d(TAG, "Inventário ID: $inventarioId")
             
-            val response = if (inventarioId != null) {
-                Log.d(TAG, "Chamando: getDashboardStatsWithInventario($inventarioId)")
-                apiService.getDashboardStatsWithInventario(inventarioId)
+            // Tratar 0 como null (usar inventário ativo do servidor)
+            val effectiveInventarioId = if (inventarioId == null || inventarioId == 0) null else inventarioId
+            
+            val response = if (effectiveInventarioId != null) {
+                Log.d(TAG, "Chamando: getDashboardStatsWithInventario($effectiveInventarioId)")
+                apiService.getDashboardStatsWithInventario(effectiveInventarioId)
             } else {
-                Log.d(TAG, "Chamando: getDashboardStats()")
+                Log.d(TAG, "Chamando: getDashboardStats() (sem inventarioId)")
                 apiService.getDashboardStats()
             }
             
@@ -149,18 +152,174 @@ class DashboardRepositoryImpl @Inject constructor(
     }
     
     override suspend fun buscarTopItens(inventarioId: Int?, limit: Int): Result<List<TopItem>> {
-        Log.w(TAG, "buscarTopItens: não implementado")
-        return Result.success(emptyList())
+        return try {
+            Log.d(TAG, "═══ BUSCAR TOP ITENS ═══")
+            Log.d(TAG, "Inventário ID: $inventarioId, Limit: $limit")
+            
+            val response = apiService.getTopItens(limit)
+            
+            Log.d(TAG, "Response Code: ${response.code()}")
+            
+            if (response.isSuccessful && response.body() != null) {
+                val apiResponse = response.body()!!
+                Log.d(TAG, "API Response Success: ${apiResponse.success}")
+                
+                if (apiResponse.success && apiResponse.data != null) {
+                    val data = apiResponse.data
+                    
+                    @Suppress("UNCHECKED_CAST")
+                    val topItensMap = data["topItens"] as? Map<String, Any>
+                    
+                    if (topItensMap != null) {
+                        val topItens = topItensMap.map { (descricao, quantidade) ->
+                            val qtd = when (quantidade) {
+                                is Number -> quantidade.toInt()
+                                else -> 0
+                            }
+                            TopItem(
+                                descricao = descricao,
+                                quantidade = qtd,
+                                percentual = 0.0
+                            )
+                        }.sortedByDescending { it.quantidade }
+                        
+                        Log.d(TAG, "Top itens: ${topItens.size} itens")
+                        topItens.forEach { Log.d(TAG, "  ${it.descricao}: ${it.quantidade}") }
+                        
+                        Result.success(topItens)
+                    } else {
+                        Log.w(TAG, "topItens não encontrado no response")
+                        Result.success(emptyList())
+                    }
+                } else {
+                    val error = "API retornou erro: ${apiResponse.message}"
+                    Log.e(TAG, error)
+                    Result.failure(Exception(error))
+                }
+            } else {
+                val error = "HTTP ${response.code()}: ${response.message()}"
+                Log.e(TAG, error)
+                Result.failure(Exception(error))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao buscar top itens", e)
+            Result.failure(e)
+        }
     }
     
     override suspend fun buscarDistribuicaoPorSala(inventarioId: Int?, limit: Int): Result<List<DistribuicaoSala>> {
-        Log.w(TAG, "buscarDistribuicaoPorSala: não implementado")
-        return Result.success(emptyList())
+        return try {
+            Log.d(TAG, "═══ BUSCAR DISTRIBUIÇÃO POR SALA ═══")
+            Log.d(TAG, "Inventário ID: $inventarioId, Limit: $limit")
+            
+            val response = apiService.getDistribuicaoPorSala(limit)
+            
+            Log.d(TAG, "Response Code: ${response.code()}")
+            
+            if (response.isSuccessful && response.body() != null) {
+                val apiResponse = response.body()!!
+                Log.d(TAG, "API Response Success: ${apiResponse.success}")
+                
+                if (apiResponse.success && apiResponse.data != null) {
+                    val data = apiResponse.data
+                    
+                    @Suppress("UNCHECKED_CAST")
+                    val distribuicaoMap = data["distribuicaoPorSala"] as? Map<String, Any>
+                    
+                    if (distribuicaoMap != null) {
+                        val distribuicao = distribuicaoMap.map { (sala, quantidade) ->
+                            val qtd = when (quantidade) {
+                                is Number -> quantidade.toInt()
+                                else -> 0
+                            }
+                            DistribuicaoSala(
+                                sala = sala,
+                                quantidade = qtd,
+                                percentual = 0.0
+                            )
+                        }.sortedByDescending { it.quantidade }
+                        
+                        Log.d(TAG, "Distribuição por sala: ${distribuicao.size} salas")
+                        distribuicao.forEach { Log.d(TAG, "  ${it.sala}: ${it.quantidade}") }
+                        
+                        Result.success(distribuicao)
+                    } else {
+                        Log.w(TAG, "distribuicaoPorSala não encontrado no response")
+                        Result.success(emptyList())
+                    }
+                } else {
+                    val error = "API retornou erro: ${apiResponse.message}"
+                    Log.e(TAG, error)
+                    Result.failure(Exception(error))
+                }
+            } else {
+                val error = "HTTP ${response.code()}: ${response.message()}"
+                Log.e(TAG, error)
+                Result.failure(Exception(error))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao buscar distribuição por sala", e)
+            Result.failure(e)
+        }
     }
     
     override suspend fun buscarEstatisticasPorStatus(inventarioId: Int?): Result<List<EstatisticaStatus>> {
-        Log.w(TAG, "buscarEstatisticasPorStatus: não implementado")
-        return Result.success(emptyList())
+        return try {
+            Log.d(TAG, "═══ BUSCAR ESTATÍSTICAS POR STATUS ═══")
+            Log.d(TAG, "Inventário ID: $inventarioId")
+            
+            val response = apiService.getEstatisticasPorStatus(inventarioId)
+            
+            Log.d(TAG, "Response Code: ${response.code()}")
+            Log.d(TAG, "Response Success: ${response.isSuccessful}")
+            
+            if (response.isSuccessful && response.body() != null) {
+                val apiResponse = response.body()!!
+                Log.d(TAG, "API Response Success: ${apiResponse.success}")
+                Log.d(TAG, "API Response Data: ${apiResponse.data}")
+                
+                if (apiResponse.success && apiResponse.data != null) {
+                    val data = apiResponse.data
+                    
+                    // Extrair statusDistribuicao do response
+                    @Suppress("UNCHECKED_CAST")
+                    val statusDistribuicao = data["statusDistribuicao"] as? Map<String, Any>
+                    
+                    if (statusDistribuicao != null) {
+                        val estatisticas = statusDistribuicao.map { (status, quantidade) ->
+                            val qtd = when (quantidade) {
+                                is Number -> quantidade.toInt()
+                                else -> 0
+                            }
+                            EstatisticaStatus(
+                                status = status,
+                                quantidade = qtd,
+                                percentual = 0.0
+                            )
+                        }
+                        
+                        Log.d(TAG, "Estatísticas por status: ${estatisticas.size} estados")
+                        estatisticas.forEach { Log.d(TAG, "  ${it.status}: ${it.quantidade}") }
+                        
+                        Result.success(estatisticas)
+                    } else {
+                        Log.w(TAG, "statusDistribuicao não encontrado no response")
+                        Result.success(emptyList())
+                    }
+                } else {
+                    val error = "API retornou erro: ${apiResponse.message}"
+                    Log.e(TAG, error)
+                    Result.failure(Exception(error))
+                }
+            } else {
+                val error = "HTTP ${response.code()}: ${response.message()}"
+                Log.e(TAG, error)
+                Result.failure(Exception(error))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao buscar estatísticas por status", e)
+            Result.failure(e)
+        }
     }
     
     /**

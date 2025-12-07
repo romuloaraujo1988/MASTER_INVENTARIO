@@ -3846,7 +3846,6 @@ id nav_settings
 id nav_statistics
 id nav_sync
 id nav_view
-id nav_voice_search
 id navigation_bar_item_active_indicator_view
 id navigation_bar_item_icon_container
 id navigation_bar_item_icon_view

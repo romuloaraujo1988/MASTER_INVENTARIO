@@ -63,16 +63,26 @@ class CollectionAdapter(
             Log.d("CollectionViewHolder", "localizacaoEncontrada (onde FOI ENCONTRADO): '${coleta.localizacaoEncontrada}'")
             Log.d("CollectionViewHolder", "localizacaoAtual: '${coleta.localizacaoAtual}'")
             Log.d("CollectionViewHolder", "sincronizado: ${coleta.sincronizado}")
+            Log.d("CollectionViewHolder", "semEtiqueta: ${coleta.semEtiqueta}")
+            Log.d("CollectionViewHolder", "descricaoItemSemEtiqueta: '${coleta.descricaoItemSemEtiqueta}'")
+            Log.d("CollectionViewHolder", "categoriaItemSemEtiqueta: '${coleta.categoriaItemSemEtiqueta}'")
             Log.d("CollectionViewHolder", "==================")
             
             binding.apply {
                 // Patrimonio information - garantir que sempre exiba algo útil
+                // CORREÇÃO: Para itens sem etiqueta, exibir descrição e categoria específicas
                 val numeroExibido = when {
+                    coleta.semEtiqueta -> "🏷️ SEM ETIQUETA"
                     !coleta.numeroPatrimonio.isNullOrBlank() -> coleta.numeroPatrimonio
                     else -> "Patrimônio ${coleta.patrimonioId}"
                 }
                 
                 val descricaoExibida = when {
+                    // Para itens sem etiqueta, priorizar descricaoItemSemEtiqueta
+                    coleta.semEtiqueta && !coleta.descricaoItemSemEtiqueta.isNullOrBlank() -> {
+                        val categoria = coleta.categoriaItemSemEtiqueta?.let { " [$it]" } ?: ""
+                        "${coleta.descricaoItemSemEtiqueta}$categoria"
+                    }
                     !coleta.descricaoPatrimonio.isNullOrBlank() -> coleta.descricaoPatrimonio
                     !coleta.observacoes.isNullOrBlank() -> coleta.observacoes
                     else -> "Patrimônio coletado"

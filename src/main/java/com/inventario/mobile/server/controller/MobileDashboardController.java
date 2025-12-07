@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -45,6 +46,24 @@ public class MobileDashboardController {
             return ResponseEntity.ok(
                     ApiResponse.success(estatisticas, "Estatísticas carregadas"));
             
+        } catch (IllegalArgumentException e) {
+            // Inventário não encontrado - retornar estatísticas vazias ao invés de erro
+            logger.warn("Inventário não encontrado, retornando estatísticas vazias: {}", e.getMessage());
+            
+            Map<String, Object> estatisticasVazias = new HashMap<>();
+            estatisticasVazias.put("inventarioId", inventarioId);
+            estatisticasVazias.put("inventarioNome", null);
+            estatisticasVazias.put("totalPatrimonios", 0);
+            estatisticasVazias.put("patrimoniosColetados", 0);
+            estatisticasVazias.put("patrimoniosPendentes", 0);
+            estatisticasVazias.put("percentualConclusao", 0.0);
+            estatisticasVazias.put("divergencias", 0);
+            estatisticasVazias.put("coletoresAtivos", 0);
+            estatisticasVazias.put("mensagem", "Nenhum inventário ativo encontrado");
+            
+            return ResponseEntity.ok(
+                    ApiResponse.success(estatisticasVazias, "Nenhum inventário ativo encontrado"));
+            
         } catch (Exception e) {
             logger.error("Erro ao buscar estatísticas do dashboard", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -71,6 +90,14 @@ public class MobileDashboardController {
             return ResponseEntity.ok(
                     ApiResponse.success(evolucao, "Dados de evolução carregados"));
             
+        } catch (IllegalArgumentException e) {
+            logger.warn("Inventário não encontrado para evolução: {}", e.getMessage());
+            Map<String, Object> evolucaoVazia = new HashMap<>();
+            evolucaoVazia.put("inventarioId", inventarioId);
+            evolucaoVazia.put("dias", dias);
+            evolucaoVazia.put("evolucao", new HashMap<>());
+            evolucaoVazia.put("totalColetas", 0);
+            return ResponseEntity.ok(ApiResponse.success(evolucaoVazia, "Nenhum inventário ativo"));
         } catch (Exception e) {
             logger.error("Erro ao buscar evolução de coletas", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -97,6 +124,14 @@ public class MobileDashboardController {
             return ResponseEntity.ok(
                     ApiResponse.success(topItens, "Top itens carregados"));
             
+        } catch (IllegalArgumentException e) {
+            logger.warn("Inventário não encontrado para top itens: {}", e.getMessage());
+            Map<String, Object> topItensVazio = new HashMap<>();
+            topItensVazio.put("inventarioId", inventarioId);
+            topItensVazio.put("limit", limit);
+            topItensVazio.put("topItens", new HashMap<>());
+            topItensVazio.put("total", 0);
+            return ResponseEntity.ok(ApiResponse.success(topItensVazio, "Nenhum inventário ativo"));
         } catch (Exception e) {
             logger.error("Erro ao buscar top itens", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -122,6 +157,13 @@ public class MobileDashboardController {
             return ResponseEntity.ok(
                     ApiResponse.success(estatisticas, "Estatísticas por status carregadas"));
             
+        } catch (IllegalArgumentException e) {
+            logger.warn("Inventário não encontrado para status: {}", e.getMessage());
+            Map<String, Object> statusVazio = new HashMap<>();
+            statusVazio.put("inventarioId", inventarioId);
+            statusVazio.put("statusDistribuicao", new HashMap<>());
+            statusVazio.put("total", 0);
+            return ResponseEntity.ok(ApiResponse.success(statusVazio, "Nenhum inventário ativo"));
         } catch (Exception e) {
             logger.error("Erro ao buscar estatísticas por status", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -148,6 +190,14 @@ public class MobileDashboardController {
             return ResponseEntity.ok(
                     ApiResponse.success(distribuicao, "Distribuição por sala carregada"));
             
+        } catch (IllegalArgumentException e) {
+            logger.warn("Inventário não encontrado para distribuição por sala: {}", e.getMessage());
+            Map<String, Object> distribuicaoVazia = new HashMap<>();
+            distribuicaoVazia.put("inventarioId", inventarioId);
+            distribuicaoVazia.put("limit", limit);
+            distribuicaoVazia.put("distribuicaoPorSala", new HashMap<>());
+            distribuicaoVazia.put("total", 0);
+            return ResponseEntity.ok(ApiResponse.success(distribuicaoVazia, "Nenhum inventário ativo"));
         } catch (Exception e) {
             logger.error("Erro ao buscar distribuição por sala", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

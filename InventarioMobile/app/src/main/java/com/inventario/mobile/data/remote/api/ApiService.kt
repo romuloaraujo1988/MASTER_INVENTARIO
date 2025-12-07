@@ -168,12 +168,14 @@ interface ApiService {
     @GET("api/mobile/dashboard/evolucao")
     suspend fun getColetasEvolucao(@Query("dias") dias: Int = 30): Response<ApiResponse<Map<String, Any>>>
     
-    @GET("dashboard/top-itens")
+    @GET("api/mobile/dashboard/top-itens")
     suspend fun getTopItens(@Query("limit") limit: Int = 10): Response<ApiResponse<Map<String, Any>>>
     
-    @GET("dashboard/distribuicao-sala")
+    @GET("api/mobile/dashboard/distribuicao-sala")
     suspend fun getDistribuicaoPorSala(@Query("limit") limit: Int = 10): Response<ApiResponse<Map<String, Any>>>
     
-    @GET("dashboard/status")
-    suspend fun getEstatisticasPorStatus(): Response<ApiResponse<Map<String, Any>>>
+    @GET("api/mobile/dashboard/status")
+    suspend fun getEstatisticasPorStatus(
+        @Query("inventarioId") inventarioId: Int?
+    ): Response<ApiResponse<Map<String, Any>>>
 }

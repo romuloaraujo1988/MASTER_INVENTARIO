@@ -183,10 +183,19 @@ class CollectionViewViewModelClean @Inject constructor(
     
     /**
      * Filtra coletas por status de sincronização
+     * CORREÇÃO: Quando filtro "Sem Etiqueta" é selecionado, mostrar todos os itens sem etiqueta
+     * independente da sala selecionada
      */
     fun filtrarPorStatus(filtro: FiltroStatus) {
         Log.d(TAG, "filtrarPorStatus: $filtro")
         filtroStatus = filtro
+        
+        // Se filtro "Sem Etiqueta" foi selecionado, limpar filtro de sala para mostrar todos
+        if (filtro == FiltroStatus.SEM_ETIQUETA) {
+            Log.d(TAG, "filtrarPorStatus: SEM_ETIQUETA selecionado, limpando filtro de sala para mostrar todos")
+            salaSelecionada = null
+        }
+        
         atualizarFiltros()
     }
     
@@ -223,12 +232,20 @@ class CollectionViewViewModelClean @Inject constructor(
     
     /**
      * Limpa o filtro de sala (volta para estado inicial sem carregar tudo)
+     * CORREÇÃO: Se filtro "Sem Etiqueta" estiver ativo, mostrar itens sem etiqueta de todas as salas
      */
     fun limparFiltroSala() {
         Log.d(TAG, "limparFiltroSala: Limpando filtro de sala")
         salaSelecionada = null
         
-        // Quando nenhuma sala está selecionada, mostrar lista vazia com mensagem
+        // Se filtro "Sem Etiqueta" estiver ativo, aplicar filtros normalmente
+        if (filtroStatus == FiltroStatus.SEM_ETIQUETA) {
+            Log.d(TAG, "limparFiltroSala: Filtro SEM_ETIQUETA ativo, aplicando filtros")
+            atualizarFiltros()
+            return
+        }
+        
+        // Quando nenhuma sala está selecionada e não é filtro "Sem Etiqueta", mostrar lista vazia com mensagem
         val currentState = _state.value
         if (currentState is CollectionViewState.Success) {
             _state.value = currentState.copy(
@@ -334,9 +351,26 @@ class CollectionViewViewModelClean @Inject constructor(
             FiltroStatus.TODOS -> filtradas
             FiltroStatus.SINCRONIZADOS -> filtradas.filter { it.sincronizado }
             FiltroStatus.PENDENTES -> filtradas.filter { !it.sincronizado }
-            FiltroStatus.SEM_ETIQUETA -> filtradas.filter { coleta ->
-                // Coletas sem etiqueta: campo semEtiqueta = true OU (numeroPatrimonio vazio e descricaoItemSemEtiqueta preenchido)
-                coleta.semEtiqueta || (coleta.numeroPatrimonio.isNullOrBlank() && !coleta.descricaoItemSemEtiqueta.isNullOrBlank())
+            FiltroStatus.SEM_ETIQUETA -> {
+                // Debug: Contar itens sem etiqueta antes do filtro
+                val totalSemEtiquetaFlag = filtradas.count { it.semEtiqueta }
+                val totalSemNumeroComDescricao = filtradas.count { 
+                    it.numeroPatrimonio.isNullOrBlank() && !it.descricaoItemSemEtiqueta.isNullOrBlank() 
+                }
+                Log.d(TAG, "📊 FILTRO SEM_ETIQUETA:")
+                Log.d(TAG, "  - Total coletas antes: ${filtradas.size}")
+                Log.d(TAG, "  - Com flag semEtiqueta=true: $totalSemEtiquetaFlag")
+                Log.d(TAG, "  - Sem número + com descrição: $totalSemNumeroComDescricao")
+                
+                // Debug: Mostrar algumas coletas com semEtiqueta=true
+                filtradas.filter { it.semEtiqueta }.take(3).forEach { coleta ->
+                    Log.d(TAG, "  ✓ Coleta ${coleta.id}: semEtiqueta=${coleta.semEtiqueta}, desc='${coleta.descricaoItemSemEtiqueta?.take(30)}'")
+                }
+                
+                filtradas.filter { coleta ->
+                    // Coletas sem etiqueta: campo semEtiqueta = true OU (numeroPatrimonio vazio e descricaoItemSemEtiqueta preenchido)
+                    coleta.semEtiqueta || (coleta.numeroPatrimonio.isNullOrBlank() && !coleta.descricaoItemSemEtiqueta.isNullOrBlank())
+                }
             }
         }
         

@@ -69,7 +69,7 @@ public class SiadsLayoutFormatter {
     
     /**
      * Formata um registro de patrimônio (Detail)
-     * Formato conforme especificação SIADS para Material Permanente
+     * Formato conforme especificação SIADS v6.2.11 para Material Permanente
      * 
      * Campos obrigatórios marcados com *
      * D¥codigoMaterial*¥descricao*¥codigoCatmat¥endereco¥codigoUorg*¥
@@ -77,6 +77,11 @@ public class SiadsLayoutFormatter {
      * formaAquisicao¥especificacao¥dataDepreciacao¥valorDepreciado¥numeroPatrimonio*¥
      * marca¥modelo¥fabricante¥garantidor¥contrato¥dataInicioGarantia¥dataFimGarantia¥
      * cpfResponsavel¥nomeResponsavel¥baixado¥dataBaixa¥motivoBaixa¥numeroProcessoBaixa¥£
+     * 
+     * Adequado às normas federais:
+     * - IN SGD/ME nº 1/2019
+     * - Decreto nº 9.373/2018
+     * - NBC TSP 07
      */
     public String formatarRegistro(SiadsRegistro registro) {
         StringBuilder sb = new StringBuilder();
@@ -87,7 +92,12 @@ public class SiadsLayoutFormatter {
         sb.append(DELIMITADOR_CAMPO);
         sb.append(formatarCampo(registro.getDescricao()));                // Descrição*
         sb.append(DELIMITADOR_CAMPO);
-        sb.append(formatarCampo(registro.getClasseContabil()));           // Código CATMAT
+        // Usa código CATMAT se disponível, senão usa classe contábil
+        String codigoCatmat = registro.getCodigoCatmat();
+        if (codigoCatmat == null || codigoCatmat.trim().isEmpty()) {
+            codigoCatmat = registro.getClasseContabil();
+        }
+        sb.append(formatarCampo(codigoCatmat));                           // Código CATMAT
         sb.append(DELIMITADOR_CAMPO);
         sb.append(formatarCampo(registro.getSala()));                     // Endereço/Localização
         sb.append(DELIMITADOR_CAMPO);
@@ -98,7 +108,9 @@ public class SiadsLayoutFormatter {
         }
         sb.append(formatarCampo(codigoUorg));                             // Código UOrg*
         sb.append(DELIMITADOR_CAMPO);
-        sb.append("1");                                                    // Tipo aquisição* (1=Compra)
+        // Tipo aquisição: usa valor do registro ou padrão "1" (Compra)
+        String tipoAquisicao = registro.getTipoAquisicao();
+        sb.append(tipoAquisicao != null ? tipoAquisicao : "1");           // Tipo aquisição* (1=Compra)
         sb.append(DELIMITADOR_CAMPO);
         sb.append(formatarEstadoConservacao(registro.getEstadoConservacao())); // Estado conservação* (1-5)
         sb.append(DELIMITADOR_CAMPO);
@@ -124,25 +136,37 @@ public class SiadsLayoutFormatter {
         sb.append(DELIMITADOR_CAMPO);
         sb.append(formatarCampo(registro.getFabricante()));               // Fabricante
         sb.append(DELIMITADOR_CAMPO);
-        sb.append("");                                                     // Garantidor
+        
+        // ========================================
+        // CAMPOS DE GARANTIA (Novos - Normas Federais)
+        // ========================================
+        sb.append(formatarCampo(registro.getGarantidor()));               // Garantidor
         sb.append(DELIMITADOR_CAMPO);
-        sb.append("");                                                     // Contrato
+        sb.append(formatarCampo(registro.getContratoGarantia()));         // Contrato garantia
         sb.append(DELIMITADOR_CAMPO);
-        sb.append("");                                                     // Data início garantia
+        sb.append(formatarData(registro.getDataInicioGarantia()));        // Data início garantia
         sb.append(DELIMITADOR_CAMPO);
-        sb.append("");                                                     // Data fim garantia
+        sb.append(formatarData(registro.getDataFimGarantia()));           // Data fim garantia
         sb.append(DELIMITADOR_CAMPO);
+        
+        // ========================================
+        // RESPONSÁVEL
+        // ========================================
         sb.append(formatarCPF(registro.getCpfResponsavel()));             // CPF responsável
         sb.append(DELIMITADOR_CAMPO);
         sb.append(formatarCampo(registro.getNomeResponsavel()));          // Nome responsável
         sb.append(DELIMITADOR_CAMPO);
-        sb.append("FALSE");                                                // Baixado
+        
+        // ========================================
+        // CAMPOS DE BAIXA (Decreto nº 9.373/2018)
+        // ========================================
+        sb.append(registro.isBaixado() ? "TRUE" : "FALSE");               // Baixado
         sb.append(DELIMITADOR_CAMPO);
-        sb.append("");                                                     // Data baixa
+        sb.append(formatarData(registro.getDataBaixa()));                 // Data baixa
         sb.append(DELIMITADOR_CAMPO);
-        sb.append("");                                                     // Motivo baixa
+        sb.append(formatarCampo(registro.getMotivoBaixa()));              // Motivo baixa (código 1-10)
         sb.append(DELIMITADOR_CAMPO);
-        sb.append("");                                                     // Número processo baixa
+        sb.append(formatarCampo(registro.getNumeroProcessoBaixa()));      // Número processo baixa
         sb.append(DELIMITADOR_CAMPO);
         sb.append(DELIMITADOR_LINHA);                                     // Fim da linha
         

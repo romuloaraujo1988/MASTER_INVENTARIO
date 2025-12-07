@@ -2346,11 +2346,11 @@ public class ColetaDAO {
      */
     public List<Map<String, Object>> buscarEstatisticasPorStatus(Integer inventarioId) throws SQLException {
         String sql = "SELECT " +
-                    "    STATUS_COLETA as status, " +
+                    "    COALESCE(ESTADO_ENCONTRADO, 'SEM INFO') as status, " +
                     "    COUNT(*) as quantidade " +
                     "FROM TABELA_COLETA " +
                     "WHERE ID_INVENTARIO = ? " +
-                    "GROUP BY STATUS_COLETA " +
+                    "GROUP BY ESTADO_ENCONTRADO " +
                     "ORDER BY quantidade DESC";
         
         List<Map<String, Object>> resultado = new ArrayList<>();

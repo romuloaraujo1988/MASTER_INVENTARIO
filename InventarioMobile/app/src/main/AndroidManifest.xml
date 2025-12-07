@@ -210,7 +210,7 @@
         
         <!-- Filtros Activity -->
         <activity
-            android:name=".presentation.inventario.FiltrosActivity"
+            android:name=".presentation.filtros.FiltrosActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.InventarioMobile.NoActionBar"

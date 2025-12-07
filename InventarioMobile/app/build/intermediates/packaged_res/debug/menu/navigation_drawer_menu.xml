@@ -63,11 +63,6 @@
                     android:title="Busca Rápida" />
                 
                 <item
-                    android:id="@+id/nav_voice_search"
-                    android:icon="@drawable/ic_mic"
-                    android:title="Busca por Voz" />
-                
-                <item
                     android:id="@+id/nav_statistics"
                     android:icon="@drawable/ic_trending_up"
                     android:title="Estatísticas" />

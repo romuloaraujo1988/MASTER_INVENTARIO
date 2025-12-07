@@ -37,6 +37,10 @@ class BuscarColetasUseCase @Inject constructor(
                     val pagedData = coletasAllResponse.data
                     Log.d(TAG, "Resposta do servidor: ${pagedData.content.size} coletas de ${pagedData.totalElements} total")
                     
+                    // Contar itens sem etiqueta para debug
+                    val itensSemEtiqueta = pagedData.content.count { it.semEtiqueta == true }
+                    Log.d(TAG, "📊 Itens sem etiqueta no servidor: $itensSemEtiqueta de ${pagedData.content.size}")
+                    
                     val coletas = pagedData.content.map { dto ->
                         Log.d(TAG, "═══════════════════════════════════════")
                         Log.d(TAG, "DTO Recebido - ID: ${dto.id}")
@@ -45,6 +49,9 @@ class BuscarColetasUseCase @Inject constructor(
                         Log.d(TAG, "  localizacaoEncontrada: '${dto.localizacaoEncontrada}'")
                         Log.d(TAG, "  localizacaoAtual: '${dto.localizacaoAtual}'")
                         Log.d(TAG, "  observacoes: '${dto.observacoes}'")
+                        Log.d(TAG, "  semEtiqueta: ${dto.semEtiqueta}")
+                        Log.d(TAG, "  descricaoItemSemEtiqueta: '${dto.descricaoItemSemEtiqueta}'")
+                        Log.d(TAG, "  categoriaItemSemEtiqueta: '${dto.categoriaItemSemEtiqueta}'")
                         Log.d(TAG, "═══════════════════════════════════════")
                         
                         Coleta(
@@ -61,7 +68,11 @@ class BuscarColetasUseCase @Inject constructor(
                             observacoes = dto.observacoes,
                             sincronizado = true, // Dados do servidor são sempre sincronizados
                             estadoEncontrado = dto.estadoEncontrado,
-                            status = dto.statusColeta
+                            status = dto.statusColeta,
+                            // Campos para itens sem etiqueta
+                            semEtiqueta = dto.semEtiqueta ?: false,
+                            descricaoItemSemEtiqueta = dto.descricaoItemSemEtiqueta,
+                            categoriaItemSemEtiqueta = dto.categoriaItemSemEtiqueta
                         )
                     }
                     

@@ -62,7 +62,7 @@
 
         </LinearLayout>
 
-        <!-- Ações Rápidas de Coleta -->
+        <!-- Resumo do Inventário -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -80,14 +80,14 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Ações Rápidas"
+                android:text="Resumo do Inventário"
                 android:textColor="@color/text_primary"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
         </LinearLayout>
 
-        <!-- Cards de Ações Rápidas -->
+        <!-- Cards de Estatísticas -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -301,7 +301,7 @@
 
         </LinearLayout>
 
-        <!-- Ações Rápidas de Coleta -->
+        <!-- Ações de Coleta -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -319,7 +319,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Ações Rápidas"
+                android:text="Ações de Coleta"
                 android:textColor="@color/text_primary"
                 android:textSize="18sp"
                 android:textStyle="bold" />

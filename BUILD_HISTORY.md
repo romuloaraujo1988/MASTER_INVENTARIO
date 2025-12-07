@@ -4,6 +4,100 @@ Este arquivo registra todas as compilações do APK Android para rastreabilidade
 
 ---
 
+## Build #034 - 07/12/2025 08:57
+
+- **Tipo:** Debug
+- **Versão:** 1.2.34
+- **Build Code:** 34
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** 11.15 MB
+- **Mudanças:** 
+  - Build de rotina solicitada pelo usuário
+  - Incremento de versão: 1.2.33 → 1.2.34
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #033 - 07/12/2025
+
+- **Tipo:** Debug
+- **Versão:** 1.2.33
+- **Build Code:** 33
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~11 MB
+- **Mudanças:** 
+  - **Correção FINAL: Filtro "Sem Etiqueta" na tela ColetasActivityClean**
+    - `FiltrarColetasUseCase.kt`: Corrigida lógica do filtro SEM_ETIQUETA
+      - Antes: usava `numeroPatrimonio.isNullOrBlank() && !descricaoPatrimonio.isNullOrBlank()` (ERRADO)
+      - Depois: usa `semEtiqueta || (numeroPatrimonio.isNullOrBlank() && !descricaoItemSemEtiqueta.isNullOrBlank())` (CORRETO)
+    - O filtro agora usa o campo correto `semEtiqueta` do modelo Coleta
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #032 - 07/12/2025
+
+- **Tipo:** Debug
+- **Versão:** 1.2.32
+- **Build Code:** 32
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~11 MB
+- **Mudanças:** 
+  - **Correção FINAL: Filtro "Sem Etiqueta" funcionando corretamente**
+    - `CollectionViewActivity.kt`: Filtro "Sem Etiqueta" agora funciona sem exigir seleção de sala
+    - `CollectionViewViewModelClean.kt`: 
+      - `filtrarPorStatus()`: Quando SEM_ETIQUETA é selecionado, limpa filtro de sala automaticamente
+      - `limparFiltroSala()`: Mantém filtro SEM_ETIQUETA ativo mesmo sem sala selecionada
+    - `CollectionAdapter.kt`: Exibe corretamente descrição e categoria de itens sem etiqueta
+      - Mostra "🏷️ SEM ETIQUETA" como número do patrimônio
+      - Exibe `descricaoItemSemEtiqueta` e `categoriaItemSemEtiqueta` na descrição
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #031 - 07/12/2025
+
+- **Tipo:** Debug
+- **Versão:** 1.2.31
+- **Build Code:** 31
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~11 MB
+- **Mudanças:** 
+  - **Correção: Filtro "Sem Etiqueta" na tela de Coletas**
+    - `BuscarColetasUseCase.kt`: Adicionados logs de debug para campos `semEtiqueta`, `descricaoItemSemEtiqueta`, `categoriaItemSemEtiqueta`
+    - `CollectionViewViewModelClean.kt`: Adicionados logs detalhados no filtro `SEM_ETIQUETA` para diagnóstico
+    - Contagem de itens sem etiqueta antes do filtro
+    - Debug de coletas com flag `semEtiqueta=true`
+  - **Correções anteriores na sessão:**
+    - `AndroidManifest.xml`: Corrigido package da FiltrosActivity (`.presentation.filtros` ao invés de `.presentation.inventario`)
+    - `navigation_drawer_menu.xml`: Removido item duplicado "Busca por Voz"
+    - `MainActivity.kt`: Removido handler do menu "Busca por Voz"
+    - `fragment_dashboard.xml`: Renomeado "Ações Rápidas" para "Resumo do Inventário" e "Ações de Coleta"
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #030 - 07/12/2025
+
+- **Tipo:** Debug
+- **Versão:** 1.2.30
+- **Build Code:** 30
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~11 MB
+- **Mudanças:** 
+  - **Correção: Gráfico de Estado de Conservação não recebia dados**
+    - `ColetaDAO.java`: Corrigido para buscar `ESTADO_ENCONTRADO` ao invés de `STATUS_COLETA`
+    - `ApiService.kt`: Corrigido endpoint de `dashboard/status` para `api/mobile/dashboard/status`
+    - `DashboardRepositoryImpl.kt`: Implementado método `buscarEstatisticasPorStatus()` que estava retornando lista vazia
+    - `MockApiService.kt`: Atualizado para incluir parâmetro `inventarioId`
+  - **Feature: Implementado gráfico Top 10 Itens Coletados**
+    - `DashboardRepositoryImpl.kt`: Implementado método `buscarTopItens()` conectando ao backend
+  - **Feature: Implementado gráfico Distribuição por Sala**
+    - `DashboardRepositoryImpl.kt`: Implementado método `buscarDistribuicaoPorSala()` conectando ao backend
+- **Status:** ✅ Sucesso
+
+---
+
 ## Build #029 - 06/12/2025
 
 - **Tipo:** Debug
