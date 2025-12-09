@@ -2,10 +2,12 @@ package com.inventario.mobile.di
 
 import android.content.Context
 import com.inventario.mobile.data.repository.ColetaRepositoryImpl
+import com.inventario.mobile.data.repository.ExportRepositoryImpl
 import com.inventario.mobile.data.repository.InventarioRepository
 import com.inventario.mobile.data.local.LocalDataManager
 import com.inventario.mobile.data.remote.api.ApiService
 import com.inventario.mobile.domain.repository.ColetaRepository
+import com.inventario.mobile.domain.repository.ExportRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -45,6 +47,12 @@ abstract class RepositoryModule {
     abstract fun bindPatrimonioConsultaRepository(
         impl: com.inventario.mobile.data.repository.PatrimonioConsultaRepositoryImpl
     ): com.inventario.mobile.domain.repository.PatrimonioConsultaRepository
+    
+    @Binds
+    @Singleton
+    abstract fun bindExportRepository(
+        impl: ExportRepositoryImpl
+    ): ExportRepository
     
     companion object {
         /**

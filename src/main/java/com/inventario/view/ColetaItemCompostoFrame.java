@@ -1,20 +1,46 @@
 package com.inventario.view;
 
-import com.inventario.model.Patrimonio;
-import com.inventario.model.Usuario;
-import com.inventario.model.Inventario;
-import com.inventario.dao.PatrimonioDAO;
-import com.inventario.dao.InventarioDAO;
-import com.inventario.dao.ItemCompostoDAO;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableModel;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.inventario.dao.InventarioDAO;
+import com.inventario.dao.ItemCompostoDAO;
+import com.inventario.dao.PatrimonioDAO;
+import com.inventario.model.Inventario;
+import com.inventario.model.Patrimonio;
+import com.inventario.model.Usuario;
 
 /**
  * Frame para coleta de itens compostos durante o inventário
@@ -24,6 +50,8 @@ import java.util.Map;
  * @version 1.0.0
  */
 public class ColetaItemCompostoFrame extends JFrame {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(ColetaItemCompostoFrame.class);
     
     private Usuario usuarioLogado;
     private Inventario inventarioAtivo;
@@ -106,9 +134,8 @@ public class ColetaItemCompostoFrame extends JFrame {
                                  " (ID: " + inventarioAtivo.getId() + ")");
             }
             
-        } catch (Exception e) {
-            System.err.println("ERRO ao carregar inventário ativo: " + e.getMessage());
-            e.printStackTrace();
+        } catch (java.sql.SQLException | RuntimeException e) {
+            LOG.error("Erro ao carregar inventário ativo: {}", e.getMessage(), e);
             JOptionPane.showMessageDialog(this,
                 "Erro ao carregar inventário ativo: " + e.getMessage(),
                 "Erro",
@@ -329,7 +356,7 @@ public class ColetaItemCompostoFrame extends JFrame {
                 }
                 cmbLocalizacaoAtual.addItem(item);
             }
-        } catch (Exception e) {
+        } catch (java.sql.SQLException e) {
             System.err.println("Erro ao carregar salas: " + e.getMessage());
         }
     }
@@ -618,12 +645,12 @@ public class ColetaItemCompostoFrame extends JFrame {
                 tabbedPane.setTitleAt(1, "📋 Listar Itens Compostos (" + itens.size() + ")");
             }
             
-        } catch (Exception e) {
+        } catch (java.sql.SQLException | RuntimeException e) {
+            LOG.error("Erro ao carregar lista de itens compostos: {}", e.getMessage(), e);
             JOptionPane.showMessageDialog(this,
                 "Erro ao carregar lista de itens compostos: " + e.getMessage(),
                 "Erro",
                 JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         } finally {
             setCursor(Cursor.getDefaultCursor());
         }
@@ -663,12 +690,12 @@ public class ColetaItemCompostoFrame extends JFrame {
                 tabbedPane.setTitleAt(1, titulo);
             }
             
-        } catch (Exception e) {
+        } catch (java.sql.SQLException | RuntimeException e) {
+            LOG.error("Erro ao filtrar itens compostos: {}", e.getMessage(), e);
             JOptionPane.showMessageDialog(this,
                 "Erro ao filtrar itens compostos: " + e.getMessage(),
                 "Erro",
                 JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         } finally {
             setCursor(Cursor.getDefaultCursor());
         }
@@ -747,12 +774,12 @@ public class ColetaItemCompostoFrame extends JFrame {
             
             carregarItemComposto(patrimonio);
             
-        } catch (Exception e) {
+        } catch (java.sql.SQLException | RuntimeException e) {
+            LOG.error("Erro ao buscar patrimônio: {}", e.getMessage(), e);
             JOptionPane.showMessageDialog(this,
                 "Erro ao buscar patrimônio: " + e.getMessage(),
                 "Erro",
                 JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
     
@@ -805,12 +832,12 @@ public class ColetaItemCompostoFrame extends JFrame {
             btnMarcarTodosEncontrados.setEnabled(true);
             btnFinalizarColeta.setEnabled(true);
             
-        } catch (Exception e) {
+        } catch (java.sql.SQLException | RuntimeException e) {
+            LOG.error("Erro ao carregar componentes: {}", e.getMessage(), e);
             JOptionPane.showMessageDialog(this,
                 "Erro ao carregar componentes: " + e.getMessage(),
                 "Erro",
                 JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
     
@@ -929,12 +956,12 @@ public class ColetaItemCompostoFrame extends JFrame {
                 atualizarTabelaComponentes();
                 atualizarStatusGeral();
                 
-            } catch (Exception e) {
+            } catch (java.sql.SQLException | RuntimeException e) {
+                LOG.error("Erro ao registrar componente: {}", e.getMessage(), e);
                 JOptionPane.showMessageDialog(this,
                     "Erro ao registrar componente: " + e.getMessage(),
                     "Erro",
                     JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
             }
         }
     }
@@ -986,12 +1013,12 @@ public class ColetaItemCompostoFrame extends JFrame {
                     "Sucesso",
                     JOptionPane.INFORMATION_MESSAGE);
                 
-            } catch (Exception e) {
+            } catch (java.sql.SQLException | RuntimeException e) {
+                LOG.error("Erro ao marcar componentes: {}", e.getMessage(), e);
                 JOptionPane.showMessageDialog(this,
                     "Erro ao marcar componentes: " + e.getMessage(),
                     "Erro",
                     JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
             }
         }
     }

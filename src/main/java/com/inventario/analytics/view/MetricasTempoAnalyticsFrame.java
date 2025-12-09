@@ -1,8 +1,27 @@
 package com.inventario.analytics.view;
 
-import com.inventario.analytics.model.MetricasColetorDTO;
-import com.inventario.analytics.model.MetricasPeriodoDTO;
-import com.inventario.analytics.service.AnalyticsService;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.SwingWorker;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -13,14 +32,9 @@ import org.jfree.data.category.DefaultCategoryDataset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.util.List;
-import java.util.Map;
+import com.inventario.analytics.model.MetricasColetorDTO;
+import com.inventario.analytics.model.MetricasPeriodoDTO;
+import com.inventario.analytics.service.AnalyticsService;
 
 /**
  * Frame de análise de métricas de tempo de coleta.
@@ -230,12 +244,10 @@ public class MetricasTempoAnalyticsFrame extends JFrame {
         CategoryPlot plot = chartTempo.getCategoryPlot();
         BarRenderer renderer = (BarRenderer) plot.getRenderer();
         
-        int index = 0;
         for (MetricasPeriodoDTO dto : periodos.values()) {
             if (dto.isBaixaProdutividade()) {
                 renderer.setSeriesPaint(0, new Color(220, 53, 69));
             }
-            index++;
         }
         
         // Adicionar gráficos ao painel

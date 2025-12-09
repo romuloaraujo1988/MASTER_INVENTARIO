@@ -1,0 +1,7 @@
+PLACEHOLDER: Adicionar logo_ifmt.png aqui
+
+Este arquivo é um placeholder para o logo da instituição.
+Substitua por um arquivo PNG com o logo do IFMT.
+
+Dimensões recomendadas: 200x80 pixels
+Formato: PNG com fundo transparente

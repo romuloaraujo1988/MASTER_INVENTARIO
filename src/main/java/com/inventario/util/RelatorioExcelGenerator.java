@@ -341,37 +341,58 @@ public class RelatorioExcelGenerator {
 
     /**
      * Gera relatório geral consolidado
+     * 
+     * ATUALIZADO 08/12/2025:
+     * - Adicionada aba "Relatório Completo" com todos os patrimônios e status de coleta
+     * - Usa gerarRelatorioGeralCompleto() do DAO
      */
     public boolean gerarRelatorioGeral(int idInventario, JComponent parent) {
         try {
+            System.out.println("=== GERANDO RELATÓRIO GERAL EXCEL ===");
+            System.out.println("ID do inventário: " + idInventario);
+            
             // Criar workbook com múltiplas abas
             Workbook workbook = new XSSFWorkbook();
 
-            // Aba 1: Itens Encontrados
+            // Aba 1: Relatório Completo (NOVA - todos os patrimônios com status)
+            List<Map<String, Object>> completo = relatorioDAO.gerarRelatorioGeralCompleto(idInventario);
+            System.out.println("Total de patrimônios no relatório completo: " + completo.size());
+            criarAbaRelatorio(workbook, "Relatório Completo", completo,
+                    new String[] { "Patrimônio", "Descrição", "Marca", "Modelo", "Setor", "Responsável", 
+                            "Sala", "Status Coleta", "Estado Encontrado", "Localização Encontrada", 
+                            "Data Coleta", "Valor" },
+                    new String[] { "Número Patrimônio", "Descrição", "Marca", "Modelo", "Setor", "Responsável", 
+                            "Sala", "Status Coleta", "Estado Encontrado", "Localização Encontrada", 
+                            "Data Coleta", "Valor Aquisição" });
+
+            // Aba 2: Itens Encontrados
             List<Map<String, Object>> encontrados = relatorioDAO.gerarRelatorioItensEncontrados(idInventario);
+            System.out.println("Total de itens encontrados: " + encontrados.size());
             criarAbaRelatorio(workbook, "Itens Encontrados", encontrados,
                     new String[] { "Patrimônio", "Descrição", "Marca", "Modelo", "Setor", "Responsável", "Estado",
                             "Local de Coleta", "Data Coleta", "Observações" },
-                    new String[] { "patrimonio", "descricao", "marca", "modelo", "setor", "responsavel", "estado",
-                            "localizacao_encontrada", "data_coleta", "observacoes" });
+                    new String[] { "Número Patrimônio", "Descrição", "marca", "modelo", "Setor", "Responsável", "Estado",
+                            "Localização Encontrada", "Data Coleta", "Observações" });
 
-            // Aba 2: Itens Não Encontrados
-            List<Map<String, Object>> naoEncontrados = relatorioDAO.gerarRelatorioItensNaoEncontrados(idInventario);
-            criarAbaRelatorio(workbook, "Não Encontrados", naoEncontrados,
-                    new String[] { "Patrimônio", "Descrição", "Marca", "Modelo", "Setor", "Responsável", "Situação",
-                            "Última Localização", "Data Tentativa", "Motivo" },
-                    new String[] { "patrimonio", "descricao", "marca", "modelo", "setor", "responsavel", "situacao",
-                            "ultima_localizacao", "data_tentativa", "motivo" });
+            // Aba 3: Itens Não Coletados
+            List<Map<String, Object>> naoColetados = relatorioDAO.gerarRelatorioItensNaoColetados(idInventario);
+            System.out.println("Total de itens não coletados: " + naoColetados.size());
+            criarAbaRelatorio(workbook, "Não Coletados", naoColetados,
+                    new String[] { "Patrimônio", "Descrição", "Marca", "Modelo", "Setor", "Responsável", "Sala",
+                            "Situação", "Valor" },
+                    new String[] { "Número Patrimônio", "Descrição", "marca", "modelo", "Setor", "Responsável", "Sala",
+                            "Situação", "Valor" });
 
-            // Aba 3: Sem Etiqueta
+            // Aba 4: Sem Etiqueta
             List<Map<String, Object>> semEtiqueta = relatorioDAO.gerarRelatorioItensSemEtiqueta(idInventario);
+            System.out.println("Total de itens sem etiqueta: " + semEtiqueta.size());
             criarAbaRelatorio(workbook, "Sem Etiqueta", semEtiqueta,
-                    new String[] { "Descrição", "Marca", "Modelo", "Quantidade", "Local", "Responsável", "Estado",
+                    new String[] { "Patrimônio", "Descrição", "Marca", "Modelo", "Setor", "Responsável", "Estado",
                             "Local de Coleta", "Data Coleta", "Observações" },
-                    new String[] { "descricao", "marca", "modelo", "quantidade", "local", "responsavel", "estado",
-                            "localizacao_encontrada", "data_coleta", "observacoes" });
+                    new String[] { "Número Patrimônio", "Descrição", "marca", "modelo", "Setor", "Responsável", "Estado",
+                            "Localização Encontrada", "Data Coleta", "Observações" });
 
-            // Aba 4: Estatísticas
+            // Aba 5: Estatísticas
             List<Map<String, Object>> estatisticas = relatorioDAO.gerarEstatisticasGerais(idInventario);
             criarAbaEstatisticas(workbook, "Estatísticas", estatisticas);
 
@@ -384,13 +405,23 @@ public class RelatorioExcelGenerator {
             fileOut.close();
             workbook.close();
 
+            System.out.println("✅ Relatório geral exportado: " + caminhoArquivo);
+
             JOptionPane.showMessageDialog(parent,
-                    "Relatório geral exportado com sucesso!\nArquivo salvo em: " + caminhoArquivo,
+                    "Relatório geral exportado com sucesso!\n\n" +
+                    "Arquivo salvo em: " + caminhoArquivo + "\n\n" +
+                    "Abas incluídas:\n" +
+                    "• Relatório Completo: " + completo.size() + " patrimônios\n" +
+                    "• Itens Encontrados: " + encontrados.size() + " itens\n" +
+                    "• Não Coletados: " + naoColetados.size() + " itens\n" +
+                    "• Sem Etiqueta: " + semEtiqueta.size() + " itens",
                     "Sucesso", JOptionPane.INFORMATION_MESSAGE);
 
             return true;
 
         } catch (Exception e) {
+            System.err.println("❌ Erro ao gerar relatório geral: " + e.getMessage());
+            e.printStackTrace();
             JOptionPane.showMessageDialog(parent,
                     "Erro ao gerar relatório: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);

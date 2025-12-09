@@ -70,6 +70,7 @@ com\inventario\view\PatrimonioFormDialog$SalaItem.class
 com\inventario\config\SecurityConfig.class
 com\inventario\service\BusinessException.class
 com\inventario\view\MainFrame$8.class
+com\inventario\siads\service\SiadsValidationService.class
 com\inventario\mobile\server\controller\MobileConsultaController.class
 com\inventario\service\AutenticacaoServiceDB.class
 com\inventario\dao\RelatorioColetaDAO.class
@@ -84,6 +85,7 @@ com\inventario\itemcomposto\model\Componente.class
 com\inventario\view\ColetaFrame_v2$1.class
 com\inventario\view\ui\ModernButtons$1.class
 com\inventario\util\ExcelExporter.class
+com\inventario\view\AcoesPatrimonioDialog$1.class
 com\inventario\view\ColetaItemCompostoFrame$5.class
 com\inventario\view\RelatorioFrame$1.class
 com\inventario\config\DatabaseConfigManager.class
@@ -124,6 +126,7 @@ com\inventario\view\JLogin$1.class
 com\inventario\analytics\view\AnalyticsDashboardFrame$1.class
 com\inventario\util\ImportacaoExcel$1.class
 com\inventario\view\InventarioFrame$8.class
+com\inventario\view\ReconciliacaoFrame$2.class
 com\inventario\presentation\viewmodel\RelatorioItemCompostoViewModel.class
 com\inventario\util\MobileServerProcessManager.class
 com\inventario\presentation\state\RelatorioState$ResponsaveisCarregados.class
@@ -157,6 +160,7 @@ com\inventario\presentation\state\RelatorioItemCompostoState$InventariosCarregad
 com\inventario\mobile\server\controller\MobileConnectionController.class
 com\inventario\model\PerfilUsuario.class
 com\inventario\view\MainFrame.class
+com\inventario\view\ReconciliacaoFrame$4.class
 com\inventario\analytics\view\AnalyticsDashboardFrame.class
 com\inventario\view\ModernDialog.class
 com\inventario\dao\SalaInventarioDAO.class
@@ -185,6 +189,7 @@ com\inventario\event\EventDebouncer.class
 com\inventario\util\SoundNotification.class
 com\inventario\sync\service\RetryManager.class
 com\inventario\view\RegistroComponenteDialog.class
+com\inventario\siads\model\SiadsRegistro$TipoDestinacao.class
 com\inventario\service\RelatorioService.class
 com\inventario\util\ExcelExporterAlternativo.class
 com\inventario\config\ConfigurationPaths$ConfigMode.class
@@ -198,6 +203,7 @@ com\inventario\view\UsuarioFrame$1.class
 com\inventario\dao\ItemCompostoRelatorioDAO.class
 com\inventario\service\ConnectedDevicesManager.class
 com\inventario\util\CriarTabelasItemComposto.class
+com\inventario\siads\model\SiadsRegistro$MotivoBaixa.class
 com\inventario\view\SetorFrame$1.class
 com\inventario\view\ui\ModernButtons$3.class
 com\inventario\itemcomposto\service\DeteccaoEmLoteService$DescricaoAgrupada.class
@@ -212,6 +218,7 @@ com\inventario\dao\ItemCompostoRelatorioDAO$1.class
 com\inventario\dao\SetorDAO$SetorComEstatisticas.class
 com\inventario\mobile\server\controller\MobileMemoryController.class
 com\inventario\view\CampusFormDialog$1.class
+com\inventario\view\ReconciliacaoFrame$6.class
 com\inventario\mobile\server\controller\MobileAuthController.class
 com\inventario\view\RelatorioItensCompostosFrame$1.class
 com\inventario\service\DataImportServiceTest$1.class
@@ -226,6 +233,7 @@ com\inventario\util\RelatorioExcelGenerator.class
 com\inventario\view\ui\ModernButtons$2.class
 com\inventario\analytics\dao\package-info.class
 com\inventario\util\RemoverComponentesComputador.class
+com\inventario\view\ReconciliacaoFrame$7.class
 com\inventario\view\SetorFrame$2.class
 com\inventario\offline\DataSynchronizer$ConflictResolution.class
 com\inventario\util\ImportacaoCSV$ProgressCallback.class
@@ -238,6 +246,7 @@ com\inventario\config\DatabaseConfig.class
 com\inventario\mobile\server\controller\MobileHealthController.class
 com\inventario\view\MobileMonitorFrameV2$6.class
 com\inventario\view\ui\ButtonStyleFactory$3.class
+com\inventario\siads\service\SiadsValidationService$ValidationResult.class
 com\inventario\util\ImportacaoExcel$ImportacaoCSVConstants.class
 com\inventario\util\CsvExcelGenerator.class
 com\inventario\util\notification\ToastNotification.class
@@ -262,6 +271,7 @@ com\inventario\service\PatrimonioService.class
 com\inventario\util\ConfiguracaoBancoUtil.class
 com\inventario\model\Coleta.class
 com\inventario\view\UsuarioFrame$2.class
+com\inventario\siads\model\SiadsRegistro$SituacaoBem.class
 com\inventario\view\RelatorioFrame$7.class
 com\inventario\view\ResponsavelFrame$2.class
 com\inventario\service\UnifiedAuthService$AuthResult.class
@@ -365,6 +375,7 @@ com\inventario\view\DashboardColetaFrame$2.class
 com\inventario\repository\Repository.class
 com\inventario\mobile\server\controller\MobileDashboardController.class
 com\inventario\offline\OfflineConfigManager.class
+com\inventario\siads\model\SiadsRegistro$TipoAquisicao.class
 com\inventario\config\DatabaseConfiguration.class
 com\inventario\service\DataImportService$ProgressListener.class
 com\inventario\offline\SyncFrame$7$1.class
@@ -386,6 +397,7 @@ com\inventario\exception\RepositoryException.class
 com\inventario\view\CampusFrame$1.class
 com\inventario\sync\model\SyncStatistics.class
 com\inventario\model\DispositivoMobile.class
+com\inventario\view\ReconciliacaoFrame.class
 com\inventario\print\EtiquetaLayout.class
 com\inventario\ui\ConfiguracaoBancoController$1.class
 com\inventario\view\ColetaItemCompostoFrame$4.class
@@ -427,6 +439,7 @@ com\inventario\dao\SetorDAO.class
 com\inventario\presentation\state\RelatorioItemCompostoState$ResponsaveisCarregados.class
 com\inventario\view\ItemCompostoFrame$3.class
 com\inventario\service\MemoryMonitorService.class
+com\inventario\view\ReconciliacaoFrame$5.class
 com\inventario\event\DashboardEventSerializer.class
 com\inventario\util\PortManager.class
 com\inventario\chart\InventarioChartService.class
@@ -463,6 +476,7 @@ com\inventario\mobile\server\dto\PatrimonioDetalheDTO.class
 com\inventario\view\ColetaFrame_v2$2.class
 com\inventario\presentation\state\RelatorioState$SalasCarregadas.class
 com\inventario\print\EtiquetaPrinter.class
+com\inventario\view\ReconciliacaoFrame$3.class
 com\inventario\util\ExceptionHandler.class
 com\inventario\presentation\state\RelatorioItemCompostoState$SetoresCarregados.class
 com\inventario\mobile\server\config\DatabaseConfigLoader.class
@@ -480,6 +494,7 @@ com\inventario\dao\InventarioSetorDAO.class
 com\inventario\mobile\server\config\MobileServerConfig.class
 com\inventario\view\MainFrame$11.class
 com\inventario\view\ItemCompostoFrame.class
+com\inventario\view\ReconciliacaoFrame$1.class
 com\inventario\view\InventarioFormDialog$1.class
 com\inventario\mobile\server\dto\MobileColetaBatchRequest.class
 com\inventario\offline\StatusBarPanel$1.class
@@ -509,6 +524,7 @@ com\inventario\view\MobileMonitorFrameV2$1.class
 com\inventario\view\ui\ModernComboBox$ModernComboBoxRenderer.class
 com\inventario\view\PatrimonioFormDialog.class
 com\inventario\mobile\server\dto\ColetasPorDiaDTO.class
+com\inventario\view\ReconciliacaoFrame$SimilaridadeRenderer.class
 com\inventario\view\PatrimonioFrame$3.class
 com\inventario\view\ui\ModernComboBox$ModernComboBoxUI$1.class
 com\inventario\model\SalaInventario.class
@@ -531,6 +547,7 @@ com\inventario\view\InventarioFrame$4.class
 com\inventario\view\MainFrame$9.class
 com\inventario\mobile\server\dto\MobileSalaDTO.class
 com\inventario\service\MemoryMonitorService$MemoryStatus.class
+com\inventario\siads\model\SiadsRegistro$EstadoConservacao.class
 com\inventario\view\InventarioFrame$3.class
 com\inventario\mobile\server\dto\MobileInventarioInfo.class
 com\inventario\view\ColetaFrame_v2$14.class
@@ -575,12 +592,14 @@ com\inventario\util\notification\ErrorReport.class
 com\inventario\view\DashboardColetaFrame$1.class
 com\inventario\view\ColetaFrame_v2$7.class
 com\inventario\presentation\state\RelatorioItemCompostoState$ExportacaoSucesso.class
+com\inventario\dao\OcorrenciaPatrimonioDAO.class
 com\inventario\model\MobileConnection.class
 com\inventario\service\RelatorioItemCompostoService.class
 com\inventario\view\InventarioFormDialog$5.class
 com\inventario\view\MainFrame$3.class
 com\inventario\dto\mobile\LoginRequest.class
 com\inventario\offline\OfflineManager.class
+com\inventario\view\AcoesPatrimonioDialog.class
 com\inventario\sync\service\BackupService.class
 com\inventario\view\ColetaFrame_v2$16.class
 com\inventario\analytics\view\MetricasTempoAnalyticsFrame$RankingCellRenderer.class
@@ -615,6 +634,7 @@ com\inventario\mobile\server\service\MobileAuthService$1.class
 com\inventario\view\RegistroComponenteDialog$1.class
 com\inventario\offline\SyncFrame$6.class
 com\inventario\view\JLogin$5.class
+com\inventario\dao\ReconciliacaoDAO.class
 com\inventario\view\DetalheItemCompostoDialog.class
 com\inventario\service\CampusService.class
 com\inventario\util\PasswordEncryption.class
@@ -634,3 +654,4 @@ com\inventario\service\DataImportService$ImportResult.class
 com\inventario\view\ColetaItemCompostoFrame$1.class
 com\inventario\util\CadastrarItensCompostosMassa$TemplateItemComposto.class
 com\inventario\service\ExportacaoItemCompostoService$1.class
+com\inventario\view\ReconciliacaoFrame$StatusRenderer.class

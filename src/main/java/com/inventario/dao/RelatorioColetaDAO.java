@@ -1055,18 +1055,26 @@ public class RelatorioColetaDAO {
      * Fornece uma visão abrangente de todo o inventário incluindo itens coletados,
      * não coletados e não encontrados
      * 
-     * @param idInventario ID do inventário ativo
+     * CORREÇÃO 08/12/2025:
+     * - Alterado STATUS = 'ATIVO' para STATUS = 'Ativo' (conforme banco)
+     * - Alterado INNER JOIN para LEFT JOIN em responsável e setor (incluir patrimônios sem responsável)
+     * - Corrigido JOIN da sala: p.ID_SALA = sa.ID (não sa.ID_SALA)
+     * 
+     * @param idInventario ID do inventário ativo (-1 para relatório geral sem inventário)
      * @return Lista completa com todos os patrimônios e seus status de coleta
      */
     public List<Map<String, Object>> gerarRelatorioGeralCompleto(int idInventario) {
+        System.out.println("\n=== RELATÓRIO GERAL COMPLETO ===");
+        System.out.println("📋 Inventário ID: " + idInventario);
+        
         String sql = """
                 SELECT
                     p.NUMERO as "Número Patrimônio",
                     p.DESCRICAO as "Descrição",
-                    p.MARCA as "Marca",
-                    p.MODELO as "Modelo",
-                    r.NOME as "Responsável",
-                    s.NOME as "Setor",
+                    COALESCE(p.MARCA, '') as "Marca",
+                    COALESCE(p.MODELO, '') as "Modelo",
+                    COALESCE(r.NOME, 'Sem Responsável') as "Responsável",
+                    COALESCE(s.NOME, 'Sem Setor') as "Setor",
                     COALESCE(sa.NUMERO_SALA, 'Não informado') as "Sala",
                     CASE
                         WHEN c.STATUS_COLETA = 'COLETADO' THEN 'Encontrado'
@@ -1081,9 +1089,9 @@ public class RelatorioColetaDAO {
                         ELSE 'N/A'
                     END as "Sem Etiqueta",
                     COALESCE(c.LOCALIZACAO_ENCONTRADA, c.LOCALIZACAO_ATUAL, 'Não informado') as "Localização Encontrada",
-                    c.ESTADO_ENCONTRADO as "Estado Encontrado",
+                    COALESCE(c.ESTADO_ENCONTRADO, 'N/A') as "Estado Encontrado",
                     c.DATA_COLETA as "Data Coleta",
-                    c.OBSERVACAO_COLETA as "Observações",
+                    COALESCE(c.OBSERVACAO_COLETA, '') as "Observações",
                     p.STATUS as "Situação Patrimônio",
                     COALESCE(p.VALOR_AQUISICAO, 0) as "Valor Aquisição",
                     p.DATA_ENTRADA as "Data Aquisição",
@@ -1092,13 +1100,13 @@ public class RelatorioColetaDAO {
                         WHEN c.DIVERGENCIA = FALSE THEN 'Não'
                         ELSE 'N/A'
                     END as "Possui Divergência",
-                    c.MOTIVO_DIVERGENCIA as "Motivo Divergência"
+                    COALESCE(c.MOTIVO_DIVERGENCIA, '') as "Motivo Divergência"
                 FROM TABELA_PATRIMONIO p
-                INNER JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID
-                INNER JOIN TABELA_SETOR s ON r.ID_SETOR = s.ID
-                LEFT JOIN TABELA_SALA sa ON p.ID_SALA = sa.ID_SALA
+                LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID
+                LEFT JOIN TABELA_SETOR s ON r.ID_SETOR = s.ID
+                LEFT JOIN TABELA_SALA sa ON p.ID_SALA = sa.ID
                 LEFT JOIN TABELA_COLETA c ON p.ID = c.ID_PATRIMONIO AND c.ID_INVENTARIO = ?
-                WHERE p.STATUS = 'ATIVO'
+                WHERE p.STATUS = 'Ativo'
                 ORDER BY
                     CASE
                         WHEN c.STATUS_COLETA = 'NAO_ENCONTRADO' THEN 1
@@ -1107,9 +1115,15 @@ public class RelatorioColetaDAO {
                         WHEN c.STATUS_COLETA = 'COLETADO' THEN 4
                         ELSE 5
                     END,
-                    s.NOME, r.NOME, p.NUMERO
+                    COALESCE(s.NOME, 'Sem Setor'), 
+                    COALESCE(r.NOME, 'Sem Responsável'), 
+                    p.NUMERO
                 """;
 
-        return executarConsulta(sql, idInventario);
+        List<Map<String, Object>> resultado = executarConsulta(sql, idInventario);
+        System.out.println("✅ Total de patrimônios no relatório: " + resultado.size());
+        System.out.println("=====================================\n");
+        
+        return resultado;
     }
 }

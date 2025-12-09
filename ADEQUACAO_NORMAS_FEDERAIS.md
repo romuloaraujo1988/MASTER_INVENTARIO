@@ -1,8 +1,13 @@
-# Adequação às Normas Federais - Sistema de Inventário IFMT
+# Adequação às Normas Federais - Sistema Complementar de Inventário IFMT
 
 ## 📋 Visão Geral
 
-Este documento descreve as adequações realizadas no sistema para conformidade com as normas federais de gestão patrimonial.
+Este documento descreve as adequações realizadas no **sistema complementar** para conformidade com as normas federais de gestão patrimonial.
+
+### ⚠️ Importante
+Este é um **sistema complementar** que auxilia nos processos de inventário. O sistema oficial de gestão patrimonial é o **SIADS** (Sistema Integrado de Administração de Serviços) do governo federal.
+
+**Objetivo:** Facilitar a coleta de dados em campo e preparar informações para exportação ao SIADS.
 
 ---
 

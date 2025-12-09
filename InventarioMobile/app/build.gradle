@@ -14,8 +14,8 @@ android {
         applicationId "com.inventario.mobile"
         minSdk 23  // Atualizado para suportar biometria
         targetSdk 34
-        versionCode 34
-        versionName "1.2.34"
+        versionCode 41
+        versionName "2.6.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -149,6 +149,9 @@ dependencies {
     // Date/Time
     implementation 'com.jakewharton.threetenabp:threetenabp:1.4.6'
     
+    // PDF Generation
+    implementation 'com.itextpdf:itext7-core:7.2.5'
+    
     // Testing
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.mockito:mockito-core:5.7.0'
@@ -159,6 +162,9 @@ dependencies {
     testImplementation 'io.kotest:kotest-runner-junit5:5.8.0'
     testImplementation 'io.kotest:kotest-assertions-core:5.8.0'
     testImplementation 'io.kotest:kotest-property:5.8.0'
+    
+    // MockK for mocking
+    testImplementation 'io.mockk:mockk:1.13.8'
     
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'

@@ -1,13 +1,22 @@
 package com.inventario.dao;
 
-import com.inventario.model.SalaInventario;
-import com.inventario.util.DatabaseConnection;
-import org.springframework.stereotype.Repository;
-
-import java.sql.*;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
-import java.math.BigDecimal;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Repository;
+
+import com.inventario.model.SalaInventario;
+import com.inventario.util.DatabaseConnection;
 
 /**
  * DAO para gerenciar operações da tabela SALA_INVENTARIO
@@ -15,6 +24,8 @@ import java.math.BigDecimal;
  */
 @Repository
 public class SalaInventarioDAO {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(SalaInventarioDAO.class);
     
     /**
      * Verifica se está usando SQLite (modo offline)
@@ -34,11 +45,11 @@ public class SalaInventarioDAO {
     public boolean salvar(SalaInventario salaInventario) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             if (isSQLite(conn)) {
-                System.out.println("SQLite detectado: salvar() não disponível em modo offline");
+                LOG.debug("SQLite detectado: salvar() não disponível em modo offline");
                 return false;
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao verificar tipo de banco: " + e.getMessage());
+            LOG.error("Erro ao verificar tipo de banco: {}", e.getMessage());
             return false;
         }
         if (salaInventario.getIdSalaInventario() == null) {
@@ -114,7 +125,7 @@ public class SalaInventarioDAO {
             }
             
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Erro ao inserir sala-inventário", e);
         }
         
         return false;
@@ -162,7 +173,7 @@ public class SalaInventarioDAO {
             return stmt.executeUpdate() > 0;
             
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Erro ao atualizar sala-inventário", e);
         }
         
         return false;
@@ -175,11 +186,11 @@ public class SalaInventarioDAO {
     public SalaInventario buscarPorSalaEInventario(Integer idSala, Integer idInventario) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             if (isSQLite(conn)) {
-                System.out.println("SQLite detectado: buscarPorSalaEInventario() não disponível em modo offline");
+                LOG.debug("SQLite detectado: buscarPorSalaEInventario() não disponível em modo offline");
                 return null;
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao verificar tipo de banco: " + e.getMessage());
+            LOG.error("Erro ao verificar tipo de banco: {}", e.getMessage());
             return null;
         }
         
@@ -198,7 +209,7 @@ public class SalaInventarioDAO {
             }
             
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Erro ao buscar sala-inventário por sala e inventário", e);
         }
         
         return null;
@@ -222,7 +233,7 @@ public class SalaInventarioDAO {
             }
             
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Erro ao buscar sala-inventário por ID", e);
         }
         
         return null;
@@ -247,7 +258,7 @@ public class SalaInventarioDAO {
             }
             
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Erro ao listar salas-inventário por inventário", e);
         }
         
         return lista;
@@ -272,7 +283,7 @@ public class SalaInventarioDAO {
             }
             
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Erro ao listar salas-inventário por sala", e);
         }
         
         return lista;
@@ -298,7 +309,7 @@ public class SalaInventarioDAO {
             }
             
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Erro ao listar salas-inventário por status", e);
         }
         
         return lista;
@@ -311,11 +322,11 @@ public class SalaInventarioDAO {
     public boolean finalizarColeta(Integer idSala, Integer idInventario, Integer idParticipante, String observacoes) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             if (isSQLite(conn)) {
-                System.out.println("SQLite detectado: finalizarColeta() não disponível em modo offline");
+                LOG.debug("SQLite detectado: finalizarColeta() não disponível em modo offline");
                 return true; // Em modo offline, retornar sucesso sem fazer nada
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao verificar tipo de banco: " + e.getMessage());
+            LOG.error("Erro ao verificar tipo de banco: {}", e.getMessage());
             return false;
         }
         
@@ -338,11 +349,11 @@ public class SalaInventarioDAO {
     public boolean reabrirColeta(Integer idSala, Integer idInventario) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             if (isSQLite(conn)) {
-                System.out.println("SQLite detectado: reabrirColeta() não disponível em modo offline");
+                LOG.debug("SQLite detectado: reabrirColeta() não disponível em modo offline");
                 return true; // Em modo offline, retornar sucesso sem fazer nada
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao verificar tipo de banco: " + e.getMessage());
+            LOG.error("Erro ao verificar tipo de banco: {}", e.getMessage());
             return false;
         }
         
@@ -363,11 +374,11 @@ public class SalaInventarioDAO {
     public boolean isColetaFinalizada(Integer idSala, Integer idInventario) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             if (isSQLite(conn)) {
-                System.out.println("SQLite detectado: isColetaFinalizada() não disponível em modo offline");
+                LOG.debug("SQLite detectado: isColetaFinalizada() não disponível em modo offline");
                 return false; // Em modo offline, considerar que nenhuma sala está finalizada
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao verificar tipo de banco: " + e.getMessage());
+            LOG.error("Erro ao verificar tipo de banco: {}", e.getMessage());
             return false;
         }
         
@@ -382,11 +393,11 @@ public class SalaInventarioDAO {
     public boolean iniciarColeta(Integer idSala, Integer idInventario, Integer idParticipante) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             if (isSQLite(conn)) {
-                System.out.println("SQLite detectado: iniciarColeta() não disponível em modo offline");
+                LOG.debug("SQLite detectado: iniciarColeta() não disponível em modo offline");
                 return true; // Em modo offline, retornar sucesso sem fazer nada
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao verificar tipo de banco: " + e.getMessage());
+            LOG.error("Erro ao verificar tipo de banco: {}", e.getMessage());
             return false;
         }
         
@@ -409,11 +420,11 @@ public class SalaInventarioDAO {
     public boolean atualizarEstatisticas(Integer idSala, Integer idInventario, Integer totalItens, Integer itensSemEtiqueta) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             if (isSQLite(conn)) {
-                System.out.println("SQLite detectado: atualizarEstatisticas() não disponível em modo offline");
+                LOG.debug("SQLite detectado: atualizarEstatisticas() não disponível em modo offline");
                 return true; // Em modo offline, retornar sucesso sem fazer nada
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao verificar tipo de banco: " + e.getMessage());
+            LOG.error("Erro ao verificar tipo de banco: {}", e.getMessage());
             return false;
         }
         
@@ -457,7 +468,7 @@ public class SalaInventarioDAO {
             }
             
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Erro ao contar salas finalizadas", e);
         }
         
         return 0;
@@ -476,7 +487,7 @@ public class SalaInventarioDAO {
             return stmt.executeUpdate() > 0;
             
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.error("Erro ao excluir sala-inventário", e);
         }
         
         return false;
@@ -518,7 +529,7 @@ public class SalaInventarioDAO {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("Aviso: Erro ao parsear DATA_INICIO_COLETA - " + e.getMessage());
+                LOG.warn("Aviso: Erro ao parsear DATA_INICIO_COLETA - {}", e.getMessage());
                 // Continua sem a data
             }
             
@@ -538,7 +549,7 @@ public class SalaInventarioDAO {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("Aviso: Erro ao parsear DATA_FINALIZACAO_COLETA - " + e.getMessage());
+                LOG.warn("Aviso: Erro ao parsear DATA_FINALIZACAO_COLETA - {}", e.getMessage());
                 // Continua sem a data
             }
             
@@ -595,8 +606,7 @@ public class SalaInventarioDAO {
             }
             
         } catch (SQLException e) {
-            System.err.println("ERRO ao criar SalaInventario do ResultSet: " + e.getMessage());
-            e.printStackTrace();
+            LOG.error("ERRO ao criar SalaInventario do ResultSet: {}", e.getMessage(), e);
             throw e; // Re-lançar para tratamento superior
         }
         
@@ -613,8 +623,8 @@ public class SalaInventarioDAO {
     public List<com.inventario.model.Sala> buscarSalasAbertasParaColeta(int idInventario) {
         List<com.inventario.model.Sala> salasAbertas = new ArrayList<>();
         
-        System.out.println("=== INÍCIO buscarSalasAbertasParaColeta ===");
-        System.out.println("Inventário ID: " + idInventario);
+        LOG.debug("=== INÍCIO buscarSalasAbertasParaColeta ===");
+        LOG.debug("Inventário ID: {}", idInventario);
         
         try (Connection conn = DatabaseConnection.getConnection()) {
             
@@ -622,7 +632,7 @@ public class SalaInventarioDAO {
             String dbType = conn.getMetaData().getDatabaseProductName().toLowerCase();
             boolean isSQLite = dbType.contains("sqlite");
             
-            System.out.println("Tipo de banco detectado: " + dbType + (isSQLite ? " (SQLite/Offline)" : " (PostgreSQL/Online)"));
+            LOG.debug("Tipo de banco detectado: {} ({})", dbType, isSQLite ? "SQLite/Offline" : "PostgreSQL/Online");
             
             // Montar SQL de acordo com o tipo de banco
             String sql;
@@ -645,68 +655,43 @@ public class SalaInventarioDAO {
                      "ORDER BY s.NUMERO_SALA";
             }
             
-            System.out.println("SQL preparado:");
-            System.out.println(sql);
+            LOG.debug("SQL preparado: {}", sql);
             
             PreparedStatement stmt = conn.prepareStatement(sql);
             
             // Setar parâmetro apenas para PostgreSQL (SQLite não usa)
             if (!isSQLite) {
                 stmt.setInt(1, idInventario);
-                System.out.println("Parâmetro setado: idInventario = " + idInventario);
+                LOG.debug("Parâmetro setado: idInventario = {}", idInventario);
             } else {
-                System.out.println("SQLite: sem parâmetros (carregando todas as salas ativas)");
+                LOG.debug("SQLite: sem parâmetros (carregando todas as salas ativas)");
             }
             
-            System.out.println("Executando query...");
+            LOG.debug("Executando query...");
             
             try (ResultSet rs = stmt.executeQuery()) {
-                System.out.println("Query executada com sucesso, processando resultados...");
+                LOG.debug("Query executada com sucesso, processando resultados...");
                 int count = 0;
                 while (rs.next()) {
                     count++;
-                    System.out.println("\n--- Processando sala " + count + " ---");
+                    LOG.trace("Processando sala {}", count);
                     try {
-                        // Log dos valores brutos do ResultSet
-                        System.out.println("  ID_SALA: " + rs.getInt("ID_SALA"));
-                        System.out.println("  NUMERO_SALA: " + rs.getString("NUMERO_SALA"));
-                        System.out.println("  DESCRICAO: " + rs.getString("DESCRICAO"));
-                        System.out.println("  ID_SETOR: " + rs.getInt("ID_SETOR"));
-                        System.out.println("  ATIVO: " + rs.getBoolean("ATIVO"));
-                        
-                        // Tentar ler DATA_CADASTRO com tratamento especial
-                        try {
-                            Object dataCadastroObj = rs.getObject("DATA_CADASTRO");
-                            System.out.println("  DATA_CADASTRO (Object): " + dataCadastroObj + " (tipo: " + (dataCadastroObj != null ? dataCadastroObj.getClass().getName() : "null") + ")");
-                        } catch (Exception e) {
-                            System.err.println("  DATA_CADASTRO: ERRO ao ler como Object - " + e.getMessage());
-                        }
-                        
-                        System.out.println("  Criando objeto Sala...");
                         com.inventario.model.Sala sala = criarSalaMinimalFromResultSet(rs);
                         salasAbertas.add(sala);
-                        System.out.println("  ✓ Sala criada: " + sala.getIdentificacaoCompleta());
+                        LOG.trace("Sala criada: {}", sala.getIdentificacaoCompleta());
                     } catch (Exception e) {
-                        System.err.println("  ✗ ERRO ao processar sala " + count + ":");
-                        System.err.println("     Tipo: " + e.getClass().getName());
-                        System.err.println("     Mensagem: " + e.getMessage());
-                        e.printStackTrace();
+                        LOG.error("ERRO ao processar sala {}: {} - {}", count, e.getClass().getName(), e.getMessage(), e);
                         // Continua processando as outras salas
                     }
                 }
-                System.out.println("\n=== Total de salas processadas: " + count + " ===");
-                System.out.println("=== Salas adicionadas à lista: " + salasAbertas.size() + " ===");
+                LOG.debug("Total de salas processadas: {} | Salas adicionadas à lista: {}", count, salasAbertas.size());
             }
             
         } catch (SQLException e) {
-            System.err.println("ERRO CRÍTICO ao buscar salas abertas para coleta:");
-            System.err.println("  Mensagem: " + e.getMessage());
-            System.err.println("  SQLState: " + e.getSQLState());
-            System.err.println("  ErrorCode: " + e.getErrorCode());
-            e.printStackTrace();
+            LOG.error("ERRO CRÍTICO ao buscar salas abertas para coleta - SQLState: {}, ErrorCode: {}", 
+                e.getSQLState(), e.getErrorCode(), e);
         } catch (Exception e) {
-            System.err.println("ERRO INESPERADO ao buscar salas: " + e.getMessage());
-            e.printStackTrace();
+            LOG.error("ERRO INESPERADO ao buscar salas: {}", e.getMessage(), e);
         }
         
         return salasAbertas;
@@ -727,8 +712,7 @@ public class SalaInventarioDAO {
             String dbType = conn.getMetaData().getDatabaseProductName().toLowerCase();
             boolean isSQLite = dbType.contains("sqlite");
             
-            System.out.println("DEBUG SalaInventarioDAO: Buscando TODAS as salas ativas");
-            System.out.println("DEBUG SalaInventarioDAO: Tipo de banco: " + dbType);
+            LOG.debug("Buscando TODAS as salas ativas - Tipo de banco: {}", dbType);
             
             // Montar SQL de acordo com o tipo de banco
             String sql;
@@ -745,7 +729,7 @@ public class SalaInventarioDAO {
                      "FROM TABELA_SALA WHERE ATIVO = TRUE ORDER BY NUMERO_SALA";
             }
             
-            System.out.println("DEBUG SalaInventarioDAO: SQL = " + sql);
+            LOG.debug("SQL: {}", sql);
             
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
@@ -756,24 +740,19 @@ public class SalaInventarioDAO {
                     com.inventario.model.Sala sala = criarSalaMinimalFromResultSet(rs);
                     salas.add(sala);
                     count++;
-                    System.out.println("DEBUG SalaInventarioDAO: Sala " + count + " - " + sala.getIdentificacaoCompleta());
+                    LOG.trace("Sala {} - {}", count, sala.getIdentificacaoCompleta());
                 } catch (Exception e) {
-                    System.err.println("ERRO ao processar sala individual: " + e.getMessage());
-                    e.printStackTrace();
+                    LOG.error("ERRO ao processar sala individual: {}", e.getMessage(), e);
                     // Continua processando as outras salas
                 }
             }
-            System.out.println("DEBUG SalaInventarioDAO: Total de salas ativas: " + count);
+            LOG.debug("Total de salas ativas: {}", count);
             
         } catch (SQLException e) {
-            System.err.println("ERRO CRÍTICO ao buscar todas as salas ativas:");
-            System.err.println("  Mensagem: " + e.getMessage());
-            System.err.println("  SQLState: " + e.getSQLState());
-            System.err.println("  ErrorCode: " + e.getErrorCode());
-            e.printStackTrace();
+            LOG.error("ERRO CRÍTICO ao buscar todas as salas ativas - SQLState: {}, ErrorCode: {}", 
+                e.getSQLState(), e.getErrorCode(), e);
         } catch (Exception e) {
-            System.err.println("ERRO INESPERADO ao buscar salas: " + e.getMessage());
-            e.printStackTrace();
+            LOG.error("ERRO INESPERADO ao buscar salas: {}", e.getMessage(), e);
         }
         
         return salas;
@@ -794,7 +773,7 @@ public class SalaInventarioDAO {
             
             if (isSQLite) {
                 // SQLite não tem TABELA_SALA_INVENTARIO, retornar null
-                System.out.println("SQLite detectado: buscarStatusSala() não disponível em modo offline");
+                LOG.debug("SQLite detectado: buscarStatusSala() não disponível em modo offline");
                 return null;
             }
             
@@ -813,7 +792,7 @@ public class SalaInventarioDAO {
             }
             
         } catch (SQLException e) {
-            System.err.println("Erro ao buscar status da sala: " + e.getMessage());
+            LOG.error("Erro ao buscar status da sala: {}", e.getMessage());
         }
         
         return null;
@@ -830,34 +809,34 @@ public class SalaInventarioDAO {
     private com.inventario.model.Sala criarSalaMinimalFromResultSet(ResultSet rs) throws SQLException {
         com.inventario.model.Sala sala = new com.inventario.model.Sala();
         
-        System.out.println("DEBUG criarSalaMinimalFromResultSet: Iniciando criação de Sala");
+        LOG.trace("Iniciando criação de Sala minimal");
         
         try {
             // Campos ESSENCIAIS apenas - com tratamento individual
             try {
                 int idSala = rs.getInt("ID_SALA");
                 sala.setIdSala(idSala);
-                System.out.println("  ✓ ID_SALA: " + idSala);
+                LOG.trace("ID_SALA: {}", idSala);
             } catch (SQLException e) {
-                System.err.println("  ✗ ERRO ao ler ID_SALA: " + e.getMessage());
+                LOG.error("ERRO ao ler ID_SALA: {}", e.getMessage());
                 throw e;
             }
             
             try {
                 String numeroSala = rs.getString("NUMERO_SALA");
                 sala.setNumeroSala(numeroSala);
-                System.out.println("  ✓ NUMERO_SALA: " + numeroSala);
+                LOG.trace("NUMERO_SALA: {}", numeroSala);
             } catch (SQLException e) {
-                System.err.println("  ✗ ERRO ao ler NUMERO_SALA: " + e.getMessage());
+                LOG.error("ERRO ao ler NUMERO_SALA: {}", e.getMessage());
                 throw e;
             }
             
             try {
                 String descricao = rs.getString("DESCRICAO");
                 sala.setDescricao(descricao);
-                System.out.println("  ✓ DESCRICAO: " + descricao);
+                LOG.trace("DESCRICAO: {}", descricao);
             } catch (SQLException e) {
-                System.err.println("  ✗ ERRO ao ler DESCRICAO: " + e.getMessage());
+                LOG.error("ERRO ao ler DESCRICAO: {}", e.getMessage());
                 throw e;
             }
             
@@ -866,77 +845,66 @@ public class SalaInventarioDAO {
                 int idSetor = rs.getInt("ID_SETOR");
                 if (!rs.wasNull()) {
                     sala.setIdSetor(idSetor);
-                    System.out.println("  ✓ ID_SETOR: " + idSetor);
+                    LOG.trace("ID_SETOR: {}", idSetor);
                 } else {
-                    System.out.println("  ✓ ID_SETOR: NULL");
+                    LOG.trace("ID_SETOR: NULL");
                 }
             } catch (SQLException e) {
-                System.err.println("  ⚠ Aviso ao ler ID_SETOR: " + e.getMessage() + " - usando NULL");
+                LOG.warn("Aviso ao ler ID_SETOR: {} - usando NULL", e.getMessage());
             }
             
             // Ativo
             try {
                 boolean ativo = rs.getBoolean("ATIVO");
                 sala.setAtivo(ativo);
-                System.out.println("  ✓ ATIVO: " + ativo);
+                LOG.trace("ATIVO: {}", ativo);
             } catch (SQLException e) {
-                System.err.println("  ✗ ERRO ao ler ATIVO: " + e.getMessage());
+                LOG.error("ERRO ao ler ATIVO: {}", e.getMessage());
                 throw e;
             }
             
             // DATA_CADASTRO - tratamento ULTRA seguro para SQLite e PostgreSQL
-            System.out.println("  Tentando ler DATA_CADASTRO...");
             try {
                 // Tentar ler como Object primeiro para ver o tipo
                 Object dataCadastroObj = rs.getObject("DATA_CADASTRO");
-                System.out.println("  DATA_CADASTRO (Object): " + dataCadastroObj + 
-                    " (tipo: " + (dataCadastroObj != null ? dataCadastroObj.getClass().getName() : "null") + ")");
                 
                 if (dataCadastroObj != null) {
                     // Verificar se é String (SQLite) ou Timestamp (PostgreSQL)
                     if (dataCadastroObj instanceof String) {
                         // SQLite retorna TEXT - converter para Timestamp
                         String dataStr = (String) dataCadastroObj;
-                        System.out.println("  DATA_CADASTRO é String (SQLite): " + dataStr);
                         try {
                             // Formato esperado: 'YYYY-MM-DD HH:MM:SS'
                             Timestamp dataCadastro = Timestamp.valueOf(dataStr);
                             sala.setDataCadastro(dataCadastro);
-                            System.out.println("  ✓ DATA_CADASTRO convertido de String para Timestamp");
+                            LOG.trace("DATA_CADASTRO convertido de String para Timestamp");
                         } catch (IllegalArgumentException e) {
-                            System.err.println("  ⚠ Formato de data inválido: " + dataStr);
-                            System.err.println("     Usando data padrão do construtor");
+                            LOG.warn("Formato de data inválido: {} - usando data padrão", dataStr);
                         }
                     } else {
                         // PostgreSQL retorna Timestamp diretamente
                         Timestamp dataCadastro = rs.getTimestamp("DATA_CADASTRO");
                         sala.setDataCadastro(dataCadastro);
-                        System.out.println("  ✓ DATA_CADASTRO lido como Timestamp (PostgreSQL)");
+                        LOG.trace("DATA_CADASTRO lido como Timestamp (PostgreSQL)");
                     }
                 } else {
-                    System.out.println("  ✓ DATA_CADASTRO é NULL - usando data padrão do construtor");
+                    LOG.trace("DATA_CADASTRO é NULL - usando data padrão do construtor");
                 }
             } catch (SQLException e) {
-                System.out.println("  ⚠ SQLException ao ler DATA_CADASTRO: " + e.getMessage());
-                System.out.println("     SQLState: " + e.getSQLState());
-                System.out.println("     ErrorCode: " + e.getErrorCode());
-                System.out.println("     Usando data padrão do construtor");
+                LOG.warn("SQLException ao ler DATA_CADASTRO: {} - SQLState: {}, ErrorCode: {} - usando data padrão", 
+                    e.getMessage(), e.getSQLState(), e.getErrorCode());
                 // NÃO lançar exceção - apenas usar data padrão
             } catch (Exception e) {
-                System.err.println("  ⚠ Exceção genérica ao ler DATA_CADASTRO: " + e.getClass().getName());
-                System.err.println("     Mensagem: " + e.getMessage());
-                System.err.println("     Usando data padrão do construtor");
+                LOG.warn("Exceção ao ler DATA_CADASTRO: {} - {} - usando data padrão", 
+                    e.getClass().getName(), e.getMessage());
                 // NÃO lançar exceção - apenas usar data padrão
             }
             
-            System.out.println("DEBUG criarSalaMinimalFromResultSet: Sala criada com sucesso");
+            LOG.trace("Sala criada com sucesso");
             
         } catch (SQLException e) {
-            System.err.println("ERRO ao criar Sala MINIMAL do ResultSet:");
-            System.err.println("  ID_SALA: " + tryGetInt(rs, "ID_SALA"));
-            System.err.println("  NUMERO_SALA: " + tryGetString(rs, "NUMERO_SALA"));
-            System.err.println("  Mensagem: " + e.getMessage());
-            e.printStackTrace();
+            LOG.error("ERRO ao criar Sala MINIMAL do ResultSet - ID_SALA: {}, NUMERO_SALA: {}", 
+                tryGetInt(rs, "ID_SALA"), tryGetString(rs, "NUMERO_SALA"), e);
             throw e;
         }
         
@@ -1037,8 +1005,7 @@ public class SalaInventarioDAO {
             }
             
         } catch (SQLException e) {
-            System.err.println("ERRO ao criar Sala do ResultSet: " + e.getMessage());
-            e.printStackTrace();
+            LOG.error("ERRO ao criar Sala do ResultSet: {}", e.getMessage(), e);
             throw e;
         }
         
@@ -1051,7 +1018,7 @@ public class SalaInventarioDAO {
     private String tryGetInt(ResultSet rs, String columnName) {
         try {
             return String.valueOf(rs.getInt(columnName));
-        } catch (Exception e) {
+        } catch (SQLException e) {
             return "ERRO: " + e.getMessage();
         }
     }
@@ -1062,7 +1029,7 @@ public class SalaInventarioDAO {
     private String tryGetString(ResultSet rs, String columnName) {
         try {
             return rs.getString(columnName);
-        } catch (Exception e) {
+        } catch (SQLException e) {
             return "ERRO: " + e.getMessage();
         }
     }

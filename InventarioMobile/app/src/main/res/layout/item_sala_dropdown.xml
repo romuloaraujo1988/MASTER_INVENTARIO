@@ -1,50 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="center_vertical"
-    android:minHeight="48dp"
     android:orientation="horizontal"
-    android:paddingHorizontal="16dp"
-    android:paddingVertical="8dp">
+    android:padding="12dp"
+    android:gravity="center_vertical">
 
-    <!-- Ícone de Status -->
     <ImageView
-        android:id="@+id/ivStatus"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_room"
+        android:tint="@color/colorPrimary"
         android:layout_marginEnd="12dp"
-        android:visibility="gone"
-        tools:src="@drawable/ic_check_circle"
-        tools:visibility="visible" />
+        android:contentDescription="Sala" />
 
-    <!-- Informações da Sala -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="vertical">
 
-        <!-- Nome da Sala -->
         <TextView
             android:id="@+id/tvSalaNome"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textColor="@color/text_primary"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-            tools:text="Sala 101 - Laboratório de Informática" />
+            tools:text="Sala 101 - Laboratório" />
 
-        <!-- Progresso -->
         <TextView
             android:id="@+id/tvProgresso"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-            tools:text="15/20 coletados" />
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:visibility="gone"
+            tools:text="15/20 (75%)"
+            tools:visibility="visible" />
 
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/ivStatus"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="8dp"
+        android:visibility="gone"
+        android:contentDescription="Status"
+        tools:src="@drawable/ic_check_circle"
+        tools:visibility="visible" />
 
 </LinearLayout>

@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
+import com.inventario.mobile.BuildConfig
 import com.inventario.mobile.R
 import com.inventario.mobile.databinding.ActivityMainBinding
 import com.inventario.mobile.presentation.dashboard.DashboardFragment
@@ -293,12 +294,15 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun showAboutDialog() {
+        val versionName = BuildConfig.VERSION_NAME
+        val versionCode = BuildConfig.VERSION_CODE
+        
         AlertDialog.Builder(this)
             .setTitle("Sobre o SIHCP")
             .setMessage("""
                 Sistema de Histórico e Coleta Patrimonial
                 
-                Versão: 1.2.0
+                Versão: $versionName (Build $versionCode)
                 
                 Desenvolvido para Instituto Federal de Mato Grosso (IFMT)
                 
@@ -308,6 +312,7 @@ class MainActivity : AppCompatActivity() {
                 • Sincronização automática
                 • Busca por voz
                 • Relatórios detalhados
+                • Exportação de relatórios (PDF, Excel, CSV)
                 
                 © 2025 IFMT - Todos os direitos reservados
             """.trimIndent())

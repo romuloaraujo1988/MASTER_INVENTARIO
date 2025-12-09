@@ -1,34 +1,50 @@
 package com.inventario.analytics.view;
 
-import com.inventario.analytics.model.*;
-import com.inventario.analytics.service.AnalyticsService;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.time.Day;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTable;
+import javax.swing.SwingWorker;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableModel;
+
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.data.time.Day;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
+
+import com.inventario.analytics.model.DivergenciaAnalytics;
+import com.inventario.analytics.model.DivergenciaTemporal;
+import com.inventario.analytics.model.TipoDivergencia;
+import com.inventario.analytics.service.AnalyticsService;
 
 /**
  * Frame de análise detalhada de divergências.
  */
 public class DivergenciasAnalyticsFrame extends JFrame {
-    
-    private static final Logger logger = LoggerFactory.getLogger(DivergenciasAnalyticsFrame.class);
-    
+        
     private final int idInventario;
     private final AnalyticsService analyticsService;
     
@@ -288,15 +304,10 @@ public class DivergenciasAnalyticsFrame extends JFrame {
             Day day = new Day(data.getDayOfMonth(), data.getMonthValue(), data.getYear());
             
             switch (dt.getTipo()) {
-                case LOCALIZACAO:
-                    serieLocalizacao.addOrUpdate(day, dt.getQuantidade());
-                    break;
-                case ESTADO:
-                    serieEstado.addOrUpdate(day, dt.getQuantidade());
-                    break;
-                case MANUAL:
-                    serieManual.addOrUpdate(day, dt.getQuantidade());
-                    break;
+                case LOCALIZACAO -> serieLocalizacao.addOrUpdate(day, dt.getQuantidade());
+                case ESTADO -> serieEstado.addOrUpdate(day, dt.getQuantidade());
+                case MANUAL -> serieManual.addOrUpdate(day, dt.getQuantidade());
+                default -> { } // OUTRO type - no action needed
             }
         }
         
@@ -334,7 +345,7 @@ public class DivergenciasAnalyticsFrame extends JFrame {
             try {
                 analyticsService.exportarParaCSV(idInventario, fileChooser.getSelectedFile().getAbsolutePath());
                 JOptionPane.showMessageDialog(this, "CSV exportado com sucesso!");
-            } catch (Exception e) {
+            } catch (java.io.IOException | SecurityException e) {
                 JOptionPane.showMessageDialog(this, "Erro ao exportar: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             }
         }
@@ -349,7 +360,7 @@ public class DivergenciasAnalyticsFrame extends JFrame {
             try {
                 analyticsService.exportarParaExcel(idInventario, fileChooser.getSelectedFile().getAbsolutePath());
                 JOptionPane.showMessageDialog(this, "Excel exportado com sucesso!");
-            } catch (Exception e) {
+            } catch (java.io.IOException | SecurityException e) {
                 JOptionPane.showMessageDialog(this, "Erro ao exportar: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             }
         }

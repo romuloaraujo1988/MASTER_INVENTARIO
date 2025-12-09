@@ -71,6 +71,36 @@ class InventarioPorSalaFragment : Fragment() {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = patrimonioAdapter
         }
+        
+        // Adicionar scroll listener no NestedScrollView (pai do RecyclerView)
+        // O RecyclerView está com nestedScrollingEnabled=false, então o scroll é do NestedScrollView
+        setupInfiniteScroll()
+    }
+    
+    /**
+     * Configura rolagem infinita no NestedScrollView.
+     * Detecta quando o usuário chega ao final da lista e carrega mais itens.
+     */
+    private fun setupInfiniteScroll() {
+        // O NestedScrollView é o primeiro filho do SwipeRefreshLayout
+        val nestedScrollView = binding.swipeRefresh.getChildAt(0) as? androidx.core.widget.NestedScrollView
+            ?: return
+        
+        nestedScrollView.setOnScrollChangeListener(
+            androidx.core.widget.NestedScrollView.OnScrollChangeListener { v, _, scrollY, _, oldScrollY ->
+                // Só carregar mais se estiver rolando para baixo
+                if (scrollY > oldScrollY) {
+                    val childHeight = v.getChildAt(0)?.height ?: 0
+                    val scrollViewHeight = v.height
+                    
+                    // Verificar se chegou perto do final (300px de margem para carregar antes)
+                    val threshold = 300
+                    if (scrollY + scrollViewHeight >= childHeight - threshold) {
+                        viewModel.carregarMaisPatrimonios()
+                    }
+                }
+            }
+        )
     }
     
     private fun setupChips() {

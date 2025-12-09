@@ -2,6 +2,8 @@ package com.inventario.dao;
 
 import com.inventario.model.ParticipanteInventario;
 import com.inventario.util.DatabaseConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
@@ -19,14 +21,8 @@ import java.util.List;
 @Repository
 public class ParticipanteInventarioDAO {
     
-    /**
-     * Detecta se está usando SQLite
-     * NOTA: Para operações do desktop/servidor, sempre usar PostgreSQL
-     */
-    private boolean isSQLite() throws SQLException {
-        // CORREÇÃO: Sempre retornar false para forçar uso do PostgreSQL
-        return false;
-    }
+    private static final Logger LOG = LoggerFactory.getLogger(ParticipanteInventarioDAO.class);
+    
     
     /**
      * Retorna o nome correto da tabela
@@ -403,13 +399,10 @@ public class ParticipanteInventarioDAO {
             }
             
         } catch (SQLException e) {
-            System.err.println("[ERROR ParticipanteInventarioDAO] ========================================");
-            System.err.println("[ERROR ParticipanteInventarioDAO] EXCEÇÃO SQL capturada:");
-            System.err.println("[ERROR ParticipanteInventarioDAO]   Mensagem: " + e.getMessage());
-            System.err.println("[ERROR ParticipanteInventarioDAO]   SQLState: " + e.getSQLState());
-            System.err.println("[ERROR ParticipanteInventarioDAO]   ErrorCode: " + e.getErrorCode());
-            System.err.println("[ERROR ParticipanteInventarioDAO] ========================================");
-            e.printStackTrace();
+            LOG.error("======================================== EXCEÇÃO SQL capturada ========================================");
+            LOG.error("Mensagem: {}", e.getMessage());
+            LOG.error("SQLState: {}, ErrorCode: {}", e.getSQLState(), e.getErrorCode());
+            LOG.error("Stack trace completo:", e);
         }
         
         return null;

@@ -17,9 +17,7 @@ public class ValidationUtils {
         "^\\(?\\d{2}\\)?\\s?\\d{4,5}-?\\d{4}$"
     );
     
-    private static final Pattern CPF_PATTERN = Pattern.compile(
-        "^\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}$"
-    );
+    // CPF_PATTERN removido - validação usa algoritmo de dígitos verificadores
     
     private static final Pattern NUMERO_PATRIMONIO_PATTERN = Pattern.compile(
         "^[0-9]{1,20}$"
@@ -147,12 +145,10 @@ public class ValidationUtils {
         if (isEmpty(value)) {
             return ValidationResult.error(fieldName + " é obrigatório");
         }
-        try {
-            Integer.parseInt(value);
-            return ValidationResult.success();
-        } catch (NumberFormatException e) {
+        if (!value.matches("-?\\d+")) {
             return ValidationResult.error(fieldName + " deve ser um número inteiro");
         }
+        return ValidationResult.success();
     }
     
     /**
@@ -162,12 +158,11 @@ public class ValidationUtils {
         if (isEmpty(value)) {
             return ValidationResult.error(fieldName + " é obrigatório");
         }
-        try {
-            Double.parseDouble(value);
-            return ValidationResult.success();
-        } catch (NumberFormatException e) {
+        // Verifica se é um número decimal válido usando regex
+        if (!value.matches("-?\\d+(\\.\\d+)?")) {
             return ValidationResult.error(fieldName + " deve ser um número decimal");
         }
+        return ValidationResult.success();
     }
     
     /**

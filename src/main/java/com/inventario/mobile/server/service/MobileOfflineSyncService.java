@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -195,9 +196,15 @@ public class MobileOfflineSyncService {
             
             return response;
             
-        } catch (Exception e) {
-            logger.error("Erro na sincronização offline", e);
+        } catch (SQLException e) {
+            logger.error("Erro de banco de dados na sincronização offline: {}", e.getMessage(), e);
+            throw new RuntimeException("Erro de banco de dados ao buscar dados offline: " + e.getMessage(), e);
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            logger.error("Erro de validação na sincronização offline: {}", e.getMessage(), e);
             throw new RuntimeException("Erro ao buscar dados offline: " + e.getMessage(), e);
+        } catch (RuntimeException e) {
+            logger.error("Erro na sincronização offline: {}", e.getMessage(), e);
+            throw e;
         }
     }
     
@@ -238,7 +245,8 @@ public class MobileOfflineSyncService {
         SalaOfflineDTO dto = new SalaOfflineDTO();
         dto.setId(sala.getId());
         dto.setNome(sala.getDescricao());  // Sala usa getDescricao(), não getNome()
-        dto.setAtiva(sala.getAtivo() != null ? sala.getAtivo() : true);  // getAtivo(), não getAtiva()
+        Boolean ativo = sala.getAtivo();
+        dto.setAtiva(Boolean.TRUE.equals(ativo));  // getAtivo(), não getAtiva() - default false se null
         return dto;
     }
     
@@ -321,8 +329,14 @@ public class MobileOfflineSyncService {
             
             return result;
             
-        } catch (Exception e) {
-            logger.error("Erro ao buscar patrimônios paginados", e);
+        } catch (SQLException e) {
+            logger.error("Erro de banco de dados ao buscar patrimônios paginados: {}", e.getMessage(), e);
+            throw new RuntimeException("Erro de banco de dados ao buscar patrimônios: " + e.getMessage(), e);
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            logger.error("Erro de validação ao buscar patrimônios paginados: {}", e.getMessage(), e);
+            throw new RuntimeException("Erro de validação ao buscar patrimônios: " + e.getMessage(), e);
+        } catch (RuntimeException e) {
+            logger.error("Erro ao buscar patrimônios paginados: {}", e.getMessage(), e);
             throw new RuntimeException("Erro ao buscar patrimônios: " + e.getMessage(), e);
         }
     }

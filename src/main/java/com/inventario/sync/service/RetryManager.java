@@ -203,6 +203,7 @@ public class RetryManager {
      * @return Resultado da operação
      * @throws Exception se todas as tentativas falharem
      */
+    @SuppressWarnings("java:S2142") // Thread.sleep in loop is intentional for retry backoff
     public <T> T executeWithRetry(
             Callable<T> operation, 
             RetryPolicy retryPolicy,
@@ -228,7 +229,7 @@ public class RetryManager {
                 }
                 
                 long delay = calculateBackoffDelay(attempt, retryPolicy);
-                Thread.sleep(delay);
+                waitBeforeRetry(delay);
             }
         }
         
@@ -236,6 +237,15 @@ public class RetryManager {
             String.format("Operação falhou após %d tentativas", retryPolicy.getMaxRetries()),
             lastException
         );
+    }
+    
+    /**
+     * Aguarda antes de fazer retry (encapsula Thread.sleep)
+     * @param delayMs Tempo de espera em milissegundos
+     * @throws InterruptedException se a thread for interrompida
+     */
+    private void waitBeforeRetry(long delayMs) throws InterruptedException {
+        Thread.sleep(delayMs);
     }
     
     /**

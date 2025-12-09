@@ -244,28 +244,6 @@ public class MobileSalaService {
     }
     
     /**
-     * Obtém o ID do inventário ativo
-     */
-    private Integer obterIdInventarioAtivo() {
-        String sql = "SELECT ID FROM TABELA_INVENTARIO " +
-                    "WHERE STATUS_INVENTARIO = 'EM_ANDAMENTO' " +
-                    "ORDER BY DATA_INICIO DESC LIMIT 1";
-        
-        try (java.sql.Connection conn = com.inventario.util.DatabaseConnection.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(sql);
-             java.sql.ResultSet rs = stmt.executeQuery()) {
-            
-            if (rs.next()) {
-                return rs.getInt("ID");
-            }
-        } catch (Exception e) {
-            logger.warn("Erro ao obter inventário ativo: {}", e.getMessage());
-        }
-        
-        return null;
-    }
-    
-    /**
      * Lista todas as salas com estatísticas de progresso de coleta.
      * Retorna total de patrimônios, coletados, pendentes e percentual.
      * 

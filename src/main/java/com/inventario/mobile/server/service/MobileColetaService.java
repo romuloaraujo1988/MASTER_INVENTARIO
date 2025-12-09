@@ -143,7 +143,8 @@ public class MobileColetaService {
         coleta.setLocalizacaoEncontrada(request.getLocalizacaoEncontrada());
         coleta.setEstadoEncontrado(request.getEstadoEncontrado());
         coleta.setDivergencia(false);
-        coleta.setSemEtiqueta(request.getSemEtiqueta() != null ? request.getSemEtiqueta() : false);
+        Boolean semEtiquetaValue = request.getSemEtiqueta();
+        coleta.setSemEtiqueta(semEtiquetaValue != null && semEtiquetaValue);
 
         // Validação customizada: verificar se tem número de patrimônio OU é sem etiqueta
         boolean temNumeroPatrimonio = request.getNumeroPatrimonio() != null && !request.getNumeroPatrimonio().trim().isEmpty();
@@ -243,7 +244,7 @@ public class MobileColetaService {
                 } else {
                     sucesso++;
                 }
-            } catch (Exception e) {
+            } catch (SQLException | IllegalArgumentException | SecurityException e) {
                 falhas++;
                 erros.add("Patrimônio " + request.getNumeroPatrimonio() + ": " + e.getMessage());
                 logger.error("Erro ao registrar coleta em lote: {}", e.getMessage());
@@ -718,7 +719,7 @@ public class MobileColetaService {
                         // Fallback: usar localizacaoEncontrada
                         response.setNomeSala(localizacaoEncontrada);
                     }
-                } catch (Exception e) {
+                } catch (SQLException | RuntimeException e) {
                     logger.error("Erro ao buscar patrimônio ID {}: {}", coleta.getIdPatrimonio(), e.getMessage());
                     // Fallback: usar localizacaoEncontrada
                     response.setNomeSala(localizacaoEncontrada);
@@ -753,13 +754,6 @@ public class MobileColetaService {
                 return new Timestamp(System.currentTimeMillis());
             }
         }
-    }
-
-    private LocalDateTime convertToLocalDateTime(Timestamp timestamp) {
-        if (timestamp == null) {
-            return null;
-        }
-        return timestamp.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
     
     /**
@@ -855,7 +849,7 @@ public class MobileColetaService {
             
             return resultado;
             
-        } catch (Exception e) {
+        } catch (SQLException | IllegalArgumentException e) {
             logger.error("Erro ao buscar descrições pendentes: {}", e.getMessage(), e);
             throw new RuntimeException("Erro ao buscar descrições pendentes: " + e.getMessage(), e);
         }
@@ -915,7 +909,7 @@ public class MobileColetaService {
                     } else {
                         logger.warn("Dados relacionados não encontrados para coleta {}", coleta.getId());
                     }
-                } catch (Exception e) {
+                } catch (SQLException | RuntimeException e) {
                     logger.warn("Erro ao converter coleta {}: {}", coleta.getId(), e.getMessage());
                 }
             }
@@ -939,7 +933,7 @@ public class MobileColetaService {
             
             return response;
             
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
             logger.error("Erro ao buscar coletas incrementais", e);
             
             // Retornar resposta vazia em caso de erro
@@ -1205,9 +1199,9 @@ public class MobileColetaService {
             long duration = System.currentTimeMillis() - startTime;
             logger.info("✓ {} salas com coletas encontradas em {}ms", resultado.size(), duration);
             
-        } catch (Exception e) {
+        } catch (SQLException e) {
             logger.error("Erro ao buscar salas com coletas", e);
-            throw new SQLException("Erro ao buscar salas com coletas: " + e.getMessage(), e);
+            throw e;
         }
         
         return resultado;

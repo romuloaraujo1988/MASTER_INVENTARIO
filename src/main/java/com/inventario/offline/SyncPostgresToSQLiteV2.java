@@ -5,6 +5,7 @@ import com.inventario.model.*;
 import com.inventario.util.DatabaseConnection;
 import java.sql.*;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -38,7 +39,7 @@ public class SyncPostgresToSQLiteV2 {
             System.err.println("=".repeat(60));
             System.err.println();
             System.err.println("Erro: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Erro na sincronização PostgreSQL -> SQLite", e);
             System.exit(1);
         }
     }
@@ -278,7 +279,7 @@ public class SyncPostgresToSQLiteV2 {
                     stmt.setString(4, user.getNomeCompleto());
                     stmt.setString(5, user.getEmail());
                     stmt.setString(6, user.getPerfil().name());
-                    stmt.setBoolean(7, user.getAtivo() != null ? user.getAtivo() : true);
+                    stmt.setBoolean(7, !Boolean.FALSE.equals(user.getAtivo()));
                     stmt.addBatch();
                 }
                 stmt.executeBatch();

@@ -15,7 +15,6 @@ public class KPICard extends JPanel {
     
     private final JLabel labelValor;
     private final JLabel labelVariacao;
-    private final Color corPrincipal;
     
     /**
      * Cria um card de KPI.
@@ -27,7 +26,6 @@ public class KPICard extends JPanel {
      * @param onClick Ação ao clicar no card (pode ser null)
      */
     public KPICard(String titulo, String valorInicial, String descricao, Color cor, Runnable onClick) {
-        this.corPrincipal = cor;
         
         setLayout(new BorderLayout(5, 5));
         setBorder(new EmptyBorder(15, 15, 15, 15));

@@ -487,7 +487,7 @@ public class OfflineConfigManager {
             String value = properties.getProperty(key);
             return value != null ? Integer.parseInt(value) : defaultValue;
         } catch (NumberFormatException e) {
-            logger.warning("Valor inválido para propriedade " + key + ". Usando valor padrão: " + defaultValue);
+            logger.log(Level.WARNING, "Valor inválido para propriedade {0}. Usando valor padrão: {1}", new Object[]{key, defaultValue});
             return defaultValue;
         }
     }
@@ -503,7 +503,6 @@ public class OfflineConfigManager {
         String value = properties.getProperty(key);
         return value != null ? Boolean.parseBoolean(value) : defaultValue;
     }
-    
     /**
      * Obtém uma propriedade como double.
      * 
@@ -511,15 +510,6 @@ public class OfflineConfigManager {
      * @param defaultValue Valor padrão
      * @return Valor da propriedade
      */
-    private double getDoubleProperty(String key, double defaultValue) {
-        try {
-            String value = properties.getProperty(key);
-            return value != null ? Double.parseDouble(value) : defaultValue;
-        } catch (NumberFormatException e) {
-            logger.warning("Valor inválido para propriedade " + key + ". Usando valor padrão: " + defaultValue);
-            return defaultValue;
-        }
-    }
     
     /**
      * Define uma propriedade.

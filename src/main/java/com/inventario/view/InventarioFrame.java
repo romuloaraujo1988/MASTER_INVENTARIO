@@ -260,6 +260,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
      */
     private JButton createModernButton(String texto, Color corBase, int fontSize) {
         JButton button = new JButton() {
+            @SuppressWarnings("FieldMayBeFinal") // Modified via reflection in mouseEntered/mouseExited
             private boolean isHovered = false;
 
             @Override
@@ -316,25 +317,27 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
         
         // Efeito hover
         button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 try {
                     java.lang.reflect.Field field = button.getClass().getDeclaredField("isHovered");
                     field.setAccessible(true);
                     field.set(button, true);
                     button.repaint();
-                } catch (Exception e) {
-                    // Fallback silencioso
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    // Fallback silencioso - campo não encontrado ou inacessível
                 }
             }
 
+            @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 try {
                     java.lang.reflect.Field field = button.getClass().getDeclaredField("isHovered");
                     field.setAccessible(true);
                     field.set(button, false);
                     button.repaint();
-                } catch (Exception e) {
-                    // Fallback silencioso
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    // Fallback silencioso - campo não encontrado ou inacessível
                 }
             }
         });
@@ -571,11 +574,9 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                 });
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, 
-                "Erro ao carregar inventários: " + e.getMessage(), 
-                "Erro", 
-                JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+            String errorMsg = "Erro ao carregar inventários: " + e.getMessage();
+            logger.severe(errorMsg);
+            JOptionPane.showMessageDialog(this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
     
@@ -604,11 +605,9 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                     JOptionPane.showMessageDialog(this, "Inventário não encontrado.");
                 }
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, 
-                    "Erro ao carregar inventário para edição: " + e.getMessage(), 
-                    "Erro", 
-                    JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
+                String errorMsg = "Erro ao carregar inventário para edição: " + e.getMessage();
+                logger.severe(errorMsg);
+                JOptionPane.showMessageDialog(this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
             }
         } else {
             JOptionPane.showMessageDialog(this, "Selecione um inventário para editar.");
@@ -631,11 +630,9 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                         JOptionPane.ERROR_MESSAGE);
                 }
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, 
-                    "Erro ao carregar detalhes do inventário: " + e.getMessage(), 
-                    "Erro", 
-                    JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
+                String errorMsg = "Erro ao carregar detalhes do inventário: " + e.getMessage();
+                logger.severe(errorMsg);
+                JOptionPane.showMessageDialog(this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
             }
         } else {
             JOptionPane.showMessageDialog(this, "Selecione um inventário para visualizar.");
@@ -723,14 +720,14 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
         // Painel de botões
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         
-        JButton btnEditar = ButtonStyleFactory.createPrimaryButton("Editar");
-        btnEditar.addActionListener(e -> {
+        JButton btnEditarDialog = ButtonStyleFactory.createPrimaryButton("Editar");
+        btnEditarDialog.addActionListener(e -> {
             dialog.dispose();
             editarInventarioSelecionado(inventario);
         });
         
-        JButton btnRelatorio = ButtonStyleFactory.createInfoButton("Gerar Relatório");
-        btnRelatorio.addActionListener(e -> {
+        JButton btnRelatorioDialog = ButtonStyleFactory.createInfoButton("Gerar Relatório");
+        btnRelatorioDialog.addActionListener(e -> {
             dialog.dispose();
             gerarRelatorio();
         });
@@ -738,8 +735,8 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
         JButton btnFechar = ButtonStyleFactory.createSecondaryButton("Fechar");
         btnFechar.addActionListener(e -> dialog.dispose());
         
-        buttonPanel.add(btnEditar);
-        buttonPanel.add(btnRelatorio);
+        buttonPanel.add(btnEditarDialog);
+        buttonPanel.add(btnRelatorioDialog);
         buttonPanel.add(btnFechar);
         
         dialog.add(mainPanel, BorderLayout.CENTER);
@@ -788,20 +785,13 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
     private Color getStatusColor(String status) {
         if (status == null) return Color.GRAY;
         
-        switch (status) {
-            case "EM_ANDAMENTO":
-            case "ABERTO":
-                return new Color(46, 204, 113); // Verde
-            case "CONCLUIDO":
-            case "FINALIZADO":
-                return new Color(52, 152, 219); // Azul
-            case "CANCELADO":
-                return new Color(231, 76, 60); // Vermelho
-            case "PLANEJADO":
-                return new Color(241, 196, 15); // Amarelo
-            default:
-                return Color.GRAY;
-        }
+        return switch (status) {
+            case "EM_ANDAMENTO", "ABERTO" -> new Color(46, 204, 113); // Verde
+            case "CONCLUIDO", "FINALIZADO" -> new Color(52, 152, 219); // Azul
+            case "CANCELADO" -> new Color(231, 76, 60); // Vermelho
+            case "PLANEJADO" -> new Color(241, 196, 15); // Amarelo
+            default -> Color.GRAY;
+        };
     }
     
     /**
@@ -853,7 +843,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
             panel.add(criarCardEstatistica("Divergências", String.valueOf(divergencias), new Color(230, 126, 34)));
             
         } catch (Exception e) {
-            logger.warning("Erro ao carregar estatísticas: " + e.getMessage());
+            logger.log(java.util.logging.Level.WARNING, "Erro ao carregar estatísticas", e);
             panel.add(new JLabel("Erro ao carregar estatísticas"));
         }
         
@@ -961,11 +951,9 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                     abrirRelatorio(id, nomeInventario, escolha);
                 }
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, 
-                    "Erro ao gerar relatório: " + e.getMessage(), 
-                    "Erro", 
-                    JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
+                String errorMsg = "Erro ao gerar relatório: " + e.getMessage();
+                logger.severe(errorMsg);
+                JOptionPane.showMessageDialog(this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
             }
         } else {
             JOptionPane.showMessageDialog(this, "Selecione um inventário para gerar o relatório.");
@@ -980,34 +968,34 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
             
             // Buscar dados conforme o tipo de relatório
             switch (tipoRelatorio) {
-                case "Itens Encontrados":
+                case "Itens Encontrados" -> {
                     dados = relatorioService.gerarRelatorioItensEncontrados(idInventario);
                     tituloRelatorio = "Itens Encontrados";
-                    break;
-                case "Itens Não Encontrados":
+                }
+                case "Itens Não Encontrados" -> {
                     dados = relatorioService.gerarRelatorioItensNaoEncontrados(idInventario);
                     tituloRelatorio = "Itens Não Encontrados";
-                    break;
-                case "Itens Não Coletados":
+                }
+                case "Itens Não Coletados" -> {
                     dados = relatorioService.gerarRelatorioItensNaoColetados(idInventario);
                     tituloRelatorio = "Itens Não Coletados";
-                    break;
-                case "Itens Sem Etiqueta":
+                }
+                case "Itens Sem Etiqueta" -> {
                     dados = relatorioService.gerarRelatorioItensSemEtiqueta(idInventario);
                     tituloRelatorio = "Itens Sem Etiqueta";
-                    break;
-                case "Divergências":
+                }
+                case "Divergências" -> {
                     dados = relatorioService.gerarRelatorioDivergencias(idInventario);
                     tituloRelatorio = "Divergências";
-                    break;
-                case "Estatísticas Gerais":
+                }
+                case "Estatísticas Gerais" -> {
                     dados = relatorioService.gerarEstatisticasGerais(idInventario);
                     tituloRelatorio = "Estatísticas Gerais";
-                    break;
-                case "Por Responsável":
+                }
+                case "Por Responsável" -> {
                     dados = relatorioService.gerarRelatorioPorResponsavel(idInventario);
                     tituloRelatorio = "Relatório por Responsável";
-                    break;
+                }
             }
             
             if (dados != null && !dados.isEmpty()) {
@@ -1021,11 +1009,9 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
             }
             
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, 
-                "Erro ao gerar relatório: " + e.getMessage(), 
-                "Erro", 
-                JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+            String errorMsg = "Erro ao gerar relatório: " + e.getMessage();
+            logger.severe(errorMsg);
+            JOptionPane.showMessageDialog(this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
     
@@ -1041,7 +1027,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
         } else {
             // Extrair colunas do primeiro registro
             Map<String, Object> primeiroRegistro = dados.get(0);
-            String[] colunas = primeiroRegistro.keySet().toArray(new String[0]);
+            String[] colunas = primeiroRegistro.keySet().toArray(String[]::new);
             
             // Criar modelo de tabela
             DefaultTableModel modelo = new DefaultTableModel(colunas, 0) {
@@ -1114,11 +1100,9 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                     });
                 }
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, 
-                    "Erro ao buscar inventários: " + e.getMessage(), 
-                    "Erro", 
-                    JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
+                String errorMsg = "Erro ao buscar inventários: " + e.getMessage();
+                logger.severe(errorMsg);
+                JOptionPane.showMessageDialog(this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
             }
         } else {
             carregarInventarios();
@@ -1163,7 +1147,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
             return Math.min(100, (int) patrimoniosColetados);
             
         } catch (Exception e) {
-            logger.warning("Erro ao calcular progresso do inventário: " + e.getMessage());
+            logger.log(java.util.logging.Level.WARNING, "Erro ao calcular progresso do inventário", e);
             return 0;
         }
     }
@@ -1376,8 +1360,9 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                     }
                 }
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Erro ao abrir inventário: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
+                String errorMsg = "Erro ao abrir inventário: " + e.getMessage();
+                logger.severe(errorMsg);
+                JOptionPane.showMessageDialog(this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
             }
         } else {
             JOptionPane.showMessageDialog(this, "Selecione um inventário para abrir.", "Aviso", JOptionPane.WARNING_MESSAGE);
@@ -1420,8 +1405,9 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                     }
                 }
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Erro ao cancelar inventário: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
+                String errorMsg = "Erro ao cancelar inventário: " + e.getMessage();
+                logger.severe(errorMsg);
+                JOptionPane.showMessageDialog(this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
             }
         } else {
             JOptionPane.showMessageDialog(this, "Selecione um inventário para cancelar.", "Aviso", JOptionPane.WARNING_MESSAGE);
@@ -1442,7 +1428,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
             }
             return false;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(java.util.logging.Level.SEVERE, "Erro ao alterar status do inventário", e);
             return false;
         }
     }
@@ -1452,7 +1438,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
             List<Inventario> inventarios = inventarioService.listarTodos();
             return inventarios.stream().anyMatch(inv -> Inventario.STATUS_EM_ANDAMENTO.equals(inv.getStatusInventario()));
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(java.util.logging.Level.SEVERE, "Erro ao verificar inventário aberto", e);
             return false;
         }
     }
@@ -1520,15 +1506,12 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                     }
                 }
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, 
-                    "Erro ao excluir inventário: " + e.getMessage(), 
-                    "Erro", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
+                String errorMsg = "Erro ao excluir inventário: " + e.getMessage();
+                logger.severe(errorMsg);
+                JOptionPane.showMessageDialog(this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
             }
         } else {
-            JOptionPane.showMessageDialog(this, 
-                "Selecione um inventário para excluir.", 
-                "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Selecione um inventário para excluir.", "Aviso", JOptionPane.WARNING_MESSAGE);
         }
     }
     
@@ -1539,19 +1522,16 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
             return !coletas.isEmpty();
         } catch (Exception e) {
             // Em caso de erro, assumir que possui coletas para segurança
-            System.err.println("Erro ao verificar coletas do inventário: " + e.getMessage());
+            logger.log(java.util.logging.Level.WARNING, "Erro ao verificar coletas do inventário", e);
             return true;
         }
     }
     
+    @SuppressWarnings("unused")
     private boolean excluirInventarioDoBanco(Integer id) {
-        try {
-            // TODO: Implementar método excluir no InventarioService
-            return false; // Por enquanto retorna false
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        // TODO: Implementar método excluir no InventarioService usando o parâmetro id
+        // Por enquanto retorna false pois a funcionalidade não está implementada
+        return false;
     }
     
     private void abrirGerenciamentoQRCodes() {
@@ -1567,12 +1547,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
         try {
             // Inicializar o OfflineManager
             offlineManager = OfflineManager.getInstance();
-            offlineManager.addStateListener(new OfflineManager.OfflineStateListener() {
-                @Override
-                public void onStateChanged(OfflineManager.OfflineState oldState, OfflineManager.OfflineState newState) {
-                    onOfflineStateChanged(oldState, newState);
-                }
-            });
+            offlineManager.addStateListener((oldState, newState) -> onOfflineStateChanged(oldState, newState));
             
             // Registrar como listener de conectividade
             ConnectivityManager.getInstance().addListener(this);
@@ -1593,8 +1568,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
             atualizarStatusOffline();
             
         } catch (Exception e) {
-            System.err.println("Erro ao inicializar componentes offline: " + e.getMessage());
-            e.printStackTrace();
+            logger.log(java.util.logging.Level.SEVERE, "Erro ao inicializar componentes offline", e);
         }
     }
     
@@ -1616,37 +1590,39 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
             
             SwingUtilities.invokeLater(() -> {
                 switch (state) {
-                    case ONLINE:
+                    case ONLINE -> {
                         lblOfflineStatus.setText("[Online]");
                         lblOfflineStatus.setForeground(Color.GREEN);
                         btnSyncNow.setEnabled(true);
-                        break;
-                    case OFFLINE:
+                    }
+                    case OFFLINE -> {
                         lblOfflineStatus.setText("[Offline]");
                         lblOfflineStatus.setForeground(Color.RED);
                         btnSyncNow.setEnabled(false);
-                        break;
-                    case SYNCING:
+                    }
+                    case SYNCING -> {
                         lblOfflineStatus.setText("[Sincronizando...]");
                         lblOfflineStatus.setForeground(Color.ORANGE);
                         btnSyncNow.setEnabled(false);
-                        break;
-                    case ERROR:
+                    }
+                    case ERROR -> {
                         lblOfflineStatus.setText("[Erro]");
                         lblOfflineStatus.setForeground(Color.MAGENTA);
                         btnSyncNow.setEnabled(isOnline);
-                        break;
-                    default:
+                    }
+                    default -> {
                         lblOfflineStatus.setText("[Inicializando...]");
                         lblOfflineStatus.setForeground(Color.GRAY);
                         btnSyncNow.setEnabled(false);
+                    }
                 }
             });
         } catch (Exception e) {
-            System.err.println("Erro ao atualizar status offline: " + e.getMessage());
+            logger.log(java.util.logging.Level.WARNING, "Erro ao atualizar status offline", e);
         }
     }
     
+    @SuppressWarnings("unused")
     private void onOfflineStateChanged(OfflineManager.OfflineState oldState, OfflineManager.OfflineState newState) {
         atualizarStatusOffline();
         
@@ -1654,21 +1630,12 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
         if (OfflineConfigManager.getInstance().isSyncNotificationsEnabled()) {
             SwingUtilities.invokeLater(() -> {
                 switch (newState) {
-                    case ONLINE:
-                        // Opcional: mostrar notificação de conexão restaurada
-                        break;
-                    case OFFLINE:
-                        // Opcional: mostrar notificação de perda de conexão
-                        break;
-                    case SYNCING:
-                        // Opcional: mostrar notificação de sincronização em andamento
-                        break;
-                    case INITIALIZING:
-                        // Opcional: mostrar notificação de inicialização
-                        break;
-                    case ERROR:
-                        // Opcional: mostrar notificação de erro
-                        break;
+                    case ONLINE -> { /* Opcional: mostrar notificação de conexão restaurada */ }
+                    case OFFLINE -> { /* Opcional: mostrar notificação de perda de conexão */ }
+                    case SYNCING -> { /* Opcional: mostrar notificação de sincronização em andamento */ }
+                    case INITIALIZING -> { /* Opcional: mostrar notificação de inicialização */ }
+                    case ERROR -> { /* Opcional: mostrar notificação de erro */ }
+                    default -> { /* Estado desconhecido */ }
                 }
             });
         }
@@ -1717,11 +1684,9 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                             JOptionPane.ERROR_MESSAGE);
                     }
                 } catch (Exception e) {
-                    JOptionPane.showMessageDialog(InventarioFrame.this, 
-                        "Erro durante a sincronização: " + e.getMessage(), 
-                        "Erro", 
-                        JOptionPane.ERROR_MESSAGE);
-                    e.printStackTrace();
+                    String errorMsg = "Erro durante a sincronização: " + e.getMessage();
+                    logger.severe(errorMsg);
+                    JOptionPane.showMessageDialog(InventarioFrame.this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -1734,11 +1699,9 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
             SyncFrame syncFrame = new SyncFrame();
             syncFrame.setVisible(true);
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, 
-                "Erro ao abrir tela de sincronização: " + e.getMessage(), 
-                "Erro", 
-                JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+            String errorMsg = "Erro ao abrir tela de sincronização: " + e.getMessage();
+            logger.severe(errorMsg);
+            JOptionPane.showMessageDialog(this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -1752,7 +1715,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
         try {
             ConnectivityManager.getInstance().removeListener(this);
         } catch (Exception e) {
-            System.err.println("Erro ao remover listener de conectividade: " + e.getMessage());
+            logger.log(java.util.logging.Level.WARNING, "Erro ao remover listener de conectividade", e);
         }
         
         super.dispose();
@@ -1823,17 +1786,17 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
             configDialog.setVisible(true);
             
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, 
-                "Erro ao abrir configurações offline: " + e.getMessage(), 
-                "Erro", 
-                JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+            String errorMsg = "Erro ao abrir configurações offline: " + e.getMessage();
+            logger.severe(errorMsg);
+            JOptionPane.showMessageDialog(this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
     
     /**
      * Abre o painel de gerenciamento do servidor mobile
+     * Método disponível para uso futuro no menu de ferramentas
      */
+    @SuppressWarnings("unused")
     private void abrirPainelServidorMobile() {
         MobileServerPanel.showDialog(this);
     }

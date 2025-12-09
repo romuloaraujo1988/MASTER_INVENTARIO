@@ -10,6 +10,8 @@ import java.awt.GridBagConstraints;
 import java.awt.Insets;
 // Formatação de datas centralizada em DateFormatUtils
 import com.inventario.util.DateFormatUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
@@ -30,8 +32,6 @@ import java.util.Locale;
 // === MVVM IMPORTS ===
 import com.inventario.presentation.viewmodel.RelatorioViewModel;
 import com.inventario.presentation.state.RelatorioState;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 
 // === IMPORTS JFREECHART - FASE 2 ===
 import org.jfree.chart.ChartFactory;
@@ -45,6 +45,8 @@ import org.jfree.data.general.DefaultPieDataset;
  * Tela para geração e visualização de relatórios
  */
 public class RelatorioFrame extends JFrame {
+
+    private static final Logger logger = LoggerFactory.getLogger(RelatorioFrame.class);
 
     // Componentes da interface
     private JComboBox<String> comboTipoRelatorio;
@@ -118,8 +120,7 @@ public class RelatorioFrame extends JFrame {
             System.out.println("✅ RelatorioFrame inicializado com sucesso (MVVM)");
 
         } catch (Exception e) {
-            System.err.println("❌ Erro ao inicializar RelatorioFrame: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("❌ Erro ao inicializar RelatorioFrame: {}", e.getMessage(), e);
 
             JOptionPane.showMessageDialog(null,
                     "⚠️ ERRO AO INICIALIZAR RELATÓRIOS\n\n" +
@@ -139,17 +140,12 @@ public class RelatorioFrame extends JFrame {
      * Observa mudanças no ViewModel e atualiza a UI
      */
     private void observarViewModel() {
-        viewModel.addPropertyChangeListener(new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                if ("state".equals(evt.getPropertyName())) {
-                    RelatorioState newState = (RelatorioState) evt.getNewValue();
+        viewModel.addPropertyChangeListener(evt -> {
+            if ("state".equals(evt.getPropertyName())) {
+                RelatorioState newState = (RelatorioState) evt.getNewValue();
 
-                    // Atualizar UI na thread do Swing
-                    SwingUtilities.invokeLater(() -> {
-                        atualizarUI(newState);
-                    });
-                }
+                // Atualizar UI na thread do Swing
+                SwingUtilities.invokeLater(() -> atualizarUI(newState));
             }
         });
     }
@@ -170,8 +166,7 @@ public class RelatorioFrame extends JFrame {
             labelStatus.setText("⏳ Gerando relatório...");
             btnGerar.setEnabled(false);
 
-        } else if (state instanceof RelatorioState.Success) {
-            RelatorioState.Success success = (RelatorioState.Success) state;
+        } else if (state instanceof RelatorioState.Success success) {
             progressBar.setVisible(false);
             labelStatus.setText("✅ Relatório gerado com sucesso! (" + success.getDados().size() + " itens)");
             btnGerar.setEnabled(true);
@@ -188,11 +183,15 @@ public class RelatorioFrame extends JFrame {
 
                 // Mensagens específicas por tipo de relatório
                 if ("Itens Não Coletados".equals(tipoRelatorio)) {
-                    mensagem = "✅ Excelente! Todos os patrimônios já foram coletados neste inventário.\n\n" +
-                            "Não há itens pendentes de coleta.";
+                    mensagem = """
+                            ✅ Excelente! Todos os patrimônios já foram coletados neste inventário.
+
+                            Não há itens pendentes de coleta.""";
                 } else if ("Itens Não Encontrados".equals(tipoRelatorio)) {
-                    mensagem = "✅ Ótimo! Todos os patrimônios foram encontrados durante a coleta.\n\n" +
-                            "Não há itens não localizados.";
+                    mensagem = """
+                            ✅ Ótimo! Todos os patrimônios foram encontrados durante a coleta.
+
+                            Não há itens não localizados.""";
                 } else if ("Itens Sem Plaqueta de Patrimônio".equals(tipoRelatorio)) {
                     mensagem = "✅ Perfeito! Não há itens sem etiqueta registrados neste inventário.";
                 }
@@ -208,8 +207,7 @@ public class RelatorioFrame extends JFrame {
                 SoundNotification.playSound(SoundNotification.SoundType.SUCCESS);
             }
 
-        } else if (state instanceof RelatorioState.Error) {
-            RelatorioState.Error error = (RelatorioState.Error) state;
+        } else if (state instanceof RelatorioState.Error error) {
             progressBar.setVisible(false);
             labelStatus.setText("❌ Erro ao gerar relatório");
             btnGerar.setEnabled(true);
@@ -218,20 +216,16 @@ public class RelatorioFrame extends JFrame {
                     "Erro",
                     JOptionPane.ERROR_MESSAGE);
 
-        } else if (state instanceof RelatorioState.InventariosCarregados) {
-            RelatorioState.InventariosCarregados inventariosState = (RelatorioState.InventariosCarregados) state;
+        } else if (state instanceof RelatorioState.InventariosCarregados inventariosState) {
             preencherComboInventarios(inventariosState.getInventarios());
 
-        } else if (state instanceof RelatorioState.SetoresCarregados) {
-            RelatorioState.SetoresCarregados setoresState = (RelatorioState.SetoresCarregados) state;
+        } else if (state instanceof RelatorioState.SetoresCarregados setoresState) {
             preencherComboSetores(setoresState.getSetores());
 
-        } else if (state instanceof RelatorioState.ResponsaveisCarregados) {
-            RelatorioState.ResponsaveisCarregados responsaveisState = (RelatorioState.ResponsaveisCarregados) state;
+        } else if (state instanceof RelatorioState.ResponsaveisCarregados responsaveisState) {
             preencherComboResponsaveis(responsaveisState.getResponsaveis());
 
-        } else if (state instanceof RelatorioState.SalasCarregadas) {
-            RelatorioState.SalasCarregadas salasState = (RelatorioState.SalasCarregadas) state;
+        } else if (state instanceof RelatorioState.SalasCarregadas salasState) {
             preencherComboSalas(salasState.getSalas());
         }
     }
@@ -639,8 +633,8 @@ public class RelatorioFrame extends JFrame {
         if (nomeSetor != null && !"Todos".equals(nomeSetor)) {
             // Buscar ID do setor pelo nome
             RelatorioState state = viewModel.getState();
-            if (state instanceof RelatorioState.SetoresCarregados) {
-                List<Setor> setores = ((RelatorioState.SetoresCarregados) state).getSetores();
+            if (state instanceof RelatorioState.SetoresCarregados setoresState) {
+                List<Setor> setores = setoresState.getSetores();
                 for (Setor setor : setores) {
                     if (setor.getNome().equals(nomeSetor)) {
                         viewModel.carregarResponsaveisPorSetor(setor.getId());
@@ -1110,7 +1104,9 @@ public class RelatorioFrame extends JFrame {
     /**
      * === MÉTODO DOS FILTROS AVANÇADOS - FASE 2 ===
      * Aplica filtros avançados aos dados do relatório
+     * Nota: Método preparado para uso futuro quando filtros avançados forem ativados na UI
      */
+    @SuppressWarnings("unused") // Método preparado para uso futuro
     private List<Map<String, Object>> aplicarFiltrosAvancados(List<Map<String, Object>> dados) {
         if (!checkFiltrosAvancados.isSelected() || dados == null || dados.isEmpty()) {
             return dados;
@@ -1202,8 +1198,7 @@ public class RelatorioFrame extends JFrame {
                     ", depois: " + dadosFiltrados.size());
 
         } catch (Exception e) {
-            System.err.println("Erro ao aplicar filtros avançados: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Erro ao aplicar filtros avançados: {}", e.getMessage(), e);
             return dados; // Retorna dados originais em caso de erro
         }
 
@@ -1219,10 +1214,10 @@ public class RelatorioFrame extends JFrame {
             javax.swing.table.TableRowSorter<DefaultTableModel> sorter;
             javax.swing.RowSorter<? extends javax.swing.table.TableModel> existingSorter = tabelaPreview.getRowSorter();
 
-            if (existingSorter instanceof javax.swing.table.TableRowSorter<?>) {
+            if (existingSorter instanceof javax.swing.table.TableRowSorter<?> existingTableSorter) {
                 // Verificar se o modelo é compatível antes de fazer o cast
                 @SuppressWarnings("unchecked")
-                javax.swing.table.TableRowSorter<DefaultTableModel> typedSorter = (javax.swing.table.TableRowSorter<DefaultTableModel>) existingSorter;
+                javax.swing.table.TableRowSorter<DefaultTableModel> typedSorter = (javax.swing.table.TableRowSorter<DefaultTableModel>) existingTableSorter;
                 sorter = typedSorter;
             } else {
                 sorter = new javax.swing.table.TableRowSorter<>(modeloTabela);
@@ -1259,8 +1254,7 @@ public class RelatorioFrame extends JFrame {
             labelResultadosBusca.setText(resultados + " resultado" + (resultados != 1 ? "s" : ""));
 
         } catch (Exception e) {
-            System.err.println("Erro ao filtrar tabela: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Erro ao filtrar tabela: {}", e.getMessage(), e);
             labelResultadosBusca.setText("Erro na busca");
         }
     }
@@ -1275,22 +1269,14 @@ public class RelatorioFrame extends JFrame {
 
         try {
             switch (tipoGrafico) {
-                case "Pizza - Status de Coleta":
-                    atualizarGraficoPizzaStatus();
-                    break;
-                case "Barras - Itens por Setor":
-                    atualizarGraficoBarrasSetor();
-                    break;
-                case "Barras - Itens por Responsável":
-                    atualizarGraficoBarrasResponsavel();
-                    break;
-                case "Pizza - Estado de Conservação":
-                    atualizarGraficoPizzaConservacao();
-                    break;
+                case "Pizza - Status de Coleta" -> atualizarGraficoPizzaStatus();
+                case "Barras - Itens por Setor" -> atualizarGraficoBarrasSetor();
+                case "Barras - Itens por Responsável" -> atualizarGraficoBarrasResponsavel();
+                case "Pizza - Estado de Conservação" -> atualizarGraficoPizzaConservacao();
+                default -> { /* Tipo não reconhecido */ }
             }
         } catch (Exception e) {
-            System.err.println("Erro ao atualizar gráficos: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Erro ao atualizar gráficos: {}", e.getMessage(), e);
         }
     }
 
@@ -1461,6 +1447,27 @@ public class RelatorioFrame extends JFrame {
                 row[3] = linha.get("quantidade") != null ? linha.get("quantidade") : "1";
                 row[4] = linha.get("local") != null ? linha.get("local")
                         : linha.get("Setor") != null ? linha.get("Setor") : linha.get("setor");
+            } else if ("Relatório Geral de Patrimônio".equals(tipoRelatorio)) {
+                // Para Relatório Geral: mostrar Sala cadastrada e Localização Encontrada
+                String sala = "";
+                if (linha.get("Sala") != null && !"Não informado".equals(linha.get("Sala").toString())) {
+                    sala = linha.get("Sala").toString();
+                } else if (linha.get("Localização Encontrada") != null && !"Não informado".equals(linha.get("Localização Encontrada").toString())) {
+                    sala = linha.get("Localização Encontrada").toString();
+                } else {
+                    sala = "N/A";
+                }
+                row[2] = sala;
+
+                // Estado Encontrado para o relatório geral
+                Object estadoObj = linha.get("Estado Encontrado");
+                if (estadoObj != null && !"N/A".equals(estadoObj.toString())) {
+                    row[3] = estadoObj.toString();
+                } else {
+                    row[3] = "Não verificado";
+                }
+
+                row[4] = linha.get("Setor") != null ? linha.get("Setor") : "Sem Setor";
             } else {
                 // Para outros relatórios, usar campos específicos ou genéricos
                 // Priorizar informação da sala onde o patrimônio foi encontrado
@@ -1488,17 +1495,30 @@ public class RelatorioFrame extends JFrame {
             }
 
             row[5] = linha.get("Responsável") != null ? linha.get("Responsável") : linha.get("responsavel");
-            // Situação do patrimônio - priorizar campo situacao
-            Object situacaoObj = linha.get("situacao");
-            if (situacaoObj != null && !situacaoObj.toString().trim().isEmpty()) {
-                row[6] = situacaoObj.toString();
-            } else {
-                // Fallback para status se situacao não estiver definida
-                Object statusObj = linha.get("status");
-                if (statusObj != null && !statusObj.toString().trim().isEmpty()) {
-                    row[6] = statusObj.toString();
+            
+            // Situação do patrimônio - lógica específica por tipo de relatório
+            // Para "Relatório Geral de Patrimônio", mostrar o Status Coleta (Encontrado, Não Encontrado, Não Coletado)
+            if ("Relatório Geral de Patrimônio".equals(tipoRelatorio)) {
+                // Priorizar Status Coleta para o relatório geral
+                Object statusColetaObj = linha.get("Status Coleta");
+                if (statusColetaObj != null && !statusColetaObj.toString().trim().isEmpty()) {
+                    row[6] = statusColetaObj.toString();
                 } else {
-                    row[6] = "ATIVO"; // Valor padrão
+                    row[6] = "Não Coletado";
+                }
+            } else {
+                // Para outros relatórios, usar campo situacao ou status
+                Object situacaoObj = linha.get("situacao");
+                if (situacaoObj != null && !situacaoObj.toString().trim().isEmpty()) {
+                    row[6] = situacaoObj.toString();
+                } else {
+                    // Fallback para status se situacao não estiver definida
+                    Object statusObj = linha.get("status");
+                    if (statusObj != null && !statusObj.toString().trim().isEmpty()) {
+                        row[6] = statusObj.toString();
+                    } else {
+                        row[6] = "ATIVO"; // Valor padrão
+                    }
                 }
             }
 
@@ -1507,8 +1527,8 @@ public class RelatorioFrame extends JFrame {
                     : linha.get("valor") != null ? linha.get("valor")
                             : linha.get("valor_aquisicao") != null ? linha.get("valor_aquisicao") : null;
             if (valorObj != null) {
-                if (valorObj instanceof Number) {
-                    double valor = ((Number) valorObj).doubleValue();
+                if (valorObj instanceof Number number) {
+                    double valor = number.doubleValue();
                     if (valor > 0) {
                         NumberFormat formatoMoeda = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR"));
                         row[7] = formatoMoeda.format(valor);
@@ -1555,11 +1575,11 @@ public class RelatorioFrame extends JFrame {
             List<Setor> todosSetores = new ArrayList<>();
 
             RelatorioState state = viewModel.getState();
-            if (state instanceof RelatorioState.ResponsaveisCarregados) {
-                todosResponsaveis = ((RelatorioState.ResponsaveisCarregados) state).getResponsaveis();
+            if (state instanceof RelatorioState.ResponsaveisCarregados responsaveisState) {
+                todosResponsaveis = responsaveisState.getResponsaveis();
             }
-            if (state instanceof RelatorioState.SetoresCarregados) {
-                todosSetores = ((RelatorioState.SetoresCarregados) state).getSetores();
+            if (state instanceof RelatorioState.SetoresCarregados setoresState) {
+                todosSetores = setoresState.getSetores();
             }
 
             // Se não estiverem carregados, carregar agora
@@ -1568,16 +1588,16 @@ public class RelatorioFrame extends JFrame {
                 // Aguardar um pouco para carregar
                 Thread.sleep(100);
                 state = viewModel.getState();
-                if (state instanceof RelatorioState.ResponsaveisCarregados) {
-                    todosResponsaveis = ((RelatorioState.ResponsaveisCarregados) state).getResponsaveis();
+                if (state instanceof RelatorioState.ResponsaveisCarregados responsaveisState) {
+                    todosResponsaveis = responsaveisState.getResponsaveis();
                 }
             }
             if (todosSetores.isEmpty()) {
                 viewModel.carregarSetores();
                 Thread.sleep(100);
                 state = viewModel.getState();
-                if (state instanceof RelatorioState.SetoresCarregados) {
-                    todosSetores = ((RelatorioState.SetoresCarregados) state).getSetores();
+                if (state instanceof RelatorioState.SetoresCarregados setoresState) {
+                    todosSetores = setoresState.getSetores();
                 }
             }
 
@@ -1719,15 +1739,10 @@ public class RelatorioFrame extends JFrame {
 
             if (status != null) {
                 switch (status) {
-                    case "COLETADO":
-                        itensColetados++;
-                        break;
-                    case "NAO_ENCONTRADO":
-                        itensNaoEncontrados++;
-                        break;
-                    case "DANIFICADO":
-                        itensDanificados++;
-                        break;
+                    case "COLETADO" -> itensColetados++;
+                    case "NAO_ENCONTRADO" -> itensNaoEncontrados++;
+                    case "DANIFICADO" -> itensDanificados++;
+                    default -> { /* Status não contabilizado */ }
                 }
             }
         }
@@ -1846,21 +1861,10 @@ public class RelatorioFrame extends JFrame {
         for (int i = 0; i < modeloTabela.getRowCount(); i++) {
             String situacao = (String) modeloTabela.getValueAt(i, 6);
             switch (situacao) {
-                case "ATIVO":
-                case "Ativo":
-                case "COLETADO":
-                    ativos++;
-                    break;
-                case "INATIVO":
-                case "Inativo":
-                case "NAO_ENCONTRADO":
-                    inativos++;
-                    break;
-                case "PENDENTE":
-                case "Em Manutenção":
-                case "DANIFICADO":
-                    manutencao++;
-                    break;
+                case "ATIVO", "Ativo", "COLETADO" -> ativos++;
+                case "INATIVO", "Inativo", "NAO_ENCONTRADO" -> inativos++;
+                case "PENDENTE", "Em Manutenção", "DANIFICADO" -> manutencao++;
+                default -> { /* Situação não contabilizada */ }
             }
         }
 
@@ -1926,7 +1930,7 @@ public class RelatorioFrame extends JFrame {
 
                     } catch (Exception e) {
                         mensagemErro = "Erro ao gerar PDF: " + e.getMessage();
-                        e.printStackTrace();
+                        logger.error("Erro ao gerar PDF: {}", e.getMessage(), e);
                     }
                     return null;
                 }
@@ -2059,8 +2063,7 @@ public class RelatorioFrame extends JFrame {
             worker.execute();
 
         } catch (Exception e) {
-            System.err.println("❌ Erro ao preparar impressão: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("❌ Erro ao preparar impressão: {}", e.getMessage(), e);
             labelStatus.setText("❌ Erro ao preparar impressão");
             JOptionPane.showMessageDialog(this,
                     "Erro ao preparar impressão:\n\n" + e.getMessage() +
@@ -2342,8 +2345,7 @@ public class RelatorioFrame extends JFrame {
             }
 
         } catch (Exception e) {
-            System.err.println("❌ ERRO: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("❌ ERRO na exportação: {}", e.getMessage(), e);
             labelStatus.setText("Erro na exportação");
             JOptionPane.showMessageDialog(this,
                     "Erro durante a exportação:\n\n" + e.getMessage(),
@@ -2467,33 +2469,28 @@ public class RelatorioFrame extends JFrame {
 
             } catch (ExceptionInInitializerError initError) {
                 // CAPTURA ESPECÍFICA DO ExceptionInInitializerError
-                System.err.println("❌ ExceptionInInitializerError detectado!");
-                System.err.println("Causa: Problema na inicialização do Apache POI");
-                initError.printStackTrace();
+                logger.error("❌ ExceptionInInitializerError detectado! Causa: Problema na inicialização do Apache POI", initError);
 
                 // Fallback automático para CSV
-                System.out.println("🔄 Usando fallback CSV...");
+                logger.info("🔄 Usando fallback CSV...");
                 return exportarComCSVFallback(dadosPreparados, colunas, chaves, tituloRelatorio, caminhoArquivo,
                         initError);
 
             } catch (NoClassDefFoundError classError) {
                 // Classe não encontrada
-                System.err.println("❌ NoClassDefFoundError: " + classError.getMessage());
-                classError.printStackTrace();
+                logger.error("❌ NoClassDefFoundError: {}", classError.getMessage(), classError);
                 return exportarComCSVFallback(dadosPreparados, colunas, chaves, tituloRelatorio, caminhoArquivo,
                         classError);
 
             } catch (Exception poiError) {
                 // Outros erros do Apache POI
-                System.err.println("❌ Apache POI falhou: " + poiError.getMessage());
-                poiError.printStackTrace();
+                logger.error("❌ Apache POI falhou: {}", poiError.getMessage(), poiError);
                 return exportarComCSVFallback(dadosPreparados, colunas, chaves, tituloRelatorio, caminhoArquivo,
                         poiError);
             }
 
         } catch (Exception e) {
-            System.err.println("❌ Erro: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("❌ Erro na exportação: {}", e.getMessage(), e);
             labelStatus.setText("Erro na exportação");
             JOptionPane.showMessageDialog(this, "Erro:\n\n" + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             return false;
@@ -2688,7 +2685,8 @@ public class RelatorioFrame extends JFrame {
             if (fileOut != null) {
                 try {
                     fileOut.close();
-                } catch (Exception e) {
+                } catch (java.io.IOException e) {
+                    // Ignorar erro ao fechar stream
                 }
             }
             if (workbook != null) {
@@ -2705,6 +2703,7 @@ public class RelatorioFrame extends JFrame {
      * Aceita qualquer tipo de erro (Throwable) incluindo
      * ExceptionInInitializerError
      */
+    @SuppressWarnings("unused") // titulo mantido para compatibilidade de assinatura
     private boolean exportarComCSVFallback(List<Map<String, Object>> dados, String[] colunas, String[] chaves,
             String titulo, String caminhoOriginal, Throwable erroOriginal) {
         try {
@@ -2744,8 +2743,7 @@ public class RelatorioFrame extends JFrame {
             String tipoErro = erroOriginal.getClass().getSimpleName();
             String causaRaiz = "";
 
-            if (erroOriginal instanceof ExceptionInInitializerError) {
-                ExceptionInInitializerError initError = (ExceptionInInitializerError) erroOriginal;
+            if (erroOriginal instanceof ExceptionInInitializerError initError) {
                 Throwable causa = initError.getCause();
                 if (causa != null) {
                     causaRaiz = "\nCausa raiz: " + causa.getClass().getSimpleName() + " - " + causa.getMessage();
@@ -2775,8 +2773,7 @@ public class RelatorioFrame extends JFrame {
             return true;
 
         } catch (Exception e) {
-            System.err.println("❌ Fallback CSV também falhou: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("❌ Fallback CSV também falhou: {}", e.getMessage(), e);
 
             labelStatus.setText("Erro no fallback CSV");
             JOptionPane.showMessageDialog(this,
@@ -2853,8 +2850,7 @@ public class RelatorioFrame extends JFrame {
             return true;
 
         } catch (Exception e) {
-            System.err.println("❌ Exportação CSV direta falhou: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("❌ Exportação CSV direta falhou: {}", e.getMessage(), e);
 
             labelStatus.setText("Erro na exportação CSV");
             JOptionPane.showMessageDialog(this,
@@ -2969,8 +2965,7 @@ public class RelatorioFrame extends JFrame {
             return dados;
 
         } catch (Exception e) {
-            System.err.println("❌ ERRO CRÍTICO ao preparar dados da tabela: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("❌ ERRO CRÍTICO ao preparar dados da tabela: {}", e.getMessage(), e);
             return new ArrayList<>();
         }
     }
@@ -3243,10 +3238,8 @@ public class RelatorioFrame extends JFrame {
             return true;
 
         } catch (Exception e) {
-            System.err.println("❌ ERRO GERAL NA EXPORTAÇÃO EXCEL:");
-            System.err.println("Tipo do erro: " + e.getClass().getSimpleName());
-            System.err.println("Mensagem: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("❌ ERRO GERAL NA EXPORTAÇÃO EXCEL - Tipo: {}, Mensagem: {}", 
+                    e.getClass().getSimpleName(), e.getMessage(), e);
 
             labelStatus.setText("Erro na exportação Excel");
 
@@ -3334,12 +3327,11 @@ public class RelatorioFrame extends JFrame {
             try {
                 sucesso = excelGenerator.gerarRelatorioGeral(idInventario, (JComponent) this.getContentPane());
             } catch (Exception e) {
-                System.err.println("❌ Erro no RelatorioExcelGenerator.gerarRelatorioGeral: " + e.getMessage());
-                e.printStackTrace();
+                logger.error("❌ Erro no RelatorioExcelGenerator.gerarRelatorioGeral: {}", e.getMessage(), e);
 
                 // Tentar método alternativo usando dados da tabela se houver
                 if (tabelaPreview.getRowCount() > 0) {
-                    System.out.println("🔄 Tentando método alternativo com dados da tabela...");
+                    logger.info("🔄 Tentando método alternativo com dados da tabela...");
                     labelStatus.setText("Tentando método alternativo...");
 
                     try {
@@ -3372,8 +3364,7 @@ public class RelatorioFrame extends JFrame {
             }
 
         } catch (Exception e) {
-            System.err.println("❌ Erro geral em exportarRelatorioGeral: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("❌ Erro geral em exportarRelatorioGeral: {}", e.getMessage(), e);
             labelStatus.setText("Erro geral na exportação");
             JOptionPane.showMessageDialog(this,
                     "Erro inesperado: " + e.getMessage(),
@@ -3401,34 +3392,12 @@ public class RelatorioFrame extends JFrame {
             boolean sucesso = false;
             try {
                 sucesso = excelGenerator.gerarRelatorioEstatisticas(idInventario, (JComponent) this.getContentPane());
-            } catch (Exception e) {
-                System.err.println("❌ Erro no RelatorioExcelGenerator.gerarRelatorioEstatisticas: " + e.getMessage());
-                e.printStackTrace();
-
-                // Tentar método alternativo usando dados da tabela se houver
-                if (tabelaPreview.getRowCount() > 0) {
-                    System.out.println("🔄 Tentando método alternativo com dados da tabela...");
-                    labelStatus.setText("Tentando método alternativo...");
-
-                    try {
-                        sucesso = exportarDadosTabela("Estatisticas_Alternativo");
-                        if (sucesso) {
-                            JOptionPane.showMessageDialog(this,
-                                    "Estatísticas exportadas usando método alternativo.\n\n" +
-                                            "Os dados da tabela atual foram exportados com sucesso.",
-                                    "Exportação Alternativa", JOptionPane.INFORMATION_MESSAGE);
-                        }
-                    } catch (Exception altError) {
-                        System.err.println("❌ Método alternativo também falhou: " + altError.getMessage());
-                    }
-                }
-
-                if (!sucesso) {
-                    JOptionPane.showMessageDialog(this,
-                            "Erro ao gerar relatório de estatísticas:\n\n" + e.getMessage() +
-                                    "\n\nTente usar 'Exportar Relatório Atual' ou formatos alternativos (CSV/HTML/TXT).",
-                            "Erro na Exportação", JOptionPane.ERROR_MESSAGE);
-                }
+            } catch (IllegalStateException | IllegalArgumentException e) {
+                logger.error("❌ Erro de validação no RelatorioExcelGenerator.gerarRelatorioEstatisticas: {}", e.getMessage(), e);
+                tentarMetodoAlternativoEstatisticas(e);
+            } catch (RuntimeException e) {
+                logger.error("❌ Erro no RelatorioExcelGenerator.gerarRelatorioEstatisticas: {}", e.getMessage(), e);
+                tentarMetodoAlternativoEstatisticas(e);
             }
 
             if (sucesso) {
@@ -3439,14 +3408,48 @@ public class RelatorioFrame extends JFrame {
                 System.out.println("❌ Falha na exportação das estatísticas");
             }
 
-        } catch (Exception e) {
-            System.err.println("❌ Erro geral em exportarEstatisticas: " + e.getMessage());
-            e.printStackTrace();
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            logger.error("❌ Erro de validação em exportarEstatisticas: {}", e.getMessage(), e);
+            labelStatus.setText("Erro de validação na exportação");
+            JOptionPane.showMessageDialog(this,
+                    "Erro de validação: " + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+        } catch (RuntimeException e) {
+            logger.error("❌ Erro geral em exportarEstatisticas: {}", e.getMessage(), e);
             labelStatus.setText("Erro geral na exportação");
             JOptionPane.showMessageDialog(this,
                     "Erro inesperado: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    /**
+     * Tenta método alternativo para exportar estatísticas quando o método principal falha
+     */
+    private void tentarMetodoAlternativoEstatisticas(Exception e) {
+        // Tentar método alternativo usando dados da tabela se houver
+        if (tabelaPreview.getRowCount() > 0) {
+            logger.info("🔄 Tentando método alternativo com dados da tabela...");
+            labelStatus.setText("Tentando método alternativo...");
+
+            try {
+                boolean sucesso = exportarDadosTabela("Estatisticas_Alternativo");
+                if (sucesso) {
+                    JOptionPane.showMessageDialog(this,
+                            "Estatísticas exportadas usando método alternativo.\n\n" +
+                                    "Os dados da tabela atual foram exportados com sucesso.",
+                            "Exportação Alternativa", JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }
+            } catch (RuntimeException altError) {
+                logger.warn("❌ Método alternativo também falhou: {}", altError.getMessage());
+            }
+        }
+
+        JOptionPane.showMessageDialog(this,
+                "Erro ao gerar relatório de estatísticas:\n\n" + e.getMessage() +
+                        "\n\nTente usar 'Exportar Relatório Atual' ou formatos alternativos (CSV/HTML/TXT).",
+                "Erro na Exportação", JOptionPane.ERROR_MESSAGE);
     }
 
     /**
@@ -3492,9 +3495,9 @@ public class RelatorioFrame extends JFrame {
 
         // Estilizar o editor do spinner
         JComponent editor = spinner.getEditor();
-        if (editor instanceof JSpinner.DefaultEditor) {
-            ((JSpinner.DefaultEditor) editor).getTextField().setBackground(Color.WHITE);
-            ((JSpinner.DefaultEditor) editor).getTextField().setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
+        if (editor instanceof JSpinner.DefaultEditor defaultEditor) {
+            defaultEditor.getTextField().setBackground(Color.WHITE);
+            defaultEditor.getTextField().setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
         }
     }
 
@@ -3591,8 +3594,7 @@ public class RelatorioFrame extends JFrame {
         // Buscar o JTabbedPane no layout
         Component[] components = getContentPane().getComponents();
         for (Component comp : components) {
-            if (comp instanceof JTabbedPane) {
-                JTabbedPane abas = (JTabbedPane) comp;
+            if (comp instanceof JTabbedPane abas) {
                 abas.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
                 abas.setBackground(new Color(245, 245, 245));
                 abas.setForeground(new Color(60, 60, 60));

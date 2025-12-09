@@ -22,8 +22,10 @@ inclusion: always
   - `BuscarPatrimoniosPorDescricaoUseCase`
   - `SincronizarDadosUseCase`
   - `SincronizarColetasPendentesUseCase`
-  - `BuscarColetasUseCase` ✨ **NOVO**
-  - `ObterUsuarioAtualUseCase` ✨ **NOVO**
+  - `BuscarColetasUseCase`
+  - `ObterUsuarioAtualUseCase`
+  - `GerarRelatorioUseCase` ✨ **NOVO - Exportação**
+  - `BuscarSalasParaExportacaoUseCase` ✨ **NOVO - Exportação**
 
 ### 3. Camada Data
 - ✅ Entities Room com índices
@@ -51,6 +53,7 @@ inclusion: always
   - `ScannerActivity` → usa `BuscarPatrimonioUseCase` ✅ **v2.8 - MODO OFFLINE**
   - `DashboardFragment` → usa `DashboardViewModelClean` ✅ **FASE 2**
   - `ScannerActivity` → `@AndroidEntryPoint` já presente ✅
+  - `ExportFragment` → usa `ExportViewModel` ✅ **EXPORTAÇÃO**
 
 ### 5. APIs
 - ✅ Retrofit interfaces
@@ -257,4 +260,35 @@ class CollectionViewViewModelClean @Inject constructor(
 4. Delegar ações para ViewModel (não acessar Repository diretamente)
 5. Atualizar UI baseado no estado (Idle, Loading, Success, Error)
 
-**Última atualização:** 14/11/2025 - Fase 2 Concluída
+### Fase 4 - Exportação de Relatórios ✨ **08/12/2025**
+
+#### Feature: Exportação Multi-Formato (PDF, Excel, CSV)
+**IMPLEMENTADO:**
+- ✅ `ExportFormat.kt` - Enum para formatos (PDF, EXCEL, CSV)
+- ✅ `ExportFilter.kt` - Enum para filtros (TODOS, COLETADOS, NAO_COLETADOS)
+- ✅ `ExportResult.kt` - Modelo de resultado da exportação
+- ✅ `ExportRepository.kt` - Interface do repositório
+- ✅ `ExportRepositoryImpl.kt` - Implementação com geração de arquivos
+- ✅ `ExcelGenerator.kt` - Gerador TSV (compatível com Excel, sem Apache POI)
+- ✅ `CsvGenerator.kt` - Gerador CSV
+- ✅ `GerarRelatorioUseCase.kt` - Use Case para gerar relatórios
+- ✅ `BuscarSalasParaExportacaoUseCase.kt` - Use Case para buscar salas
+- ✅ `ExportState.kt` - Sealed class para estados da UI
+- ✅ `ExportViewModel.kt` - ViewModel com `@HiltViewModel`
+- ✅ `ExportFragment.kt` - Fragment completo com UI
+- ✅ `SalaFilterAdapter.kt` - Adapter para dropdown de salas
+- ✅ Ícones: `ic_excel.xml`, `ic_csv.xml`
+
+**Benefícios:**
+- 📄 Exportação em 3 formatos: PDF, Excel (TSV), CSV
+- 🔍 Filtros por status: Todos, Coletados, Não Coletados
+- 📊 Estatísticas no relatório: total, coletados, pendentes, percentual
+- 📤 Compartilhamento direto do arquivo gerado
+- 📂 Abertura do arquivo no app padrão do dispositivo
+- 🔄 Funciona offline com dados locais
+
+**Nota Técnica:**
+- Excel usa formato TSV (Tab-Separated Values) pois Apache POI requer minSdk 26
+- App tem minSdk 23, então TSV é a alternativa compatível
+
+**Última atualização:** 08/12/2025 - Fase 4 (Exportação) Concluída

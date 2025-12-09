@@ -3167,12 +3167,14 @@ drawable ic_clear
 drawable ic_clear_black_24
 drawable ic_clock_black_24dp
 drawable ic_collections
+drawable ic_csv
 drawable ic_dashboard
 drawable ic_date_range
 drawable ic_delete
 drawable ic_download
 drawable ic_edit
 drawable ic_error
+drawable ic_excel
 drawable ic_export
 drawable ic_filter
 drawable ic_fingerprint
@@ -3195,6 +3197,8 @@ drawable ic_mtrl_chip_close_circle
 drawable ic_notification
 drawable ic_offline
 drawable ic_online
+drawable ic_open
+drawable ic_pdf
 drawable ic_pending
 drawable ic_people
 drawable ic_person
@@ -3206,6 +3210,7 @@ drawable ic_search
 drawable ic_search_black_24
 drawable ic_server
 drawable ic_settings
+drawable ic_share
 drawable ic_sync
 drawable ic_sync_done
 drawable ic_sync_error
@@ -3363,6 +3368,7 @@ id action_context_bar
 id action_divider
 id action_excluir
 id action_export
+id action_export_pdf
 id action_filter
 id action_image
 id action_logout
@@ -3448,6 +3454,7 @@ id btnDescriptionCollection
 id btnDisableBiometric
 id btnDownloadData
 id btnEnableAll
+id btnExport
 id btnIncreaseSyncCount
 id btnIncreaseSyncInterval
 id btnLimpar
@@ -3456,6 +3463,7 @@ id btnLogin
 id btnManualCollection
 id btnOfflineBiometric
 id btnOfflinePin
+id btnOpen
 id btnQuickScan
 id btnRefresh
 id btnRegistrar
@@ -3471,6 +3479,7 @@ id btnRunTests
 id btnSalvar
 id btnScanQr
 id btnSearch
+id btnShare
 id btnShowRecommendations
 id btnSyncAll
 id btnSyncColetas
@@ -3513,10 +3522,12 @@ id cardHeader
 id cardInput
 id cardInventory
 id cardLastSync
+id cardOffline
 id cardOfflineIndicator
 id cardOfflineMode
 id cardPatrimonioInfo
 id cardRequirements
+id cardResult
 id cardSalaFilter
 id cardSearchStats
 id cardStatisticsSummary
@@ -3763,6 +3774,8 @@ id lineChartEvolucao
 id linear
 id listMode
 id list_item
+id llActions
+id llProgress
 id loadingMoreIndicator
 id loadingOverlay
 id locale
@@ -3925,6 +3938,12 @@ id radioThemeDark
 id radioThemeLight
 id radioThemeSystem
 id ratio
+id rbColetados
+id rbCsv
+id rbExcel
+id rbNaoColetados
+id rbPdf
+id rbTodos
 id rectangles
 id recyclerView
 id recyclerViewColetas
@@ -3934,6 +3953,8 @@ id recyclerViewSalas
 id report_drawn
 id responsavelInputLayout
 id reverseSawtooth
+id rgFilter
+id rgFormat
 id right
 id rightToLeft
 id right_icon
@@ -4211,6 +4232,7 @@ id tvResponsavel
 id tvResponsavelMatricula
 id tvResponsavelSetor
 id tvResultCount
+id tvResultSummary
 id tvSala
 id tvSalaAndar
 id tvSalaBloco
@@ -4420,6 +4442,7 @@ layout activity_consulta_patrimonio
 layout activity_descricao_selection
 layout activity_detalhe_patrimonio
 layout activity_developer_settings
+layout activity_export_pdf
 layout activity_filtros
 layout activity_inventario
 layout activity_inventario_tabs

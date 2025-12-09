@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.validation.Valid;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -76,7 +77,7 @@ public class MobileColetaController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(e.getMessage(), "INVALID_DATA"));
                     
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
             logger.error("Erro ao registrar coleta", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro ao registrar coleta: " + e.getMessage(), "COLETA_ERROR"));
@@ -105,7 +106,7 @@ public class MobileColetaController {
             return ResponseEntity.ok(
                     ApiResponse.success(resultado, "Coletas processadas em lote"));
             
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             logger.error("Erro ao registrar coletas em lote", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro ao processar coletas em lote: " + e.getMessage(), 
@@ -178,7 +179,7 @@ public class MobileColetaController {
             return ResponseEntity.ok(
                     ApiResponse.success(response, "Coletas carregadas com sucesso"));
             
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
             logger.error("Erro ao buscar coletas", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro ao buscar coletas", "FETCH_ERROR"));
@@ -203,7 +204,7 @@ public class MobileColetaController {
             return ResponseEntity.ok(
                     ApiResponse.success(coletas, "Coletas pendentes carregadas"));
             
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
             logger.error("Erro ao buscar coletas pendentes", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro ao buscar coletas pendentes", "FETCH_ERROR"));
@@ -236,6 +237,7 @@ public class MobileColetaController {
      * 
      * @return lista completa de coletas
      */
+    @Deprecated
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<Map<String, Object>>> buscarTodasColetasSemPaginacao(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
@@ -252,7 +254,6 @@ public class MobileColetaController {
             Map<String, Object> response = mobileColetaService.buscarColetasComPaginacaoReal(0, Math.max(totalColetas, 1000));
             
             long duration = System.currentTimeMillis() - startTime;
-            int total = (int) response.get("totalElements");
             List<?> content = (List<?>) response.get("content");
             
             logger.info("✓ Retornando {} coletas em {}ms", content.size(), duration);
@@ -262,7 +263,7 @@ public class MobileColetaController {
                     ApiResponse.success(response, String.format("%d coletas em %dms", 
                             content.size(), duration)));
             
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
             logger.error("❌ Erro ao buscar coletas", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro ao buscar coletas", "FETCH_ERROR"));
@@ -289,7 +290,7 @@ public class MobileColetaController {
             return ResponseEntity.ok(
                     ApiResponse.success(coletas, "Histórico de coletas carregado"));
             
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
             logger.error("Erro ao buscar histórico de coletas", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro ao buscar histórico", "FETCH_ERROR"));
@@ -320,7 +321,7 @@ public class MobileColetaController {
                         .body(ApiResponse.error("Coleta não encontrada", "NOT_FOUND"));
             }
             
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
             logger.error("Erro ao buscar coleta por ID", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro ao buscar coleta", "FETCH_ERROR"));
@@ -354,7 +355,7 @@ public class MobileColetaController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(e.getMessage(), "INVALID_DATA"));
                     
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
             logger.error("Erro ao atualizar coleta", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro ao atualizar coleta", "UPDATE_ERROR"));
@@ -390,7 +391,7 @@ public class MobileColetaController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.error("Sem permissão para excluir coleta", "FORBIDDEN"));
                     
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
             logger.error("Erro ao excluir coleta", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro ao excluir coleta", "DELETE_ERROR"));
@@ -427,7 +428,7 @@ public class MobileColetaController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(e.getMessage(), "INVALID_PARAMS"));
                     
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             logger.error("Erro ao buscar descrições pendentes", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro ao buscar descrições pendentes: " + e.getMessage(), 
@@ -481,7 +482,7 @@ public class MobileColetaController {
             logger.warn("Erro de validação ao verificar duplicata: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(e.getMessage(), "VALIDATION_ERROR"));
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
             logger.error("Erro ao verificar duplicata de coleta", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro ao verificar duplicata: " + e.getMessage(), "CHECK_ERROR"));
@@ -513,7 +514,7 @@ public class MobileColetaController {
                     ApiResponse.success(salas, 
                             String.format("%d sala(s) com coletas", salas.size())));
             
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
             logger.error("Erro ao buscar salas com coletas", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro ao buscar salas: " + e.getMessage(), "FETCH_ERROR"));
@@ -541,8 +542,6 @@ public class MobileColetaController {
             logger.info("📥 Sincronização incremental de coletas: lastSync={}, inventario={}, limit={}, offset={}", 
                 lastSyncTimestamp, inventarioId, limit, offset);
             
-            // Obter username do contexto de segurança
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             // Buscar coletas modificadas desde o último timestamp
             com.inventario.mobile.server.dto.IncrementalSyncResponse<MobileColetaResponse> response = 
                 mobileColetaService.buscarColetasIncrementais(lastSyncTimestamp, inventarioId, limit, offset);
@@ -554,7 +553,7 @@ public class MobileColetaController {
             
             return ResponseEntity.ok(ApiResponse.success(response, mensagem));
             
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             logger.error("❌ Erro na sincronização incremental de coletas", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro na sincronização incremental: " + e.getMessage(), "SYNC_ERROR"));

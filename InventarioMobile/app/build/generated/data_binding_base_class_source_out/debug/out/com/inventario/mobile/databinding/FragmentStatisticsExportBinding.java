@@ -4,12 +4,20 @@ package com.inventario.mobile.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
+import android.widget.AutoCompleteTextView;
+import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
+import com.google.android.material.textfield.TextInputLayout;
 import com.inventario.mobile.R;
 import java.lang.NullPointerException;
 import java.lang.Override;
@@ -17,20 +25,104 @@ import java.lang.String;
 
 public final class FragmentStatisticsExportBinding implements ViewBinding {
   @NonNull
-  private final FrameLayout rootView;
+  private final ScrollView rootView;
 
   @NonNull
-  public final TextView tvPlaceholder;
+  public final AutoCompleteTextView actvSala;
 
-  private FragmentStatisticsExportBinding(@NonNull FrameLayout rootView,
-      @NonNull TextView tvPlaceholder) {
+  @NonNull
+  public final MaterialButton btnExport;
+
+  @NonNull
+  public final MaterialButton btnOpen;
+
+  @NonNull
+  public final MaterialButton btnShare;
+
+  @NonNull
+  public final MaterialCardView cardOffline;
+
+  @NonNull
+  public final MaterialCardView cardResult;
+
+  @NonNull
+  public final LinearLayout llActions;
+
+  @NonNull
+  public final LinearLayout llProgress;
+
+  @NonNull
+  public final CircularProgressIndicator progressBar;
+
+  @NonNull
+  public final RadioButton rbColetados;
+
+  @NonNull
+  public final RadioButton rbCsv;
+
+  @NonNull
+  public final RadioButton rbExcel;
+
+  @NonNull
+  public final RadioButton rbNaoColetados;
+
+  @NonNull
+  public final RadioButton rbPdf;
+
+  @NonNull
+  public final RadioButton rbTodos;
+
+  @NonNull
+  public final RadioGroup rgFilter;
+
+  @NonNull
+  public final RadioGroup rgFormat;
+
+  @NonNull
+  public final TextInputLayout tilSala;
+
+  @NonNull
+  public final TextView tvProgress;
+
+  @NonNull
+  public final TextView tvResultSummary;
+
+  private FragmentStatisticsExportBinding(@NonNull ScrollView rootView,
+      @NonNull AutoCompleteTextView actvSala, @NonNull MaterialButton btnExport,
+      @NonNull MaterialButton btnOpen, @NonNull MaterialButton btnShare,
+      @NonNull MaterialCardView cardOffline, @NonNull MaterialCardView cardResult,
+      @NonNull LinearLayout llActions, @NonNull LinearLayout llProgress,
+      @NonNull CircularProgressIndicator progressBar, @NonNull RadioButton rbColetados,
+      @NonNull RadioButton rbCsv, @NonNull RadioButton rbExcel, @NonNull RadioButton rbNaoColetados,
+      @NonNull RadioButton rbPdf, @NonNull RadioButton rbTodos, @NonNull RadioGroup rgFilter,
+      @NonNull RadioGroup rgFormat, @NonNull TextInputLayout tilSala, @NonNull TextView tvProgress,
+      @NonNull TextView tvResultSummary) {
     this.rootView = rootView;
-    this.tvPlaceholder = tvPlaceholder;
+    this.actvSala = actvSala;
+    this.btnExport = btnExport;
+    this.btnOpen = btnOpen;
+    this.btnShare = btnShare;
+    this.cardOffline = cardOffline;
+    this.cardResult = cardResult;
+    this.llActions = llActions;
+    this.llProgress = llProgress;
+    this.progressBar = progressBar;
+    this.rbColetados = rbColetados;
+    this.rbCsv = rbCsv;
+    this.rbExcel = rbExcel;
+    this.rbNaoColetados = rbNaoColetados;
+    this.rbPdf = rbPdf;
+    this.rbTodos = rbTodos;
+    this.rgFilter = rgFilter;
+    this.rgFormat = rgFormat;
+    this.tilSala = tilSala;
+    this.tvProgress = tvProgress;
+    this.tvResultSummary = tvResultSummary;
   }
 
   @Override
   @NonNull
-  public FrameLayout getRoot() {
+  public ScrollView getRoot() {
     return rootView;
   }
 
@@ -55,13 +147,130 @@ public final class FragmentStatisticsExportBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
-      id = R.id.tvPlaceholder;
-      TextView tvPlaceholder = ViewBindings.findChildViewById(rootView, id);
-      if (tvPlaceholder == null) {
+      id = R.id.actvSala;
+      AutoCompleteTextView actvSala = ViewBindings.findChildViewById(rootView, id);
+      if (actvSala == null) {
         break missingId;
       }
 
-      return new FragmentStatisticsExportBinding((FrameLayout) rootView, tvPlaceholder);
+      id = R.id.btnExport;
+      MaterialButton btnExport = ViewBindings.findChildViewById(rootView, id);
+      if (btnExport == null) {
+        break missingId;
+      }
+
+      id = R.id.btnOpen;
+      MaterialButton btnOpen = ViewBindings.findChildViewById(rootView, id);
+      if (btnOpen == null) {
+        break missingId;
+      }
+
+      id = R.id.btnShare;
+      MaterialButton btnShare = ViewBindings.findChildViewById(rootView, id);
+      if (btnShare == null) {
+        break missingId;
+      }
+
+      id = R.id.cardOffline;
+      MaterialCardView cardOffline = ViewBindings.findChildViewById(rootView, id);
+      if (cardOffline == null) {
+        break missingId;
+      }
+
+      id = R.id.cardResult;
+      MaterialCardView cardResult = ViewBindings.findChildViewById(rootView, id);
+      if (cardResult == null) {
+        break missingId;
+      }
+
+      id = R.id.llActions;
+      LinearLayout llActions = ViewBindings.findChildViewById(rootView, id);
+      if (llActions == null) {
+        break missingId;
+      }
+
+      id = R.id.llProgress;
+      LinearLayout llProgress = ViewBindings.findChildViewById(rootView, id);
+      if (llProgress == null) {
+        break missingId;
+      }
+
+      id = R.id.progressBar;
+      CircularProgressIndicator progressBar = ViewBindings.findChildViewById(rootView, id);
+      if (progressBar == null) {
+        break missingId;
+      }
+
+      id = R.id.rbColetados;
+      RadioButton rbColetados = ViewBindings.findChildViewById(rootView, id);
+      if (rbColetados == null) {
+        break missingId;
+      }
+
+      id = R.id.rbCsv;
+      RadioButton rbCsv = ViewBindings.findChildViewById(rootView, id);
+      if (rbCsv == null) {
+        break missingId;
+      }
+
+      id = R.id.rbExcel;
+      RadioButton rbExcel = ViewBindings.findChildViewById(rootView, id);
+      if (rbExcel == null) {
+        break missingId;
+      }
+
+      id = R.id.rbNaoColetados;
+      RadioButton rbNaoColetados = ViewBindings.findChildViewById(rootView, id);
+      if (rbNaoColetados == null) {
+        break missingId;
+      }
+
+      id = R.id.rbPdf;
+      RadioButton rbPdf = ViewBindings.findChildViewById(rootView, id);
+      if (rbPdf == null) {
+        break missingId;
+      }
+
+      id = R.id.rbTodos;
+      RadioButton rbTodos = ViewBindings.findChildViewById(rootView, id);
+      if (rbTodos == null) {
+        break missingId;
+      }
+
+      id = R.id.rgFilter;
+      RadioGroup rgFilter = ViewBindings.findChildViewById(rootView, id);
+      if (rgFilter == null) {
+        break missingId;
+      }
+
+      id = R.id.rgFormat;
+      RadioGroup rgFormat = ViewBindings.findChildViewById(rootView, id);
+      if (rgFormat == null) {
+        break missingId;
+      }
+
+      id = R.id.tilSala;
+      TextInputLayout tilSala = ViewBindings.findChildViewById(rootView, id);
+      if (tilSala == null) {
+        break missingId;
+      }
+
+      id = R.id.tvProgress;
+      TextView tvProgress = ViewBindings.findChildViewById(rootView, id);
+      if (tvProgress == null) {
+        break missingId;
+      }
+
+      id = R.id.tvResultSummary;
+      TextView tvResultSummary = ViewBindings.findChildViewById(rootView, id);
+      if (tvResultSummary == null) {
+        break missingId;
+      }
+
+      return new FragmentStatisticsExportBinding((ScrollView) rootView, actvSala, btnExport,
+          btnOpen, btnShare, cardOffline, cardResult, llActions, llProgress, progressBar,
+          rbColetados, rbCsv, rbExcel, rbNaoColetados, rbPdf, rbTodos, rgFilter, rgFormat, tilSala,
+          tvProgress, tvResultSummary);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

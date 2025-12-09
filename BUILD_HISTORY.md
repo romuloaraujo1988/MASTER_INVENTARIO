@@ -4,6 +4,111 @@ Este arquivo registra todas as compilações do APK Android para rastreabilidade
 
 ---
 
+## Build #041 - 09/12/2025 13:00
+
+- **Tipo:** Release (Produção) ✅
+- **Versão:** 2.6.0
+- **Build Code:** 41
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/release/app-release.apk
+- **Tamanho:** 15.26 MB
+- **Assinatura:** inventario-release.keystore (válida até 2053)
+- **Mudanças desta build:** 
+  - **Fix: Exportação não encontrava patrimônios da sala**
+  - **Fix: Salas não carregavam no spinner da tela de Exportação**
+  - **Fix: Tela "Sobre" agora usa BuildConfig dinamicamente**
+- **Versionamento Semântico 2.6.0:**
+  - `2` = Arquitetura Clean Architecture + MVVM + Hilt
+  - `6` = Sexta atualização de features desde 2.0:
+    - 2.1: Dark Mode
+    - 2.2: Informações do desenvolvedor (splash/settings)
+    - 2.3: Gráficos de Dashboard (Estado, Top 10, Distribuição)
+    - 2.4: Filtro "Sem Etiqueta" na tela de coletas
+    - 2.5: Busca Rápida de Patrimônio + Inventário por Sala com Abas
+    - 2.6: Exportação de Relatórios (PDF, Excel, CSV)
+  - `0` = Versão estável, sem patches pendentes
+- **Status:** ✅ Sucesso - Pronto para produção
+
+---
+
+## Build #038 - 09/12/2025 10:45
+
+- **Tipo:** Debug
+- **Versão:** 1.2.34
+- **Build Code:** 34
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~18 MB
+- **Mudanças:** 
+  - **Fix: Rolagem Infinita na Tela de Inventário por Sala (Correção)**
+    - Movido scroll listener do `RecyclerView` para o `NestedScrollView`
+    - O layout usa `NestedScrollView` como container principal com `RecyclerView` interno
+    - O `RecyclerView` tem `nestedScrollingEnabled="false"`, então o scroll é do pai
+    - Agora detecta corretamente quando o usuário chega ao final da lista
+    - Carrega mais patrimônios automaticamente (threshold de 300px antes do final)
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #037 - 09/12/2025 10:30
+
+- **Tipo:** Debug
+- **Versão:** 1.2.34
+- **Build Code:** 34
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~18 MB
+- **Mudanças:** 
+  - **Fix: Rolagem Infinita na Tela de Inventário por Sala (Tentativa 1)**
+    - Adicionado `OnScrollListener` no `RecyclerView` do `InventarioPorSalaFragment.kt`
+    - Problema: O scroll listener estava no componente errado
+- **Status:** ⚠️ Parcial (corrigido na build #038)
+
+---
+
+## Build #036 - 08/12/2025 16:07
+
+- **Tipo:** Debug
+- **Versão:** 1.2.34
+- **Build Code:** 34
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** 18.18 MB
+- **Mudanças:** 
+  - **Feature: Exportação de Relatórios (PDF, Excel, CSV)**
+    - `ExportFormat.kt` - Enum para formatos de exportação (PDF, Excel, CSV)
+    - `ExportFilter.kt` - Enum para filtros (TODOS, COLETADOS, NAO_COLETADOS)
+    - `ExportResult.kt` - Modelo de resultado da exportação
+    - `ExportRepository.kt` - Interface do repositório de exportação
+    - `ExportRepositoryImpl.kt` - Implementação com geração de PDF, Excel (TSV), CSV
+    - `ExcelGenerator.kt` - Gerador de arquivos TSV (compatível com Excel, sem Apache POI)
+    - `CsvGenerator.kt` - Gerador de arquivos CSV
+    - `GerarRelatorioUseCase.kt` - Use Case para gerar relatórios em múltiplos formatos
+    - `BuscarSalasParaExportacaoUseCase.kt` - Use Case para buscar salas disponíveis
+    - `ExportState.kt` - Sealed class para estados da UI
+    - `ExportViewModel.kt` - ViewModel com `@HiltViewModel`
+    - `ExportFragment.kt` - Fragment completo com seleção de sala, filtros e formatos
+    - `fragment_statistics_export.xml` - Layout completo com cards de seleção
+    - `SalaFilterAdapter.kt` - Adapter para dropdown de salas
+    - `ic_excel.xml`, `ic_csv.xml` - Ícones para formatos de exportação
+    - `RepositoryModule.kt` - Binding para ExportRepository
+  - **Nota:** Excel usa formato TSV (Tab-Separated Values) pois Apache POI requer minSdk 26
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #035 - 07/12/2025 15:45
+
+- **Tipo:** Release (Produção)
+- **Versão:** 1.2.34
+- **Build Code:** 34
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/release/app-release.apk
+- **Tamanho:** 8.85 MB
+- **Assinatura:** inventario-release.keystore (válida até 2053)
+- **Mudanças:** 
+  - Build de produção para evitar alerta de "app perigoso" no Android
+  - APK assinado com keystore de release
+  - Mesmo código da build #034, apenas em modo release
+- **Status:** ✅ Sucesso
+
+---
+
 ## Build #034 - 07/12/2025 08:57
 
 - **Tipo:** Debug

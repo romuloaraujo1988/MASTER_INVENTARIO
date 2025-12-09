@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-files-path name="my_images" path="Pictures" />
-    <external-files-path name="my_docs" path="Documents" />
-    <cache-path name="my_cache" path="." />
+<paths>
+    <!-- Diretório para exportação de PDFs -->
+    <external-files-path name="exports" path="exports/" />
+    
+    <!-- Cache para arquivos temporários -->
+    <cache-path name="cache" path="exports/" />
+    
+    <!-- Diretório interno para PDFs -->
+    <files-path name="internal_exports" path="exports/" />
 </paths>

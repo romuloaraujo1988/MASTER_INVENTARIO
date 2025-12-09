@@ -32,17 +32,21 @@ import java.awt.RenderingHints;
 import java.text.SimpleDateFormat;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Frame para coleta de patrimônios - Versão 2
  * Interface melhorada com tabela de histórico sempre visível
  */
 public class ColetaFrame_v2 extends JFrame {
+    private static final Logger LOG = LoggerFactory.getLogger(ColetaFrame_v2.class);
     private JComboBox<Sala> comboSalas;
     private JTextField campoBusca;
     private JTextArea campoObservacao;
@@ -179,8 +183,7 @@ public class ColetaFrame_v2 extends JFrame {
                 initializeServices();
                 System.out.println("DEBUG: initializeServices() concluído com sucesso");
             } catch (Exception e) {
-                System.err.println("ERRO FATAL em initializeServices(): " + e.getMessage());
-                e.printStackTrace();
+                LOG.error("ERRO FATAL em initializeServices(): {}", e.getMessage(), e);
                 throw e;
             }
 
@@ -189,8 +192,7 @@ public class ColetaFrame_v2 extends JFrame {
                 initializeComponents();
                 System.out.println("DEBUG: initializeComponents() concluído com sucesso");
             } catch (Exception e) {
-                System.err.println("ERRO FATAL em initializeComponents(): " + e.getMessage());
-                e.printStackTrace();
+                LOG.error("ERRO FATAL em initializeComponents(): {}", e.getMessage(), e);
                 throw e;
             }
 
@@ -199,8 +201,7 @@ public class ColetaFrame_v2 extends JFrame {
                 setupLayout();
                 System.out.println("DEBUG: setupLayout() concluído com sucesso");
             } catch (Exception e) {
-                System.err.println("ERRO FATAL em setupLayout(): " + e.getMessage());
-                e.printStackTrace();
+                LOG.error("ERRO FATAL em setupLayout(): {}", e.getMessage(), e);
                 throw e;
             }
 
@@ -209,8 +210,7 @@ public class ColetaFrame_v2 extends JFrame {
                 setupEventListeners();
                 System.out.println("DEBUG: setupEventListeners() concluído com sucesso");
             } catch (Exception e) {
-                System.err.println("ERRO FATAL em setupEventListeners(): " + e.getMessage());
-                e.printStackTrace();
+                LOG.error("ERRO FATAL em setupEventListeners(): {}", e.getMessage(), e);
                 throw e;
             }
 
@@ -219,8 +219,7 @@ public class ColetaFrame_v2 extends JFrame {
                 carregarSalas();
                 System.out.println("DEBUG: carregarSalas() concluído com sucesso");
             } catch (Exception e) {
-                System.err.println("ERRO FATAL em carregarSalas(): " + e.getMessage());
-                e.printStackTrace();
+                LOG.error("ERRO FATAL em carregarSalas(): {}", e.getMessage(), e);
                 throw e;
             }
 
@@ -229,8 +228,7 @@ public class ColetaFrame_v2 extends JFrame {
                 carregarInventarioAtual();
                 System.out.println("DEBUG: carregarInventarioAtual() concluído com sucesso");
             } catch (Exception e) {
-                System.err.println("ERRO FATAL em carregarInventarioAtual(): " + e.getMessage());
-                e.printStackTrace();
+                LOG.error("ERRO FATAL em carregarInventarioAtual(): {}", e.getMessage(), e);
                 throw e;
             }
 
@@ -239,8 +237,7 @@ public class ColetaFrame_v2 extends JFrame {
                 adicionarDicaLeitores();
                 System.out.println("DEBUG: adicionarDicaLeitores() concluído com sucesso");
             } catch (Exception e) {
-                System.err.println("ERRO FATAL em adicionarDicaLeitores(): " + e.getMessage());
-                e.printStackTrace();
+                LOG.error("ERRO FATAL em adicionarDicaLeitores(): {}", e.getMessage(), e);
                 throw e;
             }
 
@@ -274,8 +271,7 @@ public class ColetaFrame_v2 extends JFrame {
             });
 
         } catch (Exception e) {
-            System.err.println("ERRO durante inicialização do ColetaFrame_v2:");
-            e.printStackTrace();
+            LOG.error("ERRO durante inicialização do ColetaFrame_v2", e);
             throw new RuntimeException("Erro ao inicializar ColetaFrame_v2: " + e.getMessage(), e);
         }
     }
@@ -1666,10 +1662,8 @@ public class ColetaFrame_v2 extends JFrame {
             
             System.out.println("=== DEBUG TIMESTAMP: carregarTodosItensSemPatrimonio concluído ===");
 
-        } catch (Exception e) {
-            System.err.println("=== DEBUG TIMESTAMP: ERRO em carregarTodosItensSemPatrimonio ===");
-            System.err.println("DEBUG TIMESTAMP: Mensagem: " + e.getMessage());
-            e.printStackTrace();
+        } catch (SQLException | RuntimeException e) {
+            LOG.error("ERRO em carregarTodosItensSemPatrimonio: {}", e.getMessage(), e);
             
             JOptionPane.showMessageDialog(this,
                     "Erro ao carregar itens sem patrimônio: " + e.getMessage(),
@@ -1799,12 +1793,12 @@ public class ColetaFrame_v2 extends JFrame {
             // Recarregar tabela
             carregarTodosItensSemPatrimonio();
 
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
+            LOG.error("Erro ao registrar item: {}", e.getMessage(), e);
             JOptionPane.showMessageDialog(this,
                     "Erro ao registrar item: " + e.getMessage(),
                     "Erro",
                     JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
 
@@ -1885,12 +1879,12 @@ public class ColetaFrame_v2 extends JFrame {
                         JOptionPane.ERROR_MESSAGE);
             }
 
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
+            LOG.error("Erro ao remover item: {}", e.getMessage(), e);
             JOptionPane.showMessageDialog(this,
                     "Erro ao remover item: " + e.getMessage(),
                     "Erro",
                     JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
 
@@ -1976,7 +1970,7 @@ public class ColetaFrame_v2 extends JFrame {
             } else {
                 lblInventarioAtual.setText("Inventário: Nenhum inventário ativo");
             }
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
             lblInventarioAtual.setText("Inventário: Erro ao carregar");
         }
     }
@@ -1990,10 +1984,9 @@ public class ColetaFrame_v2 extends JFrame {
             Inventario inventarioAtivo = null;
             try {
                 inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
-                System.out.println("DEBUG ColetaFrame: Inventário buscado com sucesso");
-            } catch (Exception e) {
-                System.err.println("ERRO ao buscar inventário ativo: " + e.getMessage());
-                e.printStackTrace();
+                LOG.debug("Inventário buscado com sucesso");
+            } catch (SQLException | RuntimeException e) {
+                LOG.error("ERRO ao buscar inventário ativo: {}", e.getMessage(), e);
                 throw e;
             }
 
@@ -2008,13 +2001,11 @@ public class ColetaFrame_v2 extends JFrame {
 
                 // Carregar apenas salas abertas (não finalizadas) para o inventário ativo
                 try {
-                    System.out.println("DEBUG ColetaFrame: Chamando buscarSalasAbertasParaColeta()");
+                    LOG.debug("Chamando buscarSalasAbertasParaColeta()");
                     todasSalas = salaInventarioDAO.buscarSalasAbertasParaColeta(inventarioAtivo.getId());
-                    System.out.println("DEBUG ColetaFrame: buscarSalasAbertasParaColeta() retornou " + todasSalas.size()
-                            + " salas");
+                    LOG.debug("buscarSalasAbertasParaColeta() retornou {} salas", todasSalas.size());
                 } catch (Exception e) {
-                    System.err.println("ERRO ao buscar salas abertas: " + e.getMessage());
-                    e.printStackTrace();
+                    LOG.error("ERRO ao buscar salas abertas: {}", e.getMessage(), e);
                     throw e;
                 }
 
@@ -2048,9 +2039,9 @@ public class ColetaFrame_v2 extends JFrame {
             }
         } catch (Exception e) {
             todasSalas = new ArrayList<>();
+            LOG.error("Erro ao carregar salas: {}", e.getMessage(), e);
             JOptionPane.showMessageDialog(this, "Erro ao carregar salas: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
 
         // Preencher combo com todas as salas
@@ -2268,7 +2259,7 @@ public class ColetaFrame_v2 extends JFrame {
                     int[] estatisticas = coletaDAO.contarColetasPorSala(
                             inventarioAtivo.getId(), salaSelecionada.getNumeroSala());
                     totalItensColetados = estatisticas[0];
-                } catch (Exception e) {
+                } catch (SQLException | RuntimeException e) {
                     System.err.println("Erro ao contar coletas: " + e.getMessage());
                 }
             }
@@ -2370,11 +2361,11 @@ public class ColetaFrame_v2 extends JFrame {
                                   (modoOffline ? " [OFFLINE]" : ""));
             }
 
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
+            LOG.error("Erro ao carregar dados da sala: {}", e.getMessage(), e);
             JOptionPane.showMessageDialog(this,
                     "Erro ao carregar dados da sala: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
 
@@ -2479,11 +2470,12 @@ public class ColetaFrame_v2 extends JFrame {
                     
                     tabelaHistorico.setEnabled(true);
                     
-                } catch (Exception e) {
+                } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
                     System.err.println("[OTIMIZADO] Erro ao carregar histórico: " + e.getMessage());
                     lblResumoSala.setText("❌ Erro ao carregar histórico");
                     tabelaHistorico.setEnabled(true);
-                    e.printStackTrace();
+                    LOG.error("Erro ao carregar histórico", e);
+                    Thread.currentThread().interrupt();
                 }
             }
         };
@@ -2667,7 +2659,7 @@ public class ColetaFrame_v2 extends JFrame {
                 SwingUtilities.invokeLater(() -> campoBusca.requestFocusInWindow());
             }
 
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
             SoundNotification.playSound(SoundNotification.SoundType.ERROR);
             JOptionPane.showMessageDialog(this,
                     "Erro ao buscar patrimônio: " + e.getMessage(),
@@ -2781,7 +2773,7 @@ public class ColetaFrame_v2 extends JFrame {
                         if (!jaColetado) {
                             patrimoniosPendentes.add(p);
                         }
-                    } catch (Exception e) {
+                    } catch (SQLException | RuntimeException e) {
                         // Em caso de erro, incluir o patrimônio
                         patrimoniosPendentes.add(p);
                     }
@@ -2853,7 +2845,7 @@ public class ColetaFrame_v2 extends JFrame {
                     timer.setRepeats(false);
                     timer.start();
 
-                } catch (Exception e) {
+                } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
                     mostrarLoading(false);
                     btnBuscarDescricao.setEnabled(true);
                     campoBuscaDescricao.setEnabled(true);
@@ -2870,7 +2862,8 @@ public class ColetaFrame_v2 extends JFrame {
                     timer.setRepeats(false);
                     timer.start();
 
-                    e.printStackTrace();
+                    LOG.error("Erro ao buscar por descrição", e);
+                    Thread.currentThread().interrupt();
                 }
             }
         };
@@ -2947,11 +2940,11 @@ public class ColetaFrame_v2 extends JFrame {
             areaObservacoesSemPatrimonio.requestFocus();
 
         } catch (Exception e) {
+            LOG.error("Erro ao selecionar descrição: {}", e.getMessage(), e);
             JOptionPane.showMessageDialog(this,
                     "Erro ao selecionar descrição: " + e.getMessage(),
                     "Erro",
                     JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
 
@@ -3007,11 +3000,11 @@ public class ColetaFrame_v2 extends JFrame {
                     if (idParticipante == null) {
                         idParticipante = 0; // Valor especial para admin sem participação formal
                     }
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
                     idParticipante = 0; // Fallback para admin
                 }
             }
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
             System.err.println("DEBUG: Erro ao verificar permissões: " + e.getMessage());
             JOptionPane.showMessageDialog(this,
                     "Erro ao verificar permissões: " + e.getMessage(),
@@ -3195,11 +3188,10 @@ public class ColetaFrame_v2 extends JFrame {
                 campoBusca.selectAll(); // Selecionar todo o texto para facilitar nova digitação
             });
 
-            System.out.println("DEBUG: registrarItemEncontrado() concluído com sucesso!");
+            LOG.debug("registrarItemEncontrado() concluído com sucesso!");
 
-        } catch (Exception e) {
-            System.err.println("DEBUG: ERRO ao registrar item: " + e.getMessage());
-            e.printStackTrace();
+        } catch (SQLException | RuntimeException e) {
+            LOG.error("ERRO ao registrar item: {}", e.getMessage(), e);
             JOptionPane.showMessageDialog(this, "Erro ao registrar item: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
         }
@@ -3299,11 +3291,10 @@ public class ColetaFrame_v2 extends JFrame {
                 campoBusca.requestFocusInWindow();
             });
 
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
             SoundNotification.playSound(SoundNotification.SoundType.ERROR);
             mostrarFeedbackVisualErro("Erro: " + e.getMessage());
-            System.err.println("ERRO no modo automático: " + e.getMessage());
-            e.printStackTrace();
+            LOG.error("ERRO no modo automático: {}", e.getMessage(), e);
             campoBusca.selectAll();
         }
     }
@@ -3367,10 +3358,10 @@ public class ColetaFrame_v2 extends JFrame {
             tabelaItensAgrupados.revalidate();
             tabelaItensAgrupados.repaint();
 
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
+            LOG.error("Erro ao carregar itens agrupados: {}", e.getMessage(), e);
             JOptionPane.showMessageDialog(this, "Erro ao carregar itens agrupados: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
 
@@ -3498,10 +3489,10 @@ public class ColetaFrame_v2 extends JFrame {
             // Recarregar histórico usando numeroSala (consistente com dados no banco)
             carregarHistoricoColeta(salaAtual.getNumeroSala());
 
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
+            LOG.error("Erro ao excluir coleta: {}", e.getMessage(), e);
             JOptionPane.showMessageDialog(this, "Erro ao excluir coleta: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
 
@@ -3598,15 +3589,15 @@ public class ColetaFrame_v2 extends JFrame {
 
             campoBusca.requestFocusInWindow();
 
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
             // Som de erro
             SoundNotification.playSound(SoundNotification.SoundType.ERROR);
 
+            LOG.error("Erro ao remover item: {}", e.getMessage(), e);
             JOptionPane.showMessageDialog(this,
                     "❌ Erro ao remover item: " + e.getMessage(),
                     "Erro",
                     JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
 
@@ -3754,10 +3745,10 @@ public class ColetaFrame_v2 extends JFrame {
                         "Erro", JOptionPane.ERROR_MESSAGE);
             }
 
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
+            LOG.error("Erro ao finalizar coleta: {}", e.getMessage(), e);
             JOptionPane.showMessageDialog(this, "Erro ao finalizar coleta: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
 
@@ -3887,12 +3878,12 @@ public class ColetaFrame_v2 extends JFrame {
                         JOptionPane.ERROR_MESSAGE);
             }
 
-        } catch (Exception e) {
+        } catch (SQLException | RuntimeException e) {
+            LOG.error("Erro ao reabrir coleta: {}", e.getMessage(), e);
             JOptionPane.showMessageDialog(this,
                     "❌ Erro ao reabrir coleta:\n\n" + e.getMessage(),
                     "Erro",
                     JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
 
@@ -3993,9 +3984,15 @@ public class ColetaFrame_v2 extends JFrame {
         if (usuarioLogado == null) {
             return null;
         }
+        
+        if (inventarioAtivo == null) {
+            System.out.println("DEBUG: Nenhum inventário ativo para verificar autorização");
+            return null;
+        }
 
         // Modo offline: todos os usuários autenticados têm acesso
-        System.out.println("DEBUG: Modo offline - usuário autorizado: " + usuarioLogado.getNomeCompleto());
+        System.out.println("DEBUG: Modo offline - usuário autorizado: " + usuarioLogado.getNomeCompleto() + 
+                          " para inventário: " + inventarioAtivo.getNome());
         return usuarioLogado.getId();
     }
 
@@ -4324,6 +4321,7 @@ public class ColetaFrame_v2 extends JFrame {
 
         // Efeito hover
         button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 if (button.isEnabled()) {
                     try {
@@ -4331,19 +4329,20 @@ public class ColetaFrame_v2 extends JFrame {
                         field.setAccessible(true);
                         field.set(button, true);
                         button.repaint();
-                    } catch (Exception e) {
+                    } catch (NoSuchFieldException | IllegalAccessException e) {
                         // Fallback silencioso
                     }
                 }
             }
 
+            @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 try {
                     java.lang.reflect.Field field = button.getClass().getDeclaredField("isHovered");
                     field.setAccessible(true);
                     field.set(button, false);
                     button.repaint();
-                } catch (Exception e) {
+                } catch (NoSuchFieldException | IllegalAccessException e) {
                     // Fallback silencioso
                 }
             }

@@ -1,13 +1,18 @@
 package com.inventario.dao;
 
-import com.inventario.util.DatabaseConnection;
-import org.springframework.stereotype.Repository;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.inventario.util.DatabaseConnection;
 
 /**
  * DAO para operações de Reconciliação de Patrimônios
@@ -84,7 +89,7 @@ public class ReconciliacaoDAO {
                 c.observacao_coleta,
                 u.nome_completo as coletor
             FROM tabela_coleta c
-            LEFT JOIN tabela_participante_inventario pi ON c.id_participante_inventario = pi.id
+            LEFT JOIN tabela_participante_inventario pi ON c.id_participante_inventario = pi.id_participante
             LEFT JOIN tabela_usuario u ON pi.id_usuario = u.id
             WHERE c.id_inventario = ?
             AND c.sem_etiqueta = true
