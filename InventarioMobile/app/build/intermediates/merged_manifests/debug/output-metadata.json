@@ -11,8 +11,8 @@
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 35,
-      "versionName": "1.2.35",
+      "versionCode": 44,
+      "versionName": "2.7.0 (Build 44)",
       "outputFile": "AndroidManifest.xml"
     }
   ],

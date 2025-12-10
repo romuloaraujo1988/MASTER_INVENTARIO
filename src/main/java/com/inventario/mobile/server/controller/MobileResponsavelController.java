@@ -3,6 +3,7 @@ package com.inventario.mobile.server.controller;
 import com.inventario.mobile.server.dto.ApiResponse;
 import com.inventario.mobile.server.dto.MobileResponsavelDTO;
 import com.inventario.mobile.server.service.MobileResponsavelService;
+import com.inventario.security.annotation.RequireConsulta;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +17,17 @@ import java.util.List;
 
 /**
  * Controlador REST para operações de responsável mobile
+ * 
+ * Segurança por Role:
+ * - Todos os endpoints: Qualquer usuário autenticado
+ * 
+ * @author Sistema de Inventário
+ * @version 2.0.0
  */
 @RestController
 @RequestMapping("/api/mobile/responsaveis")
 @CrossOrigin(origins = "*", maxAge = 3600)
+@RequireConsulta // Todos os endpoints de responsável são acessíveis a qualquer usuário autenticado
 public class MobileResponsavelController {
     
     private static final Logger logger = LoggerFactory.getLogger(MobileResponsavelController.class);

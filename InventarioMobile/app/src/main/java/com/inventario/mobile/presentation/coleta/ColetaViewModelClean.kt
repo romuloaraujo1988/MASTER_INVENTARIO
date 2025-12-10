@@ -9,6 +9,7 @@ import com.inventario.mobile.presentation.state.ColetaState
 import com.inventario.mobile.utils.MetricsHelper
 import com.inventario.mobile.utils.ScanMetrics
 import com.inventario.mobile.utils.ScanMetricsTracker
+import com.inventario.mobile.utils.VibrationHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,12 +26,14 @@ import javax.inject.Inject
  * - Validações no Use Case (não aqui)
  * 
  * v2.1: Adicionado tracking de métricas para análise de performance
+ * v2.10: Adicionado feedback tátil (vibração) ao coletar
  */
 @HiltViewModel
 class ColetaViewModelClean @Inject constructor(
     private val buscarPatrimonioUseCase: BuscarPatrimonioUseCase,
     private val registrarColetaUseCase: RegistrarColetaUseCase,
-    private val syncScheduler: com.inventario.mobile.sync.SyncScheduler
+    private val syncScheduler: com.inventario.mobile.sync.SyncScheduler,
+    private val vibrationHelper: VibrationHelper
 ) : ViewModel() {
     
     companion object {
@@ -82,6 +85,9 @@ class ColetaViewModelClean @Inject constructor(
                     
                     // Incrementar contador de coletas para sincronização automática
                     syncScheduler.incrementCollectionCount()
+                    
+                    // v2.10: Vibrar ao coletar (se habilitado nas configurações)
+                    vibrationHelper.vibrateOnCollection()
                 },
                 onFailure = { error ->
                     _state.value = ColetaState.Error(
@@ -253,6 +259,9 @@ class ColetaViewModelClean @Inject constructor(
                     onSuccess = { coleta ->
                         _state.value = ColetaState.Success(coleta)
                         syncScheduler.incrementCollectionCount()
+                        
+                        // v2.10: Vibrar ao coletar (se habilitado nas configurações)
+                        vibrationHelper.vibrateOnCollection()
                         
                         // Resetar métricas para próxima coleta
                         resetarMetricas()

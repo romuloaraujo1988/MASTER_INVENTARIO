@@ -1,5 +1,16 @@
 package com.inventario.util;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.inventario.dao.PatrimonioDAO;
 import com.inventario.dao.ResponsavelDAO;
 import com.inventario.dao.SalaDAO;
@@ -8,13 +19,6 @@ import com.inventario.model.Patrimonio;
 import com.inventario.model.Responsavel;
 import com.inventario.model.Sala;
 import com.inventario.model.Setor;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.SQLException;
-import java.util.*;
 
 /**
  * Classe responsável pela importação de dados CSV do SUAP
@@ -223,7 +227,7 @@ public class ImportacaoCSV {
                 }
             }
             
-        } catch (Exception e) {
+        } catch (SQLException e) {
             String erro = "Linha " + (linhasProcessadas + 1) + ": Erro ao processar - " + e.getMessage();
             listaErros.add(erro);
             erros++;

@@ -14,8 +14,8 @@ android {
         applicationId "com.inventario.mobile"
         minSdk 23  // Atualizado para suportar biometria
         targetSdk 34
-        versionCode 41
-        versionName "2.6.0"
+        versionCode 44
+        versionName "2.7.0 (Build 44)"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

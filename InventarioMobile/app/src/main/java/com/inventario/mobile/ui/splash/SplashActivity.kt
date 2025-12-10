@@ -45,6 +45,10 @@ class SplashActivity : AppCompatActivity() {
             setContentView(binding.root)
             Log.d(TAG, "onCreate: setContentView executado com sucesso")
             
+            // Definir versão dinamicamente
+            binding.tvVersion.text = getString(com.inventario.mobile.R.string.app_version, com.inventario.mobile.BuildConfig.VERSION_NAME)
+            Log.d(TAG, "onCreate: Versão definida: ${com.inventario.mobile.BuildConfig.VERSION_NAME}")
+            
             // Inicializar PreferencesManager (versão criptografada)
             preferencesManager = PreferencesManager(this)
             Log.d(TAG, "onCreate: PreferencesManager inicializado com sucesso")

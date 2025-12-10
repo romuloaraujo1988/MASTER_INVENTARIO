@@ -1,16 +1,17 @@
 package com.inventario.mobile.server.service;
 
-import com.inventario.dao.SalaDAO;
-import com.inventario.model.Sala;
-import com.inventario.mobile.server.dto.MobileSalaDTO;
-import com.inventario.mobile.server.dto.MobileSalaComProgressoDTO;
-import org.springframework.stereotype.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.inventario.dao.SalaDAO;
+import com.inventario.mobile.server.dto.MobileSalaComProgressoDTO;
+import com.inventario.mobile.server.dto.MobileSalaDTO;
+import com.inventario.model.Sala;
 
 /**
  * Serviço para operações de sala mobile
@@ -208,39 +209,6 @@ public class MobileSalaService {
         }
         
         return 0;
-    }
-    
-    /**
-     * Verifica se uma sala está finalizada em um inventário
-     * Lógica: Uma sala está finalizada se todos os patrimônios dela foram coletados
-     */
-    private boolean isSalaFinalizada(Integer idInventario, Integer idSala) {
-        // Verificar se todos os patrimônios da sala foram coletados neste inventário
-        String sql = "SELECT " +
-                    "    (SELECT COUNT(*) FROM TABELA_PATRIMONIO WHERE ID_SALA = ?) as total_patrimonios, " +
-                    "    (SELECT COUNT(DISTINCT ID_PATRIMONIO) FROM TABELA_COLETA " +
-                    "     WHERE ID_INVENTARIO = ? AND ID_PATRIMONIO IN " +
-                    "         (SELECT ID FROM TABELA_PATRIMONIO WHERE ID_SALA = ?)) as patrimonios_coletados";
-        
-        try (java.sql.Connection conn = com.inventario.util.DatabaseConnection.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, idSala);
-            stmt.setInt(2, idInventario);
-            stmt.setInt(3, idSala);
-            
-            try (java.sql.ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
-            }
-        } catch (Exception e) {
-            logger.warn("Erro ao verificar se sala está finalizada: {}", e.getMessage());
-            // Em caso de erro, não filtrar (retornar false para não bloquear)
-            return false;
-        }
-        
-        return false;
     }
     
     /**

@@ -82,25 +82,38 @@ class InventarioPorSalaFragment : Fragment() {
      * Detecta quando o usuário chega ao final da lista e carrega mais itens.
      */
     private fun setupInfiniteScroll() {
-        // O NestedScrollView é o primeiro filho do SwipeRefreshLayout
-        val nestedScrollView = binding.swipeRefresh.getChildAt(0) as? androidx.core.widget.NestedScrollView
-            ?: return
+        android.util.Log.d(TAG, "setupInfiniteScroll: Configurando scroll listener no NestedScrollView")
         
-        nestedScrollView.setOnScrollChangeListener(
-            androidx.core.widget.NestedScrollView.OnScrollChangeListener { v, _, scrollY, _, oldScrollY ->
-                // Só carregar mais se estiver rolando para baixo
-                if (scrollY > oldScrollY) {
-                    val childHeight = v.getChildAt(0)?.height ?: 0
-                    val scrollViewHeight = v.height
-                    
-                    // Verificar se chegou perto do final (300px de margem para carregar antes)
-                    val threshold = 300
-                    if (scrollY + scrollViewHeight >= childHeight - threshold) {
-                        viewModel.carregarMaisPatrimonios()
-                    }
-                }
+        binding.nestedScrollView.setOnScrollChangeListener { v: View, scrollX: Int, scrollY: Int, oldScrollX: Int, oldScrollY: Int ->
+            // Só processar se estiver rolando para baixo
+            if (scrollY <= oldScrollY) return@setOnScrollChangeListener
+            
+            val nestedScrollView = v as androidx.core.widget.NestedScrollView
+            val childHeight = nestedScrollView.getChildAt(0)?.height ?: 0
+            val scrollViewHeight = nestedScrollView.height
+            
+            // Calcular distância até o final
+            val distanceToEnd = childHeight - (scrollY + scrollViewHeight)
+            
+            // Carregar mais quando faltar 300px para o final
+            val threshold = 300
+            
+            android.util.Log.d(TAG, "NestedScroll: scrollY=$scrollY, childHeight=$childHeight, " +
+                    "viewHeight=$scrollViewHeight, distanceToEnd=$distanceToEnd")
+            
+            if (distanceToEnd <= threshold) {
+                android.util.Log.d(TAG, "Chegou perto do final, carregando mais...")
+                viewModel.carregarMaisPatrimonios()
             }
-        )
+        }
+    }
+    
+    companion object {
+        private const val TAG = "InventarioPorSalaFrag"
+        
+        fun newInstance(): InventarioPorSalaFragment {
+            return InventarioPorSalaFragment()
+        }
     }
     
     private fun setupChips() {
@@ -266,11 +279,5 @@ class InventarioPorSalaFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-    
-    companion object {
-        fun newInstance(): InventarioPorSalaFragment {
-            return InventarioPorSalaFragment()
-        }
     }
 }

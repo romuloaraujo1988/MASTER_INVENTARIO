@@ -41,19 +41,19 @@ public class OfflineAuthService {
             Usuario usuario = buscarUsuarioPorLogin(conn, login.trim());
             
             if (usuario == null) {
-                LOGGER.info("Usuário não encontrado no banco offline: " + login);
+                LOGGER.log(Level.INFO, "Usuário não encontrado no banco offline: {0}", login);
                 return null;
             }
             
             // Verificar se o usuário está bloqueado
             if (Boolean.TRUE.equals(usuario.getBloqueado())) {
-                LOGGER.info("Usuário bloqueado: " + login);
+                LOGGER.log(Level.INFO, "Usuário bloqueado: {0}", login);
                 return null;
             }
             
             // Verificar se o usuário está ativo
             if (!Boolean.TRUE.equals(usuario.getAtivo())) {
-                LOGGER.info("Usuário inativo: " + login);
+                LOGGER.log(Level.INFO, "Usuário inativo: {0}", login);
                 return null;
             }
             
@@ -69,7 +69,7 @@ public class OfflineAuthService {
             // Autenticação bem-sucedida
             atualizarUltimoAcesso(conn, usuario);
             
-            LOGGER.info("Usuário autenticado com sucesso no modo offline: " + login);
+            LOGGER.log(Level.INFO, "Usuário autenticado com sucesso no modo offline: {0}", login);
             return usuario;
             
         } catch (SQLException e) {
@@ -178,11 +178,11 @@ public class OfflineAuthService {
         if (tentativas >= MAX_TENTATIVAS_LOGIN) {
             // Bloquear usuário
             sql = "UPDATE local_usuario SET tentativas_login = ?, bloqueado = TRUE WHERE id = ?";
-            LOGGER.warning("Usuário bloqueado por excesso de tentativas: " + usuario.getLogin());
+            LOGGER.log(Level.WARNING, "Usuário bloqueado por excesso de tentativas: {0}", usuario.getLogin());
         } else {
             sql = "UPDATE local_usuario SET tentativas_login = ? WHERE id = ?";
-            LOGGER.info("Senha incorreta para usuário: " + usuario.getLogin() + 
-                       " (Tentativa " + tentativas + "/" + MAX_TENTATIVAS_LOGIN + ")");
+            LOGGER.log(Level.INFO, "Senha incorreta para usuário: {0} (Tentativa {1}/{2})", 
+                       new Object[]{usuario.getLogin(), tentativas, MAX_TENTATIVAS_LOGIN});
         }
         
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -265,7 +265,7 @@ public class OfflineAuthService {
             int rowsAffected = stmt.executeUpdate();
             
             if (rowsAffected > 0) {
-                LOGGER.info("Usuário inserido no banco offline: " + usuario.getLogin());
+                LOGGER.log(Level.INFO, "Usuário inserido no banco offline: {0}", usuario.getLogin());
                 return true;
             }
             
@@ -312,7 +312,7 @@ public class OfflineAuthService {
             int rowsAffected = stmt.executeUpdate();
             
             if (rowsAffected > 0) {
-                LOGGER.info("Usuário atualizado no banco offline: " + usuario.getLogin());
+                LOGGER.log(Level.INFO, "Usuário atualizado no banco offline: {0}", usuario.getLogin());
                 return true;
             }
             
@@ -361,7 +361,7 @@ public class OfflineAuthService {
             int rowsAffected = stmt.executeUpdate();
             
             if (rowsAffected > 0) {
-                LOGGER.info("Usuário desbloqueado no banco offline: " + usuarioId);
+                LOGGER.log(Level.INFO, "Usuário desbloqueado no banco offline: {0}", usuarioId);
                 return true;
             }
             
@@ -423,7 +423,7 @@ public class OfflineAuthService {
                 boolean inserido = inserirUsuario(conn, admin);
                 
                 if (inserido) {
-                    LOGGER.info("Usuário administrador padrão criado no banco offline: admin / admin123");
+                    LOGGER.info("Usuário administrador padrão criado no banco offline");
                     return true;
                 }
             }

@@ -423,6 +423,7 @@ id nav_settings
 id nav_statistics
 id nav_sync
 id nav_view
+id nestedScrollView
 id offline_icon
 id offline_indicator
 id offline_text
@@ -485,6 +486,7 @@ id switchNotifications
 id switchOfflineMode
 id switchSync
 id switchSyncOnWifiOnly
+id switchVibrationOnCollection
 id switchWifiOnly
 id tabLayout
 id textColetadoPor

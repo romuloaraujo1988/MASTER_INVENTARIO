@@ -311,8 +311,7 @@ public class ColetaFrame_v2 extends JFrame {
             public Component getListCellRendererComponent(JList<?> list, Object value, int index,
                     boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof Sala) {
-                    Sala sala = (Sala) value;
+                if (value instanceof Sala sala) {
                     setText(sala.getIdentificacaoCompleta());
                 } else if (value == null) {
                     setText("-- Selecione uma sala --");
@@ -1641,7 +1640,6 @@ public class ColetaFrame_v2 extends JFrame {
                     }
                 } catch (Exception formatEx) {
                     System.err.println("DEBUG TIMESTAMP: ERRO ao formatar data: " + formatEx.getMessage());
-                    formatEx.printStackTrace();
                     dataFormatada = "ERRO FORMATO";
                 }
                 
@@ -2678,12 +2676,10 @@ public class ColetaFrame_v2 extends JFrame {
         if (status != null && !status.isEmpty()) {
             lblStatusItem.setText(status);
             // Colorir baseado no status
-            if ("ATIVO".equals(status)) {
-                lblStatusItem.setForeground(new Color(46, 204, 113)); // Verde
-            } else if ("BAIXADO".equals(status) || "INATIVO".equals(status)) {
-                lblStatusItem.setForeground(new Color(231, 76, 60)); // Vermelho
-            } else {
-                lblStatusItem.setForeground(new Color(241, 196, 15)); // Amarelo
+            switch (status) {
+                case "ATIVO" -> lblStatusItem.setForeground(new Color(46, 204, 113)); // Verde
+                case "BAIXADO", "INATIVO" -> lblStatusItem.setForeground(new Color(231, 76, 60)); // Vermelho
+                default -> lblStatusItem.setForeground(new Color(241, 196, 15)); // Amarelo
             }
         } else {
             lblStatusItem.setText("-");
@@ -2878,10 +2874,8 @@ public class ColetaFrame_v2 extends JFrame {
         // Encontrar o painel central que contém o CardLayout
         Component[] components = tabelaResultadosDescricao.getParent().getParent().getComponents();
         for (Component comp : components) {
-            if (comp instanceof JPanel) {
-                JPanel painelCentral = (JPanel) comp;
-                if (painelCentral.getLayout() instanceof CardLayout) {
-                    CardLayout layout = (CardLayout) painelCentral.getLayout();
+            if (comp instanceof JPanel painelCentral) {
+                if (painelCentral.getLayout() instanceof CardLayout layout) {
                     if (mostrar) {
                         layout.show(painelCentral, "loading");
                     } else {
@@ -2980,30 +2974,18 @@ public class ColetaFrame_v2 extends JFrame {
             if (autorizacao == null) {
                 System.out.println("DEBUG: Usuário sem autorização");
                 JOptionPane.showMessageDialog(this,
-                        "Acesso Negado!\n\n" +
-                                "Você não está habilitado para realizar coletas neste inventário.\n" +
-                                "Entre em contato com o supervisor do inventário para obter as permissões necessárias.",
+                        """
+                        Acesso Negado!
+
+                        Você não está habilitado para realizar coletas neste inventário.
+                        Entre em contato com o supervisor do inventário para obter as permissões necessárias.""",
                         "Acesso Negado", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             System.out.println("DEBUG: Autorização obtida: " + autorizacao);
-
-            // Para admins, buscar ou criar um participante temporário se necessário
-            Integer idParticipante = autorizacao;
-            if (autorizacao == -1) {
-                // Admin: tentar buscar participante existente, senão usar ID 0 para
-                // compatibilidade
-                try {
-                    idParticipante = participanteInventarioDAO.buscarIdParticipantePorUsuario(
-                            inventarioAtivo.getId(), usuarioLogado.getId());
-                    if (idParticipante == null) {
-                        idParticipante = 0; // Valor especial para admin sem participação formal
-                    }
-                } catch (RuntimeException e) {
-                    idParticipante = 0; // Fallback para admin
-                }
-            }
+            // Nota: O ID do participante é calculado posteriormente no método,
+            // quando a coleta é efetivamente criada (linha ~3065)
         } catch (SQLException | RuntimeException e) {
             System.err.println("DEBUG: Erro ao verificar permissões: " + e.getMessage());
             JOptionPane.showMessageDialog(this,
@@ -3144,8 +3126,9 @@ public class ColetaFrame_v2 extends JFrame {
                 // Verificar se o patrimônio já foi coletado neste inventário
                 if (coletaDAO.coletaExiste(inventarioAtivo.getId(), patrimonioSelecionado.getId())) {
                     JOptionPane.showMessageDialog(this,
-                            "Este patrimônio já foi coletado neste inventário.\n" +
-                                    "Número: " + patrimonioSelecionado.getNumero() + "\n" +
+                            """
+                            Este patrim\u00f4nio j\u00e1 foi coletado neste invent\u00e1rio.
+                            N\u00famero: """ + patrimonioSelecionado.getNumero() + "\n" +
                                     "Descrição: " + patrimonioSelecionado.getDescricao(),
                             "Patrimônio já coletado", JOptionPane.WARNING_MESSAGE);
                     return;
@@ -3447,8 +3430,9 @@ public class ColetaFrame_v2 extends JFrame {
         String descricao = (String) modeloTabelaHistorico.getValueAt(linhaSelecionada, 2);
 
         int confirmacao = JOptionPane.showConfirmDialog(this,
-                "Tem certeza que deseja excluir a coleta do item:\n" +
-                        "Patrimônio: " + numeroPatrimonio + "\n" +
+                """
+                Tem certeza que deseja excluir a coleta do item:
+                Patrim\u00f4nio: """ + numeroPatrimonio + "\n" +
                         "Descrição: " + descricao + "\n\n" +
                         "Esta ação não pode ser desfeita!",
                 "Confirmar Exclusão",
@@ -3538,8 +3522,10 @@ public class ColetaFrame_v2 extends JFrame {
 
         // Confirmar remoção
         int confirmacao = JOptionPane.showConfirmDialog(this,
-                "⚠️ Tem certeza que deseja remover este item da coleta?\n\n" +
-                        "Patrimônio: " + numeroPatrimonio + "\n" +
+                """
+                \u26a0\ufe0f Tem certeza que deseja remover este item da coleta?
+                
+                Patrim\u00f4nio: """ + numeroPatrimonio + "\n" +
                         "Descrição: " + descricao + "\n" +
                         "Data/Hora: " + dataHora + "\n\n" +
                         "Esta ação não pode ser desfeita!",
@@ -3609,10 +3595,11 @@ public class ColetaFrame_v2 extends JFrame {
     private void finalizarColetaSala() {
         // Verificar se está em modo online - operação requer PostgreSQL
         if (offlineManager.isOperatingOffline()) {
-            JOptionPane.showMessageDialog(this,
-                    "⚠️ Operação não disponível em modo OFFLINE!\n\n" +
-                    "A finalização de salas requer conexão com o servidor.\n" +
-                    "Conecte-se ao servidor e tente novamente.",
+            JOptionPane.showMessageDialog(this, """
+                                                \u26a0\ufe0f Opera\u00e7\u00e3o n\u00e3o dispon\u00edvel em modo OFFLINE!
+                                                
+                                                A finaliza\u00e7\u00e3o de salas requer conex\u00e3o com o servidor.
+                                                Conecte-se ao servidor e tente novamente.""",
                     "Modo Offline",
                     JOptionPane.WARNING_MESSAGE);
             return;
@@ -3637,9 +3624,9 @@ public class ColetaFrame_v2 extends JFrame {
             // Verificar se a sala já está finalizada
             boolean jaFinalizada = salaInventarioDAO.isColetaFinalizada(salaAtual.getIdSala(), inventarioAtivo.getId());
             if (jaFinalizada) {
-                JOptionPane.showMessageDialog(this,
-                        "Esta sala já foi finalizada anteriormente.\n" +
-                        "Use o botão 'Reabrir' se precisar fazer alterações.",
+                JOptionPane.showMessageDialog(this, """
+                                                    Esta sala j\u00e1 foi finalizada anteriormente.
+                                                    Use o bot\u00e3o 'Reabrir' se precisar fazer altera\u00e7\u00f5es.""",
                         "Sala já Finalizada", JOptionPane.WARNING_MESSAGE);
                 return;
             }
@@ -3657,15 +3644,22 @@ public class ColetaFrame_v2 extends JFrame {
 
             // Confirmar finalização com estatísticas
             int confirmacao = JOptionPane.showConfirmDialog(this,
-                    "Tem certeza que deseja FINALIZAR a coleta da sala?\n\n" +
-                            "📍 Sala: " + salaAtual.getIdentificacaoCompleta() + "\n" +
-                            "📊 Total de itens coletados: " + totalItensColetados + "\n" +
-                            "🏷️ Itens sem etiqueta: " + totalItensSemEtiqueta + "\n\n" +
-                            "⚠️ Após finalizar:\n" +
-                            "• A sala será marcada como CONCLUÍDA\n" +
-                            "• Não será possível adicionar novas coletas\n" +
-                            "• A sala não aparecerá mais no app mobile\n\n" +
-                            "Confirma a finalização?",
+                    """
+                    Tem certeza que deseja FINALIZAR a coleta da sala?
+
+                    📍 Sala: %s
+                    📊 Total de itens coletados: %d
+                    🏷️ Itens sem etiqueta: %d
+
+                    ⚠️ Após finalizar:
+                    • A sala será marcada como CONCLUÍDA
+                    • Não será possível adicionar novas coletas
+                    • A sala não aparecerá mais no app mobile
+
+                    Confirma a finalização?""".formatted(
+                            salaAtual.getIdentificacaoCompleta(),
+                            totalItensColetados,
+                            totalItensSemEtiqueta),
                     "Confirmar Finalização",
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.QUESTION_MESSAGE);
@@ -3707,11 +3701,17 @@ public class ColetaFrame_v2 extends JFrame {
                 SoundNotification.playSound(SoundNotification.SoundType.SUCCESS);
 
                 JOptionPane.showMessageDialog(this,
-                        "✅ Coleta da sala FINALIZADA com sucesso!\n\n" +
-                                "📍 Sala: " + salaAtual.getIdentificacaoCompleta() + "\n" +
-                                "📊 Total coletado: " + totalItensColetados + " itens\n" +
-                                "🏷️ Sem etiqueta: " + totalItensSemEtiqueta + " itens\n\n" +
-                                "A sala foi marcada como concluída no inventário.",
+                        """
+                        ✅ Coleta da sala FINALIZADA com sucesso!
+
+                        📍 Sala: %s
+                        📊 Total coletado: %d itens
+                        🏷️ Sem etiqueta: %d itens
+
+                        A sala foi marcada como concluída no inventário.""".formatted(
+                                salaAtual.getIdentificacaoCompleta(),
+                                totalItensColetados,
+                                totalItensSemEtiqueta),
                         "Finalização Concluída", JOptionPane.INFORMATION_MESSAGE);
 
                 // Atualizar interface - desabilitar campos
@@ -3760,10 +3760,11 @@ public class ColetaFrame_v2 extends JFrame {
     private void reabrirColetaSala() {
         // Verificar se está em modo online - operação requer PostgreSQL
         if (offlineManager.isOperatingOffline()) {
-            JOptionPane.showMessageDialog(this,
-                    "⚠️ Operação não disponível em modo OFFLINE!\n\n" +
-                    "A reabertura de salas requer conexão com o servidor.\n" +
-                    "Conecte-se ao servidor e tente novamente.",
+            JOptionPane.showMessageDialog(this, """
+                                                \u26a0\ufe0f Opera\u00e7\u00e3o n\u00e3o dispon\u00edvel em modo OFFLINE!
+                                                
+                                                A reabertura de salas requer conex\u00e3o com o servidor.
+                                                Conecte-se ao servidor e tente novamente.""",
                     "Modo Offline",
                     JOptionPane.WARNING_MESSAGE);
             return;
@@ -3774,9 +3775,12 @@ public class ColetaFrame_v2 extends JFrame {
                 (!("ADMIN".equals(usuarioLogado.getPerfil().name()) ||
                         "SUPERVISOR".equals(usuarioLogado.getPerfil().name())))) {
             JOptionPane.showMessageDialog(this,
-                    "⛔ Acesso Negado!\n\n" +
-                    "Apenas Administradores e Supervisores podem reabrir salas finalizadas.\n\n" +
-                    "Seu perfil atual: " + (usuarioLogado != null ? usuarioLogado.getPerfil().name() : "Não identificado"),
+                    """
+                    ⛔ Acesso Negado!
+
+                    Apenas Administradores e Supervisores podem reabrir salas finalizadas.
+
+                    Seu perfil atual: %s""".formatted(usuarioLogado != null ? usuarioLogado.getPerfil().name() : "Não identificado"),
                     "Permissão Insuficiente",
                     JOptionPane.ERROR_MESSAGE);
             System.out.println("DEBUG: Tentativa de reabrir sala negada - Usuário: " +
@@ -3841,10 +3845,13 @@ public class ColetaFrame_v2 extends JFrame {
                 SoundNotification.playSound(SoundNotification.SoundType.SUCCESS);
 
                 JOptionPane.showMessageDialog(this,
-                        "✅ Coleta da sala REABERTA com sucesso!\n\n" +
-                                "📍 Sala: " + salaAtual.getIdentificacaoCompleta() + "\n\n" +
-                                "A sala voltará a aparecer no aplicativo mobile e\n" +
-                                "poderá receber novas coletas.",
+                        """
+                        ✅ Coleta da sala REABERTA com sucesso!
+
+                        📍 Sala: %s
+
+                        A sala voltará a aparecer no aplicativo mobile e
+                        poderá receber novas coletas.""".formatted(salaAtual.getIdentificacaoCompleta()),
                         "Reabertura Concluída",
                         JOptionPane.INFORMATION_MESSAGE);
 
@@ -3881,96 +3888,13 @@ public class ColetaFrame_v2 extends JFrame {
         } catch (SQLException | RuntimeException e) {
             LOG.error("Erro ao reabrir coleta: {}", e.getMessage(), e);
             JOptionPane.showMessageDialog(this,
-                    "❌ Erro ao reabrir coleta:\n\n" + e.getMessage(),
+                    """
+                    ❌ Erro ao reabrir coleta:
+
+                    %s""".formatted(e.getMessage()),
                     "Erro",
                     JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    /**
-     * Determina a categoria de um item sem patrimônio baseado na sua descrição
-     * 
-     * @param descricao Descrição do item
-     * @return Categoria determinada
-     */
-    private String determinarCategoria(String descricao) {
-        if (descricao == null || descricao.trim().isEmpty()) {
-            return "NÃO CATEGORIZADO";
-        }
-
-        String desc = descricao.toLowerCase().trim();
-
-        // Móveis
-        if (desc.contains("mesa") || desc.contains("cadeira") || desc.contains("armário") ||
-                desc.contains("estante") || desc.contains("arquivo") || desc.contains("gaveteiro") ||
-                desc.contains("sofá") || desc.contains("poltrona") || desc.contains("banco") ||
-                desc.contains("prateleira") || desc.contains("balcão") || desc.contains("escrivaninha")) {
-            return "MÓVEIS";
-        }
-
-        // Equipamentos de Informática
-        if (desc.contains("computador") || desc.contains("notebook") || desc.contains("monitor") ||
-                desc.contains("teclado") || desc.contains("mouse") || desc.contains("impressora") ||
-                desc.contains("scanner") || desc.contains("cpu") || desc.contains("tablet") ||
-                desc.contains("servidor") || desc.contains("switch") || desc.contains("roteador") ||
-                desc.contains("modem") || desc.contains("webcam") || desc.contains("hd") ||
-                desc.contains("pendrive") || desc.contains("ssd")) {
-            return "EQUIPAMENTOS DE INFORMÁTICA";
-        }
-
-        // Eletrônicos
-        if (desc.contains("televisão") || desc.contains("tv") || desc.contains("projetor") ||
-                desc.contains("som") || desc.contains("caixa de som") || desc.contains("microfone") ||
-                desc.contains("amplificador") || desc.contains("rádio") || desc.contains("telefone") ||
-                desc.contains("celular") || desc.contains("smartphone") || desc.contains("câmera") ||
-                desc.contains("filmadora") || desc.contains("dvd") || desc.contains("blu-ray")) {
-            return "ELETRÔNICOS";
-        }
-
-        // Eletrodomésticos
-        if (desc.contains("geladeira") || desc.contains("freezer") || desc.contains("micro-ondas") ||
-                desc.contains("microondas") || desc.contains("fogão") || desc.contains("forno") ||
-                desc.contains("cafeteira") || desc.contains("bebedouro") || desc.contains("purificador") ||
-                desc.contains("ventilador") || desc.contains("ar condicionado") || desc.contains("aquecedor")) {
-            return "ELETRODOMÉSTICOS";
-        }
-
-        // Equipamentos de Laboratório
-        if (desc.contains("microscópio") || desc.contains("balança") || desc.contains("estufa") ||
-                desc.contains("autoclave") || desc.contains("centrífuga") || desc.contains("pipeta") ||
-                desc.contains("béquer") || desc.contains("proveta") || desc.contains("bureta") ||
-                desc.contains("reagente") || desc.contains("vidraria") || desc.contains("equipamento laboratorial")) {
-            return "EQUIPAMENTOS DE LABORATÓRIO";
-        }
-
-        // Ferramentas
-        if (desc.contains("furadeira") || desc.contains("parafusadeira") || desc.contains("martelo") ||
-                desc.contains("chave") || desc.contains("alicate") || desc.contains("serra") ||
-                desc.contains("broca") || desc.contains("ferramenta") || desc.contains("equipamento de manutenção")) {
-            return "FERRAMENTAS";
-        }
-
-        // Materiais de Escritório
-        if (desc.contains("papel") || desc.contains("caneta") || desc.contains("lápis") ||
-                desc.contains("grampeador") || desc.contains("perfurador") || desc.contains("pasta") ||
-                desc.contains("arquivo") || desc.contains("organizador") || desc.contains("material de escritório")) {
-            return "MATERIAIS DE ESCRITÓRIO";
-        }
-
-        // Equipamentos de Segurança
-        if (desc.contains("extintor") || desc.contains("câmera de segurança") || desc.contains("alarme") ||
-                desc.contains("detector") || desc.contains("equipamento de segurança") || desc.contains("epi")) {
-            return "EQUIPAMENTOS DE SEGURANÇA";
-        }
-
-        // Livros e Material Didático
-        if (desc.contains("livro") || desc.contains("apostila") || desc.contains("manual") ||
-                desc.contains("revista") || desc.contains("material didático") || desc.contains("bibliografia")) {
-            return "LIVROS E MATERIAL DIDÁTICO";
-        }
-
-        // Categoria padrão para itens não identificados
-        return "OUTROS";
     }
 
     /**

@@ -30,11 +30,12 @@ public class SalaInventarioDAO {
     /**
      * Verifica se está usando SQLite (modo offline)
      * NOTA: Para operações do desktop/servidor, sempre usar PostgreSQL
-     * @param conn Conexão ativa
      * @return sempre false para forçar uso do PostgreSQL
      */
+    @SuppressWarnings("unused")
     private boolean isSQLite(Connection conn) throws SQLException {
         // CORREÇÃO: Sempre retornar false para forçar uso do PostgreSQL
+        // Parâmetro conn mantido para compatibilidade com chamadas existentes
         return false;
     }
     
@@ -516,9 +517,9 @@ public class SalaInventarioDAO {
             try {
                 Object dataInicioObj = rs.getObject("DATA_INICIO_COLETA");
                 if (dataInicioObj != null) {
-                    if (dataInicioObj instanceof String) {
+                    if (dataInicioObj instanceof String string) {
                         // SQLite: converter String para Timestamp
-                        Timestamp dataInicio = Timestamp.valueOf((String) dataInicioObj);
+                        Timestamp dataInicio = Timestamp.valueOf(string);
                         salaInventario.setDataInicioColeta(dataInicio.toLocalDateTime());
                     } else {
                         // PostgreSQL: já é Timestamp
@@ -528,7 +529,7 @@ public class SalaInventarioDAO {
                         }
                     }
                 }
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 LOG.warn("Aviso: Erro ao parsear DATA_INICIO_COLETA - {}", e.getMessage());
                 // Continua sem a data
             }
@@ -536,9 +537,9 @@ public class SalaInventarioDAO {
             try {
                 Object dataFinalizacaoObj = rs.getObject("DATA_FINALIZACAO_COLETA");
                 if (dataFinalizacaoObj != null) {
-                    if (dataFinalizacaoObj instanceof String) {
+                    if (dataFinalizacaoObj instanceof String string) {
                         // SQLite: converter String para Timestamp
-                        Timestamp dataFinalizacao = Timestamp.valueOf((String) dataFinalizacaoObj);
+                        Timestamp dataFinalizacao = Timestamp.valueOf(string);
                         salaInventario.setDataFinalizacaoColeta(dataFinalizacao.toLocalDateTime());
                     } else {
                         // PostgreSQL: já é Timestamp
@@ -548,7 +549,7 @@ public class SalaInventarioDAO {
                         }
                     }
                 }
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 LOG.warn("Aviso: Erro ao parsear DATA_FINALIZACAO_COLETA - {}", e.getMessage());
                 // Continua sem a data
             }
@@ -570,9 +571,9 @@ public class SalaInventarioDAO {
             try {
                 Object dataCadastroObj = rs.getObject("data_criacao");
                 if (dataCadastroObj != null) {
-                    if (dataCadastroObj instanceof String) {
+                    if (dataCadastroObj instanceof String string) {
                         // SQLite: converter String para Timestamp
-                        Timestamp dataCadastro = Timestamp.valueOf((String) dataCadastroObj);
+                        Timestamp dataCadastro = Timestamp.valueOf(string);
                         salaInventario.setDataCadastro(dataCadastro.toLocalDateTime());
                     } else {
                         // PostgreSQL: já é Timestamp
@@ -582,16 +583,16 @@ public class SalaInventarioDAO {
                         }
                     }
                 }
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 // Coluna data_criacao não existe ou erro de parsing - ignorar silenciosamente
             }
             
             try {
                 Object dataAtualizacaoObj = rs.getObject("data_atualizacao");
                 if (dataAtualizacaoObj != null) {
-                    if (dataAtualizacaoObj instanceof String) {
+                    if (dataAtualizacaoObj instanceof String string) {
                         // SQLite: converter String para Timestamp
-                        Timestamp dataAtualizacao = Timestamp.valueOf((String) dataAtualizacaoObj);
+                        Timestamp dataAtualizacao = Timestamp.valueOf(string);
                         salaInventario.setDataUltimaAtualizacao(dataAtualizacao.toLocalDateTime());
                     } else {
                         // PostgreSQL: já é Timestamp
@@ -601,7 +602,7 @@ public class SalaInventarioDAO {
                         }
                     }
                 }
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 // Coluna data_atualizacao não existe ou erro de parsing - ignorar silenciosamente
             }
             
@@ -679,7 +680,7 @@ public class SalaInventarioDAO {
                         com.inventario.model.Sala sala = criarSalaMinimalFromResultSet(rs);
                         salasAbertas.add(sala);
                         LOG.trace("Sala criada: {}", sala.getIdentificacaoCompleta());
-                    } catch (Exception e) {
+                    } catch (SQLException e) {
                         LOG.error("ERRO ao processar sala {}: {} - {}", count, e.getClass().getName(), e.getMessage(), e);
                         // Continua processando as outras salas
                     }
@@ -741,7 +742,7 @@ public class SalaInventarioDAO {
                     salas.add(sala);
                     count++;
                     LOG.trace("Sala {} - {}", count, sala.getIdentificacaoCompleta());
-                } catch (Exception e) {
+                } catch (SQLException e) {
                     LOG.error("ERRO ao processar sala individual: {}", e.getMessage(), e);
                     // Continua processando as outras salas
                 }
@@ -870,10 +871,9 @@ public class SalaInventarioDAO {
                 
                 if (dataCadastroObj != null) {
                     // Verificar se é String (SQLite) ou Timestamp (PostgreSQL)
-                    if (dataCadastroObj instanceof String) {
-                        // SQLite retorna TEXT - converter para Timestamp
-                        String dataStr = (String) dataCadastroObj;
-                        try {
+                    if (dataCadastroObj instanceof String dataStr) {
+// SQLite retorna TEXT - converter para Timestamp
+                                                try {
                             // Formato esperado: 'YYYY-MM-DD HH:MM:SS'
                             Timestamp dataCadastro = Timestamp.valueOf(dataStr);
                             sala.setDataCadastro(dataCadastro);
@@ -905,107 +905,6 @@ public class SalaInventarioDAO {
         } catch (SQLException e) {
             LOG.error("ERRO ao criar Sala MINIMAL do ResultSet - ID_SALA: {}, NUMERO_SALA: {}", 
                 tryGetInt(rs, "ID_SALA"), tryGetString(rs, "NUMERO_SALA"), e);
-            throw e;
-        }
-        
-        return sala;
-    }
-    
-    /**
-     * Cria um objeto Sala a partir do ResultSet
-     * Com tratamento robusto para evitar erros de parsing de timestamps
-     * 
-     * @param rs ResultSet posicionado em uma linha válida
-     * @return Objeto Sala preenchido
-     * @throws SQLException se houver erro ao ler dados do ResultSet
-     */
-    private com.inventario.model.Sala criarSalaFromResultSet(ResultSet rs) throws SQLException {
-        com.inventario.model.Sala sala = new com.inventario.model.Sala();
-        
-        try {
-            // Campos obrigatórios
-            sala.setIdSala(rs.getInt("ID_SALA"));
-            sala.setNumeroSala(rs.getString("NUMERO_SALA"));
-            sala.setDescricao(rs.getString("DESCRICAO"));
-            
-            // ID do setor
-            int idSetor = rs.getInt("ID_SETOR");
-            if (!rs.wasNull()) {
-                sala.setIdSetor(idSetor);
-            }
-            
-            // Ativo
-            sala.setAtivo(rs.getBoolean("ATIVO"));
-            
-            // Campos opcionais
-            try {
-                Integer andar = rs.getInt("ANDAR");
-                if (!rs.wasNull()) {
-                    sala.setAndar(andar);
-                }
-            } catch (SQLException e) {
-                // Coluna ANDAR não existe - ignorar
-            }
-            
-            try {
-                sala.setBloco(rs.getString("BLOCO"));
-            } catch (SQLException e) {
-                // Coluna BLOCO não existe - ignorar
-            }
-            
-            try {
-                Integer capacidade = rs.getInt("CAPACIDADE");
-                if (!rs.wasNull()) {
-                    sala.setCapacidade(capacidade);
-                }
-            } catch (SQLException e) {
-                // Coluna CAPACIDADE não existe - ignorar
-            }
-            
-            try {
-                Double areaM2 = rs.getDouble("AREA_M2");
-                if (!rs.wasNull()) {
-                    sala.setAreaM2(areaM2);
-                }
-            } catch (SQLException e) {
-                // Coluna AREA_M2 não existe - ignorar
-            }
-            
-            try {
-                sala.setTipoSala(rs.getString("TIPO_SALA"));
-            } catch (SQLException e) {
-                // Coluna TIPO_SALA não existe - ignorar
-            }
-            
-            try {
-                sala.setObservacoes(rs.getString("OBSERVACOES"));
-            } catch (SQLException e) {
-                // Coluna OBSERVACOES não existe - ignorar
-            }
-            
-            // Timestamp - tratamento especial para SQLite e PostgreSQL
-            try {
-                Object dataCadastroObj = rs.getObject("DATA_CADASTRO");
-                if (dataCadastroObj != null) {
-                    if (dataCadastroObj instanceof String) {
-                        // SQLite: converter String para Timestamp
-                        Timestamp dataCadastro = Timestamp.valueOf((String) dataCadastroObj);
-                        sala.setDataCadastro(dataCadastro);
-                    } else {
-                        // PostgreSQL: já é Timestamp
-                        Timestamp dataCadastro = rs.getTimestamp("DATA_CADASTRO");
-                        if (dataCadastro != null && !rs.wasNull()) {
-                            sala.setDataCadastro(dataCadastro);
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                // Coluna DATA_CADASTRO não existe ou erro de parsing - ignorar
-                // Sala já tem data padrão do construtor
-            }
-            
-        } catch (SQLException e) {
-            LOG.error("ERRO ao criar Sala do ResultSet: {}", e.getMessage(), e);
             throw e;
         }
         

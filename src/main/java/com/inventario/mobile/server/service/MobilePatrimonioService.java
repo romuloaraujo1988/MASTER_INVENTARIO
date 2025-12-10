@@ -733,54 +733,92 @@ public class MobilePatrimonioService {
             logger.warn("Nenhum inventário encontrado para busca por sala");
         }
         
-        // Buscar todos os patrimônios da sala
-        List<Patrimonio> patrimonios = patrimonioDAO.buscarPorSala(salaId);
-        logger.debug("Encontrados {} patrimônios na sala {}", patrimonios.size(), salaId);
-        
         List<MobilePatrimonioDTO> dtos = new ArrayList<>();
         
-        // Processar cada patrimônio
-        for (Patrimonio patrimonio : patrimonios) {
-            // Verificar se foi coletado no inventário
-            boolean foiColetado = false;
-            if (inventario != null) {
-                try {
-                    foiColetado = coletaDAO.coletaExiste(inventario.getId(), patrimonio.getId());
-                } catch (Exception e) {
-                    logger.warn("Erro ao verificar coleta do patrimônio {}: {}", patrimonio.getId(), e.getMessage());
+        // Se não há filtro de coleta, usar paginação direta no banco (mais eficiente)
+        if (coletado == null) {
+            List<Patrimonio> patrimonios = patrimonioDAO.buscarPorSalaComPaginacao(salaId, page, size);
+            logger.debug("Encontrados {} patrimônios na sala {} (paginação no banco)", patrimonios.size(), salaId);
+            
+            for (Patrimonio patrimonio : patrimonios) {
+                boolean foiColetado = false;
+                if (inventario != null) {
+                    try {
+                        foiColetado = coletaDAO.coletaExiste(inventario.getId(), patrimonio.getId());
+                    } catch (Exception e) {
+                        logger.warn("Erro ao verificar coleta do patrimônio {}: {}", patrimonio.getId(), e.getMessage());
+                    }
+                }
+                MobilePatrimonioDTO dto = converterParaDTOSimples(patrimonio);
+                dto.setColetado(foiColetado);
+                dtos.add(dto);
+            }
+            
+            logger.debug("Retornando {} patrimônios da sala {} (página {})", dtos.size(), salaId, page);
+            return dtos;
+        }
+        
+        // Com filtro de coleta: buscar em lotes para evitar carregar tudo na memória
+        // Estratégia: buscar lotes do banco até ter itens suficientes para a página
+        int batchSize = size * 3; // Buscar 3x o tamanho da página por vez
+        int currentPage = 0;
+        int itemsToSkip = page * size;
+        int itemsSkipped = 0;
+        int itemsCollected = 0;
+        
+        logger.debug("Buscando com filtro coletado={}, precisamos pular {} itens e coletar {}", 
+                coletado, itemsToSkip, size);
+        
+        while (itemsCollected < size) {
+            List<Patrimonio> batch = patrimonioDAO.buscarPorSalaComPaginacao(salaId, currentPage, batchSize);
+            
+            if (batch.isEmpty()) {
+                logger.debug("Não há mais patrimônios para buscar");
+                break; // Não há mais dados
+            }
+            
+            for (Patrimonio patrimonio : batch) {
+                boolean foiColetado = false;
+                if (inventario != null) {
+                    try {
+                        foiColetado = coletaDAO.coletaExiste(inventario.getId(), patrimonio.getId());
+                    } catch (Exception e) {
+                        logger.warn("Erro ao verificar coleta do patrimônio {}: {}", patrimonio.getId(), e.getMessage());
+                    }
+                }
+                
+                // Verificar se passa no filtro
+                boolean passaFiltro = (coletado && foiColetado) || (!coletado && !foiColetado);
+                
+                if (passaFiltro) {
+                    if (itemsSkipped < itemsToSkip) {
+                        itemsSkipped++;
+                    } else {
+                        MobilePatrimonioDTO dto = converterParaDTOSimples(patrimonio);
+                        dto.setColetado(foiColetado);
+                        dtos.add(dto);
+                        itemsCollected++;
+                        
+                        if (itemsCollected >= size) {
+                            break;
+                        }
+                    }
                 }
             }
             
-            // Aplicar filtro de coleta se especificado
-            if (coletado != null) {
-                if (coletado && !foiColetado) {
-                    continue; // Pular se queremos coletados mas não foi coletado
-                }
-                if (!coletado && foiColetado) {
-                    continue; // Pular se queremos não coletados mas foi coletado
-                }
-            }
+            currentPage++;
             
-            // Converter para DTO
-            MobilePatrimonioDTO dto = converterParaDTOSimples(patrimonio);
-            dto.setColetado(foiColetado);
-            dtos.add(dto);
+            // Limite de segurança para evitar loop infinito
+            if (currentPage > 100) {
+                logger.warn("Limite de páginas atingido na busca por sala com filtro");
+                break;
+            }
         }
         
-        logger.debug("Após filtro de coleta: {} patrimônios", dtos.size());
+        logger.debug("Retornando {} patrimônios da sala {} (página {}, filtro coletado={})", 
+                dtos.size(), salaId, page, coletado);
         
-        // Aplicar paginação
-        int start = page * size;
-        int end = Math.min(start + size, dtos.size());
-        
-        List<MobilePatrimonioDTO> paginados = new ArrayList<>();
-        for (int i = start; i < end && i < dtos.size(); i++) {
-            paginados.add(dtos.get(i));
-        }
-        
-        logger.debug("Retornando {} patrimônios da sala {} (página {})", paginados.size(), salaId, page);
-        
-        return paginados;
+        return dtos;
     }
     
     /**

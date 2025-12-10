@@ -5,6 +5,9 @@ import com.inventario.mobile.server.dto.MobileColetaRequest;
 import com.inventario.mobile.server.dto.MobileColetaResponse;
 import com.inventario.mobile.server.dto.MobileColetaBatchRequest;
 import com.inventario.mobile.server.service.MobileColetaService;
+import com.inventario.security.annotation.RequireAdmin;
+import com.inventario.security.annotation.RequireColetor;
+import com.inventario.security.annotation.RequireConsulta;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +25,14 @@ import java.util.Map;
 /**
  * Controlador REST para operações de coleta mobile
  * 
+ * Segurança por Role:
+ * - POST (registrar): ADMIN, SUPERVISOR, COLETOR
+ * - GET (consultar): ADMIN, SUPERVISOR, COLETOR, CONSULTA
+ * - PUT (atualizar): ADMIN, SUPERVISOR, COLETOR (próprias coletas)
+ * - DELETE (excluir): ADMIN apenas
+ * 
  * @author Sistema de Inventário
- * @version 1.0.0
+ * @version 2.0.0
  */
 @RestController
 @RequestMapping("/api/mobile/coletas")
@@ -40,11 +49,13 @@ public class MobileColetaController {
     
     /**
      * Registrar uma nova coleta
+     * Requer role: ADMIN, SUPERVISOR ou COLETOR
      * 
      * @param coletaRequest dados da coleta
      * @return resposta com dados da coleta registrada
      */
     @PostMapping
+    @RequireColetor
     public ResponseEntity<ApiResponse<MobileColetaResponse>> registrarColeta(
             @Valid @RequestBody MobileColetaRequest coletaRequest) {
         try {
@@ -86,11 +97,13 @@ public class MobileColetaController {
     
     /**
      * Registrar múltiplas coletas em lote
+     * Requer role: ADMIN, SUPERVISOR ou COLETOR
      * 
      * @param batchRequest lista de coletas
      * @return resposta com resultado do processamento
      */
     @PostMapping("/batch")
+    @RequireColetor
     public ResponseEntity<ApiResponse<Map<String, Object>>> registrarColetasEmLote(
             @Valid @RequestBody MobileColetaBatchRequest batchRequest) {
         try {
@@ -116,7 +129,7 @@ public class MobileColetaController {
     
     /**
      * Buscar todas as coletas do usuário autenticado com paginação
-     * Endpoint público que aceita token JWT opcional
+     * Requer role: ADMIN, SUPERVISOR, COLETOR ou CONSULTA
      * 
      * @param authHeader header de autorização com token JWT (opcional)
      * @param page número da página (começa em 0)
@@ -124,6 +137,7 @@ public class MobileColetaController {
      * @return lista paginada de coletas
      */
     @GetMapping
+    @RequireConsulta
     public ResponseEntity<ApiResponse<Map<String, Object>>> buscarTodasColetas(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestParam(defaultValue = "0") int page,
@@ -188,10 +202,12 @@ public class MobileColetaController {
     
     /**
      * Buscar coletas pendentes de sincronização
+     * Requer role: ADMIN, SUPERVISOR ou COLETOR
      * 
      * @return lista de coletas pendentes
      */
     @GetMapping("/pendentes")
+    @RequireColetor
     public ResponseEntity<ApiResponse<List<MobileColetaResponse>>> buscarColetasPendentes() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -239,6 +255,7 @@ public class MobileColetaController {
      */
     @Deprecated
     @GetMapping("/all")
+    @RequireConsulta
     public ResponseEntity<ApiResponse<Map<String, Object>>> buscarTodasColetasSemPaginacao(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
@@ -272,11 +289,13 @@ public class MobileColetaController {
     
     /**
      * Buscar histórico de coletas do usuário
+     * Requer role: ADMIN, SUPERVISOR, COLETOR ou CONSULTA
      * 
      * @param limit número máximo de registros
      * @return lista de coletas
      */
     @GetMapping("/historico")
+    @RequireConsulta
     public ResponseEntity<ApiResponse<List<MobileColetaResponse>>> buscarHistoricoColetas(
             @RequestParam(defaultValue = "50") int limit) {
         try {
@@ -299,11 +318,13 @@ public class MobileColetaController {
     
     /**
      * Buscar coleta por ID
+     * Requer role: ADMIN, SUPERVISOR, COLETOR ou CONSULTA
      * 
      * @param id ID da coleta
      * @return dados da coleta
      */
     @GetMapping("/{id}")
+    @RequireConsulta
     public ResponseEntity<ApiResponse<MobileColetaResponse>> buscarColetaPorId(@PathVariable Long id) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -330,12 +351,14 @@ public class MobileColetaController {
     
     /**
      * Atualizar uma coleta existente
+     * Requer role: ADMIN, SUPERVISOR ou COLETOR (próprias coletas)
      * 
      * @param id ID da coleta
      * @param coletaRequest novos dados da coleta
      * @return coleta atualizada
      */
     @PutMapping("/{id}")
+    @RequireColetor
     public ResponseEntity<ApiResponse<MobileColetaResponse>> atualizarColeta(
             @PathVariable Long id,
             @Valid @RequestBody MobileColetaRequest coletaRequest) {
@@ -364,11 +387,13 @@ public class MobileColetaController {
     
     /**
      * Excluir uma coleta (apenas admin)
+     * Requer role: ADMIN apenas
      * 
      * @param id ID da coleta
      * @return confirmação
      */
     @DeleteMapping("/{id}")
+    @RequireAdmin
     public ResponseEntity<ApiResponse<String>> excluirColeta(@PathVariable Long id) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -401,12 +426,14 @@ public class MobileColetaController {
     /**
      * Buscar descrições de patrimônios pendentes de coleta
      * Retorna apenas descrições de itens que ainda não foram coletados no inventário ativo
+     * Requer role: ADMIN, SUPERVISOR ou COLETOR
      * 
      * @param termoBusca termo para buscar na descrição
      * @param idInventario ID do inventário (opcional, usa o ativo se não informado)
      * @return lista de descrições pendentes com estatísticas
      */
     @GetMapping("/descricoes-pendentes")
+    @RequireColetor
     public ResponseEntity<ApiResponse<Map<String, Object>>> buscarDescricoesPendentes(
             @RequestParam String termoBusca,
             @RequestParam(required = false) Integer idInventario) {
@@ -439,11 +466,13 @@ public class MobileColetaController {
     /**
      * Verifica se uma coleta seria duplicada
      * POST /api/mobile/coletas/verificar-duplicata
+     * Requer role: ADMIN, SUPERVISOR ou COLETOR
      * 
      * @param request dados para verificação (numeroPatrimonio, inventarioId)
      * @return informações sobre duplicação
      */
     @PostMapping("/verificar-duplicata")
+    @RequireColetor
     public ResponseEntity<ApiResponse<Map<String, Object>>> verificarDuplicataColeta(
             @RequestBody Map<String, Object> request) {
         try {
@@ -492,11 +521,13 @@ public class MobileColetaController {
     /**
      * Buscar todas as salas onde há coletas registradas
      * Útil para filtros na tela de itens coletados
+     * Requer role: ADMIN, SUPERVISOR, COLETOR ou CONSULTA
      * 
      * @param inventarioId ID do inventário (opcional, usa o ativo se não informado)
      * @return lista de salas distintas com coletas
      */
     @GetMapping("/salas-com-coletas")
+    @RequireConsulta
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> buscarSalasComColetas(
             @RequestParam(required = false) Integer inventarioId) {
         try {
@@ -524,6 +555,7 @@ public class MobileColetaController {
     /**
      * Sincronização incremental de coletas
      * Retorna apenas coletas modificadas após o timestamp fornecido
+     * Requer role: ADMIN, SUPERVISOR ou COLETOR
      * 
      * @param lastSyncTimestamp timestamp da última sincronização (em milissegundos)
      * @param inventarioId ID do inventário (opcional)
@@ -532,6 +564,7 @@ public class MobileColetaController {
      * @return coletas modificadas desde o último timestamp
      */
     @GetMapping("/incremental")
+    @RequireColetor
     public ResponseEntity<ApiResponse<com.inventario.mobile.server.dto.IncrementalSyncResponse<MobileColetaResponse>>> 
             sincronizacaoIncremental(
                 @RequestParam(required = false, defaultValue = "0") Long lastSyncTimestamp,

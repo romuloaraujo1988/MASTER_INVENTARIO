@@ -1,16 +1,5 @@
 package com.inventario.service;
 
-import com.inventario.model.Patrimonio;
-import com.inventario.repository.PatrimonioRepository;
-import com.inventario.event.DashboardEvent;
-import com.inventario.event.DashboardEventBus;
-import com.inventario.event.DashboardEventType;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,6 +8,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.inventario.event.DashboardEvent;
+import com.inventario.event.DashboardEventBus;
+import com.inventario.event.DashboardEventType;
+import com.inventario.model.Patrimonio;
+import com.inventario.repository.PatrimonioRepository;
 
 /**
  * Serviço para operações com Patrimônio
@@ -235,8 +236,8 @@ public class PatrimonioService {
             // Criar set com IDs dos patrimônios já coletados para busca O(1)
             Set<Integer> idsColetados = new HashSet<>();
             for (com.inventario.model.Coleta coleta : coletasInventario) {
-                Integer idPatrimonio = coleta.getIdPatrimonio();
-                if (idPatrimonio != null && idPatrimonio != 0) {
+                int idPatrimonio = coleta.getIdPatrimonio();
+                if (idPatrimonio != 0) {
                     idsColetados.add(idPatrimonio);
                 }
             }

@@ -6,17 +6,20 @@ import com.inventario.mobile.data.repository.InventarioRepository
 import com.inventario.mobile.domain.usecase.BuscarPatrimonioUseCase
 import com.inventario.mobile.domain.usecase.RegistrarColetaUseCase
 import com.inventario.mobile.utils.PreferencesManager
+import com.inventario.mobile.utils.VibrationHelper
 
 /**
  * Factory para criar ScannerViewModel com dependências
  * ✅ v2.8: Agora recebe BuscarPatrimonioUseCase para suporte OFFLINE
  * ✅ Recebe RegistrarColetaUseCase injetado via Hilt
+ * ✅ v2.10: Recebe VibrationHelper para feedback tátil
  */
 class ScannerViewModelFactory(
     private val inventarioRepository: InventarioRepository,
     private val preferencesManager: PreferencesManager,
     private val registrarColetaUseCase: RegistrarColetaUseCase,
-    private val buscarPatrimonioUseCase: BuscarPatrimonioUseCase // ✅ NOVO: Use Case para busca offline
+    private val buscarPatrimonioUseCase: BuscarPatrimonioUseCase,
+    private val vibrationHelper: VibrationHelper
 ) : ViewModelProvider.Factory {
     
     @Suppress("UNCHECKED_CAST")
@@ -26,7 +29,8 @@ class ScannerViewModelFactory(
                 inventarioRepository = inventarioRepository,
                 preferencesManager = preferencesManager,
                 registrarColetaUseCase = registrarColetaUseCase,
-                buscarPatrimonioUseCase = buscarPatrimonioUseCase // ✅ Use Case para busca offline
+                buscarPatrimonioUseCase = buscarPatrimonioUseCase,
+                vibrationHelper = vibrationHelper
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

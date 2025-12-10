@@ -52,6 +52,10 @@
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_developer_settings.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/fragment_inventario_por_sala.xml",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_inventario_por_sala.xml"
+    },
+    {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_consulta_patrimonio.xml",
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_consulta_patrimonio.xml"
     },
@@ -86,10 +90,6 @@
     {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\activity_collection_view.xml",
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_collection_view.xml"
-    },
-    {
-        "merged": "com.inventario.mobile.app-mergeDebugResources-66:/layout/item_sala_dropdown.xml",
-        "source": "com.inventario.mobile.app-main-69:/layout/item_sala_dropdown.xml"
     },
     {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-66:\\layout\\numeric_keypad.xml",

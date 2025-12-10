@@ -585,6 +585,25 @@ class PreferencesManager(context: Context) {
         putInt("user_id", userId)
     }
     
+    // ===== VIBRAÇÃO AO COLETAR =====
+    
+    /**
+     * Verifica se a vibração ao coletar está habilitada
+     * @return true se habilitada (padrão: true)
+     */
+    fun isVibrationOnCollectionEnabled(): Boolean {
+        return getBoolean("vibration_on_collection", true)
+    }
+    
+    /**
+     * Habilita ou desabilita vibração ao coletar
+     * @param enabled true para habilitar, false para desabilitar
+     */
+    fun setVibrationOnCollectionEnabled(enabled: Boolean) {
+        putBoolean("vibration_on_collection", enabled)
+        android.util.Log.d("PreferencesManager", "Vibração ao coletar ${if (enabled) "HABILITADA" else "DESABILITADA"}")
+    }
+    
     // ===== DARK MODE =====
     
     companion object {

@@ -4,20 +4,27 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.border.EmptyBorder;
+
 import java.awt.*;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import java.io.IOException;
+import java.sql.SQLException;
 // Formatação de datas centralizada em DateFormatUtils
+
 import com.inventario.util.DateFormatUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+
 import com.inventario.model.Responsavel;
 import com.inventario.model.Setor;
 import com.inventario.model.Inventario;
@@ -26,14 +33,18 @@ import com.inventario.model.Sala;
 import com.inventario.util.RelatorioExcelGenerator;
 import com.inventario.util.SoundNotification;
 import com.inventario.view.ui.ButtonStyleFactory;
+
 import java.text.NumberFormat;
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
 
 // === MVVM IMPORTS ===
+
 import com.inventario.presentation.viewmodel.RelatorioViewModel;
 import com.inventario.presentation.state.RelatorioState;
 
 // === IMPORTS JFREECHART - FASE 2 ===
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -123,8 +134,10 @@ public class RelatorioFrame extends JFrame {
             logger.error("❌ Erro ao inicializar RelatorioFrame: {}", e.getMessage(), e);
 
             JOptionPane.showMessageDialog(null,
-                    "⚠️ ERRO AO INICIALIZAR RELATÓRIOS\n\n" +
-                            "Erro: " + e.getMessage() + "\n\n" +
+                    """
+                    \u26a0\ufe0f ERRO AO INICIALIZAR RELAT\u00d3RIOS
+                    
+                    Erro: """ + e.getMessage() + "\n\n" +
                             "Por favor, use as seguintes alternativas:\n" +
                             "• Dashboard de Coleta (disponível no menu principal)\n" +
                             "• Exportação de dados via Excel nas telas de listagem",
@@ -182,18 +195,22 @@ public class RelatorioFrame extends JFrame {
                 String mensagem = "Nenhum dado encontrado para os filtros selecionados.";
 
                 // Mensagens específicas por tipo de relatório
-                if ("Itens Não Coletados".equals(tipoRelatorio)) {
-                    mensagem = """
-                            ✅ Excelente! Todos os patrimônios já foram coletados neste inventário.
-
-                            Não há itens pendentes de coleta.""";
-                } else if ("Itens Não Encontrados".equals(tipoRelatorio)) {
-                    mensagem = """
-                            ✅ Ótimo! Todos os patrimônios foram encontrados durante a coleta.
-
-                            Não há itens não localizados.""";
-                } else if ("Itens Sem Plaqueta de Patrimônio".equals(tipoRelatorio)) {
-                    mensagem = "✅ Perfeito! Não há itens sem etiqueta registrados neste inventário.";
+                if (tipoRelatorio != null) {
+                    switch (tipoRelatorio) {
+                        case "Itens Não Coletados" -> mensagem = 
+                            """
+                            \u2705 Excelente! Todos os patrim\u00f4nios j\u00e1 foram coletados neste invent\u00e1rio.
+                            
+                            N\u00e3o h\u00e1 itens pendentes de coleta.""";
+                        case "Itens Não Encontrados" -> mensagem = 
+                            """
+                            \u2705 \u00d3timo! Todos os patrim\u00f4nios foram encontrados durante a coleta.
+                            
+                            N\u00e3o h\u00e1 itens n\u00e3o localizados.""";
+                        case "Itens Sem Plaqueta de Patrimônio" -> mensagem = 
+                            "✅ Perfeito! Não há itens sem etiqueta registrados neste inventário.";
+                        default -> { /* Manter mensagem padrão */ }
+                    }
                 }
 
                 JOptionPane.showMessageDialog(this,
@@ -1439,36 +1456,7 @@ public class RelatorioFrame extends JFrame {
                     : linha.get("numero") != null ? linha.get("numero") : linha.get("patrimonio");
             row[1] = linha.get("Descrição") != null ? linha.get("Descrição") : linha.get("descricao");
 
-            // Para relatório sem plaqueta, combinar marca e modelo
-            if ("Itens Sem Plaqueta de Patrimônio".equals(tipoRelatorio)) {
-                String marca = linha.get("marca") != null ? linha.get("marca").toString() : "";
-                String modelo = linha.get("modelo") != null ? linha.get("modelo").toString() : "";
-                row[2] = (marca + " " + modelo).trim();
-                row[3] = linha.get("quantidade") != null ? linha.get("quantidade") : "1";
-                row[4] = linha.get("local") != null ? linha.get("local")
-                        : linha.get("Setor") != null ? linha.get("Setor") : linha.get("setor");
-            } else if ("Relatório Geral de Patrimônio".equals(tipoRelatorio)) {
-                // Para Relatório Geral: mostrar Sala cadastrada e Localização Encontrada
-                String sala = "";
-                if (linha.get("Sala") != null && !"Não informado".equals(linha.get("Sala").toString())) {
-                    sala = linha.get("Sala").toString();
-                } else if (linha.get("Localização Encontrada") != null && !"Não informado".equals(linha.get("Localização Encontrada").toString())) {
-                    sala = linha.get("Localização Encontrada").toString();
-                } else {
-                    sala = "N/A";
-                }
-                row[2] = sala;
-
-                // Estado Encontrado para o relatório geral
-                Object estadoObj = linha.get("Estado Encontrado");
-                if (estadoObj != null && !"N/A".equals(estadoObj.toString())) {
-                    row[3] = estadoObj.toString();
-                } else {
-                    row[3] = "Não verificado";
-                }
-
-                row[4] = linha.get("Setor") != null ? linha.get("Setor") : "Sem Setor";
-            } else {
+            if (null == tipoRelatorio) {
                 // Para outros relatórios, usar campos específicos ou genéricos
                 // Priorizar informação da sala onde o patrimônio foi encontrado
                 String sala = "";
@@ -1488,10 +1476,60 @@ public class RelatorioFrame extends JFrame {
                 // A coluna Quantidade deve mostrar o Estado do item
                 row[3] = linha.get("Estado") != null ? linha.get("Estado")
                         : linha.get("Estado Encontrado") != null ? linha.get("Estado Encontrado")
-                                : linha.get("estado_conservacao") != null ? linha.get("estado_conservacao") : "Bom";
-
+                        : linha.get("estado_conservacao") != null ? linha.get("estado_conservacao") : "Bom";
+                
                 row[4] = linha.get("Setor") != null ? linha.get("Setor")
                         : linha.get("setor") != null ? linha.get("setor") : linha.get("categoria");
+            } else // Para relatório sem plaqueta, combinar marca e modelo
+            switch (tipoRelatorio) {
+                case "Itens Sem Plaqueta de Patrimônio" -> {
+                    String marca = linha.get("marca") != null ? linha.get("marca").toString() : "";
+                    String modelo = linha.get("modelo") != null ? linha.get("modelo").toString() : "";
+                    row[2] = (marca + " " + modelo).trim();
+                    row[3] = linha.get("quantidade") != null ? linha.get("quantidade") : "1";
+                    row[4] = linha.get("local") != null ? linha.get("local")
+                            : linha.get("Setor") != null ? linha.get("Setor") : linha.get("setor");
+                }
+                case "Relatório Geral de Patrimônio" ->                     {
+                        // Para Relatório Geral: mostrar Sala cadastrada e Localização Encontrada
+                        String sala = "";
+                        if (linha.get("Sala") != null && !"Não informado".equals(linha.get("Sala").toString())) {
+                            sala = linha.get("Sala").toString();
+                        } else if (linha.get("Localização Encontrada") != null && !"Não informado".equals(linha.get("Localização Encontrada").toString())) {
+                            sala = linha.get("Localização Encontrada").toString();
+                        } else {
+                            sala = "N/A";
+                        }       row[2] = sala;
+                        // Estado Encontrado para o relatório geral
+                        Object estadoObj = linha.get("Estado Encontrado");
+                        if (estadoObj != null && !"N/A".equals(estadoObj.toString())) {
+                            row[3] = estadoObj.toString();
+                        } else {
+                            row[3] = "Não verificado";
+                        }       row[4] = linha.get("Setor") != null ? linha.get("Setor") : "Sem Setor";
+                    }
+                default ->                     {
+                        // Para outros relatórios, usar campos específicos ou genéricos
+                        // Priorizar informação da sala onde o patrimônio foi encontrado
+                        String sala = "";
+                        if (linha.get("Localização Encontrada") != null) {
+                            sala = linha.get("Localização Encontrada").toString();
+                        } else if (linha.get("Última Localização") != null) {
+                            sala = linha.get("Última Localização").toString();
+                        } else if (linha.get("sala") != null) {
+                            sala = linha.get("sala").toString();
+                        } else if (linha.get("Sala") != null) {
+                            sala = linha.get("Sala").toString();
+                        } else {
+                            sala = "N/A";
+                        }       row[2] = sala;
+                        // A coluna Quantidade deve mostrar o Estado do item
+                        row[3] = linha.get("Estado") != null ? linha.get("Estado")
+                                : linha.get("Estado Encontrado") != null ? linha.get("Estado Encontrado")
+                                : linha.get("estado_conservacao") != null ? linha.get("estado_conservacao") : "Bom";
+                        row[4] = linha.get("Setor") != null ? linha.get("Setor")
+                                : linha.get("setor") != null ? linha.get("setor") : linha.get("categoria");
+                    }
             }
 
             row[5] = linha.get("Responsável") != null ? linha.get("Responsável") : linha.get("responsavel");
@@ -1635,7 +1673,7 @@ public class RelatorioFrame extends JFrame {
                 linha[1] = patrimonio.getDescricao() != null ? patrimonio.getDescricao() : "Sem descrição";
 
                 // Usar informação da sala onde o patrimônio está localizado
-                String sala = "";
+                String sala;
                 if (patrimonio.getNomeSala() != null && !patrimonio.getNomeSala().trim().isEmpty()) {
                     sala = patrimonio.getNomeSala();
                 } else {
@@ -1671,7 +1709,7 @@ public class RelatorioFrame extends JFrame {
                         : "Sem responsável";
 
                 // Situação baseada no campo situacao do patrimônio
-                String situacao = "ATIVO";
+                String situacao;
                 if (patrimonio.getSituacao() != null && !patrimonio.getSituacao().trim().isEmpty()) {
                     situacao = patrimonio.getSituacao();
                 } else {
@@ -1693,7 +1731,7 @@ public class RelatorioFrame extends JFrame {
             // Atualizar status
             labelStatus.setText("Dados carregados: " + patrimonios.size() + " itens encontrados");
 
-        } catch (Exception e) {
+        } catch (InterruptedException | SQLException e) {
             // Em caso de erro, mostrar mensagem e usar dados de exemplo como fallback
             labelStatus.setText("Erro ao carregar dados: " + e.getMessage());
             JOptionPane.showMessageDialog(this,
@@ -1983,10 +2021,12 @@ public class RelatorioFrame extends JFrame {
 
             // Mostrar dialog de confirmação antes de imprimir
             int opcao = JOptionPane.showConfirmDialog(this,
-                    "Deseja imprimir o relatório?\n\n" +
-                    "Tipo: " + tipoRelatorio + "\n" +
-                    "Registros: " + modeloTabela.getRowCount() + "\n\n" +
-                    "O relatório será ajustado automaticamente à largura da página.",
+                    """
+                    Deseja imprimir o relat\u00f3rio?
+                    
+                    Tipo: """ + tipoRelatorio + "\n" +
+                            "Registros: " + modeloTabela.getRowCount() + "\n\n" +
+                            "O relatório será ajustado automaticamente à largura da página.",
                     "Confirmar Impressão",
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.QUESTION_MESSAGE);
@@ -2020,7 +2060,7 @@ public class RelatorioFrame extends JFrame {
                     } catch (java.awt.print.PrinterException pe) {
                         mensagemErro = "Erro na impressora: " + pe.getMessage();
                         return false;
-                    } catch (Exception e) {
+                    } catch (HeadlessException e) {
                         mensagemErro = "Erro ao imprimir: " + e.getMessage();
                         return false;
                     }
@@ -2035,9 +2075,10 @@ public class RelatorioFrame extends JFrame {
                             labelStatus.setText("✅ Relatório enviado para impressão com sucesso!");
                             SoundNotification.playSound(SoundNotification.SoundType.SUCCESS);
                             
-                            JOptionPane.showMessageDialog(RelatorioFrame.this,
-                                    "Relatório enviado para impressão com sucesso!\n\n" +
-                                    "Verifique a fila de impressão do seu sistema.",
+                            JOptionPane.showMessageDialog(RelatorioFrame.this, """
+                                                                               Relat\u00f3rio enviado para impress\u00e3o com sucesso!
+                                                                               
+                                                                               Verifique a fila de impress\u00e3o do seu sistema.""",
                                     "Impressão Concluída",
                                     JOptionPane.INFORMATION_MESSAGE);
                         } else {
@@ -2050,7 +2091,7 @@ public class RelatorioFrame extends JFrame {
                                         JOptionPane.ERROR_MESSAGE);
                             }
                         }
-                    } catch (Exception e) {
+                    } catch (HeadlessException | InterruptedException | ExecutionException e) {
                         labelStatus.setText("❌ Erro na impressão");
                         JOptionPane.showMessageDialog(RelatorioFrame.this,
                                 "Erro ao processar impressão: " + e.getMessage(),
@@ -2062,7 +2103,7 @@ public class RelatorioFrame extends JFrame {
             
             worker.execute();
 
-        } catch (Exception e) {
+        } catch (HeadlessException e) {
             logger.error("❌ Erro ao preparar impressão: {}", e.getMessage(), e);
             labelStatus.setText("❌ Erro ao preparar impressão");
             JOptionPane.showMessageDialog(this,
@@ -2237,59 +2278,44 @@ public class RelatorioFrame extends JFrame {
         boolean temInventarioSelecionado = idInventarioSelecionado != -1;
 
         switch (tipoSelecionado) {
-            case "Itens Encontrados":
+            case "Itens Encontrados" -> {
                 if (temInventarioSelecionado) {
                     labelStatus.setText("📋 Relatório de itens encontrados - Inventário selecionado");
                 } else {
                     labelStatus.setText("📋 Relatório de itens encontrados - REQUER INVENTÁRIO SELECIONADO");
                 }
-                break;
-            case "Itens Não Encontrados":
+            }
+            case "Itens Não Encontrados" -> {
                 if (temInventarioSelecionado) {
                     labelStatus.setText("📋 Relatório de itens não encontrados - Inventário selecionado");
                 } else {
                     labelStatus.setText("📋 Relatório de itens não encontrados - REQUER INVENTÁRIO SELECIONADO");
                 }
-                break;
-            case "Itens Não Coletados":
+            }
+            case "Itens Não Coletados" -> {
                 if (temInventarioSelecionado) {
                     labelStatus.setText("📋 Relatório de itens não coletados - Inventário selecionado");
                 } else {
                     labelStatus.setText("📋 Relatório de itens não coletados - REQUER INVENTÁRIO SELECIONADO");
                 }
-                break;
-            case "Itens Sem Plaqueta de Patrimônio":
+            }
+            case "Itens Sem Plaqueta de Patrimônio" -> {
                 if (temInventarioSelecionado) {
                     labelStatus.setText("📋 Relatório de itens sem plaqueta - Inventário selecionado");
                 } else {
                     labelStatus.setText("📋 Relatório de itens sem plaqueta - REQUER INVENTÁRIO SELECIONADO");
                 }
-                break;
-            case "Relatório por Responsável":
-                labelStatus.setText("👤 Relatório geral por responsável - Inventário opcional");
-                break;
-            // ========== RELATÓRIOS AVANÇADOS ==========
-            case "Relatório Avançado por Setor":
-                labelStatus.setText("Relatório detalhado por setor específico com filtro de período");
-                break;
-            case "Relatório Avançado por Responsável":
-                labelStatus.setText("Relatório detalhado por responsável específico com filtro de período");
-                break;
-            case "Relatório Avançado por Período":
-                labelStatus.setText("Relatório de todas as coletas realizadas no período selecionado");
-                break;
-            case "Estatísticas Avançadas por Setor":
-                labelStatus.setText("Estatísticas detalhadas com percentuais e valores por setor");
-                break;
-            case "Relatório Consolidado Executivo":
-                labelStatus.setText("Resumo executivo com indicadores de performance por setor");
-                break;
-            case "--- RELATÓRIOS AVANÇADOS ---":
-                labelStatus.setText("Selecione um tipo de relatório válido");
-                break;
-            default:
-                labelStatus.setText("Pronto para gerar relatório");
+            }
+            case "Relatório por Responsável" -> labelStatus.setText("👤 Relatório geral por responsável - Inventário opcional");
+            case "Relatório Avançado por Setor" -> labelStatus.setText("Relatório detalhado por setor específico com filtro de período");
+            case "Relatório Avançado por Responsável" -> labelStatus.setText("Relatório detalhado por responsável específico com filtro de período");
+            case "Relatório Avançado por Período" -> labelStatus.setText("Relatório de todas as coletas realizadas no período selecionado");
+            case "Estatísticas Avançadas por Setor" -> labelStatus.setText("Estatísticas detalhadas com percentuais e valores por setor");
+            case "Relatório Consolidado Executivo" -> labelStatus.setText("Resumo executivo com indicadores de performance por setor");
+            case "--- RELATÓRIOS AVANÇADOS ---" -> labelStatus.setText("Selecione um tipo de relatório válido");
+            default -> labelStatus.setText("Pronto para gerar relatório");
         }
+        // ========== RELATÓRIOS AVANÇADOS ==========
 
         // Verificar se há inventários disponíveis para relatórios que precisam
         if (precisaInventario) {
@@ -2320,9 +2346,10 @@ public class RelatorioFrame extends JFrame {
             int linhasTabela = tabelaPreview.getRowCount();
 
             if (linhasTabela == 0) {
-                JOptionPane.showMessageDialog(this,
-                        "Gere um relatório primeiro antes de exportar.\n\n" +
-                                "Clique em 'Gerar Relatório' para carregar os dados na tabela.",
+                JOptionPane.showMessageDialog(this, """
+                                                    Gere um relat\u00f3rio primeiro antes de exportar.
+                                                    
+                                                    Clique em 'Gerar Relat\u00f3rio' para carregar os dados na tabela.""",
                         "Tabela Vazia", JOptionPane.WARNING_MESSAGE);
                 return;
             }
@@ -2344,7 +2371,7 @@ public class RelatorioFrame extends JFrame {
                 System.out.println("❌ EXPORTAÇÃO FALHOU");
             }
 
-        } catch (Exception e) {
+        } catch (HeadlessException e) {
             logger.error("❌ ERRO na exportação: {}", e.getMessage(), e);
             labelStatus.setText("Erro na exportação");
             JOptionPane.showMessageDialog(this,
@@ -2389,7 +2416,7 @@ public class RelatorioFrame extends JFrame {
 
         // Validações específicas por tipo de relatório
         switch (tipoRelatorio) {
-            case "Relatório Avançado por Setor":
+            case "Relatório Avançado por Setor" -> {
                 // Setor pode ser "Todos" para relatório geral por setores
                 if (setor == null) {
                     JOptionPane.showMessageDialog(this,
@@ -2397,9 +2424,9 @@ public class RelatorioFrame extends JFrame {
                             "Setor Obrigatório", JOptionPane.WARNING_MESSAGE);
                     return false;
                 }
-                break;
+            }
 
-            case "Relatório Avançado por Responsável":
+            case "Relatório Avançado por Responsável" -> {
                 // Responsável pode ser "Todos" para relatório geral por responsáveis
                 if (responsavel == null) {
                     JOptionPane.showMessageDialog(this,
@@ -2407,14 +2434,12 @@ public class RelatorioFrame extends JFrame {
                             "Responsável Obrigatório", JOptionPane.WARNING_MESSAGE);
                     return false;
                 }
-                break;
+            }
 
-            case "Relatório Avançado por Período":
-            case "Estatísticas Avançadas por Setor":
-            case "Relatório Consolidado Executivo":
-                // Para estes relatórios, apenas o período é obrigatório (já validado acima)
-                break;
+            case "Relatório Avançado por Período", "Estatísticas Avançadas por Setor", "Relatório Consolidado Executivo" -> {
+            }
         }
+        // Para estes relatórios, apenas o período é obrigatório (já validado acima)
 
         return true;
     }
@@ -2489,7 +2514,7 @@ public class RelatorioFrame extends JFrame {
                         poiError);
             }
 
-        } catch (Exception e) {
+        } catch (HeadlessException e) {
             logger.error("❌ Erro na exportação: {}", e.getMessage(), e);
             labelStatus.setText("Erro na exportação");
             JOptionPane.showMessageDialog(this, "Erro:\n\n" + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
@@ -2673,8 +2698,10 @@ public class RelatorioFrame extends JFrame {
 
             labelStatus.setText("Concluído!");
             JOptionPane.showMessageDialog(this,
-                    "✅ Relatório Excel Profissional criado!\n\n" +
-                            "📁 Local: " + caminhoArquivo + "\n" +
+                    """
+                    \u2705 Relat\u00f3rio Excel Profissional criado!
+                    
+                    \ud83d\udcc1 Local: """ + caminhoArquivo + "\n" +
                             "📊 Registros: " + dados.size() + "\n" +
                             "🎨 Design profissional com cores e formatação",
                     "Sucesso", JOptionPane.INFORMATION_MESSAGE);
@@ -2692,7 +2719,7 @@ public class RelatorioFrame extends JFrame {
             if (workbook != null) {
                 try {
                     workbook.close();
-                } catch (Exception e) {
+                } catch (IOException e) {
                 }
             }
         }
@@ -2713,31 +2740,30 @@ public class RelatorioFrame extends JFrame {
             labelStatus.setText("Usando formato CSV alternativo...");
             System.out.println("🔄 Fallback para CSV: " + caminhoCSV);
 
-            // Exportar CSV
-            java.io.FileWriter writer = new java.io.FileWriter(caminhoCSV);
-            java.io.BufferedWriter bw = new java.io.BufferedWriter(writer);
+            // Exportar CSV usando try-with-resources
+            try (java.io.FileWriter writer = new java.io.FileWriter(caminhoCSV);
+                 java.io.BufferedWriter bw = new java.io.BufferedWriter(writer)) {
 
-            // Escrever cabeçalhos
-            for (int i = 0; i < colunas.length; i++) {
-                bw.write("\"" + colunas[i] + "\"");
-                if (i < colunas.length - 1)
-                    bw.write(",");
-            }
-            bw.newLine();
-
-            // Escrever dados
-            for (Map<String, Object> linha : dados) {
-                for (int i = 0; i < chaves.length; i++) {
-                    Object valor = linha.get(chaves[i]);
-                    String valorStr = (valor != null) ? valor.toString().replace("\"", "\"\"") : "";
-                    bw.write("\"" + valorStr + "\"");
-                    if (i < chaves.length - 1)
+                // Escrever cabeçalhos
+                for (int i = 0; i < colunas.length; i++) {
+                    bw.write("\"" + colunas[i] + "\"");
+                    if (i < colunas.length - 1)
                         bw.write(",");
                 }
                 bw.newLine();
-            }
 
-            bw.close();
+                // Escrever dados
+                for (Map<String, Object> linha : dados) {
+                    for (int i = 0; i < chaves.length; i++) {
+                        Object valor = linha.get(chaves[i]);
+                        String valorStr = (valor != null) ? valor.toString().replace("\"", "\"\"") : "";
+                        bw.write("\"" + valorStr + "\"");
+                        if (i < chaves.length - 1)
+                            bw.write(",");
+                    }
+                    bw.newLine();
+                }
+            }
 
             // Diagnóstico do erro
             String tipoErro = erroOriginal.getClass().getSimpleName();
@@ -2755,8 +2781,10 @@ public class RelatorioFrame extends JFrame {
             String mensagemFinal = causaRaiz;
             SwingUtilities.invokeLater(() -> {
                 JOptionPane.showMessageDialog(this,
-                        "⚠️ Apache POI não disponível!\n\n" +
-                                "Erro detectado: " + tipoErro + mensagemFinal + "\n\n" +
+                        """
+                        \u26a0\ufe0f Apache POI n\u00e3o dispon\u00edvel!
+                        
+                        Erro detectado: """ + tipoErro + mensagemFinal + "\n\n" +
                                 "✅ SOLUÇÃO AUTOMÁTICA APLICADA:\n" +
                                 "• Arquivo exportado em formato CSV\n" +
                                 "• 100% compatível com Excel\n" +
@@ -2772,7 +2800,7 @@ public class RelatorioFrame extends JFrame {
             });
             return true;
 
-        } catch (Exception e) {
+        } catch (IOException e) {
             logger.error("❌ Fallback CSV também falhou: {}", e.getMessage(), e);
 
             labelStatus.setText("Erro no fallback CSV");
@@ -2798,48 +2826,49 @@ public class RelatorioFrame extends JFrame {
             labelStatus.setText("Exportando como CSV...");
             System.out.println("📊 Exportação CSV direta: " + caminhoCSV);
 
-            // Exportar CSV
-            java.io.FileWriter writer = new java.io.FileWriter(caminhoCSV);
-            java.io.BufferedWriter bw = new java.io.BufferedWriter(writer);
-
-            // Escrever cabeçalhos
-            for (int i = 0; i < colunas.length; i++) {
-                bw.write("\"" + colunas[i] + "\"");
-                if (i < colunas.length - 1)
-                    bw.write(",");
-            }
-            bw.newLine();
-
-            // Escrever dados
+            // Exportar CSV usando try-with-resources
             int contador = 0;
-            for (Map<String, Object> linha : dados) {
-                for (int i = 0; i < chaves.length; i++) {
-                    Object valor = linha.get(chaves[i]);
-                    String valorStr = (valor != null) ? valor.toString().replace("\"", "\"\"") : "";
-                    bw.write("\"" + valorStr + "\"");
-                    if (i < chaves.length - 1)
+            try (java.io.FileWriter writer = new java.io.FileWriter(caminhoCSV);
+                 java.io.BufferedWriter bw = new java.io.BufferedWriter(writer)) {
+
+                // Escrever cabeçalhos
+                for (int i = 0; i < colunas.length; i++) {
+                    bw.write("\"" + colunas[i] + "\"");
+                    if (i < colunas.length - 1)
                         bw.write(",");
                 }
                 bw.newLine();
-                contador++;
 
-                if (contador % 100 == 0) {
-                    labelStatus.setText("Processando linha " + contador + "...");
+                // Escrever dados
+                for (Map<String, Object> linha : dados) {
+                    for (int i = 0; i < chaves.length; i++) {
+                        Object valor = linha.get(chaves[i]);
+                        String valorStr = (valor != null) ? valor.toString().replace("\"", "\"\"") : "";
+                        bw.write("\"" + valorStr + "\"");
+                        if (i < chaves.length - 1)
+                            bw.write(",");
+                    }
+                    bw.newLine();
+                    contador++;
+
+                    if (contador % 100 == 0) {
+                        labelStatus.setText("Processando linha " + contador + "...");
+                    }
                 }
             }
-
-            bw.close();
 
             final int totalLinhas = contador; // Tornar final para uso no lambda
             labelStatus.setText("Exportação CSV concluída!");
 
             SwingUtilities.invokeLater(() -> {
                 JOptionPane.showMessageDialog(this,
-                        "ℹ️ Apache POI não disponível\n\n" +
-                                "✅ SOLUÇÃO AUTOMÁTICA:\n" +
-                                "• Arquivo exportado em formato CSV\n" +
-                                "• Totalmente compatível com Excel\n" +
-                                "• Salvo em: " + caminhoCSV + "\n" +
+                        """
+                        \u2139\ufe0f Apache POI n\u00e3o dispon\u00edvel
+                        
+                        \u2705 SOLU\u00c7\u00c3O AUTOM\u00c1TICA:
+                        \u2022 Arquivo exportado em formato CSV
+                        \u2022 Totalmente compat\u00edvel com Excel
+                        \u2022 Salvo em: """ + caminhoCSV + "\n" +
                                 "• Linhas: " + totalLinhas + "\n\n" +
                                 "💡 Para usar Excel nativo:\n" +
                                 "1. Reinicie a aplicação\n" +
@@ -2849,7 +2878,7 @@ public class RelatorioFrame extends JFrame {
             });
             return true;
 
-        } catch (Exception e) {
+        } catch (IOException e) {
             logger.error("❌ Exportação CSV direta falhou: {}", e.getMessage(), e);
 
             labelStatus.setText("Erro na exportação CSV");
@@ -3213,7 +3242,7 @@ public class RelatorioFrame extends JFrame {
                 fileOut.close();
                 fileOut = null; // Marcar como fechado
                 System.out.println("✅ Arquivo salvo com sucesso: " + arquivo);
-            } catch (Exception e) {
+            } catch (IOException e) {
                 System.err.println("❌ Erro ao salvar arquivo: " + e.getMessage());
                 throw new RuntimeException("Falha ao salvar arquivo Excel: " + e.getMessage(), e);
             }
@@ -3223,7 +3252,7 @@ public class RelatorioFrame extends JFrame {
                 workbook.close();
                 workbook = null; // Marcar como fechado
                 System.out.println("✅ Workbook fechado com sucesso");
-            } catch (Exception e) {
+            } catch (IOException e) {
                 System.err.println("⚠️ Erro ao fechar workbook: " + e.getMessage());
                 // Não é crítico se não conseguir fechar
             }
@@ -3237,7 +3266,7 @@ public class RelatorioFrame extends JFrame {
             System.out.println("=== EXPORTAÇÃO EXCEL CONCLUÍDA COM SUCESSO ===");
             return true;
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             logger.error("❌ ERRO GERAL NA EXPORTAÇÃO EXCEL - Tipo: {}, Mensagem: {}", 
                     e.getClass().getSimpleName(), e.getMessage(), e);
 
@@ -3250,23 +3279,29 @@ public class RelatorioFrame extends JFrame {
             if (e.getMessage() != null) {
                 if (e.getMessage().contains("32767")) {
                     tipoErro = "Dados Muito Longos";
-                    mensagemErro = "Alguns dados na tabela são muito longos para o Excel.\n" +
-                            "O Excel suporta no máximo 32.767 caracteres por célula.\n\n" +
-                            "Tente filtrar os dados ou use exportação CSV/TXT.";
+                    mensagemErro = """
+                            Alguns dados na tabela são muito longos para o Excel.
+                            O Excel suporta no máximo 32.767 caracteres por célula.
+
+                            Tente filtrar os dados ou use exportação CSV/TXT.""";
                 } else if (e.getMessage().contains("CTWorkbook") || e.getMessage().contains("XMLBeans")) {
                     tipoErro = "Problema de Dependências";
-                    mensagemErro = "Problema com as bibliotecas do Apache POI.\n\n" +
-                            "Soluções:\n" +
-                            "1. Reinicie a aplicação\n" +
-                            "2. Use exportação CSV/HTML/TXT como alternativa\n" +
-                            "3. Contate o suporte técnico";
+                    mensagemErro = """
+                            Problema com as bibliotecas do Apache POI.
+
+                            Soluções:
+                            1. Reinicie a aplicação
+                            2. Use exportação CSV/HTML/TXT como alternativa
+                            3. Contate o suporte técnico""";
                 } else if (e.getMessage().contains("FileOutputStream") || e.getMessage().contains("IOException")) {
                     tipoErro = "Erro de Arquivo";
-                    mensagemErro = "Não foi possível salvar o arquivo.\n\n" +
-                            "Verifique:\n" +
-                            "1. Se você tem permissão para escrever no local\n" +
-                            "2. Se o arquivo não está aberto em outro programa\n" +
-                            "3. Se há espaço suficiente no disco";
+                    mensagemErro = """
+                            Não foi possível salvar o arquivo.
+
+                            Verifique:
+                            1. Se você tem permissão para escrever no local
+                            2. Se o arquivo não está aberto em outro programa
+                            3. Se há espaço suficiente no disco""";
                 } else {
                     tipoErro = "Erro Desconhecido";
                     mensagemErro = "Erro inesperado durante a exportação:\n\n" + e.getMessage() +
@@ -3290,7 +3325,7 @@ public class RelatorioFrame extends JFrame {
                 try {
                     fileOut.close();
                     System.out.println("FileOutputStream fechado no finally");
-                } catch (Exception e) {
+                } catch (IOException e) {
                     System.err.println("Erro ao fechar FileOutputStream no finally: " + e.getMessage());
                 }
             }
@@ -3299,7 +3334,7 @@ public class RelatorioFrame extends JFrame {
                 try {
                     workbook.close();
                     System.out.println("Workbook fechado no finally");
-                } catch (Exception e) {
+                } catch (IOException e) {
                     System.err.println("Erro ao fechar workbook no finally: " + e.getMessage());
                 }
             }
@@ -3337,12 +3372,13 @@ public class RelatorioFrame extends JFrame {
                     try {
                         sucesso = exportarDadosTabela("Relatorio_Geral_Alternativo");
                         if (sucesso) {
-                            JOptionPane.showMessageDialog(this,
-                                    "Relatório geral exportado usando método alternativo.\n\n" +
-                                            "Os dados da tabela atual foram exportados com sucesso.",
+                            JOptionPane.showMessageDialog(this, """
+                                                                Relat\u00f3rio geral exportado usando m\u00e9todo alternativo.
+                                                                
+                                                                Os dados da tabela atual foram exportados com sucesso.""",
                                     "Exportação Alternativa", JOptionPane.INFORMATION_MESSAGE);
                         }
-                    } catch (Exception altError) {
+                    } catch (HeadlessException altError) {
                         System.err.println("❌ Método alternativo também falhou: " + altError.getMessage());
                     }
                 }
@@ -3363,7 +3399,7 @@ public class RelatorioFrame extends JFrame {
                 System.out.println("❌ Falha na exportação do relatório geral");
             }
 
-        } catch (Exception e) {
+        } catch (HeadlessException e) {
             logger.error("❌ Erro geral em exportarRelatorioGeral: {}", e.getMessage(), e);
             labelStatus.setText("Erro geral na exportação");
             JOptionPane.showMessageDialog(this,
@@ -3435,9 +3471,10 @@ public class RelatorioFrame extends JFrame {
             try {
                 boolean sucesso = exportarDadosTabela("Estatisticas_Alternativo");
                 if (sucesso) {
-                    JOptionPane.showMessageDialog(this,
-                            "Estatísticas exportadas usando método alternativo.\n\n" +
-                                    "Os dados da tabela atual foram exportados com sucesso.",
+                    JOptionPane.showMessageDialog(this, """
+                                                        Estat\u00edsticas exportadas usando m\u00e9todo alternativo.
+                                                        
+                                                        Os dados da tabela atual foram exportados com sucesso.""",
                             "Exportação Alternativa", JOptionPane.INFORMATION_MESSAGE);
                     return;
                 }
@@ -3546,38 +3583,35 @@ public class RelatorioFrame extends JFrame {
                         }
 
                         // Aplicar cores baseadas no status
-                        Color corFundo = Color.WHITE;
-                        Color corTexto = Color.BLACK;
+                        Color corFundo;
+                        Color corTexto;
 
                         switch (status) {
-                            case "ENCONTRADO":
-                            case "FOUND":
+                            case "ENCONTRADO", "FOUND" -> {
                                 corFundo = new Color(212, 237, 218); // Verde claro
                                 corTexto = new Color(21, 87, 36); // Verde escuro
-                                break;
-                            case "NÃO ENCONTRADO":
-                            case "NOT FOUND":
+                            }
+                            case "NÃO ENCONTRADO", "NOT FOUND" -> {
                                 corFundo = new Color(248, 215, 218); // Vermelho claro
                                 corTexto = new Color(114, 28, 36); // Vermelho escuro
-                                break;
-                            case "DANIFICADO":
-                            case "DAMAGED":
+                            }
+                            case "DANIFICADO", "DAMAGED" -> {
                                 corFundo = new Color(255, 243, 205); // Amarelo claro
                                 corTexto = new Color(133, 100, 4); // Amarelo escuro
-                                break;
-                            case "NÃO COLETADO":
-                            case "NOT COLLECTED":
+                            }
+                            case "NÃO COLETADO", "NOT COLLECTED" -> {
                                 corFundo = new Color(230, 230, 230); // Cinza claro
                                 corTexto = new Color(73, 80, 87); // Cinza escuro
-                                break;
-                            default:
+                            }
+                            default -> {
                                 // Linhas alternadas para outros casos
                                 if (row % 2 == 0) {
                                     corFundo = Color.WHITE;
                                 } else {
                                     corFundo = new Color(248, 249, 250);
                                 }
-                                break;
+                                corTexto = Color.BLACK;
+                            }
                         }
 
                         c.setBackground(corFundo);

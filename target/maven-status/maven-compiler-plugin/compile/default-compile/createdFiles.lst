@@ -74,7 +74,6 @@ com\inventario\siads\service\SiadsValidationService.class
 com\inventario\mobile\server\controller\MobileConsultaController.class
 com\inventario\service\AutenticacaoServiceDB.class
 com\inventario\dao\RelatorioColetaDAO.class
-com\inventario\view\RelatorioFrame$8.class
 com\inventario\mobile\server\dto\MobileOfflineDataDTO$ResponsavelOfflineDTO.class
 com\inventario\analytics\view\MetricasTempoAnalyticsFrame$1.class
 com\inventario\view\StatusSalasFrame$3.class
@@ -83,6 +82,7 @@ com\inventario\view\ColetaFrame_v2$6.class
 com\inventario\dao\DispositivoMobileDAO.class
 com\inventario\itemcomposto\model\Componente.class
 com\inventario\view\ColetaFrame_v2$1.class
+com\inventario\security\annotation\RequireAdmin.class
 com\inventario\view\ui\ModernButtons$1.class
 com\inventario\util\ExcelExporter.class
 com\inventario\view\AcoesPatrimonioDialog$1.class
@@ -171,7 +171,6 @@ com\inventario\sync\exception\SyncErrorType.class
 com\inventario\view\MobileMonitorFrameV2$3.class
 com\inventario\analytics\model\MetricasColetorDTO.class
 com\inventario\view\ComponenteDialog.class
-com\inventario\view\InventarioFrame$9.class
 com\inventario\view\ui\ModernComboBox.class
 com\inventario\sync\model\Conflict.class
 com\inventario\util\RelatorioPDFGenerator.class
@@ -258,6 +257,7 @@ com\inventario\offline\ColetaOfflineService.class
 com\inventario\util\notification\ErrorReportingService.class
 com\inventario\view\SalaFormDialogRefactored$1.class
 com\inventario\presentation\state\RelatorioItemCompostoState$Success.class
+com\inventario\security\annotation\RequireConsulta.class
 com\inventario\util\ExecutarScriptSQL.class
 com\inventario\siads\view\SiadsConfigDialog.class
 com\inventario\analytics\service\DivergenciaClassificadorService$1.class
@@ -268,6 +268,7 @@ com\inventario\view\StatusSalasFrame$StatusRenderer.class
 com\inventario\mobile\server\dto\MobileLoginRequest.class
 com\inventario\service\DataImportServiceTest.class
 com\inventario\service\PatrimonioService.class
+com\inventario\security\annotation\RequireColetor.class
 com\inventario\util\ConfiguracaoBancoUtil.class
 com\inventario\model\Coleta.class
 com\inventario\view\UsuarioFrame$2.class
@@ -359,6 +360,7 @@ com\inventario\analytics\view\DivergenciasAnalyticsFrame$3.class
 com\inventario\util\notification\NotificationManager.class
 com\inventario\util\DialogUtils.class
 com\inventario\sync\service\ValidationService.class
+com\inventario\security\annotation\RequireSupervisor.class
 com\inventario\dao\ColetaDAO.class
 com\inventario\mobile\server\config\WebMvcConfig.class
 com\inventario\model\Campus.class

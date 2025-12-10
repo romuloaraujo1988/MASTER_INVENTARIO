@@ -222,15 +222,30 @@ class InventarioPorSalaViewModel @Inject constructor(
      */
     fun carregarMaisPatrimonios() {
         val currentState = _state.value
-        if (currentState !is InventarioPorSalaState.SalaSelecionada) return
-        if (currentState.isLoadingMore || !currentState.hasMorePages) return
+        if (currentState !is InventarioPorSalaState.SalaSelecionada) {
+            android.util.Log.d(TAG, "carregarMaisPatrimonios: estado não é SalaSelecionada")
+            return
+        }
+        if (currentState.isLoadingMore) {
+            android.util.Log.d(TAG, "carregarMaisPatrimonios: já está carregando")
+            return
+        }
+        if (!currentState.hasMorePages) {
+            android.util.Log.d(TAG, "carregarMaisPatrimonios: não há mais páginas")
+            return
+        }
         
         val sala = salaAtual ?: return
         
         viewModelScope.launch {
-            _state.value = currentState.copy(isLoadingMore = true)
-            
             val nextPage = currentState.currentPage + 1
+            android.util.Log.d(TAG, "═══════════════════════════════════")
+            android.util.Log.d(TAG, "CARREGANDO MAIS PATRIMÔNIOS")
+            android.util.Log.d(TAG, "Sala: ${sala.nome}, Página: $nextPage")
+            android.util.Log.d(TAG, "Patrimônios atuais: ${currentState.patrimonios.size}")
+            android.util.Log.d(TAG, "═══════════════════════════════════")
+            
+            _state.value = currentState.copy(isLoadingMore = true)
             
             val patrimoniosResult = buscarPatrimoniosPorSalaUseCase(
                 salaId = sala.id,
@@ -241,19 +256,23 @@ class InventarioPorSalaViewModel @Inject constructor(
             
             patrimoniosResult.fold(
                 onSuccess = { novosPatrimonios ->
+                    android.util.Log.d(TAG, "✓ ${novosPatrimonios.size} novos patrimônios carregados")
+                    
                     val todosPatrimonios = currentState.patrimonios + novosPatrimonios
+                    val hasMore = novosPatrimonios.size >= PAGE_SIZE
+                    
+                    android.util.Log.d(TAG, "Total agora: ${todosPatrimonios.size}, hasMorePages: $hasMore")
                     
                     _state.value = currentState.copy(
                         patrimonios = todosPatrimonios,
                         currentPage = nextPage,
-                        hasMorePages = novosPatrimonios.size >= PAGE_SIZE,
+                        hasMorePages = hasMore,
                         isLoadingMore = false
                     )
                 },
                 onFailure = { error ->
+                    android.util.Log.e(TAG, "✗ Erro ao carregar mais patrimônios", error)
                     _state.value = currentState.copy(isLoadingMore = false)
-                    // Não mudar para estado de erro, apenas parar o loading
-                    android.util.Log.e(TAG, "Erro ao carregar mais patrimônios", error)
                 }
             )
         }

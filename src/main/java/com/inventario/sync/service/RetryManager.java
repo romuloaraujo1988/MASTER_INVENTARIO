@@ -1,15 +1,16 @@
 package com.inventario.sync.service;
 
-import com.inventario.sync.exception.SyncErrorType;
-import com.inventario.sync.exception.SyncException;
-import com.inventario.sync.model.RetryPolicy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.sql.SQLException;
 import java.util.concurrent.Callable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.inventario.sync.exception.SyncErrorType;
+import com.inventario.sync.exception.SyncException;
+import com.inventario.sync.model.RetryPolicy;
 
 /**
  * Gerenciador de retry inteligente com backoff exponencial
@@ -28,6 +29,7 @@ public class RetryManager {
      * @return Resultado da operação
      * @throws Exception se todas as tentativas falharem
      */
+    @SuppressWarnings("java:S2142") // Thread.sleep in loop is intentional for retry backoff
     public <T> T executeWithRetry(Callable<T> operation, RetryPolicy retryPolicy) throws Exception {
         int attempt = 0;
         Exception lastException = null;
@@ -137,6 +139,10 @@ public class RetryManager {
      * @return true se deve fazer retry
      */
     public boolean isRetryableError(Exception exception, RetryPolicy retryPolicy) {
+        if (exception == null) {
+            return false;
+        }
+        
         // Verificar se exceção está na lista de retryable
         for (Class<? extends Exception> retryableClass : retryPolicy.getRetryableExceptions()) {
             if (retryableClass.isInstance(exception)) {
@@ -156,8 +162,7 @@ public class RetryManager {
             return true;
         }
         
-        if (exception instanceof SQLException) {
-            SQLException sqlEx = (SQLException) exception;
+        if (exception instanceof SQLException sqlEx) {
             // Alguns erros SQL são temporários
             String sqlState = sqlEx.getSQLState();
             
@@ -172,8 +177,7 @@ public class RetryManager {
         }
         
         // Verificar se é SyncException com tipo recuperável
-        if (exception instanceof SyncException) {
-            SyncException syncEx = (SyncException) exception;
+        if (exception instanceof SyncException syncEx) {
             SyncErrorType errorType = syncEx.getErrorType();
             
             // Erros de rede e transação são recuperáveis

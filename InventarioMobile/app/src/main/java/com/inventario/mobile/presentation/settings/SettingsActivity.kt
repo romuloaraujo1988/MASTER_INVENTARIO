@@ -73,6 +73,17 @@ class SettingsActivity : AppCompatActivity() {
                 ).show()
             }
             
+            // ===== VIBRAÇÃO AO COLETAR =====
+            switchVibrationOnCollection.setOnCheckedChangeListener { _, isChecked ->
+                preferencesManager.setVibrationOnCollectionEnabled(isChecked)
+                val message = if (isChecked) {
+                    "Vibração ao coletar ativada"
+                } else {
+                    "Vibração ao coletar desativada"
+                }
+                Toast.makeText(this@SettingsActivity, message, Toast.LENGTH_SHORT).show()
+            }
+            
             // Modo Offline Forçado
             switchForceOffline.setOnCheckedChangeListener { _, isChecked ->
                 viewModel.setForceOfflineMode(isChecked)
@@ -167,6 +178,9 @@ class SettingsActivity : AppCompatActivity() {
                 PreferencesManager.THEME_MODE_DARK -> radioThemeDark.isChecked = true
                 else -> radioThemeSystem.isChecked = true
             }
+            
+            // ===== CARREGAR CONFIGURAÇÃO DE VIBRAÇÃO =====
+            switchVibrationOnCollection.isChecked = preferencesManager.isVibrationOnCollectionEnabled()
             
             // Carregar outras configurações
             switchForceOffline.isChecked = viewModel.isForceOfflineMode()

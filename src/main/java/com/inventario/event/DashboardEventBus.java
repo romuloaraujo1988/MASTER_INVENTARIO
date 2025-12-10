@@ -1,11 +1,19 @@
 package com.inventario.event;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * EventBus centralizado para eventos da dashboard.
@@ -84,14 +92,16 @@ public class DashboardEventBus {
      * @return Instância do DashboardEventBus
      */
     public static DashboardEventBus getInstance() {
-        if (instance == null) {
+        DashboardEventBus result = instance;
+        if (result == null) {
             synchronized (DashboardEventBus.class) {
-                if (instance == null) {
-                    instance = new DashboardEventBus();
+                result = instance;
+                if (result == null) {
+                    instance = result = new DashboardEventBus();
                 }
             }
         }
-        return instance;
+        return result;
     }
     
     /**
@@ -245,7 +255,6 @@ public class DashboardEventBus {
      * @return Total de observers
      */
     public int getObserverCount() {
-        int count = globalObservers.size();
         Set<DashboardObserver> unique = new HashSet<>(globalObservers);
         for (List<DashboardObserver> observers : observersByType.values()) {
             unique.addAll(observers);
@@ -301,7 +310,9 @@ public class DashboardEventBus {
     
     /**
      * Reseta a instância singleton (apenas para testes).
+     * Mantido package-private para uso em testes unitários.
      */
+    @SuppressWarnings("unused")
     static void resetInstance() {
         synchronized (DashboardEventBus.class) {
             if (instance != null) {

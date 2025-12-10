@@ -269,8 +269,11 @@ class ManualCollectionActivity : BaseOfflineActivity() {
             return
         }
         
-        // Mostrar feedback visual
-        binding.etPatrimonioNumber.hint = "Escutando..."
+        // Obter referência ao TextInputLayout pai
+        val textInputLayout = binding.etPatrimonioNumber.parent.parent as? com.google.android.material.textfield.TextInputLayout
+        
+        // Mostrar feedback visual no TextInputLayout (não no EditText)
+        textInputLayout?.hint = "🎤 Escutando..."
         
         // Iniciar reconhecimento
         voiceSearchManager?.startListening(object : VoiceSearchManager.VoiceSearchListener {
@@ -281,7 +284,7 @@ class ManualCollectionActivity : BaseOfflineActivity() {
             
             override fun onError(error: String) {
                 Log.e("ManualCollection", "Erro no reconhecimento: $error")
-                binding.etPatrimonioNumber.hint = "Digite o número do patrimônio"
+                textInputLayout?.hint = "Número do Patrimônio"
                 Toast.makeText(
                     this@ManualCollectionActivity,
                     "Erro: $error",
@@ -291,17 +294,17 @@ class ManualCollectionActivity : BaseOfflineActivity() {
             
             override fun onReadyForSpeech() {
                 Log.d("ManualCollection", "Pronto para falar")
-                binding.etPatrimonioNumber.hint = "Pode falar o número..."
+                textInputLayout?.hint = "🎤 Pode falar o número..."
             }
             
             override fun onBeginningOfSpeech() {
                 Log.d("ManualCollection", "Começou a falar")
-                binding.etPatrimonioNumber.hint = "Escutando..."
+                textInputLayout?.hint = "🎤 Escutando..."
             }
             
             override fun onEndOfSpeech() {
                 Log.d("ManualCollection", "Terminou de falar")
-                binding.etPatrimonioNumber.hint = "Processando..."
+                textInputLayout?.hint = "⏳ Processando..."
             }
             
             override fun onPartialResults(text: String) {
@@ -315,12 +318,15 @@ class ManualCollectionActivity : BaseOfflineActivity() {
     private fun processVoiceInput(text: String) {
         Log.d("ManualCollection", "Processando entrada de voz: $text")
         
+        // Obter referência ao TextInputLayout pai
+        val textInputLayout = binding.etPatrimonioNumber.parent.parent as? com.google.android.material.textfield.TextInputLayout
+        
         // Extrair número do patrimônio do texto falado
         val numeroPatrimonio = extractPatrimonioNumber(text)
         
         if (numeroPatrimonio.isNotEmpty()) {
             binding.etPatrimonioNumber.setText(numeroPatrimonio)
-            binding.etPatrimonioNumber.hint = "Digite o número do patrimônio"
+            textInputLayout?.hint = "Número do Patrimônio"
             
             // Buscar automaticamente
             searchPatrimonio()
@@ -331,7 +337,7 @@ class ManualCollectionActivity : BaseOfflineActivity() {
                 Toast.LENGTH_SHORT
             ).show()
         } else {
-            binding.etPatrimonioNumber.hint = "Digite o número do patrimônio"
+            textInputLayout?.hint = "Número do Patrimônio"
             Toast.makeText(
                 this,
                 "Número não identificado. Tente novamente.",

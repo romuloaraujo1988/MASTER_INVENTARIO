@@ -54,6 +54,10 @@ class ScannerActivity : AppCompatActivity() {
     @Inject
     lateinit var buscarPatrimonioUseCase: com.inventario.mobile.domain.usecase.BuscarPatrimonioUseCase
     
+    // ✅ v2.10: Injetar VibrationHelper para feedback tátil
+    @Inject
+    lateinit var vibrationHelper: com.inventario.mobile.utils.VibrationHelper
+    
     // Launcher para solicitar permissão de câmera
     private val requestCameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -158,7 +162,8 @@ class ScannerActivity : AppCompatActivity() {
                 repository, 
                 preferencesManager, 
                 registrarColetaUseCase,
-                buscarPatrimonioUseCase // ✅ NOVO: Use Case para busca offline
+                buscarPatrimonioUseCase,
+                vibrationHelper // ✅ v2.10: VibrationHelper para feedback tátil
             )
             viewModel = ViewModelProvider(this, factory)[ScannerViewModel::class.java]
             android.util.Log.d("ScannerActivity", "✓ ViewModel inicializado com sucesso (com BuscarPatrimonioUseCase + RegistrarColetaUseCase via Hilt)")

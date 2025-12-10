@@ -1,19 +1,39 @@
 package com.inventario.view;
 
-import com.inventario.dao.OcorrenciaPatrimonioDAO;
-import com.inventario.dao.ReconciliacaoDAO;
-import com.inventario.model.Usuario;
-
-import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.Window;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.SpinnerDateModel;
+import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableModel;
+
+import com.inventario.dao.OcorrenciaPatrimonioDAO;
+import com.inventario.model.Usuario;
 
 /**
  * Diálogo de Ações para Patrimônios Não Encontrados
@@ -27,7 +47,6 @@ public class AcoesPatrimonioDialog extends JDialog {
     private final Map<String, Object> dadosPatrimonio;
     
     private final OcorrenciaPatrimonioDAO ocorrenciaDAO;
-    private final ReconciliacaoDAO reconciliacaoDAO;
     
     // Componentes
     private JTable tblHistorico;
@@ -47,7 +66,6 @@ public class AcoesPatrimonioDialog extends JDialog {
         this.idInventario = idInventario;
         this.usuarioLogado = usuario;
         this.ocorrenciaDAO = new OcorrenciaPatrimonioDAO();
-        this.reconciliacaoDAO = new ReconciliacaoDAO();
         
         initComponents();
         carregarHistorico();
@@ -532,8 +550,10 @@ public class AcoesPatrimonioDialog extends JDialog {
 
     private void acaoConfirmarExtravio() {
         int confirm = JOptionPane.showConfirmDialog(this, 
-            "ATENÇÃO: Esta ação confirma que o patrimônio foi extraviado.\n\n" +
-            "Patrimônio: " + dadosPatrimonio.get("numero") + "\n" +
+            """
+            ATEN\u00c7\u00c3O: Esta a\u00e7\u00e3o confirma que o patrim\u00f4nio foi extraviado.
+            
+            Patrim\u00f4nio: """ + dadosPatrimonio.get("numero") + "\n" +
             "Descrição: " + dadosPatrimonio.get("descricao") + "\n\n" +
             "Deseja confirmar o extravio?",
             "Confirmar Extravio", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
@@ -545,8 +565,9 @@ public class AcoesPatrimonioDialog extends JDialog {
             
             if (justificativa != null && !justificativa.trim().isEmpty()) {
                 try {
-                    String descricao = "EXTRAVIO CONFIRMADO\n" +
-                        "Justificativa: " + justificativa + "\n" +
+                    String descricao = """
+                                       EXTRAVIO CONFIRMADO
+                                       Justificativa: """ + justificativa + "\n" +
                         "Responsável no momento: " + dadosPatrimonio.getOrDefault("responsavel", "Não informado");
                     
                     ocorrenciaDAO.registrarOcorrencia(
@@ -570,8 +591,10 @@ public class AcoesPatrimonioDialog extends JDialog {
 
     private void acaoSolicitarBaixa() {
         int confirm = JOptionPane.showConfirmDialog(this, 
-            "Será iniciado o processo de baixa patrimonial.\n\n" +
-            "Patrimônio: " + dadosPatrimonio.get("numero") + "\n" +
+            """
+            Ser\u00e1 iniciado o processo de baixa patrimonial.
+            
+            Patrim\u00f4nio: """ + dadosPatrimonio.get("numero") + "\n" +
             "Descrição: " + dadosPatrimonio.get("descricao") + "\n\n" +
             "Deseja solicitar a baixa?",
             "Solicitar Baixa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
@@ -583,8 +606,9 @@ public class AcoesPatrimonioDialog extends JDialog {
             
             if (motivo != null && !motivo.trim().isEmpty()) {
                 try {
-                    String descricao = "SOLICITAÇÃO DE BAIXA PATRIMONIAL\n" +
-                        "Motivo: " + motivo + "\n" +
+                    String descricao = """
+                                       SOLICITA\u00c7\u00c3O DE BAIXA PATRIMONIAL
+                                       Motivo: """ + motivo + "\n" +
                         "Solicitante: " + usuarioLogado.getNomeCompleto();
                     
                     ocorrenciaDAO.registrarOcorrencia(
@@ -592,9 +616,10 @@ public class AcoesPatrimonioDialog extends JDialog {
                         OcorrenciaPatrimonioDAO.TIPO_BAIXA, descricao, null
                     );
                     
-                    JOptionPane.showMessageDialog(this, 
-                        "Solicitação de baixa registrada!\n\n" +
-                        "A solicitação será encaminhada para análise.",
+                    JOptionPane.showMessageDialog(this, """
+                                                        Solicita\u00e7\u00e3o de baixa registrada!
+                                                        
+                                                        A solicita\u00e7\u00e3o ser\u00e1 encaminhada para an\u00e1lise.""",
                         "Baixa Solicitada", JOptionPane.INFORMATION_MESSAGE);
                     
                     carregarHistorico();

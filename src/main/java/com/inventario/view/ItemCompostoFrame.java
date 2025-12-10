@@ -1,18 +1,44 @@
 package com.inventario.view;
 
-import com.inventario.model.Patrimonio;
-import com.inventario.model.Usuario;
-import com.inventario.dao.PatrimonioDAO;
-import com.inventario.dao.ItemCompostoDAO;
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.HeadlessException;
+import java.awt.Insets;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.awt.event.*;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+
+import com.inventario.dao.ItemCompostoDAO;
+import com.inventario.dao.PatrimonioDAO;
+import com.inventario.model.Patrimonio;
+import com.inventario.model.Usuario;
 
 /**
  * Frame para gestão de itens compostos
@@ -361,12 +387,11 @@ public class ItemCompostoFrame extends JFrame {
             // Carregar dados do patrimônio (já verifica se é item composto e carrega componentes)
             carregarPatrimonio(patrimonio);
             
-        } catch (Exception e) {
+        } catch (HeadlessException | SQLException e) {
             JOptionPane.showMessageDialog(this,
                 "Erro ao buscar patrimônio: " + e.getMessage(),
                 "Erro",
                 JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
     
@@ -420,7 +445,7 @@ public class ItemCompostoFrame extends JFrame {
                     "Item Composto Existente",
                     JOptionPane.INFORMATION_MESSAGE);
             }
-        } catch (Exception e) {
+        } catch (HeadlessException | SQLException e) {
             System.err.println("Erro ao verificar item composto: " + e.getMessage());
         }
     }
@@ -638,8 +663,9 @@ public class ItemCompostoFrame extends JFrame {
                 } else if (temColetas) {
                     // Aviso: há coletas mas não está adicionando novos
                     int opcao = JOptionPane.showConfirmDialog(this,
-                        "Este patrimônio já possui componentes cadastrados e coletas registradas.\n" +
-                        "Inventário: " + inventarioNome + "\n" +
+                        """
+                        Este patrim\u00f4nio j\u00e1 possui componentes cadastrados e coletas registradas.
+                        Invent\u00e1rio: """ + inventarioNome + "\n" +
                         "Componentes coletados: " + componentesColetados + "/" + componentesAntigos + "\n\n" +
                         "Deseja substituir os componentes?\n" +
                         "⚠️ As coletas existentes serão mantidas para componentes equivalentes.",
@@ -652,9 +678,9 @@ public class ItemCompostoFrame extends JFrame {
                     }
                 } else {
                     // Sem coletas, apenas confirmar substituição
-                    int opcao = JOptionPane.showConfirmDialog(this,
-                        "Este patrimônio já possui componentes cadastrados.\n" +
-                        "Deseja substituir pelos novos componentes?",
+                    int opcao = JOptionPane.showConfirmDialog(this, """
+                                                                    Este patrim\u00f4nio j\u00e1 possui componentes cadastrados.
+                                                                    Deseja substituir pelos novos componentes?""",
                         "Confirmar Substituição",
                         JOptionPane.YES_NO_OPTION,
                         JOptionPane.QUESTION_MESSAGE);
@@ -705,12 +731,11 @@ public class ItemCompostoFrame extends JFrame {
             
             limparFormulario();
             
-        } catch (Exception e) {
+        } catch (HeadlessException | SQLException e) {
             JOptionPane.showMessageDialog(this,
                 "Erro ao salvar item composto: " + e.getMessage(),
                 "Erro",
                 JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
     

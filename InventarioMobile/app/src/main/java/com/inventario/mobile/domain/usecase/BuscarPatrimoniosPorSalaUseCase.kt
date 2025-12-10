@@ -56,7 +56,11 @@ class BuscarPatrimoniosPorSalaUseCase @Inject constructor(
         
         // Tentar buscar do servidor primeiro
         try {
-            android.util.Log.d(TAG, "Buscando patrimônios da sala $salaId do SERVIDOR...")
+            android.util.Log.d(TAG, "═══════════════════════════════════")
+            android.util.Log.d(TAG, "Buscando patrimônios da sala $salaId do SERVIDOR")
+            android.util.Log.d(TAG, "Página: $page, Tamanho: $pageSize, Coletado: $coletado")
+            android.util.Log.d(TAG, "═══════════════════════════════════")
+            
             val response = patrimonioApi.buscarPorSala(
                 salaId = salaId,
                 page = page,
@@ -64,13 +68,19 @@ class BuscarPatrimoniosPorSalaUseCase @Inject constructor(
                 coletado = coletado
             )
             
+            android.util.Log.d(TAG, "Response code: ${response.code()}")
+            android.util.Log.d(TAG, "Response successful: ${response.isSuccessful}")
+            
             if (response.isSuccessful && response.body()?.success == true) {
                 val patrimonios = response.body()?.data ?: emptyList()
-                android.util.Log.d(TAG, "✓ ${patrimonios.size} patrimônios do servidor")
+                android.util.Log.d(TAG, "✓ ${patrimonios.size} patrimônios do servidor (página $page)")
                 return Result.success(patrimonios)
+            } else {
+                android.util.Log.w(TAG, "Resposta não bem-sucedida: ${response.body()?.message}")
             }
         } catch (e: Exception) {
             android.util.Log.w(TAG, "Falha ao buscar do servidor, tentando local: ${e.message}")
+            android.util.Log.w(TAG, "Stack trace:", e)
         }
         
         // Fallback: buscar do banco local

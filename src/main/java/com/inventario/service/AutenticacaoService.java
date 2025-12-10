@@ -98,7 +98,7 @@ public class AutenticacaoService {
         admin.setId(1);
         
         usuarios.put(ADMIN_USUARIO, admin);
-        System.out.println("Usuário padrão criado: " + ADMIN_USUARIO + " / " + ADMIN_SENHA);
+        // Log removido por segurança - não expor credenciais
     }
     
     /**

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.inventario.mobile.domain.usecase.RegistrarColetaUseCase
 import com.inventario.mobile.domain.model.Coleta
 import com.inventario.mobile.utils.PreferencesManager
+import com.inventario.mobile.utils.VibrationHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,11 +15,13 @@ import javax.inject.Inject
 
 /**
  * ViewModel para registro de itens sem etiqueta
+ * v2.10: Adicionado feedback tátil (vibração) ao coletar
  */
 @HiltViewModel
 class ItemSemEtiquetaViewModel @Inject constructor(
     private val registrarColetaUseCase: RegistrarColetaUseCase,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val vibrationHelper: VibrationHelper // v2.10: Feedback tátil
 ) : ViewModel() {
     
     private val _state = MutableStateFlow<ItemSemEtiquetaState>(ItemSemEtiquetaState.Idle)
@@ -62,6 +65,10 @@ class ItemSemEtiquetaViewModel @Inject constructor(
                 
                 if (result.isSuccess) {
                     android.util.Log.d("ItemSemEtiquetaVM", "✓ Item sem etiqueta registrado com sucesso!")
+                    
+                    // v2.10: Vibrar ao coletar (se habilitado nas configurações)
+                    vibrationHelper.vibrateOnCollection()
+                    
                     _state.value = ItemSemEtiquetaState.Success
                 } else {
                     val error = result.exceptionOrNull()

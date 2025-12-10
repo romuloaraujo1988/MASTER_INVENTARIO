@@ -3,6 +3,7 @@ package com.inventario.mobile.server.controller;
 import com.inventario.mobile.server.dto.ApiResponse;
 import com.inventario.mobile.server.dto.MobilePatrimonioDTO;
 import com.inventario.mobile.server.service.MobilePatrimonioService;
+import com.inventario.security.annotation.RequireConsulta;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,12 +20,16 @@ import java.util.List;
 /**
  * Controlador REST para operações de patrimônio mobile
  * 
+ * Segurança por Role:
+ * - Todos os endpoints de consulta: Qualquer usuário autenticado
+ * 
  * @author Sistema de Inventário
- * @version 1.0.0
+ * @version 2.0.0
  */
 @RestController
 @RequestMapping("/api/mobile/patrimonio")
 @CrossOrigin(origins = "*", maxAge = 3600)
+@RequireConsulta // Todos os endpoints de patrimônio são acessíveis a qualquer usuário autenticado
 public class MobilePatrimonioController {
     
     private static final Logger logger = LoggerFactory.getLogger(MobilePatrimonioController.class);

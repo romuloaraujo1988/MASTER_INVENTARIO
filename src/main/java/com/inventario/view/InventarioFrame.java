@@ -2,10 +2,15 @@ package com.inventario.view;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+
 import java.awt.*;
 import java.awt.event.*;
+import java.lang.reflect.InvocationTargetException;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
 import com.inventario.service.InventarioService;
 import com.inventario.service.ColetaService;
 import com.inventario.service.RelatorioService;
@@ -16,8 +21,12 @@ import com.inventario.offline.SyncFrame;
 import com.inventario.offline.ConnectivityListener;
 import com.inventario.offline.ConnectivityManager;
 import com.inventario.offline.DataSynchronizer;
+
 import javax.swing.Timer;
+
 import java.util.logging.Logger;
+
+import com.inventario.service.BusinessException;
 import com.inventario.view.ui.ButtonStyleFactory;
 
 /**
@@ -604,7 +613,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                 } else {
                     JOptionPane.showMessageDialog(this, "Inventário não encontrado.");
                 }
-            } catch (Exception e) {
+            } catch (HeadlessException e) {
                 String errorMsg = "Erro ao carregar inventário para edição: " + e.getMessage();
                 logger.severe(errorMsg);
                 JOptionPane.showMessageDialog(this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
@@ -629,7 +638,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                         "Erro", 
                         JOptionPane.ERROR_MESSAGE);
                 }
-            } catch (Exception e) {
+            } catch (HeadlessException e) {
                 String errorMsg = "Erro ao carregar detalhes do inventário: " + e.getMessage();
                 logger.severe(errorMsg);
                 JOptionPane.showMessageDialog(this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
@@ -895,9 +904,9 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                 return;
             }
             
-            int confirmacao = JOptionPane.showConfirmDialog(this, 
-                "Tem certeza que deseja finalizar este inventário?\n" +
-                "Esta ação não pode ser desfeita.", 
+            int confirmacao = JOptionPane.showConfirmDialog(this, """
+                                                                  Tem certeza que deseja finalizar este invent\u00e1rio?
+                                                                  Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita.""", 
                 "Confirmar Finalização", 
                 JOptionPane.YES_NO_OPTION);
             
@@ -910,7 +919,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                     } else {
                         JOptionPane.showMessageDialog(this, "Erro ao finalizar inventário.", "Erro", JOptionPane.ERROR_MESSAGE);
                     }
-                } catch (Exception e) {
+                } catch (BusinessException | HeadlessException e) {
                     JOptionPane.showMessageDialog(this, "Erro ao finalizar inventário: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
                 }
             }
@@ -950,7 +959,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                 if (escolha != null) {
                     abrirRelatorio(id, nomeInventario, escolha);
                 }
-            } catch (Exception e) {
+            } catch (HeadlessException e) {
                 String errorMsg = "Erro ao gerar relatório: " + e.getMessage();
                 logger.severe(errorMsg);
                 JOptionPane.showMessageDialog(this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
@@ -1008,7 +1017,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                     JOptionPane.INFORMATION_MESSAGE);
             }
             
-        } catch (Exception e) {
+        } catch (HeadlessException e) {
             String errorMsg = "Erro ao gerar relatório: " + e.getMessage();
             logger.severe(errorMsg);
             JOptionPane.showMessageDialog(this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
@@ -1180,8 +1189,9 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                 // Verificar se o inventário está ABERTO (EM_ANDAMENTO)
                 if (!Inventario.STATUS_EM_ANDAMENTO.equals(status)) {
                     JOptionPane.showMessageDialog(this, 
-                        "A coleta só pode ser realizada em inventários com status ABERTO.\n" +
-                        "Status atual: " + status, 
+                        """
+                        A coleta s\u00f3 pode ser realizada em invent\u00e1rios com status ABERTO.
+                        Status atual: """ + status, 
                         "Coleta não permitida", 
                         JOptionPane.WARNING_MESSAGE);
                     return;
@@ -1193,7 +1203,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
             } else {
                 JOptionPane.showMessageDialog(this, "Selecione um inventário para iniciar a coleta.", "Aviso", JOptionPane.WARNING_MESSAGE);
             }
-        } catch (Exception e) {
+        } catch (HeadlessException e) {
             JOptionPane.showMessageDialog(this, "Erro ao abrir coleta: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -1211,7 +1221,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
             patrimonioFrame.add(label);
             
             patrimonioFrame.setVisible(true);
-        } catch (Exception e) {
+        } catch (HeadlessException e) {
             JOptionPane.showMessageDialog(this, "Erro ao abrir patrimônio: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -1230,7 +1240,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
             Class<?> salaFrameClass = Class.forName("com.inventario.view.SalaFrame");
             JFrame salaFrame = (JFrame) salaFrameClass.getDeclaredConstructor().newInstance();
             salaFrame.setVisible(true);
-        } catch (Exception e) {
+        } catch (ClassNotFoundException | IllegalAccessException | IllegalArgumentException | InstantiationException | NoSuchMethodException | SecurityException | InvocationTargetException e) {
             JOptionPane.showMessageDialog(this, "Tela de gerenciamento de salas em desenvolvimento.", "Informação", JOptionPane.INFORMATION_MESSAGE);
         }
     }
@@ -1359,7 +1369,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                         JOptionPane.showMessageDialog(this, "Erro ao abrir inventário.", "Erro", JOptionPane.ERROR_MESSAGE);
                     }
                 }
-            } catch (Exception e) {
+            } catch (HeadlessException e) {
                 String errorMsg = "Erro ao abrir inventário: " + e.getMessage();
                 logger.severe(errorMsg);
                 JOptionPane.showMessageDialog(this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
@@ -1389,9 +1399,11 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                 
                 if (motivo != null && !motivo.trim().isEmpty()) {
                     int confirmacao = JOptionPane.showConfirmDialog(this, 
-                        "Tem certeza que deseja cancelar este inventário?\n" +
-                        "Esta ação não pode ser desfeita.\n\n" +
-                        "Motivo: " + motivo, 
+                        """
+                        Tem certeza que deseja cancelar este invent\u00e1rio?
+                        Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita.
+                        
+                        Motivo: """ + motivo, 
                         "Confirmar Cancelamento", 
                         JOptionPane.YES_NO_OPTION);
                     
@@ -1404,7 +1416,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                         }
                     }
                 }
-            } catch (Exception e) {
+            } catch (HeadlessException e) {
                 String errorMsg = "Erro ao cancelar inventário: " + e.getMessage();
                 logger.severe(errorMsg);
                 JOptionPane.showMessageDialog(this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
@@ -1427,7 +1439,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                 return inventarioService.atualizar(inventario);
             }
             return false;
-        } catch (Exception e) {
+        } catch (BusinessException e) {
             logger.log(java.util.logging.Level.SEVERE, "Erro ao alterar status do inventário", e);
             return false;
         }
@@ -1453,26 +1465,28 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                 
                 // Verificar se o inventário está em andamento
                 if (Inventario.STATUS_EM_ANDAMENTO.equals(statusAtual)) {
-                    JOptionPane.showMessageDialog(this, 
-                        "Não é possível excluir um inventário que está em andamento.\n" +
-                        "Cancele ou encerre o inventário antes de excluí-lo.", 
+                    JOptionPane.showMessageDialog(this, """
+                                                        N\u00e3o \u00e9 poss\u00edvel excluir um invent\u00e1rio que est\u00e1 em andamento.
+                                                        Cancele ou encerre o invent\u00e1rio antes de exclu\u00ed-lo.""", 
                         "Aviso", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
                 
                 // Verificar se o inventário possui coletas
                 if (inventarioPossuiColetas(id)) {
-                    JOptionPane.showMessageDialog(this, 
-                        "Não é possível excluir este inventário pois ele possui coletas registradas.\n" +
-                        "Para manter a integridade dos dados, inventários com coletas não podem ser excluídos.", 
+                    JOptionPane.showMessageDialog(this, """
+                                                        N\u00e3o \u00e9 poss\u00edvel excluir este invent\u00e1rio pois ele possui coletas registradas.
+                                                        Para manter a integridade dos dados, invent\u00e1rios com coletas n\u00e3o podem ser exclu\u00eddos.""", 
                         "Exclusão não permitida", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
                 
                 // Confirmar exclusão
                 int confirmacao = JOptionPane.showConfirmDialog(this, 
-                    "Tem certeza que deseja excluir o inventário:\n\n" +
-                    "Nome: " + nome + "\n" +
+                    """
+                    Tem certeza que deseja excluir o invent\u00e1rio:
+                    
+                    Nome: """ + nome + "\n" +
                     "Status: " + statusAtual + "\n\n" +
                     "ATENÇÃO: Esta ação não pode ser desfeita!", 
                     "Confirmar Exclusão", 
@@ -1494,9 +1508,9 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                                 "Sucesso", 
                                 JOptionPane.INFORMATION_MESSAGE);
                         } else {
-                            JOptionPane.showMessageDialog(this, 
-                                "Erro ao excluir inventário.\n" +
-                                "Verifique se não há dependências no banco de dados.", 
+                            JOptionPane.showMessageDialog(this, """
+                                                                Erro ao excluir invent\u00e1rio.
+                                                                Verifique se n\u00e3o h\u00e1 depend\u00eancias no banco de dados.""", 
                                 "Erro", JOptionPane.ERROR_MESSAGE);
                         }
                     } else if (confirmacaoTexto != null) {
@@ -1505,7 +1519,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                             "Cancelado", JOptionPane.INFORMATION_MESSAGE);
                     }
                 }
-            } catch (Exception e) {
+            } catch (HeadlessException e) {
                 String errorMsg = "Erro ao excluir inventário: " + e.getMessage();
                 logger.severe(errorMsg);
                 JOptionPane.showMessageDialog(this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);
@@ -1567,7 +1581,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
             // Atualizar status inicial
             atualizarStatusOffline();
             
-        } catch (Exception e) {
+        } catch (SQLException e) {
             logger.log(java.util.logging.Level.SEVERE, "Erro ao inicializar componentes offline", e);
         }
     }
@@ -1683,7 +1697,7 @@ public class InventarioFrame extends JFrame implements ConnectivityListener {
                             "Erro", 
                             JOptionPane.ERROR_MESSAGE);
                     }
-                } catch (Exception e) {
+                } catch (HeadlessException | InterruptedException | ExecutionException e) {
                     String errorMsg = "Erro durante a sincronização: " + e.getMessage();
                     logger.severe(errorMsg);
                     JOptionPane.showMessageDialog(InventarioFrame.this, errorMsg, "Erro", JOptionPane.ERROR_MESSAGE);

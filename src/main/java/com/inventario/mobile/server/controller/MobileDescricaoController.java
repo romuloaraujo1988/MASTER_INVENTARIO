@@ -2,6 +2,7 @@ package com.inventario.mobile.server.controller;
 
 import com.inventario.mobile.server.dto.ApiResponse;
 import com.inventario.dao.PatrimonioDAO;
+import com.inventario.security.annotation.RequireColetor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,10 +16,17 @@ import java.util.stream.Collectors;
 
 /**
  * Controlador REST para descrições de patrimônios (itens sem patrimônio)
+ * 
+ * Segurança por Role:
+ * - Todos os endpoints: ADMIN, SUPERVISOR ou COLETOR
+ * 
+ * @author Sistema de Inventário
+ * @version 2.0.0
  */
 @RestController
 @RequestMapping("/api/mobile/descricoes")
 @CrossOrigin(origins = "*", maxAge = 3600)
+@RequireColetor // Descrições são usadas para coleta, então requer role COLETOR ou superior
 public class MobileDescricaoController {
     
     private static final Logger logger = LoggerFactory.getLogger(MobileDescricaoController.class);

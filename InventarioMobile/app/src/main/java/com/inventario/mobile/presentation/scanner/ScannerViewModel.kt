@@ -8,6 +8,7 @@ import com.inventario.mobile.data.repository.InventarioRepository
 import com.inventario.mobile.domain.usecase.BuscarPatrimonioUseCase
 import com.inventario.mobile.domain.usecase.RegistrarColetaUseCase
 import com.inventario.mobile.utils.PreferencesManager
+import com.inventario.mobile.utils.VibrationHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,12 +18,14 @@ import kotlinx.coroutines.launch
  * ViewModel para Scanner de QR Code
  * ✅ v2.8: Agora usa BuscarPatrimonioUseCase para suporte OFFLINE (UNIFICADO com coleta manual)
  * ✅ Usa RegistrarColetaUseCase obrigatório (UNIFICADO com coleta manual)
+ * ✅ v2.10: Vibração ao coletar (feedback tátil)
  */
 class ScannerViewModel(
     private val inventarioRepository: InventarioRepository,
     private val preferencesManager: PreferencesManager,
     private val registrarColetaUseCase: RegistrarColetaUseCase,
-    private val buscarPatrimonioUseCase: BuscarPatrimonioUseCase // ✅ NOVO: Use Case para busca offline
+    private val buscarPatrimonioUseCase: BuscarPatrimonioUseCase,
+    private val vibrationHelper: VibrationHelper
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(ScannerUiState())
@@ -394,6 +397,9 @@ class ScannerViewModel(
                         
                         // Incrementar contador de coletas
                         preferencesManager.incrementCollectionCount()
+                        
+                        // v2.10: Vibrar ao coletar (se habilitado nas configurações)
+                        vibrationHelper.vibrateOnCollection()
                         
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,

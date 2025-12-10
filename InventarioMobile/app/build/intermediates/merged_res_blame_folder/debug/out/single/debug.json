@@ -8,6 +8,10 @@
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\activity_descricao_selection.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-merged_res-67:/layout_fragment_inventario_por_sala.xml.flat",
+        "source": "com.inventario.mobile.app-main-69:/layout/fragment_inventario_por_sala.xml"
+    },
+    {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-merged_res-67:\\drawable_ic_fingerprint.xml.flat",
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\drawable\\ic_fingerprint.xml"
     },
@@ -44,10 +48,6 @@
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\drawable\\ic_download.xml"
     },
     {
-        "merged": "com.inventario.mobile.app-merged_res-67:/layout_item_sala_dropdown.xml.flat",
-        "source": "com.inventario.mobile.app-main-69:/layout/item_sala_dropdown.xml"
-    },
-    {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-merged_res-67:\\layout_nav_header_main.xml.flat",
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\layout\\nav_header_main.xml"
     },
@@ -76,12 +76,12 @@
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\mipmap-anydpi-v26\\ic_launcher.xml"
     },
     {
-        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-merged_res-67:\\drawable_status_background.xml.flat",
-        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\drawable\\status_background.xml"
-    },
-    {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-merged_res-67:\\drawable_ic_csv.xml.flat",
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\drawable\\ic_csv.xml"
+    },
+    {
+        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-merged_res-67:\\drawable_status_background.xml.flat",
+        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-69:\\drawable\\status_background.xml"
     },
     {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-merged_res-67:\\layout_fragment_inventario_por_responsavel.xml.flat",

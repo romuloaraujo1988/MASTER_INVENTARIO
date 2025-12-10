@@ -4,6 +4,7 @@ import com.inventario.mobile.server.dto.ApiResponse;
 import com.inventario.mobile.server.dto.MobileSalaDTO;
 import com.inventario.mobile.server.dto.MobileSalaComProgressoDTO;
 import com.inventario.mobile.server.service.MobileSalaService;
+import com.inventario.security.annotation.RequireConsulta;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +18,17 @@ import java.util.List;
 
 /**
  * Controlador REST para operações de sala mobile
+ * 
+ * Segurança por Role:
+ * - Todos os endpoints: Qualquer usuário autenticado
+ * 
+ * @author Sistema de Inventário
+ * @version 2.0.0
  */
 @RestController
 @RequestMapping("/api/mobile/salas")
 @CrossOrigin(origins = "*", maxAge = 3600)
+@RequireConsulta // Todos os endpoints de sala são acessíveis a qualquer usuário autenticado
 public class MobileSalaController {
     
     private static final Logger logger = LoggerFactory.getLogger(MobileSalaController.class);

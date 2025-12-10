@@ -4,6 +4,93 @@ Este arquivo registra todas as compilações do APK Android para rastreabilidade
 
 ---
 
+## Build #045 - 09/12/2025 22:30
+
+- **Tipo:** Debug
+- **Versão:** 2.7.0 (Build 45)
+- **Build Code:** 45
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~19.5 MB
+- **Mudanças:** 
+  - **Fix: Rolagem Infinita na Tela "Por Sala"**
+    - **Backend:** Novo método `buscarPorSalaComPaginacao()` no `PatrimonioDAO.java`
+      - Usa `LIMIT/OFFSET` no SQL para paginação eficiente no banco
+      - Evita carregar todos os patrimônios em memória
+    - **Backend:** `MobilePatrimonioService.buscarPorSalaComFiltro()` refatorado
+      - Sem filtro de coleta: usa paginação direta no banco (mais eficiente)
+      - Com filtro de coleta: busca em lotes para evitar sobrecarga de memória
+    - **Android:** `InventarioPorSalaFragment.setupInfiniteScroll()` corrigido
+      - Detecção correta do NestedScrollView
+      - Logs de debug para diagnóstico
+      - Threshold aumentado para 500px
+    - **Android:** `InventarioPorSalaViewModel.carregarMaisPatrimonios()` com logs detalhados
+  - **Problema resolvido:** Lista travava nos primeiros itens ao rolar
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #044 - 09/12/2025 21:45
+
+- **Tipo:** Debug
+- **Versão:** 2.7.0 (Build 44)
+- **Build Code:** 44
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** 19.5 MB
+- **Mudanças:** 
+  - **Feature: Vibração ao Coletar Patrimônio**
+    - Nova opção nas Configurações: "Vibrar ao coletar"
+    - `VibrationHelper.kt` - Utilitário para gerenciar vibração do dispositivo
+    - `PreferencesManager.kt` - Métodos `isVibrationOnCollectionEnabled()` e `setVibrationOnCollectionEnabled()`
+    - `UtilModule.kt` - Provider para VibrationHelper via Hilt
+    - `activity_settings.xml` - Novo card "Feedback de Coleta" com switch de vibração
+    - `SettingsActivity.kt` - Handler para switch de vibração
+    - **ViewModels atualizados para vibrar ao coletar:**
+      - `ColetaViewModelClean.kt` - Vibra em `registrarColeta()` e `registrarColetaComMetricas()`
+      - `ScannerViewModel.kt` - Vibra em `coletarPatrimonioComEstado()`
+      - `ManualCollectionViewModel.kt` - Vibra em `coletarPatrimonio()`
+      - `ItemSemEtiquetaViewModel.kt` - Vibra em `registrarItemSemEtiqueta()`
+    - **Factories atualizados:**
+      - `ScannerViewModelFactory.kt` - Recebe VibrationHelper
+      - `ManualCollectionViewModelFactory.kt` - Recebe VibrationHelper
+  - **Benefícios:**
+    - Feedback tátil confirma coleta bem-sucedida
+    - Configurável pelo usuário (habilitado por padrão)
+    - Vibração curta (50ms) não intrusiva
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #043 - 09/12/2025 20:15
+
+- **Tipo:** Debug
+- **Versão:** 2.7.0
+- **Build Code:** 42
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~18 MB
+- **Mudanças:** 
+  - Versão atualizada para 2.7.0 (sincronizado com backend)
+  - SplashScreen agora exibe versão dinamicamente via BuildConfig
+  - String `app_version` agora usa placeholder `%1$s`
+- **Compatibilidade:** ✅ Compatível com servidor 2.7.0 (RBAC)
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #042 - 09/12/2025 20:00
+
+- **Tipo:** Debug
+- **Versão:** 2.6.0
+- **Build Code:** 41
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~18 MB
+- **Mudanças:** 
+  - Recompilação para teste com backend v2.7.0 (segurança por roles)
+  - Nenhuma alteração no código do app Android
+- **Compatibilidade:** ✅ Compatível com servidor 2.7.0 (RBAC)
+- **Status:** ✅ Sucesso
+
+---
+
 ## Build #041 - 09/12/2025 13:00
 
 - **Tipo:** Release (Produção) ✅

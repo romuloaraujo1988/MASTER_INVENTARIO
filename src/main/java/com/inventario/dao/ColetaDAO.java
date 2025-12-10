@@ -1,13 +1,21 @@
 package com.inventario.dao;
 
-import com.inventario.model.Coleta;
-import com.inventario.util.DatabaseConnection;
-import org.springframework.stereotype.Repository;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.inventario.model.Coleta;
+import com.inventario.util.DatabaseConnection;
 
 /**
  * DAO para operações com Coleta
@@ -1542,7 +1550,6 @@ public class ColetaDAO {
             
         } catch (SQLException e) {
             System.err.println("DEBUG TIMESTAMP: ERRO ao ler DATA_COLETA: " + e.getMessage());
-            e.printStackTrace();
             throw e;
         }
         

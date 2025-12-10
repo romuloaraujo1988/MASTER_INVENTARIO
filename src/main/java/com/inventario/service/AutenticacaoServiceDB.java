@@ -264,7 +264,7 @@ public class AutenticacaoServiceDB {
             
             try {
                 usuarioDAO.insert(admin);
-                System.out.println("Usuário administrador padrão criado: admin / admin123");
+                // Log removido por segurança - não expor credenciais
             } catch (Exception e) {
                 System.err.println("Erro ao criar usuário administrador padrão: " + e.getMessage());
             }

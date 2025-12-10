@@ -5,6 +5,7 @@ import com.inventario.mobile.server.dto.MobilePatrimonioDTO;
 import com.inventario.mobile.server.dto.MobileSalaDTO;
 import com.inventario.mobile.server.service.MobilePatrimonioService;
 import com.inventario.mobile.server.service.MobileSalaService;
+import com.inventario.security.annotation.RequireColetor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,12 +23,16 @@ import java.util.Map;
  * Controlador REST para sincronização de dados offline
  * Endpoints otimizados para download inicial de dados
  * 
+ * Segurança por Role:
+ * - Todos os endpoints: ADMIN, SUPERVISOR ou COLETOR
+ * 
  * @author Sistema de Inventário
  * @version 2.0.0
  */
 @RestController
 @RequestMapping("/api/mobile/sync")
 @CrossOrigin(origins = "*", maxAge = 3600)
+@RequireColetor // Todos os endpoints de sync requerem role COLETOR ou superior
 public class MobileSyncController {
     
     private static final Logger logger = LoggerFactory.getLogger(MobileSyncController.class);

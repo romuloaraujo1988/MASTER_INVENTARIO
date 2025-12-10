@@ -114,7 +114,7 @@
     <string name="app_full_name">Sistema de Histórico e Coleta Patrimonial</string>
     <string name="app_logo">Logo do aplicativo</string>
     <string name="app_name">SIHCP Mobile</string>
-    <string name="app_version">Versão 1.2.35</string>
+    <string name="app_version">Versão %1$s</string>
     <string name="cancel">Cancelar</string>
     <string name="cancelar">Cancelar</string>
     <string name="clear_filters">Limpar Filtros</string>

@@ -5,6 +5,48 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [2.7.0] - 2025-12-09
+
+### 🔐 Segurança - Controle de Acesso por Roles (RBAC)
+
+### ✨ Adicionado
+
+#### Anotações de Segurança Customizadas
+- **@RequireAdmin**: Restringe acesso apenas a administradores
+- **@RequireSupervisor**: Permite acesso a ADMIN e SUPERVISOR
+- **@RequireColetor**: Permite acesso a ADMIN, SUPERVISOR e COLETOR
+- **@RequireConsulta**: Permite acesso a qualquer usuário autenticado
+
+#### Segurança nos Controllers Mobile
+- **MobileColetaController**: 14 endpoints com controle de acesso
+  - POST (registrar): Requer COLETOR ou superior
+  - DELETE (excluir): Requer ADMIN apenas
+  - GET (consultar): Qualquer usuário autenticado
+- **MobileUsuarioController**: Gerenciamento restrito a ADMIN
+  - `/me` acessível a qualquer usuário autenticado
+- **MobileInventarioController**: Controle por operação
+  - Listar todos: Requer SUPERVISOR ou superior
+  - Consultar ativo: Qualquer usuário autenticado
+- **MobileSyncController**: Sincronização requer COLETOR ou superior
+- **MobileDashboardController**: Dashboard acessível a todos autenticados
+- **MobilePatrimonioController**: Consulta acessível a todos autenticados
+- **MobileSalaController**: Consulta acessível a todos autenticados
+- **MobileSetorController**: Consulta acessível a todos autenticados
+- **MobileResponsavelController**: Consulta acessível a todos autenticados
+- **MobileDescricaoController**: Requer COLETOR ou superior
+
+### 🔧 Alterado
+
+#### MobileSecurityConfig
+- Habilitado `@EnableMethodSecurity(prePostEnabled = true)`
+- Removidos endpoints temporariamente liberados
+- Todos os endpoints agora requerem autenticação (exceto login/health)
+
+### 📚 Documentação
+- Criado `.kiro/steering/security-roles.md` com matriz completa de permissões
+
+---
+
 ## [2.0.0] - 2025-11-08
 
 ### 🎉 Versão Major - Refatoração Completa e Novas Funcionalidades

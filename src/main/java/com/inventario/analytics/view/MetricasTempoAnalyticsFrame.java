@@ -29,8 +29,6 @@ import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.inventario.analytics.model.MetricasColetorDTO;
 import com.inventario.analytics.model.MetricasPeriodoDTO;
@@ -41,7 +39,7 @@ import com.inventario.analytics.service.AnalyticsService;
  */
 public class MetricasTempoAnalyticsFrame extends JFrame {
     
-    private static final Logger logger = LoggerFactory.getLogger(MetricasTempoAnalyticsFrame.class);
+    //private static final Logger logger = LoggerFactory.getLogger(MetricasTempoAnalyticsFrame.class);
     
     private final int idInventario;
     private final AnalyticsService analyticsService;

@@ -1,12 +1,21 @@
 package com.inventario.itemcomposto.service;
 
+import java.sql.Array;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
 import com.inventario.itemcomposto.dao.ItemCompostoDAO;
 import com.inventario.itemcomposto.model.Componente;
 import com.inventario.util.ConnectionManager;
-import org.springframework.stereotype.Service;
-
-import java.sql.*;
-import java.util.*;
 
 /**
  * Service para detecção e aplicação em lote de itens compostos.
@@ -19,11 +28,9 @@ import java.util.*;
 @Service
 public class DeteccaoEmLoteService {
     
-    private final ItemCompostoService itemCompostoService;
     private final ItemCompostoDAO itemCompostoDAO;
     
     public DeteccaoEmLoteService() {
-        this.itemCompostoService = new ItemCompostoService();
         this.itemCompostoDAO = new ItemCompostoDAO();
     }
     
@@ -120,7 +127,7 @@ public class DeteccaoEmLoteService {
                             String.format("Processando %d de %d...", i + 1, idsPatrimonios.size()));
                     }
                     
-                } catch (Exception e) {
+                } catch (SQLException e) {
                     resultado.getErros().add(
                         String.format("Erro no patrimônio ID %d: %s", idPatrimonio, e.getMessage())
                     );
@@ -131,7 +138,7 @@ public class DeteccaoEmLoteService {
             conn.commit();
             resultado.setSucesso(true);
             
-        } catch (Exception e) {
+        } catch (SQLException e) {
             if (conn != null) {
                 try {
                     conn.rollback();

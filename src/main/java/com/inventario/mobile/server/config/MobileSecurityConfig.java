@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -26,12 +27,18 @@ import java.util.Arrays;
 /**
  * Configuração de segurança específica para endpoints mobile
  * 
+ * Hierarquia de Perfis:
+ * - ADMIN: Acesso total (gerenciamento de usuários, configurações, etc.)
+ * - SUPERVISOR: Supervisiona coletas, relatórios, pode ver todos os dados
+ * - COLETOR: Pode realizar coletas e ver seus próprios dados
+ * - CONSULTA: Apenas visualização de dados
+ * 
  * @author Sistema de Inventário
- * @version 1.0.0
+ * @version 2.0.0
  */
 @Configuration
 @EnableWebSecurity
-// @Profile("mobile") // TEMPORARIAMENTE DESABILITADO PARA TESTE - Ativo sempre
+@EnableMethodSecurity(prePostEnabled = true) // Habilita @PreAuthorize
 @Order(1) // Prioridade alta para interceptar requests mobile primeiro
 public class MobileSecurityConfig {
 
@@ -50,16 +57,27 @@ public class MobileSecurityConfig {
 
     public MobileSecurityConfig() {
         logger.info("╔════════════════════════════════════════════════════════════════╗");
-        logger.info("║  MOBILE SECURITY CONFIG CARREGADA - PROFILE MOBILE ATIVO      ║");
+        logger.info("║  MOBILE SECURITY CONFIG v2.0 - SEGURANÇA POR ROLES ATIVA      ║");
         logger.info("╚════════════════════════════════════════════════════════════════╝");
     }
 
     /**
      * Configuração de segurança para endpoints mobile
+     * 
+     * Endpoints públicos (sem autenticação):
+     * - /api/mobile/health - Health check
+     * - /api/mobile/test/** - Testes
+     * - /api/mobile/auth/login - Login
+     * - /api/mobile/auth/validate - Validação de token
+     * 
+     * Endpoints protegidos (requerem autenticação):
+     * - Todos os outros endpoints /api/mobile/**
+     * 
+     * Controle de acesso por role é feito via @PreAuthorize nos controllers
      */
     @Bean
     public SecurityFilterChain mobileSecurityFilterChain(HttpSecurity http) throws Exception {
-        logger.info("Configurando SecurityFilterChain para API Mobile...");
+        logger.info("Configurando SecurityFilterChain para API Mobile com segurança por roles...");
         
         http
                 .securityMatcher("/api/mobile/**")
@@ -71,40 +89,72 @@ public class MobileSecurityConfig {
                     logger.info("Configurando regras de autorização...");
                     
                     authz
-                        // Endpoints públicos - Health e Test (PRIMEIRO!)
+                        // ═══════════════════════════════════════════════════════════════
+                        // ENDPOINTS PÚBLICOS (sem autenticação)
+                        // ═══════════════════════════════════════════════════════════════
+                        
+                        // Health check e testes
                         .requestMatchers("/api/mobile/health").permitAll()
                         .requestMatchers("/api/mobile/test").permitAll()
                         .requestMatchers("/api/mobile/test/**").permitAll()
                         
-                        // Endpoints públicos - Autenticação
+                        // Autenticação
                         .requestMatchers("/api/mobile/auth/login").permitAll()
                         .requestMatchers("/api/mobile/auth/validate").permitAll()
-
-                        // TEMPORÁRIO: Liberar dashboard e coletas sem autenticação
-                        .requestMatchers("/api/mobile/dashboard/**").permitAll()
-                        .requestMatchers("/api/mobile/coletas/**").permitAll()
-                        .requestMatchers("/api/mobile/patrimonios/**").permitAll()
-                        .requestMatchers("/api/mobile/salas/**").permitAll()
-                        .requestMatchers("/api/mobile/setores/**").permitAll()
-                        .requestMatchers("/api/mobile/descricoes/**").permitAll()
-                        .requestMatchers("/api/mobile/v1/connection/**").permitAll() // Monitor de conexões
-
-                        // Endpoints protegidos
-                        .requestMatchers("/api/mobile/sync/**").authenticated()
-                        .requestMatchers("/api/mobile/auth/logout").authenticated()
+                        
+                        // Monitor de conexões (para debug)
+                        .requestMatchers("/api/mobile/v1/connection/**").permitAll()
+                        
+                        // ═══════════════════════════════════════════════════════════════
+                        // ENDPOINTS PROTEGIDOS (requerem autenticação)
+                        // O controle fino de acesso é feito via @PreAuthorize nos controllers
+                        // ═══════════════════════════════════════════════════════════════
+                        
+                        // Refresh token requer autenticação
                         .requestMatchers("/api/mobile/auth/refresh").authenticated()
-
+                        .requestMatchers("/api/mobile/auth/logout").authenticated()
+                        
+                        // Dashboard - qualquer usuário autenticado
+                        .requestMatchers("/api/mobile/dashboard/**").authenticated()
+                        
+                        // Coletas - requer role COLETOR ou superior
+                        .requestMatchers("/api/mobile/coletas/**").authenticated()
+                        
+                        // Patrimônios - qualquer usuário autenticado pode consultar
+                        .requestMatchers("/api/mobile/patrimonios/**").authenticated()
+                        .requestMatchers("/api/mobile/patrimonio/**").authenticated()
+                        
+                        // Salas e Setores - qualquer usuário autenticado
+                        .requestMatchers("/api/mobile/salas/**").authenticated()
+                        .requestMatchers("/api/mobile/setores/**").authenticated()
+                        
+                        // Descrições - qualquer usuário autenticado
+                        .requestMatchers("/api/mobile/descricoes/**").authenticated()
+                        
+                        // Responsáveis - qualquer usuário autenticado
+                        .requestMatchers("/api/mobile/responsaveis/**").authenticated()
+                        
+                        // Inventários - qualquer usuário autenticado
+                        .requestMatchers("/api/mobile/inventario/**").authenticated()
+                        
+                        // Sincronização - requer autenticação
+                        .requestMatchers("/api/mobile/sync/**").authenticated()
+                        
+                        // Usuários - controle fino via @PreAuthorize
+                        .requestMatchers("/api/mobile/usuarios/**").authenticated()
+                        
+                        // Dispositivos - controle fino via @PreAuthorize
+                        .requestMatchers("/api/mobile/dispositivos/**").authenticated()
+                        
                         // Qualquer outro endpoint mobile requer autenticação
                         .anyRequest().authenticated();
                     
-                    logger.info("Regras de autorização configuradas!");
+                    logger.info("Regras de autorização configuradas com sucesso!");
                 });
 
-        // IMPORTANTE: Criar e adicionar filtro JWT com dependências injetadas
+        // Criar e adicionar filtro JWT
         logger.info("Criando MobileJwtAuthenticationFilter...");
-        MobileJwtAuthenticationFilter jwtFilter = new MobileJwtAuthenticationFilter(mobileAuthService,
-                userDetailsService);
-        logger.info("Adicionando MobileJwtAuthenticationFilter à cadeia de segurança");
+        MobileJwtAuthenticationFilter jwtFilter = new MobileJwtAuthenticationFilter(mobileAuthService, userDetailsService);
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         logger.info("MobileJwtAuthenticationFilter adicionado com sucesso!");
         
@@ -120,7 +170,7 @@ public class MobileSecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Permitir origens específicas para mobile (incluindo o IP configurado)
+        // Permitir origens específicas para mobile
         configuration.setAllowedOrigins(Arrays.asList(
             "http://192.168.10.107:8081",
             "https://192.168.10.107:8081",
@@ -153,7 +203,6 @@ public class MobileSecurityConfig {
 
     /**
      * Authentication Manager para mobile
-     * Usa @Lazy para evitar referência circular
      */
     @Bean(name = "mobileAuthenticationManager")
     @org.springframework.context.annotation.Lazy

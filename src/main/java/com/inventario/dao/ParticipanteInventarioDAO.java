@@ -25,13 +25,6 @@ public class ParticipanteInventarioDAO {
     
     
     /**
-     * Retorna o nome correto da tabela
-     */
-    private String getTableName() throws SQLException {
-        return "TABELA_PARTICIPANTE_INVENTARIO";
-    }
-    
-    /**
      * Adiciona um participante ao inventário
      * Valida se o usuário existe e se não é já participante ativo
      * Se existe um registro inativo, reativa-o em vez de criar novo

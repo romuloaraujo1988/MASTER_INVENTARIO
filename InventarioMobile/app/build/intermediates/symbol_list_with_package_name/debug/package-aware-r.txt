@@ -3866,6 +3866,7 @@ id navigation_bar_item_labels_group
 id navigation_bar_item_large_label_view
 id navigation_bar_item_small_label_view
 id navigation_header_container
+id nestedScrollView
 id never
 id neverCompleteToEnd
 id neverCompleteToStart
@@ -4052,6 +4053,7 @@ id switchNotifications
 id switchOfflineMode
 id switchSync
 id switchSyncOnWifiOnly
+id switchVibrationOnCollection
 id switchWifiOnly
 id tabLayout
 id tabMode

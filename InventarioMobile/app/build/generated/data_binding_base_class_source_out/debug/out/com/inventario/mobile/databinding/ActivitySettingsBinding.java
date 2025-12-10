@@ -73,6 +73,9 @@ public final class ActivitySettingsBinding implements ViewBinding {
   public final SwitchMaterial switchForceOffline;
 
   @NonNull
+  public final SwitchMaterial switchVibrationOnCollection;
+
+  @NonNull
   public final SwitchMaterial switchWifiOnly;
 
   @NonNull
@@ -96,9 +99,9 @@ public final class ActivitySettingsBinding implements ViewBinding {
       @NonNull RadioButton radioThemeDark, @NonNull RadioButton radioThemeLight,
       @NonNull RadioButton radioThemeSystem, @NonNull SwitchMaterial switchAutoSync,
       @NonNull SwitchMaterial switchAutoSyncByCount, @NonNull SwitchMaterial switchForceOffline,
-      @NonNull SwitchMaterial switchWifiOnly, @NonNull Toolbar toolbar,
-      @NonNull TextView tvCurrentCollectionCount, @NonNull TextView tvSyncCount,
-      @NonNull TextView tvSyncInterval) {
+      @NonNull SwitchMaterial switchVibrationOnCollection, @NonNull SwitchMaterial switchWifiOnly,
+      @NonNull Toolbar toolbar, @NonNull TextView tvCurrentCollectionCount,
+      @NonNull TextView tvSyncCount, @NonNull TextView tvSyncInterval) {
     this.rootView = rootView;
     this.btnDecreaseSyncCount = btnDecreaseSyncCount;
     this.btnDecreaseSyncInterval = btnDecreaseSyncInterval;
@@ -116,6 +119,7 @@ public final class ActivitySettingsBinding implements ViewBinding {
     this.switchAutoSync = switchAutoSync;
     this.switchAutoSyncByCount = switchAutoSyncByCount;
     this.switchForceOffline = switchForceOffline;
+    this.switchVibrationOnCollection = switchVibrationOnCollection;
     this.switchWifiOnly = switchWifiOnly;
     this.toolbar = toolbar;
     this.tvCurrentCollectionCount = tvCurrentCollectionCount;
@@ -246,6 +250,12 @@ public final class ActivitySettingsBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.switchVibrationOnCollection;
+      SwitchMaterial switchVibrationOnCollection = ViewBindings.findChildViewById(rootView, id);
+      if (switchVibrationOnCollection == null) {
+        break missingId;
+      }
+
       id = R.id.switchWifiOnly;
       SwitchMaterial switchWifiOnly = ViewBindings.findChildViewById(rootView, id);
       if (switchWifiOnly == null) {
@@ -280,8 +290,8 @@ public final class ActivitySettingsBinding implements ViewBinding {
           btnDecreaseSyncInterval, btnIncreaseSyncCount, btnIncreaseSyncInterval,
           btnResetCollectionCount, btnTestSync, layoutOfflineStatus, layoutSyncCount,
           layoutSyncInterval, radioGroupTheme, radioThemeDark, radioThemeLight, radioThemeSystem,
-          switchAutoSync, switchAutoSyncByCount, switchForceOffline, switchWifiOnly, toolbar,
-          tvCurrentCollectionCount, tvSyncCount, tvSyncInterval);
+          switchAutoSync, switchAutoSyncByCount, switchForceOffline, switchVibrationOnCollection,
+          switchWifiOnly, toolbar, tvCurrentCollectionCount, tvSyncCount, tvSyncInterval);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

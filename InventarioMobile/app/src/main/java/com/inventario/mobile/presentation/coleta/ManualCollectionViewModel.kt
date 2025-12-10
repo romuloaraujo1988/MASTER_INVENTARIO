@@ -8,6 +8,7 @@ import com.inventario.mobile.domain.model.Patrimonio as DomainPatrimonio
 import com.inventario.mobile.data.model.Patrimonio as DataPatrimonio
 import com.inventario.mobile.data.model.Coleta
 import com.inventario.mobile.data.repository.InventarioRepository
+import com.inventario.mobile.utils.VibrationHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,12 +17,17 @@ import android.util.Log
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
+/**
+ * ViewModel para coleta manual de patrimônios
+ * v2.10: Adicionado feedback tátil (vibração) ao coletar
+ */
 @HiltViewModel
 class ManualCollectionViewModel @Inject constructor(
     private val buscarPatrimonioUseCase: BuscarPatrimonioUseCase,
     private val registrarColetaUseCase: RegistrarColetaUseCase,
     private val inventarioRepository: InventarioRepository, // Temporário para compatibilidade
-    private val coletaDao: com.inventario.mobile.data.local.dao.ColetaDao // v2.7: Para contar coletas por sala
+    private val coletaDao: com.inventario.mobile.data.local.dao.ColetaDao, // v2.7: Para contar coletas por sala
+    private val vibrationHelper: VibrationHelper // v2.10: Feedback tátil
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ManualCollectionUiState())
@@ -185,6 +191,9 @@ class ManualCollectionViewModel @Inject constructor(
 
                 result.fold(
                     onSuccess = { coleta ->
+                        // v2.10: Vibrar ao coletar (se habilitado nas configurações)
+                        vibrationHelper.vibrateOnCollection()
+                        
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             coletaRealizada = true,

@@ -3,6 +3,8 @@ package com.inventario.mobile.server.controller;
 import com.inventario.mobile.server.dto.ApiResponse;
 import com.inventario.mobile.server.dto.MobileInventarioDTO;
 import com.inventario.mobile.server.service.MobileInventarioService;
+import com.inventario.security.annotation.RequireConsulta;
+import com.inventario.security.annotation.RequireSupervisor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,15 @@ import java.util.Map;
 
 /**
  * Controlador REST para operações de inventário mobile
+ * 
+ * Segurança por Role:
+ * - GET /ativo: Qualquer usuário autenticado
+ * - GET /{id}: Qualquer usuário autenticado
+ * - GET (listar): ADMIN ou SUPERVISOR
+ * - GET /{id}/estatisticas: Qualquer usuário autenticado
+ * 
+ * @author Sistema de Inventário
+ * @version 2.0.0
  */
 @RestController
 @RequestMapping("/api/mobile/inventario")
@@ -31,8 +42,10 @@ public class MobileInventarioController {
     /**
      * Busca o inventário ativo (em andamento)
      * GET /api/mobile/inventario/ativo
+     * Requer role: Qualquer usuário autenticado
      */
     @GetMapping("/ativo")
+    @RequireConsulta
     public ResponseEntity<ApiResponse<MobileInventarioDTO>> buscarInventarioAtivo() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -64,8 +77,10 @@ public class MobileInventarioController {
     /**
      * Busca inventário por ID
      * GET /api/mobile/inventario/{id}
+     * Requer role: Qualquer usuário autenticado
      */
     @GetMapping("/{id}")
+    @RequireConsulta
     public ResponseEntity<ApiResponse<MobileInventarioDTO>> buscarPorId(@PathVariable Integer id) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -93,8 +108,10 @@ public class MobileInventarioController {
     /**
      * Lista todos os inventários
      * GET /api/mobile/inventario
+     * Requer role: ADMIN ou SUPERVISOR
      */
     @GetMapping
+    @RequireSupervisor
     public ResponseEntity<ApiResponse<List<MobileInventarioDTO>>> listarInventarios() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -118,8 +135,10 @@ public class MobileInventarioController {
     /**
      * Busca estatísticas do inventário
      * GET /api/mobile/inventario/{id}/estatisticas
+     * Requer role: Qualquer usuário autenticado
      */
     @GetMapping("/{id}/estatisticas")
+    @RequireConsulta
     public ResponseEntity<ApiResponse<Map<String, Object>>> buscarEstatisticas(@PathVariable Integer id) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

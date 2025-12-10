@@ -2,6 +2,8 @@ package com.inventario.mobile.server.controller;
 
 import com.inventario.mobile.server.dto.ApiResponse;
 import com.inventario.model.Usuario;
+import com.inventario.security.annotation.RequireAdmin;
+import com.inventario.security.annotation.RequireConsulta;
 import com.inventario.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,8 +19,14 @@ import java.util.List;
 /**
  * Controlador REST para operações de usuário mobile
  * 
+ * Segurança por Role:
+ * - GET /me: Qualquer usuário autenticado
+ * - GET (listar): ADMIN apenas
+ * - GET /{id}: ADMIN apenas
+ * - GET /login/{login}: ADMIN apenas
+ * 
  * @author Sistema de Inventário
- * @version 1.0.0
+ * @version 2.0.0
  */
 @RestController
 @RequestMapping("/api/mobile/usuarios")
@@ -32,10 +40,12 @@ public class MobileUsuarioController {
     
     /**
      * Listar todos os usuários ativos
+     * Requer role: ADMIN apenas
      * 
      * @return lista de usuários
      */
     @GetMapping
+    @RequireAdmin
     public ResponseEntity<ApiResponse<List<Usuario>>> listarUsuarios() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -61,11 +71,13 @@ public class MobileUsuarioController {
     
     /**
      * Buscar usuário por ID
+     * Requer role: ADMIN apenas
      * 
      * @param id ID do usuário
      * @return dados do usuário
      */
     @GetMapping("/{id}")
+    @RequireAdmin
     public ResponseEntity<ApiResponse<Usuario>> buscarPorId(@PathVariable Integer id) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -95,11 +107,13 @@ public class MobileUsuarioController {
     
     /**
      * Buscar usuário por login
+     * Requer role: ADMIN apenas
      * 
      * @param login login do usuário
      * @return dados do usuário
      */
     @GetMapping("/login/{login}")
+    @RequireAdmin
     public ResponseEntity<ApiResponse<Usuario>> buscarPorLogin(@PathVariable String login) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -129,10 +143,12 @@ public class MobileUsuarioController {
     
     /**
      * Obter perfil do usuário autenticado
+     * Requer role: Qualquer usuário autenticado
      * 
      * @return dados do usuário logado
      */
     @GetMapping("/me")
+    @RequireConsulta
     public ResponseEntity<ApiResponse<Usuario>> obterPerfilUsuario() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

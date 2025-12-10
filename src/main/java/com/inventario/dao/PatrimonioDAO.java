@@ -380,6 +380,26 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
     }
     
     /**
+     * Busca patrimônios por sala (ID) com paginação
+     * 
+     * @param idSala ID da sala
+     * @param page número da página (0-indexed)
+     * @param size tamanho da página
+     * @return lista de patrimônios paginada
+     */
+    public List<Patrimonio> buscarPorSalaComPaginacao(int idSala, int page, int size) throws SQLException {
+        String sql = "SELECT p.*, r.NOME as nome_responsavel, s.DESCRICAO as nome_sala " +
+                    "FROM TABELA_PATRIMONIO p " +
+                    "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
+                    "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
+                    "WHERE p.ID_SALA = ? " +
+                    "ORDER BY p.NUMERO " +
+                    "LIMIT ? OFFSET ?";
+        
+        return executeQuery(sql, idSala, size, page * size);
+    }
+    
+    /**
      * Busca patrimônios por sala (nome)
      */
     public List<Patrimonio> buscarPorSala(String nomeSala) throws SQLException {

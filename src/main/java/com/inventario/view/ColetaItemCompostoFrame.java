@@ -96,7 +96,6 @@ public class ColetaItemCompostoFrame extends JFrame {
     // Localização atual de coleta
     private JComboBox<String> cmbLocalizacaoAtual;
     private JTextField txtLocalizacaoManual;
-    private String localizacaoAtualColeta = "";
     
     public ColetaItemCompostoFrame(Usuario usuarioLogado) {
         this.usuarioLogado = usuarioLogado;
@@ -123,9 +122,9 @@ public class ColetaItemCompostoFrame extends JFrame {
             this.inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
             
             if (this.inventarioAtivo == null) {
-                JOptionPane.showMessageDialog(this,
-                    "Nenhum inventário ativo encontrado.\n" +
-                    "É necessário ter um inventário em andamento para realizar coletas.",
+                JOptionPane.showMessageDialog(this, """
+                                                    Nenhum invent\u00e1rio ativo encontrado.
+                                                    \u00c9 necess\u00e1rio ter um invent\u00e1rio em andamento para realizar coletas.""",
                     "Aviso",
                     JOptionPane.WARNING_MESSAGE);
                 System.out.println("AVISO: Nenhum inventário ativo encontrado");
@@ -803,9 +802,9 @@ public class ColetaItemCompostoFrame extends JFrame {
             );
             
             if (componentes.isEmpty()) {
-                JOptionPane.showMessageDialog(this,
-                    "Este patrimônio não possui componentes cadastrados.\n" +
-                    "Configure os componentes antes de realizar a coleta.",
+                JOptionPane.showMessageDialog(this, """
+                                                    Este patrim\u00f4nio n\u00e3o possui componentes cadastrados.
+                                                    Configure os componentes antes de realizar a coleta.""",
                     "Sem Componentes",
                     JOptionPane.INFORMATION_MESSAGE);
                 return;
@@ -903,15 +902,6 @@ public class ColetaItemCompostoFrame extends JFrame {
         lblStatusGeral.setForeground(cor);
     }
     
-    private Color getCorStatus(String status) {
-        switch (status) {
-            case "COMPLETO": return new Color(46, 204, 113);
-            case "PARCIAL": return new Color(241, 196, 15);
-            case "FALTANTE": return new Color(231, 76, 60);
-            default: return new Color(149, 165, 166);
-        }
-    }
-    
     private void registrarComponente() {
         int selectedRow = tblComponentes.getSelectedRow();
         if (selectedRow == -1) return;
@@ -969,8 +959,9 @@ public class ColetaItemCompostoFrame extends JFrame {
     private void marcarTodosEncontrados() {
         String localizacaoAtual = getLocalizacaoAtual();
         
-        String mensagem = "Marcar todos os componentes como encontrados?\n" +
-            "Isso registrará a quantidade esperada para cada componente.";
+        String mensagem = """
+                          Marcar todos os componentes como encontrados?
+                          Isso registrar\u00e1 a quantidade esperada para cada componente.""";
         
         if (!localizacaoAtual.isEmpty()) {
             mensagem += "\n\n📍 Local: " + localizacaoAtual;
@@ -1040,9 +1031,9 @@ public class ColetaItemCompostoFrame extends JFrame {
         
         for (ComponenteColeta comp : componentesColeta) {
             switch (comp.getStatus()) {
-                case "COMPLETO": completos++; break;
-                case "PARCIAL": parciais++; break;
-                default: pendentes++; break;
+                case "COMPLETO" -> completos++;
+                case "PARCIAL" -> parciais++;
+                default -> pendentes++;
             }
         }
         
