@@ -1,24 +1,28 @@
 package com.inventario.mobile.server.service;
 
-import com.inventario.dao.InventarioDAO;
-import com.inventario.dao.PatrimonioDAO;
-import com.inventario.dao.ResponsavelDAO;
-import com.inventario.dao.SalaDAO;
-import com.inventario.mobile.server.dto.MobileOfflineDataDTO;
-import com.inventario.mobile.server.dto.MobileOfflineDataDTO.*;
-import com.inventario.model.Inventario;
-import com.inventario.model.Patrimonio;
-import com.inventario.model.Responsavel;
-import com.inventario.model.Sala;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.SQLException;
-import java.util.List;
-import java.util.stream.Collectors;
+import com.inventario.dao.InventarioDAO;
+import com.inventario.dao.PatrimonioDAO;
+import com.inventario.dao.ResponsavelDAO;
+import com.inventario.dao.SalaDAO;
+import com.inventario.mobile.server.dto.MobileOfflineDataDTO;
+import com.inventario.mobile.server.dto.MobileOfflineDataDTO.MetadataDTO;
+import com.inventario.mobile.server.dto.MobileOfflineDataDTO.PatrimonioOfflineDTO;
+import com.inventario.mobile.server.dto.MobileOfflineDataDTO.ResponsavelOfflineDTO;
+import com.inventario.mobile.server.dto.MobileOfflineDataDTO.SalaOfflineDTO;
+import com.inventario.model.Inventario;
+import com.inventario.model.Patrimonio;
+import com.inventario.model.Responsavel;
+import com.inventario.model.Sala;
 
 /**
  * Service para sincronização offline completa
@@ -109,9 +113,6 @@ public class MobileOfflineSyncService {
                 .map(this::converterPatrimonioParaDTO)
                 .collect(Collectors.toList());
             
-            // Liberar memória da lista original
-            patrimonios = null;
-            
             long patrimoniosTime = System.currentTimeMillis() - patrimoniosStart;
             logger.debug("{} patrimônios carregados em {}ms", 
                 patrimoniosDTO.size(), patrimoniosTime);
@@ -133,9 +134,6 @@ public class MobileOfflineSyncService {
                 .map(this::converterSalaParaDTO)
                 .collect(Collectors.toList());
             
-            // Liberar memória
-            salas = null;
-            
             long salasTime = System.currentTimeMillis() - salasStart;
             logger.debug("{} salas carregadas em {}ms", 
                 salasDTO.size(), salasTime);
@@ -156,9 +154,6 @@ public class MobileOfflineSyncService {
             List<ResponsavelOfflineDTO> responsaveisDTO = responsaveis.stream()
                 .map(this::converterResponsavelParaDTO)
                 .collect(Collectors.toList());
-            
-            // Liberar memória
-            responsaveis = null;
             
             long responsaveisTime = System.currentTimeMillis() - responsaveisStart;
             logger.debug("{} responsáveis carregados em {}ms", 
@@ -262,18 +257,6 @@ public class MobileOfflineSyncService {
     }
     
     /**
-     * Estima tamanho da resposta em KB (aproximado)
-     */
-    private int estimarTamanhoResposta(MobileOfflineDataDTO response) {
-        // Estimativa: ~200 bytes por patrimônio, ~50 por sala, ~50 por responsável
-        int patrimoniosSize = response.getPatrimonios().size() * 200;
-        int salasSize = response.getSalas().size() * 50;
-        int responsaveisSize = response.getResponsaveis().size() * 50;
-        
-        return (patrimoniosSize + salasSize + responsaveisSize) / 1024;
-    }
-    
-    /**
      * Busca patrimônios PAGINADOS para modo offline
      * 
      * USO: Quando há mais de 5.000 patrimônios, o app deve fazer múltiplas
@@ -293,24 +276,19 @@ public class MobileOfflineSyncService {
         
         try {
             // Limitar tamanho máximo
-            if (size > 2000) {
-                size = 2000;
-            }
+            int limitedSize = Math.min(size, 2000);
             
             // Contar total de patrimônios
             int totalElements = patrimonioDAO.contarTotalPatrimonios();
-            int totalPages = (int) Math.ceil((double) totalElements / size);
+            int totalPages = (int) Math.ceil((double) totalElements / limitedSize);
             
             // Buscar página de patrimônios
-            List<Patrimonio> patrimonios = patrimonioDAO.buscarPatrimoniosComPaginacao(page, size);
+            List<Patrimonio> patrimonios = patrimonioDAO.buscarPatrimoniosComPaginacao(page, limitedSize);
             
             // Converter para DTOs
             List<PatrimonioOfflineDTO> patrimoniosDTO = patrimonios.stream()
                 .map(this::converterPatrimonioParaDTO)
                 .collect(Collectors.toList());
-            
-            // Liberar memória
-            patrimonios = null;
             
             // Log de memória
             long memAfter = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
@@ -320,7 +298,7 @@ public class MobileOfflineSyncService {
             java.util.Map<String, Object> result = new java.util.HashMap<>();
             result.put("content", patrimoniosDTO);
             result.put("page", page);
-            result.put("size", size);
+            result.put("size", limitedSize);
             result.put("totalElements", totalElements);
             result.put("totalPages", totalPages);
             result.put("first", page == 0);

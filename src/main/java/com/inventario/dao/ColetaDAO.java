@@ -1508,7 +1508,7 @@ public class ColetaDAO {
         }
         
         // Tentar ler ID_COLETOR primeiro (campo atual)
-        int idColetor = 0;
+        int idColetor;
         try {
             idColetor = rs.getInt("ID_COLETOR");
             if (!rs.wasNull() && idColetor > 0) {

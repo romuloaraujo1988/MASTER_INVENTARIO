@@ -7,15 +7,11 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 /**
  * Gerador customizado de Coletas para Property-Based Testing
  */
 public class ColetaGenerator extends Generator<Coleta> {
-    
-    private static final DateTimeFormatter FORMATTER = 
-        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     
     public ColetaGenerator() {
         super(Coleta.class);

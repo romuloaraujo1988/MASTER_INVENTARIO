@@ -1459,7 +1459,7 @@ public class RelatorioFrame extends JFrame {
             if (null == tipoRelatorio) {
                 // Para outros relatórios, usar campos específicos ou genéricos
                 // Priorizar informação da sala onde o patrimônio foi encontrado
-                String sala = "";
+                String sala;
                 if (linha.get("Localização Encontrada") != null) {
                     sala = linha.get("Localização Encontrada").toString();
                 } else if (linha.get("Última Localização") != null) {
@@ -1480,8 +1480,9 @@ public class RelatorioFrame extends JFrame {
                 
                 row[4] = linha.get("Setor") != null ? linha.get("Setor")
                         : linha.get("setor") != null ? linha.get("setor") : linha.get("categoria");
-            } else // Para relatório sem plaqueta, combinar marca e modelo
-            switch (tipoRelatorio) {
+            } else {
+                // Para relatório sem plaqueta, combinar marca e modelo
+                switch (tipoRelatorio) {
                 case "Itens Sem Plaqueta de Patrimônio" -> {
                     String marca = linha.get("marca") != null ? linha.get("marca").toString() : "";
                     String modelo = linha.get("modelo") != null ? linha.get("modelo").toString() : "";
@@ -1490,46 +1491,50 @@ public class RelatorioFrame extends JFrame {
                     row[4] = linha.get("local") != null ? linha.get("local")
                             : linha.get("Setor") != null ? linha.get("Setor") : linha.get("setor");
                 }
-                case "Relatório Geral de Patrimônio" ->                     {
-                        // Para Relatório Geral: mostrar Sala cadastrada e Localização Encontrada
-                        String sala = "";
-                        if (linha.get("Sala") != null && !"Não informado".equals(linha.get("Sala").toString())) {
-                            sala = linha.get("Sala").toString();
-                        } else if (linha.get("Localização Encontrada") != null && !"Não informado".equals(linha.get("Localização Encontrada").toString())) {
-                            sala = linha.get("Localização Encontrada").toString();
-                        } else {
-                            sala = "N/A";
-                        }       row[2] = sala;
-                        // Estado Encontrado para o relatório geral
-                        Object estadoObj = linha.get("Estado Encontrado");
-                        if (estadoObj != null && !"N/A".equals(estadoObj.toString())) {
-                            row[3] = estadoObj.toString();
-                        } else {
-                            row[3] = "Não verificado";
-                        }       row[4] = linha.get("Setor") != null ? linha.get("Setor") : "Sem Setor";
+                case "Relatório Geral de Patrimônio" -> {
+                    // Para Relatório Geral: mostrar Sala cadastrada e Localização Encontrada
+                    String sala;
+                    if (linha.get("Sala") != null && !"Não informado".equals(linha.get("Sala").toString())) {
+                        sala = linha.get("Sala").toString();
+                    } else if (linha.get("Localização Encontrada") != null && !"Não informado".equals(linha.get("Localização Encontrada").toString())) {
+                        sala = linha.get("Localização Encontrada").toString();
+                    } else {
+                        sala = "N/A";
                     }
-                default ->                     {
-                        // Para outros relatórios, usar campos específicos ou genéricos
-                        // Priorizar informação da sala onde o patrimônio foi encontrado
-                        String sala = "";
-                        if (linha.get("Localização Encontrada") != null) {
-                            sala = linha.get("Localização Encontrada").toString();
-                        } else if (linha.get("Última Localização") != null) {
-                            sala = linha.get("Última Localização").toString();
-                        } else if (linha.get("sala") != null) {
-                            sala = linha.get("sala").toString();
-                        } else if (linha.get("Sala") != null) {
-                            sala = linha.get("Sala").toString();
-                        } else {
-                            sala = "N/A";
-                        }       row[2] = sala;
-                        // A coluna Quantidade deve mostrar o Estado do item
-                        row[3] = linha.get("Estado") != null ? linha.get("Estado")
-                                : linha.get("Estado Encontrado") != null ? linha.get("Estado Encontrado")
-                                : linha.get("estado_conservacao") != null ? linha.get("estado_conservacao") : "Bom";
-                        row[4] = linha.get("Setor") != null ? linha.get("Setor")
-                                : linha.get("setor") != null ? linha.get("setor") : linha.get("categoria");
+                    row[2] = sala;
+                    // Estado Encontrado para o relatório geral
+                    Object estadoObj = linha.get("Estado Encontrado");
+                    if (estadoObj != null && !"N/A".equals(estadoObj.toString())) {
+                        row[3] = estadoObj.toString();
+                    } else {
+                        row[3] = "Não verificado";
                     }
+                    row[4] = linha.get("Setor") != null ? linha.get("Setor") : "Sem Setor";
+                }
+                default -> {
+                    // Para outros relatórios, usar campos específicos ou genéricos
+                    // Priorizar informação da sala onde o patrimônio foi encontrado
+                    String sala;
+                    if (linha.get("Localização Encontrada") != null) {
+                        sala = linha.get("Localização Encontrada").toString();
+                    } else if (linha.get("Última Localização") != null) {
+                        sala = linha.get("Última Localização").toString();
+                    } else if (linha.get("sala") != null) {
+                        sala = linha.get("sala").toString();
+                    } else if (linha.get("Sala") != null) {
+                        sala = linha.get("Sala").toString();
+                    } else {
+                        sala = "N/A";
+                    }
+                    row[2] = sala;
+                    // A coluna Quantidade deve mostrar o Estado do item
+                    row[3] = linha.get("Estado") != null ? linha.get("Estado")
+                            : linha.get("Estado Encontrado") != null ? linha.get("Estado Encontrado")
+                            : linha.get("estado_conservacao") != null ? linha.get("estado_conservacao") : "Bom";
+                    row[4] = linha.get("Setor") != null ? linha.get("Setor")
+                            : linha.get("setor") != null ? linha.get("setor") : linha.get("categoria");
+                }
+                }
             }
 
             row[5] = linha.get("Responsável") != null ? linha.get("Responsável") : linha.get("responsavel");
@@ -3114,7 +3119,7 @@ public class RelatorioFrame extends JFrame {
 
             labelStatus.setText("Configurando estilos...");
             // Criar estilo para cabeçalho com tratamento de erro
-            org.apache.poi.ss.usermodel.CellStyle headerStyle = null;
+            org.apache.poi.ss.usermodel.CellStyle headerStyle;
             try {
                 headerStyle = workbook.createCellStyle();
                 headerStyle

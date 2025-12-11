@@ -19,8 +19,6 @@ import com.inventario.sync.model.RetryPolicy;
 public class RetryManager {
     
     private static final Logger logger = LoggerFactory.getLogger(RetryManager.class);
-    private static final int MAX_RETRIES = 3;
-    private static final long INITIAL_DELAY_MS = 5000;
     
     /**
      * Executa operação com retry automático

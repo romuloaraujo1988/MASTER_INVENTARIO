@@ -49,9 +49,10 @@ import com.inventario.model.Usuario;
  */
 public class ItemCompostoFrame extends JFrame {
     
-    private Usuario usuarioLogado;
-    private PatrimonioDAO patrimonioDAO;
-    private ItemCompostoDAO itemCompostoDAO;
+    @SuppressWarnings("unused") // Reserved for future use (audit logging, permissions)
+    private final Usuario usuarioLogado;
+    private final PatrimonioDAO patrimonioDAO;
+    private final ItemCompostoDAO itemCompostoDAO;
     
     // Componentes de busca
     private JTextField txtNumeroPatrimonio;
@@ -81,7 +82,7 @@ public class ItemCompostoFrame extends JFrame {
     
     // Dados
     private Patrimonio patrimonioAtual;
-    private List<ComponenteItem> componentes;
+    private final List<ComponenteItem> componentes;
     
     public ItemCompostoFrame(Usuario usuarioLogado) {
         this.usuarioLogado = usuarioLogado;

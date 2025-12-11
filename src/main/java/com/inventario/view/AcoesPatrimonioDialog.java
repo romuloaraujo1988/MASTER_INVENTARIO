@@ -478,9 +478,9 @@ public class AcoesPatrimonioDialog extends JDialog {
 
     private void acaoVincularSemEtiqueta() {
         // Abrir diálogo de vinculação com itens sem etiqueta
-        JOptionPane.showMessageDialog(this, 
-            "Use a aba 'Sugestões de Reconciliação' na tela principal\n" +
-            "para vincular este patrimônio a um item sem etiqueta.",
+        JOptionPane.showMessageDialog(this, """
+                                            Use a aba 'Sugest\u00f5es de Reconcilia\u00e7\u00e3o' na tela principal
+                                            para vincular este patrim\u00f4nio a um item sem etiqueta.""",
             "Vincular Item", JOptionPane.INFORMATION_MESSAGE);
         dispose();
     }

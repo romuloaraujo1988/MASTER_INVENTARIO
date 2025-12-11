@@ -822,8 +822,6 @@ public class ColetaFrame_v2 extends JFrame {
         // Definir cores do tema moderno
         Color corFundo = new Color(248, 249, 250); // Fundo suave
         Color corPrimaria = new Color(52, 73, 94); // Azul escuro elegante
-        Color corSecundaria = new Color(236, 240, 241); // Cinza claro
-        Color corAcento = new Color(46, 204, 113); // Verde moderno
         Color corTexto = new Color(44, 62, 80); // Texto escuro
 
         // Configurar fundo principal da janela
@@ -1165,7 +1163,7 @@ public class ColetaFrame_v2 extends JFrame {
         abaColetaNormal.add(panelCentralPrincipal, BorderLayout.CENTER);
 
         // Criar aba para Itens Sem Patrimônio
-        abaItensSemPatrimonio = criarAbaItensSemPatrimonio(corFundo, corPrimaria, corSecundaria, corAcento, corTexto);
+        abaItensSemPatrimonio = criarAbaItensSemPatrimonio(corFundo, corPrimaria, corTexto);
 
         // Adicionar abas ao TabbedPane
         tabbedPane.addTab("Coleta Normal", abaColetaNormal);
@@ -1181,14 +1179,13 @@ public class ColetaFrame_v2 extends JFrame {
         add(tabbedPane, BorderLayout.CENTER);
     }
 
-    private JPanel criarAbaItensSemPatrimonio(Color corFundo, Color corPrimaria, Color corSecundaria, Color corAcento,
-            Color corTexto) {
+    private JPanel criarAbaItensSemPatrimonio(Color corFundo, Color corPrimaria, Color corTexto) {
         JPanel aba = new JPanel(new BorderLayout(8, 8));
         aba.setBackground(corFundo);
         aba.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // ========== PAINEL SUPERIOR: PESQUISA DE DESCRIÇÕES ==========
-        JPanel painelPesquisa = criarPainelPesquisaDescricoes(corFundo, corPrimaria, corTexto);
+        JPanel painelPesquisa = criarPainelPesquisaDescricoes(corPrimaria);
 
         // ========== PAINEL CENTRAL: SPLIT ENTRE RESULTADOS E FORMULÁRIO ==========
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
@@ -1196,16 +1193,16 @@ public class ColetaFrame_v2 extends JFrame {
         splitPane.setResizeWeight(0.55);
 
         // Painel esquerdo: Resultados da pesquisa
-        JPanel painelResultados = criarPainelResultadosPesquisa(corFundo, corTexto);
+        JPanel painelResultados = criarPainelResultadosPesquisa(corTexto);
 
         // Painel direito: Formulário de registro
-        JPanel painelFormulario = criarPainelFormularioRegistro(corFundo, corAcento, corTexto);
+        JPanel painelFormulario = criarPainelFormularioRegistro(corTexto);
 
         splitPane.setLeftComponent(painelResultados);
         splitPane.setRightComponent(painelFormulario);
 
         // ========== PAINEL INFERIOR: TABELA DE ITENS REGISTRADOS ==========
-        JPanel painelTabela = criarPainelTabelaItensRegistrados(corFundo, corTexto);
+        JPanel painelTabela = criarPainelTabelaItensRegistrados(corTexto);
 
         // ========== MONTAGEM FINAL ==========
         aba.add(painelPesquisa, BorderLayout.NORTH);
@@ -1218,7 +1215,7 @@ public class ColetaFrame_v2 extends JFrame {
     /**
      * Cria o painel de pesquisa de descrições
      */
-    private JPanel criarPainelPesquisaDescricoes(Color corFundo, Color corPrimaria, Color corTexto) {
+    private JPanel criarPainelPesquisaDescricoes(Color corPrimaria) {
         JPanel painel = new JPanel(new BorderLayout(5, 5));
         painel.setBackground(Color.WHITE);
         painel.setBorder(BorderFactory.createCompoundBorder(
@@ -1292,7 +1289,7 @@ public class ColetaFrame_v2 extends JFrame {
     /**
      * Cria o painel de resultados da pesquisa
      */
-    private JPanel criarPainelResultadosPesquisa(Color corFundo, Color corTexto) {
+    private JPanel criarPainelResultadosPesquisa(Color corTexto) {
         JPanel painel = new JPanel(new BorderLayout(0, 5));
         painel.setBackground(Color.WHITE);
         painel.setBorder(BorderFactory.createCompoundBorder(
@@ -1389,7 +1386,7 @@ public class ColetaFrame_v2 extends JFrame {
     /**
      * Cria o painel do formulário de registro
      */
-    private JPanel criarPainelFormularioRegistro(Color corFundo, Color corAcento, Color corTexto) {
+    private JPanel criarPainelFormularioRegistro(Color corTexto) {
         JPanel painel = new JPanel(new BorderLayout(0, 5));
         painel.setBackground(Color.WHITE);
         painel.setBorder(BorderFactory.createCompoundBorder(
@@ -1478,7 +1475,7 @@ public class ColetaFrame_v2 extends JFrame {
     /**
      * Cria o painel da tabela de itens registrados
      */
-    private JPanel criarPainelTabelaItensRegistrados(Color corFundo, Color corTexto) {
+    private JPanel criarPainelTabelaItensRegistrados(Color corTexto) {
         JPanel painel = new JPanel(new BorderLayout(0, 5));
         painel.setBackground(Color.WHITE);
         painel.setBorder(BorderFactory.createCompoundBorder(
@@ -1629,7 +1626,7 @@ public class ColetaFrame_v2 extends JFrame {
                 System.out.println("DEBUG TIMESTAMP: Data Coleta (raw): " + dataColeta);
                 System.out.println("DEBUG TIMESTAMP: Data Coleta (class): " + (dataColeta != null ? dataColeta.getClass().getName() : "null"));
                 
-                String dataFormatada = "ERRO";
+                String dataFormatada;
                 try {
                     if (dataColeta != null) {
                         dataFormatada = sdf.format(dataColeta);
@@ -2020,9 +2017,9 @@ public class ColetaFrame_v2 extends JFrame {
                     todasSalas = salaInventarioDAO.buscarTodasSalasAtivas();
 
                     if (todasSalas.isEmpty()) {
-                        JOptionPane.showMessageDialog(this,
-                                "Nenhuma sala ativa encontrada no sistema.\n" +
-                                        "Cadastre salas antes de realizar coletas.",
+                        JOptionPane.showMessageDialog(this, """
+                                                            Nenhuma sala ativa encontrada no sistema.
+                                                            Cadastre salas antes de realizar coletas.""",
                                 "Aviso", JOptionPane.WARNING_MESSAGE);
                     } else {
                         System.out.println(
@@ -2517,7 +2514,13 @@ public class ColetaFrame_v2 extends JFrame {
         
         // Adicionar linhas
         int contador = 0;
+        if (coletas == null) {
+            System.out.println("[OTIMIZADO] Lista de coletas é null, retornando");
+            tabelaHistorico.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+            return;
+        }
         for (Coleta coleta : coletas) {
+            if (coleta == null) continue;
             contador++;
             String dataFormatada = coleta.getDataColeta() != null 
                 ? sdf.format(coleta.getDataColeta()) 
@@ -3369,9 +3372,9 @@ public class ColetaFrame_v2 extends JFrame {
             JButton btnFechar = new JButton("Fechar");
             btnFechar.addActionListener(e -> dialogItensAgrupados.setVisible(false));
 
-            JPanel panelBotoes = new JPanel(new FlowLayout());
-            panelBotoes.add(btnFechar);
-            panelDialog.add(panelBotoes, BorderLayout.SOUTH);
+            JPanel panelBotoesDialog = new JPanel(new FlowLayout());
+            panelBotoesDialog.add(btnFechar);
+            panelDialog.add(panelBotoesDialog, BorderLayout.SOUTH);
 
             dialogItensAgrupados.add(panelDialog);
             dialogItensAgrupados.setSize(800, 500);
@@ -3820,8 +3823,10 @@ public class ColetaFrame_v2 extends JFrame {
 
             // Confirmar reabertura com popup de confirmação
             int confirmacao = JOptionPane.showConfirmDialog(this,
-                    "⚠️ ATENÇÃO: Deseja realmente REABRIR a coleta desta sala?\n\n" +
-                            "📍 Sala: " + salaAtual.getIdentificacaoCompleta() + "\n" +
+                    """
+                    \u26a0\ufe0f ATEN\u00c7\u00c3O: Deseja realmente REABRIR a coleta desta sala?
+                    
+                    \ud83d\udccd Sala: """ + salaAtual.getIdentificacaoCompleta() + "\n" +
                             "📋 Inventário: " + inventarioAtivo.getNome() + "\n\n" +
                             "Ao reabrir:\n" +
                             "• A sala voltará a aparecer no aplicativo mobile\n" +
@@ -4107,9 +4112,9 @@ public class ColetaFrame_v2 extends JFrame {
      * @return JButton estilizado
      */
     private JButton createStyledButton(String text, Color baseColor) {
+        final boolean[] isHovered = {false}; // Mutable wrapper for hover state
+        
         JButton button = new JButton(text) {
-            private boolean isHovered = false;
-
             @Override
             protected void paintComponent(java.awt.Graphics g) {
                 Graphics2D g2d = (Graphics2D) g.create();
@@ -4118,8 +4123,8 @@ public class ColetaFrame_v2 extends JFrame {
                 g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 
                 Color hoverColor = baseColor.brighter();
-                Color topColor = isHovered ? hoverColor : baseColor;
-                Color bottomColor = isHovered ? hoverColor.darker() : baseColor.darker();
+                Color topColor = isHovered[0] ? hoverColor : baseColor;
+                Color bottomColor = isHovered[0] ? hoverColor.darker() : baseColor.darker();
 
                 if (!isEnabled()) {
                     topColor = new Color(180, 180, 180);
@@ -4248,27 +4253,15 @@ public class ColetaFrame_v2 extends JFrame {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 if (button.isEnabled()) {
-                    try {
-                        java.lang.reflect.Field field = button.getClass().getDeclaredField("isHovered");
-                        field.setAccessible(true);
-                        field.set(button, true);
-                        button.repaint();
-                    } catch (NoSuchFieldException | IllegalAccessException e) {
-                        // Fallback silencioso
-                    }
+                    isHovered[0] = true;
+                    button.repaint();
                 }
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
-                try {
-                    java.lang.reflect.Field field = button.getClass().getDeclaredField("isHovered");
-                    field.setAccessible(true);
-                    field.set(button, false);
-                    button.repaint();
-                } catch (NoSuchFieldException | IllegalAccessException e) {
-                    // Fallback silencioso
-                }
+                isHovered[0] = false;
+                button.repaint();
             }
         });
 

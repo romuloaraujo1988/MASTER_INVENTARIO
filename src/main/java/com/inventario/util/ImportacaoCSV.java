@@ -276,7 +276,7 @@ public class ImportacaoCSV {
             }
         }
         campos.add(campoAtual.toString());
-        return campos.toArray(new String[0]);
+        return campos.toArray(String[]::new);
     }
     
     /**
@@ -561,50 +561,22 @@ public class ImportacaoCSV {
         
         // Mapeamento de estados do SUAP para estados do sistema
         switch (estado) {
-            // BOM
-            case "BOM":
-            case "OTIMO":
-            case "ÓTIMO":
-            case "EXCELENTE":
+            case "BOM", "OTIMO", "ÓTIMO", "EXCELENTE" -> {
                 return "BOM";
-            
-            // OCIOSO
-            case "OCIOSO":
-            case "NAO UTILIZADO":
-            case "NÃO UTILIZADO":
-            case "SEM USO":
+            }
+            case "OCIOSO", "NAO UTILIZADO", "NÃO UTILIZADO", "SEM USO" -> {
                 return "OCIOSO";
-            
-            // ANTIECONÔMICO
-            case "ANTIECONOMICO":
-            case "ANTIECONÔMICO":
-            case "NAO ECONOMICO":
-            case "NÃO ECONÔMICO":
+            }
+            case "ANTIECONOMICO", "ANTIECONÔMICO", "NAO ECONOMICO", "NÃO ECONÔMICO" -> {
                 return "ANTIECONÔMICO";
-            
-            // RECUPERÁVEL
-            case "RECUPERAVEL":
-            case "RECUPERÁVEL":
-            case "PODE SER RECUPERADO":
-            case "CONSERTAVEL":
-            case "CONSERTÁVEL":
-            case "REGULAR":
+            }
+            case "RECUPERAVEL", "RECUPERÁVEL", "PODE SER RECUPERADO", "CONSERTAVEL", "CONSERTÁVEL", "REGULAR" -> {
                 return "RECUPERÁVEL";
-            
-            // IRRECUPERÁVEL
-            case "IRRECUPERAVEL":
-            case "IRRECUPERÁVEL":
-            case "NAO RECUPERAVEL":
-            case "NÃO RECUPERÁVEL":
-            case "INSERVIVEL":
-            case "INSERVÍVEL":
-            case "RUIM":
-            case "PESSIMO":
-            case "PÉSSIMO":
-            case "SUCATA":
+            }
+            case "IRRECUPERAVEL", "IRRECUPERÁVEL", "NAO RECUPERAVEL", "NÃO RECUPERÁVEL", "INSERVIVEL", "INSERVÍVEL", "RUIM", "PESSIMO", "PÉSSIMO", "SUCATA" -> {
                 return "IRRECUPERÁVEL";
-            
-            default:
+            }
+            default -> {
                 // Se não reconhecer, tentar mapear por palavras-chave
                 if (estado.contains("BOM") || estado.contains("OTIMO")) {
                     return "BOM";
@@ -614,8 +586,8 @@ public class ImportacaoCSV {
                     return "ANTIECONÔMICO";
                 } else if (estado.contains("RECUPERAVEL") || estado.contains("REGULAR") || estado.contains("CONSERT")) {
                     return "RECUPERÁVEL";
-                } else if (estado.contains("IRRECUPERAVEL") || estado.contains("INSERVIVEL") || 
-                          estado.contains("RUIM") || estado.contains("PESSIMO") || estado.contains("SUCATA")) {
+                } else if (estado.contains("IRRECUPERAVEL") || estado.contains("INSERVIVEL") ||
+                        estado.contains("RUIM") || estado.contains("PESSIMO") || estado.contains("SUCATA")) {
                     return "IRRECUPERÁVEL";
                 }
                 
@@ -624,8 +596,14 @@ public class ImportacaoCSV {
                     progressCallback.onInfo("Estado não reconhecido: '" + estadoOriginal + "' - usando 'BOM' como padrão");
                 }
                 return "BOM";
+            }
         }
-    }
+        // BOM
+        // OCIOSO
+        // ANTIECONÔMICO
+        // RECUPERÁVEL
+        // IRRECUPERÁVEL
+            }
     
     /**
      * Reseta os contadores
