@@ -1,0 +1,106 @@
+@startuml Diagrama de Arquitetura do Sistema
+!theme plain
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+title SIHCP - Arquitetura do Sistema
+footer Sistema de Histórico e Coleta Patrimonial - IFMT
+
+' Definição de cores
+skinparam component {
+    BackgroundColor<<mobile>> #E3F2FD
+    BackgroundColor<<backend>> #E8F5E9
+    BackgroundColor<<desktop>> #FFF3E0
+    BackgroundColor<<database>> #FCE4EC
+}
+
+' Atores
+actor "Administrador" as admin
+actor "Coletor" as coletor
+
+' Camada de Apresentação
+package "Aplicações Cliente" {
+    component [Aplicativo Desktop\n(Java Swing)] <<desktop>> as desktop {
+        component [Gestão de Patrimônios]
+        component [Gestão de Inventários]
+        component [Relatórios e Dashboards]
+        component [Administração de Usuários]
+    }
+    
+    component [Aplicativo Mobile\n(Android/Kotlin)] <<mobile>> as mobile {
+        component [Scanner QR Code]
+        component [Coleta de Patrimônios]
+        component [Modo Offline]
+        component [Sincronização]
+    }
+}
+
+' Camada de Backend
+package "Servidor de Aplicação" <<backend>> {
+    component [API REST Mobile\n(Spring Boot)] as api {
+        component [Autenticação JWT]
+        component [Endpoints de Coleta]
+        component [Endpoints de Sync]
+        component [Validação de Dados]
+    }
+    
+    component [Serviços de Negócio] as services {
+        component [PatrimonioService]
+        component [InventarioService]
+        component [ColetaService]
+        component [RelatorioService]
+    }
+    
+    component [Camada de Dados] as dao {
+        component [PatrimonioDAO]
+        component [InventarioDAO]
+        component [ColetaDAO]
+    }
+}
+
+' Camada de Persistência
+package "Persistência de Dados" <<database>> {
+    database "PostgreSQL\n(Servidor)" as postgres
+    database "SQLite\n(Mobile Local)" as sqlite
+}
+
+' Conexões
+admin --> desktop : usa
+coletor --> mobile : usa
+
+desktop --> services : JDBC
+mobile --> api : HTTPS/REST
+api --> services : invoca
+services --> dao : acessa
+dao --> postgres : SQL
+
+mobile --> sqlite : armazena local
+mobile ..> postgres : sincroniza
+
+' Notas
+note right of mobile
+  **Funcionalidades Mobile:**
+  • Leitura de QR Code
+  • Coleta offline
+  • Geolocalização
+  • Captura de fotos
+  • Sincronização automática
+end note
+
+note right of api
+  **Segurança:**
+  • JWT Token
+  • Refresh Token
+  • Roles: ADMIN, SUPERVISOR,
+    COLETOR, CONSULTA
+end note
+
+note bottom of postgres
+  **Dados Centralizados:**
+  • Patrimônios
+  • Inventários
+  • Coletas
+  • Usuários
+end note
+
+@enduml

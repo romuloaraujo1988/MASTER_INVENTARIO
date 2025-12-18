@@ -1,14 +1,28 @@
 package com.inventario.view;
 
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.HeadlessException;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.sql.SQLException;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.table.DefaultTableModel;
+
 import com.inventario.dao.SalaDAO;
 import com.inventario.model.Sala;
 import com.inventario.view.ui.ButtonStyleFactory;
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.List;
 
 /**
  * Interface gráfica para gerenciamento de Salas
@@ -62,7 +76,7 @@ public class SalaFrame extends JFrame {
         txtFiltro.addActionListener(e -> filtrarSalas());
         filterPanel.add(txtFiltro);
         
-        JButton btnFiltrar = ButtonStyleFactory.createSecondaryButton("Buscar");
+        JButton btnFiltrar = ButtonStyleFactory.createPrimaryButton("🔍 Buscar");
         btnFiltrar.addActionListener(e -> filtrarSalas());
         filterPanel.add(btnFiltrar);
         
@@ -158,7 +172,7 @@ public class SalaFrame extends JFrame {
         try {
             List<Sala> salas = salaDAO.listarSalas();
             atualizarTabela(salas);
-        } catch (Exception e) {
+        } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, 
                 "Erro ao carregar salas: " + e.getMessage(), 
                 "Erro", 
@@ -184,7 +198,7 @@ public class SalaFrame extends JFrame {
             }
             
             atualizarTabela(salas);
-        } catch (Exception e) {
+        } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, 
                 "Erro ao filtrar salas: " + e.getMessage(), 
                 "Erro", 
@@ -242,7 +256,7 @@ public class SalaFrame extends JFrame {
                     "Erro", 
                     JOptionPane.ERROR_MESSAGE);
             }
-        } catch (Exception e) {
+        } catch (HeadlessException | SQLException e) {
             JOptionPane.showMessageDialog(this, 
                 "Erro ao buscar sala: " + e.getMessage(), 
                 "Erro", 
@@ -279,7 +293,7 @@ public class SalaFrame extends JFrame {
                     "Sucesso", 
                     JOptionPane.INFORMATION_MESSAGE);
                 carregarSalas();
-            } catch (Exception e) {
+            } catch (HeadlessException | SQLException e) {
                 JOptionPane.showMessageDialog(this, 
                     "Erro ao excluir sala: " + e.getMessage(), 
                     "Erro", 

@@ -1,9 +1,40 @@
 package com.inventario.view;
 
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
+
 import com.inventario.model.Usuario;
 
 /**
@@ -39,7 +70,6 @@ public class JLogin extends JFrame {
             unifiedAuthService.criarUsuarioAdminPadrao();
         } catch (Exception e) {
             System.err.println("Erro ao inicializar serviço de autenticação: " + e.getMessage());
-            e.printStackTrace();
         }
 
         initComponents();
@@ -477,7 +507,6 @@ public class JLogin extends JFrame {
             }
         } catch (Exception e) {
             System.err.println("Erro durante autenticação: " + e.getMessage());
-            e.printStackTrace();
             showMessage("Erro interno do sistema.\nTente novamente ou contate o administrador.",
                     "Erro do Sistema", JOptionPane.ERROR_MESSAGE);
             txtSenha.setText("");
@@ -497,7 +526,6 @@ public class JLogin extends JFrame {
                         coletaFrame.setVisible(true);
                     } catch (Exception e) {
                         System.err.println("Erro ao abrir o frame de coleta: " + e.getMessage());
-                        e.printStackTrace();
                         showMessage("Erro ao abrir o sistema de coleta.", "Erro", JOptionPane.ERROR_MESSAGE);
 
                         // Fallback: abrir o sistema principal normal
@@ -512,7 +540,6 @@ public class JLogin extends JFrame {
             });
         } catch (Exception e) {
             System.err.println("Erro ao abrir o sistema principal: " + e.getMessage());
-            e.printStackTrace();
             showMessage("Erro ao abrir o sistema principal.", "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -539,7 +566,7 @@ public class JLogin extends JFrame {
                     break;
                 }
             }
-        } catch (Exception e) {
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException e) {
             // Usar look and feel padrão se houver erro
         }
 

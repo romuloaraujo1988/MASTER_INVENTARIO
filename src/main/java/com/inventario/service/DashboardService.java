@@ -1,16 +1,17 @@
 package com.inventario.service;
 
-import com.inventario.dao.DashboardColetaDAO;
-import com.inventario.dao.InventarioDAO;
-import com.inventario.model.Inventario;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.inventario.dao.DashboardColetaDAO;
+import com.inventario.dao.InventarioDAO;
+import com.inventario.model.Inventario;
 
 /**
  * Serviço para operações de dashboard e estatísticas
@@ -201,6 +202,63 @@ public class DashboardService {
         } catch (Exception e) {
             logger.error("Erro ao obter desempenho de coletores do inventário: {}", idInventario, e);
             return new HashMap<>();
+        }
+    }
+
+    /**
+     * Finaliza a coleta de uma sala no inventário
+     * 
+     * @param idSala ID da sala
+     * @param idInventario ID do inventário
+     * @param observacoes Observações da finalização
+     * @return true se finalizou com sucesso
+     */
+    public boolean finalizarColetaSala(int idSala, int idInventario, String observacoes) {
+        try {
+            boolean resultado = dashboardDAO.finalizarColetaSala(idSala, idInventario, observacoes);
+            if (resultado) {
+                logger.info("Sala {} finalizada no inventário {}", idSala, idInventario);
+            }
+            return resultado;
+        } catch (Exception e) {
+            logger.error("Erro ao finalizar coleta da sala {} no inventário {}: {}", idSala, idInventario, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Reabre a coleta de uma sala no inventário
+     * 
+     * @param idSala ID da sala
+     * @param idInventario ID do inventário
+     * @param motivo Motivo da reabertura
+     * @return true se reabriu com sucesso
+     */
+    public boolean reabrirColetaSala(int idSala, int idInventario, String motivo) {
+        try {
+            boolean resultado = dashboardDAO.reabrirColetaSala(idSala, idInventario, motivo);
+            if (resultado) {
+                logger.info("Sala {} reaberta no inventário {}", idSala, idInventario);
+            }
+            return resultado;
+        } catch (Exception e) {
+            logger.error("Erro ao reabrir coleta da sala {} no inventário {}: {}", idSala, idInventario, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Busca o ID da sala pelo nome
+     * 
+     * @param nomeSala Nome da sala
+     * @return ID da sala ou -1 se não encontrada
+     */
+    public int buscarIdSalaPorNome(String nomeSala) {
+        try {
+            return dashboardDAO.buscarIdSalaPorNome(nomeSala);
+        } catch (Exception e) {
+            logger.error("Erro ao buscar ID da sala {}: {}", nomeSala, e.getMessage(), e);
+            return -1;
         }
     }
 }

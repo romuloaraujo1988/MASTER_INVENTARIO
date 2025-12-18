@@ -46,6 +46,9 @@ public final class ActivitySettingsBinding implements ViewBinding {
   public final LinearLayout layoutOfflineStatus;
 
   @NonNull
+  public final LinearLayout layoutPhotoStats;
+
+  @NonNull
   public final LinearLayout layoutSyncCount;
 
   @NonNull
@@ -73,6 +76,12 @@ public final class ActivitySettingsBinding implements ViewBinding {
   public final SwitchMaterial switchForceOffline;
 
   @NonNull
+  public final SwitchMaterial switchPhotoOnCollection;
+
+  @NonNull
+  public final SwitchMaterial switchPhotoSyncWifiOnly;
+
+  @NonNull
   public final SwitchMaterial switchVibrationOnCollection;
 
   @NonNull
@@ -85,6 +94,9 @@ public final class ActivitySettingsBinding implements ViewBinding {
   public final TextView tvCurrentCollectionCount;
 
   @NonNull
+  public final TextView tvPhotoStats;
+
+  @NonNull
   public final TextView tvSyncCount;
 
   @NonNull
@@ -94,14 +106,17 @@ public final class ActivitySettingsBinding implements ViewBinding {
       @NonNull Button btnDecreaseSyncCount, @NonNull Button btnDecreaseSyncInterval,
       @NonNull Button btnIncreaseSyncCount, @NonNull Button btnIncreaseSyncInterval,
       @NonNull Button btnResetCollectionCount, @NonNull Button btnTestSync,
-      @NonNull LinearLayout layoutOfflineStatus, @NonNull LinearLayout layoutSyncCount,
-      @NonNull LinearLayout layoutSyncInterval, @NonNull RadioGroup radioGroupTheme,
-      @NonNull RadioButton radioThemeDark, @NonNull RadioButton radioThemeLight,
-      @NonNull RadioButton radioThemeSystem, @NonNull SwitchMaterial switchAutoSync,
-      @NonNull SwitchMaterial switchAutoSyncByCount, @NonNull SwitchMaterial switchForceOffline,
+      @NonNull LinearLayout layoutOfflineStatus, @NonNull LinearLayout layoutPhotoStats,
+      @NonNull LinearLayout layoutSyncCount, @NonNull LinearLayout layoutSyncInterval,
+      @NonNull RadioGroup radioGroupTheme, @NonNull RadioButton radioThemeDark,
+      @NonNull RadioButton radioThemeLight, @NonNull RadioButton radioThemeSystem,
+      @NonNull SwitchMaterial switchAutoSync, @NonNull SwitchMaterial switchAutoSyncByCount,
+      @NonNull SwitchMaterial switchForceOffline, @NonNull SwitchMaterial switchPhotoOnCollection,
+      @NonNull SwitchMaterial switchPhotoSyncWifiOnly,
       @NonNull SwitchMaterial switchVibrationOnCollection, @NonNull SwitchMaterial switchWifiOnly,
       @NonNull Toolbar toolbar, @NonNull TextView tvCurrentCollectionCount,
-      @NonNull TextView tvSyncCount, @NonNull TextView tvSyncInterval) {
+      @NonNull TextView tvPhotoStats, @NonNull TextView tvSyncCount,
+      @NonNull TextView tvSyncInterval) {
     this.rootView = rootView;
     this.btnDecreaseSyncCount = btnDecreaseSyncCount;
     this.btnDecreaseSyncInterval = btnDecreaseSyncInterval;
@@ -110,6 +125,7 @@ public final class ActivitySettingsBinding implements ViewBinding {
     this.btnResetCollectionCount = btnResetCollectionCount;
     this.btnTestSync = btnTestSync;
     this.layoutOfflineStatus = layoutOfflineStatus;
+    this.layoutPhotoStats = layoutPhotoStats;
     this.layoutSyncCount = layoutSyncCount;
     this.layoutSyncInterval = layoutSyncInterval;
     this.radioGroupTheme = radioGroupTheme;
@@ -119,10 +135,13 @@ public final class ActivitySettingsBinding implements ViewBinding {
     this.switchAutoSync = switchAutoSync;
     this.switchAutoSyncByCount = switchAutoSyncByCount;
     this.switchForceOffline = switchForceOffline;
+    this.switchPhotoOnCollection = switchPhotoOnCollection;
+    this.switchPhotoSyncWifiOnly = switchPhotoSyncWifiOnly;
     this.switchVibrationOnCollection = switchVibrationOnCollection;
     this.switchWifiOnly = switchWifiOnly;
     this.toolbar = toolbar;
     this.tvCurrentCollectionCount = tvCurrentCollectionCount;
+    this.tvPhotoStats = tvPhotoStats;
     this.tvSyncCount = tvSyncCount;
     this.tvSyncInterval = tvSyncInterval;
   }
@@ -196,6 +215,12 @@ public final class ActivitySettingsBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.layoutPhotoStats;
+      LinearLayout layoutPhotoStats = ViewBindings.findChildViewById(rootView, id);
+      if (layoutPhotoStats == null) {
+        break missingId;
+      }
+
       id = R.id.layoutSyncCount;
       LinearLayout layoutSyncCount = ViewBindings.findChildViewById(rootView, id);
       if (layoutSyncCount == null) {
@@ -250,6 +275,18 @@ public final class ActivitySettingsBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.switchPhotoOnCollection;
+      SwitchMaterial switchPhotoOnCollection = ViewBindings.findChildViewById(rootView, id);
+      if (switchPhotoOnCollection == null) {
+        break missingId;
+      }
+
+      id = R.id.switchPhotoSyncWifiOnly;
+      SwitchMaterial switchPhotoSyncWifiOnly = ViewBindings.findChildViewById(rootView, id);
+      if (switchPhotoSyncWifiOnly == null) {
+        break missingId;
+      }
+
       id = R.id.switchVibrationOnCollection;
       SwitchMaterial switchVibrationOnCollection = ViewBindings.findChildViewById(rootView, id);
       if (switchVibrationOnCollection == null) {
@@ -274,6 +311,12 @@ public final class ActivitySettingsBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.tvPhotoStats;
+      TextView tvPhotoStats = ViewBindings.findChildViewById(rootView, id);
+      if (tvPhotoStats == null) {
+        break missingId;
+      }
+
       id = R.id.tvSyncCount;
       TextView tvSyncCount = ViewBindings.findChildViewById(rootView, id);
       if (tvSyncCount == null) {
@@ -288,10 +331,12 @@ public final class ActivitySettingsBinding implements ViewBinding {
 
       return new ActivitySettingsBinding((LinearLayout) rootView, btnDecreaseSyncCount,
           btnDecreaseSyncInterval, btnIncreaseSyncCount, btnIncreaseSyncInterval,
-          btnResetCollectionCount, btnTestSync, layoutOfflineStatus, layoutSyncCount,
-          layoutSyncInterval, radioGroupTheme, radioThemeDark, radioThemeLight, radioThemeSystem,
-          switchAutoSync, switchAutoSyncByCount, switchForceOffline, switchVibrationOnCollection,
-          switchWifiOnly, toolbar, tvCurrentCollectionCount, tvSyncCount, tvSyncInterval);
+          btnResetCollectionCount, btnTestSync, layoutOfflineStatus, layoutPhotoStats,
+          layoutSyncCount, layoutSyncInterval, radioGroupTheme, radioThemeDark, radioThemeLight,
+          radioThemeSystem, switchAutoSync, switchAutoSyncByCount, switchForceOffline,
+          switchPhotoOnCollection, switchPhotoSyncWifiOnly, switchVibrationOnCollection,
+          switchWifiOnly, toolbar, tvCurrentCollectionCount, tvPhotoStats, tvSyncCount,
+          tvSyncInterval);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

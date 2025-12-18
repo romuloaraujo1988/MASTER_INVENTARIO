@@ -11,11 +11,22 @@ import androidx.room.Index
 @Entity(
     tableName = "patrimonio",
     indices = [
+        // Índices únicos
         Index(value = ["numero"], unique = true),
+        
+        // Índices simples para busca rápida
         Index(value = ["numeroPatrimonio"]),
         Index(value = ["descricao"]),
         Index(value = ["idSala"]),
-        Index(value = ["coletado"])
+        Index(value = ["coletado"]),
+        Index(value = ["nomeSala"]),
+        Index(value = ["responsavelNome"]),
+        
+        // Índices compostos para filtros de busca (otimização)
+        Index(value = ["coletado", "numeroPatrimonio"]),
+        Index(value = ["coletado", "descricao"]),
+        Index(value = ["coletado", "nomeSala"]),
+        Index(value = ["idSala", "coletado"])
     ]
 )
 data class PatrimonioEntity(

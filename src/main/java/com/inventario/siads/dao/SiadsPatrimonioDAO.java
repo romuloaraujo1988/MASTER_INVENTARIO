@@ -1,14 +1,15 @@
 package com.inventario.siads.dao;
 
-import com.inventario.dao.PatrimonioDAO;
-import com.inventario.model.Patrimonio;
-import com.inventario.util.ConnectionManager;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.inventario.dao.PatrimonioDAO;
+import com.inventario.model.Patrimonio;
+import com.inventario.util.ConnectionManager;
 
 /**
  * Extensão do PatrimonioDAORefactored com métodos específicos para SIADS
@@ -25,14 +26,14 @@ public class SiadsPatrimonioDAO extends PatrimonioDAO {
      */
     public List<Patrimonio> listarTodosParaSiads() throws SQLException {
         String sql = "SELECT p.*, " +
-                    "r.NOME as nome_responsavel, r.CPF as cpf_responsavel, r.MATRICULA as matricula_responsavel, " +
+                    "r.NOME as nome_responsavel, r.CPF as cpf_responsavel, " +
                     "s.DESCRICAO as nome_sala, " +
                     "st.NOME as nome_setor " +
                     "FROM TABELA_PATRIMONIO p " +
                     "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
                     "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
-                    "LEFT JOIN TABELA_SETOR st ON s.ID_SETOR = st.ID_SETOR " +
-                    "WHERE p.STATUS = 'ATIVO' " +
+                    "LEFT JOIN TABELA_SETOR st ON s.ID_SETOR = st.ID " +
+                    "WHERE UPPER(p.STATUS) = 'ATIVO' " +
                     "ORDER BY p.NUMERO";
         
         return executeQueryWithExtendedMapping(sql);
@@ -47,7 +48,7 @@ public class SiadsPatrimonioDAO extends PatrimonioDAO {
      */
     public List<Patrimonio> listarPorInventario(Long idInventario) throws SQLException {
         String sql = "SELECT DISTINCT p.*, " +
-                    "r.NOME as nome_responsavel, r.CPF as cpf_responsavel, r.MATRICULA as matricula_responsavel, " +
+                    "r.NOME as nome_responsavel, r.CPF as cpf_responsavel, " +
                     "s.DESCRICAO as nome_sala, " +
                     "st.NOME as nome_setor, " +
                     "c.DATA_COLETA as data_inventario " +
@@ -55,7 +56,7 @@ public class SiadsPatrimonioDAO extends PatrimonioDAO {
                     "INNER JOIN TABELA_COLETA c ON c.ID_PATRIMONIO = p.ID " +
                     "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
                     "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
-                    "LEFT JOIN TABELA_SETOR st ON s.ID_SETOR = st.ID_SETOR " +
+                    "LEFT JOIN TABELA_SETOR st ON s.ID_SETOR = st.ID " +
                     "WHERE c.ID_INVENTARIO = ? " +
                     "ORDER BY p.NUMERO";
         
@@ -71,14 +72,14 @@ public class SiadsPatrimonioDAO extends PatrimonioDAO {
      */
     public List<Patrimonio> listarPorSetor(int idSetor) throws SQLException {
         String sql = "SELECT p.*, " +
-                    "r.NOME as nome_responsavel, r.CPF as cpf_responsavel, r.MATRICULA as matricula_responsavel, " +
+                    "r.NOME as nome_responsavel, r.CPF as cpf_responsavel, " +
                     "s.DESCRICAO as nome_sala, " +
                     "st.NOME as nome_setor " +
                     "FROM TABELA_PATRIMONIO p " +
                     "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
                     "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
-                    "LEFT JOIN TABELA_SETOR st ON s.ID_SETOR = st.ID_SETOR " +
-                    "WHERE st.ID_SETOR = ? AND p.STATUS = 'ATIVO' " +
+                    "LEFT JOIN TABELA_SETOR st ON s.ID_SETOR = st.ID " +
+                    "WHERE st.ID = ? AND UPPER(p.STATUS) = 'ATIVO' " +
                     "ORDER BY p.NUMERO";
         
         return executeQueryWithExtendedMapping(sql, idSetor);
@@ -139,7 +140,6 @@ public class SiadsPatrimonioDAO extends PatrimonioDAO {
             // Campos do responsável
             patrimonio.setNomeResponsavel(rs.getString("nome_responsavel"));
             patrimonio.setCpfResponsavel(rs.getString("cpf_responsavel"));
-            patrimonio.setMatriculaResponsavel(rs.getString("matricula_responsavel"));
             
             // Campos da sala
             patrimonio.setNomeSala(rs.getString("nome_sala"));
@@ -171,7 +171,7 @@ public class SiadsPatrimonioDAO extends PatrimonioDAO {
      * @throws SQLException Se houver erro
      */
     public long contarPatrimoniosAtivosParaSiads() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM TABELA_PATRIMONIO WHERE STATUS = 'ATIVO'";
+        String sql = "SELECT COUNT(*) FROM TABELA_PATRIMONIO WHERE UPPER(STATUS) = 'ATIVO'";
         Connection conn = null;
         
         try {
@@ -204,7 +204,7 @@ public class SiadsPatrimonioDAO extends PatrimonioDAO {
      */
     public long contarPatrimoniosComResponsavel() throws SQLException {
         String sql = "SELECT COUNT(*) FROM TABELA_PATRIMONIO " +
-                    "WHERE STATUS = 'ATIVO' AND ID_RESPONSAVEL IS NOT NULL AND ID_RESPONSAVEL > 0";
+                    "WHERE UPPER(STATUS) = 'ATIVO' AND ID_RESPONSAVEL IS NOT NULL AND ID_RESPONSAVEL > 0";
         Connection conn = null;
         
         try {
@@ -237,7 +237,7 @@ public class SiadsPatrimonioDAO extends PatrimonioDAO {
      */
     public long contarPatrimoniosComLocalizacao() throws SQLException {
         String sql = "SELECT COUNT(*) FROM TABELA_PATRIMONIO " +
-                    "WHERE STATUS = 'ATIVO' AND ID_SALA IS NOT NULL AND ID_SALA > 0";
+                    "WHERE UPPER(STATUS) = 'ATIVO' AND ID_SALA IS NOT NULL AND ID_SALA > 0";
         Connection conn = null;
         
         try {

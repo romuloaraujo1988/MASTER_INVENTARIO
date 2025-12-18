@@ -3,6 +3,7 @@ package com.inventario.dao;
 import com.inventario.model.Sala;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -349,5 +350,48 @@ public class SalaDAO extends BaseDAO<Sala, Integer> {
             System.err.println("Erro ao inserir sala: " + e.getMessage());
             return false;
         }
+    }
+    
+    /**
+     * Lista todas as salas ativas com contagem de patrimônios
+     * Útil para exibir no combo de filtros de relatórios
+     * 
+     * @return Lista de salas com quantidade de patrimônios preenchida
+     */
+    public List<Sala> listarSalasComContagemPatrimonios() throws SQLException {
+        String sql = """
+            SELECT s.*, st.NOME as NOME_SETOR, 
+                   COALESCE(COUNT(p.ID), 0) as QTD_PATRIMONIOS
+            FROM TABELA_SALA s
+            LEFT JOIN TABELA_SETOR st ON s.ID_SETOR = st.ID
+            LEFT JOIN TABELA_PATRIMONIO p ON p.ID_SALA = s.ID_SALA AND p.STATUS = 'Ativo'
+            WHERE s.ATIVO = TRUE
+            GROUP BY s.ID_SALA, s.DESCRICAO, s.NUMERO_SALA, s.ANDAR, s.BLOCO, s.ID_SETOR,
+                     s.CAPACIDADE, s.AREA_M2, s.TIPO_SALA, s.ATIVO, s.DATA_CADASTRO, 
+                     s.OBSERVACOES, st.NOME
+            ORDER BY QTD_PATRIMONIOS DESC, s.NUMERO_SALA
+            """;
+        
+        List<Sala> salas = new ArrayList<>();
+        Connection conn = null;
+        
+        try {
+            conn = com.inventario.util.ConnectionManager.getConnection();
+            
+            try (PreparedStatement stmt = conn.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+                
+                while (rs.next()) {
+                    Sala sala = mapResultSetToEntity(rs);
+                    // Preencher quantidade de patrimônios
+                    sala.setQuantidadePatrimonios(rs.getInt("QTD_PATRIMONIOS"));
+                    salas.add(sala);
+                }
+            }
+        } finally {
+            com.inventario.util.ConnectionManager.closeConnection(conn);
+        }
+        
+        return salas;
     }
 }

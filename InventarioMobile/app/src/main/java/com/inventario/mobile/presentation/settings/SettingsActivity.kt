@@ -84,6 +84,28 @@ class SettingsActivity : AppCompatActivity() {
                 Toast.makeText(this@SettingsActivity, message, Toast.LENGTH_SHORT).show()
             }
             
+            // ===== FOTO NA COLETA (v2.11) =====
+            switchPhotoOnCollection.setOnCheckedChangeListener { _, isChecked ->
+                preferencesManager.setPhotoOnCollectionEnabled(isChecked)
+                updatePhotoSettingsVisibility(isChecked)
+                val message = if (isChecked) {
+                    "Captura de foto habilitada"
+                } else {
+                    "Captura de foto desabilitada"
+                }
+                Toast.makeText(this@SettingsActivity, message, Toast.LENGTH_SHORT).show()
+            }
+            
+            switchPhotoSyncWifiOnly.setOnCheckedChangeListener { _, isChecked ->
+                preferencesManager.setPhotoSyncWifiOnly(isChecked)
+                val message = if (isChecked) {
+                    "Fotos serão sincronizadas apenas via Wi-Fi"
+                } else {
+                    "Fotos serão sincronizadas em qualquer rede"
+                }
+                Toast.makeText(this@SettingsActivity, message, Toast.LENGTH_SHORT).show()
+            }
+            
             // Modo Offline Forçado
             switchForceOffline.setOnCheckedChangeListener { _, isChecked ->
                 viewModel.setForceOfflineMode(isChecked)
@@ -182,6 +204,11 @@ class SettingsActivity : AppCompatActivity() {
             // ===== CARREGAR CONFIGURAÇÃO DE VIBRAÇÃO =====
             switchVibrationOnCollection.isChecked = preferencesManager.isVibrationOnCollectionEnabled()
             
+            // ===== CARREGAR CONFIGURAÇÃO DE FOTO (v2.11) =====
+            switchPhotoOnCollection.isChecked = preferencesManager.isPhotoOnCollectionEnabled()
+            switchPhotoSyncWifiOnly.isChecked = preferencesManager.isPhotoSyncWifiOnly()
+            updatePhotoSettingsVisibility(switchPhotoOnCollection.isChecked)
+            
             // Carregar outras configurações
             switchForceOffline.isChecked = viewModel.isForceOfflineMode()
             switchAutoSync.isChecked = viewModel.isAutoSyncEnabled()
@@ -199,6 +226,14 @@ class SettingsActivity : AppCompatActivity() {
     
     private fun updateOfflineStatusVisibility(enabled: Boolean) {
         binding.layoutOfflineStatus.visibility = if (enabled) android.view.View.VISIBLE else android.view.View.GONE
+    }
+    
+    private fun updatePhotoSettingsVisibility(enabled: Boolean) {
+        binding.apply {
+            switchPhotoSyncWifiOnly.isEnabled = enabled
+            switchPhotoSyncWifiOnly.alpha = if (enabled) 1.0f else 0.5f
+            layoutPhotoStats.visibility = if (enabled) android.view.View.VISIBLE else android.view.View.GONE
+        }
     }
     
     private fun updateSyncTimeVisibility(enabled: Boolean) {

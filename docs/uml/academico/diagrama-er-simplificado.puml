@@ -1,0 +1,153 @@
+@startuml Diagrama Entidade-Relacionamento
+!theme plain
+skinparam linetype ortho
+
+title SIHCP - Modelo Entidade-Relacionamento
+footer Sistema de Histórico e Coleta Patrimonial - IFMT
+
+' Estilo
+skinparam entity {
+    BackgroundColor #FAFAFA
+    BorderColor #333333
+}
+
+entity "campus" as campus {
+    * **id** : INTEGER <<PK>>
+    --
+    nome : VARCHAR(100)
+    sigla : VARCHAR(10)
+    cidade : VARCHAR(100)
+    ativo : BOOLEAN
+}
+
+entity "setor" as setor {
+    * **id** : INTEGER <<PK>>
+    --
+    nome : VARCHAR(100)
+    responsavel_setor : VARCHAR(100)
+    * id_campus : INTEGER <<FK>>
+    ativo : BOOLEAN
+}
+
+entity "sala" as sala {
+    * **id_sala** : INTEGER <<PK>>
+    --
+    descricao : VARCHAR(200)
+    numero_sala : VARCHAR(20)
+    bloco : VARCHAR(50)
+    * id_setor : INTEGER <<FK>>
+    ativo : BOOLEAN
+}
+
+entity "responsavel" as responsavel {
+    * **id** : INTEGER <<PK>>
+    --
+    nome : VARCHAR(100)
+    cpf : VARCHAR(14)
+    email : VARCHAR(100)
+    cargo : VARCHAR(100)
+    * id_setor : INTEGER <<FK>>
+    ativo : BOOLEAN
+}
+
+entity "patrimonio" as patrimonio {
+    * **id** : INTEGER <<PK>>
+    --
+    numero : VARCHAR(20) <<UNIQUE>>
+    descricao : TEXT
+    categoria : VARCHAR(100)
+    marca : VARCHAR(100)
+    modelo : VARCHAR(100)
+    valor_aquisicao : DECIMAL(15,2)
+    data_aquisicao : DATE
+    estado_conservacao : VARCHAR(50)
+    situacao : VARCHAR(50)
+    * id_sala : INTEGER <<FK>>
+    * id_responsavel : INTEGER <<FK>>
+}
+
+entity "usuario" as usuario {
+    * **id** : INTEGER <<PK>>
+    --
+    login : VARCHAR(50) <<UNIQUE>>
+    senha_hash : VARCHAR(255)
+    nome_completo : VARCHAR(100)
+    email : VARCHAR(100)
+    perfil : ENUM
+    * id_setor : INTEGER <<FK>>
+    ativo : BOOLEAN
+    bloqueado : BOOLEAN
+}
+
+entity "inventario" as inventario {
+    * **id** : INTEGER <<PK>>
+    --
+    nome : VARCHAR(100)
+    ano : INTEGER
+    data_inicio : DATE
+    data_fim : DATE
+    status_inventario : VARCHAR(50)
+    total_patrimonios : INTEGER
+    patrimonios_coletados : INTEGER
+    percentual_conclusao : DECIMAL(5,2)
+}
+
+entity "participante_inventario" as participante {
+    * **id_participante** : INTEGER <<PK>>
+    --
+    * id_inventario : INTEGER <<FK>>
+    * id_usuario : INTEGER <<FK>>
+    papel : VARCHAR(50)
+    ativo : BOOLEAN
+}
+
+entity "sala_inventario" as sala_inv {
+    * **id_sala_inventario** : INTEGER <<PK>>
+    --
+    * id_sala : INTEGER <<FK>>
+    * id_inventario : INTEGER <<FK>>
+    * id_participante : INTEGER <<FK>>
+    coleta_finalizada : BOOLEAN
+    total_itens_coletados : INTEGER
+    percentual_conclusao : DECIMAL(5,2)
+}
+
+entity "coleta" as coleta {
+    * **id** : INTEGER <<PK>>
+    --
+    * id_inventario : INTEGER <<FK>>
+    * id_patrimonio : INTEGER <<FK>>
+    * id_participante_inventario : INTEGER <<FK>>
+    data_coleta : TIMESTAMP
+    status_coleta : VARCHAR(50)
+    localizacao_encontrada : VARCHAR(200)
+    estado_encontrado : VARCHAR(50)
+    divergencia : BOOLEAN
+    motivo_divergencia : TEXT
+    latitude : DECIMAL(10,8)
+    longitude : DECIMAL(11,8)
+    foto_patrimonio : TEXT
+    sem_etiqueta : BOOLEAN
+}
+
+' Relacionamentos
+campus ||--o{ setor : "possui"
+setor ||--o{ sala : "contém"
+setor ||--o{ responsavel : "possui"
+setor ||--o{ usuario : "pertence"
+
+sala ||--o{ patrimonio : "localiza"
+responsavel ||--o{ patrimonio : "responsável"
+
+inventario ||--o{ participante : "possui"
+usuario ||--o{ participante : "participa"
+
+inventario ||--o{ sala_inv : "abrange"
+sala ||--o{ sala_inv : "inventariada"
+participante ||--o{ sala_inv : "responsável"
+
+inventario ||--o{ coleta : "registra"
+patrimonio ||--o{ coleta : "coletado"
+participante ||--o{ coleta : "realiza"
+
+@enduml

@@ -162,17 +162,17 @@ Write-Host "Pressione Ctrl+C para parar." -ForegroundColor Yellow
 '@ | Set-Content "$outputDir\iniciar-servidor-mobile.ps1" -Encoding UTF8
 
 # README
-@"
+$readmeContent = @"
 SISTEMA DE INVENTARIO - PRODUCAO
 ================================
 
 Este diretorio contem o sistema completo com JARs separados (thin JARs).
 
 ESTRUTURA:
-- sihcp-desktop.jar: Aplicacao desktop Swing (~1.6 MB)
-- mobile-server.jar: Servidor mobile API (~1.6 MB)
-- lib/: Dependencias compartilhadas (~134 MB)
-- logs/: Diretorio de logs
+  * sihcp-desktop.jar: Aplicacao desktop Swing (~1.6 MB)
+  * mobile-server.jar: Servidor mobile API (~1.6 MB)
+  * lib/: Dependencias compartilhadas (~134 MB)
+  * logs/: Diretorio de logs
 
 EXECUCAO:
 
@@ -185,24 +185,25 @@ EXECUCAO:
    ou iniciar-servidor-mobile.bat
 
 PORTAS:
-- Desktop: Aplicacao local (sem porta)
-- Servidor Mobile: http://localhost:8081/inventario
+  * Desktop: Aplicacao local (sem porta)
+  * Servidor Mobile: http://localhost:8081/inventario
 
 MEMORIA:
-- Desktop: 512MB - 2GB
-- Servidor Mobile: 256MB - 1GB (processo separado)
+  * Desktop: 512MB - 2GB
+  * Servidor Mobile: 256MB - 1GB (processo separado)
 
 VANTAGENS DOS THIN JARS:
-- JARs pequenos (~1.6 MB cada)
-- Dependencias compartilhadas
-- Atualizacoes rapidas
-- Processos independentes
-- Melhor controle de memoria
+  * JARs pequenos (~1.6 MB cada)
+  * Dependencias compartilhadas
+  * Atualizacoes rapidas
+  * Processos independentes
+  * Melhor controle de memoria
 
 REQUISITOS:
-- Java 21 ou superior
-- PostgreSQL configurado
-"@ | Set-Content "$outputDir\README.txt" -Encoding UTF8
+  * Java 21 ou superior
+  * PostgreSQL configurado
+"@
+$readmeContent | Set-Content "$outputDir\README.txt" -Encoding UTF8
 
 # Estatísticas finais
 Write-Host ""

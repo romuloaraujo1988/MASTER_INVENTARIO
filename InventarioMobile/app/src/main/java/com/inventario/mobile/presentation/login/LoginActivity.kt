@@ -116,7 +116,16 @@ class LoginActivity : AppCompatActivity() {
 
         // Configurar listeners dos campos de texto
         binding.etServerIp.addTextChangedListener { editable: android.text.Editable? ->
-            viewModel.updateServerIp(editable?.toString() ?: "")
+            val newIp = editable?.toString() ?: ""
+            viewModel.updateServerIp(newIp)
+            
+            // Detectar mudança de IP e avisar usuário
+            if (originalIp != null && newIp.isNotBlank() && newIp != originalIp) {
+                binding.tvIpChangeWarning.visibility = android.view.View.VISIBLE
+                binding.tvIpChangeWarning.text = "⚠️ IP alterado. O app será reiniciado após o login."
+            } else {
+                binding.tvIpChangeWarning.visibility = android.view.View.GONE
+            }
         }
 
         binding.etLogin.addTextChangedListener { editable: android.text.Editable? ->

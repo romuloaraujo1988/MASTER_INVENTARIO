@@ -261,6 +261,12 @@ class MainActivity : AppCompatActivity() {
                 true
             }
             
+            R.id.nav_historico_scans -> {
+                val intent = Intent(this, com.inventario.mobile.presentation.historico.HistoricoScansActivity::class.java)
+                startActivity(intent)
+                true
+            }
+            
             R.id.nav_relatorios -> {
                 val intent = Intent(this, com.inventario.mobile.presentation.statistics.StatisticsActivity::class.java)
                 startActivity(intent)
@@ -415,9 +421,10 @@ class MainActivity : AppCompatActivity() {
                     
                     runOnUiThread {
                         mostrarDialogoReloginNecessario(
-                            titulo = "Atualização Necessária",
-                            mensagem = "Para garantir o funcionamento correto do app, é necessário fazer login novamente.\n\n" +
-                                    "Isso irá configurar automaticamente o inventário ativo."
+                            titulo = "Inventário Não Configurado",
+                            mensagem = "Nenhum inventário ativo foi encontrado.\n\n" +
+                                    "Para realizar coletas, é necessário fazer login novamente para carregar o inventário atual.",
+                            icone = android.R.drawable.ic_dialog_alert
                         )
                     }
                     return@launch
@@ -427,17 +434,19 @@ class MainActivity : AppCompatActivity() {
                 if (inventarioStatus != null && inventarioStatus != "EM_ANDAMENTO") {
                     Log.w(TAG, "⚠️ Inventário '$inventarioNome' não está mais em andamento (status: $inventarioStatus)")
                     
+                    val statusTexto = when(inventarioStatus) {
+                        "CONCLUIDO" -> "concluído"
+                        "CANCELADO" -> "cancelado"
+                        "FINALIZADO" -> "finalizado"
+                        else -> "alterado"
+                    }
+                    
                     runOnUiThread {
                         mostrarDialogoReloginNecessario(
-                            titulo = "Inventário Atualizado",
-                            mensagem = "O inventário '$inventarioNome' foi ${ 
-                                when(inventarioStatus) {
-                                    "CONCLUIDO" -> "concluído"
-                                    "CANCELADO" -> "cancelado"
-                                    else -> "alterado"
-                                }
-                            }.\n\n" +
-                                    "Faça login novamente para carregar o inventário atual."
+                            titulo = "Inventário $statusTexto",
+                            mensagem = "O inventário '$inventarioNome' foi $statusTexto.\n\n" +
+                                    "Faça login novamente para carregar o inventário atual.",
+                            icone = android.R.drawable.ic_dialog_info
                         )
                     }
                     return@launch
@@ -445,13 +454,37 @@ class MainActivity : AppCompatActivity() {
                 
                 Log.d(TAG, "✅ Inventário ativo OK: $inventarioNome (ID: $inventarioId)")
                 
+                // Mostrar informação do inventário ativo na UI
+                runOnUiThread {
+                    mostrarInfoInventarioAtivo(inventarioNome ?: "Inventário #$inventarioId")
+                }
+                
                 // Verificar com o servidor se o inventário ainda é o correto (em background)
                 verificarInventarioComServidor(inventarioId)
                 
             } catch (e: Exception) {
                 Log.e(TAG, "Erro ao verificar inventário ativo", e)
+                
+                // Em caso de erro, mostrar aviso mas não bloquear
+                runOnUiThread {
+                    Snackbar.make(
+                        binding.root,
+                        "⚠️ Não foi possível verificar o inventário ativo",
+                        Snackbar.LENGTH_LONG
+                    ).setAction("Verificar") {
+                        verificarInventarioAtivo()
+                    }.show()
+                }
             }
         }
+    }
+    
+    /**
+     * Mostra informação do inventário ativo na toolbar ou snackbar
+     */
+    private fun mostrarInfoInventarioAtivo(nomeInventario: String) {
+        // Atualizar subtítulo da toolbar com nome do inventário
+        supportActionBar?.subtitle = "📋 $nomeInventario"
     }
     
     /**
@@ -544,11 +577,15 @@ class MainActivity : AppCompatActivity() {
      * Mostra diálogo informando que o relogin é necessário
      * O usuário não pode cancelar - precisa fazer login novamente
      */
-    private fun mostrarDialogoReloginNecessario(titulo: String, mensagem: String) {
+    private fun mostrarDialogoReloginNecessario(
+        titulo: String, 
+        mensagem: String,
+        icone: Int = android.R.drawable.ic_dialog_info
+    ) {
         AlertDialog.Builder(this)
             .setTitle(titulo)
             .setMessage(mensagem)
-            .setIcon(android.R.drawable.ic_dialog_info)
+            .setIcon(icone)
             .setCancelable(false) // Não permite fechar sem clicar no botão
             .setPositiveButton("Fazer Login") { _, _ ->
                 Log.d(TAG, "Usuário aceitou fazer relogin")
@@ -557,8 +594,12 @@ class MainActivity : AppCompatActivity() {
                 preferencesManager.clearSessionData()
                 preferencesManager.clearInventarioAtivo()
                 
-                // Navegar para tela de login
-                navigateToLogin()
+                // Navegar para tela de login com mensagem
+                val intent = Intent(this, LoginActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                intent.putExtra("LOGOUT_MESSAGE", "Faça login para configurar o inventário ativo")
+                startActivity(intent)
+                finish()
             }
             .show()
     }

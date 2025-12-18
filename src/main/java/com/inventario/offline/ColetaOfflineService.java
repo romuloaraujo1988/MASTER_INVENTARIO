@@ -1,8 +1,5 @@
 package com.inventario.offline;
 
-import com.inventario.dao.ColetaDAO;
-import com.inventario.model.Coleta;
-
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.inventario.dao.ColetaDAO;
+import com.inventario.model.Coleta;
 
 /**
  * Serviço para gerenciar coletas em modo offline
@@ -48,7 +48,7 @@ public class ColetaOfflineService {
      * @throws SQLException
      */
     public int salvarColeta(Coleta coleta) throws SQLException {
-        LOGGER.info("Salvando coleta - Modo: " +
+        LOGGER.info(() -> "Salvando coleta - Modo: " +
                 (offlineManager.isOperatingOffline() ? "OFFLINE" : "ONLINE"));
         
         // DEBUG: Log detalhado do timestamp recebido
@@ -67,7 +67,7 @@ public class ColetaOfflineService {
                 // Modo online: salvar no PostgreSQL e backup no SQLite
                 return salvarColetaOnline(coleta);
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Erro ao salvar coleta", e);
 
             // Se falhou online, tentar salvar offline como fallback
@@ -96,8 +96,8 @@ public class ColetaOfflineService {
             coletaMap.put("sincronizado", 1); // Já está sincronizado
             offlineDAO.salvarColeta(coletaMap);
 
-            LOGGER.info("Coleta salva online com sucesso - ID: " + idColeta);
-        } catch (Exception e) {
+            LOGGER.info(() -> "Coleta salva online com sucesso - ID: " + idColeta);
+        } catch (SQLException e) {
             LOGGER.log(Level.WARNING, "Erro ao salvar backup no SQLite", e);
             // Não falha se backup falhar
         }
@@ -119,7 +119,7 @@ public class ColetaOfflineService {
         // Atualizar contador de pendentes
         syncStatusManager.adicionarItensPendentes("coletas", 1);
 
-        LOGGER.info("Coleta salva offline com sucesso - ID local: " + idColeta);
+        LOGGER.info(() -> "Coleta salva offline com sucesso - ID local: " + idColeta);
 
         return idColeta;
     }
@@ -148,7 +148,7 @@ public class ColetaOfflineService {
             coletas.add(mapToColeta(map));
         }
 
-        LOGGER.info("Encontradas " + coletas.size() + " coletas pendentes");
+        LOGGER.log(Level.INFO, "Encontradas {0} coletas pendentes", coletas.size());
         return coletas;
     }
 
@@ -169,9 +169,9 @@ public class ColetaOfflineService {
                 coletas.add(mapToColeta(map));
             }
             
-            LOGGER.info("Encontradas " + coletas.size() + " coletas offline para localização: " + localizacao);
+            LOGGER.info(() -> "Encontradas " + coletas.size() + " coletas offline para localização: " + localizacao);
             
-        } catch (Exception e) {
+        } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Erro ao buscar coletas por localização offline", e);
         }
         return coletas;
@@ -215,14 +215,14 @@ public class ColetaOfflineService {
                         offlineDAO.marcarColetaSincronizada(coleta.getId());
 
                         sincronizadas++;
-                        LOGGER.info("Coleta sincronizada: " + coleta.getId());
+                        LOGGER.info(() -> "Coleta sincronizada: " + coleta.getId());
                     } else {
                         // Já existe, apenas marcar como sincronizada
                         offlineDAO.marcarColetaSincronizada(coleta.getId());
-                        LOGGER.info("Coleta já existia no servidor: " + coleta.getId());
+                        LOGGER.info(() -> "Coleta já existia no servidor: " + coleta.getId());
                     }
 
-                } catch (Exception e) {
+                } catch (SQLException e) {
                     LOGGER.log(Level.WARNING, "Erro ao sincronizar coleta " + coleta.getId(), e);
                     // Continua com as próximas
                 }
@@ -234,9 +234,9 @@ public class ColetaOfflineService {
                 syncStatusManager.atualizarUltimaSincronizacaoGeral();
             }
 
-            LOGGER.info("Sincronização concluída: " + sincronizadas + " coletas");
+            LOGGER.log(Level.INFO, "Sincroniza\u00e7\u00e3o conclu\u00edda: {0} coletas", sincronizadas);
 
-        } catch (Exception e) {
+        } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Erro durante sincronização", e);
         }
 
@@ -312,8 +312,8 @@ public class ColetaOfflineService {
         
         // Verificar se é item sem etiqueta
         Object semEtiquetaObj = map.get("sem_etiqueta");
-        if (semEtiquetaObj instanceof Boolean) {
-            coleta.setSemEtiqueta((Boolean) semEtiquetaObj);
+        if (semEtiquetaObj instanceof Boolean aBoolean) {
+            coleta.setSemEtiqueta(aBoolean);
         } else {
             // Inferir se é sem etiqueta pelo id_patrimonio
             Object idPatrimonio = map.get("id_patrimonio");
@@ -344,20 +344,20 @@ public class ColetaOfflineService {
             return new java.sql.Timestamp(System.currentTimeMillis());
         }
         
-        if (dataObj instanceof java.sql.Timestamp) {
-            return (java.sql.Timestamp) dataObj;
+        if (dataObj instanceof java.sql.Timestamp timestamp) {
+            return timestamp;
         }
         
-        if (dataObj instanceof Long) {
-            return new java.sql.Timestamp((Long) dataObj);
+        if (dataObj instanceof Long aLong) {
+            return new java.sql.Timestamp(aLong);
         }
         
-        if (dataObj instanceof java.util.Date) {
-            return new java.sql.Timestamp(((java.util.Date) dataObj).getTime());
+        if (dataObj instanceof java.util.Date date) {
+            return new java.sql.Timestamp(date.getTime());
         }
         
-        if (dataObj instanceof String) {
-            String dataStr = ((String) dataObj).trim();
+        if (dataObj instanceof String string) {
+            String dataStr = string.trim();
             
             if (dataStr.isEmpty()) {
                 return new java.sql.Timestamp(System.currentTimeMillis());
@@ -416,7 +416,7 @@ public class ColetaOfflineService {
             // 5. Formato americano: MM/dd/yyyy HH:mm:ss
             // (menos comum, mas possível)
             
-            LOGGER.warning("Não foi possível converter timestamp: '" + dataStr + "' - usando data atual");
+            LOGGER.warning(() -> "Não foi possível converter timestamp: '" + dataStr + "' - usando data atual");
         }
         
         // Fallback: usar data atual

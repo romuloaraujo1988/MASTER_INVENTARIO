@@ -604,6 +604,54 @@ class PreferencesManager(context: Context) {
         android.util.Log.d("PreferencesManager", "Vibração ao coletar ${if (enabled) "HABILITADA" else "DESABILITADA"}")
     }
     
+    // ===== FOTO OPCIONAL NA COLETA (v2.11) =====
+    
+    /**
+     * Verifica se a foto opcional está habilitada
+     * @return true se habilitada (padrão: true)
+     */
+    fun isPhotoOnCollectionEnabled(): Boolean {
+        return getBoolean("photo_on_collection_enabled", true)
+    }
+    
+    /**
+     * Habilita ou desabilita foto opcional na coleta
+     */
+    fun setPhotoOnCollectionEnabled(enabled: Boolean) {
+        putBoolean("photo_on_collection_enabled", enabled)
+        android.util.Log.d("PreferencesManager", "Foto na coleta ${if (enabled) "HABILITADA" else "DESABILITADA"}")
+    }
+    
+    /**
+     * Verifica se deve sincronizar fotos apenas em Wi-Fi
+     * @return true se apenas Wi-Fi (padrão: true)
+     */
+    fun isPhotoSyncWifiOnly(): Boolean {
+        return getBoolean("photo_sync_wifi_only", true)
+    }
+    
+    /**
+     * Define se deve sincronizar fotos apenas em Wi-Fi
+     */
+    fun setPhotoSyncWifiOnly(wifiOnly: Boolean) {
+        putBoolean("photo_sync_wifi_only", wifiOnly)
+    }
+    
+    /**
+     * Obtém qualidade de compressão de foto (30-100)
+     * @return qualidade JPEG (padrão: 65)
+     */
+    fun getPhotoQuality(): Int {
+        return getInt("photo_quality", 65)
+    }
+    
+    /**
+     * Define qualidade de compressão de foto
+     */
+    fun setPhotoQuality(quality: Int) {
+        putInt("photo_quality", quality.coerceIn(30, 100))
+    }
+    
     // ===== DARK MODE =====
     
     companion object {

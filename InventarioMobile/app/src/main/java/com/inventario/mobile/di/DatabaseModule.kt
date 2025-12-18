@@ -73,4 +73,9 @@ object DatabaseModule {
     fun provideSincronizacaoDao(database: AppDatabase): SincronizacaoDao {
         return database.sincronizacaoDao()
     }
+    
+    @Provides
+    fun provideHistoricoScanDao(database: AppDatabase): HistoricoScanDao {
+        return database.historicoScanDao()
+    }
 }

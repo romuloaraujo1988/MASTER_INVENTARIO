@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.inventario.mobile"
-    android:versionCode="44"
-    android:versionName="2.7.0 (Build 44)" >
+    android:versionCode="49"
+    android:versionName="2.11.0 (Build 49)" >
 
     <uses-sdk
         android:minSdkVersion="23"
@@ -276,6 +276,14 @@
         <!-- Export PDF Activity -->
         <activity
             android:name="com.inventario.mobile.presentation.export.ExportPdfActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Historico Scans Activity (v2.11) -->
+        <activity
+            android:name="com.inventario.mobile.presentation.historico.HistoricoScansActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.InventarioMobile.NoActionBar"

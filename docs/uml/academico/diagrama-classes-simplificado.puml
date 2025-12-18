@@ -1,0 +1,173 @@
+@startuml Diagrama de Classes - Modelo de Domínio
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam packageFontSize 14
+
+title SIHCP - Diagrama de Classes do Domínio
+footer Sistema de Histórico e Coleta Patrimonial - IFMT
+
+package "Estrutura Organizacional" #E8F5E9 {
+    class Campus {
+        -id: Integer
+        -nome: String
+        -sigla: String
+        -cidade: String
+        -ativo: Boolean
+    }
+    
+    class Setor {
+        -id: Integer
+        -nome: String
+        -responsavelSetor: String
+        -idCampus: Integer
+        -ativo: Boolean
+    }
+    
+    class Sala {
+        -idSala: Integer
+        -descricao: String
+        -numeroSala: String
+        -bloco: String
+        -idSetor: Integer
+        -ativo: Boolean
+    }
+    
+    class Responsavel {
+        -id: Integer
+        -nome: String
+        -cpf: String
+        -email: String
+        -cargo: String
+        -idSetor: Integer
+        -ativo: Boolean
+    }
+}
+
+package "Gestão de Patrimônio" #E3F2FD {
+    class Patrimonio {
+        -id: Integer
+        -numero: String
+        -descricao: String
+        -categoria: String
+        -marca: String
+        -modelo: String
+        -valorAquisicao: BigDecimal
+        -dataAquisicao: Date
+        -estadoConservacao: String
+        -idSala: Integer
+        -idResponsavel: Integer
+        -situacao: String
+        +isAtivo(): Boolean
+    }
+    
+    class QRCode {
+        -id: Integer
+        -codigo: String
+        -idPatrimonio: Integer
+        -dataGeracao: LocalDateTime
+        -ativo: Boolean
+    }
+}
+
+package "Processo de Inventário" #FFF3E0 {
+    class Inventario {
+        -id: Integer
+        -nome: String
+        -ano: Integer
+        -dataInicio: Date
+        -dataFim: Date
+        -statusInventario: String
+        -totalPatrimonios: Integer
+        -patrimoniosColetados: Integer
+        -percentualConclusao: BigDecimal
+        +isEmAndamento(): Boolean
+        +isFinalizado(): Boolean
+    }
+    
+    class ParticipanteInventario {
+        -idParticipante: Integer
+        -idInventario: Integer
+        -idUsuario: Integer
+        -papel: String
+        -ativo: Boolean
+        +isCoordenador(): Boolean
+        +isColetor(): Boolean
+    }
+    
+    class SalaInventario {
+        -idSalaInventario: Integer
+        -idSala: Integer
+        -idInventario: Integer
+        -idParticipante: Integer
+        -coletaFinalizada: Boolean
+        -totalItensColetados: Integer
+        -percentualConclusao: BigDecimal
+        +iniciarColeta(): void
+        +finalizarColeta(): void
+    }
+    
+    class Coleta {
+        -id: Integer
+        -idInventario: Integer
+        -idPatrimonio: Integer
+        -idParticipanteInventario: Integer
+        -dataColeta: Timestamp
+        -statusColeta: String
+        -localizacaoEncontrada: String
+        -estadoEncontrado: String
+        -divergencia: Boolean
+        -motivoDivergencia: String
+        -latitude: BigDecimal
+        -longitude: BigDecimal
+        -fotoPatrimonio: String
+        -semEtiqueta: Boolean
+    }
+}
+
+package "Controle de Acesso" #FCE4EC {
+    class Usuario {
+        -id: Integer
+        -login: String
+        -senhaHash: String
+        -nomeCompleto: String
+        -email: String
+        -perfil: PerfilUsuario
+        -idSetor: Integer
+        -ativo: Boolean
+        -bloqueado: Boolean
+    }
+    
+    enum PerfilUsuario {
+        ADMIN
+        SUPERVISOR
+        COLETOR
+        CONSULTA
+    }
+}
+
+' Relacionamentos - Estrutura Organizacional
+Campus "1" *-- "0..*" Setor : possui
+Setor "1" *-- "0..*" Sala : contém
+Setor "1" *-- "0..*" Responsavel : possui
+
+' Relacionamentos - Patrimônio
+Sala "1" o-- "0..*" Patrimonio : localiza
+Responsavel "1" o-- "0..*" Patrimonio : responsável
+Patrimonio "1" -- "0..1" QRCode : identificado por
+
+' Relacionamentos - Inventário
+Inventario "1" *-- "0..*" ParticipanteInventario : possui
+Inventario "1" *-- "0..*" SalaInventario : abrange
+Inventario "1" *-- "0..*" Coleta : registra
+Patrimonio "1" -- "0..*" Coleta : coletado em
+SalaInventario "0..*" -- "1" Sala : referencia
+ParticipanteInventario "1" -- "0..*" SalaInventario : responsável por
+ParticipanteInventario "1" -- "0..*" Coleta : realiza
+
+' Relacionamentos - Usuário
+Usuario "1" -- "0..*" ParticipanteInventario : participa
+Usuario "*" -- "1" PerfilUsuario : possui
+Setor "1" o-- "0..*" Usuario : pertence
+
+@enduml

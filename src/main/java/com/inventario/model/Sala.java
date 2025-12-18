@@ -27,6 +27,9 @@ public class Sala {
     // Campo transiente para exibição
     private String nomeSetor;
     
+    // Campo transiente para contagem de patrimônios (usado em relatórios)
+    private Integer quantidadePatrimonios;
+    
     // Constantes
     public static final Boolean ATIVO_SIM = true;
     public static final Boolean ATIVO_NAO = false;
@@ -185,7 +188,13 @@ public class Sala {
         this.nomeSetor = nomeSetor;
     }
     
-
+    public Integer getQuantidadePatrimonios() {
+        return quantidadePatrimonios;
+    }
+    
+    public void setQuantidadePatrimonios(Integer quantidadePatrimonios) {
+        this.quantidadePatrimonios = quantidadePatrimonios;
+    }
     
     // Métodos utilitários
     public boolean isAtiva() {

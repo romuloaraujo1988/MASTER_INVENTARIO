@@ -1,8 +1,5 @@
 package com.inventario.dao;
 
-import com.inventario.model.Patrimonio;
-import org.springframework.stereotype.Repository;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,6 +8,10 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import com.inventario.model.Patrimonio;
 
 /**
  * DAO Refatorado para operações com Patrimônio
@@ -260,16 +261,22 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
             }
         }
         
-        // ESTADO_CONSERVACAO: compatível em ambos
+        // ESTADO_CONSERVACAO: PostgreSQL retorna em minúsculas
+        // Tentar minúsculo primeiro (padrão PostgreSQL), depois maiúsculo
+        String estadoConservacao = null;
         try {
-            p.setEstadoConservacao(rs.getString("ESTADO_CONSERVACAO"));
+            estadoConservacao = rs.getString("estado_conservacao");
         } catch (SQLException e) {
+            // Ignorar
+        }
+        if (estadoConservacao == null) {
             try {
-                p.setEstadoConservacao(rs.getString("estado_conservacao"));
-            } catch (SQLException e2) {
-                p.setEstadoConservacao(null);
+                estadoConservacao = rs.getString("ESTADO_CONSERVACAO");
+            } catch (SQLException e) {
+                // Ignorar
             }
         }
+        p.setEstadoConservacao(estadoConservacao);
         
         // CATEGORIA: compatível em ambos
         try {
@@ -374,7 +381,7 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
                     "FROM TABELA_PATRIMONIO p " +
                     "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
                     "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
-                    "WHERE p.ID_SALA = ? ORDER BY p.NUMERO";
+                    "WHERE p.ID_SALA = ? AND p.STATUS = 'Ativo' ORDER BY p.NUMERO";
         
         return executeQuery(sql, idSala);
     }
@@ -392,7 +399,7 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
                     "FROM TABELA_PATRIMONIO p " +
                     "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
                     "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
-                    "WHERE p.ID_SALA = ? " +
+                    "WHERE p.ID_SALA = ? AND p.STATUS = 'Ativo' " +
                     "ORDER BY p.NUMERO " +
                     "LIMIT ? OFFSET ?";
         
@@ -407,7 +414,7 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
                     "FROM TABELA_PATRIMONIO p " +
                     "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
                     "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
-                    "WHERE s.DESCRICAO ILIKE ? ORDER BY p.NUMERO";
+                    "WHERE s.DESCRICAO ILIKE ? AND p.STATUS = 'Ativo' ORDER BY p.NUMERO";
         
         return executeQuery(sql, "%" + nomeSala + "%");
     }
@@ -558,7 +565,7 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
             conn = com.inventario.util.ConnectionManager.getConnection();
             String dbUrl = conn.getMetaData().getURL();
             isSQLite = dbUrl.contains("jdbc:sqlite");
-        } catch (Exception e) {
+        } catch (SQLException e) {
             // Fallback para PostgreSQL
         }
         
@@ -774,7 +781,7 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
     public List<Patrimonio> buscarPorCodigoParcial(String codigoParcial, int limit) throws SQLException {
         String sql = "SELECT p.*, s.NOME as SALA_NOME, r.NOME_COMPLETO as RESPONSAVEL_NOME " +
                     "FROM TABELA_PATRIMONIO p " +
-                    "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID " +
+                    "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
                     "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
                     "WHERE p.NUMERO LIKE ? " +
                     "  AND p.STATUS = 'ATIVO' " +
@@ -782,27 +789,18 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
                     "LIMIT ?";
         
         List<Patrimonio> patrimonios = new ArrayList<>();
-        Connection conn = null;
         
-        try {
-            conn = com.inventario.util.ConnectionManager.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = com.inventario.util.ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, "%" + codigoParcial + "%");
             stmt.setInt(2, limit);
             
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                patrimonios.add(mapResultSetToEntity(rs));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    patrimonios.add(mapResultSetToEntity(rs));
+                }
             }
-            
-            rs.close();
-            stmt.close();
-            
-        } catch (SQLException e) {
-            throw e;
-        } finally {
-            com.inventario.util.ConnectionManager.closeConnection(conn);
         }
         
         return patrimonios;
@@ -819,7 +817,7 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
     public List<Patrimonio> buscarPorDescricao(String descricao, int limit) throws SQLException {
         String sql = "SELECT p.*, s.NOME as SALA_NOME, r.NOME_COMPLETO as RESPONSAVEL_NOME " +
                     "FROM TABELA_PATRIMONIO p " +
-                    "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID " +
+                    "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
                     "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
                     "WHERE UPPER(p.DESCRICAO) LIKE UPPER(?) " +
                     "  AND p.STATUS = 'ATIVO' " +
@@ -827,27 +825,18 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
                     "LIMIT ?";
         
         List<Patrimonio> patrimonios = new ArrayList<>();
-        Connection conn = null;
         
-        try {
-            conn = com.inventario.util.ConnectionManager.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = com.inventario.util.ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, "%" + descricao + "%");
             stmt.setInt(2, limit);
             
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                patrimonios.add(mapResultSetToEntity(rs));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    patrimonios.add(mapResultSetToEntity(rs));
+                }
             }
-            
-            rs.close();
-            stmt.close();
-            
-        } catch (SQLException e) {
-            throw e;
-        } finally {
-            com.inventario.util.ConnectionManager.closeConnection(conn);
         }
         
         return patrimonios;
@@ -867,34 +856,21 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
                     "r.EMAIL as RESPONSAVEL_EMAIL, " +
                     "st.NOME as SETOR_NOME " +
                     "FROM TABELA_PATRIMONIO p " +
-                    "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID " +
+                    "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
                     "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
                     "LEFT JOIN TABELA_SETOR st ON r.ID_SETOR = st.ID " +
                     "WHERE p.ID = ?";
         
-        Connection conn = null;
-        
-        try {
-            conn = com.inventario.util.ConnectionManager.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = com.inventario.util.ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setLong(1, patrimonioId);
             
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                Patrimonio patrimonio = mapResultSetToEntity(rs);
-                rs.close();
-                stmt.close();
-                return patrimonio;
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToEntity(rs);
+                }
             }
-            
-            rs.close();
-            stmt.close();
-            
-        } catch (SQLException e) {
-            throw e;
-        } finally {
-            com.inventario.util.ConnectionManager.closeConnection(conn);
         }
         
         return null;
@@ -920,7 +896,7 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT p.*, s.NOME as SALA_NOME, r.NOME_COMPLETO as RESPONSAVEL_NOME ");
         sql.append("FROM TABELA_PATRIMONIO p ");
-        sql.append("LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID ");
+        sql.append("LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA ");
         sql.append("LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID ");
         sql.append("WHERE p.ATIVO = true ");
         
@@ -957,30 +933,21 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
         parametros.add(limit);
         
         List<Patrimonio> patrimonios = new ArrayList<>();
-        Connection conn = null;
         
-        try {
-            conn = com.inventario.util.ConnectionManager.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql.toString());
+        try (Connection conn = com.inventario.util.ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             
             // Definir parâmetros
             for (int i = 0; i < parametros.size(); i++) {
                 stmt.setObject(i + 1, parametros.get(i));
             }
             
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                Patrimonio patrimonio = mapResultSetToEntity(rs);
-                patrimonios.add(patrimonio);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Patrimonio patrimonio = mapResultSetToEntity(rs);
+                    patrimonios.add(patrimonio);
+                }
             }
-            
-            rs.close();
-            stmt.close();
-            
-        } catch (SQLException e) {
-            throw e;
-        } finally {
-            com.inventario.util.ConnectionManager.closeConnection(conn);
         }
         
         return patrimonios;
@@ -998,39 +965,31 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
                      "s.NOME as SALA_NOME, " +
                      "r.NOME as RESPONSAVEL_NOME " +
                      "FROM TABELA_PATRIMONIO p " +
-                     "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID " +
+                     "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
                      "LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID " +
                      "WHERE p.STATUS = 'ATIVO' " +
                      "ORDER BY p.ID " +
                      "LIMIT ? OFFSET ?";
         
         List<Patrimonio> patrimonios = new ArrayList<>();
-        Connection conn = null;
         
-        try {
-            conn = com.inventario.util.ConnectionManager.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = com.inventario.util.ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
             stmt.setInt(1, size);
             stmt.setInt(2, page * size);
             
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                Patrimonio patrimonio = mapResultSetToEntity(rs);
-                
-                // Adicionar nome da sala e responsável
-                patrimonio.setNomeSala(rs.getString("SALA_NOME"));
-                patrimonio.setNomeResponsavel(rs.getString("RESPONSAVEL_NOME"));
-                
-                patrimonios.add(patrimonio);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Patrimonio patrimonio = mapResultSetToEntity(rs);
+                    
+                    // Adicionar nome da sala e responsável
+                    patrimonio.setNomeSala(rs.getString("SALA_NOME"));
+                    patrimonio.setNomeResponsavel(rs.getString("RESPONSAVEL_NOME"));
+                    
+                    patrimonios.add(patrimonio);
+                }
             }
-            
-            rs.close();
-            stmt.close();
-            
-        } catch (SQLException e) {
-            throw e;
-        } finally {
-            com.inventario.util.ConnectionManager.closeConnection(conn);
         }
         
         return patrimonios;
@@ -1060,33 +1019,30 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
         
         List<Patrimonio> patrimonios = new java.util.ArrayList<>();
         
-        Connection conn = null;
-        try {
-            conn = com.inventario.util.ConnectionManager.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = com.inventario.util.ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             for (int i = 0; i < ids.size(); i++) {
                 stmt.setInt(i + 1, ids.get(i));
             }
             
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                Patrimonio p = mapResultSetToEntity(rs);
-                // Garantir que nomeSala seja populado
-                try {
-                    String nomeSala = rs.getString("nome_sala");
-                    if (nomeSala != null && !nomeSala.isEmpty()) {
-                        p.setNomeSala(nomeSala);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Patrimonio p = mapResultSetToEntity(rs);
+                    // Garantir que nomeSala seja populado
+                    try {
+                        String nomeSala = rs.getString("nome_sala");
+                        if (nomeSala != null && !nomeSala.isEmpty()) {
+                            p.setNomeSala(nomeSala);
+                        }
+                    } catch (SQLException e) {
+                        // Ignorar se coluna não existir
                     }
-                } catch (SQLException e) {
-                    // Ignorar se coluna não existir
+                    patrimonios.add(p);
                 }
-                patrimonios.add(p);
             }
             
             System.out.println("DEBUG PatrimonioDAO.buscarPorIds: Buscados " + patrimonios.size() + " patrimônios em batch");
-        } finally {
-            com.inventario.util.ConnectionManager.closeConnection(conn);
         }
         
         return patrimonios;

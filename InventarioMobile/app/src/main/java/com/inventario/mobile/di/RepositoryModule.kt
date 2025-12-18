@@ -54,6 +54,12 @@ abstract class RepositoryModule {
         impl: ExportRepositoryImpl
     ): ExportRepository
     
+    @Binds
+    @Singleton
+    abstract fun bindHistoricoScanRepository(
+        impl: com.inventario.mobile.data.repository.HistoricoScanRepositoryImpl
+    ): com.inventario.mobile.domain.repository.HistoricoScanRepository
+    
     companion object {
         /**
          * Provider para InventarioRepository (stub temporário)

@@ -31,6 +31,13 @@ class ManualCollectionActivity : BaseOfflineActivity() {
     private var salaId: Long = -1L
     private var salaNome: String = ""
     
+    // ✅ v2.11: Injetar PhotoHelper para captura de fotos
+    @javax.inject.Inject
+    lateinit var photoHelper: com.inventario.mobile.utils.PhotoHelper
+    
+    // ✅ v2.11: Helper para captura de foto
+    private var photoCaptureHelper: com.inventario.mobile.presentation.components.PhotoCaptureHelper? = null
+    
     private val requestAudioPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -68,8 +75,48 @@ class ManualCollectionActivity : BaseOfflineActivity() {
         setupUI()
         setupObservers()
         
+        // ✅ v2.11: Configurar captura de foto opcional
+        setupPhotoCapture()
+        
         // Configurar informações da sala no ViewModel
         viewModel.setSalaInfo(salaId, salaNome)
+    }
+    
+    /**
+     * v2.11: Configura captura de foto opcional
+     */
+    private fun setupPhotoCapture() {
+        try {
+            // Criar helper de captura de foto
+            photoCaptureHelper = com.inventario.mobile.presentation.components.PhotoCaptureHelper(
+                activity = this,
+                photoHelper = photoHelper,
+                preferencesManager = preferencesManager
+            )
+            
+            // Registrar launcher de câmera
+            photoCaptureHelper?.registerCameraLauncher()
+            
+            // Configurar views (se existirem no layout)
+            binding.cardFotoOpcional?.let { card ->
+                photoCaptureHelper?.setupPhotoCapture(
+                    cardFotoOpcional = card,
+                    textFotoLabel = binding.textFotoLabel!!,
+                    btnAddPhoto = binding.btnAddPhoto!!,
+                    layoutPhotoPreview = binding.layoutPhotoPreview!!,
+                    imgPhotoPreview = binding.imgPhotoPreview!!,
+                    btnRemovePhoto = binding.btnRemovePhoto!!,
+                    layoutMotivoFoto = binding.layoutMotivoFoto!!,
+                    spinnerMotivoFoto = binding.spinnerMotivoFoto!!
+                )
+                Log.d("ManualCollectionActivity", "✓ PhotoCaptureHelper configurado")
+            } ?: run {
+                Log.w("ManualCollectionActivity", "Card de foto não encontrado no layout")
+            }
+            
+        } catch (e: Exception) {
+            Log.e("ManualCollectionActivity", "Erro ao configurar captura de foto", e)
+        }
     }
 
     private fun setupUI() {
@@ -176,11 +223,17 @@ class ManualCollectionActivity : BaseOfflineActivity() {
                                           !state.isLoading && 
                                           state.patrimonio.id > 0 && 
                                           state.patrimonio.numeroPatrimonio.isNotBlank()
+            
+            // ✅ v2.11: Mostrar card de foto opcional (se não foi coletado)
+            photoCaptureHelper?.showPhotoCard(state.patrimonio.numeroPatrimonio, state.jaColetado)
         } else {
             // Ocultar o card pai quando não há patrimônio
             binding.cardPatrimonioInfo?.visibility = android.view.View.GONE
             binding.tvPatrimonioInfo?.visibility = android.view.View.GONE
             binding.btnCollect.isEnabled = false
+            
+            // ✅ v2.11: Ocultar card de foto
+            photoCaptureHelper?.hidePhotoCard()
         }
 
         // Exibir mensagens
@@ -220,6 +273,10 @@ class ManualCollectionActivity : BaseOfflineActivity() {
         binding.cardPatrimonioInfo?.visibility = android.view.View.GONE
         binding.btnCollect.isEnabled = false
         viewModel.clearPatrimonio()
+        
+        // ✅ v2.11: Limpar e ocultar card de foto
+        photoCaptureHelper?.clearPhoto()
+        photoCaptureHelper?.hidePhotoCard()
     }
 
     override fun onSupportNavigateUp(): Boolean {

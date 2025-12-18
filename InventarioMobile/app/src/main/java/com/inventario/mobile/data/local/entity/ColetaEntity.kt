@@ -13,12 +13,18 @@ import androidx.room.Index
 @Entity(
     tableName = "coleta",
     indices = [
+        // Índices simples
         Index(value = ["idPatrimonio"]),
         Index(value = ["idInventario"]),
         Index(value = ["sincronizado"]),
         Index(value = ["dataColeta"]),
         Index(value = ["metodoColeta"]),
-        Index(value = ["tipoScan"])
+        Index(value = ["tipoScan"]),
+        
+        // Índices compostos para otimização de queries
+        Index(value = ["idPatrimonio", "idInventario"]),
+        Index(value = ["idInventario", "sincronizado"]),
+        Index(value = ["idInventario", "dataColeta"])
     ]
 )
 data class ColetaEntity(
@@ -64,5 +70,11 @@ data class ColetaEntity(
     val semEtiqueta: Boolean = false,               // Se é item sem etiqueta
     val descricaoItemSemEtiqueta: String? = null,   // Descrição do item sem etiqueta
     val categoriaItemSemEtiqueta: String? = null,   // Categoria do item sem etiqueta
-    val fotoPatrimonio: String? = null              // Foto em Base64
+    val fotoPatrimonio: String? = null,             // Foto em Base64 (legado, para itens sem etiqueta)
+    
+    // ========== FOTO OPCIONAL (v2.11) ==========
+    val fotoPath: String? = null,                   // Caminho do arquivo de foto (otimizado)
+    val fotoThumbnailPath: String? = null,          // Caminho do thumbnail
+    val fotoSincronizada: Boolean = false,          // Se a foto já foi enviada ao servidor
+    val motivoFoto: String? = null                  // DIVERGENCIA, ESTADO_RUIM, ATENCAO, OUTRO
 )

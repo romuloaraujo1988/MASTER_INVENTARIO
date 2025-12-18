@@ -1,10 +1,15 @@
 package com.inventario.dao;
 
-import com.inventario.util.DatabaseConnection;
-import org.springframework.stereotype.Repository;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.springframework.stereotype.Repository;
+
+import com.inventario.util.DatabaseConnection;
 
 /**
  * DAO para buscar dados estatísticos em tempo real da coleta de inventário
@@ -303,6 +308,7 @@ public class DashboardColetaDAO {
 
     /**
      * Busca estatísticas de coleta por sala do inventário ativo
+     * Inclui o status real da sala (FINALIZADA, EM_ANDAMENTO, etc.) da tabela_sala_inventario
      * 
      * @param idInventario ID do inventário ativo
      * @return List com estatísticas por sala
@@ -310,37 +316,46 @@ public class DashboardColetaDAO {
     public java.util.List<Map<String, Object>> buscarEstatisticasPorSala(int idInventario) {
         java.util.List<Map<String, Object>> estatisticasPorSala = new java.util.ArrayList<>();
 
-        String sql = """
-                SELECT
-                    s.NUMERO_SALA,
-                    s.DESCRICAO,
-                    st.NOME as setor,
-                    COUNT(p.ID) as total_patrimonios,
-                    COUNT(CASE WHEN c.STATUS_COLETA = 'COLETADO' THEN 1 END) as itens_coletados
-                FROM TABELA_SALA s
-                LEFT JOIN TABELA_SETOR st ON s.ID_SETOR = st.ID
-                LEFT JOIN TABELA_PATRIMONIO p ON p.ID_SALA = s.ID_SALA AND p.status = 'Ativo'
-                LEFT JOIN TABELA_COLETA c ON p.ID = c.ID_PATRIMONIO AND c.ID_INVENTARIO = ?
-                WHERE s.ATIVO = TRUE
-                GROUP BY s.ID_SALA, s.NUMERO_SALA, s.DESCRICAO, st.NOME
-                ORDER BY st.NOME, s.NUMERO_SALA
-                """;
+        // Incluir status real da sala da tabela_sala_inventario
+        String sql = "SELECT " +
+                "s.ID_SALA, " +
+                "s.NUMERO_SALA, " +
+                "s.DESCRICAO, " +
+                "st.NOME as setor, " +
+                "COUNT(p.ID) as total_patrimonios, " +
+                "COUNT(CASE WHEN c.STATUS_COLETA = 'COLETADO' THEN 1 END) as itens_coletados, " +
+                "si.status_coleta as status_sala_inventario, " +
+                "si.coleta_finalizada, " +
+                "si.data_finalizacao_coleta, " +
+                "si.percentual_conclusao as percentual_sala_inventario " +
+                "FROM TABELA_SALA s " +
+                "LEFT JOIN TABELA_SETOR st ON s.ID_SETOR = st.ID " +
+                "LEFT JOIN TABELA_PATRIMONIO p ON p.ID_SALA = s.ID_SALA AND p.status = 'Ativo' " +
+                "LEFT JOIN TABELA_COLETA c ON p.ID = c.ID_PATRIMONIO AND c.ID_INVENTARIO = ? " +
+                "LEFT JOIN TABELA_SALA_INVENTARIO si ON s.ID_SALA = si.ID_SALA AND si.ID_INVENTARIO = ? " +
+                "WHERE s.ATIVO = TRUE " +
+                "GROUP BY s.ID_SALA, s.NUMERO_SALA, s.DESCRICAO, st.NOME, " +
+                "si.status_coleta, si.coleta_finalizada, si.data_finalizacao_coleta, si.percentual_conclusao " +
+                "ORDER BY st.NOME, s.NUMERO_SALA";
 
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, idInventario);
+            stmt.setInt(2, idInventario);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     Map<String, Object> salaStats = new HashMap<>();
 
+                    int idSala = rs.getInt("ID_SALA");
                     String numero = rs.getString("NUMERO_SALA");
                     String descricao = rs.getString("DESCRICAO");
                     String nomeSala = (numero != null ? numero : "") + " - " + (descricao != null ? descricao : "");
                     if (nomeSala.startsWith(" - "))
                         nomeSala = nomeSala.substring(3);
 
+                    salaStats.put("id_sala", idSala);
                     salaStats.put("sala", nomeSala);
                     salaStats.put("setor", rs.getString("setor") != null ? rs.getString("setor") : "Sem Setor");
 
@@ -353,17 +368,52 @@ public class DashboardColetaDAO {
                     double percentual = total > 0 ? (double) coletados / total * 100.0 : 0.0;
                     salaStats.put("percentual", percentual);
 
+                    // ✅ NOVO: Usar status real da tabela_sala_inventario se disponível
+                    String statusSalaInventario = rs.getString("status_sala_inventario");
+                    boolean coletaFinalizada = rs.getBoolean("coleta_finalizada");
+                    java.sql.Timestamp dataFinalizacao = rs.getTimestamp("data_finalizacao_coleta");
+                    
                     String status;
-                    if (coletados == 0 && total > 0) {
-                        status = "Não Iniciado";
-                    } else if (coletados == 0 && total == 0) {
-                        status = "Vazia";
-                    } else if (coletados < total) {
-                        status = "Em Andamento";
+                    if (statusSalaInventario != null) {
+                        // Usar status real da tabela_sala_inventario
+                        switch (statusSalaInventario) {
+                            case "FINALIZADA":
+                                status = "Finalizada";
+                                break;
+                            case "EM_ANDAMENTO":
+                                status = "Em Andamento";
+                                break;
+                            case "NAO_INICIADA":
+                                status = "Não Iniciado";
+                                break;
+                            case "PENDENTE":
+                                status = "Pendente";
+                                break;
+                            default:
+                                status = statusSalaInventario;
+                        }
+                        
+                        // Se está marcada como finalizada, mostrar como Finalizada
+                        if (coletaFinalizada) {
+                            status = "Finalizada";
+                        }
                     } else {
-                        status = "Concluído";
+                        // Fallback: calcular status baseado nos itens coletados
+                        if (coletados == 0 && total > 0) {
+                            status = "Não Iniciado";
+                        } else if (coletados == 0 && total == 0) {
+                            status = "Vazia";
+                        } else if (coletados < total) {
+                            status = "Em Andamento";
+                        } else {
+                            status = "Concluído";
+                        }
                     }
                     salaStats.put("status", status);
+                    
+                    // Adicionar informações extras
+                    salaStats.put("coleta_finalizada", coletaFinalizada);
+                    salaStats.put("data_finalizacao", dataFinalizacao);
 
                     estatisticasPorSala.add(salaStats);
                 }
@@ -377,4 +427,109 @@ public class DashboardColetaDAO {
         return estatisticasPorSala;
     }
 
+    /**
+     * Finaliza a coleta de uma sala no inventário
+     * 
+     * @param idSala ID da sala
+     * @param idInventario ID do inventário
+     * @param observacoes Observações da finalização
+     * @return true se finalizou com sucesso
+     */
+    public boolean finalizarColetaSala(int idSala, int idInventario, String observacoes) {
+        // Primeiro verificar se já existe registro na tabela_sala_inventario
+        String sqlVerifica = "SELECT id_sala_inventario FROM tabela_sala_inventario WHERE id_sala = ? AND id_inventario = ?";
+        String sqlInsert = "INSERT INTO tabela_sala_inventario (id_sala, id_inventario, coleta_finalizada, data_finalizacao_coleta, observacoes_finalizacao, status_coleta, data_atualizacao) VALUES (?, ?, TRUE, CURRENT_TIMESTAMP, ?, 'FINALIZADA', CURRENT_TIMESTAMP)";
+        String sqlUpdate = "UPDATE tabela_sala_inventario SET coleta_finalizada = TRUE, data_finalizacao_coleta = CURRENT_TIMESTAMP, observacoes_finalizacao = ?, status_coleta = 'FINALIZADA', data_atualizacao = CURRENT_TIMESTAMP WHERE id_sala = ? AND id_inventario = ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            // Verificar se existe
+            boolean existe = false;
+            try (PreparedStatement stmtVerifica = conn.prepareStatement(sqlVerifica)) {
+                stmtVerifica.setInt(1, idSala);
+                stmtVerifica.setInt(2, idInventario);
+                try (ResultSet rs = stmtVerifica.executeQuery()) {
+                    existe = rs.next();
+                }
+            }
+            
+            if (existe) {
+                // Atualizar registro existente
+                try (PreparedStatement stmt = conn.prepareStatement(sqlUpdate)) {
+                    stmt.setString(1, observacoes);
+                    stmt.setInt(2, idSala);
+                    stmt.setInt(3, idInventario);
+                    int rows = stmt.executeUpdate();
+                    return rows > 0;
+                }
+            } else {
+                // Inserir novo registro
+                try (PreparedStatement stmt = conn.prepareStatement(sqlInsert)) {
+                    stmt.setInt(1, idSala);
+                    stmt.setInt(2, idInventario);
+                    stmt.setString(3, observacoes);
+                    int rows = stmt.executeUpdate();
+                    return rows > 0;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao finalizar coleta da sala: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    /**
+     * Reabre a coleta de uma sala no inventário
+     * 
+     * @param idSala ID da sala
+     * @param idInventario ID do inventário
+     * @param motivo Motivo da reabertura
+     * @return true se reabriu com sucesso
+     */
+    public boolean reabrirColetaSala(int idSala, int idInventario, String motivo) {
+        String sql = "UPDATE tabela_sala_inventario SET coleta_finalizada = FALSE, data_finalizacao_coleta = NULL, status_coleta = 'EM_ANDAMENTO', observacoes_finalizacao = CONCAT(COALESCE(observacoes_finalizacao, ''), ' | Reaberta: ', ?), data_atualizacao = CURRENT_TIMESTAMP WHERE id_sala = ? AND id_inventario = ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, motivo);
+            stmt.setInt(2, idSala);
+            stmt.setInt(3, idInventario);
+            
+            int rows = stmt.executeUpdate();
+            return rows > 0;
+        } catch (SQLException e) {
+            System.err.println("Erro ao reabrir coleta da sala: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    /**
+     * Busca o ID da sala pelo nome (número + descrição)
+     * 
+     * @param nomeSala Nome da sala no formato "NUMERO - DESCRICAO"
+     * @return ID da sala ou -1 se não encontrada
+     */
+    public int buscarIdSalaPorNome(String nomeSala) {
+        String sql = "SELECT id_sala FROM tabela_sala WHERE CONCAT(COALESCE(numero_sala, ''), ' - ', COALESCE(descricao, '')) = ? OR descricao = ? OR numero_sala = ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, nomeSala);
+            stmt.setString(2, nomeSala);
+            stmt.setString(3, nomeSala);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id_sala");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar ID da sala: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return -1;
+    }
 }

@@ -760,6 +760,106 @@ public class SalaInventarioDAO {
     }
     
     /**
+     * Conta o total de salas ativas para um inventário.
+     * Útil para mostrar progresso de carregamento.
+     * 
+     * @param idInventario ID do inventário
+     * @return Total de salas ativas
+     */
+    public int contarSalasAtivas(int idInventario) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String dbType = conn.getMetaData().getDatabaseProductName().toLowerCase();
+            boolean isSQLite = dbType.contains("sqlite");
+            
+            String sql;
+            if (isSQLite) {
+                sql = "SELECT COUNT(*) FROM SALA WHERE ATIVA = 1";
+            } else {
+                sql = "SELECT COUNT(DISTINCT s.ID_SALA) FROM TABELA_SALA s " +
+                      "LEFT JOIN TABELA_SALA_INVENTARIO si ON s.ID_SALA = si.ID_SALA AND si.ID_INVENTARIO = ? " +
+                      "WHERE s.ATIVO = TRUE";
+            }
+            
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                if (!isSQLite) {
+                    stmt.setInt(1, idInventario);
+                }
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            LOG.error("Erro ao contar salas ativas: {}", e.getMessage());
+        }
+        return 0;
+    }
+    
+    /**
+     * Busca salas ativas de forma PAGINADA para carregamento progressivo.
+     * Ideal para conexões VPN lentas.
+     * 
+     * @param idInventario ID do inventário
+     * @param offset Posição inicial (0-based)
+     * @param limit Quantidade máxima de registros
+     * @return Lista de salas (pode ser menor que limit se não houver mais)
+     */
+    public List<com.inventario.model.Sala> buscarSalasAtivasPaginado(int idInventario, int offset, int limit) {
+        List<com.inventario.model.Sala> salas = new ArrayList<>();
+        
+        LOG.debug("Buscando salas paginado: inventario={}, offset={}, limit={}", idInventario, offset, limit);
+        
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String dbType = conn.getMetaData().getDatabaseProductName().toLowerCase();
+            boolean isSQLite = dbType.contains("sqlite");
+            
+            String sql;
+            if (isSQLite) {
+                sql = "SELECT ID_SALA, NUMERO_SALA, NOME_SALA as DESCRICAO, " +
+                      "0 as ID_SETOR, ATIVA as ATIVO, NULL AS DATA_CADASTRO " +
+                      "FROM SALA WHERE ATIVA = 1 ORDER BY NUMERO_SALA " +
+                      "LIMIT ? OFFSET ?";
+            } else {
+                sql = "SELECT DISTINCT s.ID_SALA, s.NUMERO_SALA, s.DESCRICAO, s.ID_SETOR, s.ATIVO, " +
+                      "CAST(NULL AS TIMESTAMP) AS DATA_CADASTRO " +
+                      "FROM TABELA_SALA s " +
+                      "LEFT JOIN TABELA_SALA_INVENTARIO si ON s.ID_SALA = si.ID_SALA AND si.ID_INVENTARIO = ? " +
+                      "WHERE s.ATIVO = TRUE ORDER BY s.NUMERO_SALA " +
+                      "LIMIT ? OFFSET ?";
+            }
+            
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                int paramIndex = 1;
+                if (!isSQLite) {
+                    stmt.setInt(paramIndex++, idInventario);
+                }
+                stmt.setInt(paramIndex++, limit);
+                stmt.setInt(paramIndex, offset);
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        try {
+                            com.inventario.model.Sala sala = criarSalaMinimalFromResultSet(rs);
+                            salas.add(sala);
+                        } catch (SQLException e) {
+                            LOG.error("Erro ao processar sala: {}", e.getMessage());
+                        }
+                    }
+                }
+            }
+            
+            LOG.debug("Salas carregadas nesta página: {}", salas.size());
+            
+        } catch (SQLException e) {
+            LOG.error("Erro ao buscar salas paginado: SQLState={}, ErrorCode={}", 
+                e.getSQLState(), e.getErrorCode(), e);
+        }
+        
+        return salas;
+    }
+    
+    /**
      * Busca o status de coleta de uma sala em um inventário
      * 
      * @param idSala ID da sala

@@ -1,16 +1,33 @@
 package com.inventario.view;
 
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.JTableHeader;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.HeadlessException;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
-import com.inventario.service.ResponsavelService;
-import com.inventario.service.BusinessException;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+
 import com.inventario.model.Responsavel;
+import com.inventario.service.BusinessException;
+import com.inventario.service.ResponsavelService;
 import com.inventario.view.ui.ButtonStyleFactory;
 
 /**
@@ -60,7 +77,7 @@ public class ResponsavelFrame extends JFrame {
         campoBusca = new JTextField(20);
         painelBusca.add(campoBusca);
 
-        btnBuscar = ButtonStyleFactory.createSecondaryButton("Buscar");
+        btnBuscar = ButtonStyleFactory.createPrimaryButton("🔍 Buscar");
         painelBusca.add(btnBuscar);
 
         // Subpainel de ações
@@ -198,7 +215,7 @@ public class ResponsavelFrame extends JFrame {
                     JOptionPane.showMessageDialog(this, "Responsável não encontrado.", "Erro",
                             JOptionPane.ERROR_MESSAGE);
                 }
-            } catch (Exception e) {
+            } catch (HeadlessException e) {
                 JOptionPane.showMessageDialog(this, "Erro ao editar responsável: " + e.getMessage(), "Erro",
                         JOptionPane.ERROR_MESSAGE);
             }
@@ -235,7 +252,7 @@ public class ResponsavelFrame extends JFrame {
                             JOptionPane.WARNING_MESSAGE);
                     }
                 }
-            } catch (Exception e) {
+            } catch (HeadlessException e) {
                 JOptionPane.showMessageDialog(this, "Erro: " + e.getMessage(), "Erro",
                         JOptionPane.ERROR_MESSAGE);
             }
@@ -273,10 +290,9 @@ public class ResponsavelFrame extends JFrame {
                             "Busca",
                             JOptionPane.INFORMATION_MESSAGE);
                 }
-            } catch (Exception e) {
+            } catch (HeadlessException e) {
                 JOptionPane.showMessageDialog(this, "Erro ao buscar responsáveis: " + e.getMessage(), "Erro",
                         JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
             }
         } else {
             carregarResponsaveis();

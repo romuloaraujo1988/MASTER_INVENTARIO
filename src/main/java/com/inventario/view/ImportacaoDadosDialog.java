@@ -1,13 +1,33 @@
 package com.inventario.view;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Frame;
+import java.sql.SQLException;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+import javax.swing.border.EmptyBorder;
+
 import com.inventario.model.Usuario;
 import com.inventario.service.DataImportService;
 import com.inventario.service.DataImportService.ImportResult;
 import com.inventario.service.DataImportService.ProgressListener;
-
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
 
 /**
  * Dialog para importação de dados do servidor para modo offline
@@ -60,10 +80,10 @@ public class ImportacaoDadosDialog extends JDialog {
             @Override
             public void windowClosing(java.awt.event.WindowEvent e) {
                 if (importacaoEmAndamento) {
-                    int opcao = JOptionPane.showConfirmDialog(
-                        ImportacaoDadosDialog.this,
-                        "A importação está em andamento.\n\n" +
-                        "Deseja cancelar e fechar?",
+                    int opcao = JOptionPane.showConfirmDialog(ImportacaoDadosDialog.this, """
+                                                                                          A importa\u00e7\u00e3o est\u00e1 em andamento.
+                                                                                          
+                                                                                          Deseja cancelar e fechar?""",
                         "Importação em Andamento",
                         JOptionPane.YES_NO_OPTION,
                         JOptionPane.WARNING_MESSAGE);
@@ -105,14 +125,14 @@ public class ImportacaoDadosDialog extends JDialog {
         headerPanel.setBackground(CARD_COLOR);
         
         JLabel titleLabel = new JLabel("📥 Importar Dados para Modo Offline");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        titleLabel.setFont(new Font("Segoe UI Emoji", Font.BOLD, 18));
         titleLabel.setForeground(TEXT_COLOR);
         
         JLabel subtitleLabel = new JLabel(
             "<html>Esta operação irá baixar dados do servidor para permitir<br>" +
             "que você trabalhe offline. Isso pode levar alguns minutos.</html>"
         );
-        subtitleLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         subtitleLabel.setForeground(new Color(127, 140, 141));
         subtitleLabel.setBorder(new EmptyBorder(5, 0, 0, 0));
         
@@ -195,7 +215,7 @@ public class ImportacaoDadosDialog extends JDialog {
     
     private JLabel createItemLabel(String text) {
         JLabel label = new JLabel(text);
-        label.setFont(new Font("Arial", Font.PLAIN, 13));
+        label.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 13));
         label.setForeground(TEXT_COLOR);
         return label;
     }
@@ -206,29 +226,17 @@ public class ImportacaoDadosDialog extends JDialog {
         buttonPanel.setBackground(CARD_COLOR);
         buttonPanel.setBorder(new EmptyBorder(15, 0, 0, 0));
         
-        btnIniciar = new JButton("Iniciar Importação");
-        btnIniciar.setFont(new Font("Arial", Font.BOLD, 13));
-        btnIniciar.setBackground(SUCCESS_COLOR);
-        btnIniciar.setForeground(Color.WHITE);
-        btnIniciar.setFocusPainted(false);
-        btnIniciar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnIniciar.addActionListener(e -> iniciarImportacao());
-        
         btnCancelar = new JButton("Cancelar");
-        btnCancelar.setFont(new Font("Arial", Font.PLAIN, 13));
-        btnCancelar.setBackground(DANGER_COLOR);
-        btnCancelar.setForeground(Color.WHITE);
-        btnCancelar.setFocusPainted(false);
-        btnCancelar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnCancelar.setFont(new Font("Arial", Font.PLAIN, 12));
         btnCancelar.setEnabled(false);
         btnCancelar.addActionListener(e -> cancelarImportacao());
         
+        btnIniciar = new JButton("Iniciar Importação");
+        btnIniciar.setFont(new Font("Arial", Font.PLAIN, 12));
+        btnIniciar.addActionListener(e -> iniciarImportacao());
+        
         btnFechar = new JButton("Fechar");
-        btnFechar.setFont(new Font("Arial", Font.PLAIN, 13));
-        btnFechar.setBackground(new Color(149, 165, 166));
-        btnFechar.setForeground(Color.WHITE);
-        btnFechar.setFocusPainted(false);
-        btnFechar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnFechar.setFont(new Font("Arial", Font.PLAIN, 12));
         btnFechar.addActionListener(e -> dispose());
         
         buttonPanel.add(btnCancelar);
@@ -324,7 +332,6 @@ public class ImportacaoDadosDialog extends JDialog {
                     finalizarCancelamento();
                 } catch (java.util.concurrent.ExecutionException e) {
                     System.err.println(">>> DEBUG: ExecutionException - " + e.getMessage());
-                    e.printStackTrace();
                     
                     // Verificar se foi cancelamento encapsulado
                     Throwable cause = e.getCause();
@@ -336,7 +343,6 @@ public class ImportacaoDadosDialog extends JDialog {
                     }
                 } catch (Exception e) {
                     System.err.println(">>> DEBUG: Exception genérica - " + e.getMessage());
-                    e.printStackTrace();
                     finalizarComErro(e);
                 }
             }
@@ -412,8 +418,10 @@ public class ImportacaoDadosDialog extends JDialog {
                 result.patrimonios, result.salas, result.responsaveis));
             
             JOptionPane.showMessageDialog(this,
-                "Dados importados com sucesso!\n\n" +
-                "Patrimônios: " + result.patrimonios + "\n" +
+                """
+                Dados importados com sucesso!
+                
+                Patrim\u00f4nios: """ + result.patrimonios + "\n" +
                 "Salas: " + result.salas + "\n" +
                 "Responsáveis: " + result.responsaveis + "\n\n" +
                 "Você agora pode trabalhar em modo offline.",
@@ -495,7 +503,7 @@ public class ImportacaoDadosDialog extends JDialog {
                 addLog("⚠️ Tabela SALA não encontrada: " + e.getMessage());
             }
             
-        } catch (Exception e) {
+        } catch (SQLException e) {
             addLog("⚠️ Erro ao verificar dados: " + e.getMessage());
         }
     }
@@ -516,10 +524,11 @@ public class ImportacaoDadosDialog extends JDialog {
     }
     
     private void cancelarImportacao() {
-        int opcao = JOptionPane.showConfirmDialog(this,
-            "Deseja realmente cancelar a importação?\n\n" +
-            "⚠️ ATENÇÃO: Os dados já importados serão mantidos,\n" +
-            "mas a importação não estará completa.",
+        int opcao = JOptionPane.showConfirmDialog(this, """
+                                                        Deseja realmente cancelar a importa\u00e7\u00e3o?
+                                                        
+                                                        \u26a0\ufe0f ATEN\u00c7\u00c3O: Os dados j\u00e1 importados ser\u00e3o mantidos,
+                                                        mas a importa\u00e7\u00e3o n\u00e3o estar\u00e1 completa.""",
             "Cancelar Importação",
             JOptionPane.YES_NO_OPTION,
             JOptionPane.WARNING_MESSAGE);
@@ -555,11 +564,13 @@ public class ImportacaoDadosDialog extends JDialog {
         addLog("=== Importação cancelada pelo usuário ===");
         addLog("⚠️ Dados parcialmente importados podem estar disponíveis");
         
-        JOptionPane.showMessageDialog(this,
-            "Importação cancelada!\n\n" +
-            "⚠️ Os dados já importados foram mantidos,\n" +
-            "mas a importação não está completa.\n\n" +
-            "Você pode tentar novamente quando desejar.",
+        JOptionPane.showMessageDialog(this, """
+                                            Importa\u00e7\u00e3o cancelada!
+                                            
+                                            \u26a0\ufe0f Os dados j\u00e1 importados foram mantidos,
+                                            mas a importa\u00e7\u00e3o n\u00e3o est\u00e1 completa.
+                                            
+                                            Voc\u00ea pode tentar novamente quando desejar.""",
             "Importação Cancelada",
             JOptionPane.WARNING_MESSAGE);
     }

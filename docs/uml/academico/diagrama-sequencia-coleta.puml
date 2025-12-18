@@ -1,0 +1,80 @@
+@startuml Diagrama de Sequência - Processo de Coleta
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title SIHCP - Fluxo de Coleta de Patrimônio
+footer Sistema de Histórico e Coleta Patrimonial - IFMT
+
+actor "Coletor" as user
+participant "App Mobile\n(Android)" as app #E3F2FD
+participant "SQLite\n(Local)" as sqlite #FCE4EC
+participant "API REST\n(Spring Boot)" as api #E8F5E9
+database "PostgreSQL" as db #FFF3E0
+
+== Autenticação ==
+user -> app : Abre aplicativo
+app -> api : POST /auth/login\n{login, senha}
+api -> db : Valida credenciais
+db --> api : Usuário válido
+api --> app : {accessToken, refreshToken,\nusuario, inventarioAtivo}
+app -> sqlite : Salva tokens e dados
+
+== Sincronização Inicial ==
+app -> api : GET /sync/patrimonios
+api -> db : Busca patrimônios
+db --> api : Lista de patrimônios
+api --> app : Patrimônios do inventário
+app -> sqlite : Armazena localmente
+
+== Coleta de Patrimônio ==
+user -> app : Escaneia QR Code
+app -> app : Decodifica número\ndo patrimônio
+
+alt Modo Online
+    app -> api : GET /patrimonio/{numero}/validar
+    api -> db : Busca patrimônio
+    db --> api : Dados do patrimônio
+    api --> app : {valido: true, patrimonio, jaColetado}
+else Modo Offline
+    app -> sqlite : Busca patrimônio local
+    sqlite --> app : Dados do patrimônio
+end
+
+app --> user : Exibe dados do patrimônio
+
+user -> app : Confirma localização\ne estado de conservação
+user -> app : [Opcional] Tira foto
+user -> app : Clica "Registrar Coleta"
+
+app -> app : Cria objeto Coleta\ncom timestamp e GPS
+
+alt Modo Online
+    app -> api : POST /coletas\n{patrimonio, localização,\nestado, foto, coordenadas}
+    api -> api : Valida dados
+    api -> db : INSERT coleta
+    db --> api : Coleta registrada
+    api --> app : {success: true, coletaId}
+    app --> user : ✓ Coleta registrada\ncom sucesso!
+else Modo Offline
+    app -> sqlite : INSERT coleta\n(sincronizado = false)
+    sqlite --> app : Coleta salva localmente
+    app --> user : ✓ Coleta salva offline\n(pendente sincronização)
+end
+
+== Sincronização de Coletas Pendentes ==
+user -> app : Clica "Sincronizar"
+app -> sqlite : Busca coletas pendentes
+sqlite --> app : Lista de coletas\nnão sincronizadas
+
+loop Para cada coleta pendente
+    app -> api : POST /coletas/batch\n[lista de coletas]
+    api -> db : INSERT coletas em lote
+    db --> api : Coletas registradas
+    api --> app : {sincronizadas: N, falhas: 0}
+end
+
+app -> sqlite : Marca coletas\ncomo sincronizadas
+app --> user : ✓ Sincronização concluída\nN coletas enviadas
+
+@enduml

@@ -263,6 +263,97 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
+                <!-- Card de Foto Opcional (v2.11) -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardFotoOpcional"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="12dp"
+                    android:visibility="gone"
+                    app:cardElevation="2dp"
+                    app:cardCornerRadius="8dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:id="@+id/textFotoLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="📷 Foto (opcional)"
+                            android:textSize="14sp"
+                            android:textColor="?attr/colorOnSurface" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Adicione foto se houver divergência ou estado ruim"
+                            android:textSize="11sp"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnAddPhoto"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Adicionar Foto"
+                            app:icon="@drawable/ic_camera"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+                        <FrameLayout
+                            android:id="@+id/layoutPhotoPreview"
+                            android:layout_width="match_parent"
+                            android:layout_height="150dp"
+                            android:layout_marginTop="8dp"
+                            android:visibility="gone">
+
+                            <ImageView
+                                android:id="@+id/imgPhotoPreview"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:scaleType="centerCrop"
+                                android:background="@color/black" />
+
+                            <ImageButton
+                                android:id="@+id/btnRemovePhoto"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:layout_gravity="top|end"
+                                android:layout_margin="8dp"
+                                android:background="@drawable/bg_circle_error"
+                                android:src="@drawable/ic_close"
+                                android:tint="@android:color/white"
+                                android:contentDescription="Remover foto" />
+
+                        </FrameLayout>
+
+                        <!-- Seleção de motivo da foto -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/layoutMotivoFoto"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:visibility="gone"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:hint="Motivo da foto">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/spinnerMotivoFoto"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="none"
+                                android:textSize="14sp" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
             </LinearLayout>
 
         </ScrollView>

@@ -88,6 +88,9 @@ public final class ActivityLoginBinding implements ViewBinding {
   public final TextView tvError;
 
   @NonNull
+  public final TextView tvIpChangeWarning;
+
+  @NonNull
   public final TextView tvNoOfflineMethod;
 
   @NonNull
@@ -124,11 +127,11 @@ public final class ActivityLoginBinding implements ViewBinding {
       @NonNull ProgressBar progressBar, @NonNull TextInputLayout tilLogin,
       @NonNull TextInputLayout tilPassword, @NonNull TextInputLayout tilServerIp,
       @NonNull TextView tvBiometricHint, @NonNull TextView tvBiometricType,
-      @NonNull TextView tvError, @NonNull TextView tvNoOfflineMethod,
-      @NonNull TextView tvOfflineMode, @NonNull TextView tvOfflineModeMessage,
-      @NonNull TextView tvOfflineUsername, @NonNull TextView tvOrDivider,
-      @NonNull TextView tvSavedUser, @NonNull TextView tvSubtitle, @NonNull TextView tvTitle,
-      @NonNull TextView tvVersion) {
+      @NonNull TextView tvError, @NonNull TextView tvIpChangeWarning,
+      @NonNull TextView tvNoOfflineMethod, @NonNull TextView tvOfflineMode,
+      @NonNull TextView tvOfflineModeMessage, @NonNull TextView tvOfflineUsername,
+      @NonNull TextView tvOrDivider, @NonNull TextView tvSavedUser, @NonNull TextView tvSubtitle,
+      @NonNull TextView tvTitle, @NonNull TextView tvVersion) {
     this.rootView = rootView;
     this.btnBiometric = btnBiometric;
     this.btnLogin = btnLogin;
@@ -150,6 +153,7 @@ public final class ActivityLoginBinding implements ViewBinding {
     this.tvBiometricHint = tvBiometricHint;
     this.tvBiometricType = tvBiometricType;
     this.tvError = tvError;
+    this.tvIpChangeWarning = tvIpChangeWarning;
     this.tvNoOfflineMethod = tvNoOfflineMethod;
     this.tvOfflineMode = tvOfflineMode;
     this.tvOfflineModeMessage = tvOfflineModeMessage;
@@ -308,6 +312,12 @@ public final class ActivityLoginBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.tvIpChangeWarning;
+      TextView tvIpChangeWarning = ViewBindings.findChildViewById(rootView, id);
+      if (tvIpChangeWarning == null) {
+        break missingId;
+      }
+
       id = R.id.tvNoOfflineMethod;
       TextView tvNoOfflineMethod = ViewBindings.findChildViewById(rootView, id);
       if (tvNoOfflineMethod == null) {
@@ -366,8 +376,8 @@ public final class ActivityLoginBinding implements ViewBinding {
           btnOfflineBiometric, btnOfflinePin, cardBiometric, cardOfflineMode, divider,
           dividerBiometric, etLogin, etPassword, etServerIp, fabBiometric, ivLogo, progressBar,
           tilLogin, tilPassword, tilServerIp, tvBiometricHint, tvBiometricType, tvError,
-          tvNoOfflineMethod, tvOfflineMode, tvOfflineModeMessage, tvOfflineUsername, tvOrDivider,
-          tvSavedUser, tvSubtitle, tvTitle, tvVersion);
+          tvIpChangeWarning, tvNoOfflineMethod, tvOfflineMode, tvOfflineModeMessage,
+          tvOfflineUsername, tvOrDivider, tvSavedUser, tvSubtitle, tvTitle, tvVersion);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

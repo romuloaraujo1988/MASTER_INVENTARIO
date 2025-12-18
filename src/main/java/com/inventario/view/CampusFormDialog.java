@@ -1,12 +1,30 @@
 package com.inventario.view;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Frame;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.border.EmptyBorder;
+
 import com.inventario.model.Campus;
 import com.inventario.service.CampusService;
 import com.inventario.view.ui.ModernButtons;
-
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import java.awt.*;
 
 public class CampusFormDialog extends JDialog {
     private Campus campus;
@@ -18,7 +36,6 @@ public class CampusFormDialog extends JDialog {
     private JTextField campoCnpj;
     private JTextField campoCodigoUorg;
     private JTextField campoDiretor;
-    private JTextField campoCursos;
     private JTextField campoTelefone;
     private JTextField campoEmail;
     private JTextArea campoObservacoes;
@@ -68,16 +85,12 @@ public class CampusFormDialog extends JDialog {
         painelCampos.add(criarCampoFormulario("🏢 CNPJ *", campoCnpj = new JTextField()));
         painelCampos.add(Box.createVerticalStrut(15));
         
-        // Campo Código UOrg
-        painelCampos.add(criarCampoFormulario("🔢 Código UOrg (SIADS)", campoCodigoUorg = new JTextField()));
+        // Campo Código UOrg (importante para SIADS)
+        painelCampos.add(criarCampoFormulario("🔢 Código UOrg (SIADS) *", campoCodigoUorg = new JTextField()));
         painelCampos.add(Box.createVerticalStrut(15));
         
         // Campo Diretor
         painelCampos.add(criarCampoFormulario("👤 Diretor", campoDiretor = new JTextField()));
-        painelCampos.add(Box.createVerticalStrut(15));
-        
-        // Campo Cursos
-        painelCampos.add(criarCampoFormulario("🎓 Cursos", campoCursos = new JTextField()));
         painelCampos.add(Box.createVerticalStrut(15));
         
         // Campo Telefone
@@ -178,7 +191,6 @@ public class CampusFormDialog extends JDialog {
         adicionarEfeitoFocus(campoCnpj);
         adicionarEfeitoFocus(campoCodigoUorg);
         adicionarEfeitoFocus(campoDiretor);
-        adicionarEfeitoFocus(campoCursos);
         adicionarEfeitoFocus(campoTelefone);
         adicionarEfeitoFocus(campoEmail);
         adicionarEfeitoFocusTextArea(campoObservacoes);
@@ -240,7 +252,6 @@ public class CampusFormDialog extends JDialog {
             campoCnpj.setText(campus.getCnpj());
             campoCodigoUorg.setText(campus.getCodigoUorg());
             campoDiretor.setText(campus.getDiretor());
-            campoCursos.setText(campus.getCursos());
             campoTelefone.setText(campus.getTelefone());
             campoEmail.setText(campus.getEmail());
             campoObservacoes.setText(campus.getObservacoes());
@@ -268,6 +279,12 @@ public class CampusFormDialog extends JDialog {
                 return;
             }
             
+            if (campoCodigoUorg.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "O Código UOrg é obrigatório para integração com SIADS.");
+                campoCodigoUorg.requestFocus();
+                return;
+            }
+            
             // Criar ou atualizar campus
             if (campus == null) {
                 campus = new Campus();
@@ -278,7 +295,6 @@ public class CampusFormDialog extends JDialog {
             campus.setCnpj(campoCnpj.getText().trim());
             campus.setCodigoUorg(campoCodigoUorg.getText().trim());
             campus.setDiretor(campoDiretor.getText().trim());
-            campus.setCursos(campoCursos.getText().trim());
             campus.setTelefone(campoTelefone.getText().trim());
             campus.setEmail(campoEmail.getText().trim());
             campus.setObservacoes(campoObservacoes.getText().trim());

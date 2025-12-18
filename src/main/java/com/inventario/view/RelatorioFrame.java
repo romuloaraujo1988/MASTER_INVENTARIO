@@ -181,7 +181,6 @@ public class RelatorioFrame extends JFrame {
 
         } else if (state instanceof RelatorioState.Success success) {
             progressBar.setVisible(false);
-            labelStatus.setText("✅ Relatório gerado com sucesso! (" + success.getDados().size() + " itens)");
             btnGerar.setEnabled(true);
             btnExportar.setEnabled(true);
             btnImprimir.setEnabled(true);
@@ -190,7 +189,21 @@ public class RelatorioFrame extends JFrame {
             btnExportarEstatisticas.setEnabled(true);
 
             List<Map<String, Object>> dados = success.getDados();
-            if (dados.isEmpty()) {
+            
+            // === APLICAR FILTROS AVANÇADOS (se ativados) ===
+            // Isso inclui filtro por sala, valor, estado de conservação, etc.
+            List<Map<String, Object>> dadosFiltrados = aplicarFiltrosAvancados(dados);
+            
+            // Atualizar label de status com quantidade após filtros
+            int totalOriginal = dados.size();
+            int totalFiltrado = dadosFiltrados.size();
+            if (checkFiltrosAvancados.isSelected() && totalOriginal != totalFiltrado) {
+                labelStatus.setText("✅ Relatório gerado! " + totalFiltrado + " itens (filtrados de " + totalOriginal + ")");
+            } else {
+                labelStatus.setText("✅ Relatório gerado com sucesso! (" + totalFiltrado + " itens)");
+            }
+            
+            if (dadosFiltrados.isEmpty()) {
                 String tipoRelatorio = success.getTipoRelatorio();
                 String mensagem = "Nenhum dado encontrado para os filtros selecionados.";
 
@@ -209,7 +222,14 @@ public class RelatorioFrame extends JFrame {
                             N\u00e3o h\u00e1 itens n\u00e3o localizados.""";
                         case "Itens Sem Plaqueta de Patrimônio" -> mensagem = 
                             "✅ Perfeito! Não há itens sem etiqueta registrados neste inventário.";
-                        default -> { /* Manter mensagem padrão */ }
+                        default -> { 
+                            // Se filtros avançados estão ativos, informar que nenhum item passou nos filtros
+                            if (checkFiltrosAvancados.isSelected() && totalOriginal > 0) {
+                                mensagem = "Nenhum item encontrado com os filtros avançados selecionados.\n\n" +
+                                           "Total de itens antes do filtro: " + totalOriginal + "\n" +
+                                           "Tente ajustar os filtros de sala, valor ou estado de conservação.";
+                            }
+                        }
                     }
                 }
 
@@ -218,8 +238,8 @@ public class RelatorioFrame extends JFrame {
                         "Informação",
                         JOptionPane.INFORMATION_MESSAGE);
             } else {
-                preencherTabelaComDados(dados);
-                gerarResumoEstatistico(dados);
+                preencherTabelaComDados(dadosFiltrados);
+                gerarResumoEstatistico(dadosFiltrados);
                 atualizarGraficos();
                 SoundNotification.playSound(SoundNotification.SoundType.SUCCESS);
             }
@@ -339,6 +359,9 @@ public class RelatorioFrame extends JFrame {
                 "Itens Não Coletados",
                 "Relatório de Divergências",
                 "Estatísticas do Inventário",
+                "--- RELATÓRIOS POR SALA ---",
+                "Relatório de Coletas por Sala",
+                "Estatísticas de Coletas por Sala",
                 "--- RELATÓRIOS AVANÇADOS ---",
                 "Relatório Avançado por Setor",
                 "Relatório Avançado por Responsável",
@@ -354,28 +377,10 @@ public class RelatorioFrame extends JFrame {
                 BorderFactory.createEmptyBorder(2, 5, 2, 5)));
         painel.add(comboTipoRelatorio);
 
-        // Separador visual
-        painel.add(new JLabel("  |  "));
-
-        // Data início
-        painel.add(new JLabel("Data Início:"));
+        // Spinners de data criados mas não exibidos (mantidos para compatibilidade com código existente)
         spinnerDataInicio = new JSpinner(new SpinnerDateModel());
-        JSpinner.DateEditor editorInicio = new JSpinner.DateEditor(spinnerDataInicio, "dd/MM/yyyy");
-        spinnerDataInicio.setEditor(editorInicio);
-        spinnerDataInicio.setPreferredSize(new Dimension(150, 30));
-        painel.add(spinnerDataInicio);
-
-        // Separador
-        painel.add(Box.createHorizontalStrut(15));
-
-        // Data fim
-        painel.add(new JLabel("Data Fim:"));
         spinnerDataFim = new JSpinner(new SpinnerDateModel());
-        JSpinner.DateEditor editorFim = new JSpinner.DateEditor(spinnerDataFim, "dd/MM/yyyy");
-        spinnerDataFim.setEditor(editorFim);
         spinnerDataFim.setValue(new Date());
-        spinnerDataFim.setPreferredSize(new Dimension(150, 30));
-        painel.add(spinnerDataFim);
 
         return painel;
     }
@@ -1091,6 +1096,9 @@ public class RelatorioFrame extends JFrame {
         String setor = (String) comboSetor.getSelectedItem();
         String responsavel = (String) comboResponsavel.getSelectedItem();
         String status = (String) comboStatus.getSelectedItem();
+        
+        // Coletar filtro de sala (usado em relatórios por sala e filtros avançados)
+        String sala = (String) comboSala.getSelectedItem();
 
         // Validar filtros obrigatórios (validação de UI apenas)
         if (!validarFiltrosRelatoriosAvancados(tipoRelatorio, setor, responsavel, dataInicio, dataFim)) {
@@ -1104,8 +1112,8 @@ public class RelatorioFrame extends JFrame {
         SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() throws Exception {
-                // === MVVM: ViewModel faz todo o trabalho ===
-                viewModel.gerarRelatorio(tipoRelatorio, idInventario, setor, responsavel, dataInicio, dataFim, status);
+                // === MVVM: ViewModel faz todo o trabalho (agora com filtro de sala) ===
+                viewModel.gerarRelatorio(tipoRelatorio, idInventario, setor, responsavel, dataInicio, dataFim, status, sala);
                 return null;
             }
 
@@ -1121,30 +1129,100 @@ public class RelatorioFrame extends JFrame {
     /**
      * === MÉTODO DOS FILTROS AVANÇADOS - FASE 2 ===
      * Aplica filtros avançados aos dados do relatório
-     * Nota: Método preparado para uso futuro quando filtros avançados forem ativados na UI
+     * Filtros disponíveis: sala, valor mínimo/máximo, estado de conservação
+     * 
+     * CORREÇÃO 11/12/2025: Método agora é chamado automaticamente após receber dados do ViewModel
      */
-    @SuppressWarnings("unused") // Método preparado para uso futuro
     private List<Map<String, Object>> aplicarFiltrosAvancados(List<Map<String, Object>> dados) {
-        if (!checkFiltrosAvancados.isSelected() || dados == null || dados.isEmpty()) {
+        System.out.println("🔍 aplicarFiltrosAvancados chamado");
+        System.out.println("🔍 checkFiltrosAvancados.isSelected() = " + checkFiltrosAvancados.isSelected());
+        System.out.println("🔍 checkFiltrosAvancados.isEnabled() = " + checkFiltrosAvancados.isEnabled());
+        System.out.println("🔍 dados = " + (dados == null ? "null" : dados.size() + " itens"));
+        
+        if (dados == null || dados.isEmpty()) {
+            System.out.println("🔍 Dados vazios, retornando sem filtrar");
             return dados;
         }
-
+        
+        // CORREÇÃO 11/12/2025: O filtro de SITUAÇÃO deve ser aplicado SEMPRE
+        // mesmo quando os filtros avançados não estão marcados
+        // Isso permite filtrar por "Não Coletado" no Relatório Geral
         List<Map<String, Object>> dadosFiltrados = new ArrayList<>(dados);
+        
+        // Aplicar filtro de situação SEMPRE (independente do checkbox de filtros avançados)
+        String situacaoSelecionada = (String) comboStatus.getSelectedItem();
+        if (situacaoSelecionada != null && !"Todos".equals(situacaoSelecionada)) {
+            final String filtroSituacao = situacaoSelecionada.toLowerCase();
+            
+            System.out.println("🔍 Filtro de situação (SEMPRE): '" + situacaoSelecionada + "'");
+            
+            dadosFiltrados = dadosFiltrados.stream()
+                    .filter(item -> {
+                        // Tentar várias chaves possíveis para status/situação
+                        Object statusObj = item.get("Status Coleta");
+                        if (statusObj == null) statusObj = item.get("Situação");
+                        if (statusObj == null) statusObj = item.get("situacao");
+                        if (statusObj == null) statusObj = item.get("status");
+                        if (statusObj == null) statusObj = item.get("Estado");
+                        
+                        if (statusObj == null || statusObj.toString().isEmpty()) {
+                            // Se não tem status, considerar como "Não Coletado"
+                            return filtroSituacao.contains("não coletado") || filtroSituacao.contains("nao coletado");
+                        }
+                        
+                        String statusStr = statusObj.toString().toLowerCase();
+                        
+                        // Mapear valores do filtro para valores do banco
+                        boolean match = false;
+                        
+                        if (filtroSituacao.contains("não encontrado") || filtroSituacao.contains("nao encontrado")) {
+                            match = statusStr.contains("não encontrado") || 
+                                    statusStr.contains("nao encontrado") ||
+                                    statusStr.contains("nao_encontrado");
+                        } else if (filtroSituacao.contains("não coletado") || filtroSituacao.contains("nao coletado")) {
+                            match = statusStr.contains("não coletado") || 
+                                    statusStr.contains("nao coletado") ||
+                                    statusStr.isEmpty();
+                        } else if (filtroSituacao.contains("encontrado")) {
+                            // "Encontrado" - deve ser exatamente "Encontrado", não "Não Encontrado"
+                            match = statusStr.equals("encontrado") || 
+                                    statusStr.equals("coletado") ||
+                                    (statusStr.contains("encontrado") && !statusStr.contains("não"));
+                        } else {
+                            // Comparação genérica
+                            match = statusStr.contains(filtroSituacao);
+                        }
+                        
+                        return match;
+                    })
+                    .collect(Collectors.toList());
+            
+            System.out.println("🔍 Filtro de situação aplicado: '" + situacaoSelecionada + "' - " + 
+                               dadosFiltrados.size() + " itens após filtro");
+        }
+        
+        // Se filtros avançados não estão marcados, retornar após aplicar apenas o filtro de situação
+        if (!checkFiltrosAvancados.isSelected()) {
+            System.out.println("🔍 Filtros avançados NÃO marcados, retornando após filtro de situação");
+            return dadosFiltrados;
+        }
 
+        // Continuar com filtros avançados (sala, valor, estado de conservação)
         try {
             // Filtro por valor mínimo e máximo
+            // NOTA: O DAO pode retornar "Valor", "valor", "Valor Aquisição", etc.
             Double valorMin = (Double) spinnerValorMinimo.getValue();
             Double valorMax = (Double) spinnerValorMaximo.getValue();
 
             if (valorMin != null && valorMin > 0) {
+                final double minValue = valorMin;
                 dadosFiltrados = dadosFiltrados.stream()
                         .filter(item -> {
-                            Object valorObj = item.get("valor");
-                            if (valorObj == null)
-                                return false;
+                            Object valorObj = obterValorItem(item);
+                            if (valorObj == null) return false;
                             try {
                                 double valor = Double.parseDouble(valorObj.toString());
-                                return valor >= valorMin;
+                                return valor >= minValue;
                             } catch (NumberFormatException e) {
                                 return false;
                             }
@@ -1152,15 +1230,15 @@ public class RelatorioFrame extends JFrame {
                         .collect(Collectors.toList());
             }
 
-            if (valorMax != null && valorMax > 0) {
+            if (valorMax != null && valorMax < 999999999.0) {
+                final double maxValue = valorMax;
                 dadosFiltrados = dadosFiltrados.stream()
                         .filter(item -> {
-                            Object valorObj = item.get("valor");
-                            if (valorObj == null)
-                                return false;
+                            Object valorObj = obterValorItem(item);
+                            if (valorObj == null) return false;
                             try {
                                 double valor = Double.parseDouble(valorObj.toString());
-                                return valor <= valorMax;
+                                return valor <= maxValue;
                             } catch (NumberFormatException e) {
                                 return false;
                             }
@@ -1169,38 +1247,126 @@ public class RelatorioFrame extends JFrame {
             }
 
             // Filtro por sala
+            // NOTA: O combo contém "NUMERO_SALA - DESCRICAO (X itens)", precisamos extrair apenas o número
+            // O DAO retorna "Sala" (maiúsculo) com apenas o NUMERO_SALA
+            // ATUALIZAÇÃO 11/12/2025: Novo formato inclui contagem de itens
             String salaSelecionada = (String) comboSala.getSelectedItem();
-            if (salaSelecionada != null && !"Todas as Salas".equals(salaSelecionada)) {
+            if (salaSelecionada != null && !"Todas as Salas".equals(salaSelecionada) && !salaSelecionada.isEmpty()) {
+                // Extrair apenas o número da sala
+                // Formato pode ser: "NUMERO_SALA (X itens)" ou "NUMERO_SALA - DESCRICAO (X itens)"
+                String numeroSala = salaSelecionada;
+                
+                // Primeiro, remover a contagem de itens "(X itens)" se existir
+                if (numeroSala.contains(" (") && numeroSala.endsWith(" itens)")) {
+                    numeroSala = numeroSala.substring(0, numeroSala.lastIndexOf(" (")).trim();
+                }
+                
+                // Depois, extrair apenas o número (antes do " - " se houver descrição)
+                if (numeroSala.contains(" - ")) {
+                    numeroSala = numeroSala.substring(0, numeroSala.indexOf(" - ")).trim();
+                }
+                // Normalizar espaços múltiplos para comparação
+                final String filtroSala = numeroSala.toLowerCase().replaceAll("\\s+", " ").trim();
+                // Também criar versão sem normalização para comparação exata
+                final String filtroSalaOriginal = numeroSala.toLowerCase().trim();
+                
+                System.out.println("\n🔍 ===== FILTRO DE SALA =====");
+                System.out.println("🔍 Combo selecionado: '" + salaSelecionada + "'");
+                System.out.println("🔍 Número da sala extraído: '" + numeroSala + "'");
+                System.out.println("🔍 Filtro normalizado: '" + filtroSala + "'");
+                System.out.println("🔍 Filtro original: '" + filtroSalaOriginal + "'");
+                System.out.println("🔍 Total de dados ANTES do filtro: " + dadosFiltrados.size());
+                
+                // Debug: mostrar primeiros 5 valores de sala nos dados
+                int debugCount = 0;
+                for (Map<String, Object> item : dadosFiltrados) {
+                    if (debugCount < 5) {
+                        Object salaDebug = item.get("Sala");
+                        if (salaDebug == null) salaDebug = item.get("sala");
+                        System.out.println("🔍 Debug sala[" + debugCount + "]: '" + salaDebug + "'");
+                        debugCount++;
+                    }
+                }
+                
                 dadosFiltrados = dadosFiltrados.stream()
                         .filter(item -> {
-                            Object salaObj = item.get("sala");
-                            if (salaObj == null)
+                            // Tentar várias chaves possíveis para sala
+                            Object salaObj = item.get("Sala");
+                            if (salaObj == null) salaObj = item.get("sala");
+                            if (salaObj == null) salaObj = item.get("Localização Encontrada");
+                            if (salaObj == null) salaObj = item.get("Localização Cadastrada");
+                            
+                            if (salaObj == null || salaObj.toString().isEmpty() || 
+                                "Não informado".equalsIgnoreCase(salaObj.toString()) ||
+                                "N/A".equalsIgnoreCase(salaObj.toString())) {
                                 return false;
-                            return salaObj.toString().contains(salaSelecionada);
+                            }
+                            
+                            String salaOriginal = salaObj.toString().toLowerCase().trim();
+                            // Normalizar espaços e comparar case-insensitive
+                            String salaStr = salaOriginal.replaceAll("\\s+", " ");
+                            
+                            // Tentar múltiplas formas de comparação:
+                            // 1. Comparação exata (após normalização de espaços)
+                            boolean matchExato = salaStr.equals(filtroSala);
+                            // 2. Comparação com contains (bidirecional)
+                            boolean matchContains = salaStr.contains(filtroSala) || filtroSala.contains(salaStr);
+                            // 3. Comparação sem normalização de espaços (para casos com espaços duplos)
+                            boolean matchOriginal = salaOriginal.equals(filtroSalaOriginal) || 
+                                                    salaOriginal.contains(filtroSalaOriginal) || 
+                                                    filtroSalaOriginal.contains(salaOriginal);
+                            
+                            boolean match = matchExato || matchContains || matchOriginal;
+                            
+                            // Debug para itens que contêm "hangar"
+                            if (salaOriginal.contains("hangar")) {
+                                System.out.println("🔍 Encontrado HANGAR: salaOriginal='" + salaOriginal + 
+                                    "', salaStr='" + salaStr + 
+                                    "', filtro='" + filtroSala + 
+                                    "', matchExato=" + matchExato + 
+                                    ", matchContains=" + matchContains + 
+                                    ", matchOriginal=" + matchOriginal +
+                                    ", match=" + match);
+                            }
+                            
+                            return match;
                         })
                         .collect(Collectors.toList());
+                
+                System.out.println("🔍 Filtro de sala aplicado: '" + filtroSala + "'");
+                System.out.println("🔍 Total de dados APÓS filtro de sala: " + dadosFiltrados.size() + " itens");
+                System.out.println("🔍 ===== FIM FILTRO DE SALA =====\n");
             }
 
             // Filtro por estado de conservação
+            // NOTA: O DAO pode retornar "Estado", "Estado Encontrado", "estado_conservacao", etc.
             String estadoSelecionado = (String) comboEstadoConservacao.getSelectedItem();
             if (estadoSelecionado != null && !"Todos".equals(estadoSelecionado)) {
+                final String filtroEstado = estadoSelecionado.toLowerCase();
                 dadosFiltrados = dadosFiltrados.stream()
                         .filter(item -> {
-                            Object estadoObj = item.get("estado_conservacao");
-                            if (estadoObj == null)
+                            Object estadoObj = item.get("Estado Encontrado");
+                            if (estadoObj == null) estadoObj = item.get("Estado");
+                            if (estadoObj == null) estadoObj = item.get("estado_conservacao");
+                            if (estadoObj == null) estadoObj = item.get("estado");
+                            
+                            if (estadoObj == null || estadoObj.toString().isEmpty()) {
                                 return false;
-                            return estadoObj.toString().equalsIgnoreCase(estadoSelecionado);
+                            }
+                            return estadoObj.toString().toLowerCase().contains(filtroEstado);
                         })
                         .collect(Collectors.toList());
+                
+                System.out.println("🔍 Filtro de estado aplicado: '" + estadoSelecionado + "' - " + 
+                                   dadosFiltrados.size() + " itens após filtro");
             }
 
             // Filtro para excluir itens sem valor
             if (checkExcluirSemValor.isSelected()) {
                 dadosFiltrados = dadosFiltrados.stream()
                         .filter(item -> {
-                            Object valorObj = item.get("valor");
-                            if (valorObj == null)
-                                return false;
+                            Object valorObj = obterValorItem(item);
+                            if (valorObj == null) return false;
                             try {
                                 double valor = Double.parseDouble(valorObj.toString());
                                 return valor > 0;
@@ -1211,7 +1377,7 @@ public class RelatorioFrame extends JFrame {
                         .collect(Collectors.toList());
             }
 
-            System.out.println("Filtros avançados aplicados. Itens antes: " + dados.size() +
+            System.out.println("✅ Filtros avançados aplicados. Itens antes: " + dados.size() +
                     ", depois: " + dadosFiltrados.size());
 
         } catch (Exception e) {
@@ -1220,6 +1386,18 @@ public class RelatorioFrame extends JFrame {
         }
 
         return dadosFiltrados;
+    }
+
+    /**
+     * Método auxiliar para obter o valor de um item do relatório
+     * Tenta várias chaves possíveis pois o DAO pode retornar diferentes nomes de coluna
+     */
+    private Object obterValorItem(Map<String, Object> item) {
+        Object valorObj = item.get("Valor Aquisição");
+        if (valorObj == null) valorObj = item.get("Valor");
+        if (valorObj == null) valorObj = item.get("valor");
+        if (valorObj == null) valorObj = item.get("VALOR");
+        return valorObj;
     }
 
     // === MÉTODO PARA BUSCA EM TEMPO REAL - FASE 2 ===
@@ -2198,16 +2376,32 @@ public class RelatorioFrame extends JFrame {
     /**
      * === MVVM: Preenche combo de salas ===
      * Chamado quando ViewModel notifica SalasCarregadas
+     * 
+     * MELHORIA 11/12/2025: Exibe contagem de patrimônios por sala
+     * Formato: "NUMERO_SALA (X itens)" ou "NUMERO_SALA - DESCRICAO (X itens)"
+     * Ordenado por quantidade de patrimônios (decrescente)
      */
     private void preencherComboSalas(List<Sala> salas) {
         comboSala.removeAllItems();
         comboSala.addItem("Todas as Salas");
         for (Sala sala : salas) {
-            String displayText = sala.getNumeroSala();
-            if (sala.getDescricao() != null && !sala.getDescricao().trim().isEmpty()) {
-                displayText += " - " + sala.getDescricao();
+            StringBuilder displayText = new StringBuilder();
+            displayText.append(sala.getNumeroSala());
+            
+            // Adicionar descrição se diferente do número
+            if (sala.getDescricao() != null && !sala.getDescricao().trim().isEmpty() 
+                && !sala.getDescricao().equals(sala.getNumeroSala())) {
+                displayText.append(" - ").append(sala.getDescricao());
             }
-            comboSala.addItem(displayText);
+            
+            // Adicionar contagem de patrimônios se disponível
+            if (sala.getQuantidadePatrimonios() != null && sala.getQuantidadePatrimonios() > 0) {
+                displayText.append(" (").append(sala.getQuantidadePatrimonios()).append(" itens)");
+            } else if (sala.getQuantidadePatrimonios() != null) {
+                displayText.append(" (0 itens)");
+            }
+            
+            comboSala.addItem(displayText.toString());
         }
     }
 
@@ -2229,25 +2423,25 @@ public class RelatorioFrame extends JFrame {
                 || tipoSelecionado.contains("Avançado por Responsável") || tipoSelecionado.contains("Consolidado");
         comboResponsavel.setEnabled(habilitarResponsavel && !isRelatorioBasico);
 
-        // Para relatórios básicos, desabilitar filtros de data
+        // Filtros de data SEMPRE habilitados (solicitação do usuário)
+        // Permite filtrar por período em qualquer tipo de relatório
         boolean habilitarDatas = tipoSelecionado.contains("Avançado") || tipoSelecionado.contains("Consolidado");
-        spinnerDataInicio.setEnabled(!isRelatorioBasico);
-        spinnerDataFim.setEnabled(!isRelatorioBasico);
+        spinnerDataInicio.setEnabled(true);
+        spinnerDataFim.setEnabled(true);
 
-        // Ocultar/mostrar componentes avançados para relatórios básicos
-        if (isRelatorioBasico) {
-            // Desabilitar filtros avançados para relatórios básicos
-            checkFiltrosAvancados.setEnabled(false);
-            checkFiltrosAvancados.setSelected(false);
-            // Desabilitar manualmente os filtros avançados
-            spinnerValorMinimo.setEnabled(false);
-            spinnerValorMaximo.setEnabled(false);
-            comboSala.setEnabled(false);
-            comboEstadoConservacao.setEnabled(false);
-            comboOperadorLogico.setEnabled(false);
-            checkExcluirSemValor.setEnabled(false);
-        } else {
-            checkFiltrosAvancados.setEnabled(true);
+        // CORREÇÃO 11/12/2025: Habilitar filtros avançados para TODOS os relatórios
+        // Isso permite filtrar por sala mesmo em relatórios básicos como "Itens Não Encontrados"
+        // O usuário pode querer ver apenas os itens não encontrados de uma sala específica
+        checkFiltrosAvancados.setEnabled(true);
+        
+        // Se filtros avançados estão marcados, habilitar os controles
+        if (checkFiltrosAvancados.isSelected()) {
+            spinnerValorMinimo.setEnabled(true);
+            spinnerValorMaximo.setEnabled(true);
+            comboSala.setEnabled(true);
+            comboEstadoConservacao.setEnabled(true);
+            comboOperadorLogico.setEnabled(true);
+            checkExcluirSemValor.setEnabled(true);
         }
 
         // Destacar campos obrigatórios para relatórios avançados
@@ -2317,7 +2511,25 @@ public class RelatorioFrame extends JFrame {
             case "Relatório Avançado por Período" -> labelStatus.setText("Relatório de todas as coletas realizadas no período selecionado");
             case "Estatísticas Avançadas por Setor" -> labelStatus.setText("Estatísticas detalhadas com percentuais e valores por setor");
             case "Relatório Consolidado Executivo" -> labelStatus.setText("Resumo executivo com indicadores de performance por setor");
-            case "--- RELATÓRIOS AVANÇADOS ---" -> labelStatus.setText("Selecione um tipo de relatório válido");
+            case "--- RELATÓRIOS AVANÇADOS ---", "--- RELATÓRIOS POR SALA ---" -> labelStatus.setText("Selecione um tipo de relatório válido");
+            case "Relatório de Coletas por Sala" -> {
+                // Habilitar filtro de sala para este tipo de relatório
+                comboSala.setEnabled(true);
+                if (temInventarioSelecionado) {
+                    labelStatus.setText("📋 Relatório de coletas agrupadas por sala - Selecione uma sala ou deixe 'Todas'");
+                } else {
+                    labelStatus.setText("📋 Relatório de coletas por sala - REQUER INVENTÁRIO SELECIONADO");
+                }
+            }
+            case "Estatísticas de Coletas por Sala" -> {
+                // Habilitar filtro de sala para este tipo de relatório
+                comboSala.setEnabled(true);
+                if (temInventarioSelecionado) {
+                    labelStatus.setText("📊 Estatísticas de coletas por sala - Selecione uma sala ou deixe 'Todas'");
+                } else {
+                    labelStatus.setText("📊 Estatísticas por sala - REQUER INVENTÁRIO SELECIONADO");
+                }
+            }
             default -> labelStatus.setText("Pronto para gerar relatório");
         }
         // ========== RELATÓRIOS AVANÇADOS ==========
@@ -2396,7 +2608,8 @@ public class RelatorioFrame extends JFrame {
         }
 
         // Verificar se é o separador
-        if ("--- RELATÓRIOS AVANÇADOS ---".equals(tipoRelatorio)) {
+        if ("--- RELATÓRIOS AVANÇADOS ---".equals(tipoRelatorio) || 
+            "--- RELATÓRIOS POR SALA ---".equals(tipoRelatorio)) {
             JOptionPane.showMessageDialog(this,
                     "Por favor, selecione um tipo de relatório válido.",
                     "Seleção Inválida", JOptionPane.WARNING_MESSAGE);

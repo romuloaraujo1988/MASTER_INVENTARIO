@@ -1,7 +1,9 @@
 package com.inventario.mobile.presentation.sync
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventario.mobile.data.cache.SearchCache
 import com.inventario.mobile.domain.usecase.SincronizarColetasPendentesUseCase
 import com.inventario.mobile.domain.usecase.SincronizarDadosUseCase
 import com.inventario.mobile.sync.SyncManager
@@ -15,13 +17,20 @@ import javax.inject.Inject
 /**
  * ViewModel para tela de sincronização
  * Gerencia sincronização de dados e coletas pendentes
+ * 
+ * v2.9: Adicionada limpeza de cache após sincronização
  */
 @HiltViewModel
 class SyncViewModel @Inject constructor(
     private val sincronizarDadosUseCase: SincronizarDadosUseCase,
     private val sincronizarColetasPendentesUseCase: SincronizarColetasPendentesUseCase,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val searchCache: SearchCache
 ) : ViewModel() {
+    
+    companion object {
+        private const val TAG = "SyncViewModel"
+    }
     
     private val _state = MutableStateFlow<SyncState>(SyncState.Idle)
     val state: StateFlow<SyncState> = _state.asStateFlow()
@@ -58,6 +67,11 @@ class SyncViewModel @Inject constructor(
             
             if (result.isSuccess) {
                 val syncResult = result.getOrNull()!!
+                
+                // Limpar cache de busca após sincronização (dados mudaram)
+                searchCache.clear()
+                Log.d(TAG, "✓ Cache de busca limpo após sincronização de dados")
+                
                 _state.value = SyncState.Success(
                     message = "Sincronização concluída!",
                     patrimoniosSincronizados = syncResult.patrimonios,
@@ -86,6 +100,13 @@ class SyncViewModel @Inject constructor(
             
             if (result.isSuccess) {
                 val quantidade = result.getOrNull() ?: 0
+                
+                // Limpar cache de busca após sincronização de coletas (status de coleta mudou)
+                if (quantidade > 0) {
+                    searchCache.clear()
+                    Log.d(TAG, "✓ Cache de busca limpo após sincronização de $quantidade coleta(s)")
+                }
+                
                 _state.value = SyncState.ColetasSyncSuccess(
                     message = if (quantidade > 0) {
                         "$quantidade coleta(s) sincronizada(s) com sucesso!"
@@ -116,6 +137,11 @@ class SyncViewModel @Inject constructor(
             
             if (result.isSuccess) {
                 val clearResult = result.getOrNull()!!
+                
+                // Limpar cache de busca (dados foram removidos)
+                searchCache.clear()
+                Log.d(TAG, "✓ Cache de busca limpo após limpeza de dados locais")
+                
                 _state.value = SyncState.ClearSuccess(
                     message = buildClearSuccessMessage(clearResult),
                     patrimoniosRemovidos = clearResult.patrimoniosRemovidos,

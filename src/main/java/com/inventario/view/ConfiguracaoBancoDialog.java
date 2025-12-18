@@ -7,12 +7,15 @@ import com.inventario.util.DatabaseConnection;
 import com.inventario.util.ConnectionManager;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.io.*;
+import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Dialog para configuração da conexão com o banco de dados
@@ -176,18 +179,10 @@ public class ConfiguracaoBancoDialog extends JDialog {
     private void atualizarPortaPadrao() {
         String sgbd = (String) comboSGBD.getSelectedItem();
         switch (sgbd) {
-            case "MySQL":
-                campoPorta.setText("3306");
-                break;
-            case "PostgreSQL":
-                campoPorta.setText("5432");
-                break;
-            case "SQL Server":
-                campoPorta.setText("1433");
-                break;
-            case "Oracle":
-                campoPorta.setText("1521");
-                break;
+            case "MySQL" -> campoPorta.setText("3306");
+            case "PostgreSQL" -> campoPorta.setText("5432");
+            case "SQL Server" -> campoPorta.setText("1433");
+            case "Oracle" -> campoPorta.setText("1521");
         }
     }
     
@@ -214,7 +209,7 @@ public class ConfiguracaoBancoDialog extends JDialog {
                         labelStatus.setText("Status: Falha na conexão");
                         labelStatus.setBackground(Color.RED);
                     }
-                } catch (Exception e) {
+                } catch (InterruptedException | ExecutionException e) {
                     labelStatus.setText("Status: Erro - " + e.getMessage());
                     labelStatus.setBackground(Color.RED);
                 }
@@ -254,13 +249,16 @@ public class ConfiguracaoBancoDialog extends JDialog {
         
         // Erro de pg_hba.conf (acesso remoto não configurado)
         if (mensagem.contains("pg_hba.conf") || mensagem.contains("no pg_hba.conf entry")) {
-            return "❌ Erro de Configuração do PostgreSQL\n\n" +
-                   "O servidor PostgreSQL não está configurado para aceitar\n" +
-                   "conexões remotas deste computador.\n\n" +
-                   "Solução:\n" +
-                   "1. No servidor PostgreSQL, edite o arquivo pg_hba.conf\n" +
-                   "2. Adicione uma linha permitindo seu IP:\n" +
-                   "   host    all    all    " + obterIPLocal() + "/32    md5\n" +
+            return """
+                   \u274c Erro de Configura\u00e7\u00e3o do PostgreSQL
+                   
+                   O servidor PostgreSQL n\u00e3o est\u00e1 configurado para aceitar
+                   conex\u00f5es remotas deste computador.
+                   
+                   Solu\u00e7\u00e3o:
+                   1. No servidor PostgreSQL, edite o arquivo pg_hba.conf
+                   2. Adicione uma linha permitindo seu IP:
+                      host    all    all    """ + obterIPLocal() + "/32    md5\n" +
                    "3. Edite postgresql.conf e configure:\n" +
                    "   listen_addresses = '*'\n" +
                    "4. Reinicie o PostgreSQL\n" +
@@ -272,11 +270,14 @@ public class ConfiguracaoBancoDialog extends JDialog {
         
         // Erro de conexão recusada (servidor não está rodando ou firewall)
         if (mensagem.contains("connection refused") || mensagem.contains("conexão recusada")) {
-            return "❌ Conexão Recusada\n\n" +
-                   "Não foi possível conectar ao servidor PostgreSQL.\n\n" +
-                   "Possíveis causas:\n" +
-                   "• PostgreSQL não está rodando no servidor\n" +
-                   "• Firewall bloqueando a porta " + campoPorta.getText() + "\n" +
+            return """
+                   \u274c Conex\u00e3o Recusada
+                   
+                   N\u00e3o foi poss\u00edvel conectar ao servidor PostgreSQL.
+                   
+                   Poss\u00edveis causas:
+                   \u2022 PostgreSQL n\u00e3o est\u00e1 rodando no servidor
+                   \u2022 Firewall bloqueando a porta """ + campoPorta.getText() + "\n" +
                    "• Endereço ou porta incorretos\n\n" +
                    "Verifique:\n" +
                    "1. Se o PostgreSQL está rodando\n" +
@@ -287,24 +288,32 @@ public class ConfiguracaoBancoDialog extends JDialog {
         
         // Erro de timeout (servidor não responde)
         if (mensagem.contains("timeout") || mensagem.contains("timed out")) {
-            return "❌ Tempo Esgotado (Timeout)\n\n" +
-                   "O servidor não respondeu dentro do tempo esperado.\n\n" +
-                   "Possíveis causas:\n" +
-                   "• Servidor está muito lento ou sobrecarregado\n" +
-                   "• Problemas de rede\n" +
-                   "• Firewall bloqueando a conexão\n\n" +
-                   "Tente novamente ou verifique a conexão de rede.\n\n" +
-                   "Erro técnico: " + e.getMessage();
+            return """
+                   \u274c Tempo Esgotado (Timeout)
+                   
+                   O servidor n\u00e3o respondeu dentro do tempo esperado.
+                   
+                   Poss\u00edveis causas:
+                   \u2022 Servidor est\u00e1 muito lento ou sobrecarregado
+                   \u2022 Problemas de rede
+                   \u2022 Firewall bloqueando a conex\u00e3o
+                   
+                   Tente novamente ou verifique a conex\u00e3o de rede.
+                   
+                   Erro t\u00e9cnico: """ + e.getMessage();
         }
         
         // Erro de autenticação (usuário/senha incorretos)
         if (mensagem.contains("password authentication failed") || 
             mensagem.contains("autenticação") ||
             mensagem.contains("authentication")) {
-            return "❌ Falha na Autenticação\n\n" +
-                   "Usuário ou senha incorretos.\n\n" +
-                   "Verifique:\n" +
-                   "• Usuário: " + campoUsuario.getText() + "\n" +
+            return """
+                   \u274c Falha na Autentica\u00e7\u00e3o
+                   
+                   Usu\u00e1rio ou senha incorretos.
+                   
+                   Verifique:
+                   \u2022 Usu\u00e1rio: """ + campoUsuario.getText() + "\n" +
                    "• Senha digitada\n" +
                    "• Se o usuário tem permissão no banco\n\n" +
                    "Erro técnico: " + e.getMessage();
@@ -312,8 +321,10 @@ public class ConfiguracaoBancoDialog extends JDialog {
         
         // Erro de banco não existe
         if (mensagem.contains("database") && mensagem.contains("does not exist")) {
-            return "❌ Banco de Dados Não Encontrado\n\n" +
-                   "O banco de dados '" + campoBanco.getText() + "' não existe.\n\n" +
+            return """
+                   \u274c Banco de Dados N\u00e3o Encontrado
+                   
+                   O banco de dados '""" + campoBanco.getText() + "' não existe.\n\n" +
                    "Solução:\n" +
                    "1. Verifique se o nome está correto\n" +
                    "2. Crie o banco de dados no PostgreSQL:\n" +
@@ -322,8 +333,11 @@ public class ConfiguracaoBancoDialog extends JDialog {
         }
         
         // Erro genérico
-        return "❌ Erro ao Conectar com o Banco de Dados\n\n" +
-               "Detalhes do erro:\n" + e.getMessage() + "\n\n" +
+        return """
+               \u274c Erro ao Conectar com o Banco de Dados
+               
+               Detalhes do erro:
+               """ + e.getMessage() + "\n\n" +
                "Verifique:\n" +
                "• Servidor: " + campoServidor.getText() + "\n" +
                "• Porta: " + campoPorta.getText() + "\n" +
@@ -340,7 +354,7 @@ public class ConfiguracaoBancoDialog extends JDialog {
         try {
             java.net.InetAddress localHost = java.net.InetAddress.getLocalHost();
             return localHost.getHostAddress();
-        } catch (Exception e) {
+        } catch (UnknownHostException e) {
             return "SEU_IP";
         }
     }
@@ -352,18 +366,21 @@ public class ConfiguracaoBancoDialog extends JDialog {
         String banco = campoBanco.getText();
         
         switch (sgbd) {
-            case "MySQL":
-                return String.format("jdbc:mysql://%s:%s/%s?useSSL=false&serverTimezone=UTC", 
-                                    servidor, porta, banco);
-            case "PostgreSQL":
+            case "MySQL" -> {
+                return String.format("jdbc:mysql://%s:%s/%s?useSSL=false&serverTimezone=UTC",
+                        servidor, porta, banco);
+            }
+            case "PostgreSQL" -> {
                 return String.format("jdbc:postgresql://%s:%s/%s", servidor, porta, banco);
-            case "SQL Server":
-                return String.format("jdbc:sqlserver://%s:%s;databaseName=%s", 
-                                    servidor, porta, banco);
-            case "Oracle":
+            }
+            case "SQL Server" -> {
+                return String.format("jdbc:sqlserver://%s:%s;databaseName=%s",
+                        servidor, porta, banco);
+            }
+            case "Oracle" -> {
                 return String.format("jdbc:oracle:thin:@%s:%s:%s", servidor, porta, banco);
-            default:
-                throw new IllegalArgumentException("SGBD não suportado: " + sgbd);
+            }
+            default -> throw new IllegalArgumentException("SGBD não suportado: " + sgbd);
         }
     }
     
@@ -445,12 +462,11 @@ public class ConfiguracaoBancoDialog extends JDialog {
                     JOptionPane.ERROR_MESSAGE);
             }
             
-        } catch (Exception e) {
+        } catch (HeadlessException e) {
             JOptionPane.showMessageDialog(this, 
                 "Erro ao salvar configurações: " + e.getMessage(),
                 "Erro", 
                 JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
     
@@ -474,8 +490,8 @@ public class ConfiguracaoBancoDialog extends JDialog {
             json.append("        \"schema\": \"public\"\n");
             json.append("    },\n");
             json.append("    \"sqlite\": {\n");
-            json.append("        \"database\": \"inventario_offline.db\",\n");
-            json.append("        \"backup_dir\": \"backups\"\n");
+            json.append("        \"database\": \"inventario.db\",\n");
+            json.append("        \"backup_dir\": \"backups/").append(new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date())).append("\"\n");
             json.append("    },\n");
             json.append("    \"mysql\": {\n");
             json.append("        \"host\": \"localhost\",\n");
@@ -502,7 +518,6 @@ public class ConfiguracaoBancoDialog extends JDialog {
             
         } catch (IOException e) {
             System.err.println("❌ Erro ao salvar configuracao_banco.json: " + e.getMessage());
-            e.printStackTrace();
             return false;
         }
     }
@@ -624,9 +639,9 @@ public class ConfiguracaoBancoDialog extends JDialog {
      * Limpa as configurações salvas
      */
     private void limparConfiguracoes() {
-        int resposta = JOptionPane.showConfirmDialog(this,
-            "Tem certeza que deseja limpar todas as configurações salvas?\n" +
-            "Esta ação não pode ser desfeita.",
+        int resposta = JOptionPane.showConfirmDialog(this, """
+                                                           Tem certeza que deseja limpar todas as configura\u00e7\u00f5es salvas?
+                                                           Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita.""",
             "Confirmar Limpeza",
             JOptionPane.YES_NO_OPTION,
             JOptionPane.WARNING_MESSAGE);
@@ -667,12 +682,11 @@ public class ConfiguracaoBancoDialog extends JDialog {
                         JOptionPane.ERROR_MESSAGE);
                 }
                 
-            } catch (Exception e) {
+            } catch (HeadlessException e) {
                 JOptionPane.showMessageDialog(this,
                     "Erro ao limpar configurações: " + e.getMessage(),
                     "Erro",
                     JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
             }
         }
     }
@@ -700,11 +714,13 @@ public class ConfiguracaoBancoDialog extends JDialog {
             File guia = new File("GUIA_CONFIGURACAO_POSTGRESQL_REMOTO.md");
             
             if (!guia.exists()) {
-                JOptionPane.showMessageDialog(this,
-                    "Arquivo de ajuda não encontrado.\n\n" +
-                    "Procure pelo arquivo:\n" +
-                    "GUIA_CONFIGURACAO_POSTGRESQL_REMOTO.md\n\n" +
-                    "na pasta raiz do sistema.",
+                JOptionPane.showMessageDialog(this, """
+                                                    Arquivo de ajuda n\u00e3o encontrado.
+                                                    
+                                                    Procure pelo arquivo:
+                                                    GUIA_CONFIGURACAO_POSTGRESQL_REMOTO.md
+                                                    
+                                                    na pasta raiz do sistema.""",
                     "Ajuda",
                     JOptionPane.INFORMATION_MESSAGE);
                 return;
@@ -728,7 +744,7 @@ public class ConfiguracaoBancoDialog extends JDialog {
                 "Ajuda",
                 JOptionPane.INFORMATION_MESSAGE);
                 
-        } catch (Exception e) {
+        } catch (HeadlessException | IOException e) {
             JOptionPane.showMessageDialog(this,
                 "Erro ao abrir o guia de ajuda:\n" + e.getMessage(),
                 "Erro",

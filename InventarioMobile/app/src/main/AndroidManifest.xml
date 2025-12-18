@@ -256,6 +256,14 @@
             android:theme="@style/Theme.InventarioMobile.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
         
+        <!-- Historico Scans Activity (v2.11) -->
+        <activity
+            android:name=".presentation.historico.HistoricoScansActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
         <!-- Work Manager para sincronização -->
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"

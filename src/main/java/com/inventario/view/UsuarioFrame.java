@@ -1,19 +1,38 @@
 package com.inventario.view;
 
-import com.inventario.model.Usuario;
-import com.inventario.model.PerfilUsuario;
-import com.inventario.view.ui.ButtonStyleFactory;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.JTableHeader;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.HeadlessException;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-// import java.time.format.DateTimeFormatter; // Removido - usando DateFormatUtils
-import com.inventario.util.DateFormatUtils;
+import java.sql.SQLException;
 import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+
+import com.inventario.model.PerfilUsuario;
+import com.inventario.model.Usuario;
+import com.inventario.util.DateFormatUtils;
+import com.inventario.view.ui.ButtonStyleFactory;
 
 /**
  * Frame para gerenciamento de usuários do sistema
@@ -48,6 +67,7 @@ public class UsuarioFrame extends JFrame {
         setTitle("Gerenciamento de Usuários - SIHCP");
         setSize(1200, 700);
         setLocationRelativeTo(null);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 
@@ -157,7 +177,7 @@ public class UsuarioFrame extends JFrame {
         panelFiltros.add(cbFiltroTipo);
         panelFiltros.add(txtFiltro);
 
-        JButton btnFiltrar = ButtonStyleFactory.createSecondaryButton("Filtrar");
+        JButton btnFiltrar = ButtonStyleFactory.createPrimaryButton("🔍 Filtrar");
         btnFiltrar.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 11));
         btnFiltrar.setPreferredSize(new Dimension(100, 30));
         btnFiltrar.addActionListener(e -> aplicarFiltro());
@@ -259,7 +279,7 @@ public class UsuarioFrame extends JFrame {
 
                 lblStatus.setText("Total de usuários ativos: " + usuarios.size());
 
-            } catch (Exception e) {
+            } catch (SQLException e) {
                 lblStatus.setText("Erro ao carregar usuários");
                 JOptionPane.showMessageDialog(this,
                         "Erro ao carregar usuários: " + e.getMessage(),
@@ -308,16 +328,12 @@ public class UsuarioFrame extends JFrame {
             List<Usuario> usuariosFiltrados;
 
             switch (tipoFiltro) {
-                case "Nome":
-                case "Login":
-                case "Email":
-                    usuariosFiltrados = usuarioDAO.findAll().stream()
-                            .filter(u -> u.getNomeCompleto().toLowerCase().contains(filtro.toLowerCase()) ||
-                                    u.getLogin().toLowerCase().contains(filtro.toLowerCase()) ||
-                                    u.getEmail().toLowerCase().contains(filtro.toLowerCase()))
-                            .collect(java.util.stream.Collectors.toList());
-                    break;
-                case "Perfil":
+                case "Nome", "Login", "Email" -> usuariosFiltrados = usuarioDAO.findAll().stream()
+                        .filter(u -> u.getNomeCompleto().toLowerCase().contains(filtro.toLowerCase()) ||
+                                u.getLogin().toLowerCase().contains(filtro.toLowerCase()) ||
+                                u.getEmail().toLowerCase().contains(filtro.toLowerCase()))
+                        .collect(java.util.stream.Collectors.toList());
+                case "Perfil" -> {
                     try {
                         PerfilUsuario perfil = PerfilUsuario.valueOf(filtro.toUpperCase());
                         usuariosFiltrados = usuarioDAO.findAll().stream()
@@ -329,19 +345,17 @@ public class UsuarioFrame extends JFrame {
                                 "Filtro Inválido", JOptionPane.WARNING_MESSAGE);
                         return;
                     }
-                    break;
-                default:
-                    usuariosFiltrados = usuarioDAO.findAll().stream()
-                            .filter(u -> u.getNomeCompleto().toLowerCase().contains(filtro.toLowerCase()) ||
-                                    u.getLogin().toLowerCase().contains(filtro.toLowerCase()))
-                            .collect(java.util.stream.Collectors.toList());
-                    break;
+                }
+                default -> usuariosFiltrados = usuarioDAO.findAll().stream()
+                        .filter(u -> u.getNomeCompleto().toLowerCase().contains(filtro.toLowerCase()) ||
+                                u.getLogin().toLowerCase().contains(filtro.toLowerCase()))
+                        .collect(java.util.stream.Collectors.toList());
             }
 
             atualizarTabelaUsuarios(usuariosFiltrados);
             lblStatus.setText("Filtro aplicado. Usuários encontrados: " + usuariosFiltrados.size());
 
-        } catch (Exception e) {
+        } catch (HeadlessException | SQLException e) {
             lblStatus.setText("Erro ao aplicar filtro");
             JOptionPane.showMessageDialog(this,
                     "Erro ao aplicar filtro: " + e.getMessage(),
@@ -415,7 +429,7 @@ public class UsuarioFrame extends JFrame {
                         "Erro", JOptionPane.ERROR_MESSAGE);
             }
 
-        } catch (Exception e) {
+        } catch (HeadlessException | SQLException e) {
             JOptionPane.showMessageDialog(this,
                     "Erro ao carregar dados do usuário: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
@@ -440,9 +454,12 @@ public class UsuarioFrame extends JFrame {
 
             // Primeira confirmação - aviso sobre exclusão permanente
             int opcao1 = JOptionPane.showConfirmDialog(this,
-                    "⚠️ ATENÇÃO: EXCLUSÃO PERMANENTE ⚠️\n\n" +
-                            "Você está prestes a EXCLUIR PERMANENTEMENTE o usuário:\n\n" +
-                            "Nome: " + nomeUsuario + "\n" +
+                    """
+                    \u26a0\ufe0f ATEN\u00c7\u00c3O: EXCLUS\u00c3O PERMANENTE \u26a0\ufe0f
+                    
+                    Voc\u00ea est\u00e1 prestes a EXCLUIR PERMANENTEMENTE o usu\u00e1rio:
+                    
+                    Nome: """ + nomeUsuario + "\n" +
                             "Login: " + loginUsuario + "\n\n" +
                             "Esta ação é IRREVERSÍVEL e irá:\n" +
                             "• Remover o usuário do banco de dados\n" +
@@ -459,9 +476,11 @@ public class UsuarioFrame extends JFrame {
 
             // Segunda confirmação - confirmação final
             int opcao2 = JOptionPane.showConfirmDialog(this,
-                    "ÚLTIMA CONFIRMAÇÃO\n\n" +
-                            "Tem ABSOLUTA CERTEZA que deseja excluir permanentemente\n" +
-                            "o usuário '" + nomeUsuario + "'?\n\n" +
+                    """
+                    \u00daLTIMA CONFIRMA\u00c7\u00c3O
+                    
+                    Tem ABSOLUTA CERTEZA que deseja excluir permanentemente
+                    o usu\u00e1rio '""" + nomeUsuario + "'?\n\n" +
                             "Esta ação NÃO PODE SER DESFEITA!",
                     "⚠️ Confirmação Final",
                     JOptionPane.YES_NO_OPTION,
@@ -479,7 +498,7 @@ public class UsuarioFrame extends JFrame {
 
                     carregarUsuarios();
 
-                } catch (Exception ex) {
+                } catch (HeadlessException | SQLException ex) {
                     JOptionPane.showMessageDialog(this,
                             "Erro ao excluir usuário: " + ex.getMessage() + "\n\n" +
                                     "Possíveis causas:\n" +
@@ -491,7 +510,7 @@ public class UsuarioFrame extends JFrame {
                 }
             }
 
-        } catch (Exception e) {
+        } catch (HeadlessException e) {
             JOptionPane.showMessageDialog(this,
                     "Erro ao processar exclusão: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
@@ -532,14 +551,14 @@ public class UsuarioFrame extends JFrame {
                                 "Usuário não encontrado.",
                                 "Erro", JOptionPane.ERROR_MESSAGE);
                     }
-                } catch (Exception ex) {
+                } catch (HeadlessException | SQLException ex) {
                     JOptionPane.showMessageDialog(this,
                             "Erro ao bloquear usuário: " + ex.getMessage(),
                             "Erro", JOptionPane.ERROR_MESSAGE);
                 }
             }
 
-        } catch (Exception e) {
+        } catch (HeadlessException e) {
             JOptionPane.showMessageDialog(this,
                     "Erro ao bloquear usuário: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
@@ -580,14 +599,14 @@ public class UsuarioFrame extends JFrame {
                                 "Usuário não encontrado.",
                                 "Erro", JOptionPane.ERROR_MESSAGE);
                     }
-                } catch (Exception ex) {
+                } catch (HeadlessException | SQLException ex) {
                     JOptionPane.showMessageDialog(this,
                             "Erro ao desbloquear usuário: " + ex.getMessage(),
                             "Erro", JOptionPane.ERROR_MESSAGE);
                 }
             }
 
-        } catch (Exception e) {
+        } catch (HeadlessException e) {
             JOptionPane.showMessageDialog(this,
                     "Erro ao desbloquear usuário: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);

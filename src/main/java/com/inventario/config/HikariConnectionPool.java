@@ -1,14 +1,15 @@
 package com.inventario.config;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.SQLException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 /**
  * Pool de conexões HikariCP centralizado
@@ -35,12 +36,13 @@ public class HikariConnectionPool {
     private static final Object lock = new Object();
     
     // Configurações do pool (alinhadas com application-mobile.properties)
-    private static final int MAXIMUM_POOL_SIZE = 15;      // Máximo de conexões
-    private static final int MINIMUM_IDLE = 5;            // Mínimo de conexões ociosas
-    private static final long CONNECTION_TIMEOUT = 10000; // 10 segundos para obter conexão
-    private static final long IDLE_TIMEOUT = 300000;      // 5 minutos para conexão ociosa
-    private static final long MAX_LIFETIME = 900000;      // 15 minutos de vida máxima
-    private static final long LEAK_DETECTION = 30000;     // Detectar vazamento após 30s
+    // AJUSTADO: Timeouts MUITO aumentados para conexões VPN com ping alto (>500ms)
+    private static final int MAXIMUM_POOL_SIZE = 15;       // Máximo de conexões
+    private static final int MINIMUM_IDLE = 5;             // Mínimo de conexões ociosas
+    private static final long CONNECTION_TIMEOUT = 120000; // 2 MINUTOS para obter conexão (VPN lenta)
+    private static final long IDLE_TIMEOUT = 300000;       // 5 minutos para conexão ociosa
+    private static final long MAX_LIFETIME = 900000;       // 15 minutos de vida máxima
+    private static final long LEAK_DETECTION = 120000;     // Detectar vazamento após 2 MINUTOS (VPN)
     
     private HikariConnectionPool() {
         // Singleton
@@ -127,9 +129,12 @@ public class HikariConnectionPool {
             hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
             hikariConfig.addDataSourceProperty("useServerPrepStmts", "true");
             
-            // Configurações de timeout do PostgreSQL
-            hikariConfig.addDataSourceProperty("socketTimeout", "30");
-            hikariConfig.addDataSourceProperty("connectTimeout", "10");
+            // Configurações de timeout do PostgreSQL (MUITO aumentados para VPN com ping alto)
+            hikariConfig.addDataSourceProperty("socketTimeout", "300");    // 5 MINUTOS para operações (VPN lenta)
+            hikariConfig.addDataSourceProperty("connectTimeout", "120");   // 2 MINUTOS para conectar
+            hikariConfig.addDataSourceProperty("loginTimeout", "120");     // 2 MINUTOS para login
+            hikariConfig.addDataSourceProperty("tcpKeepAlive", "true");    // Manter conexão viva
+            hikariConfig.addDataSourceProperty("ApplicationName", "SIHCP-Desktop"); // Identificar no servidor
             
             // Criar o DataSource
             dataSource = new HikariDataSource(hikariConfig);

@@ -8,6 +8,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.HeadlessException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,6 +16,7 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -475,7 +477,7 @@ public class ReconciliacaoFrame extends JFrame {
             protected void done() {
                 try {
                     get();
-                } catch (Exception e) {
+                } catch (InterruptedException | ExecutionException e) {
                     JOptionPane.showMessageDialog(ReconciliacaoFrame.this,
                         "Erro ao carregar dados: " + e.getMessage(),
                         "Erro", JOptionPane.ERROR_MESSAGE);
@@ -703,7 +705,7 @@ public class ReconciliacaoFrame extends JFrame {
                         "Sucesso", JOptionPane.INFORMATION_MESSAGE);
                     carregarDados();
                     buscarSugestoes();
-                } catch (Exception e) {
+                } catch (HeadlessException | InterruptedException | ExecutionException e) {
                     JOptionPane.showMessageDialog(ReconciliacaoFrame.this,
                         "Erro ao processar: " + e.getMessage(),
                         "Erro", JOptionPane.ERROR_MESSAGE);

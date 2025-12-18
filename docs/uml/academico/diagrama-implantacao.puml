@@ -1,0 +1,95 @@
+@startuml Diagrama de Implantação
+!theme plain
+skinparam nodeStyle rectangle
+
+title SIHCP - Diagrama de Implantação
+footer Sistema de Histórico e Coleta Patrimonial - IFMT
+
+' Nós de hardware/ambiente
+node "Servidor de Aplicação" as server {
+    node "JVM (Java 21)" as jvm {
+        artifact "sistema-inventario.jar" as jar {
+            component [Spring Boot 3.2]
+            component [API REST Mobile]
+            component [Serviços de Negócio]
+        }
+    }
+    
+    node "PostgreSQL 12+" as postgres {
+        database "sispatrimonio" as db {
+            storage [Patrimônios]
+            storage [Inventários]
+            storage [Coletas]
+            storage [Usuários]
+        }
+    }
+}
+
+node "Estação de Trabalho" as desktop {
+    node "JVM (Java 21)" as jvm_desktop {
+        artifact "sistema-inventario-desktop.jar" as desktop_jar {
+            component [Interface Swing]
+            component [Relatórios]
+            component [Administração]
+        }
+    }
+}
+
+node "Dispositivo Mobile" as mobile {
+    node "Android 7.0+" as android {
+        artifact "inventario-mobile.apk" as apk {
+            component [Scanner QR Code]
+            component [Coleta Offline]
+            component [Sincronização]
+        }
+        
+        database "SQLite" as sqlite {
+            storage [Cache Local]
+            storage [Coletas Pendentes]
+        }
+    }
+}
+
+cloud "Rede Institucional" as network {
+    node "Firewall" as firewall
+}
+
+' Conexões
+desktop_jar --> db : JDBC\nPostgreSQL
+jar --> db : JDBC\nPostgreSQL
+apk --> jar : HTTPS\nREST API\nPorta 8080/8081
+apk --> sqlite : Room\nDatabase
+
+desktop --> network
+mobile --> network
+network --> server
+
+' Protocolos e portas
+note right of jar
+  **Endpoints principais:**
+  • /api/mobile/auth
+  • /api/mobile/coletas
+  • /api/mobile/patrimonio
+  • /api/mobile/sync
+  
+  **Segurança:**
+  • JWT Token
+  • HTTPS
+end note
+
+note bottom of sqlite
+  **Dados Offline:**
+  • Patrimônios sincronizados
+  • Coletas pendentes
+  • Configurações locais
+end note
+
+note left of desktop_jar
+  **Funcionalidades Desktop:**
+  • Gestão completa
+  • Relatórios PDF/Excel
+  • Administração de usuários
+  • Importação SUAP
+end note
+
+@enduml

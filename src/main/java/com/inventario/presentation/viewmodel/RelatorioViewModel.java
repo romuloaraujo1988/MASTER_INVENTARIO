@@ -14,9 +14,9 @@ import com.inventario.presentation.state.RelatorioState;
 import java.util.List;
 import java.util.Map;
 import java.util.Date;
-import java.util.ArrayList;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.sql.SQLException;
 
 /**
  * ViewModel para tela de Relatórios
@@ -83,7 +83,7 @@ public class RelatorioViewModel {
             // Não mostrar loading para carregamento de combos (operação rápida)
             List<Inventario> inventarios = inventarioDAO.findAll();
             setState(new RelatorioState.InventariosCarregados(inventarios));
-        } catch (Exception e) {
+        } catch (SQLException e) {
             setState(new RelatorioState.Error("Erro ao carregar inventários: " + e.getMessage()));
         }
     }
@@ -95,7 +95,7 @@ public class RelatorioViewModel {
         try {
             List<Setor> setores = setorDAO.findAll();
             setState(new RelatorioState.SetoresCarregados(setores));
-        } catch (Exception e) {
+        } catch (SQLException e) {
             setState(new RelatorioState.Error("Erro ao carregar setores: " + e.getMessage()));
         }
     }
@@ -107,7 +107,7 @@ public class RelatorioViewModel {
         try {
             List<Responsavel> responsaveis = responsavelDAO.findAll();
             setState(new RelatorioState.ResponsaveisCarregados(responsaveis));
-        } catch (Exception e) {
+        } catch (SQLException e) {
             setState(new RelatorioState.Error("Erro ao carregar responsáveis: " + e.getMessage()));
         }
     }
@@ -119,20 +119,28 @@ public class RelatorioViewModel {
         try {
             List<Responsavel> responsaveis = responsavelDAO.buscarPorSetor(idSetor);
             setState(new RelatorioState.ResponsaveisCarregados(responsaveis));
-        } catch (Exception e) {
+        } catch (SQLException e) {
             setState(new RelatorioState.Error("Erro ao carregar responsáveis do setor: " + e.getMessage()));
         }
     }
 
     /**
-     * Carrega lista de salas
+     * Carrega lista de salas com contagem de patrimônios
+     * Ordenadas por quantidade de patrimônios (decrescente)
      */
     public void carregarSalas() {
         try {
-            List<Sala> salas = salaDAO.listarSalas();
+            // Usar método que retorna contagem de patrimônios por sala
+            List<Sala> salas = salaDAO.listarSalasComContagemPatrimonios();
             setState(new RelatorioState.SalasCarregadas(salas));
-        } catch (Exception e) {
-            setState(new RelatorioState.Error("Erro ao carregar salas: " + e.getMessage()));
+        } catch (SQLException e) {
+            // Fallback para método simples se houver erro
+            try {
+                List<Sala> salas = salaDAO.listarSalas();
+                setState(new RelatorioState.SalasCarregadas(salas));
+            } catch (SQLException e2) {
+                setState(new RelatorioState.Error("Erro ao carregar salas: " + e2.getMessage()));
+            }
         }
     }
 
@@ -141,9 +149,33 @@ public class RelatorioViewModel {
      */
     /**
      * Gera relatório baseado no tipo selecionado
+     * @param tipoRelatorio Tipo do relatório a ser gerado
+     * @param idInventario ID do inventário selecionado
+     * @param setor Nome do setor (ou "Todos")
+     * @param responsavel Nome do responsável (ou "Todos")
+     * @param dataInicio Data inicial do período
+     * @param dataFim Data final do período
+     * @param status Status do patrimônio
      */
     public void gerarRelatorio(String tipoRelatorio, int idInventario, String setor,
             String responsavel, Date dataInicio, Date dataFim, String status) {
+        // Chamar versão completa com sala = null
+        gerarRelatorio(tipoRelatorio, idInventario, setor, responsavel, dataInicio, dataFim, status, null);
+    }
+
+    /**
+     * Gera relatório baseado no tipo selecionado (versão completa com filtro de sala)
+     * @param tipoRelatorio Tipo do relatório a ser gerado
+     * @param idInventario ID do inventário selecionado
+     * @param setor Nome do setor (ou "Todos")
+     * @param responsavel Nome do responsável (ou "Todos")
+     * @param dataInicio Data inicial do período
+     * @param dataFim Data final do período
+     * @param status Status do patrimônio
+     * @param sala Nome da sala para filtro (ou null/vazio para todas)
+     */
+    public void gerarRelatorio(String tipoRelatorio, int idInventario, String setor,
+            String responsavel, Date dataInicio, Date dataFim, String status, String sala) {
         try {
             // Validar entrada
             if (idInventario == -1 && !tipoRelatorio.equals("Relatório Geral de Patrimônio")) {
@@ -153,57 +185,45 @@ public class RelatorioViewModel {
 
             setState(RelatorioState.Loading.INSTANCE);
 
-            List<Map<String, Object>> dados = new ArrayList<>();
+            List<Map<String, Object>> dados;
 
             // Delegar para DAO apropriado baseado no tipo
             switch (tipoRelatorio) {
-                case "Itens Encontrados":
-                    dados = relatorioDAO.gerarRelatorioItensEncontrados(idInventario);
-                    break;
-                case "Itens Não Encontrados":
-                    dados = relatorioDAO.gerarRelatorioItensNaoEncontrados(idInventario);
-                    break;
-                case "Itens Sem Plaqueta de Patrimônio":
-                    dados = relatorioDAO.gerarRelatorioItensSemEtiqueta(idInventario);
-                    break;
-                case "Relatório por Responsável":
+                case "Itens Encontrados" -> dados = relatorioDAO.gerarRelatorioItensEncontrados(idInventario);
+                case "Itens Não Encontrados" -> dados = relatorioDAO.gerarRelatorioItensNaoEncontrados(idInventario);
+                case "Itens Sem Plaqueta de Patrimônio" -> dados = relatorioDAO.gerarRelatorioItensSemEtiqueta(idInventario);
+                case "Relatório por Responsável" -> {
                     if (!"Todos".equals(responsavel)) {
                         dados = relatorioDAO.gerarRelatorioDetalhadoPorResponsavel(idInventario, responsavel, status);
                     } else {
                         dados = relatorioDAO.gerarRelatorioItensEncontrados(idInventario);
                     }
-                    break;
-                case "Itens Não Coletados":
-                    dados = relatorioDAO.gerarRelatorioItensNaoColetados(idInventario);
-                    break;
-                case "Relatório de Divergências":
-                    dados = relatorioDAO.gerarRelatorioDivergencias(idInventario);
-                    break;
-                case "Estatísticas do Inventário":
-                    dados = relatorioDAO.gerarEstatisticasGerais(idInventario);
-                    break;
-                case "Relatório Avançado por Setor":
+                }
+                case "Itens Não Coletados" -> dados = relatorioDAO.gerarRelatorioItensNaoColetados(idInventario);
+                case "Relatório de Divergências" -> dados = relatorioDAO.gerarRelatorioDivergencias(idInventario);
+                case "Estatísticas do Inventário" -> dados = relatorioDAO.gerarEstatisticasGerais(idInventario);
+                case "Relatório Avançado por Setor" -> {
                     String setorSelecionado = "Todos".equals(setor) ? "" : setor;
                     dados = relatorioDAO.gerarRelatorioAvancadoPorSetor(idInventario, setorSelecionado,
                             dataInicio, dataFim, status);
-                    break;
-                case "Relatório Avançado por Responsável":
+                }
+                case "Relatório Avançado por Responsável" -> {
                     String responsavelSelecionado = "Todos".equals(responsavel) ? "" : responsavel;
                     dados = relatorioDAO.gerarRelatorioAvancadoPorResponsavel(idInventario,
                             responsavelSelecionado,
                             dataInicio, dataFim, status);
-                    break;
-                case "Relatório Avançado por Período":
-                    dados = relatorioDAO.gerarRelatorioAvancadoPorPeriodo(idInventario, dataInicio, dataFim);
-                    break;
-                case "Estatísticas Avançadas por Setor":
-                    dados = relatorioDAO.gerarEstatisticasAvancadasPorSetor(idInventario, dataInicio, dataFim);
-                    break;
-                case "Relatório Consolidado Executivo":
-                    dados = relatorioDAO.gerarRelatorioConsolidado(idInventario, dataInicio, dataFim);
-                    break;
-                default:
-                    dados = relatorioDAO.gerarRelatorioGeralCompleto(idInventario);
+                }
+                case "Relatório Avançado por Período" -> dados = relatorioDAO.gerarRelatorioAvancadoPorPeriodo(idInventario, dataInicio, dataFim);
+                case "Estatísticas Avançadas por Setor" -> dados = relatorioDAO.gerarEstatisticasAvancadasPorSetor(idInventario, dataInicio, dataFim);
+                case "Relatório Consolidado Executivo" -> dados = relatorioDAO.gerarRelatorioConsolidado(idInventario, dataInicio, dataFim);
+                case "Relatório de Coletas por Sala" -> {
+                    // Usar filtro de sala se fornecido, senão usar string vazia (todas as salas)
+                    String salaSelecionada = (sala != null && !sala.isEmpty() && !"Todas as Salas".equals(sala)) 
+                            ? sala : "";
+                    dados = relatorioDAO.gerarRelatorioColetasPorSala(idInventario, salaSelecionada);
+                }
+                case "Estatísticas de Coletas por Sala" -> dados = relatorioDAO.gerarEstatisticasColetasPorSala(idInventario);
+                default -> dados = relatorioDAO.gerarRelatorioGeralCompleto(idInventario);
             }
 
             setState(new RelatorioState.Success(dados, tipoRelatorio));

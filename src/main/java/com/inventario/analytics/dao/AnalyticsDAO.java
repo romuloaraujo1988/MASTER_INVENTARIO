@@ -1,12 +1,19 @@
 package com.inventario.analytics.dao;
 
-import com.inventario.util.ConnectionManager;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.*;
-import java.time.LocalDate;
-import java.util.*;
+import com.inventario.util.ConnectionManager;
 
 /**
  * DAO para consultas analíticas otimizadas.
@@ -34,28 +41,28 @@ public class AnalyticsDAO {
                 c.estado_encontrado,
                 c.divergencia,
                 c.motivo_divergencia,
-                p.numero_patrimonio,
+                p.numero as numero_patrimonio,
                 p.descricao as descricao_patrimonio,
                 p.estado_conservacao as estado_cadastrado,
                 s.id as id_sala,
-                s.nome as nome_sala,
+                s.descricao as nome_sala,
                 st.id as id_setor,
                 st.nome as nome_setor,
                 r.id as id_responsavel,
                 r.nome as nome_responsavel,
-                u.id as id_coletor,
-                u.nome as nome_coletor
+                COALESCE(u.id, c.id_coletor) as id_coletor,
+                COALESCE(u.nome_completo, 'Coletor ' || c.id_coletor) as nome_coletor
             FROM tabela_coleta c
             INNER JOIN tabela_patrimonio p ON c.id_patrimonio = p.id
             LEFT JOIN tabela_sala s ON p.id_sala = s.id
             LEFT JOIN tabela_setor st ON s.id_setor = st.id
             LEFT JOIN tabela_responsavel r ON p.id_responsavel = r.id
-            LEFT JOIN tabela_participante_inventario pi ON c.id_participante_inventario = pi.id
+            LEFT JOIN tabela_participante_inventario pi ON c.id_participante_inventario = pi.id_participante
             LEFT JOIN tabela_usuario u ON pi.id_usuario = u.id
             WHERE c.id_inventario = ?
             AND (c.divergencia = true 
-                 OR c.localizacao_encontrada != s.nome 
-                 OR c.estado_encontrado != p.estado_conservacao)
+                 OR (c.localizacao_encontrada IS NOT NULL AND c.localizacao_encontrada != '' AND c.localizacao_encontrada != COALESCE(s.descricao, ''))
+                 OR (c.estado_encontrado IS NOT NULL AND c.estado_encontrado != '' AND c.estado_encontrado != COALESCE(p.estado_conservacao, '')))
             ORDER BY c.data_coleta DESC
             """;
         
@@ -112,8 +119,8 @@ public class AnalyticsDAO {
         
         switch (agrupamento.toUpperCase()) {
             case "COLETOR":
-                selectClause = "u.id as id_grupo, u.nome as nome_grupo";
-                groupByClause = "u.id, u.nome";
+                selectClause = "COALESCE(u.id, c.id_coletor) as id_grupo, COALESCE(u.nome_completo, 'Coletor ' || c.id_coletor) as nome_grupo";
+                groupByClause = "COALESCE(u.id, c.id_coletor), COALESCE(u.nome_completo, 'Coletor ' || c.id_coletor)";
                 break;
             case "PERIODO":
                 selectClause = """
@@ -166,12 +173,12 @@ public class AnalyticsDAO {
                 %s,
                 COUNT(*) as total_coletas,
                 COUNT(c.tempo_coleta_segundos) FILTER (WHERE c.tempo_coleta_segundos > 0 AND c.tempo_coleta_segundos < 600) as coletas_com_tempo,
-                AVG(c.tempo_coleta_segundos) FILTER (WHERE c.tempo_coleta_segundos > 0 AND c.tempo_coleta_segundos < 600) as tempo_medio,
-                MIN(c.tempo_coleta_segundos) FILTER (WHERE c.tempo_coleta_segundos > 0 AND c.tempo_coleta_segundos < 600) as tempo_minimo,
-                MAX(c.tempo_coleta_segundos) FILTER (WHERE c.tempo_coleta_segundos > 0 AND c.tempo_coleta_segundos < 600) as tempo_maximo,
-                STDDEV(c.tempo_coleta_segundos) FILTER (WHERE c.tempo_coleta_segundos > 0 AND c.tempo_coleta_segundos < 600) as desvio_padrao
+                COALESCE(AVG(c.tempo_coleta_segundos) FILTER (WHERE c.tempo_coleta_segundos > 0 AND c.tempo_coleta_segundos < 600), 0) as tempo_medio,
+                COALESCE(MIN(c.tempo_coleta_segundos) FILTER (WHERE c.tempo_coleta_segundos > 0 AND c.tempo_coleta_segundos < 600), 0) as tempo_minimo,
+                COALESCE(MAX(c.tempo_coleta_segundos) FILTER (WHERE c.tempo_coleta_segundos > 0 AND c.tempo_coleta_segundos < 600), 0) as tempo_maximo,
+                COALESCE(STDDEV(c.tempo_coleta_segundos) FILTER (WHERE c.tempo_coleta_segundos > 0 AND c.tempo_coleta_segundos < 600), 0) as desvio_padrao
             FROM tabela_coleta c
-            LEFT JOIN tabela_participante_inventario pi ON c.id_participante_inventario = pi.id
+            LEFT JOIN tabela_participante_inventario pi ON c.id_participante_inventario = pi.id_participante
             LEFT JOIN tabela_usuario u ON pi.id_usuario = u.id
             WHERE c.id_inventario = ?
             GROUP BY %s
@@ -223,8 +230,8 @@ public class AnalyticsDAO {
                 st.nome as nome_setor,
                 COUNT(c.id) as total_coletas,
                 COUNT(c.id) FILTER (WHERE c.divergencia = true 
-                    OR c.localizacao_encontrada != s.nome 
-                    OR c.estado_encontrado != p.estado_conservacao) as total_divergencias
+                    OR (c.localizacao_encontrada IS NOT NULL AND c.localizacao_encontrada != '' AND c.localizacao_encontrada != COALESCE(s.descricao, ''))
+                    OR (c.estado_encontrado IS NOT NULL AND c.estado_encontrado != '' AND c.estado_encontrado != COALESCE(p.estado_conservacao, ''))) as total_divergencias
             FROM tabela_coleta c
             INNER JOIN tabela_patrimonio p ON c.id_patrimonio = p.id
             LEFT JOIN tabela_sala s ON p.id_sala = s.id
@@ -234,8 +241,8 @@ public class AnalyticsDAO {
             GROUP BY st.id, st.nome
             HAVING COUNT(c.id) > 0
             ORDER BY (COUNT(c.id) FILTER (WHERE c.divergencia = true 
-                OR c.localizacao_encontrada != s.nome 
-                OR c.estado_encontrado != p.estado_conservacao) * 100.0 / COUNT(c.id)) DESC
+                OR (c.localizacao_encontrada IS NOT NULL AND c.localizacao_encontrada != '' AND c.localizacao_encontrada != COALESCE(s.descricao, ''))
+                OR (c.estado_encontrado IS NOT NULL AND c.estado_encontrado != '' AND c.estado_encontrado != COALESCE(p.estado_conservacao, ''))) * 100.0 / COUNT(c.id)) DESC
             """;
         
         try (Connection conn = ConnectionManager.getConnection();
@@ -292,13 +299,18 @@ public class AnalyticsDAO {
         String sql = """
             SELECT 
                 COUNT(c.id) as total_coletas,
-                COUNT(c.id) FILTER (WHERE c.divergencia = true) as total_divergencias,
+                COUNT(c.id) FILTER (WHERE c.divergencia = true 
+                    OR (c.localizacao_encontrada IS NOT NULL AND c.localizacao_encontrada != '' AND c.localizacao_encontrada != COALESCE(s.descricao, ''))
+                    OR (c.estado_encontrado IS NOT NULL AND c.estado_encontrado != '' AND c.estado_encontrado != COALESCE(p.estado_conservacao, ''))
+                ) as total_divergencias,
                 AVG(c.tempo_coleta_segundos) FILTER (WHERE c.tempo_coleta_segundos > 0 AND c.tempo_coleta_segundos < 600) as tempo_medio,
-                COUNT(DISTINCT pi.id_usuario) as coletores_ativos,
+                COUNT(DISTINCT COALESCE(pi.id_usuario, c.id_coletor)) as coletores_ativos,
                 MIN(c.data_coleta) as primeira_coleta,
                 MAX(c.data_coleta) as ultima_coleta
             FROM tabela_coleta c
-            LEFT JOIN tabela_participante_inventario pi ON c.id_participante_inventario = pi.id
+            LEFT JOIN tabela_patrimonio p ON c.id_patrimonio = p.id
+            LEFT JOIN tabela_sala s ON p.id_sala = s.id
+            LEFT JOIN tabela_participante_inventario pi ON c.id_participante_inventario = pi.id_participante
             WHERE c.id_inventario = ?
             """;
         
@@ -320,14 +332,30 @@ public class AnalyticsDAO {
                     kpis.put("primeira_coleta", rs.getTimestamp("primeira_coleta"));
                     kpis.put("ultima_coleta", rs.getTimestamp("ultima_coleta"));
                     
-                    // Calcular coletas por hora
-                    Timestamp primeira = rs.getTimestamp("primeira_coleta");
-                    Timestamp ultima = rs.getTimestamp("ultima_coleta");
-                    if (primeira != null && ultima != null && totalColetas > 0) {
-                        long horasTrabalhadas = (ultima.getTime() - primeira.getTime()) / (1000 * 60 * 60);
-                        kpis.put("coletas_por_hora", horasTrabalhadas > 0 ? (double) totalColetas / horasTrabalhadas : totalColetas);
-                    } else {
-                        kpis.put("coletas_por_hora", 0.0);
+                    // Calcular coletas por hora (baseado em dias com coletas, não período total)
+                    // Assumindo 8 horas de trabalho por dia com coletas
+                    kpis.put("coletas_por_hora", 0.0);
+                }
+            }
+            
+            // Buscar dias distintos com coletas para calcular coletas por hora
+            String sqlDias = """
+                SELECT COUNT(DISTINCT DATE(data_coleta)) as dias_com_coletas
+                FROM tabela_coleta
+                WHERE id_inventario = ?
+                """;
+            
+            try (PreparedStatement stmtDias = conn.prepareStatement(sqlDias)) {
+                stmtDias.setInt(1, idInventario);
+                try (ResultSet rsDias = stmtDias.executeQuery()) {
+                    if (rsDias.next()) {
+                        int diasComColetas = rsDias.getInt("dias_com_coletas");
+                        int totalColetas = (int) kpis.getOrDefault("total_coletas", 0);
+                        // Assumindo 8 horas de trabalho por dia
+                        double horasEfetivas = diasComColetas * 8.0;
+                        if (horasEfetivas > 0 && totalColetas > 0) {
+                            kpis.put("coletas_por_hora", totalColetas / horasEfetivas);
+                        }
                     }
                 }
             }
@@ -355,10 +383,12 @@ public class AnalyticsDAO {
         StringBuilder sql = new StringBuilder("""
             SELECT 
                 DATE(c.data_coleta) as data,
-                COUNT(c.id) FILTER (WHERE c.localizacao_encontrada != s.nome) as divergencias_localizacao,
-                COUNT(c.id) FILTER (WHERE c.estado_encontrado != p.estado_conservacao) as divergencias_estado,
+                COUNT(c.id) FILTER (WHERE c.localizacao_encontrada IS NOT NULL AND c.localizacao_encontrada != '' AND c.localizacao_encontrada != COALESCE(s.descricao, '')) as divergencias_localizacao,
+                COUNT(c.id) FILTER (WHERE c.estado_encontrado IS NOT NULL AND c.estado_encontrado != '' AND c.estado_encontrado != COALESCE(p.estado_conservacao, '')) as divergencias_estado,
                 COUNT(c.id) FILTER (WHERE c.divergencia = true AND c.motivo_divergencia IS NOT NULL) as divergencias_manual,
-                COUNT(c.id) FILTER (WHERE c.divergencia = true) as total_divergencias
+                COUNT(c.id) FILTER (WHERE c.divergencia = true 
+                    OR (c.localizacao_encontrada IS NOT NULL AND c.localizacao_encontrada != '' AND c.localizacao_encontrada != COALESCE(s.descricao, ''))
+                    OR (c.estado_encontrado IS NOT NULL AND c.estado_encontrado != '' AND c.estado_encontrado != COALESCE(p.estado_conservacao, ''))) as total_divergencias
             FROM tabela_coleta c
             INNER JOIN tabela_patrimonio p ON c.id_patrimonio = p.id
             LEFT JOIN tabela_sala s ON p.id_sala = s.id
@@ -423,8 +453,8 @@ public class AnalyticsDAO {
                 r.nome as nome_responsavel,
                 COUNT(DISTINCT p.id) as total_patrimonios,
                 COUNT(c.id) FILTER (WHERE c.divergencia = true 
-                    OR c.localizacao_encontrada != s.nome 
-                    OR c.estado_encontrado != p.estado_conservacao) as total_divergencias
+                    OR (c.localizacao_encontrada IS NOT NULL AND c.localizacao_encontrada != '' AND c.localizacao_encontrada != COALESCE(s.descricao, ''))
+                    OR (c.estado_encontrado IS NOT NULL AND c.estado_encontrado != '' AND c.estado_encontrado != COALESCE(p.estado_conservacao, ''))) as total_divergencias
             FROM tabela_coleta c
             INNER JOIN tabela_patrimonio p ON c.id_patrimonio = p.id
             LEFT JOIN tabela_sala s ON p.id_sala = s.id
@@ -433,11 +463,11 @@ public class AnalyticsDAO {
             AND r.id IS NOT NULL
             GROUP BY r.id, r.nome
             HAVING COUNT(c.id) FILTER (WHERE c.divergencia = true 
-                OR c.localizacao_encontrada != s.nome 
-                OR c.estado_encontrado != p.estado_conservacao) > 0
+                OR (c.localizacao_encontrada IS NOT NULL AND c.localizacao_encontrada != '' AND c.localizacao_encontrada != COALESCE(s.descricao, ''))
+                OR (c.estado_encontrado IS NOT NULL AND c.estado_encontrado != '' AND c.estado_encontrado != COALESCE(p.estado_conservacao, ''))) > 0
             ORDER BY COUNT(c.id) FILTER (WHERE c.divergencia = true 
-                OR c.localizacao_encontrada != s.nome 
-                OR c.estado_encontrado != p.estado_conservacao) DESC
+                OR (c.localizacao_encontrada IS NOT NULL AND c.localizacao_encontrada != '' AND c.localizacao_encontrada != COALESCE(s.descricao, ''))
+                OR (c.estado_encontrado IS NOT NULL AND c.estado_encontrado != '' AND c.estado_encontrado != COALESCE(p.estado_conservacao, ''))) DESC
             """;
         
         try (Connection conn = ConnectionManager.getConnection();

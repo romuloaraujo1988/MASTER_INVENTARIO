@@ -1,9 +1,18 @@
 package com.inventario.view.ui;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+
+import javax.swing.JButton;
 
 /**
  * Fábrica de botões com estilo padronizado baseado no frame de login.
@@ -222,24 +231,26 @@ public class ButtonStyleFactory {
 
         // Efeito hover
         button.addMouseListener(new MouseAdapter() {
+            @Override
             public void mouseEntered(MouseEvent evt) {
                 try {
                     java.lang.reflect.Field field = button.getClass().getDeclaredField("isHovered");
                     field.setAccessible(true);
                     field.set(button, true);
                     button.repaint();
-                } catch (Exception e) {
+                } catch (IllegalAccessException | IllegalArgumentException | NoSuchFieldException | SecurityException e) {
                     // Fallback silencioso
                 }
             }
 
+            @Override
             public void mouseExited(MouseEvent evt) {
                 try {
                     java.lang.reflect.Field field = button.getClass().getDeclaredField("isHovered");
                     field.setAccessible(true);
                     field.set(button, false);
                     button.repaint();
-                } catch (Exception e) {
+                } catch (IllegalAccessException | IllegalArgumentException | NoSuchFieldException | SecurityException e) {
                     // Fallback silencioso
                 }
             }

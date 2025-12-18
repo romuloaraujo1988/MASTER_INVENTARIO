@@ -36,9 +36,9 @@ public class ReconciliacaoDAO {
                 s.numero_sala,
                 r.nome as responsavel
             FROM tabela_patrimonio p
-            LEFT JOIN tabela_sala s ON p.id_sala = s.id
+            LEFT JOIN tabela_sala s ON p.id_sala = s.id_sala
             LEFT JOIN tabela_responsavel r ON p.id_responsavel = r.id
-            WHERE p.status = 'ATIVO'
+            WHERE UPPER(p.status) = 'ATIVO'
             AND p.id NOT IN (
                 SELECT DISTINCT id_patrimonio 
                 FROM tabela_coleta 
@@ -87,18 +87,12 @@ public class ReconciliacaoDAO {
                 c.data_coleta,
                 c.foto_patrimonio,
                 c.observacao_coleta,
-                u.nome_completo as coletor
+                COALESCE(u.nome_completo, 'N/A') as coletor
             FROM tabela_coleta c
             LEFT JOIN tabela_participante_inventario pi ON c.id_participante_inventario = pi.id_participante
             LEFT JOIN tabela_usuario u ON pi.id_usuario = u.id
             WHERE c.id_inventario = ?
             AND c.sem_etiqueta = true
-            AND c.id NOT IN (
-                SELECT id_coleta_sem_etiqueta 
-                FROM tabela_reconciliacao 
-                WHERE id_inventario = ? 
-                AND status = 'CONFIRMADO'
-            )
             ORDER BY c.descricao_item_sem_etiqueta
             """;
 
@@ -108,7 +102,6 @@ public class ReconciliacaoDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, idInventario);
-            stmt.setInt(2, idInventario);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -173,36 +166,137 @@ public class ReconciliacaoDAO {
 
     /**
      * Busca sugestões de reconciliação baseado em similaridade
+     * Otimizado para grandes volumes de dados com pré-filtragem
      */
     public List<Map<String, Object>> buscarSugestoesReconciliacao(int idInventario, double limiarSimilaridade) throws SQLException {
-        List<Map<String, Object>> naoEncontrados = buscarPatrimoniosNaoEncontrados(idInventario);
         List<Map<String, Object>> semEtiqueta = buscarItensSemEtiqueta(idInventario);
         List<Map<String, Object>> sugestoes = new ArrayList<>();
+        
+        System.out.println("=== INICIANDO BUSCA DE SUGESTÕES ===");
+        System.out.println("Inventário ID: " + idInventario);
+        System.out.println("Limiar similaridade: " + limiarSimilaridade + "%");
+        System.out.println("Itens sem etiqueta: " + semEtiqueta.size());
+        
+        if (semEtiqueta.isEmpty()) {
+            System.out.println("Nenhum item sem etiqueta encontrado!");
+            return sugestoes;
+        }
 
-        for (Map<String, Object> patrimonio : naoEncontrados) {
-            String descPatrimonio = (String) patrimonio.get("descricao");
-
-            for (Map<String, Object> itemSemEtiqueta : semEtiqueta) {
-                String descItem = (String) itemSemEtiqueta.get("descricao");
+        // Para cada item sem etiqueta, buscar patrimônios similares diretamente no banco
+        for (Map<String, Object> itemSemEtiqueta : semEtiqueta) {
+            String descItem = (String) itemSemEtiqueta.get("descricao");
+            if (descItem == null || descItem.trim().isEmpty()) {
+                System.out.println("Item sem etiqueta com descrição vazia, pulando...");
+                continue;
+            }
+            
+            System.out.println("Buscando matches para: " + descItem);
+            
+            // Buscar patrimônios com descrição similar diretamente no banco (mais eficiente)
+            List<Map<String, Object>> patrimoniosSimilares = buscarPatrimoniosSimilares(idInventario, descItem);
+            System.out.println("Patrimônios similares encontrados: " + patrimoniosSimilares.size());
+            
+            for (Map<String, Object> patrimonio : patrimoniosSimilares) {
+                String descPatrimonio = (String) patrimonio.get("descricao");
                 double similaridade = calcularSimilaridade(descPatrimonio, descItem);
-
+                
                 if (similaridade >= limiarSimilaridade) {
                     Map<String, Object> sugestao = new HashMap<>();
                     sugestao.put("patrimonio", patrimonio);
                     sugestao.put("itemSemEtiqueta", itemSemEtiqueta);
                     sugestao.put("similaridade", similaridade);
                     sugestoes.add(sugestao);
+                    
+                    System.out.println("  MATCH! Similaridade: " + String.format("%.1f%%", similaridade) + 
+                        " | Patrimônio: " + patrimonio.get("numero") + " - " + descPatrimonio);
                 }
             }
         }
+        
+        System.out.println("=== TOTAL DE SUGESTÕES: " + sugestoes.size() + " ===");
 
         // Ordenar por similaridade decrescente
         sugestoes.sort((a, b) -> Double.compare(
             (Double) b.get("similaridade"),
             (Double) a.get("similaridade")
         ));
+        
+        // Limitar a 500 sugestões para evitar problemas de memória/UI
+        if (sugestoes.size() > 500) {
+            return new ArrayList<>(sugestoes.subList(0, 500));
+        }
 
         return sugestoes;
+    }
+    
+    /**
+     * Busca patrimônios com descrição similar usando LIKE no banco
+     * Mais eficiente que comparar todos os 10k+ registros em memória
+     */
+    private List<Map<String, Object>> buscarPatrimoniosSimilares(int idInventario, String descricaoItem) throws SQLException {
+        // Extrair palavras-chave da descrição (primeiras 3 palavras significativas)
+        String[] palavras = descricaoItem.toUpperCase().split("\\s+");
+        StringBuilder likePattern = new StringBuilder("%");
+        int count = 0;
+        for (String palavra : palavras) {
+            if (palavra.length() > 3 && count < 3) { // Ignorar palavras curtas
+                likePattern.append(palavra).append("%");
+                count++;
+            }
+        }
+        
+        String sql = """
+            SELECT 
+                p.id,
+                p.numero,
+                p.descricao,
+                p.estado_conservacao,
+                s.descricao as sala_esperada,
+                s.numero_sala,
+                r.nome as responsavel
+            FROM tabela_patrimonio p
+            LEFT JOIN tabela_sala s ON p.id_sala = s.id_sala
+            LEFT JOIN tabela_responsavel r ON p.id_responsavel = r.id
+            WHERE UPPER(p.status) = 'ATIVO'
+            AND (
+                UPPER(p.descricao) LIKE ? 
+                OR UPPER(p.descricao) = ?
+            )
+            AND p.id NOT IN (
+                SELECT DISTINCT id_patrimonio 
+                FROM tabela_coleta 
+                WHERE id_inventario = ? 
+                AND id_patrimonio IS NOT NULL
+            )
+            ORDER BY p.descricao
+            LIMIT 100
+            """;
+
+        List<Map<String, Object>> resultado = new ArrayList<>();
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, likePattern.toString());
+            stmt.setString(2, descricaoItem.toUpperCase());
+            stmt.setInt(3, idInventario);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("id", rs.getInt("id"));
+                    item.put("numero", rs.getString("numero"));
+                    item.put("descricao", rs.getString("descricao"));
+                    item.put("estadoConservacao", rs.getString("estado_conservacao"));
+                    item.put("salaEsperada", rs.getString("sala_esperada"));
+                    item.put("numeroSala", rs.getString("numero_sala"));
+                    item.put("responsavel", rs.getString("responsavel"));
+                    resultado.add(item);
+                }
+            }
+        }
+
+        return resultado;
     }
 
     /**
@@ -328,7 +422,7 @@ public class ReconciliacaoDAO {
         // Contar não encontrados
         String sqlNaoEncontrados = """
             SELECT COUNT(*) as total FROM tabela_patrimonio p
-            WHERE p.status = 'ATIVO'
+            WHERE UPPER(p.status) = 'ATIVO'
             AND p.id NOT IN (
                 SELECT DISTINCT id_patrimonio FROM tabela_coleta 
                 WHERE id_inventario = ? AND id_patrimonio IS NOT NULL

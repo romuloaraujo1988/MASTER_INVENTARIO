@@ -4,6 +4,208 @@ Este arquivo registra todas as compilações do APK Android para rastreabilidade
 
 ---
 
+## Build #049 - 15/12/2025 (Foto por Exceção)
+
+- **Tipo:** Debug
+- **Versão:** 2.11.0 (Build 49)
+- **Build Code:** 49
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** 18.29 MB
+- **Mudanças:** 
+  - **Feature: Captura de Foto Opcional na Coleta (Foto por Exceção)**
+    - **Infraestrutura de Fotos:**
+      - `PhotoHelper.kt` - Helper completo para captura e compressão de fotos
+        - Compressão agressiva: 800x600 max, JPEG 65%
+        - Resultado: ~50-100 KB por foto (vs 3-5 MB original)
+        - Geração de thumbnails (200x200, JPEG 50%)
+        - Conversão Base64 para sincronização
+        - Limpeza automática de fotos antigas (máx 100 locais)
+        - Estatísticas de uso de espaço
+      - `PhotoCaptureButton.kt` - Componente de UI para captura opcional
+        - Suporte a motivos: DIVERGENCIA, ESTADO_RUIM, ATENCAO, OUTRO
+        - Preview de foto com opção de remover
+        - Integração com FileProvider para câmera
+    - **Banco de Dados (Room):**
+      - `ColetaEntity.kt` - Novos campos:
+        - `fotoPath` - Caminho da foto comprimida
+        - `fotoThumbnailPath` - Caminho do thumbnail
+        - `fotoSincronizada` - Flag de sincronização
+        - `motivoFoto` - Motivo da foto (divergência, estado ruim, etc)
+      - `ColetaDao.kt` - Novas queries:
+        - `buscarColetasComFotoPendente()` - Fotos não sincronizadas
+        - `marcarFotoSincronizada()` - Atualizar flag após sync
+        - `contarColetasComFoto()` - Estatísticas
+        - `contarFotosPendentes()` - Pendentes de sync
+        - `atualizarFoto()` / `removerFoto()` - Gerenciamento
+      - `AppDatabase.kt` - Migração 8→9 (campos de foto) e 9→10 (histórico scan)
+    - **Sincronização em Background:**
+      - `PhotoSyncWorker.kt` - Worker para sync de fotos
+        - Sincroniza apenas em Wi-Fi (configurável)
+        - Respeita bateria (não executa com bateria baixa)
+        - Limpa fotos locais após sync bem-sucedido
+        - Retry automático com backoff exponencial
+    - **Configurações do Usuário:**
+      - `PreferencesManager.kt` - Novas preferências:
+        - `isPhotoOnCollectionEnabled()` - Habilitar/desabilitar fotos
+        - `isPhotoSyncWifiOnly()` - Sincronizar apenas em Wi-Fi
+      - `activity_settings.xml` - Nova seção "Fotos de Coleta"
+        - Switch para habilitar captura de fotos
+        - Switch para sincronizar apenas em Wi-Fi
+      - `SettingsActivity.kt` - Handlers para switches de foto
+    - **Injeção de Dependência:**
+      - `UtilModule.kt` - Provider para PhotoHelper
+      - `RepositoryModule.kt` - Binding para HistoricoScanRepository
+      - `DatabaseModule.kt` - Provider para HistoricoScanDao
+    - **Correções:**
+      - `activity_historico_scans.xml` - Layout corrigido
+      - `item_historico_scan.xml` - Layout de item criado
+      - `menu_historico_scans.xml` - Menu criado
+      - Drawables: `bg_circle_primary.xml`, `bg_circle_success.xml`, `ic_info.xml`
+  - **Benefícios:**
+    - 📷 Foto opcional apenas quando necessário (divergência, estado ruim)
+    - 💾 Compressão agressiva (~50-100KB vs 3-5MB original)
+    - 📶 Sync de fotos apenas em Wi-Fi (economia de dados)
+    - 🔋 Respeita bateria do dispositivo
+    - 🗑️ Limpeza automática após sincronização
+    - ⚙️ Configurável pelo usuário nas Configurações
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #048 - 12/12/2025 18:30
+
+- **Tipo:** Debug
+- **Versão:** 2.7.0 (Build 44)
+- **Build Code:** 44
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~19 MB
+- **Mudanças:** 
+  - **Feature: Otimização da Busca Rápida de Patrimônios**
+    - **Cache de Busca Implementado:**
+      - `BuscarPatrimoniosUseCase.kt` - Integrado com `SearchCache` existente
+      - Cache LRU com 50 entradas e TTL de 5 minutos
+      - Verifica cache antes de consultar servidor/banco local
+      - Armazena resultados após consultas bem-sucedidas
+      - Novos métodos: `limparCache()`, `getCacheStats()`
+    - **Índices Compostos no Room:**
+      - `PatrimonioEntity.kt` - Novos índices:
+        - `idx_patrimonio_nomeSala` (nomeSala)
+        - `idx_patrimonio_responsavelNome` (responsavelNome)
+        - `idx_patrimonio_coletado_numero` (coletado, numeroPatrimonio)
+        - `idx_patrimonio_coletado_descricao` (coletado, descricao)
+        - `idx_patrimonio_coletado_sala` (coletado, nomeSala)
+        - `idx_patrimonio_sala_coletado` (idSala, coletado)
+      - `ColetaEntity.kt` - Novos índices:
+        - `idx_coleta_patrimonio_inventario` (idPatrimonio, idInventario)
+        - `idx_coleta_inventario_sincronizado` (idInventario, sincronizado)
+        - `idx_coleta_inventario_data` (idInventario, dataColeta)
+    - **Limpeza de Cache na Sincronização:**
+      - `SyncViewModel.kt` - Limpa cache após sync do servidor
+      - `QuickSearchViewModel.kt` - Métodos para limpar cache e obter estatísticas
+    - **Correção de Sintaxe:**
+      - `SearchCache.kt` - Corrigido LinkedHashMap para suporte LRU
+  - **Benefícios:**
+    - ⚡ Buscas repetidas são instantâneas (cache hit)
+    - 📊 Queries SQL mais rápidas com índices compostos
+    - 🔄 Cache invalidado automaticamente após sincronização
+    - 📉 Redução de carga no servidor e banco local
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #047 - 12/12/2025 16:15 (Release - Corrigido)
+
+- **Tipo:** Release (Produção)
+- **Versão:** 2.7.0 (Build 44)
+- **Build Code:** 44
+- **Arquivo:** dist/release/SIHCP-Mobile-2.7.0-FIXED.apk
+- **Tamanho:** 15.27 MB
+- **Assinatura:** 
+  - ✅ Assinado com keystore de produção
+  - Certificado: CN=IFMT Inventario, OU=TI, O=IFMT, L=Cuiaba, ST=MT, C=BR
+  - Algoritmo: SHA256withRSA (2048-bit)
+  - Válido até: 2053-04-15
+- **Correção:**
+  - ✅ Clean build completo (gradle clean)
+  - ✅ Sem daemon do Gradle
+  - ✅ Assinatura verificada
+  - ✅ Pronto para instalação
+- **Mudanças:** 
+  - Recompilação completa para resolver erro "Pacote Inválido"
+  - Versão sincronizada com backend 2.7.0
+  - Todas as features implementadas:
+    - ✅ Clean Architecture + MVVM + Hilt
+    - ✅ Sincronização avançada (batch + background)
+    - ✅ Validação de patrimônios
+    - ✅ Coleta de itens sem etiqueta
+    - ✅ Exportação de relatórios (PDF, Excel, CSV)
+    - ✅ Dark Mode
+    - ✅ Busca Rápida com servidor
+    - ✅ Vibração ao coletar
+    - ✅ Rolagem infinita em listas
+    - ✅ Paginação com Paging 3
+- **Status:** ✅ Sucesso - Pronto para instalação
+
+---
+
+## Build #046 - 12/12/2025 15:30 (Release - Assinado e Otimizado)
+
+- **Tipo:** Release (Produção)
+- **Versão:** 2.7.0 (Build 44)
+- **Build Code:** 44
+- **Arquivo:** dist/release/SIHCP-Mobile-2.7.0.apk
+- **Tamanho:** 15.26 MB
+- **Assinatura:** 
+  - ✅ Assinado com keystore de produção
+  - Certificado: CN=IFMT Inventario, OU=TI, O=IFMT, L=Cuiaba, ST=MT, C=BR
+  - Algoritmo: SHA256withRSA (2048-bit)
+  - Válido até: 2053-04-15
+- **Otimização:**
+  - ✅ Zipalign executado (4-byte alignment)
+  - ✅ Verificação de assinatura bem-sucedida
+  - ✅ Pronto para distribuição em produção
+- **Mudanças:** 
+  - Compilação release do APK Android
+  - Versão sincronizada com backend 2.7.0
+  - Todas as features implementadas:
+    - ✅ Clean Architecture + MVVM + Hilt
+    - ✅ Sincronização avançada (batch + background)
+    - ✅ Validação de patrimônios
+    - ✅ Coleta de itens sem etiqueta
+    - ✅ Exportação de relatórios (PDF, Excel, CSV)
+    - ✅ Dark Mode
+    - ✅ Busca Rápida com servidor
+    - ✅ Vibração ao coletar
+    - ✅ Rolagem infinita em listas
+    - ✅ Paginação com Paging 3
+- **Status:** ✅ Sucesso - Pronto para distribuição em produção
+
+---
+
+## Build Produção - 12/12/2025 14:45
+
+- **Tipo:** Production (Thin JARs)
+- **Versão:** 2.0.0
+- **Componentes:**
+  - `sihcp-desktop.jar` - 1.84 MB (Aplicação Desktop Swing)
+  - `mobile-server.jar` - 1.84 MB (Servidor Mobile API)
+  - `lib/` - 133.85 MB (193 dependências compartilhadas)
+  - **Total:** 137.53 MB
+- **Localização:** `dist/producao/`
+- **Mudanças:**
+  - ✅ Melhoria no filtro de sala com contagem de patrimônios
+  - ✅ Novo método `SalaDAO.listarSalasComContagemPatrimonios()`
+  - ✅ Combo de salas agora exibe: "NUMERO_SALA (X itens)"
+  - ✅ Salas ordenadas por quantidade de patrimônios (decrescente)
+  - ✅ Extração corrigida do número da sala no filtro avançado
+  - ✅ Suporte a novo formato com contagem de itens
+- **Scripts de Execução:**
+  - `iniciar-desktop.ps1` / `iniciar-desktop.bat`
+  - `iniciar-servidor-mobile.ps1` / `iniciar-servidor-mobile.bat`
+- **Status:** ✅ Sucesso
+
+---
+
 ## Build #045 - 09/12/2025 22:30
 
 - **Tipo:** Debug
@@ -850,3 +1052,43 @@ Este arquivo registra todas as compilações do APK Android para rastreabilidade
 - **Tamanho:** 11.24 MB
 - **Mudanças:** Build inicial com registro de histórico
 - **Status:** ✅ Sucesso
+
+
+---
+
+## Build Produção - 12/12/2025 01:30
+
+- **Tipo:** Production (Thin JARs - Desktop + Mobile Server)
+- **Versão:** 2.7.0 (Backend) + 2.6.0 (Android)
+- **Componentes Gerados:**
+  - `sihcp-desktop.jar` - 1.84 MB (Aplicação Desktop Swing)
+  - `mobile-server.jar` - 1.84 MB (Servidor Mobile API)
+  - `lib/` - 133.85 MB (193 dependências compartilhadas)
+  - **Total:** 137.53 MB
+- **Localização:** `dist/producao/`
+- **Scripts de Execução:**
+  - `iniciar-desktop.ps1` / `iniciar-desktop.bat` - Inicia aplicação desktop
+  - `iniciar-servidor-mobile.ps1` / `iniciar-servidor-mobile.bat` - Inicia servidor mobile na porta 8081
+- **Configurações Incluídas:**
+  - `application.properties` - Configuração padrão
+  - `application-mobile.properties` - Configuração mobile
+  - `application-performance.properties` - Otimizações de performance
+  - `application-test.properties` - Configuração de testes
+  - `application.yml` - Configuração YAML
+- **Mudanças Incluídas:**
+  - ✅ Correção de sintaxe no `DashboardColetaDAO.buscarEstatisticasPorSala()`
+  - ✅ Suporte a status real da sala (FINALIZADA, EM_ANDAMENTO, etc.)
+  - ✅ Filtro de status na tela StatusSalasFrame
+  - ✅ Renderizadores personalizados com cores e ícones
+  - ✅ Resumo de salas finalizadas vs concluídas
+  - ✅ Progresso geral do inventário
+- **Memória Configurada:**
+  - Desktop: 512MB - 2GB (JVM)
+  - Servidor Mobile: 256MB - 1GB (JVM)
+- **Vantagens dos Thin JARs:**
+  - JARs pequenos (~1.6 MB cada) - fácil distribuição
+  - Dependências compartilhadas - economia de espaço
+  - Atualizações rápidas - apenas JARs mudam
+  - Processos independentes - melhor controle
+  - Melhor gerenciamento de memória
+- **Status:** ✅ Sucesso - Pronto para produção

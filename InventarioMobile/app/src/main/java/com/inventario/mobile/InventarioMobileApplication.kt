@@ -102,6 +102,13 @@ class InventarioMobileApplication : Application(), Configuration.Provider, Token
             } else {
                 android.util.Log.d(TAG, "ℹ️ Sincronização automática desabilitada")
             }
+            
+            // v2.11: Agendar sincronização de fotos (se habilitado)
+            if (preferencesManager.isPhotoOnCollectionEnabled()) {
+                android.util.Log.i(TAG, "📷 Agendando sincronização de fotos...")
+                com.inventario.mobile.worker.PhotoSyncWorker.schedule(this)
+                android.util.Log.i(TAG, "✅ Sincronização de fotos agendada (a cada 6h, apenas Wi-Fi)")
+            }
         } catch (e: Exception) {
             android.util.Log.e(TAG, "❌ Erro ao iniciar sincronização", e)
         }

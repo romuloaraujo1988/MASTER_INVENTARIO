@@ -254,4 +254,20 @@ class QuickSearchViewModel @Inject constructor(
     fun getMensagemValidacao(query: String): String? {
         return buscarPatrimoniosUseCase.getMensagemValidacao(query)
     }
+    
+    /**
+     * Limpa o cache de busca
+     * Útil quando o usuário quer forçar uma nova busca no servidor
+     */
+    fun limparCache() {
+        buscarPatrimoniosUseCase.limparCache()
+        Log.d(TAG, "✓ Cache de busca limpo pelo usuário")
+    }
+    
+    /**
+     * Retorna estatísticas do cache para debug
+     */
+    fun getCacheStats(): String {
+        return buscarPatrimoniosUseCase.getCacheStats()
+    }
 }

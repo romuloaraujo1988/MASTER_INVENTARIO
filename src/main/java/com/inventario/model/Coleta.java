@@ -34,6 +34,19 @@ public class Coleta {
     private String descricaoItemSemEtiqueta;
     private String categoriaItemSemEtiqueta;
     
+    // Campos de métricas de tempo (Analytics)
+    private Integer tempoColetaSegundos;      // Tempo total da coleta em segundos
+    private Integer tempoScanSegundos;        // Tempo do scan/busca em segundos
+    private Integer tempoPreenchimentoSegundos; // Tempo de preenchimento em segundos
+    private String metodoColeta;              // MANUAL, SCANNER, BUSCA_DESCRICAO
+    private Integer horaColeta;               // Hora da coleta (0-23)
+    private Integer diaSemana;                // Dia da semana (1=Dom, 7=Sab)
+    private String periodoColeta;             // MANHA, TARDE, NOITE
+    private String tipoScan;                  // QR_CODE, BARCODE, MANUAL
+    private Integer tentativasScan;           // Número de tentativas de scan
+    private Integer errosScan;                // Número de erros de scan
+    private String qualidadeEtiqueta;         // BOA, REGULAR, RUIM, ILEGIVEL
+    
     // Campos transientes para exibição
     private String numeroPatrimonio;
     private String descricaoPatrimonio;
@@ -229,6 +242,128 @@ public class Coleta {
     
     public void setCategoriaItemSemEtiqueta(String categoriaItemSemEtiqueta) {
         this.categoriaItemSemEtiqueta = categoriaItemSemEtiqueta;
+    }
+    
+    // Getters e Setters para métricas de tempo (Analytics)
+    public Integer getTempoColetaSegundos() {
+        return tempoColetaSegundos;
+    }
+    
+    public void setTempoColetaSegundos(Integer tempoColetaSegundos) {
+        this.tempoColetaSegundos = tempoColetaSegundos;
+    }
+    
+    public Integer getTempoScanSegundos() {
+        return tempoScanSegundos;
+    }
+    
+    public void setTempoScanSegundos(Integer tempoScanSegundos) {
+        this.tempoScanSegundos = tempoScanSegundos;
+    }
+    
+    public Integer getTempoPreenchimentoSegundos() {
+        return tempoPreenchimentoSegundos;
+    }
+    
+    public void setTempoPreenchimentoSegundos(Integer tempoPreenchimentoSegundos) {
+        this.tempoPreenchimentoSegundos = tempoPreenchimentoSegundos;
+    }
+    
+    public String getMetodoColeta() {
+        return metodoColeta;
+    }
+    
+    public void setMetodoColeta(String metodoColeta) {
+        this.metodoColeta = metodoColeta;
+    }
+    
+    public Integer getHoraColeta() {
+        return horaColeta;
+    }
+    
+    public void setHoraColeta(Integer horaColeta) {
+        this.horaColeta = horaColeta;
+    }
+    
+    public Integer getDiaSemana() {
+        return diaSemana;
+    }
+    
+    public void setDiaSemana(Integer diaSemana) {
+        this.diaSemana = diaSemana;
+    }
+    
+    public String getPeriodoColeta() {
+        return periodoColeta;
+    }
+    
+    public void setPeriodoColeta(String periodoColeta) {
+        this.periodoColeta = periodoColeta;
+    }
+    
+    public String getTipoScan() {
+        return tipoScan;
+    }
+    
+    public void setTipoScan(String tipoScan) {
+        this.tipoScan = tipoScan;
+    }
+    
+    public Integer getTentativasScan() {
+        return tentativasScan;
+    }
+    
+    public void setTentativasScan(Integer tentativasScan) {
+        this.tentativasScan = tentativasScan;
+    }
+    
+    public Integer getErrosScan() {
+        return errosScan;
+    }
+    
+    public void setErrosScan(Integer errosScan) {
+        this.errosScan = errosScan;
+    }
+    
+    public String getQualidadeEtiqueta() {
+        return qualidadeEtiqueta;
+    }
+    
+    public void setQualidadeEtiqueta(String qualidadeEtiqueta) {
+        this.qualidadeEtiqueta = qualidadeEtiqueta;
+    }
+    
+    /**
+     * Calcula e define as métricas de tempo automaticamente
+     * @param inicioColeta Timestamp do início da coleta
+     * @param inicioScan Timestamp do início do scan (pode ser null)
+     * @param fimScan Timestamp do fim do scan (pode ser null)
+     */
+    public void calcularMetricasTempo(long inicioColeta, Long inicioScan, Long fimScan) {
+        long agora = System.currentTimeMillis();
+        
+        // Tempo total da coleta
+        this.tempoColetaSegundos = (int) ((agora - inicioColeta) / 1000);
+        
+        // Tempo de scan (se disponível)
+        if (inicioScan != null && fimScan != null) {
+            this.tempoScanSegundos = (int) ((fimScan - inicioScan) / 1000);
+            this.tempoPreenchimentoSegundos = this.tempoColetaSegundos - this.tempoScanSegundos;
+        }
+        
+        // Calcular hora, dia da semana e período
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        this.horaColeta = cal.get(java.util.Calendar.HOUR_OF_DAY);
+        this.diaSemana = cal.get(java.util.Calendar.DAY_OF_WEEK);
+        
+        // Definir período
+        if (this.horaColeta >= 6 && this.horaColeta < 12) {
+            this.periodoColeta = "MANHA";
+        } else if (this.horaColeta >= 12 && this.horaColeta < 18) {
+            this.periodoColeta = "TARDE";
+        } else {
+            this.periodoColeta = "NOITE";
+        }
     }
     
     // Campos transientes

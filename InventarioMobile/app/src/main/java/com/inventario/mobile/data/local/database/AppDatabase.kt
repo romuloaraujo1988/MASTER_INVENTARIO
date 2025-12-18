@@ -19,9 +19,10 @@ import com.inventario.mobile.data.local.entity.*
         ColetaEntity::class,
         SincronizacaoEntity::class,
         SyncLogEntity::class,
-        LogColetaEntity::class  // v2.2: Log de auditoria
+        LogColetaEntity::class,  // v2.2: Log de auditoria
+        HistoricoScanEntity::class  // v2.11: Histórico de scans
     ],
-    version = 8,  // v2.7: Adicionados campos para item sem etiqueta
+    version = 10,  // v2.11: Adicionada tabela de histórico de scans
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -34,6 +35,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun syncLogDao(): SyncLogDao
     abstract fun logColetaDao(): LogColetaDao  // v2.2: DAO de auditoria
     abstract fun dashboardDao(): DashboardDao  // v2.4: DAO reativo para estatísticas
+    abstract fun historicoScanDao(): HistoricoScanDao  // v2.11: DAO de histórico de scans
     
     companion object {
         @Volatile
@@ -53,6 +55,52 @@ abstract class AppDatabase : RoomDatabase() {
                 
                 // Criar índice para semEtiqueta
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_coleta_semEtiqueta ON coleta(semEtiqueta)")
+            }
+        }
+        
+        /**
+         * Migração da versão 8 para 9
+         * Adiciona campos para foto opcional otimizada na coleta
+         * v2.11: Foto por exceção (divergência, estado ruim, atenção)
+         */
+        private val MIGRATION_8_9 = object : androidx.room.migration.Migration(8, 9) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                // Adicionar campos de foto otimizada
+                database.execSQL("ALTER TABLE coleta ADD COLUMN fotoPath TEXT")
+                database.execSQL("ALTER TABLE coleta ADD COLUMN fotoThumbnailPath TEXT")
+                database.execSQL("ALTER TABLE coleta ADD COLUMN fotoSincronizada INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE coleta ADD COLUMN motivoFoto TEXT")
+                
+                // Criar índice para fotos pendentes de sincronização
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_coleta_fotoSincronizada ON coleta(fotoSincronizada)")
+            }
+        }
+        
+        /**
+         * Migração da versão 9 para 10
+         * Adiciona tabela de histórico de scans
+         * v2.11: Histórico de patrimônios escaneados/consultados
+         */
+        private val MIGRATION_9_10 = object : androidx.room.migration.Migration(9, 10) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                // Criar tabela historico_scan
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS historico_scan (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        numeroPatrimonio TEXT NOT NULL,
+                        descricao TEXT,
+                        nomeSala TEXT,
+                        tipoAcesso TEXT NOT NULL,
+                        foiColetado INTEGER NOT NULL DEFAULT 0,
+                        jaEstaColetado INTEGER NOT NULL DEFAULT 0,
+                        timestamp INTEGER NOT NULL
+                    )
+                """)
+                
+                // Criar índices
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_historico_scan_numeroPatrimonio ON historico_scan(numeroPatrimonio)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_historico_scan_timestamp ON historico_scan(timestamp)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_historico_scan_tipoAcesso ON historico_scan(tipoAcesso)")
             }
         }
         
@@ -169,7 +217,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "inventario_offline.db"
                 )
-                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)  // v2.7: Adicionar migração 7->8 (sem etiqueta)
+                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)  // v2.11: Adicionar migração 9->10 (histórico scans)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

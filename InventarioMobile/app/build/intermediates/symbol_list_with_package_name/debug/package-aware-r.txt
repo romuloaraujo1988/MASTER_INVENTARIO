@@ -3117,6 +3117,9 @@ drawable abc_vector_test
 drawable avd_hide_password
 drawable avd_show_password
 drawable bg_badge
+drawable bg_circle_error
+drawable bg_circle_primary
+drawable bg_circle_success
 drawable bg_error_light
 drawable bg_info_coleta
 drawable bg_spinner
@@ -3161,11 +3164,13 @@ drawable ic_call_answer_video
 drawable ic_call_answer_video_low
 drawable ic_call_decline
 drawable ic_call_decline_low
+drawable ic_camera
 drawable ic_check
 drawable ic_check_circle
 drawable ic_clear
 drawable ic_clear_black_24
 drawable ic_clock_black_24dp
+drawable ic_close
 drawable ic_collections
 drawable ic_csv
 drawable ic_dashboard
@@ -3178,7 +3183,9 @@ drawable ic_excel
 drawable ic_export
 drawable ic_filter
 drawable ic_fingerprint
+drawable ic_history
 drawable ic_home
+drawable ic_info
 drawable ic_inventory
 drawable ic_keyboard_black_24dp
 drawable ic_list
@@ -3304,6 +3311,7 @@ drawable status_background
 drawable test_level_drawable
 drawable tooltip_frame_dark
 drawable tooltip_frame_light
+drawable warning_background
 id ALT
 id BOTTOM_END
 id BOTTOM_START
@@ -3371,6 +3379,7 @@ id action_export
 id action_export_pdf
 id action_filter
 id action_image
+id action_limpar
 id action_logout
 id action_menu_divider
 id action_menu_presenter
@@ -3431,6 +3440,7 @@ id btn6
 id btn7
 id btn8
 id btn9
+id btnAddPhoto
 id btnAplicarFiltros
 id btnBackToDashboard
 id btnBackspace
@@ -3467,6 +3477,7 @@ id btnOpen
 id btnQuickScan
 id btnRefresh
 id btnRegistrar
+id btnRemovePhoto
 id btnRemoverFoto
 id btnRemoverSalaFixada
 id btnResetCollectionCount
@@ -3517,6 +3528,7 @@ id cardCollections
 id cardConnectionStatus
 id cardDivergencias
 id cardEstatisticas
+id cardFotoOpcional
 id cardGraficoEvolucao
 id cardHeader
 id cardInput
@@ -3553,6 +3565,7 @@ id checked
 id chipAll
 id chipAllUsers
 id chipColetados
+id chipConsultas
 id chipDivergencias
 id chipFiltroUsuario
 id chipFiltrosAvancados
@@ -3716,6 +3729,7 @@ id ifRoom
 id ignore
 id ignoreRequest
 id image
+id imgPhotoPreview
 id imgPreview
 id immediateStop
 id included
@@ -3733,6 +3747,7 @@ id ivMicAnimation
 id ivStatus
 id ivStatusIcon
 id ivSyncIcon
+id ivTipoAcesso
 id ivUserAvatar
 id jumpToEnd
 id jumpToStart
@@ -3751,10 +3766,13 @@ id layoutInfoColeta
 id layoutLocalizacao
 id layoutLocation
 id layoutMarcaModelo
+id layoutMotivoFoto
 id layoutNoResults
 id layoutOfflineIndicator
 id layoutOfflineStatus
 id layoutPatrimonioInfo
+id layoutPhotoPreview
+id layoutPhotoStats
 id layoutResponsavel
 id layoutSala
 id layoutSalaFixada
@@ -3846,6 +3864,7 @@ id nav_collections
 id nav_controller_view_tag
 id nav_dashboard
 id nav_divergencias
+id nav_historico_scans
 id nav_host_fragment_container
 id nav_inventario
 id nav_inventory
@@ -4012,6 +4031,7 @@ id spacer
 id special_effects_controller_view_tag
 id spinnerCategoria
 id spinnerEstado
+id spinnerMotivoFoto
 id spinnerResponsavel
 id spinnerSala
 id spinnerSalas
@@ -4051,6 +4071,8 @@ id switchDescricao
 id switchForceOffline
 id switchNotifications
 id switchOfflineMode
+id switchPhotoOnCollection
+id switchPhotoSyncWifiOnly
 id switchSync
 id switchSyncOnWifiOnly
 id switchVibrationOnCollection
@@ -4076,6 +4098,7 @@ id textColetadoPor
 id textColetasCount
 id textDataColeta
 id textEnd
+id textFotoLabel
 id textLocalizacaoEncontrada
 id textPatrimonioDescricao
 id textPatrimonioNumero
@@ -4158,6 +4181,7 @@ id tvColetados
 id tvColetadosCount
 id tvColetadosHoje
 id tvColetadosSemana
+id tvColetasHoje
 id tvColetasPendentesCount
 id tvColetores
 id tvCollectionCount
@@ -4180,6 +4204,7 @@ id tvEstadoEncontrado
 id tvFotoStatus
 id tvGraficoError
 id tvHorario
+id tvIpChangeWarning
 id tvKpiColetados
 id tvKpiColetores
 id tvKpiDivergencias
@@ -4200,6 +4225,7 @@ id tvNetworkStatus
 id tvNoOfflineMethod
 id tvNoResultsMessage
 id tvNumero
+id tvNumeroPatrimonio
 id tvNumeroSerie
 id tvObservacoes
 id tvObservacoesColeta
@@ -4224,6 +4250,7 @@ id tvPendingSync
 id tvPercentual
 id tvPercentualConclusao
 id tvPercentualPendente
+id tvPhotoStats
 id tvPlaceholder
 id tvProgress
 id tvProgresso
@@ -4245,6 +4272,7 @@ id tvSalaNome
 id tvSalasCount
 id tvSavedUser
 id tvScanInstruction
+id tvScansHoje
 id tvSearchTime
 id tvSetor
 id tvStatus
@@ -4261,6 +4289,8 @@ id tvSyncInterval
 id tvSyncProgress
 id tvSyncWarning
 id tvSyncedCount
+id tvTaxaConversao
+id tvTempo
 id tvTitle
 id tvTotal
 id tvTotalAtualizados
@@ -4286,6 +4316,7 @@ id unlabeled
 id up
 id useLogo
 id vertical_only
+id viewIndicador
 id viewPager
 id viewStatusIndicator
 id view_offset_helper
@@ -4446,6 +4477,7 @@ layout activity_detalhe_patrimonio
 layout activity_developer_settings
 layout activity_export_pdf
 layout activity_filtros
+layout activity_historico_scans
 layout activity_inventario
 layout activity_inventario_tabs
 layout activity_item_sem_etiqueta
@@ -4507,6 +4539,7 @@ layout item_coleta
 layout item_coleta_header
 layout item_descricao
 layout item_estatisticas_sala
+layout item_historico_scan
 layout item_load_state
 layout item_loading
 layout item_patrimonio
@@ -4586,6 +4619,7 @@ menu bottom_navigation
 menu main_menu
 menu menu_coleta_pendente
 menu menu_coletas
+menu menu_historico_scans
 menu menu_inventario
 menu menu_inventario_tabs
 menu navigation_drawer_menu

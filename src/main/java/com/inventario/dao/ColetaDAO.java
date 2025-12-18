@@ -119,12 +119,16 @@ public class ColetaDAO {
                   "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         } else {
             // PostgreSQL: usar TABELA_COLETA com nomes de colunas MAIÚSCULOS
+            // Inclui campos de métricas de tempo para Analytics
             sql = "INSERT INTO TABELA_COLETA (ID_INVENTARIO, ID_PATRIMONIO, ID_COLETOR, ID_PARTICIPANTE_INVENTARIO, " +
                   "DATA_COLETA, STATUS_COLETA, OBSERVACAO_COLETA, LOCALIZACAO_ATUAL, " +
                   "LOCALIZACAO_ENCONTRADA, ESTADO_ENCONTRADO, DIVERGENCIA, MOTIVO_DIVERGENCIA, " +
                   "LATITUDE, LONGITUDE, FOTO_PATRIMONIO, SEM_ETIQUETA, " +
-                  "DESCRICAO_ITEM_SEM_ETIQUETA, CATEGORIA_ITEM_SEM_ETIQUETA) " +
-                  "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                  "DESCRICAO_ITEM_SEM_ETIQUETA, CATEGORIA_ITEM_SEM_ETIQUETA, " +
+                  "TEMPO_COLETA_SEGUNDOS, TEMPO_SCAN_SEGUNDOS, TEMPO_PREENCHIMENTO_SEGUNDOS, " +
+                  "METODO_COLETA, HORA_COLETA, DIA_SEMANA, PERIODO_COLETA, " +
+                  "TIPO_SCAN, TENTATIVAS_SCAN, ERROS_SCAN, QUALIDADE_ETIQUETA) " +
+                  "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         }
         
         try (Connection conn = DatabaseConnection.getConnection();
@@ -150,7 +154,7 @@ public class ColetaDAO {
                 stmt.setBoolean(11, coleta.isSemEtiqueta());
                 stmt.setString(12, coleta.getDescricaoItemSemEtiqueta());
             } else {
-                // PostgreSQL: 18 parâmetros
+                // PostgreSQL: 29 parâmetros (inclui métricas de tempo)
                 stmt.setInt(1, coleta.getIdInventario());
                 // ID_PATRIMONIO pode ser NULL para itens sem etiqueta
                 if (coleta.isSemEtiqueta() || coleta.getIdPatrimonio() == 0) {
@@ -185,6 +189,56 @@ public class ColetaDAO {
                 stmt.setBoolean(16, coleta.isSemEtiqueta());
                 stmt.setString(17, coleta.getDescricaoItemSemEtiqueta());
                 stmt.setString(18, coleta.getCategoriaItemSemEtiqueta());
+                
+                // Campos de métricas de tempo (Analytics)
+                if (coleta.getTempoColetaSegundos() != null) {
+                    stmt.setInt(19, coleta.getTempoColetaSegundos());
+                } else {
+                    stmt.setNull(19, Types.INTEGER);
+                }
+                
+                if (coleta.getTempoScanSegundos() != null) {
+                    stmt.setInt(20, coleta.getTempoScanSegundos());
+                } else {
+                    stmt.setNull(20, Types.INTEGER);
+                }
+                
+                if (coleta.getTempoPreenchimentoSegundos() != null) {
+                    stmt.setInt(21, coleta.getTempoPreenchimentoSegundos());
+                } else {
+                    stmt.setNull(21, Types.INTEGER);
+                }
+                
+                stmt.setString(22, coleta.getMetodoColeta());
+                
+                if (coleta.getHoraColeta() != null) {
+                    stmt.setInt(23, coleta.getHoraColeta());
+                } else {
+                    stmt.setNull(23, Types.INTEGER);
+                }
+                
+                if (coleta.getDiaSemana() != null) {
+                    stmt.setInt(24, coleta.getDiaSemana());
+                } else {
+                    stmt.setNull(24, Types.INTEGER);
+                }
+                
+                stmt.setString(25, coleta.getPeriodoColeta());
+                stmt.setString(26, coleta.getTipoScan());
+                
+                if (coleta.getTentativasScan() != null) {
+                    stmt.setInt(27, coleta.getTentativasScan());
+                } else {
+                    stmt.setNull(27, Types.INTEGER);
+                }
+                
+                if (coleta.getErrosScan() != null) {
+                    stmt.setInt(28, coleta.getErrosScan());
+                } else {
+                    stmt.setNull(28, Types.INTEGER);
+                }
+                
+                stmt.setString(29, coleta.getQualidadeEtiqueta());
             }
             
             stmt.executeUpdate();
@@ -503,6 +557,13 @@ public class ColetaDAO {
         return coletas;
     }
     
+    /**
+     * Busca coletas por ID da sala
+     * IMPORTANTE: Retorna apenas coletas de patrimônios COM etiqueta (sem_etiqueta = false)
+     * Para itens sem etiqueta, usar buscarColetasSemEtiquetaPorSala()
+     * @param idSala ID da sala
+     * @return Lista de coletas encontradas na sala (apenas patrimônios com etiqueta)
+     */
     public List<Coleta> buscarColetasPorSala(int idSala) throws SQLException {
         boolean sqlite = isSQLite();
         
@@ -510,6 +571,7 @@ public class ColetaDAO {
         if (sqlite) {
             // SQLite: Query com JOINs para buscar dados completos
             // IMPORTANTE: Incluir situacao_encontrada (campo de estado no SQLite)
+            // FILTRO: Apenas patrimônios COM etiqueta
             sql = "SELECT c.*, " +
                   "c.situacao_encontrada, " +
                   "p.numero as NUMERO_PATRIMONIO, " +
@@ -520,9 +582,11 @@ public class ColetaDAO {
                   "LEFT JOIN local_patrimonio p ON c.id_patrimonio = p.id " +
                   "LEFT JOIN local_inventario i ON c.id_inventario = i.id " +
                   "WHERE p.id_sala = ? " +
+                  "AND (c.sem_etiqueta = 0 OR c.sem_etiqueta IS NULL) " +
                   "ORDER BY c.data_coleta DESC";
         } else {
             // PostgreSQL: usar TABELA_* e colunas MAIÚSCULAS
+            // FILTRO: Apenas patrimônios COM etiqueta (sem_etiqueta = false ou NULL)
             sql = "SELECT c.*, p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
                   "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO " +
                   "FROM " + getColetaTableName() + " c " +
@@ -530,7 +594,9 @@ public class ColetaDAO {
                   "LEFT JOIN " + getParticipanteTableName() + " pi ON c.ID_PARTICIPANTE_INVENTARIO = pi.id_participante " +
                   "LEFT JOIN " + getUsuarioTableName() + " u ON pi.ID_USUARIO = u.ID " +
                   "LEFT JOIN " + getInventarioTableName() + " i ON c.ID_INVENTARIO = i.ID " +
-                  "WHERE p.ID_SALA = ? ORDER BY c.DATA_COLETA DESC";
+                  "WHERE p.ID_SALA = ? " +
+                  "AND (c.SEM_ETIQUETA = false OR c.SEM_ETIQUETA IS NULL) " +
+                  "ORDER BY c.DATA_COLETA DESC";
         }
         
         List<Coleta> coletas = new ArrayList<>();
@@ -553,11 +619,14 @@ public class ColetaDAO {
     /**
      * Busca coletas por número da sala (usado no ColetaFrame)
      * Busca EXATA: "CAE" encontra apenas "CAE" (não "CAE(IFMT - PDL)")
+     * IMPORTANTE: Retorna apenas coletas de patrimônios COM etiqueta (sem_etiqueta = false)
+     * Para itens sem etiqueta, usar buscarColetasSemEtiquetaPorSala()
      * @param numeroSala Número/identificação da sala (ex: "CAE", "101", etc)
-     * @return Lista de coletas encontradas na sala
+     * @return Lista de coletas encontradas na sala (apenas patrimônios com etiqueta)
      */
     public List<Coleta> buscarColetasPorNumeroSala(String numeroSala) throws SQLException {
         System.out.println("[DEBUG ColetaDAO] Buscando coletas por número de sala: '" + numeroSala + "'");
+        System.out.println("[DEBUG ColetaDAO] FILTRO: Apenas patrimônios COM etiqueta (sem_etiqueta = false)");
         
         boolean sqlite = isSQLite();
         
@@ -565,6 +634,7 @@ public class ColetaDAO {
         if (sqlite) {
             // SQLite: Busca EXATA pela localizacao_encontrada
             // IMPORTANTE: Incluir situacao_encontrada (campo de estado no SQLite)
+            // FILTRO: Apenas patrimônios COM etiqueta
             sql = "SELECT c.*, " +
                   "c.situacao_encontrada, " +
                   "p.numero as NUMERO_PATRIMONIO, " +
@@ -575,9 +645,11 @@ public class ColetaDAO {
                   "LEFT JOIN local_patrimonio p ON c.id_patrimonio = p.id " +
                   "LEFT JOIN local_inventario i ON c.id_inventario = i.id " +
                   "WHERE c.localizacao_encontrada = ? " +
+                  "AND (c.sem_etiqueta = 0 OR c.sem_etiqueta IS NULL) " +
                   "ORDER BY c.data_coleta DESC";
         } else {
             // PostgreSQL: Busca EXATA pela LOCALIZACAO_ENCONTRADA
+            // FILTRO: Apenas patrimônios COM etiqueta (sem_etiqueta = false ou NULL)
             sql = "SELECT c.*, p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
                   "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO " +
                   "FROM " + getColetaTableName() + " c " +
@@ -586,6 +658,7 @@ public class ColetaDAO {
                   "LEFT JOIN " + getUsuarioTableName() + " u ON pi.ID_USUARIO = u.ID " +
                   "LEFT JOIN " + getInventarioTableName() + " i ON c.ID_INVENTARIO = i.ID " +
                   "WHERE c.LOCALIZACAO_ENCONTRADA = ? " +
+                  "AND (c.SEM_ETIQUETA = false OR c.SEM_ETIQUETA IS NULL) " +
                   "ORDER BY c.DATA_COLETA DESC";
         }
         
@@ -608,6 +681,176 @@ public class ColetaDAO {
         
         System.out.println("[DEBUG ColetaDAO] Encontradas " + coletas.size() + " coletas para sala '" + numeroSala + "'");
         return coletas;
+    }
+    
+    /**
+     * Conta o total de coletas para uma sala (query rápida para progresso).
+     * @param numeroSala Número/identificação da sala
+     * @return Total de coletas na sala
+     */
+    public int contarColetasPorNumeroSala(String numeroSala) throws SQLException {
+        boolean sqlite = isSQLite();
+        
+        String sql;
+        if (sqlite) {
+            sql = "SELECT COUNT(*) FROM local_coleta " +
+                  "WHERE localizacao_encontrada = ? " +
+                  "AND (sem_etiqueta = 0 OR sem_etiqueta IS NULL)";
+        } else {
+            sql = "SELECT COUNT(*) FROM " + getColetaTableName() + " " +
+                  "WHERE LOCALIZACAO_ENCONTRADA = ? " +
+                  "AND (SEM_ETIQUETA = false OR SEM_ETIQUETA IS NULL)";
+        }
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, numeroSala);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+    
+    /**
+     * Busca coletas por número da sala de forma PAGINADA.
+     * Versão OTIMIZADA para VPN lenta - apenas 1 JOIN (patrimônio).
+     * @param numeroSala Número/identificação da sala
+     * @param offset Posição inicial (0-based)
+     * @param limit Quantidade máxima de registros
+     * @return Lista de coletas (pode ser menor que limit se não houver mais)
+     */
+    public List<Coleta> buscarColetasPorNumeroSalaPaginado(String numeroSala, int offset, int limit) throws SQLException {
+        System.out.println("[DEBUG ColetaDAO] Buscando coletas paginado OTIMIZADO: sala='" + numeroSala + "', offset=" + offset + ", limit=" + limit);
+        
+        boolean sqlite = isSQLite();
+        
+        // QUERY OTIMIZADA: Apenas 1 JOIN (patrimônio) para ter número e descrição
+        // NOTA: Usar aliases em minúsculas para compatibilidade (PostgreSQL converte para minúsculas)
+        String sql;
+        if (sqlite) {
+            sql = "SELECT c.id, c.id_patrimonio, c.id_inventario, c.data_coleta, " +
+                  "c.localizacao_encontrada, c.estado_encontrado, c.observacao, " +
+                  "c.sem_etiqueta, c.descricao_item_sem_etiqueta, " +
+                  "p.numero as numero_patrimonio, p.descricao as descricao_patrimonio " +
+                  "FROM local_coleta c " +
+                  "LEFT JOIN local_patrimonio p ON c.id_patrimonio = p.id " +
+                  "WHERE c.localizacao_encontrada = ? " +
+                  "AND (c.sem_etiqueta = 0 OR c.sem_etiqueta IS NULL) " +
+                  "ORDER BY c.data_coleta DESC " +
+                  "LIMIT ? OFFSET ?";
+        } else {
+            // PostgreSQL: Query com apenas 1 JOIN (patrimônio)
+            // Colunas são case-insensitive, aliases são convertidos para minúsculas
+            sql = "SELECT c.id, c.id_patrimonio, c.id_inventario, c.data_coleta, " +
+                  "c.localizacao_encontrada, c.estado_encontrado, c.observacao, " +
+                  "c.sem_etiqueta, c.descricao_item_sem_etiqueta, " +
+                  "p.numero as numero_patrimonio, p.descricao as descricao_patrimonio " +
+                  "FROM " + getColetaTableName() + " c " +
+                  "LEFT JOIN " + getPatrimonioTableName() + " p ON c.id_patrimonio = p.id " +
+                  "WHERE c.localizacao_encontrada = ? " +
+                  "AND (c.sem_etiqueta = false OR c.sem_etiqueta IS NULL) " +
+                  "ORDER BY c.data_coleta DESC " +
+                  "LIMIT ? OFFSET ?";
+        }
+        
+        List<Coleta> coletas = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, numeroSala);
+            stmt.setInt(2, limit);
+            stmt.setInt(3, offset);
+            
+            System.out.println("[DEBUG ColetaDAO] Executando query...");
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                System.out.println("[DEBUG ColetaDAO] Query executada, processando resultados...");
+                while (rs.next()) {
+                    Coleta coleta = criarColetaOtimizadaFromResultSet(rs, sqlite);
+                    coletas.add(coleta);
+                    System.out.println("[DEBUG ColetaDAO] Coleta carregada: ID=" + coleta.getId() + 
+                        ", Patrimonio=" + coleta.getNumeroPatrimonio());
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[DEBUG ColetaDAO] ERRO SQL: " + e.getMessage());
+            throw e;
+        }
+        
+        System.out.println("[DEBUG ColetaDAO] Lote carregado: " + coletas.size() + " coletas");
+        return coletas;
+    }
+    
+    /**
+     * Cria uma Coleta com dados otimizados (apenas 1 JOIN).
+     * Usado para carregamento rápido em VPN lenta.
+     * NOTA: PostgreSQL converte aliases para minúsculas, então usamos minúsculas para todos.
+     */
+    private Coleta criarColetaOtimizadaFromResultSet(ResultSet rs, boolean sqlite) throws SQLException {
+        Coleta coleta = new Coleta();
+        
+        // PostgreSQL retorna colunas em minúsculas, usar sempre minúsculas para compatibilidade
+        coleta.setId(rs.getInt("id"));
+        
+        int idPatrimonio = rs.getInt("id_patrimonio");
+        if (!rs.wasNull()) {
+            coleta.setIdPatrimonio(idPatrimonio);
+        }
+        
+        int idInventario = rs.getInt("id_inventario");
+        if (!rs.wasNull()) {
+            coleta.setIdInventario(idInventario);
+        }
+        
+        java.sql.Timestamp dataColeta = rs.getTimestamp("data_coleta");
+        if (dataColeta != null) {
+            coleta.setDataColeta(dataColeta);
+        }
+        
+        coleta.setLocalizacaoEncontrada(rs.getString("localizacao_encontrada"));
+        coleta.setEstadoEncontrado(rs.getString("estado_encontrado"));
+        coleta.setObservacaoColeta(rs.getString("observacao"));
+        
+        // Número e descrição do patrimônio (do JOIN) - aliases em minúsculas
+        String numeroPatrimonio = rs.getString("numero_patrimonio");
+        String descricaoPatrimonio = rs.getString("descricao_patrimonio");
+        String descricaoItem = rs.getString("descricao_item_sem_etiqueta");
+        
+        // Verificar se é item sem etiqueta
+        boolean semEtiqueta = false;
+        try {
+            semEtiqueta = rs.getBoolean("sem_etiqueta");
+        } catch (SQLException e) {
+            // Coluna pode não existir
+        }
+        coleta.setSemEtiqueta(semEtiqueta);
+        
+        // Número do patrimônio
+        if (numeroPatrimonio != null && !numeroPatrimonio.isEmpty()) {
+            coleta.setNumeroPatrimonio(numeroPatrimonio);
+        } else if (semEtiqueta) {
+            coleta.setNumeroPatrimonio("SEM ETIQUETA");
+        } else {
+            coleta.setNumeroPatrimonio(idPatrimonio > 0 ? String.valueOf(idPatrimonio) : "-");
+        }
+        
+        // Descrição do item - priorizar descricao_item_sem_etiqueta para itens sem etiqueta
+        if (descricaoItem != null && !descricaoItem.isEmpty()) {
+            coleta.setDescricaoItemSemEtiqueta(descricaoItem);
+            coleta.setDescricaoPatrimonio(descricaoItem);
+        } else if (descricaoPatrimonio != null && !descricaoPatrimonio.isEmpty()) {
+            coleta.setDescricaoPatrimonio(descricaoPatrimonio);
+        } else if (semEtiqueta) {
+            coleta.setDescricaoPatrimonio("Item sem etiqueta");
+        } else {
+            coleta.setDescricaoPatrimonio("Patrimônio #" + idPatrimonio);
+        }
+        
+        return coleta;
     }
     
     /**
@@ -2861,7 +3104,7 @@ public class ColetaDAO {
                   "    COUNT(*) as quantidade " +
                   "FROM " + getColetaTableName() + " c " +
                   "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
-                  "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID " +
+                  "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
                   "WHERE c.ID_INVENTARIO = ? " +
                   "GROUP BY COALESCE(c.LOCALIZACAO_ENCONTRADA, s.NUMERO, 'Sem Sala') " +
                   "ORDER BY quantidade DESC, nome_sala";
@@ -2871,7 +3114,7 @@ public class ColetaDAO {
                   "    COUNT(*) as quantidade " +
                   "FROM " + getColetaTableName() + " c " +
                   "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
-                  "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID " +
+                  "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID_SALA " +
                   "GROUP BY COALESCE(c.LOCALIZACAO_ENCONTRADA, s.NUMERO, 'Sem Sala') " +
                   "ORDER BY quantidade DESC, nome_sala";
         }

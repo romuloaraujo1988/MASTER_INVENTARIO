@@ -1,0 +1,126 @@
+@startuml Diagrama Clean Architecture - App Mobile
+!theme plain
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+
+title SIHCP Mobile - Clean Architecture + MVVM
+footer Aplicativo Android - Kotlin
+
+' Cores por camada
+skinparam package {
+    BackgroundColor<<presentation>> #E3F2FD
+    BackgroundColor<<domain>> #E8F5E9
+    BackgroundColor<<data>> #FFF3E0
+}
+
+package "Presentation Layer" <<presentation>> {
+    component [Activities/Fragments] as ui {
+        component [ColetaActivity]
+        component [ScannerActivity]
+        component [SyncActivity]
+        component [DashboardFragment]
+    }
+    
+    component [ViewModels] as vm {
+        component [ColetaViewModel]
+        component [SyncViewModel]
+        component [DashboardViewModel]
+    }
+    
+    component [UI States] as states {
+        component [ColetaState]
+        component [SyncState]
+    }
+}
+
+package "Domain Layer" <<domain>> {
+    component [Use Cases] as usecases {
+        component [RegistrarColetaUseCase]
+        component [BuscarPatrimonioUseCase]
+        component [SincronizarDadosUseCase]
+        component [ValidarPatrimonioUseCase]
+    }
+    
+    component [Domain Models] as models {
+        component [Patrimonio]
+        component [Coleta]
+        component [Sala]
+    }
+    
+    component [Repository Interfaces] as repointerface {
+        component [ColetaRepository]
+        component [PatrimonioRepository]
+    }
+}
+
+package "Data Layer" <<data>> {
+    component [Repository Impl] as repoimpl {
+        component [ColetaRepositoryImpl]
+        component [PatrimonioRepositoryImpl]
+    }
+    
+    component [Local Data Source] as local {
+        component [Room Database]
+        component [DAOs]
+        component [Entities]
+    }
+    
+    component [Remote Data Source] as remote {
+        component [Retrofit APIs]
+        component [DTOs]
+        component [Interceptors]
+    }
+    
+    component [Mappers] as mappers {
+        component [Entity ↔ Domain]
+        component [DTO ↔ Domain]
+    }
+}
+
+' Dependências - Presentation
+ui --> vm : observa
+vm --> usecases : invoca
+vm --> states : emite
+
+' Dependências - Domain
+usecases --> repointerface : usa
+usecases --> models : manipula
+
+' Dependências - Data
+repoimpl ..|> repointerface : implementa
+repoimpl --> local : acessa
+repoimpl --> remote : acessa
+repoimpl --> mappers : converte
+
+' Notas
+note right of usecases
+  **Regras de Negócio:**
+  • Validação de patrimônio
+  • Verificação de duplicatas
+  • Lógica de sincronização
+  • Tratamento de erros
+end note
+
+note right of repoimpl
+  **Estratégia Offline-First:**
+  1. Salva localmente (SQLite)
+  2. Tenta sincronizar (API)
+  3. Marca como pendente se falhar
+end note
+
+note bottom of local
+  **Room Database:**
+  • PatrimonioEntity
+  • ColetaEntity
+  • SalaEntity
+  • Índices otimizados
+end note
+
+note bottom of remote
+  **Retrofit + OkHttp:**
+  • JWT Authentication
+  • Refresh Token Interceptor
+  • Timeout handling
+end note
+
+@enduml

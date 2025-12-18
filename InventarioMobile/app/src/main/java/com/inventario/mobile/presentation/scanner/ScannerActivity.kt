@@ -58,6 +58,13 @@ class ScannerActivity : AppCompatActivity() {
     @Inject
     lateinit var vibrationHelper: com.inventario.mobile.utils.VibrationHelper
     
+    // ✅ v2.11: Injetar PhotoHelper para captura de fotos
+    @Inject
+    lateinit var photoHelper: com.inventario.mobile.utils.PhotoHelper
+    
+    // ✅ v2.11: Helper para captura de foto
+    private var photoCaptureHelper: com.inventario.mobile.presentation.components.PhotoCaptureHelper? = null
+    
     // Launcher para solicitar permissão de câmera
     private val requestCameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -171,6 +178,9 @@ class ScannerActivity : AppCompatActivity() {
             setupToolbar()
             setupObservers()
             setupButtonListeners()
+            
+            // ✅ v2.11: Configurar captura de foto opcional
+            setupPhotoCapture()
             
             // Verificar e solicitar permissões antes de inicializar scanner
             checkAndRequestPermissions()
@@ -329,6 +339,43 @@ class ScannerActivity : AppCompatActivity() {
         }
     }
     
+    /**
+     * v2.11: Configura captura de foto opcional
+     */
+    private fun setupPhotoCapture() {
+        try {
+            // Criar helper de captura de foto
+            photoCaptureHelper = com.inventario.mobile.presentation.components.PhotoCaptureHelper(
+                activity = this,
+                photoHelper = photoHelper,
+                preferencesManager = preferencesManager
+            )
+            
+            // Registrar launcher de câmera
+            photoCaptureHelper?.registerCameraLauncher()
+            
+            // Configurar views (se existirem no layout)
+            binding.cardFotoOpcional?.let { card ->
+                photoCaptureHelper?.setupPhotoCapture(
+                    cardFotoOpcional = card,
+                    textFotoLabel = binding.textFotoLabel,
+                    btnAddPhoto = binding.btnAddPhoto,
+                    layoutPhotoPreview = binding.layoutPhotoPreview,
+                    imgPhotoPreview = binding.imgPhotoPreview,
+                    btnRemovePhoto = binding.btnRemovePhoto,
+                    layoutMotivoFoto = binding.layoutMotivoFoto,
+                    spinnerMotivoFoto = binding.spinnerMotivoFoto
+                )
+                android.util.Log.d("ScannerActivity", "✓ PhotoCaptureHelper configurado")
+            } ?: run {
+                android.util.Log.w("ScannerActivity", "Card de foto não encontrado no layout")
+            }
+            
+        } catch (e: Exception) {
+            android.util.Log.e("ScannerActivity", "Erro ao configurar captura de foto", e)
+        }
+    }
+    
     private fun showEstadoPatrimonioDialog(patrimonioId: Long, salaNome: String) {
         val dialog = EstadoPatrimonioDialog.newInstance { estadoSelecionado ->
             // Callback executado quando o usuário seleciona um estado
@@ -481,6 +528,10 @@ class ScannerActivity : AppCompatActivity() {
         // Ocultar card de informações
         binding.cardPatrimonioInfo.visibility = View.GONE
         
+        // ✅ v2.11: Limpar e ocultar card de foto
+        photoCaptureHelper?.clearPhoto()
+        photoCaptureHelper?.hidePhotoCard()
+        
         // Ocultar botão de coletar
         binding.buttonColetar.visibility = View.GONE
         
@@ -568,6 +619,9 @@ class ScannerActivity : AppCompatActivity() {
         
         // ✅ SEMPRE mostrar card de informações
         binding.cardPatrimonioInfo.visibility = View.VISIBLE
+        
+        // ✅ v2.11: Mostrar card de foto opcional (se não foi coletado)
+        photoCaptureHelper?.showPhotoCard(result.patrimonioCodigo, result.jaColetado)
         
         if (result.jaColetado) {
             // Se já foi coletado, NÃO mostrar botão de coletar

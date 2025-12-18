@@ -252,4 +252,56 @@ interface ColetaDao {
     """)
     suspend fun getTopItems(idInventario: Int): List<TopItemData>
     
+    // ========================================
+    // Queries para Fotos (v2.11)
+    // ========================================
+    
+    /**
+     * Busca coletas com foto pendente de sincronização
+     */
+    @Query("""
+        SELECT * FROM coleta 
+        WHERE fotoPath IS NOT NULL 
+        AND fotoSincronizada = 0
+        ORDER BY dataColeta ASC
+    """)
+    suspend fun buscarColetasComFotoPendente(): List<ColetaEntity>
+    
+    /**
+     * Marca foto como sincronizada
+     */
+    @Query("UPDATE coleta SET fotoSincronizada = 1 WHERE id = :id")
+    suspend fun marcarFotoSincronizada(id: Long)
+    
+    /**
+     * Conta coletas com foto
+     */
+    @Query("SELECT COUNT(*) FROM coleta WHERE fotoPath IS NOT NULL")
+    suspend fun contarColetasComFoto(): Int
+    
+    /**
+     * Conta fotos pendentes de sincronização
+     */
+    @Query("SELECT COUNT(*) FROM coleta WHERE fotoPath IS NOT NULL AND fotoSincronizada = 0")
+    suspend fun contarFotosPendentes(): Int
+    
+    /**
+     * Atualiza caminho da foto de uma coleta
+     */
+    @Query("""
+        UPDATE coleta SET 
+            fotoPath = :fotoPath, 
+            fotoThumbnailPath = :thumbnailPath,
+            motivoFoto = :motivo,
+            fotoSincronizada = 0
+        WHERE id = :id
+    """)
+    suspend fun atualizarFoto(id: Long, fotoPath: String?, thumbnailPath: String?, motivo: String?)
+    
+    /**
+     * Remove foto de uma coleta
+     */
+    @Query("UPDATE coleta SET fotoPath = NULL, fotoThumbnailPath = NULL, motivoFoto = NULL WHERE id = :id")
+    suspend fun removerFoto(id: Long)
+    
 }

@@ -4,7 +4,11 @@ package com.inventario.mobile.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -16,6 +20,7 @@ import androidx.viewbinding.ViewBindings;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.inventario.mobile.R;
 import java.lang.NullPointerException;
 import java.lang.Override;
@@ -24,6 +29,9 @@ import java.lang.String;
 public final class ActivityManualCollectionBinding implements ViewBinding {
   @NonNull
   private final ConstraintLayout rootView;
+
+  @NonNull
+  public final MaterialButton btnAddPhoto;
 
   @NonNull
   public final MaterialButton btnBackToDashboard;
@@ -35,7 +43,13 @@ public final class ActivityManualCollectionBinding implements ViewBinding {
   public final Button btnCollect;
 
   @NonNull
+  public final ImageButton btnRemovePhoto;
+
+  @NonNull
   public final Button btnSearch;
+
+  @NonNull
+  public final MaterialCardView cardFotoOpcional;
 
   @NonNull
   public final MaterialCardView cardInput;
@@ -47,10 +61,25 @@ public final class ActivityManualCollectionBinding implements ViewBinding {
   public final TextInputEditText etPatrimonioNumber;
 
   @NonNull
+  public final ImageView imgPhotoPreview;
+
+  @NonNull
   public final LinearLayout layoutDicas;
 
   @NonNull
+  public final TextInputLayout layoutMotivoFoto;
+
+  @NonNull
+  public final FrameLayout layoutPhotoPreview;
+
+  @NonNull
   public final ProgressBar progressBar;
+
+  @NonNull
+  public final AutoCompleteTextView spinnerMotivoFoto;
+
+  @NonNull
+  public final TextView textFotoLabel;
 
   @NonNull
   public final TextView tvCollectionCount;
@@ -62,22 +91,34 @@ public final class ActivityManualCollectionBinding implements ViewBinding {
   public final TextView tvSalaInfo;
 
   private ActivityManualCollectionBinding(@NonNull ConstraintLayout rootView,
-      @NonNull MaterialButton btnBackToDashboard, @NonNull Button btnClear,
-      @NonNull Button btnCollect, @NonNull Button btnSearch, @NonNull MaterialCardView cardInput,
-      @NonNull MaterialCardView cardPatrimonioInfo, @NonNull TextInputEditText etPatrimonioNumber,
-      @NonNull LinearLayout layoutDicas, @NonNull ProgressBar progressBar,
+      @NonNull MaterialButton btnAddPhoto, @NonNull MaterialButton btnBackToDashboard,
+      @NonNull Button btnClear, @NonNull Button btnCollect, @NonNull ImageButton btnRemovePhoto,
+      @NonNull Button btnSearch, @NonNull MaterialCardView cardFotoOpcional,
+      @NonNull MaterialCardView cardInput, @NonNull MaterialCardView cardPatrimonioInfo,
+      @NonNull TextInputEditText etPatrimonioNumber, @NonNull ImageView imgPhotoPreview,
+      @NonNull LinearLayout layoutDicas, @NonNull TextInputLayout layoutMotivoFoto,
+      @NonNull FrameLayout layoutPhotoPreview, @NonNull ProgressBar progressBar,
+      @NonNull AutoCompleteTextView spinnerMotivoFoto, @NonNull TextView textFotoLabel,
       @NonNull TextView tvCollectionCount, @NonNull TextView tvPatrimonioInfo,
       @NonNull TextView tvSalaInfo) {
     this.rootView = rootView;
+    this.btnAddPhoto = btnAddPhoto;
     this.btnBackToDashboard = btnBackToDashboard;
     this.btnClear = btnClear;
     this.btnCollect = btnCollect;
+    this.btnRemovePhoto = btnRemovePhoto;
     this.btnSearch = btnSearch;
+    this.cardFotoOpcional = cardFotoOpcional;
     this.cardInput = cardInput;
     this.cardPatrimonioInfo = cardPatrimonioInfo;
     this.etPatrimonioNumber = etPatrimonioNumber;
+    this.imgPhotoPreview = imgPhotoPreview;
     this.layoutDicas = layoutDicas;
+    this.layoutMotivoFoto = layoutMotivoFoto;
+    this.layoutPhotoPreview = layoutPhotoPreview;
     this.progressBar = progressBar;
+    this.spinnerMotivoFoto = spinnerMotivoFoto;
+    this.textFotoLabel = textFotoLabel;
     this.tvCollectionCount = tvCollectionCount;
     this.tvPatrimonioInfo = tvPatrimonioInfo;
     this.tvSalaInfo = tvSalaInfo;
@@ -110,6 +151,12 @@ public final class ActivityManualCollectionBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.btnAddPhoto;
+      MaterialButton btnAddPhoto = ViewBindings.findChildViewById(rootView, id);
+      if (btnAddPhoto == null) {
+        break missingId;
+      }
+
       id = R.id.btnBackToDashboard;
       MaterialButton btnBackToDashboard = ViewBindings.findChildViewById(rootView, id);
       if (btnBackToDashboard == null) {
@@ -128,9 +175,21 @@ public final class ActivityManualCollectionBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.btnRemovePhoto;
+      ImageButton btnRemovePhoto = ViewBindings.findChildViewById(rootView, id);
+      if (btnRemovePhoto == null) {
+        break missingId;
+      }
+
       id = R.id.btnSearch;
       Button btnSearch = ViewBindings.findChildViewById(rootView, id);
       if (btnSearch == null) {
+        break missingId;
+      }
+
+      id = R.id.cardFotoOpcional;
+      MaterialCardView cardFotoOpcional = ViewBindings.findChildViewById(rootView, id);
+      if (cardFotoOpcional == null) {
         break missingId;
       }
 
@@ -152,15 +211,45 @@ public final class ActivityManualCollectionBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.imgPhotoPreview;
+      ImageView imgPhotoPreview = ViewBindings.findChildViewById(rootView, id);
+      if (imgPhotoPreview == null) {
+        break missingId;
+      }
+
       id = R.id.layoutDicas;
       LinearLayout layoutDicas = ViewBindings.findChildViewById(rootView, id);
       if (layoutDicas == null) {
         break missingId;
       }
 
+      id = R.id.layoutMotivoFoto;
+      TextInputLayout layoutMotivoFoto = ViewBindings.findChildViewById(rootView, id);
+      if (layoutMotivoFoto == null) {
+        break missingId;
+      }
+
+      id = R.id.layoutPhotoPreview;
+      FrameLayout layoutPhotoPreview = ViewBindings.findChildViewById(rootView, id);
+      if (layoutPhotoPreview == null) {
+        break missingId;
+      }
+
       id = R.id.progressBar;
       ProgressBar progressBar = ViewBindings.findChildViewById(rootView, id);
       if (progressBar == null) {
+        break missingId;
+      }
+
+      id = R.id.spinnerMotivoFoto;
+      AutoCompleteTextView spinnerMotivoFoto = ViewBindings.findChildViewById(rootView, id);
+      if (spinnerMotivoFoto == null) {
+        break missingId;
+      }
+
+      id = R.id.textFotoLabel;
+      TextView textFotoLabel = ViewBindings.findChildViewById(rootView, id);
+      if (textFotoLabel == null) {
         break missingId;
       }
 
@@ -182,9 +271,11 @@ public final class ActivityManualCollectionBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ActivityManualCollectionBinding((ConstraintLayout) rootView, btnBackToDashboard,
-          btnClear, btnCollect, btnSearch, cardInput, cardPatrimonioInfo, etPatrimonioNumber,
-          layoutDicas, progressBar, tvCollectionCount, tvPatrimonioInfo, tvSalaInfo);
+      return new ActivityManualCollectionBinding((ConstraintLayout) rootView, btnAddPhoto,
+          btnBackToDashboard, btnClear, btnCollect, btnRemovePhoto, btnSearch, cardFotoOpcional,
+          cardInput, cardPatrimonioInfo, etPatrimonioNumber, imgPhotoPreview, layoutDicas,
+          layoutMotivoFoto, layoutPhotoPreview, progressBar, spinnerMotivoFoto, textFotoLabel,
+          tvCollectionCount, tvPatrimonioInfo, tvSalaInfo);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

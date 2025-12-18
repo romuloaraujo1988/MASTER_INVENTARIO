@@ -1,6 +1,7 @@
 package com.inventario.mobile.domain.usecase
 
 import android.util.Log
+import com.inventario.mobile.data.cache.SearchCache
 import com.inventario.mobile.data.model.Patrimonio
 import com.inventario.mobile.data.remote.api.PatrimonioApi
 import com.inventario.mobile.data.repository.PatrimonioRepositoryImpl
@@ -14,14 +15,20 @@ import javax.inject.Inject
 /**
  * Use Case: Buscar patrimônios com filtros para busca rápida
  * 
- * Estratégia: Servidor primeiro, fallback para local se offline
+ * Estratégia: 
+ * 1. Verificar cache primeiro (100-1000x mais rápido)
+ * 2. Se não estiver em cache, buscar do servidor
+ * 3. Fallback para local se offline
+ * 4. Cachear resultado para próximas buscas
  * 
  * @see Requirements 1.1, 3.1, 3.2, 3.3
+ * @see OTIMIZACAO_BUSCA_RAPIDA_ANDROID.md
  */
 class BuscarPatrimoniosUseCase @Inject constructor(
     private val patrimonioRepository: PatrimonioRepositoryImpl,
     private val patrimonioApi: PatrimonioApi,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val searchCache: SearchCache
 ) {
     companion object {
         private const val TAG = "BuscarPatrimoniosUseCase"
@@ -52,19 +59,40 @@ class BuscarPatrimoniosUseCase @Inject constructor(
             val queryLimpa = sanitizarQuery(query)
             val inventarioId = preferencesManager.getInventarioAtivoId()
             
+            // Chave do cache: query + filtro + inventário
+            val cacheKey = "$queryLimpa:$filtro:${inventarioId ?: 0}"
+            
             Log.d(TAG, "Buscando patrimônios: query='$queryLimpa', filtro=$filtro, inventarioId=$inventarioId")
             
-            // Tentar buscar do servidor primeiro
+            // 1. VERIFICAR CACHE PRIMEIRO (100-1000x mais rápido)
+            searchCache.get(cacheKey)?.let { resultadoCache ->
+                Log.d(TAG, "✓ Cache hit! Retornando ${resultadoCache.size} resultados do cache")
+                return Result.success(resultadoCache)
+            }
+            
+            // 2. Tentar buscar do servidor
             val resultadoServidor = buscarDoServidor(queryLimpa, filtro, inventarioId)
             
             if (resultadoServidor.isSuccess) {
-                Log.d(TAG, "✓ Busca no servidor bem-sucedida: ${resultadoServidor.getOrNull()?.size} resultados")
+                val resultados = resultadoServidor.getOrNull() ?: emptyList()
+                Log.d(TAG, "✓ Busca no servidor bem-sucedida: ${resultados.size} resultados")
+                
+                // Cachear resultado do servidor
+                searchCache.put(cacheKey, resultados)
+                
                 return resultadoServidor
             }
             
-            // Fallback para busca local
+            // 3. Fallback para busca local
             Log.w(TAG, "Servidor indisponível, usando busca local")
-            buscarLocal(queryLimpa, filtro, inventarioId)
+            val resultadoLocal = buscarLocal(queryLimpa, filtro, inventarioId)
+            
+            // Cachear resultado local também
+            resultadoLocal.onSuccess { resultados ->
+                searchCache.put(cacheKey, resultados)
+            }
+            
+            resultadoLocal
             
         } catch (e: CancellationException) {
             // Job foi cancelado (normal durante debounce/navegação)
@@ -74,6 +102,22 @@ class BuscarPatrimoniosUseCase @Inject constructor(
             Log.e(TAG, "Erro ao buscar patrimônios", e)
             Result.failure(Exception("Erro ao buscar patrimônios: ${e.message}", e))
         }
+    }
+    
+    /**
+     * Limpa o cache de busca
+     * Deve ser chamado após sincronização ou quando dados mudam
+     */
+    fun limparCache() {
+        searchCache.clear()
+        Log.d(TAG, "✓ Cache de busca limpo")
+    }
+    
+    /**
+     * Retorna estatísticas do cache para debug
+     */
+    fun getCacheStats(): String {
+        return searchCache.getStats()
     }
     
     /**

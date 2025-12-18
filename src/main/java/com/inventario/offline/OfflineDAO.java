@@ -1,9 +1,18 @@
 package com.inventario.offline;
 
-import java.sql.*;
-import java.util.*;
-import java.util.logging.Logger;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * DAO para operações offline no banco SQLite local
@@ -50,7 +59,7 @@ public class OfflineDAO {
                 // Retornar o ID que foi passado no Map
                 Integer id = (Integer) patrimonio.get("id");
                 if (id != null) {
-                    LOGGER.fine("Patrimônio salvo offline - ID: " + id);
+                    LOGGER.fine(() -> "Patrimônio salvo offline - ID: " + id);
                     return id;
                 }
             }
@@ -62,7 +71,6 @@ public class OfflineDAO {
             System.err.println(">>>   ID: " + patrimonio.get("id"));
             System.err.println(">>>   Número: " + patrimonio.get("numero"));
             System.err.println(">>>   Erro: " + e.getMessage());
-            e.printStackTrace();
             LOGGER.log(Level.SEVERE, "Erro ao salvar patrimônio offline", e);
             throw e;
         }
@@ -180,7 +188,13 @@ public class OfflineDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             setColetaParameters(stmt, coleta);
-            stmt.setString(13, "PENDING");
+            
+            // ✅ CORREÇÃO: Verificar se já está sincronizado (backup de coleta online)
+            Object sincronizado = coleta.get("sincronizado");
+            boolean jaSincronizado = sincronizado != null && 
+                (sincronizado.equals(1) || sincronizado.equals(true) || "1".equals(sincronizado.toString()));
+            
+            stmt.setString(13, jaSincronizado ? "SYNCED" : "PENDING");
             
             int rowsAffected = stmt.executeUpdate();
             
@@ -190,8 +204,15 @@ public class OfflineDAO {
                      var rs = stmtId.executeQuery("SELECT last_insert_rowid()")) {
                     if (rs.next()) {
                         int id = rs.getInt(1);
-                        registrarOperacaoSync("local_coleta", id, "INSERT", coleta);
-                        LOGGER.fine("Coleta salva offline - ID: " + id);
+                        
+                        // ✅ CORREÇÃO: Só registrar operação de sync se NÃO estiver sincronizado
+                        // Coletas já sincronizadas (backup de coleta online) não precisam de sync
+                        if (!jaSincronizado) {
+                            registrarOperacaoSync("local_coleta", id, "INSERT", coleta);
+                        }
+                        
+                        LOGGER.fine(() -> "Coleta salva offline - ID: " + id + 
+                            (jaSincronizado ? " (backup sincronizado)" : " (pendente)"));
                         return id;
                     }
                 }
@@ -275,7 +296,7 @@ public class OfflineDAO {
             if (rowsAffected > 0) {
                 Integer id = (Integer) inventario.get("id");
                 if (id != null) {
-                    LOGGER.fine("Inventário salvo offline - ID: " + id);
+                    LOGGER.fine(() -> "Inventário salvo offline - ID: " + id);
                     return id;
                 }
             }
@@ -440,13 +461,74 @@ public class OfflineDAO {
                 }
             }
             
-            LOGGER.fine("Coletas pendentes de sincronização: " + total);
+            final int totalFinal = total;
+            LOGGER.fine(() -> "Coletas pendentes de sincronização: " + totalFinal);
             
         } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "Erro ao contar coletas pendentes: " + e.getMessage());
+            LOGGER.log(Level.WARNING, () -> "Erro ao contar coletas pendentes: " + e.getMessage());
         }
         
         return total;
+    }
+    
+    /**
+     * Limpa coletas pendentes que já existem no PostgreSQL
+     * Útil para corrigir inconsistências entre SQLite e PostgreSQL
+     * @param coletaDAO DAO para verificar no PostgreSQL
+     * @return Número de coletas corrigidas
+     */
+    public int limparColetasPendentesJaSincronizadas(com.inventario.dao.ColetaDAO coletaDAO) {
+        final int[] corrigidas = {0};
+        
+        try (Connection conn = sqliteConnection.getConnection()) {
+            // Buscar coletas pendentes no SQLite
+            String sqlBuscar = "SELECT id, id_inventario, id_patrimonio FROM local_coleta WHERE sync_status = 'PENDING' OR sync_status IS NULL";
+            
+            try (PreparedStatement stmt = conn.prepareStatement(sqlBuscar);
+                 ResultSet rs = stmt.executeQuery()) {
+                
+                while (rs.next()) {
+                    final int idLocal = rs.getInt("id");
+                    int idInventario = rs.getInt("id_inventario");
+                    Object idPatrimonioObj = rs.getObject("id_patrimonio");
+                    int idPatrimonio = idPatrimonioObj != null ? ((Number) idPatrimonioObj).intValue() : 0;
+                    
+                    // Verificar se já existe no PostgreSQL
+                    try {
+                        if (coletaDAO.coletaExiste(idInventario, idPatrimonio)) {
+                            // Já existe no PostgreSQL, marcar como sincronizada
+                            marcarColetaSincronizada(idLocal);
+                            corrigidas[0]++;
+                            LOGGER.info(() -> "Coleta " + idLocal + " marcada como sincronizada (já existe no PostgreSQL)");
+                        }
+                    } catch (Exception e) {
+                        LOGGER.fine(() -> "Erro ao verificar coleta " + idLocal + ": " + e.getMessage());
+                    }
+                }
+            }
+            
+            // Limpar também a tabela sync_control para coletas já sincronizadas
+            String sqlLimparSync = """
+                UPDATE sync_control SET synced = TRUE 
+                WHERE table_name = 'local_coleta' 
+                AND record_id IN (SELECT id FROM local_coleta WHERE sync_status = 'SYNCED')
+            """;
+            try (PreparedStatement stmt = conn.prepareStatement(sqlLimparSync)) {
+                int syncCorrigidos = stmt.executeUpdate();
+                if (syncCorrigidos > 0) {
+                    LOGGER.info("Corrigidos " + syncCorrigidos + " registros na sync_control");
+                }
+            }
+            
+            if (corrigidas[0] > 0) {
+                LOGGER.info("Total de coletas corrigidas: " + corrigidas[0]);
+            }
+            
+        } catch (SQLException e) {
+            LOGGER.log(Level.WARNING, "Erro ao limpar coletas pendentes já sincronizadas", e);
+        }
+        
+        return corrigidas[0];
     }
     
     /**
@@ -465,7 +547,7 @@ public class OfflineDAO {
             }
             
         } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "Erro ao contar operações pendentes: " + e.getMessage());
+            LOGGER.log(Level.WARNING, () -> "Erro ao contar operações pendentes: " + e.getMessage());
         }
         
         return 0;
@@ -495,7 +577,7 @@ public class OfflineDAO {
         } catch (SQLException e) {
             // Se a tabela não existir ainda, apenas logar e não lançar exceção
             if (e.getMessage().contains("no such table") || e.getMessage().contains("no column named")) {
-                LOGGER.fine("Tabela sync_metadata ainda não existe - ignorando atualização de metadado: " + chave);
+                LOGGER.fine(() -> "Tabela sync_metadata ainda não existe - ignorando atualização de metadado: " + chave);
                 return;
             }
             LOGGER.log(Level.WARNING, "Erro ao atualizar metadado: " + chave, e);
@@ -526,7 +608,7 @@ public class OfflineDAO {
         } catch (SQLException e) {
             // Se a tabela não existir ainda, retornar null silenciosamente
             if (e.getMessage().contains("no such table") || e.getMessage().contains("no column named")) {
-                LOGGER.fine("Tabela sync_metadata ainda não existe - retornando null para chave: " + chave);
+                LOGGER.fine(() -> "Tabela sync_metadata ainda não existe - retornando null para chave: " + chave);
                 return null;
             }
             LOGGER.log(Level.WARNING, "Erro ao obter metadado: " + chave, e);
@@ -704,8 +786,7 @@ public class OfflineDAO {
             System.out.println("DEBUG TIMESTAMP: Classe do objeto: " + 
                 (dataColetaObj != null ? dataColetaObj.getClass().getName() : "null"));
             
-            if (dataColetaObj instanceof Timestamp) {
-                Timestamp ts = (Timestamp) dataColetaObj;
+            if (dataColetaObj instanceof Timestamp ts) {
                 System.out.println("DEBUG TIMESTAMP: É um Timestamp válido");
                 System.out.println("DEBUG TIMESTAMP: Timestamp.toString(): " + ts.toString());
                 System.out.println("DEBUG TIMESTAMP: Timestamp.getTime(): " + ts.getTime());
@@ -752,7 +833,7 @@ public class OfflineDAO {
                             System.err.println("DEBUG TIMESTAMP: Erro ao verificar timestamp salvo: " + e.getMessage());
                         }
                         
-                        LOGGER.info("Coleta salva offline - ID: " + id);
+                        LOGGER.info(() -> "Coleta salva offline - ID: " + id);
                         return id;
                     }
                 }
@@ -764,7 +845,6 @@ public class OfflineDAO {
             System.err.println("DEBUG TIMESTAMP: Mensagem: " + e.getMessage());
             System.err.println("DEBUG TIMESTAMP: SQLState: " + e.getSQLState());
             System.err.println("DEBUG TIMESTAMP: ErrorCode: " + e.getErrorCode());
-            e.printStackTrace();
             throw e;
         }
     }
@@ -807,7 +887,7 @@ public class OfflineDAO {
             }
         }
         
-        LOGGER.info("Encontradas " + coletas.size() + " coletas pendentes");
+        LOGGER.info(() -> "Encontradas " + coletas.size() + " coletas pendentes");
         return coletas;
     }
     
@@ -831,7 +911,7 @@ public class OfflineDAO {
             int rowsAffected = stmt.executeUpdate();
             
             if (rowsAffected > 0) {
-                LOGGER.info("Coleta marcada como sincronizada - ID: " + idColeta);
+                LOGGER.info(() -> "Coleta marcada como sincronizada - ID: " + idColeta);
             }
         }
     }
@@ -990,8 +1070,8 @@ public class OfflineDAO {
             
             // Ativa (padrão true se NULL)
             Object ativa = sala.get("ativa");
-            if (ativa instanceof Boolean) {
-                stmt.setBoolean(8, (Boolean) ativa);
+            if (ativa instanceof Boolean aBoolean) {
+                stmt.setBoolean(8, aBoolean);
             } else {
                 stmt.setBoolean(8, true); // Padrão: ativa
             }
@@ -999,7 +1079,7 @@ public class OfflineDAO {
             int rowsAffected = stmt.executeUpdate();
             
             if (rowsAffected > 0) {
-                LOGGER.fine("Sala salva offline - ID: " + sala.get("id"));
+                LOGGER.fine(() -> "Sala salva offline - ID: " + sala.get("id"));
                 return (Integer) sala.get("id");
             }
             
@@ -1014,7 +1094,6 @@ public class OfflineDAO {
             System.err.println(">>>   Andar: " + sala.get("andar"));
             System.err.println(">>>   Tipo: " + sala.get("tipo"));
             System.err.println(">>>   Erro: " + e.getMessage());
-            e.printStackTrace();
             LOGGER.log(Level.SEVERE, "Erro ao salvar sala offline", e);
             throw e;
         }
@@ -1071,7 +1150,7 @@ public class OfflineDAO {
             int rowsAffected = stmt.executeUpdate();
             
             if (rowsAffected > 0) {
-                LOGGER.fine("Responsável salvo offline - ID: " + responsavel.get("id"));
+                LOGGER.fine(() -> "Responsável salvo offline - ID: " + responsavel.get("id"));
                 return (Integer) responsavel.get("id");
             }
             
@@ -1082,7 +1161,6 @@ public class OfflineDAO {
             System.err.println(">>>   ID: " + responsavel.get("id"));
             System.err.println(">>>   Nome: " + responsavel.get("nome"));
             System.err.println(">>>   Erro: " + e.getMessage());
-            e.printStackTrace();
             LOGGER.log(Level.SEVERE, "Erro ao salvar responsável offline", e);
             throw e;
         }
@@ -1143,7 +1221,7 @@ public class OfflineDAO {
             
             if (rowsAffected > 0) {
                 System.out.println(">>> ✅ Usuário salvo no SQLite - ID: " + usuario.get("id") + ", Login: " + usuario.get("login"));
-                LOGGER.fine("Usuário salvo offline - ID: " + usuario.get("id"));
+                LOGGER.fine(() -> "Usuário salvo offline - ID: " + usuario.get("id"));
                 return (Integer) usuario.get("id");
             }
             
@@ -1151,7 +1229,6 @@ public class OfflineDAO {
             
         } catch (SQLException e) {
             System.err.println(">>> ❌ ERRO ao salvar usuário no SQLite: " + e.getMessage());
-            e.printStackTrace();
             LOGGER.log(Level.SEVERE, "Erro ao salvar usuário offline", e);
             throw e;
         }
@@ -1259,7 +1336,7 @@ public class OfflineDAO {
                 }
             }
             
-            LOGGER.fine("Estatísticas obtidas: " + stats);
+            LOGGER.fine(() -> "Estatísticas obtidas: " + stats);
             
         } catch (SQLException e) {
             LOGGER.log(Level.WARNING, "Erro ao obter estatísticas", e);
@@ -1280,11 +1357,14 @@ public class OfflineDAO {
      * @throws SQLException
      */
     public List<Map<String, Object>> buscarColetasPorLocalizacao(String localizacao) throws SQLException {
+        // FILTRO: Apenas patrimônios COM etiqueta (sem_etiqueta = 0 ou NULL)
+        // Para itens sem etiqueta, usar buscarItensSemEtiquetaPorLocalizacao()
         String sql = """
             SELECT lc.*, lp.descricao as descricao_patrimonio
             FROM local_coleta lc
             LEFT JOIN local_patrimonio lp ON lc.id_patrimonio = lp.id
             WHERE lc.localizacao_encontrada = ?
+            AND (lc.sem_etiqueta = 0 OR lc.sem_etiqueta IS NULL)
             ORDER BY lc.data_coleta DESC
             LIMIT 100
         """;
@@ -1324,7 +1404,7 @@ public class OfflineDAO {
                 }
             }
             
-            LOGGER.info("Encontradas " + coletas.size() + " coletas para localização: " + localizacao);
+            LOGGER.info(() -> "Encontradas " + coletas.size() + " coletas para localização: " + localizacao);
             
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Erro ao buscar coletas por localização offline", e);
@@ -1355,7 +1435,7 @@ public class OfflineDAO {
             }
             
         } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "Erro ao contar coletas por localização: " + e.getMessage());
+            LOGGER.log(Level.WARNING, () -> "Erro ao contar coletas por localização: " + e.getMessage());
         }
         
         return 0;
@@ -1429,7 +1509,7 @@ public class OfflineDAO {
             }
             
             // 5. Último recurso: usar data atual
-            LOGGER.warning("Não foi possível converter timestamp: " + strValue + " - usando data atual");
+            LOGGER.warning(() -> "Não foi possível converter timestamp: " + strValue + " - usando data atual");
             return new Timestamp(System.currentTimeMillis());
             
         } catch (SQLException e) {

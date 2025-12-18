@@ -1,0 +1,118 @@
+@startuml Diagrama de Casos de Uso
+!theme plain
+skinparam actorStyle awesome
+skinparam usecaseFontSize 11
+
+title SIHCP - Casos de Uso Principais
+footer Sistema de Histórico e Coleta Patrimonial - IFMT
+
+left to right direction
+
+' Atores
+actor "Administrador" as Admin #LightBlue
+actor "Supervisor" as Supervisor #LightGreen
+actor "Coletor" as Coletor #LightYellow
+actor "Consulta" as Consulta #LightGray
+
+' Herança de atores
+Admin --|> Supervisor
+Supervisor --|> Coletor
+Coletor --|> Consulta
+
+rectangle "Sistema SIHCP" {
+    
+    package "Gestão de Patrimônio" #E3F2FD {
+        usecase "Cadastrar Patrimônio" as UC01
+        usecase "Consultar Patrimônio" as UC02
+        usecase "Gerar QR Code" as UC03
+        usecase "Importar Planilha SUAP" as UC04
+    }
+    
+    package "Processo de Inventário" #E8F5E9 {
+        usecase "Criar Inventário" as UC05
+        usecase "Definir Participantes" as UC06
+        usecase "Atribuir Salas" as UC07
+        usecase "Monitorar Progresso" as UC08
+        usecase "Finalizar Inventário" as UC09
+    }
+    
+    package "Coleta de Dados" #FFF3E0 {
+        usecase "Escanear QR Code" as UC10
+        usecase "Registrar Coleta" as UC11
+        usecase "Registrar Divergência" as UC12
+        usecase "Coletar Item Sem Etiqueta" as UC13
+        usecase "Capturar Foto" as UC14
+        usecase "Registrar Geolocalização" as UC15
+        usecase "Trabalhar Offline" as UC16
+        usecase "Sincronizar Dados" as UC17
+    }
+    
+    package "Relatórios" #FCE4EC {
+        usecase "Gerar Relatório PDF" as UC18
+        usecase "Exportar Excel" as UC19
+        usecase "Visualizar Dashboard" as UC20
+        usecase "Consultar Estatísticas" as UC21
+    }
+    
+    package "Administração" #F3E5F5 {
+        usecase "Gerenciar Usuários" as UC22
+        usecase "Configurar Sistema" as UC23
+        usecase "Gerenciar Setores/Salas" as UC24
+    }
+}
+
+' Relacionamentos - Admin
+Admin --> UC22
+Admin --> UC23
+Admin --> UC24
+Admin --> UC04
+
+' Relacionamentos - Supervisor
+Supervisor --> UC05
+Supervisor --> UC06
+Supervisor --> UC07
+Supervisor --> UC08
+Supervisor --> UC09
+
+' Relacionamentos - Coletor
+Coletor --> UC10
+Coletor --> UC11
+Coletor --> UC12
+Coletor --> UC13
+Coletor --> UC14
+Coletor --> UC15
+Coletor --> UC16
+Coletor --> UC17
+
+' Relacionamentos - Consulta
+Consulta --> UC01
+Consulta --> UC02
+Consulta --> UC03
+Consulta --> UC18
+Consulta --> UC19
+Consulta --> UC20
+Consulta --> UC21
+
+' Includes e Extends
+UC11 ..> UC10 : <<include>>
+UC11 ..> UC15 : <<include>>
+UC11 ..> UC14 : <<extend>>
+UC12 ..> UC11 : <<extend>>
+UC13 ..> UC14 : <<include>>
+UC16 ..> UC17 : <<include>>
+
+' Notas
+note right of UC16
+  Permite coleta sem
+  conexão com internet.
+  Dados são armazenados
+  localmente no SQLite.
+end note
+
+note right of UC13
+  Para patrimônios sem
+  etiqueta ou QR Code.
+  Requer foto obrigatória.
+end note
+
+@enduml

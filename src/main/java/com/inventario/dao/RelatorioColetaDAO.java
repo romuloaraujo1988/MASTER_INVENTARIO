@@ -294,7 +294,6 @@ public class RelatorioColetaDAO {
             }
         } catch (SQLException e) {
             System.err.println("❌ Erro ao obter métricas: " + e.getMessage());
-            e.printStackTrace();
         }
 
         // Query CORRIGIDA:
@@ -443,15 +442,14 @@ public class RelatorioColetaDAO {
 
         // Adicionar filtro de status se fornecido
         if (status != null && !status.trim().isEmpty() && !"Todos".equals(status)) {
-            if ("Não Coletado".equals(status)) {
-                sql.append(" AND c.STATUS_COLETA IS NULL");
-            } else if ("Encontrado".equals(status)) {
-                sql.append(" AND c.STATUS_COLETA = 'COLETADO'");
-            } else if ("Não Encontrado".equals(status)) {
-                sql.append(" AND c.STATUS_COLETA = 'NAO_ENCONTRADO'");
-            } else {
-                sql.append(" AND c.STATUS_COLETA = ?");
-                parametros.add(status);
+            switch (status) {
+                case "Não Coletado" -> sql.append(" AND c.STATUS_COLETA IS NULL");
+                case "Encontrado" -> sql.append(" AND c.STATUS_COLETA = 'COLETADO'");
+                case "Não Encontrado" -> sql.append(" AND c.STATUS_COLETA = 'NAO_ENCONTRADO'");
+                default -> {
+                    sql.append(" AND c.STATUS_COLETA = ?");
+                    parametros.add(status);
+                }
             }
         }
 
@@ -528,7 +526,6 @@ public class RelatorioColetaDAO {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
         }
 
         return estatisticas;
@@ -650,7 +647,6 @@ public class RelatorioColetaDAO {
 
         } catch (SQLException e) {
             System.err.println("Erro ao executar consulta de relatório: " + e.getMessage());
-            e.printStackTrace();
         }
 
         return resultados;
@@ -777,15 +773,14 @@ public class RelatorioColetaDAO {
 
         // Adicionar filtro de status se fornecido
         if (status != null && !status.trim().isEmpty() && !"Todos".equals(status)) {
-            if ("Não Coletado".equals(status)) {
-                sql.append(" AND c.STATUS_COLETA IS NULL");
-            } else if ("Encontrado".equals(status)) {
-                sql.append(" AND c.STATUS_COLETA = 'COLETADO'");
-            } else if ("Não Encontrado".equals(status)) {
-                sql.append(" AND c.STATUS_COLETA = 'NAO_ENCONTRADO'");
-            } else {
-                sql.append(" AND c.STATUS_COLETA = ?");
-                parametros.add(status);
+            switch (status) {
+                case "Não Coletado" -> sql.append(" AND c.STATUS_COLETA IS NULL");
+                case "Encontrado" -> sql.append(" AND c.STATUS_COLETA = 'COLETADO'");
+                case "Não Encontrado" -> sql.append(" AND c.STATUS_COLETA = 'NAO_ENCONTRADO'");
+                default -> {
+                    sql.append(" AND c.STATUS_COLETA = ?");
+                    parametros.add(status);
+                }
             }
         }
 
@@ -873,15 +868,14 @@ public class RelatorioColetaDAO {
 
         // Adicionar filtro de status se fornecido
         if (status != null && !status.trim().isEmpty() && !"Todos".equals(status)) {
-            if ("Não Coletado".equals(status)) {
-                sql.append(" AND c.STATUS_COLETA IS NULL");
-            } else if ("Encontrado".equals(status)) {
-                sql.append(" AND c.STATUS_COLETA = 'COLETADO'");
-            } else if ("Não Encontrado".equals(status)) {
-                sql.append(" AND c.STATUS_COLETA = 'NAO_ENCONTRADO'");
-            } else {
-                sql.append(" AND c.STATUS_COLETA = ?");
-                parametros.add(status);
+            switch (status) {
+                case "Não Coletado" -> sql.append(" AND c.STATUS_COLETA IS NULL");
+                case "Encontrado" -> sql.append(" AND c.STATUS_COLETA = 'COLETADO'");
+                case "Não Encontrado" -> sql.append(" AND c.STATUS_COLETA = 'NAO_ENCONTRADO'");
+                default -> {
+                    sql.append(" AND c.STATUS_COLETA = ?");
+                    parametros.add(status);
+                }
             }
         }
 
@@ -1104,7 +1098,7 @@ public class RelatorioColetaDAO {
                 FROM TABELA_PATRIMONIO p
                 LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID
                 LEFT JOIN TABELA_SETOR s ON r.ID_SETOR = s.ID
-                LEFT JOIN TABELA_SALA sa ON p.ID_SALA = sa.ID
+                LEFT JOIN TABELA_SALA sa ON p.ID_SALA = sa.ID_SALA
                 LEFT JOIN TABELA_COLETA c ON p.ID = c.ID_PATRIMONIO AND c.ID_INVENTARIO = ?
                 WHERE p.STATUS = 'Ativo'
                 ORDER BY
@@ -1124,6 +1118,144 @@ public class RelatorioColetaDAO {
         System.out.println("✅ Total de patrimônios no relatório: " + resultado.size());
         System.out.println("=====================================\n");
         
+        return resultado;
+    }
+
+    /**
+     * Gera relatório de coletas agrupadas por sala
+     * Mostra todas as coletas realizadas em cada sala do inventário
+     * 
+     * @param idInventario ID do inventário ativo
+     * @param nomeSala Nome da sala para filtrar (vazio ou null para todas as salas)
+     * @return Lista com dados das coletas por sala
+     */
+    public List<Map<String, Object>> gerarRelatorioColetasPorSala(int idInventario, String nomeSala) {
+        System.out.println("\n=== RELATÓRIO COLETAS POR SALA ===");
+        System.out.println("📋 Inventário ID: " + idInventario);
+        System.out.println("📍 Sala filtro: " + (nomeSala == null || nomeSala.isEmpty() ? "TODAS" : nomeSala));
+
+        StringBuilder sql = new StringBuilder("""
+                SELECT
+                    COALESCE(sa.NUMERO_SALA, c.LOCALIZACAO_ENCONTRADA, 'Sem Sala') as "Sala",
+                    COALESCE(sa.DESCRICAO, '') as "Descrição Sala",
+                    COALESCE(se.NOME, 'Sem Setor') as "Setor",
+                    p.NUMERO as "Número Patrimônio",
+                    p.DESCRICAO as "Descrição",
+                    COALESCE(r.NOME, 'Sem Responsável') as "Responsável",
+                    c.STATUS_COLETA as "Status Coleta",
+                    c.ESTADO_ENCONTRADO as "Estado",
+                    CASE WHEN c.SEM_ETIQUETA THEN 'Sim' ELSE 'Não' END as "Sem Etiqueta",
+                    c.OBSERVACAO_COLETA as "Observações",
+                    COALESCE(p.VALOR_AQUISICAO, 0) as "Valor"
+                FROM TABELA_COLETA c
+                LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID
+                LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID
+                LEFT JOIN TABELA_SETOR se ON r.ID_SETOR = se.ID
+                LEFT JOIN TABELA_SALA sa ON (p.ID_SALA = sa.ID_SALA OR c.LOCALIZACAO_ENCONTRADA = sa.NUMERO_SALA)
+                WHERE c.ID_INVENTARIO = ?
+                """);
+
+        List<Object> params = new ArrayList<>();
+        params.add(idInventario);
+
+        // Filtrar por sala específica se informada
+        if (nomeSala != null && !nomeSala.isEmpty() && !"Todas as Salas".equals(nomeSala)) {
+            sql.append(" AND (sa.NUMERO_SALA ILIKE ? OR sa.DESCRICAO ILIKE ? OR c.LOCALIZACAO_ENCONTRADA ILIKE ?)");
+            String filtro = "%" + nomeSala + "%";
+            params.add(filtro);
+            params.add(filtro);
+            params.add(filtro);
+        }
+
+        sql.append("""
+                ORDER BY
+                    COALESCE(sa.NUMERO_SALA, c.LOCALIZACAO_ENCONTRADA, 'Sem Sala'),
+                    p.NUMERO
+                """);
+
+        List<Map<String, Object>> resultado = executarConsultaComParametros(sql.toString(), params);
+        System.out.println("✅ Total de coletas no relatório: " + resultado.size());
+        System.out.println("=====================================\n");
+
+        return resultado;
+    }
+
+    /**
+     * Gera estatísticas de coletas por sala
+     * Mostra resumo quantitativo de cada sala
+     * 
+     * @param idInventario ID do inventário ativo
+     * @return Lista com estatísticas por sala
+     */
+    public List<Map<String, Object>> gerarEstatisticasColetasPorSala(int idInventario) {
+        System.out.println("\n=== ESTATÍSTICAS COLETAS POR SALA ===");
+        System.out.println("📋 Inventário ID: " + idInventario);
+
+        String sql = """
+                SELECT
+                    COALESCE(sa.NUMERO_SALA, c.LOCALIZACAO_ENCONTRADA, 'Sem Sala') as "Sala",
+                    COALESCE(sa.DESCRICAO, '') as "Descrição Sala",
+                    COALESCE(se.NOME, 'Sem Setor') as "Setor",
+                    COUNT(*) as "Total Coletados",
+                    SUM(CASE WHEN c.STATUS_COLETA = 'COLETADO' THEN 1 ELSE 0 END) as "Encontrados",
+                    SUM(CASE WHEN c.STATUS_COLETA = 'NAO_ENCONTRADO' THEN 1 ELSE 0 END) as "Não Encontrados",
+                    SUM(CASE WHEN c.SEM_ETIQUETA = TRUE THEN 1 ELSE 0 END) as "Sem Etiqueta",
+                    SUM(COALESCE(p.VALOR_AQUISICAO, 0)) as "Valor Total",
+                    ROUND(AVG(COALESCE(p.VALOR_AQUISICAO, 0))::numeric, 2) as "Valor Médio"
+                FROM TABELA_COLETA c
+                LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID
+                LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID
+                LEFT JOIN TABELA_SETOR se ON r.ID_SETOR = se.ID
+                LEFT JOIN TABELA_SALA sa ON (p.ID_SALA = sa.ID_SALA OR c.LOCALIZACAO_ENCONTRADA = sa.NUMERO_SALA)
+                WHERE c.ID_INVENTARIO = ?
+                GROUP BY
+                    COALESCE(sa.NUMERO_SALA, c.LOCALIZACAO_ENCONTRADA, 'Sem Sala'),
+                    COALESCE(sa.DESCRICAO, ''),
+                    COALESCE(se.NOME, 'Sem Setor')
+                ORDER BY
+                    "Total Coletados" DESC,
+                    "Sala"
+                """;
+
+        List<Map<String, Object>> resultado = executarConsulta(sql, idInventario);
+        System.out.println("✅ Total de salas no relatório: " + resultado.size());
+        System.out.println("=====================================\n");
+
+        return resultado;
+    }
+
+    /**
+     * Executa consulta SQL com lista de parâmetros
+     */
+    private List<Map<String, Object>> executarConsultaComParametros(String sql, List<Object> params) {
+        List<Map<String, Object>> resultado = new ArrayList<>();
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            // Definir parâmetros
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                ResultSetMetaData metaData = rs.getMetaData();
+                int columnCount = metaData.getColumnCount();
+
+                while (rs.next()) {
+                    Map<String, Object> linha = new LinkedHashMap<>();
+                    for (int i = 1; i <= columnCount; i++) {
+                        String columnName = metaData.getColumnLabel(i);
+                        Object value = rs.getObject(i);
+                        linha.put(columnName, value);
+                    }
+                    resultado.add(linha);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ Erro ao executar consulta: " + e.getMessage());
+        }
+
         return resultado;
     }
 }
