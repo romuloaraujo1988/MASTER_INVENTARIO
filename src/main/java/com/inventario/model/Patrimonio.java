@@ -1,11 +1,13 @@
 package com.inventario.model;
 
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
+
 import com.inventario.util.DateFormatUtils;
 
 /**
@@ -244,7 +246,7 @@ public class Patrimonio {
                 Class<?> servicoClass = Class.forName("com.inventario.service.DescricaoResumoService");
                 java.lang.reflect.Method metodo = servicoClass.getMethod("gerarResumo", String.class);
                 this.descricaoResumida = (String) metodo.invoke(null, this.descricao);
-            } catch (Exception e) {
+            } catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException | SecurityException | InvocationTargetException e) {
                 // Fallback: usar os primeiros 50 caracteres
                 this.descricaoResumida = this.descricao.length() > 50 ? 
                     this.descricao.substring(0, 47) + "..." : this.descricao;

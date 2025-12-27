@@ -70,41 +70,6 @@ Copy-Item "target\mobile-server\application*.yml" $outputDir -Force -ErrorAction
 
 Write-Host "[5/5] Criando scripts de execucao..." -ForegroundColor Yellow
 
-# Script Desktop - BAT
-@'
-@echo off
-setlocal
-
-echo ╔════════════════════════════════════════════════════════════════╗
-echo ║  SIHCP - Sistema de Historico e Coleta Patrimonial             ║
-echo ║  Aplicacao Desktop                                             ║
-echo ╚════════════════════════════════════════════════════════════════╝
-echo.
-
-set JAVA_OPTS=-Xms512m -Xmx2g
-set JAVA_OPTS=%JAVA_OPTS% -XX:MaxMetaspaceSize=256m
-set JAVA_OPTS=%JAVA_OPTS% -XX:+UseG1GC
-set JAVA_OPTS=%JAVA_OPTS% -XX:MaxGCPauseMillis=200
-set JAVA_OPTS=%JAVA_OPTS% -XX:+UseStringDeduplication
-
-echo Iniciando aplicacao desktop...
-java %JAVA_OPTS% -cp "sihcp-desktop.jar;lib\*" com.inventario.SistemaInventarioApplication
-pause
-'@ | Set-Content "$outputDir\iniciar-desktop.bat" -Encoding ASCII
-
-# Script Desktop - PS1
-@'
-# SIHCP - Aplicacao Desktop
-Write-Host "╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║  SIHCP - Sistema de Historico e Coleta Patrimonial             ║" -ForegroundColor Cyan
-Write-Host "║  Aplicacao Desktop                                             ║" -ForegroundColor Cyan
-Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
-
-$javaOpts = @("-Xms512m", "-Xmx2g", "-XX:MaxMetaspaceSize=256m", "-XX:+UseG1GC", "-XX:MaxGCPauseMillis=200", "-XX:+UseStringDeduplication")
-Write-Host "Iniciando aplicacao desktop..." -ForegroundColor Green
-& java $javaOpts -cp "sihcp-desktop.jar;lib\*" com.inventario.SistemaInventarioApplication
-'@ | Set-Content "$outputDir\iniciar-desktop.ps1" -Encoding UTF8
-
 # Script Servidor Mobile - BAT
 @'
 @echo off
@@ -176,20 +141,14 @@ ESTRUTURA:
 
 EXECUCAO:
 
-1. APENAS DESKTOP:
-   .\iniciar-desktop.ps1
-   ou iniciar-desktop.bat
-
-2. APENAS SERVIDOR MOBILE:
+SERVIDOR MOBILE:
    .\iniciar-servidor-mobile.ps1
    ou iniciar-servidor-mobile.bat
 
 PORTAS:
-  * Desktop: Aplicacao local (sem porta)
   * Servidor Mobile: http://localhost:8081/inventario
 
 MEMORIA:
-  * Desktop: 512MB - 2GB
   * Servidor Mobile: 256MB - 1GB (processo separado)
 
 VANTAGENS DOS THIN JARS:
@@ -227,6 +186,5 @@ Write-Host "  Total:              $([math]::Round($desktopSize + $mobileSize + $
 Write-Host ""
 Write-Host "Para executar:" -ForegroundColor Cyan
 Write-Host "  cd dist\producao" -ForegroundColor White
-Write-Host "  .\iniciar-desktop.ps1          # Apenas desktop" -ForegroundColor White
-Write-Host "  .\iniciar-servidor-mobile.ps1  # Apenas servidor" -ForegroundColor White
+Write-Host "  .\iniciar-servidor-mobile.ps1  # Servidor mobile" -ForegroundColor White
 Write-Host ""

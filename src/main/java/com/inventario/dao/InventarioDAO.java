@@ -1,15 +1,20 @@
 package com.inventario.dao;
 
-import com.inventario.model.Inventario;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Repository;
+
 import com.inventario.event.DashboardEvent;
 import com.inventario.event.DashboardEventBus;
 import com.inventario.event.DashboardEventType;
-import org.springframework.stereotype.Repository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.sql.*;
-import java.util.List;
+import com.inventario.model.Inventario;
 
 /**
  * DAO Refatorado para gerenciar operações CRUD da tabela INVENTARIO
@@ -255,10 +260,15 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
 
     /**
      * Finaliza um inventário (altera status para CONCLUIDO)
+     * 
+     * CORREÇÃO 27/12/2025: Adicionada atualização de DATA_FIM
+     * - Registra a data de encerramento do inventário
+     * - Atualiza status para CONCLUIDO
+     * - Define percentual de conclusão como 100%
      */
     public boolean finalizar(int id) throws SQLException {
-        String sql = "UPDATE TABELA_INVENTARIO SET STATUS_INVENTARIO = ?, PERCENTUAL_CONCLUSAO = ? WHERE ID = ?";
-        return executeUpdate(sql, "CONCLUIDO", new java.math.BigDecimal("100.00"), id) > 0;
+        String sql = "UPDATE TABELA_INVENTARIO SET STATUS_INVENTARIO = ?, PERCENTUAL_CONCLUSAO = ?, DATA_FIM = ? WHERE ID = ?";
+        return executeUpdate(sql, "CONCLUIDO", new java.math.BigDecimal("100.00"), new java.sql.Date(System.currentTimeMillis()), id) > 0;
     }
 
     /**

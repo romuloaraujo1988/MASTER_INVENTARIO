@@ -250,7 +250,6 @@ com\inventario\util\ImportacaoExcel$ImportacaoCSVConstants.class
 com\inventario\util\CsvExcelGenerator.class
 com\inventario\util\notification\ToastNotification.class
 com\inventario\itemcomposto\model\ComponenteColeta.class
-com\inventario\view\ColetaFrame_v2$HistoricoResult.class
 com\inventario\view\CampusFormDialog$2.class
 com\inventario\view\ModernDialog$1.class
 com\inventario\offline\ColetaOfflineService.class
@@ -364,6 +363,7 @@ com\inventario\sync\service\ValidationService.class
 com\inventario\security\annotation\RequireSupervisor.class
 com\inventario\dao\ColetaDAO.class
 com\inventario\mobile\server\config\WebMvcConfig.class
+com\inventario\view\ColetaFrame_v2$24.class
 com\inventario\model\Campus.class
 com\inventario\analytics\model\package-info.class
 com\inventario\itemcomposto\dao\ComponenteDAO.class

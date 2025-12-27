@@ -11,20 +11,14 @@ ESTRUTURA:
 
 EXECUCAO:
 
-1. APENAS DESKTOP:
-   .\iniciar-desktop.ps1
-   ou iniciar-desktop.bat
-
-2. APENAS SERVIDOR MOBILE:
+SERVIDOR MOBILE:
    .\iniciar-servidor-mobile.ps1
    ou iniciar-servidor-mobile.bat
 
 PORTAS:
-  * Desktop: Aplicacao local (sem porta)
   * Servidor Mobile: http://localhost:8081/inventario
 
 MEMORIA:
-  * Desktop: 512MB - 2GB
   * Servidor Mobile: 256MB - 1GB (processo separado)
 
 VANTAGENS DOS THIN JARS:

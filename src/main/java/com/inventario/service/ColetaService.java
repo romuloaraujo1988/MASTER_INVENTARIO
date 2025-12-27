@@ -1,15 +1,19 @@
 package com.inventario.service;
 
-import com.inventario.dao.ColetaDAO;
-import com.inventario.dao.SalaInventarioDAO;
-import com.inventario.model.Coleta;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.inventario.dao.ColetaDAO;
+import com.inventario.dao.InventarioDAO;
+import com.inventario.dao.SalaInventarioDAO;
+import com.inventario.model.Coleta;
+import com.inventario.model.Inventario;
 
 /**
  * Serviço para operações com Coleta
@@ -25,15 +29,18 @@ public class ColetaService {
     
     private final ColetaDAO coletaDAO;
     private final SalaInventarioDAO salaInventarioDAO;
+    private final InventarioDAO inventarioDAO;
     
     public ColetaService() {
         this.coletaDAO = new ColetaDAO();
         this.salaInventarioDAO = new SalaInventarioDAO();
+        this.inventarioDAO = new InventarioDAO();
     }
     
     public ColetaService(ColetaDAO coletaDAO, SalaInventarioDAO salaInventarioDAO) {
         this.coletaDAO = coletaDAO;
         this.salaInventarioDAO = salaInventarioDAO;
+        this.inventarioDAO = new InventarioDAO();
     }
     
     /**
@@ -337,6 +344,10 @@ public class ColetaService {
     
     /**
      * Valida dados da coleta
+     * 
+     * CORREÇÃO 27/12/2025: Adicionada validação de status do inventário
+     * - Bloqueia coletas se inventário não estiver EM_ANDAMENTO
+     * - Impede coletas em inventários CONCLUIDO, CANCELADO ou PLANEJADO
      */
     private void validarColeta(Coleta coleta) throws BusinessException {
         if (coleta == null) {
@@ -349,6 +360,40 @@ public class ColetaService {
         
         if (coleta.getIdPatrimonio() <= 0 && !coleta.isSemEtiqueta()) {
             throw new BusinessException("Patrimônio inválido");
+        }
+        
+        // VALIDAÇÃO CRÍTICA: Verificar se inventário está EM_ANDAMENTO
+        try {
+            Inventario inventario = inventarioDAO.findById(coleta.getIdInventario());
+            if (inventario == null) {
+                throw new BusinessException("Inventário não encontrado: " + coleta.getIdInventario());
+            }
+            
+            if (!inventario.isEmAndamento()) {
+                String statusAtual = inventario.getStatusInventario();
+                String mensagem;
+                
+                if (Inventario.STATUS_CONCLUIDO.equals(statusAtual)) {
+                    mensagem = "Este inventário já foi FINALIZADO e não aceita mais coletas. " +
+                              "Data de encerramento: " + (inventario.getDataFim() != null ? 
+                              inventario.getDataFim().toString() : "não registrada");
+                } else if (Inventario.STATUS_CANCELADO.equals(statusAtual)) {
+                    mensagem = "Este inventário foi CANCELADO e não aceita coletas.";
+                } else if (Inventario.STATUS_PLANEJADO.equals(statusAtual)) {
+                    mensagem = "Este inventário ainda está em PLANEJAMENTO. " +
+                              "Aguarde a abertura para iniciar as coletas.";
+                } else {
+                    mensagem = "Inventário com status '" + statusAtual + "' não permite coletas. " +
+                              "Apenas inventários com status 'EM_ANDAMENTO' aceitam coletas.";
+                }
+                
+                logger.warn("Tentativa de coleta em inventário não ativo: ID={}, Status={}", 
+                        inventario.getId(), statusAtual);
+                throw new BusinessException(mensagem);
+            }
+        } catch (SQLException e) {
+            logger.error("Erro ao validar status do inventário: {}", e.getMessage());
+            throw new BusinessException("Erro ao validar inventário: " + e.getMessage());
         }
     }
 }

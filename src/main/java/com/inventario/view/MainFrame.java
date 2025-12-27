@@ -208,9 +208,16 @@ public class MainFrame extends JFrame {
         JMenuItem itemStatusSalas = new JMenuItem("Status das Salas");
         itemStatusSalas.setFont(new Font("Arial", Font.PLAIN, 13));
         itemStatusSalas.addActionListener(e -> abrirStatusSalas());
+        
+        JMenuItem itemConsultaColeta = new JMenuItem("Consultar Coleta por Patrimônio");
+        itemConsultaColeta.setFont(new Font("Arial", Font.PLAIN, 13));
+        itemConsultaColeta.setToolTipText("Pesquisar informações de coleta de um patrimônio específico");
+        itemConsultaColeta.addActionListener(e -> abrirConsultaColeta());
 
         menuDashboard.add(itemDashboardColeta);
         menuDashboard.add(itemStatusSalas);
+        menuDashboard.addSeparator();
+        menuDashboard.add(itemConsultaColeta);
 
         // Menu Analytics (disponível para ADMIN e GESTOR)
         JMenu menuAnalytics = null;
@@ -1264,6 +1271,20 @@ public class MainFrame extends JFrame {
         } catch (Exception e) {
             ModernDialog.showMessage(this,
                     "Erro ao abrir status das salas: " + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    /**
+     * Abre a tela de consulta de coletas por patrimônio
+     */
+    private void abrirConsultaColeta() {
+        try {
+            ConsultaColetaFrame consultaFrame = new ConsultaColetaFrame();
+            consultaFrame.setVisible(true);
+        } catch (Exception e) {
+            ModernDialog.showMessage(this,
+                    "Erro ao abrir consulta de coletas: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }

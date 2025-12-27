@@ -225,8 +225,10 @@ public class RelatorioFrame extends JFrame {
                         default -> { 
                             // Se filtros avançados estão ativos, informar que nenhum item passou nos filtros
                             if (checkFiltrosAvancados.isSelected() && totalOriginal > 0) {
-                                mensagem = "Nenhum item encontrado com os filtros avançados selecionados.\n\n" +
-                                           "Total de itens antes do filtro: " + totalOriginal + "\n" +
+                                mensagem = """
+                                           Nenhum item encontrado com os filtros avan\u00e7ados selecionados.
+                                           
+                                           Total de itens antes do filtro: """ + totalOriginal + "\n" +
                                            "Tente ajustar os filtros de sala, valor ou estado de conservação.";
                             }
                         }

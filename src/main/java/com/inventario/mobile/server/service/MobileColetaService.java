@@ -1,27 +1,5 @@
 package com.inventario.mobile.server.service;
 
-import com.inventario.dao.ColetaDAO;
-import com.inventario.dao.InventarioDAO;
-import com.inventario.dao.PatrimonioDAO;
-import com.inventario.dao.UsuarioDAO;
-import com.inventario.dao.ParticipanteInventarioDAO;
-import com.inventario.model.Coleta;
-import com.inventario.model.Inventario;
-import com.inventario.model.Patrimonio;
-import com.inventario.model.Usuario;
-import com.inventario.util.SoundNotification;
-import com.inventario.mobile.server.dto.MobileColetaRequest;
-import com.inventario.mobile.server.dto.MobileColetaResponse;
-import com.inventario.event.DashboardEvent;
-import com.inventario.event.DashboardEventBus;
-import com.inventario.event.DashboardEventType;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -30,6 +8,29 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.inventario.dao.ColetaDAO;
+import com.inventario.dao.InventarioDAO;
+import com.inventario.dao.ParticipanteInventarioDAO;
+import com.inventario.dao.PatrimonioDAO;
+import com.inventario.dao.UsuarioDAO;
+import com.inventario.event.DashboardEvent;
+import com.inventario.event.DashboardEventBus;
+import com.inventario.event.DashboardEventType;
+import com.inventario.mobile.server.dto.MobileColetaRequest;
+import com.inventario.mobile.server.dto.MobileColetaResponse;
+import com.inventario.model.Coleta;
+import com.inventario.model.Inventario;
+import com.inventario.model.Patrimonio;
+import com.inventario.model.Usuario;
+import com.inventario.util.SoundNotification;
 
 /**
  * Serviço para operações de coleta mobile
@@ -122,6 +123,30 @@ public class MobileColetaService {
         
         if (inventario == null) {
             throw new IllegalArgumentException("Nenhum inventário ativo encontrado. Por favor, inicie um inventário no sistema com status 'EM_ANDAMENTO'.");
+        }
+        
+        // VALIDAÇÃO CRÍTICA 27/12/2025: Verificar se inventário está EM_ANDAMENTO
+        if (!inventario.isEmAndamento()) {
+            String statusAtual = inventario.getStatusInventario();
+            String mensagem;
+            
+            if (Inventario.STATUS_CONCLUIDO.equals(statusAtual)) {
+                mensagem = "INVENTÁRIO FINALIZADO: O inventário '" + inventario.getNome() + 
+                          "' já foi encerrado e não aceita mais coletas.";
+            } else if (Inventario.STATUS_CANCELADO.equals(statusAtual)) {
+                mensagem = "INVENTÁRIO CANCELADO: O inventário '" + inventario.getNome() + 
+                          "' foi cancelado e não aceita coletas.";
+            } else if (Inventario.STATUS_PLANEJADO.equals(statusAtual)) {
+                mensagem = "INVENTÁRIO NÃO INICIADO: O inventário '" + inventario.getNome() + 
+                          "' ainda está em planejamento. Aguarde a abertura.";
+            } else {
+                mensagem = "INVENTÁRIO INDISPONÍVEL: Status atual '" + statusAtual + 
+                          "' não permite coletas.";
+            }
+            
+            logger.warn("🚫 Tentativa de coleta em inventário não ativo: ID={}, Nome='{}', Status={}", 
+                    inventario.getId(), inventario.getNome(), statusAtual);
+            throw new IllegalArgumentException(mensagem);
         }
 
         // Buscar ID do participante

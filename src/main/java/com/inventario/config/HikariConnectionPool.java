@@ -32,7 +32,8 @@ public class HikariConnectionPool {
     
     private static final Logger logger = LoggerFactory.getLogger(HikariConnectionPool.class);
     
-    private static volatile HikariDataSource dataSource;
+    private static HikariDataSource dataSource;
+    private static volatile boolean initialized = false;
     private static final Object lock = new Object();
     
     // Configurações do pool (alinhadas com application-mobile.properties)
@@ -55,10 +56,11 @@ public class HikariConnectionPool {
      * @throws SQLException se não conseguir obter conexão
      */
     public static Connection getConnection() throws SQLException {
-        if (dataSource == null) {
+        if (!initialized) {
             synchronized (lock) {
-                if (dataSource == null) {
+                if (!initialized) {
                     initializePool();
+                    initialized = true;
                 }
             }
         }
@@ -259,10 +261,13 @@ public class HikariConnectionPool {
      * Fecha o pool de conexões (usar apenas no shutdown da aplicação)
      */
     public static void shutdown() {
-        if (dataSource != null && !dataSource.isClosed()) {
-            logger.info("🛑 Fechando pool de conexões...");
-            dataSource.close();
-            logger.info("✅ Pool fechado com sucesso");
+        synchronized (lock) {
+            if (dataSource != null && !dataSource.isClosed()) {
+                logger.info("🛑 Fechando pool de conexões...");
+                dataSource.close();
+                initialized = false;
+                logger.info("✅ Pool fechado com sucesso");
+            }
         }
     }
     

@@ -2614,7 +2614,7 @@ public class ColetaFrame_v2 extends JFrame {
                                 Thread.sleep(DELAY_ENTRE_LOTES);
                             }
                             
-                        } catch (Exception e) {
+                        } catch (InterruptedException e) {
                             tentativasErro++;
                             LOG.warn("Erro no lote {} (tentativa {}/{}): {}", 
                                 loteAtual, tentativasErro, MAX_TENTATIVAS_LOTE, e.getMessage());
@@ -2649,7 +2649,7 @@ public class ColetaFrame_v2 extends JFrame {
                         }
                     }
                     
-                } catch (Exception e) {
+                } catch (InterruptedException | SQLException e) {
                     LOG.error("Erro crítico no carregamento progressivo: {}", e.getMessage(), e);
                     erroFinal = e.getMessage();
                 }
@@ -2719,37 +2719,6 @@ public class ColetaFrame_v2 extends JFrame {
     }
     
     /**
-     * Verifica se o erro é relacionado a problemas de rede/conexão.
-     */
-    private boolean isErroDeRede(Throwable causa) {
-        if (causa == null) return false;
-        
-        String mensagem = causa.getMessage();
-        if (mensagem == null) mensagem = "";
-        mensagem = mensagem.toLowerCase();
-        
-        // Verificar tipos de exceção de rede
-        if (causa instanceof java.net.SocketException ||
-            causa instanceof java.net.SocketTimeoutException ||
-            causa instanceof java.io.IOException ||
-            causa instanceof java.sql.SQLTransientConnectionException) {
-            return true;
-        }
-        
-        // Verificar mensagens comuns de erro de rede
-        return mensagem.contains("connection reset") ||
-               mensagem.contains("connection refused") ||
-               mensagem.contains("connection timed out") ||
-               mensagem.contains("socket") ||
-               mensagem.contains("timeout") ||
-               mensagem.contains("i/o error") ||
-               mensagem.contains("network") ||
-               mensagem.contains("08006") || // SQLSTATE para connection failure
-               mensagem.contains("08001") || // SQLSTATE para unable to connect
-               mensagem.contains("sending to the backend");
-    }
-    
-    /**
      * Trata erros de carregamento com opção de retry manual.
      * @param mensagemErro Mensagem de erro
      * @param tentativaAtual Número da tentativa atual
@@ -2764,10 +2733,13 @@ public class ColetaFrame_v2 extends JFrame {
             ? "\n\nForam realizadas " + (tentativaAtual + 1) + " tentativas automáticas."
             : "";
         
-        String dicasVPN = "\n\nDicas para conexão VPN:\n" +
-            "• Verifique se a VPN está conectada\n" +
-            "• Tente reconectar a VPN\n" +
-            "• Aguarde alguns segundos e tente novamente";
+        String dicasVPN = """
+                          
+                          
+                          Dicas para conex\u00e3o VPN:
+                          \u2022 Verifique se a VPN est\u00e1 conectada
+                          \u2022 Tente reconectar a VPN
+                          \u2022 Aguarde alguns segundos e tente novamente""";
         
         int opcao = JOptionPane.showOptionDialog(this,
                 "Erro ao carregar salas:\n" + mensagemErro + infoTentativas + dicasVPN,
@@ -3211,7 +3183,7 @@ public class ColetaFrame_v2 extends JFrame {
                     lblResumoSala.setText(String.format("Coletando em: %s (%d itens) [OFFLINE]", 
                         salaAtual.getIdentificacaoCompleta(), coletas.size()));
                     tabelaHistorico.setEnabled(true);
-                } catch (Exception e) {
+                } catch (InterruptedException | ExecutionException e) {
                     tratarErroHistorico(e.getMessage(), identificacaoSala);
                 }
             }
@@ -3383,7 +3355,7 @@ public class ColetaFrame_v2 extends JFrame {
                                 Thread.sleep(DELAY_ENTRE_LOTES);
                             }
                             
-                        } catch (Exception e) {
+                        } catch (InterruptedException | SQLException e) {
                             tentativasErro++;
                             System.err.println("[PROGRESSIVO] ERRO lote " + loteAtual + " (tentativa " + tentativasErro + "/" + MAX_TENTATIVAS + "): " + e.getMessage());
                             
@@ -3425,7 +3397,7 @@ public class ColetaFrame_v2 extends JFrame {
                         System.err.println("[PROGRESSIVO] Erro ao buscar coletas locais: " + e.getMessage());
                     }
                     
-                } catch (Exception e) {
+                } catch (InterruptedException | SQLException e) {
                     erroFinal = e.getMessage();
                     LOG.error("Erro ao carregar histórico progressivo: {}", e.getMessage(), e);
                 }
@@ -3488,8 +3460,33 @@ public class ColetaFrame_v2 extends JFrame {
         // Colunas: { "Data/Hora", "Patrimônio", "Descrição", "Estado", "ID" }
         String data = coleta.getDataColeta() != null ? sdf.format(coleta.getDataColeta()) : "-";
         String numero = coleta.getNumeroPatrimonio() != null ? coleta.getNumeroPatrimonio() : "-";
-        String descricao = coleta.getDescricaoPatrimonio() != null ? coleta.getDescricaoPatrimonio() : 
-                          (coleta.getDescricaoItemSemEtiqueta() != null ? coleta.getDescricaoItemSemEtiqueta() : "-");
+        
+        // ✅ CORRIGIDO: Buscar descrição do patrimônio se não estiver preenchida
+        String descricao = coleta.getDescricaoPatrimonio();
+        if (descricao == null || descricao.isEmpty()) {
+            // Se não tem descrição do patrimônio, tentar buscar do banco
+            if (coleta.getIdPatrimonio() > 0) {
+                try {
+                    Patrimonio p = patrimonioDAO.buscarPorIdComJoins(coleta.getIdPatrimonio());
+                    if (p != null) {
+                        descricao = p.getDescricao();
+                    }
+                } catch (SQLException e) {
+                    System.err.println("Erro ao buscar descrição do patrimônio: " + e.getMessage());
+                }
+            }
+            
+            // Se ainda não tem descrição, usar descrição de item sem etiqueta
+            if (descricao == null || descricao.isEmpty()) {
+                descricao = coleta.getDescricaoItemSemEtiqueta();
+            }
+            
+            // Se ainda não tem, usar hífen
+            if (descricao == null || descricao.isEmpty()) {
+                descricao = "-";
+            }
+        }
+        
         String estado = coleta.getEstadoEncontrado() != null ? coleta.getEstadoEncontrado() : "-";
         int id = coleta.getId();
         
@@ -3507,8 +3504,33 @@ public class ColetaFrame_v2 extends JFrame {
         // Colunas: { "Data/Hora", "Patrimônio", "Descrição", "Estado", "ID" }
         String data = coleta.getDataColeta() != null ? sdf.format(coleta.getDataColeta()) : "-";
         String numero = coleta.getNumeroPatrimonio() != null ? coleta.getNumeroPatrimonio() : "-";
-        String descricao = coleta.getDescricaoPatrimonio() != null ? coleta.getDescricaoPatrimonio() : 
-                          (coleta.getDescricaoItemSemEtiqueta() != null ? coleta.getDescricaoItemSemEtiqueta() : "-");
+        
+        // ✅ CORRIGIDO: Buscar descrição do patrimônio se não estiver preenchida
+        String descricao = coleta.getDescricaoPatrimonio();
+        if (descricao == null || descricao.isEmpty()) {
+            // Se não tem descrição do patrimônio, tentar buscar do banco
+            if (coleta.getIdPatrimonio() > 0) {
+                try {
+                    Patrimonio p = patrimonioDAO.buscarPorIdComJoins(coleta.getIdPatrimonio());
+                    if (p != null) {
+                        descricao = p.getDescricao();
+                    }
+                } catch (SQLException e) {
+                    System.err.println("Erro ao buscar descrição do patrimônio: " + e.getMessage());
+                }
+            }
+            
+            // Se ainda não tem descrição, usar descrição de item sem etiqueta
+            if (descricao == null || descricao.isEmpty()) {
+                descricao = coleta.getDescricaoItemSemEtiqueta();
+            }
+            
+            // Se ainda não tem, usar hífen
+            if (descricao == null || descricao.isEmpty()) {
+                descricao = "-";
+            }
+        }
+        
         String estado = coleta.getEstadoEncontrado() != null ? coleta.getEstadoEncontrado() : "-";
         int id = coleta.getId();
         
@@ -3587,8 +3609,31 @@ public class ColetaFrame_v2 extends JFrame {
             // Número do patrimônio (itens sem etiqueta já foram filtrados acima)
             String numeroPatrimonio = coleta.getNumeroPatrimonio() != null ? coleta.getNumeroPatrimonio() : "-";
             
-            // Descrição do patrimônio (itens sem etiqueta já foram filtrados acima)
-            String descricao = coleta.getDescricaoPatrimonio() != null ? coleta.getDescricaoPatrimonio() : "-";
+            // ✅ CORRIGIDO: Buscar descrição do patrimônio se não estiver preenchida
+            String descricao = coleta.getDescricaoPatrimonio();
+            if (descricao == null || descricao.isEmpty()) {
+                // Se não tem descrição do patrimônio, tentar buscar do banco
+                if (coleta.getIdPatrimonio() > 0) {
+                    try {
+                        Patrimonio p = patrimonioDAO.buscarPorIdComJoins(coleta.getIdPatrimonio());
+                        if (p != null) {
+                            descricao = p.getDescricao();
+                        }
+                    } catch (SQLException e) {
+                        System.err.println("Erro ao buscar descrição do patrimônio: " + e.getMessage());
+                    }
+                }
+                
+                // Se ainda não tem descrição, usar descrição de item sem etiqueta
+                if (descricao == null || descricao.isEmpty()) {
+                    descricao = coleta.getDescricaoItemSemEtiqueta();
+                }
+                
+                // Se ainda não tem, usar hífen
+                if (descricao == null || descricao.isEmpty()) {
+                    descricao = "-";
+                }
+            }
             
             Object[] linha = {
                 dataFormatada,
@@ -4644,7 +4689,7 @@ public class ColetaFrame_v2 extends JFrame {
             System.out.println("DEBUG: Coleta ID " + idColeta + " excluída com sucesso");
 
             // Remover apenas a linha da tabela (sem recarregar tudo)
-            int linhaSelecionada = tabelaHistorico.getSelectedRow();
+            // Usar linhaSelecionada já declarada no início do método
             if (linhaSelecionada >= 0) {
                 modeloTabelaHistorico.removeRow(linhaSelecionada);
                 atualizarContagemColetas(modeloTabelaHistorico.getRowCount());
