@@ -1092,3 +1092,46 @@ Este arquivo registra todas as compilações do APK Android para rastreabilidade
   - Processos independentes - melhor controle
   - Melhor gerenciamento de memória
 - **Status:** ✅ Sucesso - Pronto para produção
+
+
+---
+
+## Build Produção - 27/12/2025 14:30 (Thin JARs - Versão 2.0.0)
+
+- **Tipo:** Production (Thin JARs)
+- **Versão:** 2.0.0
+- **Componentes:**
+  - `sihcp-desktop.jar` - 1.87 MB (Aplicação Desktop Swing)
+  - `mobile-server.jar` - 1.87 MB (Servidor Mobile API)
+  - `lib/` - 133.85 MB (193 dependências compartilhadas)
+  - **Total:** 137.59 MB
+- **Localização:** `dist/producao/`
+- **Arquivos Gerados:**
+  - ✅ `sihcp-desktop.jar` - Aplicação desktop
+  - ✅ `mobile-server.jar` - Servidor mobile
+  - ✅ `lib/` - Dependências compartilhadas (193 JARs)
+  - ✅ `iniciar-servidor-mobile.ps1` - Script PowerShell
+  - ✅ `iniciar-servidor-mobile.bat` - Script Batch
+  - ✅ `application.properties` - Configuração padrão
+  - ✅ `application-mobile.properties` - Config servidor mobile
+  - ✅ `application-performance.properties` - Otimizações
+  - ✅ `application-test.properties` - Testes
+  - ✅ `application.yml` - Configuração YAML
+  - ✅ `README.txt` - Instruções de uso
+- **Mudanças:**
+  - ✅ Arquitetura Thin JAR implementada
+  - ✅ JARs pequenos e independentes
+  - ✅ Dependências compartilhadas em lib/
+  - ✅ Scripts de execução para servidor mobile
+  - ✅ Configurações de performance incluídas
+  - ✅ Suporte a múltiplos perfis (mobile, performance, test)
+- **Benefícios:**
+  - 📦 JARs pequenos (1.87 MB cada) - fácil distribuição
+  - 🔄 Dependências compartilhadas - reduz duplicação
+  - ⚡ Processos independentes - melhor isolamento
+  - 🚀 Atualizações rápidas - apenas JARs principais mudam
+  - 💾 Economia de espaço - 137.59 MB total vs ~300MB monolítico
+- **Execução:**
+  - Servidor Mobile: `.\iniciar-servidor-mobile.ps1` (porta 8081)
+  - Desktop: Executar `sihcp-desktop.jar` diretamente
+- **Status:** ✅ Sucesso - Pronto para produção

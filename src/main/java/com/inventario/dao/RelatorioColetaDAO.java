@@ -1,9 +1,19 @@
 package com.inventario.dao;
 
-import com.inventario.util.DatabaseConnection;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.stereotype.Repository;
-import java.sql.*;
-import java.util.*;
+
+import com.inventario.util.DatabaseConnection;
 
 /**
  * DAO para geração de relatórios de coleta de inventário.
@@ -76,6 +86,9 @@ public class RelatorioColetaDAO {
         // Query CORRIGIDA:
         // 1. STATUS = 'Ativo' (primeira maiúscula, como está no banco)
         // 2. NOT EXISTS ao invés de NOT IN (evita problema com NULLs)
+        // CORREÇÃO 29/12/2025: JOIN com sa.ID_SALA (não sa.ID)
+        // A tabela_sala tem duas colunas: id e id_sala
+        // O patrimônio.id_sala referencia sala.id_sala (não sala.id)
         String sql = """
                 SELECT
                     p.NUMERO as "Número Patrimônio",
@@ -93,7 +106,7 @@ public class RelatorioColetaDAO {
                 FROM TABELA_PATRIMONIO p
                 LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID
                 LEFT JOIN TABELA_SETOR s ON r.ID_SETOR = s.ID
-                LEFT JOIN TABELA_SALA sa ON p.ID_SALA = sa.ID
+                LEFT JOIN TABELA_SALA sa ON p.ID_SALA = sa.ID_SALA
                 WHERE p.STATUS = 'Ativo'
                   AND NOT EXISTS (
                       SELECT 1
@@ -296,9 +309,9 @@ public class RelatorioColetaDAO {
             System.err.println("❌ Erro ao obter métricas: " + e.getMessage());
         }
 
-        // Query CORRIGIDA:
-        // 1. STATUS = 'Ativo' (primeira maiúscula, como está no banco)
-        // 2. NOT EXISTS ao invés de NOT IN (evita problema com NULLs)
+        // CORREÇÃO 29/12/2025: JOIN com sa.ID_SALA (não sa.ID)
+        // A tabela_sala tem duas colunas: id e id_sala
+        // O patrimônio.id_sala referencia sala.id_sala (não sala.id)
         String sql = """
                 SELECT
                     p.NUMERO as "Número Patrimônio",
@@ -316,7 +329,7 @@ public class RelatorioColetaDAO {
                 FROM TABELA_PATRIMONIO p
                 LEFT JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID
                 LEFT JOIN TABELA_SETOR s ON r.ID_SETOR = s.ID
-                LEFT JOIN TABELA_SALA sa ON p.ID_SALA = sa.ID
+                LEFT JOIN TABELA_SALA sa ON p.ID_SALA = sa.ID_SALA
                 WHERE p.STATUS = 'Ativo'
                   AND NOT EXISTS (
                       SELECT 1
@@ -1052,7 +1065,7 @@ public class RelatorioColetaDAO {
      * CORREÇÃO 08/12/2025:
      * - Alterado STATUS = 'ATIVO' para STATUS = 'Ativo' (conforme banco)
      * - Alterado INNER JOIN para LEFT JOIN em responsável e setor (incluir patrimônios sem responsável)
-     * - Corrigido JOIN da sala: p.ID_SALA = sa.ID (não sa.ID_SALA)
+     * - Corrigido JOIN da sala: p.ID_SALA = sa.ID_SALA (a tabela_sala tem id e id_sala como colunas diferentes)
      * 
      * @param idInventario ID do inventário ativo (-1 para relatório geral sem inventário)
      * @return Lista completa com todos os patrimônios e seus status de coleta

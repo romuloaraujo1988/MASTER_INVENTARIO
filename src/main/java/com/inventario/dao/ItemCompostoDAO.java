@@ -1,11 +1,15 @@
 package com.inventario.dao;
 
-import com.inventario.util.DatabaseConnection;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.inventario.util.DatabaseConnection;
 
 /**
  * DAO para gerenciar itens compostos e suas coletas
@@ -392,6 +396,75 @@ public class ItemCompostoDAO {
             stmt.setInt(1, idComponente);
             stmt.executeUpdate();
         }
+    }
+    
+    /**
+     * Remove todos os componentes de um item composto (remove o patrimônio dos itens compostos)
+     * Também remove as coletas de componentes associadas
+     * 
+     * @param idPatrimonio ID do patrimônio principal
+     * @return Número de componentes removidos
+     */
+    public int removerItemComposto(int idPatrimonio) throws SQLException {
+        int componentesRemovidos = 0;
+        
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            
+            try {
+                // 1. Primeiro, remover as coletas de componentes associadas
+                String sqlRemoverColetas = """
+                    DELETE FROM tabela_coleta_componente 
+                    WHERE id_item_composto IN (
+                        SELECT id FROM tabela_item_composto WHERE id_patrimonio_principal = ?
+                    )
+                    """;
+                
+                try (PreparedStatement stmt = conn.prepareStatement(sqlRemoverColetas)) {
+                    stmt.setInt(1, idPatrimonio);
+                    stmt.executeUpdate();
+                }
+                
+                // 2. Depois, remover os componentes
+                String sqlRemoverComponentes = "DELETE FROM tabela_item_composto WHERE id_patrimonio_principal = ?";
+                
+                try (PreparedStatement stmt = conn.prepareStatement(sqlRemoverComponentes)) {
+                    stmt.setInt(1, idPatrimonio);
+                    componentesRemovidos = stmt.executeUpdate();
+                }
+                
+                conn.commit();
+                
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        }
+        
+        return componentesRemovidos;
+    }
+    
+    /**
+     * Conta quantos componentes um item composto possui
+     */
+    public int contarComponentes(int idPatrimonio) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM tabela_item_composto WHERE id_patrimonio_principal = ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idPatrimonio);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        
+        return 0;
     }
     
     /**

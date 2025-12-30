@@ -3461,30 +3461,16 @@ public class ColetaFrame_v2 extends JFrame {
         String data = coleta.getDataColeta() != null ? sdf.format(coleta.getDataColeta()) : "-";
         String numero = coleta.getNumeroPatrimonio() != null ? coleta.getNumeroPatrimonio() : "-";
         
-        // ✅ CORRIGIDO: Buscar descrição do patrimônio se não estiver preenchida
+        // ✅ OTIMIZADO: Usar descrição que já veio do JOIN no DAO (sem query adicional)
+        // A descrição já vem preenchida pelo método criarColetaOtimizadaFromResultSet
         String descricao = coleta.getDescricaoPatrimonio();
         if (descricao == null || descricao.isEmpty()) {
-            // Se não tem descrição do patrimônio, tentar buscar do banco
-            if (coleta.getIdPatrimonio() > 0) {
-                try {
-                    Patrimonio p = patrimonioDAO.buscarPorIdComJoins(coleta.getIdPatrimonio());
-                    if (p != null) {
-                        descricao = p.getDescricao();
-                    }
-                } catch (SQLException e) {
-                    System.err.println("Erro ao buscar descrição do patrimônio: " + e.getMessage());
-                }
-            }
-            
-            // Se ainda não tem descrição, usar descrição de item sem etiqueta
-            if (descricao == null || descricao.isEmpty()) {
-                descricao = coleta.getDescricaoItemSemEtiqueta();
-            }
-            
-            // Se ainda não tem, usar hífen
-            if (descricao == null || descricao.isEmpty()) {
-                descricao = "-";
-            }
+            // Fallback: usar descrição de item sem etiqueta
+            descricao = coleta.getDescricaoItemSemEtiqueta();
+        }
+        if (descricao == null || descricao.isEmpty()) {
+            // Último fallback: usar hífen (NÃO fazer query adicional!)
+            descricao = "-";
         }
         
         String estado = coleta.getEstadoEncontrado() != null ? coleta.getEstadoEncontrado() : "-";
@@ -3505,30 +3491,16 @@ public class ColetaFrame_v2 extends JFrame {
         String data = coleta.getDataColeta() != null ? sdf.format(coleta.getDataColeta()) : "-";
         String numero = coleta.getNumeroPatrimonio() != null ? coleta.getNumeroPatrimonio() : "-";
         
-        // ✅ CORRIGIDO: Buscar descrição do patrimônio se não estiver preenchida
+        // ✅ OTIMIZADO: Usar descrição que já veio do JOIN no DAO (sem query adicional)
+        // A descrição já vem preenchida pelo método criarColetaOtimizadaFromResultSet
         String descricao = coleta.getDescricaoPatrimonio();
         if (descricao == null || descricao.isEmpty()) {
-            // Se não tem descrição do patrimônio, tentar buscar do banco
-            if (coleta.getIdPatrimonio() > 0) {
-                try {
-                    Patrimonio p = patrimonioDAO.buscarPorIdComJoins(coleta.getIdPatrimonio());
-                    if (p != null) {
-                        descricao = p.getDescricao();
-                    }
-                } catch (SQLException e) {
-                    System.err.println("Erro ao buscar descrição do patrimônio: " + e.getMessage());
-                }
-            }
-            
-            // Se ainda não tem descrição, usar descrição de item sem etiqueta
-            if (descricao == null || descricao.isEmpty()) {
-                descricao = coleta.getDescricaoItemSemEtiqueta();
-            }
-            
-            // Se ainda não tem, usar hífen
-            if (descricao == null || descricao.isEmpty()) {
-                descricao = "-";
-            }
+            // Fallback: usar descrição de item sem etiqueta
+            descricao = coleta.getDescricaoItemSemEtiqueta();
+        }
+        if (descricao == null || descricao.isEmpty()) {
+            // Último fallback: usar hífen (NÃO fazer query adicional!)
+            descricao = "-";
         }
         
         String estado = coleta.getEstadoEncontrado() != null ? coleta.getEstadoEncontrado() : "-";
@@ -3609,30 +3581,16 @@ public class ColetaFrame_v2 extends JFrame {
             // Número do patrimônio (itens sem etiqueta já foram filtrados acima)
             String numeroPatrimonio = coleta.getNumeroPatrimonio() != null ? coleta.getNumeroPatrimonio() : "-";
             
-            // ✅ CORRIGIDO: Buscar descrição do patrimônio se não estiver preenchida
+            // ✅ OTIMIZADO: Usar descrição que já veio do JOIN no DAO (sem query adicional)
+            // A descrição já vem preenchida pelo método criarColetaOtimizadaFromResultSet
             String descricao = coleta.getDescricaoPatrimonio();
             if (descricao == null || descricao.isEmpty()) {
-                // Se não tem descrição do patrimônio, tentar buscar do banco
-                if (coleta.getIdPatrimonio() > 0) {
-                    try {
-                        Patrimonio p = patrimonioDAO.buscarPorIdComJoins(coleta.getIdPatrimonio());
-                        if (p != null) {
-                            descricao = p.getDescricao();
-                        }
-                    } catch (SQLException e) {
-                        System.err.println("Erro ao buscar descrição do patrimônio: " + e.getMessage());
-                    }
-                }
-                
-                // Se ainda não tem descrição, usar descrição de item sem etiqueta
-                if (descricao == null || descricao.isEmpty()) {
-                    descricao = coleta.getDescricaoItemSemEtiqueta();
-                }
-                
-                // Se ainda não tem, usar hífen
-                if (descricao == null || descricao.isEmpty()) {
-                    descricao = "-";
-                }
+                // Fallback: usar descrição de item sem etiqueta
+                descricao = coleta.getDescricaoItemSemEtiqueta();
+            }
+            if (descricao == null || descricao.isEmpty()) {
+                // Último fallback: usar hífen (NÃO fazer query adicional!)
+                descricao = "-";
             }
             
             Object[] linha = {

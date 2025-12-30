@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.text.ParseException;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -106,7 +107,7 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
                     }
                 }
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             // Ignorar erros
         }
 
@@ -128,7 +129,7 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
                     }
                 }
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             // Ignorar erros
         }
 
@@ -454,7 +455,7 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
                 sdf.setLenient(false);
                 java.util.Date parsed = sdf.parse(dataStr);
                 return new java.sql.Date(parsed.getTime());
-            } catch (Exception e) {
+            } catch (ParseException e) {
                 // Tentar próximo formato
             }
         }

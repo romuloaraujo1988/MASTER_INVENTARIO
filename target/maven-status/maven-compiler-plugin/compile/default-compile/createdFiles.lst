@@ -107,6 +107,7 @@ com\inventario\util\notification\NotificationUtils.class
 com\inventario\view\CampusManagementFrame$1.class
 com\inventario\service\MobileConnectionService$1.class
 com\inventario\service\SyncStatusManager$SyncStatus.class
+com\inventario\view\ItemCompostoFrame$5.class
 com\inventario\view\ui\ButtonStyleFactory$1.class
 com\inventario\mobile\server\config\MobileSecurityConfig.class
 com\inventario\mobile\server\dto\MobileColetaRequest.class
@@ -117,6 +118,7 @@ com\inventario\view\StatusSalasFrame$1.class
 com\inventario\mobile\server\dto\MobileOfflineDataDTO$SalaOfflineDTO.class
 com\inventario\view\MobileMonitorFrameV2$5.class
 com\inventario\view\ImportacaoDadosDialog$2.class
+com\inventario\view\ConsultaColetaFrame$2.class
 com\inventario\view\components\PaginationPanel.class
 com\inventario\service\InventarioService.class
 com\inventario\mobile\server\service\MobileColetaService.class
@@ -172,6 +174,7 @@ com\inventario\analytics\model\MetricasColetorDTO.class
 com\inventario\view\ComponenteDialog.class
 com\inventario\view\ui\ModernComboBox.class
 com\inventario\sync\model\Conflict.class
+com\inventario\view\ItemCompostoFrame$4.class
 com\inventario\util\RelatorioPDFGenerator.class
 com\inventario\print\EtiquetaConfig$Formato.class
 com\inventario\print\EtiquetaData.class
@@ -234,6 +237,7 @@ com\inventario\analytics\dao\package-info.class
 com\inventario\util\RemoverComponentesComputador.class
 com\inventario\view\ReconciliacaoFrame$7.class
 com\inventario\view\SetorFrame$2.class
+com\inventario\view\ConsultaColetaFrame.class
 com\inventario\offline\DataSynchronizer$ConflictResolution.class
 com\inventario\util\ImportacaoCSV$ProgressCallback.class
 com\inventario\view\SalaFrame$2.class
@@ -327,6 +331,7 @@ com\inventario\view\RelatorioItensCompostosFrame$3.class
 com\inventario\mobile\server\config\DatabasePoolConfig.class
 com\inventario\mobile\server\controller\MobileSetorController.class
 com\inventario\mobile\server\controller\MobileDispositivoController.class
+com\inventario\view\ConsultaColetaFrame$StatusCellRenderer.class
 com\inventario\mobile\server\service\MobileInventarioService.class
 com\inventario\analytics\model\RankingSetorDTO.class
 com\inventario\util\FormUtils$1.class
@@ -349,6 +354,7 @@ com\inventario\view\ColetaFrame_v2$5.class
 com\inventario\util\notification\ToastNotification$2.class
 com\inventario\util\ImportacaoCSV.class
 com\inventario\analytics\view\MetricasTempoAnalyticsFrame$2.class
+com\inventario\view\ConsultaColetaFrame$DivergenciaCellRenderer.class
 com\inventario\presentation\state\RelatorioItemCompostoState$Error.class
 com\inventario\model\StatusDispositivo.class
 com\inventario\analytics\dao\AnalyticsDAO.class
@@ -370,6 +376,7 @@ com\inventario\itemcomposto\dao\ComponenteDAO.class
 com\inventario\util\MobileApiClient.class
 com\inventario\view\ModernConfirmDialog$1.class
 com\inventario\event\DashboardEventSerializer$2.class
+com\inventario\view\ConsultaColetaFrame$1.class
 com\inventario\mobile\server\service\MobileAuthService$4.class
 com\inventario\offline\SyncFrame$2.class
 com\inventario\view\MainFrame$2.class
@@ -492,6 +499,7 @@ com\inventario\service\ResponsavelService.class
 com\inventario\service\UsuarioService.class
 com\inventario\util\CadastrarItensCompostosMassa.class
 com\inventario\view\ColetaFrame_v2$11.class
+com\inventario\view\ConsultaColetaFrame$3.class
 com\inventario\analytics\model\MetricasPeriodoDTO$Builder.class
 com\inventario\dao\InventarioSetorDAO.class
 com\inventario\mobile\server\config\MobileServerConfig.class

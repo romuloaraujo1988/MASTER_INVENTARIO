@@ -1,15 +1,16 @@
 package com.inventario.analytics.service;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.inventario.analytics.model.GravidadeDivergencia;
 import com.inventario.analytics.model.TipoDivergencia;
 import com.inventario.model.Coleta;
 import com.inventario.model.Patrimonio;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * Serviço responsável pela classificação de gravidade das divergências.
@@ -199,30 +200,22 @@ public class DivergenciaClassificadorService {
     public GravidadeDivergencia classificarGravidade(Coleta coleta, Patrimonio patrimonio) {
         TipoDivergencia tipo = detectarTipo(coleta, patrimonio);
         
-        switch (tipo) {
-            case LOCALIZACAO:
-                // Patrimonio usa idSala, não temos acesso direto ao setor
-                // Para uma classificação mais precisa, seria necessário buscar o setor via DAO
-                return classificarDivergenciaLocalizacao(
-                        patrimonio.getNomeSala(),
-                        coleta.getLocalizacaoEncontrada(),
-                        null, // setorCadastrado - não disponível diretamente
-                        null  // setorEncontrado - não disponível diretamente
-                );
-                
-            case ESTADO:
-                return classificarDivergenciaEstado(
-                        patrimonio.getEstadoConservacao(),
-                        coleta.getEstadoEncontrado()
-                );
-                
-            case MANUAL:
-                // Divergências manuais são consideradas de gravidade média por padrão
-                return GravidadeDivergencia.MEDIA;
-                
-            default:
-                return GravidadeDivergencia.BAIXA;
-        }
+        return switch (tipo) {
+            case LOCALIZACAO -> classificarDivergenciaLocalizacao(
+                    patrimonio.getNomeSala(),
+                    coleta.getLocalizacaoEncontrada(),
+                    null, // setorCadastrado - não disponível diretamente
+                    null  // setorEncontrado - não disponível diretamente
+            );
+            case ESTADO -> classificarDivergenciaEstado(
+                    patrimonio.getEstadoConservacao(),
+                    coleta.getEstadoEncontrado()
+            );
+            case MANUAL -> GravidadeDivergencia.MEDIA;
+            default -> GravidadeDivergencia.BAIXA;
+        }; // Patrimonio usa idSala, não temos acesso direto ao setor
+        // Para uma classificação mais precisa, seria necessário buscar o setor via DAO
+        // Divergências manuais são consideradas de gravidade média por padrão
     }
     
     /**

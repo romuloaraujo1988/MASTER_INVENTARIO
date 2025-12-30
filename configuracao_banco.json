@@ -1,6 +1,6 @@
 {
     "postgresql": {
-        "host": "25.30.18.235",
+        "host": "localhost",
         "database": "sispatrimonio",
         "user": "postgres",
         "password": "Romulo@2020",
@@ -9,7 +9,7 @@
     },
     "sqlite": {
         "database": "inventario.db",
-        "backup_dir": "backups/2025-12-18"
+        "backup_dir": "backups/2025-12-30"
     },
     "mysql": {
         "host": "localhost",
