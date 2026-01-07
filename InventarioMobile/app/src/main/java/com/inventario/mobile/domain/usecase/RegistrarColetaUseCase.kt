@@ -60,7 +60,8 @@ class RegistrarColetaUseCase @Inject constructor(
                 dataColeta = System.currentTimeMillis(),
                 localizacaoAtual = localizacaoAtual,
                 observacoes = observacoes,
-                status = estadoEncontrado ?: "COLETADO",
+                status = "COLETADO",  // Status da coleta (COLETADO, PENDENTE, ERRO)
+                estadoEncontrado = estadoEncontrado ?: "BOM",  // Estado de conservação conforme legislação
                 latitude = latitude,
                 longitude = longitude,
                 sincronizado = false
@@ -116,7 +117,8 @@ class RegistrarColetaUseCase @Inject constructor(
                 dataColeta = System.currentTimeMillis(),
                 localizacaoAtual = localizacaoAtual,
                 observacoes = "Categoria: $categoria | $observacoes",
-                status = estadoEncontrado,
+                status = "COLETADO",  // Status da coleta
+                estadoEncontrado = estadoEncontrado,  // Estado de conservação
                 latitude = latitude,
                 longitude = longitude,
                 sincronizado = false,
@@ -134,6 +136,64 @@ class RegistrarColetaUseCase @Inject constructor(
             
         } catch (e: Exception) {
             android.util.Log.e("RegistrarColetaUseCase", "❌ Erro ao registrar item sem etiqueta", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Registra coleta por descrição (item similar sem etiqueta)
+     * Usado quando o coletor encontra um item igual ao anterior mas sem etiqueta
+     */
+    suspend fun registrarColetaPorDescricao(
+        descricao: String,
+        salaId: Int,
+        salaNome: String,
+        estadoConservacao: String,
+        inventarioId: Int,
+        usuarioId: Long,
+        usuarioNome: String,
+        observacoes: String? = null
+    ): Result<Coleta> {
+        return try {
+            // 1. Validar entrada
+            if (descricao.isBlank()) {
+                return Result.failure(Exception("Descrição do item é obrigatória"))
+            }
+            
+            android.util.Log.d("RegistrarColetaUseCase", "═══════════════════════════════════════")
+            android.util.Log.d("RegistrarColetaUseCase", "✓ Registrando coleta por DESCRIÇÃO (similar)")
+            android.util.Log.d("RegistrarColetaUseCase", "  Descrição: $descricao")
+            android.util.Log.d("RegistrarColetaUseCase", "  Sala: $salaNome (ID: $salaId)")
+            android.util.Log.d("RegistrarColetaUseCase", "  Estado: $estadoConservacao")
+            android.util.Log.d("RegistrarColetaUseCase", "  Usuário: $usuarioNome (ID: $usuarioId)")
+            android.util.Log.d("RegistrarColetaUseCase", "═══════════════════════════════════════")
+            
+            // 2. Criar coleta para item similar (sem número de patrimônio)
+            val coleta = Coleta(
+                id = 0,
+                patrimonioId = 0,  // Sem patrimônio específico
+                numeroPatrimonio = null,  // Sem número
+                descricaoPatrimonio = descricao,
+                usuarioId = usuarioId,
+                salaId = salaId,
+                dataColeta = System.currentTimeMillis(),
+                localizacaoAtual = salaNome,
+                estadoEncontrado = estadoConservacao,
+                observacoes = observacoes ?: "Coleta similar - item sem etiqueta",
+                status = "COLETADO",
+                sincronizado = false,
+                // Campos para item sem etiqueta
+                semEtiqueta = true,
+                descricaoItemSemEtiqueta = descricao
+            )
+            
+            android.util.Log.d("RegistrarColetaUseCase", "✓ Coleta por descrição criada, salvando...")
+            
+            // 3. Registrar coleta
+            coletaRepository.registrarColetaSemEtiqueta(coleta)
+            
+        } catch (e: Exception) {
+            android.util.Log.e("RegistrarColetaUseCase", "❌ Erro ao registrar coleta por descrição", e)
             Result.failure(e)
         }
     }

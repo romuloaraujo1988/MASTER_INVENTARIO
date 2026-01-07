@@ -31,6 +31,8 @@ public class DashboardColetaDAO {
         System.out.println("DEBUG: Buscando estatísticas para inventário ID: " + idInventario);
 
         // Primeira consulta: estatísticas dos patrimônios cadastrados
+        // ATUALIZADO: Inclui patrimônios com status 'Ativo' E 'Pendente' (total: 11.070)
+        // Exclui patrimônios 'Baixado' que não devem ser inventariados
         String sqlPatrimonios = "SELECT " +
                 "COUNT(p.ID) as total_patrimonios, " +
                 "COUNT(CASE WHEN c.STATUS_COLETA = 'COLETADO' THEN 1 END) as itens_coletados, " +
@@ -38,7 +40,7 @@ public class DashboardColetaDAO {
                 "COUNT(CASE WHEN c.STATUS_COLETA = 'NAO_ENCONTRADO' THEN 1 END) as itens_nao_coletados " +
                 "FROM TABELA_PATRIMONIO p " +
                 "LEFT JOIN TABELA_COLETA c ON p.ID = c.ID_PATRIMONIO AND c.ID_INVENTARIO = ? " +
-                "WHERE p.status = 'Ativo'";
+                "WHERE UPPER(p.status) IN ('ATIVO', 'PENDENTE')";
 
         // Segunda consulta: itens sem patrimônio encontrados (usando campo
         // SEM_ETIQUETA)
@@ -122,7 +124,7 @@ public class DashboardColetaDAO {
                 FROM TABELA_PATRIMONIO p
                 INNER JOIN TABELA_RESPONSAVEL r ON p.ID_RESPONSAVEL = r.ID
                 LEFT JOIN TABELA_COLETA c ON p.ID = c.ID_PATRIMONIO AND c.ID_INVENTARIO = ?
-                WHERE p.status = 'Ativo'
+                WHERE UPPER(p.status) IN ('ATIVO', 'PENDENTE')
                 GROUP BY r.ID, r.NOME
                 ORDER BY itens_coletados DESC
                 """;
@@ -170,7 +172,7 @@ public class DashboardColetaDAO {
                 INNER JOIN TABELA_SALA sa ON p.ID_SALA = sa.ID_SALA
                 INNER JOIN TABELA_SETOR s ON sa.ID_SETOR = s.ID
                 LEFT JOIN TABELA_COLETA c ON p.ID = c.ID_PATRIMONIO AND c.ID_INVENTARIO = ?
-                WHERE p.status = 'Ativo'
+                WHERE UPPER(p.status) IN ('ATIVO', 'PENDENTE')
                 GROUP BY s.ID, s.NOME
                 ORDER BY itens_coletados DESC
                 """;
@@ -317,6 +319,7 @@ public class DashboardColetaDAO {
         java.util.List<Map<String, Object>> estatisticasPorSala = new java.util.ArrayList<>();
 
         // Incluir status real da sala da tabela_sala_inventario
+        // ATUALIZADO: Inclui patrimônios com status 'Ativo' E 'Pendente' (total: 11.070)
         String sql = "SELECT " +
                 "s.ID_SALA, " +
                 "s.NUMERO_SALA, " +
@@ -330,7 +333,7 @@ public class DashboardColetaDAO {
                 "si.percentual_conclusao as percentual_sala_inventario " +
                 "FROM TABELA_SALA s " +
                 "LEFT JOIN TABELA_SETOR st ON s.ID_SETOR = st.ID " +
-                "LEFT JOIN TABELA_PATRIMONIO p ON p.ID_SALA = s.ID_SALA AND p.status = 'Ativo' " +
+                "LEFT JOIN TABELA_PATRIMONIO p ON p.ID_SALA = s.ID_SALA AND UPPER(p.status) IN ('ATIVO', 'PENDENTE') " +
                 "LEFT JOIN TABELA_COLETA c ON p.ID = c.ID_PATRIMONIO AND c.ID_INVENTARIO = ? " +
                 "LEFT JOIN TABELA_SALA_INVENTARIO si ON s.ID_SALA = si.ID_SALA AND si.ID_INVENTARIO = ? " +
                 "WHERE s.ATIVO = TRUE " +

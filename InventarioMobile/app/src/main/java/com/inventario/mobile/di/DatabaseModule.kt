@@ -78,4 +78,9 @@ object DatabaseModule {
     fun provideHistoricoScanDao(database: AppDatabase): HistoricoScanDao {
         return database.historicoScanDao()
     }
+    
+    @Provides
+    fun provideFotoReferenciaDao(database: AppDatabase): FotoReferenciaDao {
+        return database.fotoReferenciaDao()
+    }
 }

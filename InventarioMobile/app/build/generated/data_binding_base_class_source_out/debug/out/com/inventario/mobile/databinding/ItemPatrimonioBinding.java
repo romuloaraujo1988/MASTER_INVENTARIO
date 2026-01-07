@@ -4,7 +4,9 @@ package com.inventario.mobile.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,6 +23,12 @@ public final class ItemPatrimonioBinding implements ViewBinding {
   private final MaterialCardView rootView;
 
   @NonNull
+  public final MaterialCardView cardFotoReferencia;
+
+  @NonNull
+  public final ImageView imageViewFotoReferencia;
+
+  @NonNull
   public final LinearLayout layoutInfoColeta;
 
   @NonNull
@@ -31,6 +39,9 @@ public final class ItemPatrimonioBinding implements ViewBinding {
 
   @NonNull
   public final LinearLayout layoutResponsavel;
+
+  @NonNull
+  public final ProgressBar progressFotoReferencia;
 
   @NonNull
   public final TextView textViewColetadoPor;
@@ -69,19 +80,24 @@ public final class ItemPatrimonioBinding implements ViewBinding {
   public final TextView textViewStatus;
 
   private ItemPatrimonioBinding(@NonNull MaterialCardView rootView,
+      @NonNull MaterialCardView cardFotoReferencia, @NonNull ImageView imageViewFotoReferencia,
       @NonNull LinearLayout layoutInfoColeta, @NonNull LinearLayout layoutLocalizacao,
       @NonNull LinearLayout layoutMarcaModelo, @NonNull LinearLayout layoutResponsavel,
-      @NonNull TextView textViewColetadoPor, @NonNull TextView textViewDataColeta,
-      @NonNull TextView textViewDescricao, @NonNull TextView textViewEstadoEncontrado,
-      @NonNull TextView textViewLocalizacaoEncontrada, @NonNull TextView textViewMarca,
-      @NonNull TextView textViewModelo, @NonNull TextView textViewNumero,
-      @NonNull TextView textViewResponsavel, @NonNull TextView textViewSala,
-      @NonNull TextView textViewSetor, @NonNull TextView textViewStatus) {
+      @NonNull ProgressBar progressFotoReferencia, @NonNull TextView textViewColetadoPor,
+      @NonNull TextView textViewDataColeta, @NonNull TextView textViewDescricao,
+      @NonNull TextView textViewEstadoEncontrado, @NonNull TextView textViewLocalizacaoEncontrada,
+      @NonNull TextView textViewMarca, @NonNull TextView textViewModelo,
+      @NonNull TextView textViewNumero, @NonNull TextView textViewResponsavel,
+      @NonNull TextView textViewSala, @NonNull TextView textViewSetor,
+      @NonNull TextView textViewStatus) {
     this.rootView = rootView;
+    this.cardFotoReferencia = cardFotoReferencia;
+    this.imageViewFotoReferencia = imageViewFotoReferencia;
     this.layoutInfoColeta = layoutInfoColeta;
     this.layoutLocalizacao = layoutLocalizacao;
     this.layoutMarcaModelo = layoutMarcaModelo;
     this.layoutResponsavel = layoutResponsavel;
+    this.progressFotoReferencia = progressFotoReferencia;
     this.textViewColetadoPor = textViewColetadoPor;
     this.textViewDataColeta = textViewDataColeta;
     this.textViewDescricao = textViewDescricao;
@@ -123,6 +139,18 @@ public final class ItemPatrimonioBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.cardFotoReferencia;
+      MaterialCardView cardFotoReferencia = ViewBindings.findChildViewById(rootView, id);
+      if (cardFotoReferencia == null) {
+        break missingId;
+      }
+
+      id = R.id.imageViewFotoReferencia;
+      ImageView imageViewFotoReferencia = ViewBindings.findChildViewById(rootView, id);
+      if (imageViewFotoReferencia == null) {
+        break missingId;
+      }
+
       id = R.id.layoutInfoColeta;
       LinearLayout layoutInfoColeta = ViewBindings.findChildViewById(rootView, id);
       if (layoutInfoColeta == null) {
@@ -144,6 +172,12 @@ public final class ItemPatrimonioBinding implements ViewBinding {
       id = R.id.layoutResponsavel;
       LinearLayout layoutResponsavel = ViewBindings.findChildViewById(rootView, id);
       if (layoutResponsavel == null) {
+        break missingId;
+      }
+
+      id = R.id.progressFotoReferencia;
+      ProgressBar progressFotoReferencia = ViewBindings.findChildViewById(rootView, id);
+      if (progressFotoReferencia == null) {
         break missingId;
       }
 
@@ -219,11 +253,12 @@ public final class ItemPatrimonioBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ItemPatrimonioBinding((MaterialCardView) rootView, layoutInfoColeta,
-          layoutLocalizacao, layoutMarcaModelo, layoutResponsavel, textViewColetadoPor,
-          textViewDataColeta, textViewDescricao, textViewEstadoEncontrado,
-          textViewLocalizacaoEncontrada, textViewMarca, textViewModelo, textViewNumero,
-          textViewResponsavel, textViewSala, textViewSetor, textViewStatus);
+      return new ItemPatrimonioBinding((MaterialCardView) rootView, cardFotoReferencia,
+          imageViewFotoReferencia, layoutInfoColeta, layoutLocalizacao, layoutMarcaModelo,
+          layoutResponsavel, progressFotoReferencia, textViewColetadoPor, textViewDataColeta,
+          textViewDescricao, textViewEstadoEncontrado, textViewLocalizacaoEncontrada, textViewMarca,
+          textViewModelo, textViewNumero, textViewResponsavel, textViewSala, textViewSetor,
+          textViewStatus);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

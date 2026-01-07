@@ -178,9 +178,11 @@ class ColetasPagerAdapter(
             else -> emptyList()
         }
 
-        val adapter = PatrimonioAdapter { patrimonio ->
-            Toast.makeText(activity, "Patrimônio: ${patrimonio.numeroPatrimonio}", Toast.LENGTH_SHORT).show()
-        }
+        val adapter = PatrimonioAdapter(
+            onItemClick = { patrimonio ->
+                Toast.makeText(activity, "Patrimônio: ${patrimonio.numeroPatrimonio}", Toast.LENGTH_SHORT).show()
+            }
+        )
         
         holder.recyclerView.adapter = adapter
         adapter.submitList(data)

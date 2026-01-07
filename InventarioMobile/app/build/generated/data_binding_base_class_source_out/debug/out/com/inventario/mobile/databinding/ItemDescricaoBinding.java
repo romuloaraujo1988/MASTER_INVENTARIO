@@ -20,15 +20,23 @@ public final class ItemDescricaoBinding implements ViewBinding {
   private final MaterialCardView rootView;
 
   @NonNull
+  public final TextView tvCategoria;
+
+  @NonNull
   public final TextView tvDescricao;
+
+  @NonNull
+  public final TextView tvIcone;
 
   @NonNull
   public final TextView tvQuantidade;
 
-  private ItemDescricaoBinding(@NonNull MaterialCardView rootView, @NonNull TextView tvDescricao,
-      @NonNull TextView tvQuantidade) {
+  private ItemDescricaoBinding(@NonNull MaterialCardView rootView, @NonNull TextView tvCategoria,
+      @NonNull TextView tvDescricao, @NonNull TextView tvIcone, @NonNull TextView tvQuantidade) {
     this.rootView = rootView;
+    this.tvCategoria = tvCategoria;
     this.tvDescricao = tvDescricao;
+    this.tvIcone = tvIcone;
     this.tvQuantidade = tvQuantidade;
   }
 
@@ -59,9 +67,21 @@ public final class ItemDescricaoBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.tvCategoria;
+      TextView tvCategoria = ViewBindings.findChildViewById(rootView, id);
+      if (tvCategoria == null) {
+        break missingId;
+      }
+
       id = R.id.tvDescricao;
       TextView tvDescricao = ViewBindings.findChildViewById(rootView, id);
       if (tvDescricao == null) {
+        break missingId;
+      }
+
+      id = R.id.tvIcone;
+      TextView tvIcone = ViewBindings.findChildViewById(rootView, id);
+      if (tvIcone == null) {
         break missingId;
       }
 
@@ -71,7 +91,8 @@ public final class ItemDescricaoBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ItemDescricaoBinding((MaterialCardView) rootView, tvDescricao, tvQuantidade);
+      return new ItemDescricaoBinding((MaterialCardView) rootView, tvCategoria, tvDescricao,
+          tvIcone, tvQuantidade);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

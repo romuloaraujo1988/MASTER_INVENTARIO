@@ -47,6 +47,9 @@ public final class ActivityScannerBinding implements ViewBinding {
   public final MaterialButton buttonColetar;
 
   @NonNull
+  public final MaterialButton buttonColetarSimilar;
+
+  @NonNull
   public final MaterialButton buttonRetry;
 
   @NonNull
@@ -118,24 +121,26 @@ public final class ActivityScannerBinding implements ViewBinding {
   private ActivityScannerBinding(@NonNull CoordinatorLayout rootView,
       @NonNull AppBarLayout appBarLayout, @NonNull MaterialButton btnAddPhoto,
       @NonNull ImageButton btnRemovePhoto, @NonNull MaterialButton buttonCancel,
-      @NonNull MaterialButton buttonColetar, @NonNull MaterialButton buttonRetry,
-      @NonNull FrameLayout cameraPreview, @NonNull MaterialCardView cardFotoOpcional,
-      @NonNull MaterialCardView cardPatrimonioInfo, @NonNull ImageView imgPhotoPreview,
-      @NonNull LinearLayout layoutButtons, @NonNull LinearLayout layoutInfoColeta,
-      @NonNull TextInputLayout layoutMotivoFoto, @NonNull FrameLayout layoutPhotoPreview,
-      @NonNull ProgressBar progressBar, @NonNull ScrollView scrollContent,
-      @NonNull AutoCompleteTextView spinnerMotivoFoto, @NonNull TextView textColetadoPor,
-      @NonNull TextView textColetasCount, @NonNull TextView textDataColeta,
-      @NonNull TextView textFotoLabel, @NonNull TextView textLocalizacaoEncontrada,
-      @NonNull TextView textPatrimonioDescricao, @NonNull TextView textPatrimonioNumero,
-      @NonNull TextView textPatrimonioSala, @NonNull TextView textPatrimonioStatus,
-      @NonNull TextView textStatus, @NonNull Toolbar toolbar) {
+      @NonNull MaterialButton buttonColetar, @NonNull MaterialButton buttonColetarSimilar,
+      @NonNull MaterialButton buttonRetry, @NonNull FrameLayout cameraPreview,
+      @NonNull MaterialCardView cardFotoOpcional, @NonNull MaterialCardView cardPatrimonioInfo,
+      @NonNull ImageView imgPhotoPreview, @NonNull LinearLayout layoutButtons,
+      @NonNull LinearLayout layoutInfoColeta, @NonNull TextInputLayout layoutMotivoFoto,
+      @NonNull FrameLayout layoutPhotoPreview, @NonNull ProgressBar progressBar,
+      @NonNull ScrollView scrollContent, @NonNull AutoCompleteTextView spinnerMotivoFoto,
+      @NonNull TextView textColetadoPor, @NonNull TextView textColetasCount,
+      @NonNull TextView textDataColeta, @NonNull TextView textFotoLabel,
+      @NonNull TextView textLocalizacaoEncontrada, @NonNull TextView textPatrimonioDescricao,
+      @NonNull TextView textPatrimonioNumero, @NonNull TextView textPatrimonioSala,
+      @NonNull TextView textPatrimonioStatus, @NonNull TextView textStatus,
+      @NonNull Toolbar toolbar) {
     this.rootView = rootView;
     this.appBarLayout = appBarLayout;
     this.btnAddPhoto = btnAddPhoto;
     this.btnRemovePhoto = btnRemovePhoto;
     this.buttonCancel = buttonCancel;
     this.buttonColetar = buttonColetar;
+    this.buttonColetarSimilar = buttonColetarSimilar;
     this.buttonRetry = buttonRetry;
     this.cameraPreview = cameraPreview;
     this.cardFotoOpcional = cardFotoOpcional;
@@ -215,6 +220,12 @@ public final class ActivityScannerBinding implements ViewBinding {
       id = R.id.buttonColetar;
       MaterialButton buttonColetar = ViewBindings.findChildViewById(rootView, id);
       if (buttonColetar == null) {
+        break missingId;
+      }
+
+      id = R.id.buttonColetarSimilar;
+      MaterialButton buttonColetarSimilar = ViewBindings.findChildViewById(rootView, id);
+      if (buttonColetarSimilar == null) {
         break missingId;
       }
 
@@ -357,12 +368,12 @@ public final class ActivityScannerBinding implements ViewBinding {
       }
 
       return new ActivityScannerBinding((CoordinatorLayout) rootView, appBarLayout, btnAddPhoto,
-          btnRemovePhoto, buttonCancel, buttonColetar, buttonRetry, cameraPreview, cardFotoOpcional,
-          cardPatrimonioInfo, imgPhotoPreview, layoutButtons, layoutInfoColeta, layoutMotivoFoto,
-          layoutPhotoPreview, progressBar, scrollContent, spinnerMotivoFoto, textColetadoPor,
-          textColetasCount, textDataColeta, textFotoLabel, textLocalizacaoEncontrada,
-          textPatrimonioDescricao, textPatrimonioNumero, textPatrimonioSala, textPatrimonioStatus,
-          textStatus, toolbar);
+          btnRemovePhoto, buttonCancel, buttonColetar, buttonColetarSimilar, buttonRetry,
+          cameraPreview, cardFotoOpcional, cardPatrimonioInfo, imgPhotoPreview, layoutButtons,
+          layoutInfoColeta, layoutMotivoFoto, layoutPhotoPreview, progressBar, scrollContent,
+          spinnerMotivoFoto, textColetadoPor, textColetasCount, textDataColeta, textFotoLabel,
+          textLocalizacaoEncontrada, textPatrimonioDescricao, textPatrimonioNumero,
+          textPatrimonioSala, textPatrimonioStatus, textStatus, toolbar);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

@@ -20,9 +20,10 @@ import com.inventario.mobile.data.local.entity.*
         SincronizacaoEntity::class,
         SyncLogEntity::class,
         LogColetaEntity::class,  // v2.2: Log de auditoria
-        HistoricoScanEntity::class  // v2.11: Histórico de scans
+        HistoricoScanEntity::class,  // v2.11: Histórico de scans
+        FotoReferenciaEntity::class  // v2.9: Fotos de referência por descrição
     ],
-    version = 10,  // v2.11: Adicionada tabela de histórico de scans
+    version = 11,  // v2.9: Adicionada tabela de fotos de referência
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -36,6 +37,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun logColetaDao(): LogColetaDao  // v2.2: DAO de auditoria
     abstract fun dashboardDao(): DashboardDao  // v2.4: DAO reativo para estatísticas
     abstract fun historicoScanDao(): HistoricoScanDao  // v2.11: DAO de histórico de scans
+    abstract fun fotoReferenciaDao(): FotoReferenciaDao  // v2.9: DAO de fotos de referência
     
     companion object {
         @Volatile
@@ -101,6 +103,34 @@ abstract class AppDatabase : RoomDatabase() {
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_historico_scan_numeroPatrimonio ON historico_scan(numeroPatrimonio)")
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_historico_scan_timestamp ON historico_scan(timestamp)")
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_historico_scan_tipoAcesso ON historico_scan(tipoAcesso)")
+            }
+        }
+        
+        /**
+         * Migração da versão 10 para 11
+         * Adiciona tabela de fotos de referência por descrição
+         * v2.9: Fotos de referência para exibição offline
+         */
+        private val MIGRATION_10_11 = object : androidx.room.migration.Migration(10, 11) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                // Criar tabela foto_referencia
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS foto_referencia (
+                        id INTEGER PRIMARY KEY NOT NULL,
+                        descricaoNormalizada TEXT NOT NULL,
+                        imagemBlob BLOB,
+                        hashImagem TEXT,
+                        tamanhoBytes INTEGER NOT NULL DEFAULT 0,
+                        dataAtualizacao INTEGER NOT NULL,
+                        ativo INTEGER NOT NULL DEFAULT 1
+                    )
+                """)
+                
+                // Criar índices
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_foto_referencia_descricaoNormalizada ON foto_referencia(descricaoNormalizada)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_foto_referencia_dataAtualizacao ON foto_referencia(dataAtualizacao)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_foto_referencia_ativo ON foto_referencia(ativo)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_foto_referencia_ativo_dataAtualizacao ON foto_referencia(ativo, dataAtualizacao)")
             }
         }
         
@@ -217,7 +247,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "inventario_offline.db"
                 )
-                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)  // v2.11: Adicionar migração 9->10 (histórico scans)
+                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)  // v2.9: Adicionar migração 10->11 (fotos referência)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

@@ -2,6 +2,7 @@ package com.inventario.mobile.presentation.descricao
 
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
@@ -10,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.inventario.mobile.R
 import com.inventario.mobile.databinding.ActivityDescricaoSelectionBinding
+import com.inventario.mobile.domain.model.DescricaoItem
 import com.inventario.mobile.domain.model.Patrimonio
 import com.inventario.mobile.presentation.dialog.EstadoPatrimonioDialog
 import com.inventario.mobile.presentation.state.DescricaoState
@@ -41,7 +43,10 @@ class DescricaoSelectionActivity : AppCompatActivity() {
     private var salaNome: String = ""
     
     // Lista completa de descrições (para filtrar)
-    private var descricoesCompletas: List<String> = emptyList()
+    private var descricoesCompletas: List<DescricaoItem> = emptyList()
+    
+    // Filtro de categoria atual
+    private var filtroCategoria: String? = null
 
     companion object {
         private const val TAG = "DescricaoSelectionActivity"
@@ -69,12 +74,70 @@ class DescricaoSelectionActivity : AppCompatActivity() {
         }
         
         setupToolbar()
+        setupResumo()
         setupRecyclerView()
         setupSearch()
+        setupChipFilters()
         setupObservers()
         
         // Carregar descrições
         loadDescricoes()
+    }
+    
+    /**
+     * Configura o card de resumo
+     */
+    private fun setupResumo() {
+        binding.tvSalaNome.text = salaNome
+    }
+    
+    /**
+     * Configura os chips de filtro por categoria
+     */
+    private fun setupChipFilters() {
+        binding.chipGroupFiltros.setOnCheckedStateChangeListener { _, checkedIds ->
+            if (checkedIds.isEmpty()) {
+                // Se nenhum chip selecionado, selecionar "Todos"
+                binding.chipTodos.isChecked = true
+                return@setOnCheckedStateChangeListener
+            }
+            
+            val chipId = checkedIds.first()
+            filtroCategoria = when (chipId) {
+                R.id.chipTodos -> null
+                R.id.chipCadeiras -> "Cadeiras"
+                R.id.chipMesas -> "Mesas"
+                R.id.chipComputadores -> "Computadores"
+                R.id.chipArmarios -> "Armários"
+                R.id.chipOutros -> "Outros"
+                else -> null
+            }
+            
+            Log.d(TAG, "Filtro de categoria: $filtroCategoria")
+            aplicarFiltros()
+        }
+    }
+    
+    /**
+     * Aplica filtros de busca e categoria
+     */
+    private fun aplicarFiltros() {
+        val query = binding.searchView.query?.toString()?.lowercase()?.trim() ?: ""
+        
+        var filtradas = descricoesCompletas
+        
+        // Filtrar por categoria
+        if (filtroCategoria != null) {
+            filtradas = filtradas.filter { it.categoria == filtroCategoria }
+        }
+        
+        // Filtrar por texto de busca
+        if (query.isNotEmpty()) {
+            filtradas = filtradas.filter { it.descricao.lowercase().contains(query) }
+        }
+        
+        Log.d(TAG, "Filtros aplicados: categoria=$filtroCategoria, query='$query' - ${filtradas.size} resultados")
+        updateDescricoes(filtradas, atualizarCompletas = false)
     }
     
     /**
@@ -93,7 +156,9 @@ class DescricaoSelectionActivity : AppCompatActivity() {
                     }
                     is DescricaoState.Success -> {
                         hideLoading()
-                        updateDescricoes(state.descricoes)
+                        // Converter strings para DescricaoItem
+                        val items = state.descricoes.map { DescricaoItem.fromDescricao(it) }
+                        updateDescricoes(items, atualizarCompletas = true)
                     }
                     is DescricaoState.Error -> {
                         hideLoading()
@@ -201,8 +266,8 @@ class DescricaoSelectionActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        adapter = DescricaoAdapter { descricao ->
-            onDescricaoSelected(descricao)
+        adapter = DescricaoAdapter { item ->
+            onDescricaoSelected(item)
         }
 
         binding.recyclerView.apply {
@@ -214,73 +279,55 @@ class DescricaoSelectionActivity : AppCompatActivity() {
     private fun setupSearch() {
         binding.searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                query?.let { searchDescricoes(it) }
+                aplicarFiltros()
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                // Filtrar em tempo real conforme o usuário digita
-                if (newText.isNullOrEmpty()) {
-                    // Se vazio, mostrar todas as descrições
-                    updateDescricoes(descricoesCompletas)
-                } else {
-                    // Filtrar descrições
-                    searchDescricoes(newText)
-                }
+                aplicarFiltros()
                 return true
             }
         })
-    }
-    
-    /**
-     * Busca descrições localmente (filtro em memória)
-     */
-    private fun searchDescricoes(query: String) {
-        val queryLower = query.lowercase().trim()
-        
-        // Filtrar descrições que contenham o texto buscado
-        val descricoesFiltradas = descricoesCompletas.filter { descricao ->
-            descricao.lowercase().contains(queryLower)
-        }
-        
-        Log.d(TAG, "Busca: '$query' - Encontradas ${descricoesFiltradas.size} de ${descricoesCompletas.size} descrições")
-        
-        // Atualizar lista filtrada
-        updateDescricoes(descricoesFiltradas)
     }
 
     /**
      * Atualiza lista de descrições
      */
-    private fun updateDescricoes(descricoes: List<String>) {
+    private fun updateDescricoes(descricoes: List<DescricaoItem>, atualizarCompletas: Boolean = false) {
         // Salvar lista completa se for a primeira vez
-        if (descricoesCompletas.isEmpty() && descricoes.isNotEmpty()) {
+        if (atualizarCompletas) {
             descricoesCompletas = descricoes
             Log.d(TAG, "Lista completa salva: ${descricoesCompletas.size} descrições")
+            
+            // Atualizar resumo
+            binding.tvTotalDescricoes.text = descricoes.size.toString()
+            binding.tvTotalPendentes.text = descricoes.sumOf { it.quantidade }.toString()
         }
         
         // Atualizar adapter
-        adapter.submitList(descricoes.map { it })
+        adapter.submitList(descricoes)
         
         // Atualizar mensagem vazia
         if (descricoes.isEmpty()) {
-            binding.tvEmpty.visibility = android.view.View.VISIBLE
+            binding.layoutEmpty.visibility = View.VISIBLE
+            binding.recyclerView.visibility = View.GONE
             // Verificar se está vazio por causa do filtro ou se realmente não há dados
             val mensagem = if (descricoesCompletas.isEmpty()) {
                 "Nenhuma descrição disponível"
             } else {
-                "Nenhuma descrição encontrada para a busca"
+                "Nenhuma descrição encontrada para o filtro"
             }
             binding.tvEmpty.text = mensagem
         } else {
-            binding.tvEmpty.visibility = android.view.View.GONE
+            binding.layoutEmpty.visibility = View.GONE
+            binding.recyclerView.visibility = View.VISIBLE
         }
     }
 
-    private fun onDescricaoSelected(descricao: String) {
-        Log.d(TAG, "Descrição selecionada: $descricao")
+    private fun onDescricaoSelected(item: DescricaoItem) {
+        Log.d(TAG, "Descrição selecionada: ${item.descricao}")
         // Buscar patrimônios não coletados com essa descrição
-        viewModel.buscarPatrimoniosPorDescricao(descricao)
+        viewModel.buscarPatrimoniosPorDescricao(item.descricao)
     }
 
     /**
@@ -294,14 +341,14 @@ class DescricaoSelectionActivity : AppCompatActivity() {
      * Mostra loading
      */
     private fun showLoading() {
-        binding.progressBar.visibility = android.view.View.VISIBLE
+        binding.progressBar.visibility = View.VISIBLE
     }
     
     /**
      * Esconde loading
      */
     private fun hideLoading() {
-        binding.progressBar.visibility = android.view.View.GONE
+        binding.progressBar.visibility = View.GONE
     }
     
     /**

@@ -3,11 +3,13 @@ package com.inventario.mobile.di
 import android.content.Context
 import com.inventario.mobile.data.repository.ColetaRepositoryImpl
 import com.inventario.mobile.data.repository.ExportRepositoryImpl
+import com.inventario.mobile.data.repository.FotoReferenciaRepositoryImpl
 import com.inventario.mobile.data.repository.InventarioRepository
 import com.inventario.mobile.data.local.LocalDataManager
 import com.inventario.mobile.data.remote.api.ApiService
 import com.inventario.mobile.domain.repository.ColetaRepository
 import com.inventario.mobile.domain.repository.ExportRepository
+import com.inventario.mobile.domain.repository.FotoReferenciaRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -59,6 +61,12 @@ abstract class RepositoryModule {
     abstract fun bindHistoricoScanRepository(
         impl: com.inventario.mobile.data.repository.HistoricoScanRepositoryImpl
     ): com.inventario.mobile.domain.repository.HistoricoScanRepository
+    
+    @Binds
+    @Singleton
+    abstract fun bindFotoReferenciaRepository(
+        impl: FotoReferenciaRepositoryImpl
+    ): FotoReferenciaRepository
     
     companion object {
         /**

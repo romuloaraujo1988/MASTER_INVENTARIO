@@ -501,6 +501,21 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
     }
     
     /**
+     * Conta patrimônios a inventariar (Ativo + Pendente)
+     * Total de patrimônios que devem ser encontrados no inventário:
+     * - Ativo: 10.810 patrimônios em uso
+     * - Pendente: 260 patrimônios aguardando regularização
+     * Total: 11.070 patrimônios
+     * 
+     * Exclui patrimônios com status 'Baixado' (500) que não devem ser inventariados.
+     */
+    public int contarPatrimoniosAInventariar() throws SQLException {
+        String sql = "SELECT COUNT(*)::INTEGER FROM TABELA_PATRIMONIO WHERE UPPER(STATUS) IN ('ATIVO', 'PENDENTE')";
+        Integer count = executeScalar(sql, Integer.class);
+        return count != null ? count : 0;
+    }
+    
+    /**
      * Calcula valor total dos patrimônios ativos
      */
     public double calcularValorTotal() throws SQLException {

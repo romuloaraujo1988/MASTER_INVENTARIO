@@ -223,34 +223,39 @@ object ChartHelper {
 
     /**
      * Cria gráfico de estado de conservação (pizza)
-     * Mostra: Bom, Regular, Ruim, Péssimo, Sem Info
+     * Estados conforme legislação: Bom, Ocioso, Recuperável, Antieconômico, Irrecuperável
      */
     fun createStatusPieData(
         bom: Int,
-        regular: Int,
-        ruim: Int,
-        pessimo: Int,
+        ocioso: Int,
+        recuperavel: Int,
+        antieconomico: Int,
+        irrecuperavel: Int,
         semInfo: Int = 0
     ): PieData {
         val entries = mutableListOf<PieEntry>()
         
-        // Cores específicas para cada estado
+        // Cores específicas para cada estado conforme legislação
         val colors = mutableListOf<Int>()
         
         if (bom > 0) {
             entries.add(PieEntry(bom.toFloat(), "Bom"))
             colors.add(Color.parseColor("#4CAF50")) // Verde
         }
-        if (regular > 0) {
-            entries.add(PieEntry(regular.toFloat(), "Regular"))
+        if (ocioso > 0) {
+            entries.add(PieEntry(ocioso.toFloat(), "Ocioso"))
+            colors.add(Color.parseColor("#2196F3")) // Azul
+        }
+        if (recuperavel > 0) {
+            entries.add(PieEntry(recuperavel.toFloat(), "Recuperável"))
             colors.add(Color.parseColor("#FFC107")) // Amarelo
         }
-        if (ruim > 0) {
-            entries.add(PieEntry(ruim.toFloat(), "Ruim"))
+        if (antieconomico > 0) {
+            entries.add(PieEntry(antieconomico.toFloat(), "Antieconômico"))
             colors.add(Color.parseColor("#FF9800")) // Laranja
         }
-        if (pessimo > 0) {
-            entries.add(PieEntry(pessimo.toFloat(), "Péssimo"))
+        if (irrecuperavel > 0) {
+            entries.add(PieEntry(irrecuperavel.toFloat(), "Irrecuperável"))
             colors.add(Color.parseColor("#F44336")) // Vermelho
         }
         if (semInfo > 0) {

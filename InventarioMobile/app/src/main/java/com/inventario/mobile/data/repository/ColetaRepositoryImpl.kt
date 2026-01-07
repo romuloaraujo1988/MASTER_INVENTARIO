@@ -235,6 +235,11 @@ class ColetaRepositoryImpl @Inject constructor(
                                 return@withTimeout
                             }
                             
+                            // ✅ LOG: Estado de conservação sendo enviado
+                            android.util.Log.d("ColetaRepositoryImpl", "📤 Sincronizando coleta:")
+                            android.util.Log.d("ColetaRepositoryImpl", "   Patrimônio: $numeroPatrimonio")
+                            android.util.Log.d("ColetaRepositoryImpl", "   Estado de Conservação: ${coleta.estadoEncontrado ?: "BOM (padrão)"}")
+                            
                             // Converter para MobileColetaRequest (formato esperado pelo servidor)
                             val request = com.inventario.mobile.data.remote.dto.MobileColetaRequest(
                                 numeroPatrimonio = numeroPatrimonio,
@@ -242,7 +247,7 @@ class ColetaRepositoryImpl @Inject constructor(
                                 usuarioId = coleta.usuarioId.toInt(),
                                 idSala = patrimonio?.idSala,
                                 localizacaoEncontrada = coleta.localizacaoAtual,
-                                estadoEncontrado = coleta.status ?: "BOM",
+                                estadoEncontrado = coleta.estadoEncontrado ?: "BOM",
                                 observacaoColeta = coleta.observacoes,
                                 dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
                                     .format(java.util.Date(coleta.dataColeta)),
@@ -349,7 +354,7 @@ class ColetaRepositoryImpl @Inject constructor(
                                 usuarioId = coleta.usuarioId.toInt(),
                                 idSala = patrimonioLocal?.idSala,
                                 localizacaoEncontrada = coleta.localizacaoAtual,
-                                estadoEncontrado = coleta.status ?: "BOM",
+                                estadoEncontrado = coleta.estadoEncontrado ?: "BOM",
                                 observacaoColeta = coleta.observacoes,
                                 dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
                                     .format(java.util.Date(coleta.dataColeta)),
@@ -483,7 +488,7 @@ class ColetaRepositoryImpl @Inject constructor(
                     usuarioId = coleta.usuarioId.toInt(),
                     idSala = patrimonio?.idSala,
                     localizacaoEncontrada = coleta.localizacaoAtual,
-                    estadoEncontrado = coleta.status ?: "BOM",
+                    estadoEncontrado = coleta.estadoEncontrado ?: "BOM",
                     observacaoColeta = coleta.observacoes,
                     dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
                         .format(java.util.Date(coleta.dataColeta)),
@@ -603,7 +608,7 @@ class ColetaRepositoryImpl @Inject constructor(
                     usuarioId = coleta.usuarioId.toInt(),
                     idSala = patrimonio?.idSala,
                     localizacaoEncontrada = coleta.localizacaoAtual,
-                    estadoEncontrado = coleta.status ?: "BOM",
+                    estadoEncontrado = coleta.estadoEncontrado ?: "BOM",
                     observacaoColeta = coleta.observacoes,
                     dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
                         .format(java.util.Date(coleta.dataColeta)),
@@ -749,7 +754,7 @@ class ColetaRepositoryImpl @Inject constructor(
                 usuarioId = coleta.usuarioId.toInt(),
                 idSala = patrimonio?.idSala,
                 localizacaoEncontrada = coleta.localizacaoAtual,
-                estadoEncontrado = coleta.status ?: "BOM",
+                estadoEncontrado = coleta.estadoEncontrado ?: "BOM",
                 observacaoColeta = coleta.observacoes,
                 dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
                     .format(java.util.Date(coleta.dataColeta)),
@@ -880,7 +885,7 @@ class ColetaRepositoryImpl @Inject constructor(
                             usuarioId = coleta.usuarioId.toInt(),
                             idSala = coleta.salaId,
                             localizacaoEncontrada = coleta.localizacaoAtual,
-                            estadoEncontrado = coleta.status ?: "BOM",
+                            estadoEncontrado = coleta.estadoEncontrado ?: "BOM",
                             observacaoColeta = coleta.observacoes,
                             dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
                                 .format(java.util.Date(coleta.dataColeta)),

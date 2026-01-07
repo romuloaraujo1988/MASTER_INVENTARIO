@@ -12,19 +12,21 @@ import androidx.room.util.TableInfo;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.sqlite.db.SupportSQLiteOpenHelper;
 import com.inventario.mobile.data.local.dao.ColetaDao;
-import com.inventario.mobile.data.local.dao.ColetaDao_Impl;
+import com.inventario.mobile.data.local.dao.ColetaDao_AppDatabase_Impl;
 import com.inventario.mobile.data.local.dao.DashboardDao;
 import com.inventario.mobile.data.local.dao.DashboardDao_Impl;
+import com.inventario.mobile.data.local.dao.FotoReferenciaDao;
+import com.inventario.mobile.data.local.dao.FotoReferenciaDao_Impl;
 import com.inventario.mobile.data.local.dao.HistoricoScanDao;
 import com.inventario.mobile.data.local.dao.HistoricoScanDao_Impl;
 import com.inventario.mobile.data.local.dao.LogColetaDao;
 import com.inventario.mobile.data.local.dao.LogColetaDao_Impl;
 import com.inventario.mobile.data.local.dao.PatrimonioDao;
-import com.inventario.mobile.data.local.dao.PatrimonioDao_Impl;
+import com.inventario.mobile.data.local.dao.PatrimonioDao_AppDatabase_Impl;
 import com.inventario.mobile.data.local.dao.ResponsavelDao;
 import com.inventario.mobile.data.local.dao.ResponsavelDao_Impl;
 import com.inventario.mobile.data.local.dao.SalaDao;
-import com.inventario.mobile.data.local.dao.SalaDao_Impl;
+import com.inventario.mobile.data.local.dao.SalaDao_AppDatabase_Impl;
 import com.inventario.mobile.data.local.dao.SincronizacaoDao;
 import com.inventario.mobile.data.local.dao.SincronizacaoDao_Impl;
 import com.inventario.mobile.data.local.dao.SyncLogDao;
@@ -63,10 +65,12 @@ public final class AppDatabase_Impl extends AppDatabase {
 
   private volatile HistoricoScanDao _historicoScanDao;
 
+  private volatile FotoReferenciaDao _fotoReferenciaDao;
+
   @Override
   @NonNull
   protected SupportSQLiteOpenHelper createOpenHelper(@NonNull final DatabaseConfiguration config) {
-    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(10) {
+    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(11) {
       @Override
       public void createAllTables(@NonNull final SupportSQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS `patrimonio` (`id` INTEGER NOT NULL, `numero` TEXT NOT NULL, `numeroPatrimonio` TEXT NOT NULL, `descricao` TEXT NOT NULL, `marca` TEXT, `modelo` TEXT, `numeroSerie` TEXT, `estado` TEXT, `valor` REAL, `setorId` INTEGER, `setorNome` TEXT, `idSala` INTEGER, `nomeSala` TEXT, `salaId` INTEGER, `salaNome` TEXT, `idResponsavel` INTEGER, `nomeResponsavel` TEXT, `responsavelId` INTEGER, `responsavelNome` TEXT, `status` TEXT, `coletado` INTEGER NOT NULL, `dataColeta` INTEGER, `coletadoPor` TEXT, `observacoesColeta` TEXT, `observacoes` TEXT, `dataUltimaAtualizacao` INTEGER NOT NULL, PRIMARY KEY(`id`))");
@@ -106,8 +110,13 @@ public final class AppDatabase_Impl extends AppDatabase {
         db.execSQL("CREATE TABLE IF NOT EXISTS `historico_scan` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `numeroPatrimonio` TEXT NOT NULL, `descricao` TEXT, `nomeSala` TEXT, `salaId` INTEGER, `foiColetado` INTEGER NOT NULL, `tipoAcesso` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `estadoPatrimonio` TEXT, `jaEstaColetado` INTEGER NOT NULL)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_historico_scan_numeroPatrimonio` ON `historico_scan` (`numeroPatrimonio`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_historico_scan_timestamp` ON `historico_scan` (`timestamp`)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS `foto_referencia` (`id` INTEGER NOT NULL, `descricaoNormalizada` TEXT NOT NULL, `imagemBlob` BLOB, `hashImagem` TEXT, `tamanhoBytes` INTEGER NOT NULL, `dataAtualizacao` INTEGER NOT NULL, `ativo` INTEGER NOT NULL, PRIMARY KEY(`id`))");
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_foto_referencia_descricaoNormalizada` ON `foto_referencia` (`descricaoNormalizada`)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_foto_referencia_dataAtualizacao` ON `foto_referencia` (`dataAtualizacao`)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_foto_referencia_ativo` ON `foto_referencia` (`ativo`)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_foto_referencia_ativo_dataAtualizacao` ON `foto_referencia` (`ativo`, `dataAtualizacao`)");
         db.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)");
-        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '182e801440af01f2ce4177385fc4cde2')");
+        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3a0859e521a42c72330bf5086727a5da')");
       }
 
       @Override
@@ -120,6 +129,7 @@ public final class AppDatabase_Impl extends AppDatabase {
         db.execSQL("DROP TABLE IF EXISTS `sync_log`");
         db.execSQL("DROP TABLE IF EXISTS `log_coleta`");
         db.execSQL("DROP TABLE IF EXISTS `historico_scan`");
+        db.execSQL("DROP TABLE IF EXISTS `foto_referencia`");
         final List<? extends RoomDatabase.Callback> _callbacks = mCallbacks;
         if (_callbacks != null) {
           for (RoomDatabase.Callback _callback : _callbacks) {
@@ -386,9 +396,30 @@ public final class AppDatabase_Impl extends AppDatabase {
                   + " Expected:\n" + _infoHistoricoScan + "\n"
                   + " Found:\n" + _existingHistoricoScan);
         }
+        final HashMap<String, TableInfo.Column> _columnsFotoReferencia = new HashMap<String, TableInfo.Column>(7);
+        _columnsFotoReferencia.put("id", new TableInfo.Column("id", "INTEGER", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsFotoReferencia.put("descricaoNormalizada", new TableInfo.Column("descricaoNormalizada", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsFotoReferencia.put("imagemBlob", new TableInfo.Column("imagemBlob", "BLOB", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsFotoReferencia.put("hashImagem", new TableInfo.Column("hashImagem", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsFotoReferencia.put("tamanhoBytes", new TableInfo.Column("tamanhoBytes", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsFotoReferencia.put("dataAtualizacao", new TableInfo.Column("dataAtualizacao", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsFotoReferencia.put("ativo", new TableInfo.Column("ativo", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        final HashSet<TableInfo.ForeignKey> _foreignKeysFotoReferencia = new HashSet<TableInfo.ForeignKey>(0);
+        final HashSet<TableInfo.Index> _indicesFotoReferencia = new HashSet<TableInfo.Index>(4);
+        _indicesFotoReferencia.add(new TableInfo.Index("index_foto_referencia_descricaoNormalizada", true, Arrays.asList("descricaoNormalizada"), Arrays.asList("ASC")));
+        _indicesFotoReferencia.add(new TableInfo.Index("index_foto_referencia_dataAtualizacao", false, Arrays.asList("dataAtualizacao"), Arrays.asList("ASC")));
+        _indicesFotoReferencia.add(new TableInfo.Index("index_foto_referencia_ativo", false, Arrays.asList("ativo"), Arrays.asList("ASC")));
+        _indicesFotoReferencia.add(new TableInfo.Index("index_foto_referencia_ativo_dataAtualizacao", false, Arrays.asList("ativo", "dataAtualizacao"), Arrays.asList("ASC", "ASC")));
+        final TableInfo _infoFotoReferencia = new TableInfo("foto_referencia", _columnsFotoReferencia, _foreignKeysFotoReferencia, _indicesFotoReferencia);
+        final TableInfo _existingFotoReferencia = TableInfo.read(db, "foto_referencia");
+        if (!_infoFotoReferencia.equals(_existingFotoReferencia)) {
+          return new RoomOpenHelper.ValidationResult(false, "foto_referencia(com.inventario.mobile.data.local.entity.FotoReferenciaEntity).\n"
+                  + " Expected:\n" + _infoFotoReferencia + "\n"
+                  + " Found:\n" + _existingFotoReferencia);
+        }
         return new RoomOpenHelper.ValidationResult(true, null);
       }
-    }, "182e801440af01f2ce4177385fc4cde2", "a7831f0c88416b878adbc3152c65eacd");
+    }, "3a0859e521a42c72330bf5086727a5da", "ed525f633d38b8f0bdd9cd7e53ab2827");
     final SupportSQLiteOpenHelper.Configuration _sqliteConfig = SupportSQLiteOpenHelper.Configuration.builder(config.context).name(config.name).callback(_openCallback).build();
     final SupportSQLiteOpenHelper _helper = config.sqliteOpenHelperFactory.create(_sqliteConfig);
     return _helper;
@@ -399,7 +430,7 @@ public final class AppDatabase_Impl extends AppDatabase {
   protected InvalidationTracker createInvalidationTracker() {
     final HashMap<String, String> _shadowTablesMap = new HashMap<String, String>(0);
     final HashMap<String, Set<String>> _viewTables = new HashMap<String, Set<String>>(0);
-    return new InvalidationTracker(this, _shadowTablesMap, _viewTables, "patrimonio","sala","responsavel","coleta","sincronizacao","sync_log","log_coleta","historico_scan");
+    return new InvalidationTracker(this, _shadowTablesMap, _viewTables, "patrimonio","sala","responsavel","coleta","sincronizacao","sync_log","log_coleta","historico_scan","foto_referencia");
   }
 
   @Override
@@ -416,6 +447,7 @@ public final class AppDatabase_Impl extends AppDatabase {
       _db.execSQL("DELETE FROM `sync_log`");
       _db.execSQL("DELETE FROM `log_coleta`");
       _db.execSQL("DELETE FROM `historico_scan`");
+      _db.execSQL("DELETE FROM `foto_referencia`");
       super.setTransactionSuccessful();
     } finally {
       super.endTransaction();
@@ -430,15 +462,16 @@ public final class AppDatabase_Impl extends AppDatabase {
   @NonNull
   protected Map<Class<?>, List<Class<?>>> getRequiredTypeConverters() {
     final HashMap<Class<?>, List<Class<?>>> _typeConvertersMap = new HashMap<Class<?>, List<Class<?>>>();
-    _typeConvertersMap.put(PatrimonioDao.class, PatrimonioDao_Impl.getRequiredConverters());
-    _typeConvertersMap.put(SalaDao.class, SalaDao_Impl.getRequiredConverters());
+    _typeConvertersMap.put(PatrimonioDao.class, PatrimonioDao_AppDatabase_Impl.getRequiredConverters());
+    _typeConvertersMap.put(SalaDao.class, SalaDao_AppDatabase_Impl.getRequiredConverters());
     _typeConvertersMap.put(ResponsavelDao.class, ResponsavelDao_Impl.getRequiredConverters());
-    _typeConvertersMap.put(ColetaDao.class, ColetaDao_Impl.getRequiredConverters());
+    _typeConvertersMap.put(ColetaDao.class, ColetaDao_AppDatabase_Impl.getRequiredConverters());
     _typeConvertersMap.put(SincronizacaoDao.class, SincronizacaoDao_Impl.getRequiredConverters());
     _typeConvertersMap.put(SyncLogDao.class, SyncLogDao_Impl.getRequiredConverters());
     _typeConvertersMap.put(LogColetaDao.class, LogColetaDao_Impl.getRequiredConverters());
     _typeConvertersMap.put(DashboardDao.class, DashboardDao_Impl.getRequiredConverters());
     _typeConvertersMap.put(HistoricoScanDao.class, HistoricoScanDao_Impl.getRequiredConverters());
+    _typeConvertersMap.put(FotoReferenciaDao.class, FotoReferenciaDao_Impl.getRequiredConverters());
     return _typeConvertersMap;
   }
 
@@ -464,7 +497,7 @@ public final class AppDatabase_Impl extends AppDatabase {
     } else {
       synchronized(this) {
         if(_patrimonioDao == null) {
-          _patrimonioDao = new PatrimonioDao_Impl(this);
+          _patrimonioDao = new PatrimonioDao_AppDatabase_Impl(this);
         }
         return _patrimonioDao;
       }
@@ -478,7 +511,7 @@ public final class AppDatabase_Impl extends AppDatabase {
     } else {
       synchronized(this) {
         if(_salaDao == null) {
-          _salaDao = new SalaDao_Impl(this);
+          _salaDao = new SalaDao_AppDatabase_Impl(this);
         }
         return _salaDao;
       }
@@ -506,7 +539,7 @@ public final class AppDatabase_Impl extends AppDatabase {
     } else {
       synchronized(this) {
         if(_coletaDao == null) {
-          _coletaDao = new ColetaDao_Impl(this);
+          _coletaDao = new ColetaDao_AppDatabase_Impl(this);
         }
         return _coletaDao;
       }
@@ -579,6 +612,20 @@ public final class AppDatabase_Impl extends AppDatabase {
           _historicoScanDao = new HistoricoScanDao_Impl(this);
         }
         return _historicoScanDao;
+      }
+    }
+  }
+
+  @Override
+  public FotoReferenciaDao fotoReferenciaDao() {
+    if (_fotoReferenciaDao != null) {
+      return _fotoReferenciaDao;
+    } else {
+      synchronized(this) {
+        if(_fotoReferenciaDao == null) {
+          _fotoReferenciaDao = new FotoReferenciaDao_Impl(this);
+        }
+        return _fotoReferenciaDao;
       }
     }
   }

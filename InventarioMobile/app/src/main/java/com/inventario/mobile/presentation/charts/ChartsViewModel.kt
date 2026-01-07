@@ -26,9 +26,6 @@ class ChartsViewModel @Inject constructor(
     private val _evolutionData = MutableStateFlow<Map<String, Int>>(emptyMap())
     val evolutionData: StateFlow<Map<String, Int>> = _evolutionData.asStateFlow()
 
-    private val _topItemsData = MutableStateFlow<Map<String, Int>>(emptyMap())
-    val topItemsData: StateFlow<Map<String, Int>> = _topItemsData.asStateFlow()
-
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -48,7 +45,6 @@ class ChartsViewModel @Inject constructor(
                 launch { loadProgressData(idInventario) }
                 launch { loadStatusData(idInventario) }
                 launch { loadEvolutionData(idInventario) }
-                launch { loadTopItemsData(idInventario) }
             } catch (e: Exception) {
                 _error.value = "Erro ao carregar dados: ${e.message}"
             } finally {
@@ -79,15 +75,6 @@ class ChartsViewModel @Inject constructor(
         try {
             val data = chartDataProvider.getEvolutionData(idInventario)
             _evolutionData.value = data
-        } catch (e: Exception) {
-            // Log error
-        }
-    }
-
-    private suspend fun loadTopItemsData(idInventario: Int) {
-        try {
-            val data = chartDataProvider.getTopItemsData(idInventario)
-            _topItemsData.value = data
         } catch (e: Exception) {
             // Log error
         }

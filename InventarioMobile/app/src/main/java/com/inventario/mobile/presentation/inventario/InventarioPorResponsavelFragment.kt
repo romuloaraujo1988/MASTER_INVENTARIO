@@ -67,9 +67,11 @@ class InventarioPorResponsavelFragment : Fragment() {
     }
     
     private fun setupRecyclerView() {
-        adapter = PatrimonioAdapter { patrimonio ->
-            showPatrimonioDetailsDialog(patrimonio)
-        }
+        adapter = PatrimonioAdapter(
+            onItemClick = { patrimonio ->
+                showPatrimonioDetailsDialog(patrimonio)
+            }
+        )
         
         binding.recyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())

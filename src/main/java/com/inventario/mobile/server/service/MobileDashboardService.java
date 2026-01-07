@@ -1,15 +1,21 @@
 package com.inventario.mobile.server.service;
 
+import java.sql.SQLException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
 import com.inventario.dao.ColetaDAO;
 import com.inventario.dao.InventarioDAO;
 import com.inventario.dao.PatrimonioDAO;
 import com.inventario.model.Inventario;
-import org.springframework.stereotype.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.sql.SQLException;
-import java.util.*;
 
 /**
  * Serviço para estatísticas e dashboard mobile
@@ -51,7 +57,8 @@ public class MobileDashboardService {
         logger.debug("Inventário encontrado: ID={}", inventario.getId());
         
         // Estatísticas básicas
-        int totalPatrimonios = patrimonioDAO.contarPatrimoniosAtivos();
+        // ATUALIZADO: Usar contarPatrimoniosAInventariar() que inclui Ativo + Pendente (11.070)
+        int totalPatrimonios = patrimonioDAO.contarPatrimoniosAInventariar();
         int totalColetados = coletaDAO.contarColetasPorInventario(inventario.getId());
         int totalPendentes = totalPatrimonios - totalColetados;
         double percentualConclusao = totalPatrimonios > 0 

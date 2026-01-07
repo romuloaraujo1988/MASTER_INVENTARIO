@@ -32,6 +32,7 @@ class ColetaMapper @Inject constructor(
             localizacaoAtual = entity.nomeSala,
             observacoes = entity.observacao,
             status = if (entity.sincronizado) "SINCRONIZADO" else "PENDENTE",
+            estadoEncontrado = entity.estadoPatrimonio,  // ✅ CORREÇÃO: Mapear estado de conservação
             latitude = entity.latitude,
             longitude = entity.longitude,
             sincronizado = entity.sincronizado,
@@ -124,7 +125,7 @@ class ColetaMapper @Inject constructor(
             idResponsavel = patrimonio?.idResponsavel,
             nomeResponsavel = patrimonio?.nomeResponsavel,
             observacao = domain.observacoes,
-            estadoPatrimonio = null,
+            estadoPatrimonio = domain.estadoEncontrado,  // ✅ CORREÇÃO: Mapear estado de conservação
             latitude = domain.latitude,
             longitude = domain.longitude,
             dataColeta = domain.dataColeta,
@@ -170,7 +171,7 @@ class ColetaMapper @Inject constructor(
             idResponsavel = null,
             nomeResponsavel = null,
             observacao = domain.observacoes,
-            estadoPatrimonio = null,
+            estadoPatrimonio = domain.estadoEncontrado,  // ✅ CORREÇÃO: Mapear estado de conservação
             latitude = domain.latitude,
             longitude = domain.longitude,
             dataColeta = domain.dataColeta,

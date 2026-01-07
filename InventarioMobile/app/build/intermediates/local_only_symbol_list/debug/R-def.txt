@@ -15,6 +15,7 @@ color card_stroke_color
 color colorPrimary
 color colorSecondary
 color divider
+color divider_color
 color error
 color error_dark
 color error_light
@@ -101,11 +102,15 @@ dimen scanner_status_text_size
 dimen scanner_title_text_size
 dimen toolbar_height
 drawable bg_badge
+drawable bg_badge_pendente
 drawable bg_circle_error
 drawable bg_circle_primary
 drawable bg_circle_success
 drawable bg_error_light
+drawable bg_icon_circle
 drawable bg_info_coleta
+drawable bg_rounded_white
+drawable bg_search_rounded
 drawable bg_spinner
 drawable bg_warning
 drawable circle_background
@@ -129,9 +134,11 @@ drawable ic_calendar
 drawable ic_camera
 drawable ic_check
 drawable ic_check_circle
+drawable ic_chevron_right
 drawable ic_clear
 drawable ic_close
 drawable ic_collections
+drawable ic_content_copy
 drawable ic_csv
 drawable ic_dashboard
 drawable ic_date_range
@@ -145,6 +152,7 @@ drawable ic_filter
 drawable ic_fingerprint
 drawable ic_history
 drawable ic_home
+drawable ic_image_placeholder
 drawable ic_info
 drawable ic_inventory
 drawable ic_list
@@ -292,6 +300,8 @@ id buttonCancel
 id buttonClearFilters
 id buttonClearSearch
 id buttonColetar
+id buttonColetarSimilar
+id buttonFechar
 id buttonRetry
 id cameraPreview
 id cardBiometric
@@ -300,7 +310,9 @@ id cardCollections
 id cardConnectionStatus
 id cardDivergencias
 id cardEstatisticas
+id cardFoto
 id cardFotoOpcional
+id cardFotoReferencia
 id cardGraficoEvolucao
 id cardHeader
 id cardInput
@@ -312,6 +324,7 @@ id cardOfflineMode
 id cardPatrimonioInfo
 id cardRequirements
 id cardResult
+id cardResumo
 id cardSalaFilter
 id cardSearchStats
 id cardStatisticsSummary
@@ -322,10 +335,12 @@ id cardSyncWarning
 id chartEvolucao
 id chartProgresso
 id chartStatus
-id chartTopItens
 id chipAll
 id chipAllUsers
+id chipArmarios
+id chipCadeiras
 id chipColetados
+id chipComputadores
 id chipConsultas
 id chipDivergencias
 id chipFiltroUsuario
@@ -336,9 +351,11 @@ id chipGroupFiltros
 id chipGroupPeriod
 id chipGroupStatus
 id chipGroupUser
+id chipMesas
 id chipMonth
 id chipMyCollections
 id chipNaoColetados
+id chipOutros
 id chipPendentes
 id chipPending
 id chipSemEtiqueta
@@ -377,6 +394,8 @@ id filter_com_etiqueta
 id filter_sem_etiqueta
 id filter_todos
 id fragment_container
+id imageViewFoto
+id imageViewFotoReferencia
 id imgPhotoPreview
 id imgPreview
 id ivBiometricStatus
@@ -439,7 +458,6 @@ id nav_quick_search
 id nav_relatorios
 id nav_scanner
 id nav_settings
-id nav_statistics
 id nav_sync
 id nav_view
 id nestedScrollView
@@ -456,6 +474,7 @@ id progressBarInventario
 id progressBarMore
 id progressBarSync
 id progressConclusao
+id progressFotoReferencia
 id progressOverlay
 id progress_bar
 id radioGroupEstado
@@ -479,6 +498,7 @@ id rgFilter
 id rgFormat
 id rvSearchResults
 id rvTimeline
+id scrollChips
 id scrollContent
 id scrollView
 id searchCard
@@ -527,6 +547,7 @@ id textViewColetadosCount
 id textViewCount
 id textViewDataColeta
 id textViewDescricao
+id textViewDica
 id textViewDivergencia
 id textViewEmpty
 id textViewError
@@ -561,6 +582,7 @@ id tvBiometricDescription
 id tvBiometricHint
 id tvBiometricStatus
 id tvBiometricType
+id tvCategoria
 id tvCodigo
 id tvColetadoPor
 id tvColetados
@@ -590,6 +612,7 @@ id tvEstadoEncontrado
 id tvFotoStatus
 id tvGraficoError
 id tvHorario
+id tvIcone
 id tvIpChangeWarning
 id tvKpiColetados
 id tvKpiColetores
@@ -683,7 +706,9 @@ id tvTotalAtualizados
 id tvTotalColetados
 id tvTotalColetas
 id tvTotalCount
+id tvTotalDescricoes
 id tvTotalPatrimonios
+id tvTotalPendentes
 id tvTotalSalas
 id tvUserInfo
 id tvUserName
@@ -736,6 +761,7 @@ layout activity_statistics
 layout activity_sync
 layout activity_sync_manual
 layout dialog_estado_patrimonio
+layout dialog_foto_referencia
 layout dialog_pin_login
 layout dialog_pin_setup
 layout fragment_biometric_settings
@@ -831,6 +857,11 @@ string error_unknown
 string filter_all
 string filter_pending
 string filter_synced
+string foto_referencia_ampliar
+string foto_referencia_carregando
+string foto_referencia_descricao
+string foto_referencia_fechar
+string foto_referencia_nao_disponivel
 string inventory_title
 string item_without_patrimony
 string last_sync
@@ -934,6 +965,7 @@ style PinKeypadButton
 style TabTextAppearance
 style Theme.InventarioMobile
 style Theme.InventarioMobile.AppBarOverlay
+style Theme.InventarioMobile.FullScreenDialog
 style Theme.InventarioMobile.NoActionBar
 style Theme.InventarioMobile.PopupOverlay
 style Theme.InventarioMobile.Splash

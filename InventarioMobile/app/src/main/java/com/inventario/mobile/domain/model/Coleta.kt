@@ -50,6 +50,9 @@ data class Coleta(
     // Status da coleta
     val status: String, // COLETADO, PENDENTE, ERRO
     
+    // Estado de conservação do patrimônio conforme legislação (BOM, OCIOSO, RECUPERÁVEL, ANTIECONÔMICO, IRRECUPERÁVEL)
+    val estadoEncontrado: String? = null,
+    
     // Coordenadas GPS (opcional)
     val latitude: Double? = null,
     val longitude: Double? = null,

@@ -190,4 +190,10 @@ object ApiModule {
     ): com.inventario.mobile.data.remote.api.ApiService {
         return NetworkModule.getApiService(context)
     }
+    
+    @Provides
+    @Singleton
+    fun provideFotoReferenciaApi(retrofit: Retrofit): com.inventario.mobile.data.remote.api.FotoReferenciaApi {
+        return retrofit.create(com.inventario.mobile.data.remote.api.FotoReferenciaApi::class.java)
+    }
 }

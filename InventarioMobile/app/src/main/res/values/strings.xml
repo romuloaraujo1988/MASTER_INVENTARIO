@@ -192,4 +192,11 @@
     <string name="theme_description">O tema escuro reduz o brilho da tela e pode economizar bateria em dispositivos com tela OLED.</string>
     <string name="theme_changed">Tema alterado para: %s</string>
 
+    <!-- Foto de Referência -->
+    <string name="foto_referencia_descricao">Foto de referência do patrimônio</string>
+    <string name="foto_referencia_carregando">Carregando foto...</string>
+    <string name="foto_referencia_nao_disponivel">Foto não disponível</string>
+    <string name="foto_referencia_ampliar">Toque para ampliar</string>
+    <string name="foto_referencia_fechar">Fechar visualização</string>
+
 </resources>

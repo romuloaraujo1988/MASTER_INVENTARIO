@@ -88,9 +88,6 @@ class ChartsFragment : Fragment() {
         
         // Configurar gráfico de evolução
         ChartHelper.setupLineChart(binding.chartEvolucao, emptyList())
-        
-        // Configurar gráfico de top itens
-        ChartHelper.setupBarChart(binding.chartTopItens, emptyList())
     }
 
     private fun observeData() {
@@ -110,14 +107,6 @@ class ChartsFragment : Fragment() {
             viewModel.evolutionData.collect { data ->
                 if (data.isNotEmpty()) {
                     updateEvolutionChart(data)
-                }
-            }
-        }
-        
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.topItemsData.collect { data ->
-                if (data.isNotEmpty()) {
-                    updateTopItemsChart(data)
                 }
             }
         }
@@ -155,9 +144,10 @@ class ChartsFragment : Fragment() {
     private fun updateStatusChart(data: StatusData) {
         val pieData = ChartHelper.createStatusPieData(
             data.bom,
-            data.regular,
-            data.ruim,
-            data.pessimo,
+            data.ocioso,
+            data.recuperavel,
+            data.antieconomico,
+            data.irrecuperavel,
             data.semInfo
         )
         binding.chartStatus.data = pieData
@@ -171,14 +161,6 @@ class ChartsFragment : Fragment() {
         ChartHelper.setupLineChart(binding.chartEvolucao, labels)
         binding.chartEvolucao.data = lineData
         binding.chartEvolucao.invalidate()
-    }
-
-    private fun updateTopItemsChart(data: Map<String, Int>) {
-        val (barData, labels) = ChartHelper.createTopItemsBarData(data)
-        
-        ChartHelper.setupBarChart(binding.chartTopItens, labels)
-        binding.chartTopItens.data = barData
-        binding.chartTopItens.invalidate()
     }
 
     override fun onDestroyView() {

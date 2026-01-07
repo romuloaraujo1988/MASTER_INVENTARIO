@@ -133,7 +133,7 @@ class PdfDataIntegrityPropertyTest : FunSpec({
      * **Validates: Requirements 10.1**
      */
     test("patrimonio estado should be valid value") {
-        val validEstados = listOf("BOM", "REGULAR", "RUIM", "INSERVÍVEL")
+        val validEstados = listOf("BOM", "OCIOSO", "RECUPERAVEL", "ANTIECONOMICO", "IRRECUPERAVEL")
         
         checkAll(100, PatrimonioGenerators.patrimonio()) { patrimonio ->
             patrimonio.estado?.let { estado ->

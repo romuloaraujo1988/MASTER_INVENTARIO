@@ -438,6 +438,52 @@ public class ColetaDAO {
         return coletas;
     }
     
+    /**
+     * Busca coletas por inventário com limite de registros.
+     * Usado para visualização de todas as coletas do inventário com paginação.
+     * Inclui informações da sala (localização encontrada) para filtros.
+     * @param idInventario ID do inventário
+     * @param limite Número máximo de registros a retornar
+     * @return Lista de coletas ordenadas por data (mais recentes primeiro)
+     */
+    public List<Coleta> buscarColetasPorInventario(int idInventario, int limite) throws SQLException {
+        String sql = "SELECT c.*, p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
+                    "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO, " +
+                    "COALESCE(s.NUMERO_SALA, s.DESCRICAO) as NOME_SALA " +
+                    "FROM TABELA_COLETA c " +
+                    "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
+                    "LEFT JOIN TABELA_SALA s ON p.ID_SALA = s.ID " +
+                    "LEFT JOIN TABELA_PARTICIPANTE_INVENTARIO pi ON c.ID_PARTICIPANTE_INVENTARIO = pi.id_participante " +
+                    "LEFT JOIN TABELA_USUARIO u ON pi.ID_USUARIO = u.ID " +
+                    "LEFT JOIN TABELA_INVENTARIO i ON c.ID_INVENTARIO = i.ID " +
+                    "WHERE c.ID_INVENTARIO = ? " +
+                    "ORDER BY c.DATA_COLETA DESC " +
+                    "LIMIT ?";
+        
+        List<Coleta> coletas = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idInventario);
+            stmt.setInt(2, limite);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Coleta coleta = criarColetaFromResultSet(rs);
+                    // Se localizacao_encontrada estiver vazia, usar nome da sala do patrimônio
+                    if ((coleta.getLocalizacaoEncontrada() == null || coleta.getLocalizacaoEncontrada().isEmpty()) 
+                        && rs.getString("NOME_SALA") != null) {
+                        coleta.setLocalizacaoEncontrada(rs.getString("NOME_SALA"));
+                    }
+                    coletas.add(coleta);
+                }
+            }
+        }
+        
+        return coletas;
+    }
+    
     public List<Coleta> buscarPorColetor(int idColetor) throws SQLException {
         String sql = "SELECT c.ID, c.ID_INVENTARIO, c.ID_PATRIMONIO, c.ID_COLETOR, c.ID_PARTICIPANTE_INVENTARIO, " +
                     "c.DATA_COLETA, c.STATUS_COLETA, c.OBSERVACAO_COLETA, c.LOCALIZACAO_ATUAL, " +
@@ -1948,13 +1994,22 @@ public class ColetaDAO {
         try {
             coleta.setNumeroPatrimonio(rs.getString("NUMERO_PATRIMONIO"));
         } catch (SQLException e) {
-            coleta.setNumeroPatrimonio(null);
+            try {
+                coleta.setNumeroPatrimonio(rs.getString("numero_patrimonio"));
+            } catch (SQLException e2) {
+                coleta.setNumeroPatrimonio(null);
+            }
         }
         
         try {
             coleta.setDescricaoPatrimonio(rs.getString("DESCRICAO_PATRIMONIO"));
         } catch (SQLException e) {
-            coleta.setDescricaoPatrimonio(null);
+            try {
+                // PostgreSQL converte aliases para minúsculas
+                coleta.setDescricaoPatrimonio(rs.getString("descricao_patrimonio"));
+            } catch (SQLException e2) {
+                coleta.setDescricaoPatrimonio(null);
+            }
         }
         
         try {

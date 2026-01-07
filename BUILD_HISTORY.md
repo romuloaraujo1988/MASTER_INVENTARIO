@@ -4,6 +4,85 @@ Este arquivo registra todas as compilações do APK Android para rastreabilidade
 
 ---
 
+## Build #051 - 07/01/2026 (Foto de Referência - Exibição Android)
+
+- **Tipo:** Debug
+- **Versão:** 2.11.0 (Build 49)
+- **Build Code:** 49
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** ~18.30 MB
+- **Mudanças:** 
+  - **Feature: Exibição de Fotos de Referência no Android (Task 12)**
+    - **FotoReferenciaHelper.kt** - Helper para buscar fotos por descrição
+      - `buscarFotoPorDescricao(descricao)` - Retorna Bitmap ou null
+      - `normalizarDescricao(descricao)` - Normalização no cliente
+      - Cache LRU em memória para Bitmaps
+      - Busca em lote para múltiplas descrições
+    - **PatrimonioAdapter.kt** - Atualizado para exibir fotos
+      - Novo parâmetro `fotoReferenciaHelper` (opcional)
+      - Callback `onFotoClick` para ampliar foto
+      - Carregamento assíncrono com coroutines
+      - Cancelamento de jobs ao reciclar views
+      - Método `cleanup()` para liberar recursos
+    - **item_patrimonio.xml** - Layout atualizado
+      - `cardFotoReferencia` - Card para thumbnail (64x64dp)
+      - `imageViewFotoReferencia` - ImageView para foto
+      - `progressFotoReferencia` - ProgressBar para loading
+    - **FotoReferenciaDialogFragment.kt** - Dialog full-screen
+      - Pinch-to-zoom para ampliar foto
+      - Double-tap para alternar zoom
+      - Pan/drag quando ampliado
+      - Botão de fechar
+    - **Arquivos de suporte criados:**
+      - `dialog_foto_referencia.xml` - Layout do dialog
+      - `ic_image_placeholder.xml` - Placeholder drawable
+      - `bg_rounded_white.xml` - Background drawable
+      - `Theme.InventarioMobile.FullScreenDialog` - Tema para dialog
+    - **Correções de compilação:**
+      - `ColetasActivity.kt` - Uso de named parameter `onItemClick`
+      - `InventarioPorResponsavelFragment.kt` - Uso de named parameter `onItemClick`
+      - `InventarioPorSalaFragment.kt` - Uso de named parameter `onItemClick`
+  - **Benefícios:**
+    - 📷 Fotos de referência ajudam a identificar patrimônios visualmente
+    - 🔍 Zoom e pan para ver detalhes da foto
+    - ⚡ Cache em memória para performance
+    - 🔄 Carregamento assíncrono não bloqueia UI
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #050 - 05/01/2026 (Correção Estado de Conservação)
+
+- **Tipo:** Debug
+- **Versão:** 2.11.0 (Build 49)
+- **Build Code:** 49
+- **Arquivo:** InventarioMobile/app/build/outputs/apk/debug/app-debug.apk
+- **Tamanho:** 18.30 MB
+- **Mudanças:** 
+  - **Fix: Estado de Conservação não era sincronizado corretamente no modo offline**
+    - **Problema:** Coletas offline eram sincronizadas com estado "PENDENTE" ao invés do estado escolhido
+    - **Causa raiz:** O campo `estadoEncontrado` estava sendo mapeado para o campo `status` no modelo `Coleta`
+    - **Correções:**
+      - `Coleta.kt` - Adicionado campo `estadoEncontrado: String?` separado do `status`
+      - `RegistrarColetaUseCase.kt` - Corrigido para usar `status = "COLETADO"` e `estadoEncontrado` separadamente
+      - `ColetaMapper.kt` - Mapeamento correto de `estadoEncontrado` para `estadoPatrimonio` na Entity
+      - `ColetaRepositoryImpl.kt` - 7 ocorrências corrigidas: `coleta.status` → `coleta.estadoEncontrado`
+  - **Atualização: Estados de Conservação conforme Legislação Federal**
+    - Estados válidos: **BOM, OCIOSO, RECUPERÁVEL, ANTIECONÔMICO, IRRECUPERÁVEL**
+    - `EstadoPatrimonio.kt` - Enum já estava correto
+    - `ChartDataProvider.kt` - Atualizado mapeamento para estados da legislação
+    - `ChartHelper.kt` - Gráfico de pizza atualizado com cores para cada estado
+    - `ChartsFragment.kt` - Chamada atualizada para novos parâmetros
+    - `StatusData` - Campos atualizados: `bom`, `ocioso`, `recuperavel`, `antieconomico`, `irrecuperavel`
+    - Arquivos de teste atualizados com estados corretos
+  - **Benefícios:**
+    - ✅ Estado de conservação sincronizado corretamente
+    - ✅ Conformidade com legislação federal de patrimônio público
+    - ✅ Gráficos exibem estados corretos com cores apropriadas
+- **Status:** ✅ Sucesso
+
+---
+
 ## Build #049 - 15/12/2025 (Foto por Exceção)
 
 - **Tipo:** Debug
@@ -1135,3 +1214,64 @@ Este arquivo registra todas as compilações do APK Android para rastreabilidade
   - Servidor Mobile: `.\iniciar-servidor-mobile.ps1` (porta 8081)
   - Desktop: Executar `sihcp-desktop.jar` diretamente
 - **Status:** ✅ Sucesso - Pronto para produção
+
+
+## Build Produção - 06/01/2026 (Correção Descrição Patrimônio)
+
+- **Tipo:** Production (Thin JARs)
+- **Versão:** 2.0.0
+- **Componentes:**
+  - `sihcp-desktop.jar` - 1.88 MB (Aplicação Desktop Swing)
+  - `mobile-server.jar` - 1.88 MB (Servidor Mobile API)
+  - `lib/` - 133.85 MB (193 dependências compartilhadas)
+  - **Total:** 137.61 MB
+- **Localização:** `dist/producao/`
+- **Mudanças:**
+  - ✅ **Fix: Descrição do patrimônio não era exibida na JTable de coleta**
+    - **Problema:** Ao registrar uma coleta, a descrição do patrimônio não aparecia na tabela de histórico
+    - **Causa raiz:** 
+      - `ColetaFrame_v2.registrarItemEncontrado()` não definia `coleta.setDescricaoPatrimonio()`
+      - `ColetaDAO.criarColetaFromResultSet()` tentava ler `DESCRICAO_PATRIMONIO` (maiúsculas) mas PostgreSQL retorna em minúsculas
+    - **Correções:**
+      - `ColetaFrame_v2.java` - Adicionado `coleta.setDescricaoPatrimonio(patrimonioSelecionado.getDescricao())`
+      - `ColetaDAO.java` - Melhorado tratamento para ler descrição em maiúsculas e minúsculas
+    - **Benefícios:**
+      - ✅ Descrição do patrimônio agora aparece corretamente na JTable
+      - ✅ Compatibilidade com PostgreSQL (aliases em minúsculas)
+      - ✅ Fallback para minúsculas se maiúsculas falharem
+- **Scripts de Execução:**
+  - `iniciar-servidor-mobile.ps1` / `iniciar-servidor-mobile.bat`
+- **Status:** ✅ Sucesso
+
+## Build #051 - 06/01/2026 (Otimização de Carregamento Histórico)
+
+- **Tipo:** Debug
+- **Versão:** 2.11.0 (Build 50)
+- **Build Code:** 50
+- **Arquivo:** src/main/java/com/inventario/view/ColetaFrame_v2.java
+- **Tamanho:** N/A (Desktop)
+- **Mudanças:** 
+  - **Otimização: Carregamento Progressivo de Histórico para VPN Lenta**
+    - **Problema:** Carregamento de 1 coleta por vez era muito lento em VPN
+    - **Solução:** Aumentado tamanho do lote de 1 para 5 coletas por requisição
+    - **Benefícios:**
+      - ⚡ Redução de ~80% no tempo de carregamento (5 coletas por lote vs 1)
+      - 📊 Menos requisições ao banco de dados
+      - 🔄 Menos overhead de rede (menos round-trips)
+      - ⏱️ Delay entre lotes reduzido de 300ms para 200ms (compatível com lotes maiores)
+    - **Mudanças no código:**
+      - `TAMANHO_LOTE`: 1 → 5 coletas por lote
+      - `DELAY_ENTRE_LOTES`: 300ms → 200ms (reduzido para lotes maiores)
+      - Comentário atualizado: "Lotes de 5 coletas" ao invés de "Lotes de 1 coleta"
+      - Descrição do método atualizada: "query simplificada para VPN lenta"
+    - **Limite de histórico:** Mantido em 50 coletas (já otimizado na build anterior)
+    - **Compatibilidade:** Totalmente compatível com VPN lenta
+  - **Validação:**
+    - ✅ Código compila sem erros
+    - ✅ Sem warnings de sintaxe
+    - ✅ Método `carregarHistoricoProgressivo()` funcional
+    - ✅ Dialog de progresso exibe corretamente
+    - ✅ Barra de progresso atualiza com novos lotes
+- **Status:** ✅ Sucesso
+
+---

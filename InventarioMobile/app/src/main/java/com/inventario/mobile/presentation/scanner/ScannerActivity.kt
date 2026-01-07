@@ -41,6 +41,7 @@ class ScannerActivity : AppCompatActivity() {
     private lateinit var preferencesManager: PreferencesManager
     private lateinit var android14CameraHelper: Android14CameraHelper
     private var currentScanResult: ScanResult? = null
+    private var lastCollectedPatrimonio: ScanResult? = null // ✅ NOVO: Guarda último patrimônio coletado para "Coletar Similar"
     private var isInitializing = false
     private var retryCount = 0
     private val maxRetries = 3
@@ -416,6 +417,31 @@ class ScannerActivity : AppCompatActivity() {
             }
         }
         
+        // ✅ NOVO: Botão Coletar Similar (sem etiqueta)
+        binding.buttonColetarSimilar.setOnClickListener {
+            android.util.Log.d("ScannerActivity", "=== BOTÃO COLETAR SIMILAR CLICADO ===")
+            lastCollectedPatrimonio?.let { scanResult ->
+                val salaId = preferencesManager.getCurrentSalaId()
+                val salaNome = preferencesManager.getCurrentSalaNome()
+                
+                val descricao = scanResult.patrimonio?.descricao ?: "Item similar"
+                
+                android.util.Log.d("ScannerActivity", "Coletando similar ao patrimônio: ${scanResult.patrimonioCodigo}")
+                android.util.Log.d("ScannerActivity", "Descrição: $descricao")
+                android.util.Log.d("ScannerActivity", "Sala: $salaNome")
+                
+                if (salaId > 0 && !salaNome.isNullOrBlank()) {
+                    // Mostrar diálogo de confirmação
+                    showColetarSimilarDialog(descricao, salaId, salaNome)
+                } else {
+                    Toast.makeText(this, "Sala não selecionada", Toast.LENGTH_SHORT).show()
+                }
+            } ?: run {
+                android.util.Log.e("ScannerActivity", "❌ ERRO: lastCollectedPatrimonio é null!")
+                Toast.makeText(this, "Nenhum patrimônio de referência", Toast.LENGTH_SHORT).show()
+            }
+        }
+        
         binding.buttonRetry.setOnClickListener {
             android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
             android.util.Log.d("ScannerActivity", "BOTÃO 'ESCANEAR OUTRO' CLICADO")
@@ -433,6 +459,98 @@ class ScannerActivity : AppCompatActivity() {
         binding.buttonCancel.setOnClickListener {
             setResult(Activity.RESULT_CANCELED)
             finish()
+        }
+    }
+    
+    /**
+     * ✅ NOVO: Mostra diálogo de confirmação para coletar item similar
+     */
+    private fun showColetarSimilarDialog(descricao: String, salaId: Int, salaNome: String) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("🔄 Coletar Similar")
+            .setMessage("Registrar coleta de item similar:\n\n\"$descricao\"\n\nLocal: $salaNome\n\nEste item será registrado SEM número de patrimônio.")
+            .setPositiveButton("Coletar") { _, _ ->
+                // Mostrar diálogo de estado de conservação
+                showEstadoDialogParaSimilar(descricao, salaId, salaNome)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+    
+    /**
+     * ✅ NOVO: Mostra diálogo de estado para coleta similar
+     */
+    private fun showEstadoDialogParaSimilar(descricao: String, salaId: Int, salaNome: String) {
+        val dialog = EstadoPatrimonioDialog.newInstance { estadoSelecionado ->
+            android.util.Log.d("ScannerActivity", "Estado selecionado para similar: ${estadoSelecionado.name}")
+            registrarColetaSimilar(descricao, salaId, salaNome, estadoSelecionado.name)
+        }
+        dialog.show(supportFragmentManager, "EstadoPatrimonioDialogSimilar")
+    }
+    
+    /**
+     * ✅ NOVO: Registra coleta de item similar (sem número de patrimônio)
+     */
+    private fun registrarColetaSimilar(descricao: String, salaId: Int, salaNome: String, estadoConservacao: String) {
+        android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
+        android.util.Log.d("ScannerActivity", "REGISTRANDO COLETA SIMILAR")
+        android.util.Log.d("ScannerActivity", "Descrição: $descricao")
+        android.util.Log.d("ScannerActivity", "Sala: $salaNome (ID: $salaId)")
+        android.util.Log.d("ScannerActivity", "Estado: $estadoConservacao")
+        android.util.Log.d("ScannerActivity", "═══════════════════════════════════════")
+        
+        binding.progressBar.visibility = View.VISIBLE
+        binding.textStatus.text = "Registrando coleta similar..."
+        
+        lifecycleScope.launch {
+            try {
+                val inventarioId = preferencesManager.getInventarioAtivoId() ?: 0
+                val usuarioId = preferencesManager.getUserId() ?: 0
+                val usuarioNome = preferencesManager.getUserName() ?: "Usuário"
+                
+                // Usar o Use Case para registrar coleta por descrição
+                registrarColetaUseCase.registrarColetaPorDescricao(
+                    descricao = descricao,
+                    salaId = salaId,
+                    salaNome = salaNome,
+                    estadoConservacao = estadoConservacao,
+                    inventarioId = inventarioId,
+                    usuarioId = usuarioId.toLong(),
+                    usuarioNome = usuarioNome
+                ).fold(
+                    onSuccess = { coletaSalva ->
+                        android.util.Log.d("ScannerActivity", "✅ Coleta similar registrada com sucesso!")
+                        
+                        runOnUiThread {
+                            binding.progressBar.visibility = View.GONE
+                            SoundUtils.playSuccessSound()
+                            Toast.makeText(this@ScannerActivity, "✓ Coleta similar registrada!", Toast.LENGTH_SHORT).show()
+                            
+                            // Atualizar contador via ViewModel
+                            viewModel.loadColetasCount()
+                            
+                            // Manter botão de coletar similar visível para continuar
+                            binding.textStatus.text = "Coleta similar registrada! Pronto para mais."
+                        }
+                    },
+                    onFailure = { error ->
+                        android.util.Log.e("ScannerActivity", "❌ Erro ao registrar coleta similar", error)
+                        
+                        runOnUiThread {
+                            binding.progressBar.visibility = View.GONE
+                            Toast.makeText(this@ScannerActivity, "Erro: ${error.message}", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                )
+                
+            } catch (e: Exception) {
+                android.util.Log.e("ScannerActivity", "❌ Erro ao registrar coleta similar", e)
+                
+                runOnUiThread {
+                    binding.progressBar.visibility = View.GONE
+                    Toast.makeText(this@ScannerActivity, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
         }
     }
     
@@ -519,6 +637,13 @@ class ScannerActivity : AppCompatActivity() {
     private fun clearFormAndPrepareForNext() {
         android.util.Log.d("ScannerActivity", "Limpando formulário e preparando para próxima coleta...")
         
+        // ✅ NOVO: Salvar último patrimônio coletado para "Coletar Similar"
+        if (currentScanResult != null) {
+            lastCollectedPatrimonio = currentScanResult
+            android.util.Log.d("ScannerActivity", "✓ Último patrimônio salvo: ${lastCollectedPatrimonio?.patrimonioCodigo}")
+            android.util.Log.d("ScannerActivity", "  Descrição: ${lastCollectedPatrimonio?.patrimonio?.descricao}")
+        }
+        
         // Limpar resultado atual
         currentScanResult = null
         
@@ -534,6 +659,15 @@ class ScannerActivity : AppCompatActivity() {
         
         // Ocultar botão de coletar
         binding.buttonColetar.visibility = View.GONE
+        
+        // ✅ NOVO: Mostrar botão "Coletar Similar" se tiver patrimônio de referência
+        if (lastCollectedPatrimonio != null && !lastCollectedPatrimonio?.patrimonio?.descricao.isNullOrBlank()) {
+            binding.buttonColetarSimilar.visibility = View.VISIBLE
+            binding.buttonColetarSimilar.text = "🔄 Coletar Similar (${lastCollectedPatrimonio?.patrimonio?.descricao?.take(20)}...)"
+            android.util.Log.d("ScannerActivity", "✓ Botão 'Coletar Similar' visível")
+        } else {
+            binding.buttonColetarSimilar.visibility = View.GONE
+        }
         
         // Mostrar botão de escanear outro
         binding.buttonRetry.visibility = View.VISIBLE

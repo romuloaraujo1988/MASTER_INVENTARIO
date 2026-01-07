@@ -144,6 +144,11 @@ public class MainFrame extends JFrame {
             itemColetaItensCompostos.setFont(new Font("Arial", Font.PLAIN, 13));
             itemColetaItensCompostos.addActionListener(e -> abrirColetaItensCompostos());
             
+            JMenuItem itemFotosReferencia = new JMenuItem("Fotos de Referência");
+            itemFotosReferencia.setFont(new Font("Arial", Font.PLAIN, 13));
+            itemFotosReferencia.setToolTipText("Gerenciar fotos de referência por descrição de patrimônio");
+            itemFotosReferencia.addActionListener(e -> abrirFotosReferencia());
+            
             JMenuItem itemImportarCSV = new JMenuItem("Importar Excel do SUAP");
             itemImportarCSV.setFont(new Font("Arial", Font.PLAIN, 13));
             itemImportarCSV.addActionListener(e -> abrirImportacaoCSV());
@@ -158,6 +163,7 @@ public class MainFrame extends JFrame {
             menuInventario.add(itemItensCompostos);
             menuInventario.add(itemColeta);
             menuInventario.add(itemColetaItensCompostos);
+            menuInventario.add(itemFotosReferencia);
             menuInventario.addSeparator();
             
             JMenuItem itemReconciliacao = new JMenuItem("Reconciliação de Patrimônios");
@@ -786,6 +792,21 @@ public class MainFrame extends JFrame {
         } catch (Exception e) {
             ModernDialog.showMessage(this,
                     "Erro ao abrir reconciliação de patrimônios: " + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * Abre a tela de gerenciamento de fotos de referência
+     * Permite associar fotos a descrições de patrimônios
+     */
+    private void abrirFotosReferencia() {
+        try {
+            FotoReferenciaFrame frame = new FotoReferenciaFrame();
+            frame.setVisible(true);
+        } catch (Exception e) {
+            ModernDialog.showMessage(this,
+                    "Erro ao abrir fotos de referência: " + e.getMessage(),
                     "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }

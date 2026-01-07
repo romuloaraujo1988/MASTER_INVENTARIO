@@ -479,13 +479,12 @@ O inventário 2025 foi realizado entre 18/11/2025 e 23/12/2025, com os seguintes
 
 | Estado | Quantidade | Percentual |
 |--------|-----------|-----------|
-| BOM | 7.060 | 84,21% |
+| BOM | 7.061 | 84,22% |
 | IRRECUPERÁVEL | 1.130 | 13,48% |
 | PENDENTE | 81 | 0,97% |
 | N/A | 59 | 0,70% |
 | OCIOSO | 30 | 0,36% |
 | RECUPERÁVEL | 23 | 0,27% |
-| COLETADO | 1 | 0,01% |
 
 #### 6.3.2 Coletas de Itens Compostos
 

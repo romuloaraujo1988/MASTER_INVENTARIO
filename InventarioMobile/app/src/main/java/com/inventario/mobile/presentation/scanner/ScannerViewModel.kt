@@ -205,7 +205,7 @@ class ScannerViewModel(
         }
     }
     
-    private fun loadColetasCount() {
+    fun loadColetasCount() {
         viewModelScope.launch {
             try {
                 val coletas = inventarioRepository.getColetas()

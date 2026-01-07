@@ -68,11 +68,6 @@
                     android:title="Histórico de Scans" />
                 
                 <item
-                    android:id="@+id/nav_statistics"
-                    android:icon="@drawable/ic_trending_up"
-                    android:title="Estatísticas" />
-                
-                <item
                     android:id="@+id/nav_relatorios"
                     android:icon="@drawable/ic_list"
                     android:title="Relatórios" />

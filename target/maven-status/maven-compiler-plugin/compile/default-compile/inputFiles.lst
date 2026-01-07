@@ -1,10 +1,12 @@
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileResponsavelDTO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\MobileServerManager.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\analytics\model\RankingResponsavelDTO.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\ImageProcessor.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\event\CircularEventBuffer.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\notification\NotificationManager.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\ui\ConfiguracaoBancoController.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\dao\DashboardColetaDAO.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\service\MobileFotoReferenciaService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\dao\OcorrenciaPatrimonioDAO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\PatrimonioDetalheDTO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\AutenticacaoServiceDB.java
@@ -163,6 +165,7 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\dao\ResponsavelDAO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\dto\mobile\LoginResponse.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\config\DatabaseConfigLoader.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileFotoReferenciaController.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\SalaInventarioService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\dao\SalaInventarioDAO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\model\ParticipanteInventario.java
@@ -201,6 +204,8 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\RelatorioExcelGenerator.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\offline\SQLiteConnection.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\event\EventDebouncer.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\model\DescricaoResumo.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\model\FotoReferencia.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\config\SchedulingConfig.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\notification\NotificationUtils.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\analytics\view\AnalyticsDashboardFrame.java
@@ -262,6 +267,8 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileConsultaController.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\repository\impl\ColetaRepositoryImpl.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\DispositivoMobileService.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\DescricaoNormalizador.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\FotoReferenciaFrame.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileSetorController.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileLoginResponse.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\ConsultaColetaFrame.java
@@ -270,6 +277,7 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\sync\model\SyncStatistics.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\security\annotation\RequireSupervisor.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\DatabaseTestQuery.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\dao\FotoReferenciaDAO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\util\ExceptionHandler.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\PatrimonioService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\itemcomposto\model\Componente.java
@@ -278,6 +286,7 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\security\JwtAuthenticationEntryPoint.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\dao\ChartDataDAO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\controller\MobileDescricaoController.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\service\FotoReferenciaService.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\analytics\model\TipoDivergencia.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\model\DispositivoMobile.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\view\RelatorioDivergenciasFrame.java
@@ -304,6 +313,7 @@ C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventari
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\offline\StatusBarPanel.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\sync\model\EntityType.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\dao\InventarioSetorDAO.java
+C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\mobile\server\dto\MobileFotoReferenciaDTO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\siads\dao\SiadsPatrimonioDAO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\itemcomposto\dao\ItemCompostoDAO.java
 C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\src\main\java\com\inventario\config\DAOConfiguration.java

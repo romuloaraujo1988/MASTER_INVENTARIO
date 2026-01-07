@@ -28,7 +28,7 @@ object PatrimonioGenerators {
             marca = Arb.string(3..20).orNull().bind(),
             modelo = Arb.string(3..20).orNull().bind(),
             numeroSerie = Arb.string(5..20).orNull().bind(),
-            estado = listOf("BOM", "REGULAR", "RUIM", "INSERVÍVEL").random(),
+            estado = listOf("BOM", "OCIOSO", "RECUPERAVEL", "ANTIECONOMICO", "IRRECUPERAVEL").random(),
             valor = Arb.double(100.0..50000.0).orNull().bind(),
             dataAquisicao = Arb.long(1000000000000L..1700000000000L).orNull().bind(),
             observacoes = Arb.string(0..200).orNull().bind(),
@@ -49,7 +49,7 @@ object PatrimonioGenerators {
             coletadoPor = listOf("João Silva", "Maria Santos", "Pedro Oliveira", null).random(),
             dataColetaFormatada = null,
             localizacaoEncontrada = Arb.string(5..30).orNull().bind(),
-            estadoEncontrado = listOf("BOM", "REGULAR", "RUIM", null).random()
+            estadoEncontrado = listOf("BOM", "OCIOSO", "RECUPERAVEL", "ANTIECONOMICO", "IRRECUPERAVEL", null).random()
         )
     }
     

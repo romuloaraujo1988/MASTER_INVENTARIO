@@ -713,4 +713,58 @@ class PreferencesManager(context: Context) {
             else -> "Desconhecido"
         }
     }
+    
+    // ===== SINCRONIZAÇÃO DE FOTOS DE REFERÊNCIA (v2.9) =====
+    
+    /**
+     * Obtém timestamp da última sincronização de fotos de referência
+     */
+    fun getLastFotoReferenciaSyncTimestamp(): Long {
+        return getLong("last_foto_referencia_sync_timestamp", 0L)
+    }
+    
+    /**
+     * Salva timestamp da última sincronização de fotos de referência
+     */
+    fun setLastFotoReferenciaSyncTimestamp(timestamp: Long) {
+        putLong("last_foto_referencia_sync_timestamp", timestamp)
+        android.util.Log.d("PreferencesManager", "Timestamp de sync de fotos atualizado: $timestamp")
+    }
+    
+    /**
+     * Verifica se a sincronização de fotos está habilitada
+     */
+    fun isFotoReferenciaSyncEnabled(): Boolean {
+        return getBoolean("foto_referencia_sync_enabled", true)
+    }
+    
+    /**
+     * Habilita ou desabilita sincronização de fotos de referência
+     */
+    fun setFotoReferenciaSyncEnabled(enabled: Boolean) {
+        putBoolean("foto_referencia_sync_enabled", enabled)
+        android.util.Log.d("PreferencesManager", "Sync de fotos ${if (enabled) "HABILITADO" else "DESABILITADO"}")
+    }
+    
+    /**
+     * Obtém limite de armazenamento de fotos em MB
+     */
+    fun getFotoReferenciaStorageLimitMB(): Int {
+        return getInt("foto_referencia_storage_limit_mb", 100)
+    }
+    
+    /**
+     * Define limite de armazenamento de fotos em MB
+     */
+    fun setFotoReferenciaStorageLimitMB(limitMB: Int) {
+        putInt("foto_referencia_storage_limit_mb", limitMB.coerceIn(10, 500))
+    }
+    
+    /**
+     * Limpa dados de sincronização de fotos de referência
+     */
+    fun clearFotoReferenciaSync() {
+        remove("last_foto_referencia_sync_timestamp")
+        android.util.Log.d("PreferencesManager", "Dados de sync de fotos limpos")
+    }
 }

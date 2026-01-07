@@ -33,9 +33,6 @@ public final class FragmentChartsBinding implements ViewBinding {
   public final PieChart chartStatus;
 
   @NonNull
-  public final BarChart chartTopItens;
-
-  @NonNull
   public final ProgressBar progressBar;
 
   @NonNull
@@ -55,15 +52,14 @@ public final class FragmentChartsBinding implements ViewBinding {
 
   private FragmentChartsBinding(@NonNull SwipeRefreshLayout rootView,
       @NonNull LineChart chartEvolucao, @NonNull BarChart chartProgresso,
-      @NonNull PieChart chartStatus, @NonNull BarChart chartTopItens,
-      @NonNull ProgressBar progressBar, @NonNull SwipeRefreshLayout swipeRefresh,
-      @NonNull TextView tvColetados, @NonNull TextView tvPendentes, @NonNull TextView tvPercentual,
+      @NonNull PieChart chartStatus, @NonNull ProgressBar progressBar,
+      @NonNull SwipeRefreshLayout swipeRefresh, @NonNull TextView tvColetados,
+      @NonNull TextView tvPendentes, @NonNull TextView tvPercentual,
       @NonNull TextView tvTotalPatrimonios) {
     this.rootView = rootView;
     this.chartEvolucao = chartEvolucao;
     this.chartProgresso = chartProgresso;
     this.chartStatus = chartStatus;
-    this.chartTopItens = chartTopItens;
     this.progressBar = progressBar;
     this.swipeRefresh = swipeRefresh;
     this.tvColetados = tvColetados;
@@ -117,12 +113,6 @@ public final class FragmentChartsBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.chartTopItens;
-      BarChart chartTopItens = ViewBindings.findChildViewById(rootView, id);
-      if (chartTopItens == null) {
-        break missingId;
-      }
-
       id = R.id.progressBar;
       ProgressBar progressBar = ViewBindings.findChildViewById(rootView, id);
       if (progressBar == null) {
@@ -156,8 +146,8 @@ public final class FragmentChartsBinding implements ViewBinding {
       }
 
       return new FragmentChartsBinding((SwipeRefreshLayout) rootView, chartEvolucao, chartProgresso,
-          chartStatus, chartTopItens, progressBar, swipeRefresh, tvColetados, tvPendentes,
-          tvPercentual, tvTotalPatrimonios);
+          chartStatus, progressBar, swipeRefresh, tvColetados, tvPendentes, tvPercentual,
+          tvTotalPatrimonios);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

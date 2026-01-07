@@ -58,14 +58,16 @@ class InventarioPorSalaFragment : Fragment() {
     }
     
     private fun setupRecyclerView() {
-        patrimonioAdapter = PatrimonioAdapter { patrimonio ->
-            // Click no patrimônio - pode abrir detalhes
-            Toast.makeText(
-                requireContext(),
-                "Patrimônio: ${patrimonio.numeroPatrimonio}",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
+        patrimonioAdapter = PatrimonioAdapter(
+            onItemClick = { patrimonio ->
+                // Click no patrimônio - pode abrir detalhes
+                Toast.makeText(
+                    requireContext(),
+                    "Patrimônio: ${patrimonio.numeroPatrimonio}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        )
         
         binding.recyclerViewPatrimonios.apply {
             layoutManager = LinearLayoutManager(requireContext())

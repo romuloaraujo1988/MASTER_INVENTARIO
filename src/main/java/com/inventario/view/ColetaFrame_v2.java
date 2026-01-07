@@ -26,6 +26,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.Cursor;
 import java.awt.FontMetrics;
 import java.awt.GradientPaint;
@@ -62,6 +63,7 @@ public class ColetaFrame_v2 extends JFrame {
     private JButton btnFinalizarColeta; // Botão para finalizar coleta na sala
     private JButton btnReabrirColeta; // Botão para reabrir coleta da sala (apenas admin/supervisor)
     private JButton btnRemoverItem; // Botão para remover item (não disponível para coletor)
+    private JButton btnVerTodasColetas; // Botão para ver todas as coletas do inventário
     private JLabel lblResumoSala;
     private JLabel lblInventarioAtual;
 
@@ -677,6 +679,12 @@ public class ColetaFrame_v2 extends JFrame {
                 (usuarioLogado != null ? usuarioLogado.getNomeCompleto() + " (" + usuarioLogado.getPerfil() + ")"
                         : "null"));
 
+        // Botão para ver todas as coletas do inventário
+        btnVerTodasColetas = createStyledButton("📋 Ver Todas", new Color(52, 152, 219));
+        btnVerTodasColetas.setPreferredSize(new Dimension(140, 35));
+        btnVerTodasColetas.setEnabled(true);
+        btnVerTodasColetas.setToolTipText("Ver todas as coletas do inventário atual (todas as salas)");
+
         // Labels de resumo
         lblResumoSala = new JLabel("Selecione uma sala para iniciar a coleta");
         lblInventarioAtual = new JLabel("Inventário: Carregando...");
@@ -723,14 +731,20 @@ public class ColetaFrame_v2 extends JFrame {
         tabelaHistorico.setBackground(Color.WHITE);
         tabelaHistorico.setForeground(new Color(44, 62, 80));
 
-        // Cores alternadas nas linhas
+        // Cores alternadas nas linhas com texto PRETO visível
         tabelaHistorico.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
                     boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if (!isSelected) {
+                if (isSelected) {
+                    // Linha selecionada: fundo azul, texto branco
+                    c.setBackground(new Color(52, 152, 219));
+                    c.setForeground(Color.WHITE);
+                } else {
+                    // Linha não selecionada: fundo alternado, texto PRETO
                     c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 248, 248));
+                    c.setForeground(new Color(44, 62, 80)); // Texto escuro (quase preto)
                 }
                 return c;
             }
@@ -967,6 +981,9 @@ public class ColetaFrame_v2 extends JFrame {
         // Panel para botões do histórico com design moderno
         JPanel panelBotoesHistorico = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         panelBotoesHistorico.setBackground(Color.WHITE);
+
+        // Adicionar botão Ver Todas as Coletas
+        panelBotoesHistorico.add(btnVerTodasColetas);
 
         // Adicionar o botão remover se visível
         if (btnRemoverItem.isVisible()) {
@@ -2404,6 +2421,9 @@ public class ColetaFrame_v2 extends JFrame {
             btnReabrirColeta.addActionListener(e -> reabrirColetaSala());
         }
 
+        // Listener para o botão de ver todas as coletas
+        btnVerTodasColetas.addActionListener(e -> mostrarTodasColetas());
+
         // Listener para seleção na tabela de histórico
         // ✅ REGRA: btnRemover só habilita se:
         //    1. Há uma linha selecionada na tabela
@@ -2770,6 +2790,12 @@ public class ColetaFrame_v2 extends JFrame {
             if (comp == btnRemoverItem) {
                 continue; // Pular btnRemoverItem
             }
+            // ✅ EXCEÇÃO: btnReabrirColeta NÃO deve ser habilitado aqui
+            // Ele só é habilitado quando a sala está FINALIZADA (controlado em carregarDadosSala)
+            // REGRA: btnReabrir e btnFinalizar são MUTUAMENTE EXCLUSIVOS
+            if (comp == btnReabrirColeta) {
+                continue; // Pular btnReabrirColeta - controlado separadamente
+            }
             comp.setEnabled(true);
         }
     }
@@ -3045,23 +3071,22 @@ public class ColetaFrame_v2 extends JFrame {
                 
                 // Botão Reabrir: habilitado APENAS se:
                 // 1. Botão está visível (usuário é admin/supervisor - verificado na criação)
-                // 2. Sala está FINALIZADA (condição atual)
+                // 2. Sala está FINALIZADA (condição atual) ✅
                 // 3. Modo ONLINE (requer conexão com servidor)
+                // REGRA: btnReabrir só fica ativo quando btnFinalizar está INATIVO (sala finalizada)
                 if (btnReabrirColeta.isVisible()) {
-                    boolean podeReabrir = !modoOffline && salaFinalizada; // Online E sala finalizada
+                    boolean podeReabrir = !modoOffline; // Online E sala finalizada (já estamos no bloco salaFinalizada=true)
                     btnReabrirColeta.setEnabled(podeReabrir);
                     btnReabrirColeta.setBackground(new Color(255, 193, 7)); // Amarelo/laranja
                     
                     if (modoOffline) {
                         btnReabrirColeta.setToolTipText("⚠️ Reabrir sala requer conexão com o servidor");
-                    } else if (salaFinalizada) {
-                        btnReabrirColeta.setToolTipText("Reabrir sala finalizada para permitir novas coletas");
                     } else {
-                        btnReabrirColeta.setToolTipText("Sala já está aberta para coleta");
+                        btnReabrirColeta.setToolTipText("Reabrir sala finalizada para permitir novas coletas");
                     }
                     
                     System.out.println("DEBUG: btnReabrir habilitado=" + podeReabrir + 
-                                     " (modoOffline=" + modoOffline + ", salaFinalizada=" + salaFinalizada + ")");
+                                     " (modoOffline=" + modoOffline + ", salaFinalizada=true)");
                 }
                 
                 // Botão Remover: SEMPRE desabilitado (nenhuma linha selecionada inicialmente)
@@ -3076,7 +3101,7 @@ public class ColetaFrame_v2 extends JFrame {
                 comboEstado.setEnabled(false);
                 
                 System.out.println("DEBUG: ✅ Sala FINALIZADA - btnFinalizar=false, btnReabrir=" + 
-                                  (!modoOffline && salaFinalizada) + ", btnRemover=false (aguardando seleção)" + 
+                                  (!modoOffline) + ", btnRemover=false (aguardando seleção)" + 
                                   (modoOffline ? " [OFFLINE]" : ""));
                 
             } else {
@@ -3097,13 +3122,14 @@ public class ColetaFrame_v2 extends JFrame {
                     btnFinalizarColeta.setToolTipText("Marcar a coleta desta sala como finalizada");
                 }
                 
-                // Botão Reabrir: SEMPRE desabilitado (sala está ABERTA, não finalizada)
-                // Só fica ativo quando sala está FINALIZADA
+                // Botão Reabrir: SEMPRE desabilitado quando sala está ABERTA
+                // REGRA: btnReabrir só fica ativo quando btnFinalizar está INATIVO (sala finalizada)
+                // Como a sala está ABERTA, btnFinalizar está ATIVO, então btnReabrir deve estar INATIVO
                 if (btnReabrirColeta.isVisible()) {
-                    btnReabrirColeta.setEnabled(false);
-                    btnReabrirColeta.setBackground(new Color(255, 193, 7)); // Restaurar cor original
-                    btnReabrirColeta.setToolTipText("Sala já está aberta para coleta");
-                    System.out.println("DEBUG: btnReabrir desabilitado - sala aberta (salaFinalizada=false)");
+                    btnReabrirColeta.setEnabled(false); // SEMPRE false quando sala está aberta
+                    btnReabrirColeta.setBackground(new Color(200, 160, 10)); // Cor mais escura para indicar inativo
+                    btnReabrirColeta.setToolTipText("Sala já está aberta para coleta - não é necessário reabrir");
+                    System.out.println("DEBUG: btnReabrir DESABILITADO - sala aberta (btnFinalizar está ativo)");
                 }
                 
                 // Botão Remover: SEMPRE desabilitado inicialmente (nenhuma linha selecionada)
@@ -3118,7 +3144,7 @@ public class ColetaFrame_v2 extends JFrame {
                 habilitarComponentesPorAba(abaSelecionada);
                 
                 System.out.println("DEBUG: 🔓 Sala ABERTA - btnFinalizar=" + (!modoOffline) + 
-                                  ", btnReabrir=false (sala aberta), btnRemover=false (aguardando seleção)" + 
+                                  ", btnReabrir=false (sala aberta, btnFinalizar ativo), btnRemover=false (aguardando seleção)" + 
                                   (modoOffline ? " [OFFLINE]" : ""));
             }
 
@@ -3131,7 +3157,284 @@ public class ColetaFrame_v2 extends JFrame {
     }
 
     // Limite de registros para performance
-    private static final int LIMITE_HISTORICO = 100;
+    private static final int LIMITE_HISTORICO = 50;  // Carregar apenas últimos 50 patrimônios
+    private static final int LIMITE_TODAS_COLETAS = 500; // Limite para visualização de todas as coletas
+    
+    /**
+     * Mostra todas as coletas do inventário atual em um dialog separado.
+     * Permite visualizar coletas de todas as salas.
+     */
+    private void mostrarTodasColetas() {
+        // Criar dialog para exibir todas as coletas
+        JDialog dialogTodasColetas = new JDialog(this, "📋 Todas as Coletas do Inventário", true);
+        dialogTodasColetas.setLayout(new BorderLayout(10, 10));
+        dialogTodasColetas.setSize(1000, 600);
+        dialogTodasColetas.setLocationRelativeTo(this);
+        
+        // Painel principal
+        JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
+        panelPrincipal.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        panelPrincipal.setBackground(Color.WHITE);
+        
+        // Painel superior com informações e filtros
+        JPanel panelSuperior = new JPanel(new BorderLayout(10, 5));
+        panelSuperior.setBackground(Color.WHITE);
+        
+        JLabel lblTitulo = new JLabel("📋 Todas as Coletas do Inventário Atual");
+        lblTitulo.setFont(new Font("Segoe UI Emoji", Font.BOLD, 16));
+        lblTitulo.setForeground(new Color(52, 73, 94));
+        
+        JLabel lblStatus = new JLabel("Carregando...");
+        lblStatus.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblStatus.setForeground(new Color(100, 100, 100));
+        
+        // Painel de filtro por sala
+        JPanel panelFiltro = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        panelFiltro.setBackground(Color.WHITE);
+        
+        JLabel lblFiltro = new JLabel("Filtrar por sala:");
+        lblFiltro.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        
+        JComboBox<String> comboFiltroSala = new JComboBox<>();
+        comboFiltroSala.addItem("Todas as salas");
+        comboFiltroSala.setPreferredSize(new Dimension(250, 28));
+        
+        JTextField campoFiltroTexto = new JTextField(20);
+        campoFiltroTexto.setToolTipText("Filtrar por número ou descrição");
+        
+        JButton btnFiltrar = createStyledButton("🔍 Filtrar", new Color(52, 152, 219));
+        btnFiltrar.setPreferredSize(new Dimension(100, 28));
+        
+        panelFiltro.add(lblFiltro);
+        panelFiltro.add(comboFiltroSala);
+        panelFiltro.add(new JLabel("  Buscar:"));
+        panelFiltro.add(campoFiltroTexto);
+        panelFiltro.add(btnFiltrar);
+        
+        JPanel panelTituloStatus = new JPanel(new BorderLayout());
+        panelTituloStatus.setBackground(Color.WHITE);
+        panelTituloStatus.add(lblTitulo, BorderLayout.NORTH);
+        panelTituloStatus.add(lblStatus, BorderLayout.SOUTH);
+        
+        panelSuperior.add(panelTituloStatus, BorderLayout.NORTH);
+        panelSuperior.add(panelFiltro, BorderLayout.SOUTH);
+        
+        // Tabela de todas as coletas (com coluna Sala adicional)
+        String[] colunas = {"Data/Hora", "Sala", "Patrimônio", "Descrição", "Estado", "Coletor"};
+        DefaultTableModel modeloTodasColetas = new DefaultTableModel(colunas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        
+        JTable tabelaTodasColetas = new JTable(modeloTodasColetas);
+        tabelaTodasColetas.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tabelaTodasColetas.setRowHeight(28);
+        tabelaTodasColetas.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tabelaTodasColetas.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        tabelaTodasColetas.getTableHeader().setBackground(new Color(52, 73, 94));
+        tabelaTodasColetas.getTableHeader().setForeground(Color.WHITE);
+        tabelaTodasColetas.setGridColor(new Color(220, 220, 220));
+        tabelaTodasColetas.setBackground(Color.WHITE);
+        
+        // Configurar larguras das colunas
+        tabelaTodasColetas.getColumnModel().getColumn(0).setPreferredWidth(130); // Data/Hora
+        tabelaTodasColetas.getColumnModel().getColumn(1).setPreferredWidth(120); // Sala
+        tabelaTodasColetas.getColumnModel().getColumn(2).setPreferredWidth(100); // Patrimônio
+        tabelaTodasColetas.getColumnModel().getColumn(3).setPreferredWidth(300); // Descrição
+        tabelaTodasColetas.getColumnModel().getColumn(4).setPreferredWidth(100); // Estado
+        tabelaTodasColetas.getColumnModel().getColumn(5).setPreferredWidth(120); // Coletor
+        
+        // Renderer para cores alternadas com texto preto
+        tabelaTodasColetas.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (isSelected) {
+                    c.setBackground(new Color(52, 152, 219));
+                    c.setForeground(Color.WHITE);
+                } else {
+                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 248, 248));
+                    c.setForeground(new Color(44, 62, 80));
+                }
+                return c;
+            }
+        });
+        
+        JScrollPane scrollTodasColetas = new JScrollPane(tabelaTodasColetas);
+        scrollTodasColetas.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
+        
+        // Painel inferior com botões
+        JPanel panelInferior = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        panelInferior.setBackground(Color.WHITE);
+        
+        JButton btnExportar = createStyledButton("📥 Exportar CSV", new Color(46, 204, 113));
+        btnExportar.addActionListener(e -> exportarTodasColetas(modeloTodasColetas));
+        
+        JButton btnFechar = createStyledButton("❌ Fechar", new Color(108, 117, 125));
+        btnFechar.addActionListener(e -> dialogTodasColetas.dispose());
+        
+        panelInferior.add(btnExportar);
+        panelInferior.add(btnFechar);
+        
+        panelPrincipal.add(panelSuperior, BorderLayout.NORTH);
+        panelPrincipal.add(scrollTodasColetas, BorderLayout.CENTER);
+        panelPrincipal.add(panelInferior, BorderLayout.SOUTH);
+        
+        dialogTodasColetas.add(panelPrincipal);
+        
+        // Lista para armazenar todas as coletas (para filtro)
+        final List<Object[]> todasAsColetas = new ArrayList<>();
+        
+        // Carregar dados em background
+        SwingWorker<Void, Object[]> worker = new SwingWorker<>() {
+            private int totalColetas = 0;
+            private java.util.Set<String> salasEncontradas = new java.util.HashSet<>();
+            
+            @Override
+            protected Void doInBackground() throws Exception {
+                try {
+                    // Buscar inventário ativo
+                    Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
+                    if (inventarioAtivo == null) {
+                        SwingUtilities.invokeLater(() -> 
+                            lblStatus.setText("❌ Nenhum inventário ativo encontrado"));
+                        return null;
+                    }
+                    
+                    SwingUtilities.invokeLater(() -> 
+                        lblStatus.setText("⏳ Carregando coletas do inventário: " + inventarioAtivo.getNome()));
+                    
+                    // Buscar todas as coletas do inventário
+                    List<Coleta> coletas = coletaDAO.buscarColetasPorInventario(inventarioAtivo.getId(), LIMITE_TODAS_COLETAS);
+                    totalColetas = coletas.size();
+                    
+                    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+                    
+                    for (Coleta coleta : coletas) {
+                        String data = coleta.getDataColeta() != null ? sdf.format(coleta.getDataColeta()) : "-";
+                        String sala = coleta.getLocalizacaoEncontrada() != null ? coleta.getLocalizacaoEncontrada() : "-";
+                        String numero = coleta.getNumeroPatrimonio() != null ? coleta.getNumeroPatrimonio() : 
+                                        (coleta.isSemEtiqueta() ? "SEM ETIQUETA" : "-");
+                        String descricao = coleta.getDescricaoPatrimonio() != null ? coleta.getDescricaoPatrimonio() :
+                                          (coleta.getDescricaoItemSemEtiqueta() != null ? coleta.getDescricaoItemSemEtiqueta() : "-");
+                        String estado = coleta.getEstadoEncontrado() != null ? coleta.getEstadoEncontrado() : "-";
+                        String coletor = coleta.getNomeColetor() != null ? coleta.getNomeColetor() : "-";
+                        
+                        salasEncontradas.add(sala);
+                        
+                        Object[] linha = {data, sala, numero, descricao, estado, coletor};
+                        publish(linha);
+                    }
+                    
+                } catch (SQLException e) {
+                    LOG.error("Erro ao carregar todas as coletas: {}", e.getMessage(), e);
+                    SwingUtilities.invokeLater(() -> 
+                        lblStatus.setText("❌ Erro ao carregar: " + e.getMessage()));
+                }
+                return null;
+            }
+            
+            @Override
+            protected void process(List<Object[]> chunks) {
+                for (Object[] linha : chunks) {
+                    modeloTodasColetas.addRow(linha);
+                    todasAsColetas.add(linha);
+                }
+                lblStatus.setText("⏳ Carregando... " + modeloTodasColetas.getRowCount() + " coletas");
+            }
+            
+            @Override
+            protected void done() {
+                lblStatus.setText(String.format("✅ %d coletas carregadas (limite: %d)", 
+                    totalColetas, LIMITE_TODAS_COLETAS));
+                
+                // Preencher combo de salas
+                for (String sala : salasEncontradas) {
+                    comboFiltroSala.addItem(sala);
+                }
+            }
+        };
+        
+        // Ação do filtro
+        ActionListener filtrarAction = e -> {
+            String salaFiltro = (String) comboFiltroSala.getSelectedItem();
+            String textoFiltro = campoFiltroTexto.getText().toLowerCase().trim();
+            
+            modeloTodasColetas.setRowCount(0);
+            
+            for (Object[] linha : todasAsColetas) {
+                String sala = (String) linha[1];
+                String numero = (String) linha[2];
+                String descricao = (String) linha[3];
+                
+                boolean passaSala = "Todas as salas".equals(salaFiltro) || sala.equals(salaFiltro);
+                boolean passaTexto = textoFiltro.isEmpty() || 
+                                    numero.toLowerCase().contains(textoFiltro) ||
+                                    descricao.toLowerCase().contains(textoFiltro);
+                
+                if (passaSala && passaTexto) {
+                    modeloTodasColetas.addRow(linha);
+                }
+            }
+            
+            lblStatus.setText(String.format("🔍 Exibindo %d de %d coletas", 
+                modeloTodasColetas.getRowCount(), todasAsColetas.size()));
+        };
+        
+        btnFiltrar.addActionListener(filtrarAction);
+        comboFiltroSala.addActionListener(filtrarAction);
+        campoFiltroTexto.addActionListener(filtrarAction);
+        
+        worker.execute();
+        dialogTodasColetas.setVisible(true);
+    }
+    
+    /**
+     * Exporta todas as coletas exibidas para um arquivo CSV.
+     */
+    private void exportarTodasColetas(DefaultTableModel modelo) {
+        if (modelo.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, 
+                "Não há coletas para exportar.", 
+                "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Salvar Todas as Coletas");
+        String nomeArquivo = "todas_coletas_" + new SimpleDateFormat("yyyyMMdd_HHmm").format(new java.util.Date()) + ".csv";
+        fileChooser.setSelectedFile(new java.io.File(nomeArquivo));
+        
+        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try (java.io.PrintWriter writer = new java.io.PrintWriter(fileChooser.getSelectedFile(), "UTF-8")) {
+                // Cabecalho
+                writer.println("Data/Hora;Sala;Patrimonio;Descricao;Estado;Coletor");
+                
+                // Dados
+                for (int i = 0; i < modelo.getRowCount(); i++) {
+                    StringBuilder sb = new StringBuilder();
+                    for (int j = 0; j < modelo.getColumnCount(); j++) {
+                        if (j > 0) sb.append(";");
+                        Object valor = modelo.getValueAt(i, j);
+                        sb.append(valor != null ? valor.toString().replace(";", ",") : "");
+                    }
+                    writer.println(sb);
+                }
+                
+                JOptionPane.showMessageDialog(this,
+                    "✅ Exportado com sucesso!\n" + fileChooser.getSelectedFile().getAbsolutePath(),
+                    "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                    
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this,
+                    "❌ Erro ao exportar: " + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
     
     /**
      * Carrega histórico de coletas de forma PROGRESSIVA e ASSÍNCRONA.
@@ -3194,12 +3497,12 @@ public class ColetaFrame_v2 extends JFrame {
     /**
      * Carrega histórico do PostgreSQL de forma PROGRESSIVA (em lotes).
      * Ideal para conexões VPN com ping alto.
-     * AJUSTADO: Lotes de 1 coleta + query simplificada para VPN MUITO lenta.
+     * AJUSTADO: Lotes de 5 coletas + query simplificada para VPN lenta.
      * Exibe dialog de progresso com barra visual.
      */
     private void carregarHistoricoProgressivo(String identificacaoSala, Sala salaAtual) {
-        final int TAMANHO_LOTE = 1; // Carregar 1 coleta por vez (VPN extremamente lenta)
-        final int DELAY_ENTRE_LOTES = 300; // 300ms entre lotes
+        final int TAMANHO_LOTE = 5; // Carregar 5 coletas por vez (melhor performance)
+        final int DELAY_ENTRE_LOTES = 200; // 200ms entre lotes (reduzido para 5 itens)
         final int DELAY_APOS_ERRO = 5000; // 5s após erro antes de retry
         
         // Limpar tabela
@@ -4270,6 +4573,7 @@ public class ColetaFrame_v2 extends JFrame {
                 // Configurar para patrimônio normal
                 coleta.setIdPatrimonio(patrimonioSelecionado.getId());
                 coleta.setNumeroPatrimonio(patrimonioSelecionado.getNumero()); // ✅ ADICIONAR número do patrimônio
+                coleta.setDescricaoPatrimonio(patrimonioSelecionado.getDescricao()); // ✅ ADICIONAR descrição do patrimônio
                 coleta.setSemEtiqueta(false);
                 coleta.setLocalizacaoAtual(patrimonioSelecionado.getNomeSala());
 

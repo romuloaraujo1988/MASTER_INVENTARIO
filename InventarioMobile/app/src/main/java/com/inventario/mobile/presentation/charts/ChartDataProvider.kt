@@ -22,7 +22,7 @@ class ChartDataProvider @Inject constructor(
 
     /**
      * Busca dados de estado de conservação dos patrimônios coletados
-     * Agrupa por: BOM, REGULAR, RUIM, PÉSSIMO, SEM INFO
+     * Estados conforme legislação: BOM, OCIOSO, RECUPERÁVEL, ANTIECONÔMICO, IRRECUPERÁVEL
      */
     suspend fun getStatusData(idInventario: Int = 0): StatusData = withContext(Dispatchers.IO) {
         try {
@@ -35,41 +35,44 @@ class ChartDataProvider @Inject constructor(
                 onSuccess = { estatisticas ->
                     Log.d(TAG, "Estatísticas por estado recebidas: ${estatisticas.size} estados")
                     
-                    // Mapear os estados de conservação
+                    // Mapear os estados de conservação conforme legislação
                     var bom = 0
-                    var regular = 0
-                    var ruim = 0
-                    var pessimo = 0
+                    var ocioso = 0
+                    var recuperavel = 0
+                    var antieconomico = 0
+                    var irrecuperavel = 0
                     var semInfo = 0
                     
                     estatisticas.forEach { stat ->
                         when (stat.status.uppercase()) {
-                            "BOM", "OTIMO", "ÓTIMO", "EXCELENTE" -> bom += stat.quantidade
-                            "REGULAR", "RAZOAVEL", "RAZOÁVEL" -> regular += stat.quantidade
-                            "RUIM", "MAU" -> ruim += stat.quantidade
-                            "PESSIMO", "PÉSSIMO", "INSERVIVEL", "INSERVÍVEL" -> pessimo += stat.quantidade
+                            "BOM" -> bom += stat.quantidade
+                            "OCIOSO" -> ocioso += stat.quantidade
+                            "RECUPERAVEL", "RECUPERÁVEL" -> recuperavel += stat.quantidade
+                            "ANTIECONOMICO", "ANTIECONÔMICO" -> antieconomico += stat.quantidade
+                            "IRRECUPERAVEL", "IRRECUPERÁVEL" -> irrecuperavel += stat.quantidade
                             else -> semInfo += stat.quantidade
                         }
                     }
                     
-                    Log.d(TAG, "Estados: Bom=$bom, Regular=$regular, Ruim=$ruim, Péssimo=$pessimo, Sem Info=$semInfo")
+                    Log.d(TAG, "Estados: Bom=$bom, Ocioso=$ocioso, Recuperável=$recuperavel, Antieconômico=$antieconomico, Irrecuperável=$irrecuperavel, Sem Info=$semInfo")
                     
                     StatusData(
                         bom = bom,
-                        regular = regular,
-                        ruim = ruim,
-                        pessimo = pessimo,
+                        ocioso = ocioso,
+                        recuperavel = recuperavel,
+                        antieconomico = antieconomico,
+                        irrecuperavel = irrecuperavel,
                         semInfo = semInfo
                     )
                 },
                 onFailure = { error ->
                     Log.e(TAG, "Erro ao buscar estados de conservação", error)
-                    StatusData(0, 0, 0, 0, 0)
+                    StatusData(0, 0, 0, 0, 0, 0)
                 }
             )
         } catch (e: Exception) {
             Log.e(TAG, "Exceção ao buscar estados de conservação", e)
-            StatusData(0, 0, 0, 0, 0)
+            StatusData(0, 0, 0, 0, 0, 0)
         }
     }
 
@@ -209,9 +212,10 @@ class ChartDataProvider @Inject constructor(
  */
 data class StatusData(
     val bom: Int,
-    val regular: Int,
-    val ruim: Int,
-    val pessimo: Int,
+    val ocioso: Int,
+    val recuperavel: Int,
+    val antieconomico: Int,
+    val irrecuperavel: Int,
     val semInfo: Int = 0
 )
 
