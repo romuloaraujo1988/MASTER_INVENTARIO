@@ -94,7 +94,9 @@ interface ApiService {
     suspend fun getColetas(): Response<ApiResponse<List<ColetaDto>>>
     
     @GET("api/mobile/coletas/all")
-    suspend fun buscarTodasColetasSemPaginacao(): Response<ColetasAllResponse>
+    suspend fun buscarTodasColetasSemPaginacao(
+        @Query("inventarioId") inventarioId: Int? = null
+    ): Response<ColetasAllResponse>
     
     /**
      * Buscar todas as salas que possuem coletas registradas

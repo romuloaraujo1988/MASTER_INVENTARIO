@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inventario.mobile.data.remote.api.ApiClient
 import com.inventario.mobile.data.remote.dto.LoginRequest
 import com.inventario.mobile.domain.repository.AuthRepository
 import com.inventario.mobile.utils.ErrorMapper
@@ -480,60 +481,75 @@ class LoginViewModel(
     }
     
     /**
-     * Realiza login offline usando dados salvos localmente
+     * Realiza login com biometria
+     * Tenta renovar token no servidor (online) ou usa token salvo (offline)
      * Deve ser chamado APÓS validação biométrica bem-sucedida
      */
     fun loginWithBiometric() {
         viewModelScope.launch {
             try {
                 Log.d("LoginViewModel", "═══════════════════════════════════════════")
-                Log.d("LoginViewModel", "INICIANDO LOGIN OFFLINE COM BIOMETRIA")
+                Log.d("LoginViewModel", "INICIANDO LOGIN COM BIOMETRIA")
                 
                 _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
                 
-                // Carregar dados do usuário local
-                val username = preferencesManager.getSavedUsername()
-                val fullName = preferencesManager.getSavedUserFullName()
-                val token = preferencesManager.getAccessToken()
-                val isLoggedIn = preferencesManager.isLoggedIn()
+                // Criar Use Case (sem Hilt por enquanto)
+                val authApi: com.inventario.mobile.data.remote.api.AuthApi = ApiClient.getAuthApi(context)
+                val renovarTokenUseCase = com.inventario.mobile.domain.usecase.RenovarTokenComBiometriaUseCase(
+                    authApi, 
+                    preferencesManager,
+                    context
+                )
                 
-                Log.d("LoginViewModel", "Username: $username")
-                Log.d("LoginViewModel", "Nome completo: $fullName")
-                Log.d("LoginViewModel", "Token presente: ${token != null}")
-                Log.d("LoginViewModel", "Já logado: $isLoggedIn")
-                
-                if (username != null && fullName != null && token != null) {
-                    // Login offline bem-sucedido
-                    Log.d("LoginViewModel", "✅ LOGIN OFFLINE BEM-SUCEDIDO")
-                    Log.d("LoginViewModel", "Usuário: $fullName")
-                    Log.d("LoginViewModel", "Modo: OFFLINE")
-                    Log.d("LoginViewModel", "═══════════════════════════════════════════")
-                    
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        isLoginSuccessful = true,
-                        offlineMode = true
-                    )
-                } else {
-                    // Dados locais inválidos ou incompletos
-                    Log.e("LoginViewModel", "❌ DADOS LOCAIS INVÁLIDOS")
-                    Log.e("LoginViewModel", "Username: ${username != null}")
-                    Log.e("LoginViewModel", "FullName: ${fullName != null}")
-                    Log.e("LoginViewModel", "Token: ${token != null}")
-                    Log.e("LoginViewModel", "═══════════════════════════════════════════")
-                    
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = "Dados locais inválidos. Conecte-se à internet para fazer login."
-                    )
-                }
+                // Tentar renovar token
+                renovarTokenUseCase().fold(
+                    onSuccess = { result ->
+                        Log.d("LoginViewModel", "✅ LOGIN BIOMÉTRICO BEM-SUCEDIDO")
+                        Log.d("LoginViewModel", "Usuário: ${result.fullName}")
+                        Log.d("LoginViewModel", "Modo: ${if (result.isOnline) "ONLINE" else "OFFLINE"}")
+                        Log.d("LoginViewModel", "Token renovado: ${result.isOnline}")
+                        Log.d("LoginViewModel", "═══════════════════════════════════════════")
+                        
+                        // CRÍTICO: Forçar recriação do ApiService após login biométrico para usar novo token
+                        com.inventario.mobile.data.remote.api.ApiClient.recreateApiService(context)
+                        Log.d("LoginViewModel", "✓ ApiService recriado com novo token biométrico")
+                        
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            isLoginSuccessful = true,
+                            biometricEnabled = true, // ✅ Já autenticou com biometria — não oferecer setup novamente
+                            offlineMode = !result.isOnline,
+                            savedUserName = result.fullName
+                        )
+                    },
+                    onFailure = { error ->
+                        Log.e("LoginViewModel", "❌ FALHA NO LOGIN BIOMÉTRICO")
+                        Log.e("LoginViewModel", "Erro: ${error.message}")
+                        Log.e("LoginViewModel", "═══════════════════════════════════════════")
+
+                        val msg = when {
+                            error.message?.contains("Dados locais inválidos", ignoreCase = true) == true ||
+                            error.message?.contains("Dados locais incompletos", ignoreCase = true) == true ->
+                                "⚠️ Sem dados locais. Conecte-se à internet e faça login com senha primeiro."
+                            error.message?.contains("Refresh token", ignoreCase = true) == true ||
+                            error.message?.contains("Sessão expirada", ignoreCase = true) == true ->
+                                "Sessão expirada. Faça login com sua senha uma vez para renovar."
+                            else -> error.message ?: "Erro ao fazer login com biometria"
+                        }
+
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = msg
+                        )
+                    }
+                )
             } catch (e: Exception) {
-                Log.e("LoginViewModel", "❌ ERRO NO LOGIN OFFLINE", e)
+                Log.e("LoginViewModel", "❌ ERRO INESPERADO NO LOGIN BIOMÉTRICO", e)
                 Log.e("LoginViewModel", "═══════════════════════════════════════════")
                 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = "Erro ao fazer login offline: ${e.message}"
+                    errorMessage = "Erro inesperado: ${e.message}"
                 )
             }
         }
@@ -633,7 +649,8 @@ class LoginViewModel(
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
                 isLoginSuccessful = true,
-                offlineMode = true
+                offlineMode = true,
+                biometricEnabled = preferencesManager.isBiometricEnabled() // ✅ Preservar estado real
             )
         } else {
             _uiState.value = _uiState.value.copy(

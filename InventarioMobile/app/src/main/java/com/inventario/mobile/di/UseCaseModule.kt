@@ -1,7 +1,9 @@
 package com.inventario.mobile.di
 
 import android.content.Context
+import com.inventario.mobile.api.SalaApi
 import com.inventario.mobile.data.local.LocalDataManager
+import com.inventario.mobile.data.local.dao.SalaDao
 import com.inventario.mobile.data.repository.PatrimonioRepositoryImpl
 import com.inventario.mobile.domain.repository.ColetaRepository
 import com.inventario.mobile.domain.repository.PatrimonioRepository
@@ -10,6 +12,8 @@ import com.inventario.mobile.domain.usecase.BuscarEstatisticasSalaUseCase
 import com.inventario.mobile.domain.usecase.BuscarPatrimoniosPorSalaUseCase
 import com.inventario.mobile.domain.usecase.BuscarSalasComProgressoUseCase
 import com.inventario.mobile.domain.usecase.RegistrarColetaUseCase
+import com.inventario.mobile.domain.usecase.SincronizarSalasUseCase
+import com.inventario.mobile.utils.PreferencesManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -85,5 +89,19 @@ object UseCaseModule {
         salaRepository: SalaRepository
     ): BuscarSalasComProgressoUseCase {
         return BuscarSalasComProgressoUseCase(salaRepository)
+    }
+    
+    /**
+     * Fornece SincronizarSalasUseCase para sincronização incremental de salas
+     */
+    @Provides
+    @ActivityScoped
+    fun provideSincronizarSalasUseCase(
+        salaApi: SalaApi,
+        salaDao: SalaDao,
+        @ApplicationContext context: Context
+    ): SincronizarSalasUseCase {
+        val preferencesManager = PreferencesManager(context)
+        return SincronizarSalasUseCase(salaApi, salaDao, preferencesManager)
     }
 }

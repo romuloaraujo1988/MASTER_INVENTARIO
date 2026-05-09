@@ -112,6 +112,27 @@ class InventarioPorResponsavelFragment : Fragment() {
             aplicarFiltros()
         }
         
+        // Configurar campo de busca por descrição
+        binding.edtBuscaDescricao.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                viewModel.searchPatrimonios(s?.toString() ?: "")
+            }
+        })
+        
+        // Ação de busca no teclado
+        binding.edtBuscaDescricao.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
+                // Esconder teclado
+                val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                imm.hideSoftInputFromWindow(binding.edtBuscaDescricao.windowToken, 0)
+                true
+            } else {
+                false
+            }
+        }
+        
         // Botão limpar filtros
         binding.btnLimparFiltros.setOnClickListener {
             limparFiltros()
@@ -156,6 +177,10 @@ class InventarioPorResponsavelFragment : Fragment() {
         
         statusColetaSelecionado = null
         binding.chipTodos.isChecked = true
+        
+        // Limpar campo de busca
+        binding.edtBuscaDescricao.setText("")
+        viewModel.searchPatrimonios("")
         
         viewModel.clearPatrimonios()
     }

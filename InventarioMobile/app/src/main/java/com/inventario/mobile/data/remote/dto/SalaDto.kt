@@ -37,7 +37,7 @@ data class SalaDto(
     val nomeSetor: String?,
     
     @SerializedName("andar")
-    val andar: Int?,
+    val andar: String?,
     
     @SerializedName("bloco")
     val bloco: String?,

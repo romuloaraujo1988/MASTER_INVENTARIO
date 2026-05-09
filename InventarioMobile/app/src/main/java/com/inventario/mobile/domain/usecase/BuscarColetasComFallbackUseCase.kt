@@ -5,6 +5,7 @@ import com.inventario.mobile.data.local.dao.ColetaDao
 import com.inventario.mobile.data.model.Coleta
 import com.inventario.mobile.data.remote.api.ApiService
 import com.inventario.mobile.util.NetworkChecker
+import com.inventario.mobile.utils.PreferencesManager
 import javax.inject.Inject
 
 /**
@@ -22,7 +23,8 @@ import javax.inject.Inject
 class BuscarColetasComFallbackUseCase @Inject constructor(
     private val apiService: ApiService,
     private val coletaDao: ColetaDao,
-    private val networkChecker: NetworkChecker
+    private val networkChecker: NetworkChecker,
+    private val preferencesManager: PreferencesManager
 ) {
     companion object {
         private const val TAG = "BuscarColetasFallback"
@@ -55,8 +57,9 @@ class BuscarColetasComFallbackUseCase @Inject constructor(
      */
     private suspend fun buscarDoServidorComFallback(): Result<ColetasResult> {
         return try {
-            Log.d(TAG, "Buscando coletas do servidor...")
-            val response = apiService.buscarTodasColetasSemPaginacao()
+            val idInventarioAtivo = preferencesManager.getInventarioAtivoId()
+            Log.d(TAG, "Buscando coletas do servidor (inventárioId=$idInventarioAtivo)...")
+            val response = apiService.buscarTodasColetasSemPaginacao(idInventarioAtivo)
             
             if (response.isSuccessful && response.body() != null) {
                 val coletasAllResponse = response.body()!!
@@ -94,9 +97,14 @@ class BuscarColetasComFallbackUseCase @Inject constructor(
                     
                     Log.d(TAG, "✓ ${coletasServidor.size} coletas sincronizadas do servidor")
                     
-                    // Buscar coletas pendentes locais (não sincronizadas)
+                    // Buscar coletas pendentes locais APENAS do inventário ativo
+                    val idInventarioAtivo = preferencesManager.getInventarioAtivoId() ?: 0
                     val coletasPendentesLocais = try {
-                        val entities = coletaDao.buscarPendentes()
+                        val entities = if (idInventarioAtivo > 0) {
+                            coletaDao.buscarPendentes(idInventarioAtivo)
+                        } else {
+                            coletaDao.buscarPendentes()
+                        }
                         entities.map { entity ->
                             Coleta(
                                 id = entity.id.toInt(),
@@ -108,8 +116,21 @@ class BuscarColetasComFallbackUseCase @Inject constructor(
                                 dataColeta = entity.dataColeta.toString(),
                                 nomeSala = entity.nomeSala,
                                 localizacaoAtual = entity.nomeSala,
+                                // Para pendentes locais, a localização "encontrada" é a mesma
+                                // sala gravada no momento da coleta (não há dado separado na entity).
+                                localizacaoEncontrada = entity.nomeSala,
                                 observacoes = entity.observacao,
-                                sincronizado = false  // ✓ Pendentes
+                                sincronizado = false,  // ✓ Pendentes
+                                // Preservar o estado de conservação selecionado na coleta
+                                estadoEncontrado = entity.estadoPatrimonio,
+                                // Preservar campos de item sem etiqueta para que o filtro
+                                // "Sem Etiqueta" funcione offline. (Bug corrigido em v2.20.1)
+                                semEtiqueta = entity.semEtiqueta,
+                                descricaoItemSemEtiqueta = entity.descricaoItemSemEtiqueta,
+                                categoriaItemSemEtiqueta = entity.categoriaItemSemEtiqueta,
+                                // Campo de erro de sincronização (v2.6) — útil no menu de reenvio
+                                erroSincronizacao = entity.erroSincronizacao,
+                                tentativasSincronizacao = entity.tentativasSincronizacao
                             )
                         }
                     } catch (e: Exception) {
@@ -150,7 +171,14 @@ class BuscarColetasComFallbackUseCase @Inject constructor(
     private suspend fun buscarDoLocal(): Result<ColetasResult> {
         return try {
             Log.d(TAG, "Buscando coletas do banco local...")
-            val entities = coletaDao.buscarTodas()
+            val idInventarioAtivo = preferencesManager.getInventarioAtivoId() ?: 0
+            val entities = if (idInventarioAtivo > 0) {
+                Log.d(TAG, "Filtrando por inventário ativo: $idInventarioAtivo")
+                coletaDao.buscarTodas(idInventarioAtivo)
+            } else {
+                Log.w(TAG, "Sem inventário ativo, buscando todas as coletas")
+                coletaDao.buscarTodas()
+            }
             
             // Converter Entity para data.model.Coleta
             val coletas = entities.map { entity ->
@@ -164,8 +192,22 @@ class BuscarColetasComFallbackUseCase @Inject constructor(
                     dataColeta = entity.dataColeta.toString(),
                     nomeSala = entity.nomeSala,
                     localizacaoAtual = entity.nomeSala,
+                    // Offline: sem dado separado de localização encontrada, usamos a
+                    // própria sala gravada na coleta (mesmo tratamento que o servidor
+                    // aplica quando não há divergência).
+                    localizacaoEncontrada = entity.nomeSala,
                     observacoes = entity.observacao,
-                    sincronizado = entity.sincronizado
+                    sincronizado = entity.sincronizado,
+                    // Campos preservados do banco local para filtros funcionarem offline
+                    // (Bug corrigido em v2.20.1: antes esses campos eram descartados,
+                    //  fazendo o chip "Sem Etiqueta" ficar sempre vazio offline e o
+                    //  estado de conservação não aparecer no histórico local.)
+                    estadoEncontrado = entity.estadoPatrimonio,
+                    semEtiqueta = entity.semEtiqueta,
+                    descricaoItemSemEtiqueta = entity.descricaoItemSemEtiqueta,
+                    categoriaItemSemEtiqueta = entity.categoriaItemSemEtiqueta,
+                    erroSincronizacao = entity.erroSincronizacao,
+                    tentativasSincronizacao = entity.tentativasSincronizacao
                 )
             }
             

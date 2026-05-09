@@ -1,0 +1,9 @@
+tabela_coleta: 8712
+tabela_coleta_componente: 580
+Total: 9292
+
+  BOM: 7395
+  IRRECUPERÁVEL: 1130
+  OCIOSO: 89
+  N/A: 68
+  RECUPERÁVEL: 30

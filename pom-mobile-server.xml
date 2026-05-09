@@ -162,7 +162,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>com.inventario.MobileApiApplication</mainClass>
+                    <mainClass>com.inventario.sihcp.MobileApiApplication</mainClass>
                     <executable>true</executable>
                 </configuration>
                 <executions>

@@ -23,7 +23,7 @@ import com.inventario.mobile.data.local.entity.*
         HistoricoScanEntity::class,  // v2.11: Histórico de scans
         FotoReferenciaEntity::class  // v2.9: Fotos de referência por descrição
     ],
-    version = 11,  // v2.9: Adicionada tabela de fotos de referência
+    version = 16,  // v2.20.12: adiciona localizacaoEncontrada na tabela coleta
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -135,6 +135,95 @@ abstract class AppDatabase : RoomDatabase() {
         }
         
         /**
+         * Migração da versão 12 para 13
+         * Preparação para campos de divergência
+         * v2.13: Migração intermediária
+         */
+        private val MIGRATION_12_13 = object : androidx.room.migration.Migration(12, 13) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                // Migração vazia - apenas incrementa versão
+                // Preparação para a próxima migração que adiciona campos de divergência
+            }
+        }
+        
+        /**
+         * Migração da versão 13 para 14
+         * Adiciona campos de divergência automática na tabela coleta
+         * v2.13: Detecta e registra divergência de localização e estado
+         */
+        private val MIGRATION_13_14 = object : androidx.room.migration.Migration(13, 14) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE coleta ADD COLUMN divergencia INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE coleta ADD COLUMN motivoDivergencia TEXT")
+                // Índice para consultas rápidas de divergências (estatísticas)
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_coleta_divergencia ON coleta(divergencia)")
+            }
+        }
+
+        /**
+         * Migração da versão 14 para 15
+         * Adiciona campos de auditoria da coleta diretamente na tabela patrimonio
+         * v2.20.7: permite que relatórios exportados mostrem localização encontrada
+         * e estado encontrado mesmo após a coleta ter sido apagada pós-sync.
+         */
+        private val MIGRATION_14_15 = object : androidx.room.migration.Migration(14, 15) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE patrimonio ADD COLUMN localizacaoEncontrada TEXT")
+                database.execSQL("ALTER TABLE patrimonio ADD COLUMN estadoEncontrado TEXT")
+
+                // Backfill: para patrimônios já coletados cujas coletas ainda existem
+                // no banco local, copia os valores da coleta mais recente.
+                // Após limparSincronizadas() as coletas somem, mas aqui garantimos que
+                // todo dado disponível no momento da migração seja preservado.
+                database.execSQL(
+                    """
+                    UPDATE patrimonio SET
+                        localizacaoEncontrada = (
+                            SELECT c.nomeSala FROM coleta c
+                            WHERE c.idPatrimonio = patrimonio.id
+                            ORDER BY c.dataColeta DESC LIMIT 1
+                        ),
+                        estadoEncontrado = (
+                            SELECT c.estadoPatrimonio FROM coleta c
+                            WHERE c.idPatrimonio = patrimonio.id
+                            ORDER BY c.dataColeta DESC LIMIT 1
+                        ),
+                        coletadoPor = COALESCE(coletadoPor, (
+                            SELECT c.nomeUsuario FROM coleta c
+                            WHERE c.idPatrimonio = patrimonio.id
+                            ORDER BY c.dataColeta DESC LIMIT 1
+                        )),
+                        dataColeta = COALESCE(dataColeta, (
+                            SELECT c.dataColeta FROM coleta c
+                            WHERE c.idPatrimonio = patrimonio.id
+                            ORDER BY c.dataColeta DESC LIMIT 1
+                        ))
+                    WHERE coletado = 1
+                    """.trimIndent()
+                )
+            }
+        }
+
+        /**
+         * Migração da versão 11 para 12
+         * Corrige índices faltantes na tabela patrimonio
+         * v2.14: Adiciona índices compostos para otimização de busca
+         */
+        private val MIGRATION_11_12 = object : androidx.room.migration.Migration(11, 12) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                // Adicionar índices faltantes na tabela patrimonio
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_nomeSala ON patrimonio(nomeSala)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_nomeResponsavel ON patrimonio(nomeResponsavel)")
+                
+                // Índices compostos para filtros de busca
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_coletado_numeroPatrimonio ON patrimonio(coletado, numeroPatrimonio)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_coletado_descricao ON patrimonio(coletado, descricao)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_coletado_nomeSala ON patrimonio(coletado, nomeSala)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_idSala_coletado ON patrimonio(idSala, coletado)")
+            }
+        }
+        
+        /**
          * Migração da versão 6 para 7
          * Corrige estrutura da tabela patrimonio (numeroSerie)
          */
@@ -157,12 +246,8 @@ abstract class AppDatabase : RoomDatabase() {
                         setorNome TEXT,
                         idSala INTEGER,
                         nomeSala TEXT,
-                        salaId INTEGER,
-                        salaNome TEXT,
                         idResponsavel INTEGER,
                         nomeResponsavel TEXT,
-                        responsavelId INTEGER,
-                        responsavelNome TEXT,
                         status TEXT,
                         coletado INTEGER NOT NULL DEFAULT 0,
                         dataColeta INTEGER,
@@ -173,12 +258,23 @@ abstract class AppDatabase : RoomDatabase() {
                     )
                 """)
                 
-                // Recriar índices
+                // Recriar TODOS os índices conforme definido na PatrimonioEntity
+                // Índice único
                 database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_patrimonio_numero ON patrimonio(numero)")
+                
+                // Índices simples
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_numeroPatrimonio ON patrimonio(numeroPatrimonio)")
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_descricao ON patrimonio(descricao)")
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_idSala ON patrimonio(idSala)")
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_coletado ON patrimonio(coletado)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_nomeSala ON patrimonio(nomeSala)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_nomeResponsavel ON patrimonio(nomeResponsavel)")
+                
+                // Índices compostos para filtros de busca
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_coletado_numeroPatrimonio ON patrimonio(coletado, numeroPatrimonio)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_coletado_descricao ON patrimonio(coletado, descricao)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_coletado_nomeSala ON patrimonio(coletado, nomeSala)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_patrimonio_idSala_coletado ON patrimonio(idSala, coletado)")
             }
         }
         
@@ -240,14 +336,66 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
         
+        /**
+         * Migração da versão 15 para 16
+         * Adiciona coluna localizacaoEncontrada na tabela coleta.
+         * v2.20.12: separa "onde o item foi encontrado" (localizacaoEncontrada)
+         * de "sala de origem do patrimônio" (nomeSala), corrigindo o bug em que
+         * as telas de coleta exibiam a localização de origem em vez da localização
+         * onde o item foi realmente encontrado durante o inventário.
+         *
+         * Backfill: para coletas existentes, copia nomeSala → localizacaoEncontrada
+         * pois antes os dois valores eram armazenados no mesmo campo.
+         */
+        private val MIGRATION_15_16 = object : androidx.room.migration.Migration(15, 16) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE coleta ADD COLUMN localizacaoEncontrada TEXT")
+                // Backfill: coletas antigas tinham o local encontrado em nomeSala
+                database.execSQL("UPDATE coleta SET localizacaoEncontrada = nomeSala WHERE localizacaoEncontrada IS NULL")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
+                // Passphrase do SQLCipher via Android Keystore — spec correcoes-seguranca Req 3
+                val passphraseBytes = com.inventario.mobile.security.SqlCipherKeyManager
+                    .getInstance(context)
+                    .getOrCreatePassphrase()
+                val factory = net.sqlcipher.database.SupportFactory(passphraseBytes)
+
+                val dbName = "inventario_offline_secure.db"
+
+                // Remove o banco antigo não-criptografado se ele existir
+                // (migração pré-SQLCipher → SQLCipher, mantida para dispositivos
+                // muito antigos que ainda não haviam feito essa transição)
+                val oldDbFile = context.getDatabasePath("inventario_offline.db")
+                if (oldDbFile.exists()) {
+                    oldDbFile.delete()
+                    android.util.Log.d("AppDatabase", "Banco de dados antigo apagado para dar lugar ao novo encriptado.")
+                }
+
+                // Migração one-shot: a passphrase mudou de literal "inventario_secure_key"
+                // para uma passphrase aleatória no Android Keystore. O banco antigo não pode
+                // ser aberto com a nova chave, então deletamos para reconstruir na primeira
+                // execução após a atualização. Coletas pendentes não sincronizadas serão
+                // perdidas — coordenar sync forçado antes do upgrade (spec correcoes-seguranca Tarefa 19).
+                val migrationPrefs = context.getSharedPreferences("sqlcipher_migration", android.content.Context.MODE_PRIVATE)
+                if (!migrationPrefs.getBoolean("migrated_to_keystore_v1", false)) {
+                    val oldSecureDbFile = context.getDatabasePath("inventario_offline_secure.db")
+                    if (oldSecureDbFile.exists()) {
+                        oldSecureDbFile.delete()
+                        android.util.Log.i("AppDatabase", "Banco antigo removido para migração à passphrase via Keystore")
+                    }
+                    migrationPrefs.edit().putBoolean("migrated_to_keystore_v1", true).apply()
+                }
+
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "inventario_offline.db"
+                    dbName
                 )
-                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)  // v2.9: Adicionar migração 10->11 (fotos referência)
+                    .openHelperFactory(factory)
+                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)  // v2.20.12: localizacaoEncontrada na coleta
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

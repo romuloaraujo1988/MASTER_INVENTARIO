@@ -90,12 +90,8 @@ class SyncRepository @Inject constructor(
                     setorNome = null,
                     idSala = dto.salaId,
                     nomeSala = dto.salaNome,
-                    salaId = dto.salaId,
-                    salaNome = dto.salaNome,
                     idResponsavel = dto.responsavelId,
                     nomeResponsavel = dto.responsavelNome,
-                    responsavelId = dto.responsavelId,
-                    responsavelNome = dto.responsavelNome,
                     status = dto.estado,
                     coletado = dto.coletado
                 )
@@ -209,12 +205,8 @@ class SyncRepository @Inject constructor(
                                 setorNome = patrimonio.setorNome,
                                 idSala = patrimonio.salaId?.toInt(),
                                 nomeSala = patrimonio.salaNome,
-                                salaId = patrimonio.salaId?.toInt(),
-                                salaNome = patrimonio.salaNome,
                                 idResponsavel = patrimonio.responsavelId?.toInt(),
                                 nomeResponsavel = patrimonio.responsavelNome,
-                                responsavelId = patrimonio.responsavelId?.toInt(),
-                                responsavelNome = patrimonio.responsavelNome,
                                 status = patrimonio.estado,
                                 coletado = patrimonio.coletado
                             )

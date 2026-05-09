@@ -72,5 +72,20 @@ data class Coleta(
     // v2.7: Campos para itens sem etiqueta
     val semEtiqueta: Boolean = false,
     val descricaoItemSemEtiqueta: String? = null,
-    val categoriaItemSemEtiqueta: String? = null
+    val categoriaItemSemEtiqueta: String? = null,
+    
+    // v2.1: Métricas de Tempo
+    val tempoColetaSegundos: Int? = null,
+    val tempoScanSegundos: Int? = null,
+    val tempoPreenchimentoSegundos: Int? = null,
+    val metodoColeta: String? = null,
+    val tipoScan: String? = null,
+
+    // v2.13: Divergência automática
+    val divergencia: Boolean = false,
+    val motivoDivergencia: String? = null,  // LOCALIZACAO_DIFERENTE, ESTADO_DIFERENTE, LOCALIZACAO_E_ESTADO
+
+    // v2.20.12: Local onde o item foi REALMENTE encontrado durante a coleta.
+    // Distinto de `localizacaoAtual` (que é a sala de origem do patrimônio).
+    val localizacaoEncontrada: String? = null
 )

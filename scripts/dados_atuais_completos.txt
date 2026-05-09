@@ -1,0 +1,137 @@
+======================================================================
+1. TOTAIS GERAIS
+======================================================================
+  Total cadastrados        : 11570
+  Total coletas principais : 8712
+  Total coletas compostas  : 580
+  Unicos coleta principal  : 8606
+  Unicos total (union)     : 8936  (77.23%)
+  Nao localizados          : 2634  (22.77%)
+  Total divergencias       : 2234  (25.64%)
+  Coletores distintos      : 13
+  Periodo                  : 18/11/2025 a 19/02/2026
+  Dias com coleta          : 34
+  Tempo medio coleta (s)   : 8.86
+  Sem etiqueta             : 106  (1.22%)
+
+======================================================================
+2. ESTADO DE CONSERVACAO
+======================================================================
+  BOM                  :   7313  (83.94%)
+  IRRECUPERÁVEL        :   1130  (12.97%)
+  OCIOSO               :     89  (1.02%)
+  PENDENTE             :     81  (0.93%)
+  N/A                  :     68  (0.78%)
+  RECUPERÁVEL          :     30  (0.34%)
+  COLETADO             :      1  (0.01%)
+
+======================================================================
+3. TOP 15 SALAS POR VOLUME (localizacao_atual)
+======================================================================
+  Sala                                                       Col   %Tot   %Irr   Div   %Div
+  ------------------------------------------------------- ------ ------ ------ ----- ------
+  BIBLIOTECA(IFMT - PDL)                                    4153 47.67%  0.02%    71  1.71%
+  ?                                                          747  8.57% 94.91%     0  0.00%
+  MEZANINO AUDITORIO(IFMT - PDL)                             604  6.93% 60.76%   603 99.83%
+  AUDITÓRIO(IFMT - PDL)                                      220  2.53%  0.45%    38 17.27%
+  GABINETE (IFMT - PDL)                                      194  2.23%  0.00%   153 78.87%
+  SALA DE PROF.(IFMT - PDL)                                  169  1.94%  1.78%    33 19.53%
+  ALMOXARIFADO PDL - 1 SALA PREFEITURA(IFMT - PDL)           160  1.84%  0.00%   160 100.00%
+  Área do Campus(IFMT - PDL)                                 150  1.72%  0.67%   139 92.67%
+  DAP(IFMT - PDL)                                            126  1.45%  1.59%    32 25.40%
+  CAE(IFMT - PDL)                                            113  1.30%  1.77%    65 57.52%
+  LAB. INFORMATICA A9(IFMT - PDL)                            109  1.25%  1.83%    16 14.68%
+  LAB. A2 TECN. MATERIAIS(BLOCO DE LABORATORIOS)              99  1.14%  0.00%    53 53.54%
+  SALA TI SERVIDOR DE REDE(IFMT - PDL)                        95  1.09%  2.11%    53 55.79%
+  Área Externa (IFMT - PDL)                                   91  1.04% 16.48%    67 73.63%
+  LAB. INFORMATICA A10(IFMT - PDL)                            90  1.03%  0.00%    14 15.56%
+
+======================================================================
+4. TOP 20 SALAS — taxa de divergencia (min 10 coletas)
+======================================================================
+   #  Sala                                                   Col   Div    Taxa    Imp
+   1.  MEZANINO AUDITORIO(IFMT - PDL)                         604   603  99.83%  26.99%
+   2.  ALMOXARIFADO PDL - 1 SALA PREFEITURA(IFMT - PDL)       160   160 100.00%   7.16%
+   3.  GABINETE (IFMT - PDL)                                  194   153  78.87%   6.85%
+   4.  Área do Campus(IFMT - PDL)                             150   139  92.67%   6.22%
+   5.  BIBLIOTECA(IFMT - PDL)                                4153    71   1.71%   3.18%
+   6.  Área Externa (IFMT - PDL)                               91    67  73.63%   3.00%
+   7.  CAE(IFMT - PDL)                                        113    65  57.52%   2.91%
+   8.  SALA DE T.I.(IFMT - PDL)                                71    54  76.06%   2.42%
+   9.  SALA TI SERVIDOR DE REDE(IFMT - PDL)                    95    53  55.79%   2.37%
+  10.  LAB. A2 TECN. MATERIAIS(BLOCO DE LABORATORIOS)          99    53  53.54%   2.37%
+  11.  LAB. B4 Automação industrial, Medidas elétricas e Ef    47    47 100.00%   2.10%
+  12.  SALA DE DESENHO(IFMT - PDL)                             46    46 100.00%   2.06%
+  13.  PREFEITURA(BLOCO DE LABORATORIOS)                       41    38  92.68%   1.70%
+  14.  AUDITÓRIO(IFMT - PDL)                                  220    38  17.27%   1.70%
+  15.  LAB. B2 Eletricidade básica, Automação Residencial(B    38    38 100.00%   1.70%
+  16.  SALA DE PROF.(IFMT - PDL)                              169    33  19.53%   1.48%
+  17.  DAP(IFMT - PDL)                                        126    32  25.40%   1.43%
+  18.  LAB. A1 HIDR. PNEUM.(BLOCO DE LABORATORIOS)             28    28 100.00%   1.25%
+  19.  LAB. B1 Controle e Automação(BLOCO DE LABORATORIOS)     37    22  59.46%   0.98%
+  20.  LAB-ETEC(IFMT - PDL)                                    19    19 100.00%   0.85%
+
+======================================================================
+5. TOP 15 DESTINOS — onde foram encontrados os itens divergentes
+======================================================================
+  SALA  DO DESFAZIMENTO(PREDIO ANTIGO)                    | div:   490 (21.93%) | 15 origens
+  AUDITÓRIO                                               | div:   196 (8.77%) | 13 origens
+  ALMOXARIFADO 1                                          | div:   140 (6.27%) | 16 origens
+  HANGAR(PROJETO  HANGAR)                                 | div:   113 (5.06%) | 14 origens
+  Protocolo                                               | div:   110 (4.92%) | 24 origens
+  MEZANINO AUDITORIO                                      | div:    94 (4.21%) | 9 origens
+  Área do Campus                                          | div:    79 (3.54%) | 12 origens
+  BIBLIOTECA                                              | div:    75 (3.36%) | 15 origens
+  SALA DE PROF.                                           | div:    65 (2.91%) | 27 origens
+  SALA DE AULA A8                                         | div:    60 (2.69%) | 2 origens
+  LAB. DE AUTOMAÇÃO                                       | div:    56 (2.51%) | 13 origens
+  CORREDOR 2º ANDAR                                       | div:    55 (2.46%) | 9 origens
+  SALA DOS PROFESSORES 2(PREDIO ANTIGO)                   | div:    44 (1.97%) | 22 origens
+  INSTALACÕES-ELETRICA                                    | div:    42 (1.88%) | 5 origens
+  Área Externa                                            | div:    38 (1.70%) | 14 origens
+
+======================================================================
+6. DIVERGENCIAS X ESTADO DE CONSERVACAO
+======================================================================
+  Estado                 Total    Div    Taxa  Impacto
+  BOM                     7313   1695  23.18%   75.87%
+  IRRECUPERÁVEL           1130    416  36.81%   18.62%
+  OCIOSO                    89     86  96.63%    3.85%
+  PENDENTE                  81     25  30.86%    1.12%
+  N/A                       68      0   0.00%    0.00%
+  RECUPERÁVEL               30     12  40.00%    0.54%
+  COLETADO                   1      0   0.00%    0.00%
+
+======================================================================
+7. PERFORMANCE DOS COLETORES
+======================================================================
+  Colunas tabela_coletor: ['id', 'nome_coletor', 'cpf', 'email', 'telefone', 'matricula', 'cargo', 'id_setor', 'ativo', 'data_cadastro', 'observacoes']
+  Usando coluna: nome_coletor
+  Coletor                                Col   Div    Taxa    Part
+  COLETOR PRINCIPAL                      711     2   0.28%   8.16%
+  COLETOR TI                             456   297  65.13%   5.23%
+  COLETOR GERAL 2                         43    14  32.56%   0.49%
+
+======================================================================
+8. TOP 10 DIAS — maior taxa de divergencia
+======================================================================
+  2025-12-22  col:   42  div:   42  taxa:100.00%
+  2025-12-18  col:   34  div:   34  taxa:100.00%
+  2025-12-16  col:   68  div:   68  taxa:100.00%
+  2025-12-14  col:  168  div:  166  taxa:98.81%
+  2025-12-08  col:  125  div:  120  taxa:96.00%
+  2026-01-05  col:   98  div:   87  taxa:88.78%
+  2026-01-06  col:   38  div:   29  taxa:76.32%
+  2025-12-15  col:  247  div:  178  taxa:72.06%
+  2025-11-29  col:  117  div:   80  taxa:68.38%
+  2025-12-29  col:   44  div:   27  taxa:61.36%
+
+======================================================================
+9. SALA DE DESFAZIMENTO
+======================================================================
+  'SALA  DO DESFAZIMENTO(PREDIO ANTIGO)'
+    Total: 17 | Irrec: 7 (41.18%) | Bom: 10 (58.82%) | Ocioso: 0 (0.0%) | Div: 14 (82.35%)
+
+======================================================================
+10. SECRETARIA
+======================================================================

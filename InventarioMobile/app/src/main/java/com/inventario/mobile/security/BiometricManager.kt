@@ -25,7 +25,7 @@ class BiometricAuthManager(private val context: Context) {
     fun isBiometricAvailable(): BiometricAvailability {
         val biometricManager = BiometricManager.from(context)
         
-        return when (biometricManager.canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)) {
+        return when (biometricManager.canAuthenticate(BIOMETRIC_WEAK)) {
             BiometricManager.BIOMETRIC_SUCCESS -> {
                 Log.d(TAG, "Biometria disponível")
                 BiometricAvailability.Available
@@ -133,7 +133,7 @@ class BiometricAuthManager(private val context: Context) {
             .setTitle(title)
             .setSubtitle(subtitle)
             .setDescription(description)
-            .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
+            .setNegativeButtonText(negativeButtonText)
             .build()
 
         biometricPrompt.authenticate(promptInfo)
@@ -186,7 +186,6 @@ class BiometricAuthManager(private val context: Context) {
             .setSubtitle(subtitle)
             .setDescription(description)
             .setNegativeButtonText("Cancelar")
-            .setAllowedAuthenticators(BIOMETRIC_STRONG)
             .build()
 
         biometricPrompt.authenticate(promptInfo)

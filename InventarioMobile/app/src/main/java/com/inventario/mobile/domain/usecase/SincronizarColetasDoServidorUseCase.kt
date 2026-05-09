@@ -122,7 +122,8 @@ class SincronizarColetasDoServidorUseCase @Inject constructor(
             numeroPatrimonio = dto.numeroPatrimonio ?: "",
             idInventario = dto.idInventario ?: 0,
             idSala = dto.idSala,
-            nomeSala = dto.nomeSala,
+            nomeSala = dto.nomeSala,                         // sala de ORIGEM do patrimônio
+            localizacaoEncontrada = dto.localizacaoEncontrada, // onde foi ENCONTRADO
             idResponsavel = null,
             nomeResponsavel = null,
             observacao = dto.observacoes,

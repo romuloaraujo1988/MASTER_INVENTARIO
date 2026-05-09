@@ -1,0 +1,59 @@
+Columns in tabela_sala:
+      column_name                    data_type
+0         id_sala                      integer
+1       descricao            character varying
+2     numero_sala            character varying
+3           andar                      integer
+4           bloco            character varying
+5        id_setor                      integer
+6      capacidade                      integer
+7         area_m2             double precision
+8       tipo_sala            character varying
+9           ativo                      boolean
+10  data_cadastro  timestamp without time zone
+11    observacoes                         text
+12     created_at  timestamp without time zone
+13         numero            character varying
+14           tipo            character varying
+
+Columns in tabela_setor:
+          column_name                    data_type
+0                  id                      integer
+1                nome            character varying
+2           descricao                         text
+3   responsavel_setor            character varying
+4               ativo                      boolean
+5        data_criacao  timestamp without time zone
+6          created_at  timestamp without time zone
+7               email            character varying
+8           id_campus                      integer
+9         observacoes                         text
+10        responsavel            character varying
+11           telefone            character varying
+
+Columns in tabela_patrimonio:
+           column_name                    data_type
+0                   id                      integer
+1               numero            character varying
+2               status            character varying
+3            descricao                         text
+4              rotulos            character varying
+5       id_responsavel                      integer
+6      valor_aquisicao                      numeric
+7     valor_depreciado                      numeric
+8   numero_nota_fiscal            character varying
+9         numero_serie            character varying
+10        data_entrada                         date
+11          data_carga  timestamp without time zone
+12          fornecedor            character varying
+13             id_sala                      integer
+14  estado_conservacao            character varying
+15               marca            character varying
+16              modelo            character varying
+17           categoria            character varying
+18  descricao_resumida            character varying
+19         observacoes                         text
+20            situacao            character varying
+21                  ed            character varying
+22         nota_fiscal            character varying
+

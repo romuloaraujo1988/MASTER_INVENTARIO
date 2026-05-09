@@ -10,14 +10,14 @@
     - Adicionar getter e setter
     - _Requirements: 2.1_
 
-  - [ ] 1.2 Adicionar campo `mensagemDuplicada` (String) no DTO
+  - [x] 1.2 Adicionar campo `mensagemDuplicada` (String) no DTO
     - Adicionar getter e setter
 
 
 
 
     - _Requirements: 2.2_
-  - [ ] 1.3 Adicionar campos `coletaOriginalId`, `dataColetaOriginal`, `coletorOriginal` no DTO
+  - [x] 1.3 Adicionar campos `coletaOriginalId`, `dataColetaOriginal`, `coletorOriginal` no DTO
     - Adicionar getters e setters para os três campos
     - _Requirements: 2.3, 2.4, 1.2_
 
@@ -49,7 +49,7 @@
 
 
 
-  - [ ] 3.2 Criar método privado `criarRespostaDuplicada(Coleta coletaExistente, MobileColetaRequest request)`
+  - [x] 3.2 Criar método privado `criarRespostaDuplicada(Coleta coletaExistente, MobileColetaRequest request)`
     - Preencher todos os campos de duplicata no response
     - Incluir mensagem explicativa para o usuário
 
@@ -71,19 +71,19 @@
 
     - Adicionar log de warning para duplicatas
     - _Requirements: 1.1, 1.3, 3.1_
-  - [ ] 4.2 Garantir que não lança exceção para duplicatas
+  - [x] 4.2 Garantir que não lança exceção para duplicatas
     - Capturar possíveis exceções de constraint violation
     - Converter para resposta de duplicata
     - _Requirements: 1.1_
 
 - [ ] 5. Modificar método registrarColetasEmLote para tratar duplicatas
-  - [ ] 5.1 Adicionar contagem de duplicatas no resultado
+  - [x] 5.1 Adicionar contagem de duplicatas no resultado
     - Novo campo `duplicadas` no Map de resultado
     - Nova lista `coletasDuplicadas` com números dos patrimônios
     - _Requirements: 1.4_
 
 
-  - [ ] 5.2 Processar duplicatas sem interromper o lote
+  - [x] 5.2 Processar duplicatas sem interromper o lote
     - Continuar processando após detectar duplicata
     - Incrementar contador de duplicatas
     - _Requirements: 1.4_
@@ -92,7 +92,7 @@
     - **Validates: Requirements 1.4**
 
 - [ ] 6. Implementar logging de duplicatas
-  - [ ] 6.1 Adicionar log de warning para cada duplicata detectada
+  - [x] 6.1 Adicionar log de warning para cada duplicata detectada
     - Incluir número do patrimônio, ID do inventário, usuário
     - _Requirements: 3.1_
   - [ ] 6.2 Adicionar log informativo para múltiplas tentativas

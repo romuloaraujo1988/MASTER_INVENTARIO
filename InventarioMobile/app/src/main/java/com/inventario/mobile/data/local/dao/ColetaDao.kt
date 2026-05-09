@@ -19,12 +19,18 @@ interface ColetaDao {
     @Query("SELECT * FROM coleta WHERE id = :id")
     suspend fun buscarPorId(id: Long): ColetaEntity?
     
+    @Query("SELECT * FROM coleta WHERE sincronizado = 0 AND idInventario = :idInventario ORDER BY dataColeta ASC")
+    suspend fun buscarPendentes(idInventario: Int): List<ColetaEntity>
+
     @Query("SELECT * FROM coleta WHERE sincronizado = 0 ORDER BY dataColeta ASC")
     suspend fun buscarPendentes(): List<ColetaEntity>
     
     @Query("SELECT * FROM coleta WHERE sincronizado = 0")
     fun observarPendentes(): Flow<List<ColetaEntity>>
     
+    @Query("SELECT * FROM coleta WHERE idInventario = :idInventario ORDER BY dataColeta DESC")
+    suspend fun buscarTodas(idInventario: Int): List<ColetaEntity>
+
     @Query("SELECT * FROM coleta ORDER BY dataColeta DESC")
     suspend fun buscarTodas(): List<ColetaEntity>
     
@@ -80,6 +86,9 @@ interface ColetaDao {
      * Busca coletas por sala
      * @see Requirements 3.1
      */
+    @Query("SELECT * FROM coleta WHERE idSala = :salaId AND idInventario = :idInventario ORDER BY dataColeta DESC")
+    suspend fun buscarPorSala(salaId: Int, idInventario: Int): List<ColetaEntity>
+
     @Query("SELECT * FROM coleta WHERE idSala = :salaId ORDER BY dataColeta DESC")
     suspend fun buscarPorSala(salaId: Int): List<ColetaEntity>
     
@@ -112,22 +121,59 @@ interface ColetaDao {
      * Registra coleta com transação atômica
      * Garante que coleta e atualização do patrimônio aconteçam juntas
      * Se uma falhar, ambas são revertidas (tudo ou nada)
+     *
+     * v2.20.7: além de marcar `coletado = 1`, também persiste os campos de
+     * auditoria (`coletadoPor`, `dataColeta`, `localizacaoEncontrada`,
+     * `estadoEncontrado`, `observacoesColeta`) diretamente na tabela `patrimonio`.
+     * Isso garante que esses dados sobrevivam mesmo após a coleta ser apagada
+     * pós-sincronização (`limparSincronizadas`), e aparece corretamente nos
+     * relatórios exportados.
      */
     @Transaction
     suspend fun registrarColetaComTransacao(coleta: ColetaEntity): Long {
         // 1. Inserir coleta
         val coletaId = inserir(coleta)
-        
-        // 2. Marcar patrimônio como coletado (mesma transação)
-        marcarPatrimonioColetado(coleta.idPatrimonio)
-        
+
+        // 2. Atualizar patrimônio com dados completos da coleta (mesma transação)
+        atualizarPatrimonioComColeta(
+            patrimonioId = coleta.idPatrimonio,
+            dataColeta = coleta.dataColeta,
+            coletadoPor = coleta.nomeUsuario,
+            localizacaoEncontrada = coleta.nomeSala,
+            estadoEncontrado = coleta.estadoPatrimonio,
+            observacoesColeta = coleta.observacao
+        )
+
         // 3. Retornar ID da coleta
         return coletaId
     }
-    
+
     /**
-     * Marca patrimônio como coletado
-     * Usado dentro de transação
+     * Marca patrimônio como coletado preenchendo todos os campos de auditoria.
+     * Usado dentro da transação de `registrarColetaComTransacao`.
+     */
+    @Query("""
+        UPDATE patrimonio SET
+            coletado = 1,
+            dataColeta = :dataColeta,
+            coletadoPor = :coletadoPor,
+            localizacaoEncontrada = COALESCE(:localizacaoEncontrada, localizacaoEncontrada),
+            estadoEncontrado = COALESCE(:estadoEncontrado, estadoEncontrado),
+            observacoesColeta = COALESCE(:observacoesColeta, observacoesColeta)
+        WHERE id = :patrimonioId
+    """)
+    suspend fun atualizarPatrimonioComColeta(
+        patrimonioId: Int,
+        dataColeta: Long,
+        coletadoPor: String,
+        localizacaoEncontrada: String?,
+        estadoEncontrado: String?,
+        observacoesColeta: String?
+    )
+
+    /**
+     * Marca patrimônio como coletado (apenas o flag)
+     * Mantido para compatibilidade com código legado.
      */
     @Query("UPDATE patrimonio SET coletado = 1 WHERE id = :patrimonioId")
     suspend fun marcarPatrimonioColetado(patrimonioId: Int)

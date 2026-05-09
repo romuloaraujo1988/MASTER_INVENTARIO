@@ -1,0 +1,14 @@
+tabela_coleta: 8712
+tabela_coleta_componente: 580
+Total combinado: 9292
+
+Colunas tabela_coleta_componente: ['id', 'id_item_composto', 'id_inventario', 'id_coletor', 'quantidade_encontrada', 'status_componente', 'observacao_coleta', 'data_coleta', 'localizacao_encontrada']
+
+Estados em tabela_coleta:
+  BOM: 7313
+  IRRECUPERÁVEL: 1130
+  OCIOSO: 89
+  PENDENTE: 81
+  N/A: 68
+  RECUPERÁVEL: 30
+  COLETADO: 1

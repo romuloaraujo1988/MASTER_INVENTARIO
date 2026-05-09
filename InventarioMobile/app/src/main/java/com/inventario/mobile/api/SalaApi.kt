@@ -4,6 +4,7 @@ import com.inventario.mobile.data.remote.dto.ApiResponse
 import com.inventario.mobile.data.remote.dto.PagedResponse
 import com.inventario.mobile.data.remote.dto.SalaComProgressoDTO
 import com.inventario.mobile.data.model.Sala
+import com.inventario.mobile.data.model.SalaSyncResponse
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -77,4 +78,21 @@ interface SalaApi {
     suspend fun listarSalasComProgresso(
         @Query("inventarioId") inventarioId: Int? = null
     ): Response<ApiResponse<List<SalaComProgressoDTO>>>
+    
+    /**
+     * SINCRONIZAÇÃO INCREMENTAL de salas.
+     * Retorna apenas salas modificadas após a data informada.
+     * 
+     * Estratégia:
+     * - Se lastSync = 0 ou null: retorna TODAS as salas (sync inicial)
+     * - Se lastSync > 0: retorna apenas salas modificadas/criadas após essa data
+     * - Inclui lista de IDs de salas removidas/inativadas
+     * 
+     * @param lastSync Timestamp da última sincronização (milissegundos)
+     * @return Salas novas/modificadas + IDs removidos
+     */
+    @GET("api/mobile/salas/sync")
+    suspend fun sincronizarSalas(
+        @Query("lastSync") lastSync: Long = 0
+    ): Response<ApiResponse<SalaSyncResponse>>
 }

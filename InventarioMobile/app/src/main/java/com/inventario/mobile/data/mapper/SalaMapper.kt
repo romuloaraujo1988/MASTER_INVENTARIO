@@ -53,7 +53,7 @@ object SalaMapper {
             idSetor = null,
             setorId = null,
             nomeSetor = null,
-            andar = model.andar?.toIntOrNull(),
+            andar = model.andar,
             bloco = model.bloco,
             tipoSala = null,
             dataCadastro = null,

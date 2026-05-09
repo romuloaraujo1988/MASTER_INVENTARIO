@@ -11,12 +11,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
-import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.inventario.mobile.R;
@@ -26,10 +26,10 @@ import java.lang.String;
 
 public final class ActivityDescricaoSelectionBinding implements ViewBinding {
   @NonNull
-  private final ConstraintLayout rootView;
+  private final CoordinatorLayout rootView;
 
   @NonNull
-  public final MaterialCardView cardResumo;
+  public final AppBarLayout appBarLayout;
 
   @NonNull
   public final Chip chipArmarios;
@@ -54,6 +54,9 @@ public final class ActivityDescricaoSelectionBinding implements ViewBinding {
 
   @NonNull
   public final LinearLayout layoutEmpty;
+
+  @NonNull
+  public final LinearLayout layoutResumo;
 
   @NonNull
   public final ProgressBar progressBar;
@@ -82,16 +85,17 @@ public final class ActivityDescricaoSelectionBinding implements ViewBinding {
   @NonNull
   public final TextView tvTotalPendentes;
 
-  private ActivityDescricaoSelectionBinding(@NonNull ConstraintLayout rootView,
-      @NonNull MaterialCardView cardResumo, @NonNull Chip chipArmarios, @NonNull Chip chipCadeiras,
+  private ActivityDescricaoSelectionBinding(@NonNull CoordinatorLayout rootView,
+      @NonNull AppBarLayout appBarLayout, @NonNull Chip chipArmarios, @NonNull Chip chipCadeiras,
       @NonNull Chip chipComputadores, @NonNull ChipGroup chipGroupFiltros, @NonNull Chip chipMesas,
       @NonNull Chip chipOutros, @NonNull Chip chipTodos, @NonNull LinearLayout layoutEmpty,
-      @NonNull ProgressBar progressBar, @NonNull RecyclerView recyclerView,
-      @NonNull HorizontalScrollView scrollChips, @NonNull SearchView searchView,
-      @NonNull MaterialToolbar toolbar, @NonNull TextView tvEmpty, @NonNull TextView tvSalaNome,
-      @NonNull TextView tvTotalDescricoes, @NonNull TextView tvTotalPendentes) {
+      @NonNull LinearLayout layoutResumo, @NonNull ProgressBar progressBar,
+      @NonNull RecyclerView recyclerView, @NonNull HorizontalScrollView scrollChips,
+      @NonNull SearchView searchView, @NonNull MaterialToolbar toolbar, @NonNull TextView tvEmpty,
+      @NonNull TextView tvSalaNome, @NonNull TextView tvTotalDescricoes,
+      @NonNull TextView tvTotalPendentes) {
     this.rootView = rootView;
-    this.cardResumo = cardResumo;
+    this.appBarLayout = appBarLayout;
     this.chipArmarios = chipArmarios;
     this.chipCadeiras = chipCadeiras;
     this.chipComputadores = chipComputadores;
@@ -100,6 +104,7 @@ public final class ActivityDescricaoSelectionBinding implements ViewBinding {
     this.chipOutros = chipOutros;
     this.chipTodos = chipTodos;
     this.layoutEmpty = layoutEmpty;
+    this.layoutResumo = layoutResumo;
     this.progressBar = progressBar;
     this.recyclerView = recyclerView;
     this.scrollChips = scrollChips;
@@ -113,7 +118,7 @@ public final class ActivityDescricaoSelectionBinding implements ViewBinding {
 
   @Override
   @NonNull
-  public ConstraintLayout getRoot() {
+  public CoordinatorLayout getRoot() {
     return rootView;
   }
 
@@ -138,9 +143,9 @@ public final class ActivityDescricaoSelectionBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
-      id = R.id.cardResumo;
-      MaterialCardView cardResumo = ViewBindings.findChildViewById(rootView, id);
-      if (cardResumo == null) {
+      id = R.id.appBarLayout;
+      AppBarLayout appBarLayout = ViewBindings.findChildViewById(rootView, id);
+      if (appBarLayout == null) {
         break missingId;
       }
 
@@ -189,6 +194,12 @@ public final class ActivityDescricaoSelectionBinding implements ViewBinding {
       id = R.id.layoutEmpty;
       LinearLayout layoutEmpty = ViewBindings.findChildViewById(rootView, id);
       if (layoutEmpty == null) {
+        break missingId;
+      }
+
+      id = R.id.layoutResumo;
+      LinearLayout layoutResumo = ViewBindings.findChildViewById(rootView, id);
+      if (layoutResumo == null) {
         break missingId;
       }
 
@@ -246,10 +257,10 @@ public final class ActivityDescricaoSelectionBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ActivityDescricaoSelectionBinding((ConstraintLayout) rootView, cardResumo,
+      return new ActivityDescricaoSelectionBinding((CoordinatorLayout) rootView, appBarLayout,
           chipArmarios, chipCadeiras, chipComputadores, chipGroupFiltros, chipMesas, chipOutros,
-          chipTodos, layoutEmpty, progressBar, recyclerView, scrollChips, searchView, toolbar,
-          tvEmpty, tvSalaNome, tvTotalDescricoes, tvTotalPendentes);
+          chipTodos, layoutEmpty, layoutResumo, progressBar, recyclerView, scrollChips, searchView,
+          toolbar, tvEmpty, tvSalaNome, tvTotalDescricoes, tvTotalPendentes);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

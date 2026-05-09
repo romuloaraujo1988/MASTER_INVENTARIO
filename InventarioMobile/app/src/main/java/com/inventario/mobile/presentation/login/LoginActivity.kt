@@ -29,6 +29,12 @@ class LoginActivity : AppCompatActivity() {
     private var ipChangedDuringSession = false
     private var originalIp: String? = null
     
+    // ✅ Rastreia se a sessão atual usou autenticação biométrica (evita prompt duplo na MainActivity)
+    private var wasAuthenticatedViaBiometric = false
+    
+    // ✅ Proteção contra navegação dupla (StateFlow pode emitir múltiplas vezes)
+    private var navigationHandled = false
+    
     companion object {
         private const val REQUEST_NOTIFICATION_PERMISSION = 1001
     }
@@ -103,6 +109,11 @@ class LoginActivity : AppCompatActivity() {
             android.util.Log.d("LoginActivity", "Biometria: $biometricEnabledFromIntent")
             android.util.Log.d("LoginActivity", "PIN: $pinEnabledFromIntent")
             android.util.Log.d("LoginActivity", "═══════════════════════════════════════════")
+            
+            // ✅ Marcar que esta sessão usa autenticacão biométrica (para não perguntar de novo na MainActivity)
+            if (biometricEnabledFromIntent) {
+                wasAuthenticatedViaBiometric = true
+            }
             
             // Iniciar autenticação automaticamente após um pequeno delay
             binding.root.postDelayed({
@@ -187,8 +198,77 @@ class LoginActivity : AppCompatActivity() {
         // Verificar se deve oferecer configuração de PIN
         viewModel.checkPinSetup()
 
+        // ✅ VERIFICAR SE PRECISA MOSTRAR BIOMETRIA AUTOMATICAMENTE
+        // Só chama se não estiver usando a autenticação local da intent (evita prompt duplo)
+        if (!requireLocalAuth) {
+            verificarEMostrarBiometriaSeNecessario()
+        }
+
         // Observar ViewModel
         observeViewModel()
+    }
+
+    /**
+     * Verifica se precisa mostrar prompt de biometria automaticamente
+     * Casos: token expirado OU offline + biometria habilitada + usuário salvo
+     * IMPORTANTE: Só permite acesso offline se houver dados salvos localmente
+     */
+    private fun verificarEMostrarBiometriaSeNecessario() {
+        android.util.Log.d("LoginActivity", "═══════════════════════════════════════════")
+        android.util.Log.d("LoginActivity", "VERIFICANDO SE PRECISA MOSTRAR BIOMETRIA AUTOMATICAMENTE")
+        
+        // Verificar se chegou da expiração de token ou está offline
+        val tokenExpired = intent.getBooleanExtra("TOKEN_EXPIRED", false)
+        val offlineFlag = intent.getBooleanExtra("OFFLINE", false)
+        val isOffline = !com.inventario.mobile.utils.NetworkUtils.isNetworkAvailable(this)
+        
+        android.util.Log.d("LoginActivity", "Token expirado (intent): $tokenExpired")
+        android.util.Log.d("LoginActivity", "Offline (intent): $offlineFlag")
+        android.util.Log.d("LoginActivity", "Offline (real): $isOffline")
+        
+        // Verificar se biometria está habilitada
+        val biometricEnabled = preferencesManager.isBiometricEnabled()
+        android.util.Log.d("LoginActivity", "Biometria habilitada: $biometricEnabled")
+        
+        // Verificar se há usuário salvo localmente (primeira autenticação já foi feita)
+        val hasUserSaved = preferencesManager.hasUserSavedLocally()
+        android.util.Log.d("LoginActivity", "Usuário salvo localmente: $hasUserSaved")
+        
+        // ✅ VALIDAÇÃO: Só permite acesso offline se houver dados locais
+        if ((isOffline || offlineFlag) && !hasUserSaved) {
+            android.util.Log.w("LoginActivity", "❌ Offline sem dados locais. Primeira autenticação necessária.")
+            showError("Conecte-se à internet para fazer o primeiro login.")
+            return
+        }
+        
+        // Decidir se deve mostrar prompt automaticamente
+        val shouldShowBiometric = (tokenExpired || offlineFlag || isOffline) && biometricEnabled && hasUserSaved
+        
+        android.util.Log.d("LoginActivity", "Deve mostrar biometria automaticamente: $shouldShowBiometric")
+        android.util.Log.d("LoginActivity", "═══════════════════════════════════════════")
+        
+        if (shouldShowBiometric) {
+            // Determinar mensagem apropriada
+            val mensagem = when {
+                isOffline || offlineFlag -> "Sem conexão. Use biometria para acessar dados offline"
+                tokenExpired -> "Token expirado. Use biometria para renovar"
+                else -> "Use biometria para continuar"
+            }
+            
+            android.util.Log.d("LoginActivity", "✓ Mostrando prompt de biometria: $mensagem")
+            
+            // Mostrar mensagem ao usuário
+            com.google.android.material.snackbar.Snackbar.make(
+                binding.root,
+                mensagem,
+                com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+            ).show()
+            
+            // Mostrar prompt de biometria após delay
+            binding.root.postDelayed({
+                authenticateWithBiometric()
+            }, 500)
+        }
     }
 
 
@@ -201,16 +281,7 @@ class LoginActivity : AppCompatActivity() {
     private fun authenticateWithBiometric() {
         android.util.Log.d("LoginActivity", "Iniciando autenticação biométrica")
         
-        // Verificar se biometria está disponível
-        val availability = biometricManager.isBiometricAvailable()
-        
-        if (!availability.isAvailable()) {
-            android.util.Log.w("LoginActivity", "Biometria não disponível: ${availability.getMessage()}")
-            showError(availability.getMessage())
-            return
-        }
-        
-        // Solicitar biometria
+        // Solicitar biometria diretamente — o hardware do Android gerencia disponibilidade
         biometricManager.authenticateWithCancel(
             activity = this,
             title = "Login com Biometria",
@@ -219,28 +290,40 @@ class LoginActivity : AppCompatActivity() {
             callback = object : com.inventario.mobile.security.BiometricCallback {
                 override fun onAuthenticationSucceeded(authenticationType: String) {
                     android.util.Log.d("LoginActivity", "✅ Biometria autenticada com sucesso: $authenticationType")
-                    // Biometria válida - fazer login offline
+                    wasAuthenticatedViaBiometric = true
                     viewModel.loginWithBiometric()
                 }
                 
                 override fun onAuthenticationFailed(message: String) {
                     android.util.Log.w("LoginActivity", "❌ Biometria falhou: $message")
                     showError("Biometria não reconhecida. Tente novamente.")
+                    binding.etLogin.isEnabled = true
+                    binding.etPassword.isEnabled = true
+                    binding.btnLogin.isEnabled = true
                 }
                 
                 override fun onAuthenticationError(errorCode: Int, errorMessage: String) {
                     android.util.Log.e("LoginActivity", "❌ Erro na biometria: $errorCode - $errorMessage")
                     showError("Erro: $errorMessage")
+                    binding.etLogin.isEnabled = true
+                    binding.etPassword.isEnabled = true
+                    binding.btnLogin.isEnabled = true
                 }
                 
                 override fun onAuthenticationCanceled() {
                     android.util.Log.d("LoginActivity", "Biometria cancelada pelo usuário")
-                    // Usuário cancelou - não fazer nada
+                    binding.etLogin.isEnabled = true
+                    binding.etPassword.isEnabled = true
+                    binding.btnLogin.isEnabled = true
+                    showError("Autenticação cancelada. Use senha para fazer login.")
                 }
                 
                 override fun onAuthenticationLockout(message: String) {
                     android.util.Log.e("LoginActivity", "🔒 Biometria bloqueada: $message")
                     showError(message)
+                    binding.etLogin.isEnabled = true
+                    binding.etPassword.isEnabled = true
+                    binding.btnLogin.isEnabled = true
                 }
             }
         )
@@ -467,7 +550,9 @@ class LoginActivity : AppCompatActivity() {
         }
 
         // Navegar para MainActivity se login bem-sucedido
-        if (state.isLoginSuccessful) {
+        if (state.isLoginSuccessful && !navigationHandled) {
+            navigationHandled = true  // ✅ Evitar chamadas repetidas do StateFlow
+            
             // Verificar se deve oferecer biometria/PIN
             val pinAuthManager = com.inventario.mobile.security.PinAuthManager(this)
             val biometricManager = com.inventario.mobile.security.BiometricAuthManager(this)
@@ -486,7 +571,11 @@ class LoginActivity : AppCompatActivity() {
                 showPinSetupOfferAndNavigate()
             } else {
                 // Navegar diretamente
-                navigateToMain()
+                // Passar flag biometricAuthCompleted se:
+                // 1. O usuário autenticou via biometria nesta sessão, OU
+                // 2. Biometria já está habilitada (evita prompt duplo na MainActivity)
+                val skipBiometricCheck = wasAuthenticatedViaBiometric || state.biometricEnabled
+                navigateToMain(biometricAuthCompleted = skipBiometricCheck)
             }
         }
     }
@@ -614,12 +703,18 @@ class LoginActivity : AppCompatActivity() {
      * Navega para MainActivity
      * Se o IP mudou durante a sessão, reinicia o app para aplicar as novas configurações
      */
-    private fun navigateToMain() {
+    private fun navigateToMain(biometricAuthCompleted: Boolean = false) {
         if (ipChangedDuringSession) {
             android.util.Log.d("LoginActivity", "🔄 IP mudou, reiniciando app para aplicar configurações...")
             restartApp()
         } else {
             val intent = Intent(this, MainActivity::class.java)
+            // ✅ Sinalizar que autenticação biométrica já foi feita nesta sessão
+            // Evita que MainActivity solicite biometria novamente (prompt duplo)
+            if (biometricAuthCompleted) {
+                intent.putExtra("BIOMETRIC_AUTH_COMPLETED", true)
+                android.util.Log.d("LoginActivity", "✓ Flag BIOMETRIC_AUTH_COMPLETED enviada para MainActivity")
+            }
             startActivity(intent)
             finish()
         }
@@ -629,21 +724,45 @@ class LoginActivity : AppCompatActivity() {
      * Reinicia o app completamente para aplicar novas configurações de servidor
      */
     private fun restartApp() {
-        // Limpar caches
+        android.util.Log.d("LoginActivity", "═══════════════════════════════════════")
+        android.util.Log.d("LoginActivity", "🔄 REINICIANDO APP - IP ALTERADO")
+        android.util.Log.d("LoginActivity", "═══════════════════════════════════════")
+        
+        // Limpar caches do ApiClient
         com.inventario.mobile.data.remote.api.ApiClient.clearInstance()
         
-        // Criar intent para reiniciar
+        // Usar AlarmManager para reiniciar o app de forma confiável
         val intent = packageManager.getLaunchIntentForPackage(packageName)
-        intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        if (intent != null) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            intent.putExtra("IP_CHANGED_RESTART", true)
+            
+            // Agendar reinício em 100ms usando AlarmManager
+            val pendingIntent = android.app.PendingIntent.getActivity(
+                this,
+                0,
+                intent,
+                android.app.PendingIntent.FLAG_CANCEL_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+            )
+            
+            val alarmManager = getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager
+            alarmManager.set(
+                android.app.AlarmManager.RTC,
+                System.currentTimeMillis() + 100,
+                pendingIntent
+            )
+            
+            android.util.Log.d("LoginActivity", "✓ Reinício agendado via AlarmManager")
+        }
         
-        // Passar flag indicando que é um restart após mudança de IP
-        intent?.putExtra("IP_CHANGED_RESTART", true)
-        
+        // Finalizar todas as activities
         finishAffinity()
-        startActivity(intent)
         
-        // Forçar encerramento do processo para limpar singletons
-        android.os.Process.killProcess(android.os.Process.myPid())
+        // Matar o processo para limpar singletons
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            android.os.Process.killProcess(android.os.Process.myPid())
+            kotlin.system.exitProcess(0)
+        }, 50)
     }
     
     /**

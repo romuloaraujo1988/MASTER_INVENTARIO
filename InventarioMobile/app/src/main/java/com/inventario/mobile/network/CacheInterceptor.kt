@@ -19,10 +19,18 @@ class CacheInterceptor : Interceptor {
         
         // Determinar tempo de cache baseado no endpoint
         val cacheControl = when {
-            // Dashboard stats: cache por 2 minutos
+            // Dashboard stats: NÃO cachear — a FonteEstatisticas do
+            // DashboardViewModelClean depende de que cada refresh bata o
+            // servidor de verdade (se mudou alguma coleta, o dashboard
+            // precisa refletir em tempo real). Bug 07/05/2026: o cache de
+            // 2 min estava fazendo as requisições sumirem após a primeira
+            // chamada, impedindo o dashboard de atualizar. (Req 5.1 —
+            // endpoint `api/mobile/dashboard/stats` permanece intacto; só
+            // a política de cache HTTP é que muda.)
             request.url.encodedPath.contains("/dashboard/stats") -> {
                 CacheControl.Builder()
-                    .maxAge(2, TimeUnit.MINUTES)
+                    .noCache()
+                    .noStore()
                     .build()
             }
             

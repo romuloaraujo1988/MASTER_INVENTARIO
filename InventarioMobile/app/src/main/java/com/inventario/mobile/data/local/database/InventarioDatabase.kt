@@ -9,6 +9,23 @@ import com.inventario.mobile.data.local.dao.*
 import com.inventario.mobile.data.local.entity.*
 import com.inventario.mobile.data.local.converters.Converters
 
+/**
+ * ⚠️ DEPRECATED - NÃO USAR!
+ * 
+ * Este banco de dados foi substituído pelo AppDatabase (inventario_offline.db).
+ * 
+ * Para todo código novo ou modificações, use:
+ * - AppDatabase.getInstance(context)
+ * 
+ * Este arquivo será removido em versões futuras.
+ * 
+ * @see AppDatabase
+ */
+@Deprecated(
+    message = "Use AppDatabase.getInstance(context) ao invés de InventarioDatabase.getDatabase(context)",
+    replaceWith = ReplaceWith("AppDatabase.getInstance(context)", "com.inventario.mobile.data.local.database.AppDatabase"),
+    level = DeprecationLevel.WARNING
+)
 @Database(
     entities = [
         UsuarioEntity::class,
@@ -33,6 +50,11 @@ abstract class InventarioDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: InventarioDatabase? = null
 
+        @Deprecated(
+            message = "Use AppDatabase.getInstance(context) ao invés de InventarioDatabase.getDatabase(context)",
+            replaceWith = ReplaceWith("AppDatabase.getInstance(context)", "com.inventario.mobile.data.local.database.AppDatabase"),
+            level = DeprecationLevel.WARNING
+        )
         fun getDatabase(context: Context): InventarioDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(

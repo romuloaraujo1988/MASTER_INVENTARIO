@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.inventario.mobile.app-mergeDebugResources-65:/values-kk/values-kk.xml",
+            "outputFile": "com.inventario.mobile.app-mergeDebugResources-71:/values-kk/values-kk.xml",
             "map": [
                 {
                     "source": "C:\\Users\\Romulo\\.gradle\\caches\\transforms-3\\99ce4198dc17315bb9a78336ed2ffe09\\transformed\\core-1.12.0\\res\\values-kk\\values-kk.xml",

@@ -58,4 +58,27 @@ object ApiClient {
             currentBaseUrl = null
         }
     }
+    
+    /**
+     * Obtém instância do AuthApi
+     */
+    fun getAuthApi(context: Context): AuthApi {
+        val serverConfigManager = ServerConfigManager.getInstance(context)
+        val baseUrl = serverConfigManager.getBaseUrl()
+        
+        // Criar Retrofit simples para AuthApi
+        val okHttpClient = okhttp3.OkHttpClient.Builder()
+            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
+        
+        val retrofit = retrofit2.Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .client(okHttpClient)
+            .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create())
+            .build()
+        
+        return retrofit.create(AuthApi::class.java)
+    }
 }

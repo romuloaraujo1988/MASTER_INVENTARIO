@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.inventario.mobile.data.local.database.InventarioDatabase
+import com.inventario.mobile.data.local.database.AppDatabase
 import java.io.File
 
 /**
@@ -14,6 +14,8 @@ import java.io.File
  * - Coletas sincronizadas com mais de 30 dias
  * - Arquivos de cache antigos
  * - Imagens temporárias antigas
+ * 
+ * v2.15: Migrado para usar AppDatabase (inventario_offline.db) - banco padronizado
  */
 class DatabaseCleanupWorker(
     context: Context,
@@ -32,7 +34,8 @@ class DatabaseCleanupWorker(
         return try {
             Log.d(TAG, "Iniciando limpeza do banco de dados...")
             
-            val database = InventarioDatabase.getDatabase(applicationContext)
+            // v2.15: Usar AppDatabase (inventario_offline.db) ao invés de InventarioDatabase
+            val database = AppDatabase.getInstance(applicationContext)
             val thirtyDaysAgo = System.currentTimeMillis() - RETENTION_PERIOD_MS
             
             // Deletar coletas sincronizadas antigas

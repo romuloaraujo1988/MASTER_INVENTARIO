@@ -28,6 +28,7 @@ import com.inventario.mobile.presentation.viewmodel.QuickSearchViewModel
 import com.inventario.mobile.utils.VoiceSearchManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Activity para busca rápida de patrimônios
@@ -44,6 +45,10 @@ class QuickSearchActivity : AppCompatActivity() {
     private lateinit var voiceSearchManager: VoiceSearchManager
     
     private val viewModel: QuickSearchViewModel by viewModels()
+    
+    // ✅ v2.11: Registrar acesso no histórico de scans
+    @Inject
+    lateinit var registrarAcessoUseCase: com.inventario.mobile.domain.usecase.RegistrarAcessoPatrimonioUseCase
     
     companion object {
         private const val TAG = "QuickSearchActivity"
@@ -232,6 +237,22 @@ class QuickSearchActivity : AppCompatActivity() {
     }
     
     private fun navegarParaDetalhes(patrimonio: PatrimonioComColeta) {
+        // ✅ v2.11: Registrar no histórico de scans (busca manual)
+        lifecycleScope.launch {
+            try {
+                registrarAcessoUseCase.registrarBasico(
+                    numeroPatrimonio = patrimonio.numero,
+                    descricao = patrimonio.descricao,
+                    nomeSala = patrimonio.salaNome,
+                    salaId = null,
+                    tipoAcesso = com.inventario.mobile.domain.model.TipoAcesso.BUSCA_MANUAL,
+                    jaColetado = patrimonio.coletado
+                )
+            } catch (e: Exception) {
+                Log.w(TAG, "Erro ao registrar histórico de busca: ${e.message}")
+            }
+        }
+
         val intent = Intent(this, PatrimonioDetailActivity::class.java).apply {
             putExtra(PatrimonioDetailActivity.EXTRA_PATRIMONIO_ID, patrimonio.id.toInt())
         }

@@ -68,3 +68,20 @@ backups/
 # OS
 .DS_Store
 Thumbs.db
+
+# Keystore credentials (NUNCA versionar)
+keystore.properties
+InventarioMobile/keystore.properties
+*.keystore
+*.jks
+*.keystore.backup
+
+# Secrets e configurações locais (NUNCA versionar)
+.env
+.env.*
+application-*-local.properties
+application-local.properties
+src/main/resources/application-mobile-local.properties
+secrets/
+*.pem
+*.p12

@@ -549,3 +549,58 @@ data class EstatisticasServidor(
     @SerializedName("ultima_atualizacao")
     val ultimaAtualizacao: String
 )
+
+// ============= SINCRONIZAÇÃO INCREMENTAL =============
+
+/**
+ * Response da sincronização incremental de salas.
+ * 
+ * Estratégia:
+ * - syncType = "FULL": Todas as salas (sync inicial)
+ * - syncType = "INCREMENTAL": Apenas mudanças desde lastSync
+ * 
+ * @property salas Lista de salas novas/modificadas
+ * @property removidas Lista de IDs de salas removidas/inativadas
+ * @property syncType Tipo de sincronização ("FULL" ou "INCREMENTAL")
+ * @property serverTime Timestamp do servidor (usar como lastSync na próxima chamada)
+ * @property totalSalas Total de salas (apenas em FULL)
+ * @property totalModificadas Total de salas modificadas (apenas em INCREMENTAL)
+ * @property totalRemovidas Total de salas removidas (apenas em INCREMENTAL)
+ */
+data class SalaSyncResponse(
+    @SerializedName("salas")
+    val salas: List<Sala>,
+    
+    @SerializedName("removidas")
+    val removidas: List<Int>,
+    
+    @SerializedName("syncType")
+    val syncType: String,
+    
+    @SerializedName("serverTime")
+    val serverTime: Long,
+    
+    @SerializedName("totalSalas")
+    val totalSalas: Int? = null,
+    
+    @SerializedName("totalModificadas")
+    val totalModificadas: Int? = null,
+    
+    @SerializedName("totalRemovidas")
+    val totalRemovidas: Int? = null
+) {
+    /**
+     * Verifica se é uma sincronização completa (inicial)
+     */
+    fun isFullSync(): Boolean = syncType == "FULL"
+    
+    /**
+     * Verifica se é uma sincronização incremental
+     */
+    fun isIncrementalSync(): Boolean = syncType == "INCREMENTAL"
+    
+    /**
+     * Verifica se há mudanças para aplicar
+     */
+    fun hasChanges(): Boolean = salas.isNotEmpty() || removidas.isNotEmpty()
+}

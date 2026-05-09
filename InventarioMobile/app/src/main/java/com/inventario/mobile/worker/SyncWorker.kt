@@ -83,7 +83,8 @@ class SyncWorker @AssistedInject constructor(
     private suspend fun sincronizarColetas(): Boolean {
         return try {
             // Buscar quantidade de coletas pendentes
-            val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(applicationContext)
+            // v2.14.1: Usar AppDatabase (inventario_offline.db) ao invés de InventarioDatabase
+            val database = com.inventario.mobile.data.local.database.AppDatabase.getInstance(applicationContext)
             val coletaDao = database.coletaDao()
             val pendentes = coletaDao.contarPendentes()
             

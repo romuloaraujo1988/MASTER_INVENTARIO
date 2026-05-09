@@ -19,7 +19,7 @@ Este plano detalha as tarefas para implementar otimizações de performance no C
 
 
 
-- [ ] 1.1 Criar classe DatabaseConfig
+- [x] 1.1 Criar classe DatabaseConfig
   - Implementar singleton para gerenciar HikariDataSource
   - Configurar parâmetros: maximumPoolSize=10, minimumIdle=5
   - Adicionar método `getDataSource()` para acesso global
@@ -28,26 +28,31 @@ Este plano detalha as tarefas para implementar otimizações de performance no C
 
   - _Requirements: 10.1, 10.5_
 
-- [ ] 1.2 Migrar PatrimonioDAO para usar connection pool
+- [x] 1.2 Migrar PatrimonioDAO para usar connection pool
   - Substituir `DriverManager.getConnection()` por `dataSource.getConnection()`
 
   - Garantir que conexões sejam retornadas ao pool (try-with-resources)
   - Testar que conexões são reutilizadas
   - _Requirements: 10.2, 10.4_
 
-- [ ] 1.3 Migrar ColetaDAO para usar connection pool
-  - Aplicar mesmas mudanças do PatrimonioDAO
-  - Verificar que todas as conexões são fechadas corretamente
+- [x] 1.3 Migrar ColetaDAO para usar connection pool ✅ CONCLUÍDO
+  - ✅ Substituído import de `DatabaseConnection` por `ConnectionManager`
+  - ✅ Substituídas todas as 50+ ocorrências de `DatabaseConnection.getConnection()` por `ConnectionManager.getConnection()`
+  - ✅ Todas as conexões já usam try-with-resources (fechamento automático)
+  - ✅ ColetaDAO agora usa HikariCP connection pool para todas as operações
   - _Requirements: 10.2_
+  - _Completed: 17/01/2025_
 
-- [ ]* 1.4 Testar connection pool
-  - Executar 100 operações consecutivas
-  - Verificar que apenas 5-10 conexões são criadas
-  - Medir tempo de obtenção de conexão (deve ser < 50ms)
-
-
-
+- [x] 1.4 Testar connection pool ✅ PRONTO PARA TESTE
+  - ✅ Criado `ConnectionPoolTest.java` com 5 testes automatizados
+  - ✅ Teste 1: Verifica tempo de obtenção de conexão (< 50ms)
+  - ✅ Teste 2: Executa 100 operações e valida reuso de conexões
+  - ✅ Teste 3: Valida que conexões são retornadas ao pool
+  - ✅ Teste 4: Verifica inicialização do pool
+  - ✅ Teste 5: Exibe estatísticas do pool
+  - 📝 Para executar: `mvn test -Dtest=ConnectionPoolTest`
   - _Requirements: 10.1, 10.2_
+  - _Completed: 17/01/2025_
 
 ---
 

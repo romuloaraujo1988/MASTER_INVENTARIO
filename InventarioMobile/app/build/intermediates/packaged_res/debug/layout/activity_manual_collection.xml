@@ -1,16 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
+    android:fillViewport="true"
     tools:context=".presentation.coleta.ManualCollectionActivity">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
 
     <!-- Informação da Sala -->
     <TextView
         android:id="@+id/tvSalaInfo"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:background="@drawable/info_background"
@@ -19,21 +25,15 @@
         android:textSize="16sp"
         android:textStyle="bold"
         android:gravity="center"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
         tools:text="Sala: Laboratório de Informática 1" />
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardInput"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         app:cardCornerRadius="12dp"
-        app:cardElevation="4dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvSalaInfo">
+        app:cardElevation="4dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -88,27 +88,44 @@
 
                 <Button
                     android:id="@+id/btnClear"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
                     android:text="Limpar"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="10sp"
+                    android:autoSizeMaxTextSize="14sp"
+                    android:autoSizeStepGranularity="1sp"
                     android:backgroundTint="@android:color/darker_gray"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
 
                 <Button
                     android:id="@+id/btnSearch"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="4dp"
                     android:text="Buscar"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="10sp"
+                    android:autoSizeMaxTextSize="14sp"
+                    android:autoSizeStepGranularity="1sp"
                     android:backgroundTint="@color/colorSecondary"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
 
                 <Button
                     android:id="@+id/btnCollect"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
                     android:text="Coletar"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="10sp"
+                    android:autoSizeMaxTextSize="14sp"
+                    android:autoSizeStepGranularity="1sp"
                     android:enabled="false"
                     android:backgroundTint="@color/colorPrimary" />
 
@@ -123,25 +140,20 @@
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:layout_marginTop="16dp"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/cardInput" />
+        android:visibility="gone" />
 
     <!-- Informações do Patrimônio -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardPatrimonioInfo"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:visibility="gone"
         app:cardCornerRadius="8dp"
         app:cardElevation="2dp"
-        app:cardBackgroundColor="@color/background_light"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/progressBar">
+        app:cardBackgroundColor="@color/background_light">
 
         <TextView
             android:id="@+id/tvPatrimonioInfo"
@@ -155,18 +167,32 @@
 
     </com.google.android.material.card.MaterialCardView>
 
+    <!-- Botão Coletar Similar (aparece após coleta bem-sucedida) -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnColetarSimilar"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="12dp"
+        android:text="Coletar item similar (sem placa)"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:icon="@drawable/ic_content_copy"
+        app:iconSize="20dp"
+        app:iconGravity="textStart"
+        app:iconPadding="8dp"
+        app:backgroundTint="@color/teal_700"
+        app:cornerRadius="12dp" />
+
     <!-- Card de Foto Opcional (v2.11) -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardFotoOpcional"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:visibility="gone"
         app:cardCornerRadius="8dp"
-        app:cardElevation="2dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/cardPatrimonioInfo">
+        app:cardElevation="2dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -256,21 +282,15 @@
         android:layout_marginTop="16dp"
         android:text="Total coletado na sala: 0"
         android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/cardFotoOpcional" />
+        android:textStyle="bold" />
 
     <LinearLayout
         android:id="@+id/layoutDicas"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
         android:orientation="vertical"
-        android:gravity="center"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvCollectionCount">
+        android:gravity="center">
 
         <TextView
             android:layout_width="wrap_content"
@@ -302,7 +322,7 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnBackToDashboard"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_marginTop="24dp"
         android:layout_marginBottom="16dp"
@@ -312,11 +332,8 @@
         app:icon="@drawable/ic_home"
         app:iconGravity="textStart"
         app:strokeColor="@color/primary"
-        app:strokeWidth="1dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layoutDicas"
-        app:layout_constraintVertical_bias="1.0" />
+        app:strokeWidth="1dp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>
+
+</androidx.core.widget.NestedScrollView>

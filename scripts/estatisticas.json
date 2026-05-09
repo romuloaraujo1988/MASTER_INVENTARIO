@@ -1,0 +1,108 @@
+{
+    "total_coletas": 8712,
+    "total_componentes": 580,
+    "patrimonios_unicos": 8606,
+    "total_cadastrados": 11570,
+    "sem_etiqueta": 106,
+    "tempo_medio": 5.48,
+    "estado_conservacao": [
+        [
+            "BOM",
+            7313
+        ],
+        [
+            "IRRECUPERÁVEL",
+            1130
+        ],
+        [
+            "OCIOSO",
+            89
+        ],
+        [
+            "PENDENTE",
+            81
+        ],
+        [
+            "N/A",
+            68
+        ],
+        [
+            "RECUPERÁVEL",
+            30
+        ],
+        [
+            "COLETADO",
+            1
+        ]
+    ],
+    "top_salas": [
+        [
+            "BIBLIOTECA",
+            4165,
+            4165,
+            0,
+            60,
+            null
+        ],
+        [
+            "Sala do Desfazimento",
+            709,
+            0,
+            709,
+            0,
+            null
+        ],
+        [
+            "SALA  DO DESFAZIMENTO(PREDIO ANTIGO)",
+            493,
+            40,
+            394,
+            430,
+            16.40625
+        ],
+        [
+            "AUDITÓRIO",
+            379,
+            378,
+            0,
+            323,
+            5.4
+        ],
+        [
+            "SALA DE PROF.",
+            201,
+            201,
+            0,
+            8,
+            0.0
+        ]
+    ],
+    "total_divergencias": 1596,
+    "salas_divergencia": [
+        [
+            "MEZANINO AUDITORIO",
+            95,
+            95
+        ],
+        [
+            "NAPNE",
+            12,
+            12
+        ],
+        [
+            "SALA DE AULA B2(PREDIO ANTIGO)",
+            19,
+            19
+        ],
+        [
+            "COORD. CONTABILIDADE",
+            19,
+            19
+        ],
+        [
+            "SALA DE AULA B4(PREDIO ANTIGO)",
+            21,
+            21
+        ]
+    ]
+}

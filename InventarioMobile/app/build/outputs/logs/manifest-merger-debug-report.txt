@@ -1,17 +1,17 @@
 -- Merging decision tree log ---
 provider#androidx.core.content.FileProvider
-INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:274:9-282:20
+INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:297:9-305:20
 	android:grantUriPermissions
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:278:13-47
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:301:13-47
 	android:authorities
 		INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:276:13-64
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:299:13-64
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:277:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:300:13-37
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:275:13-62
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:298:13-62
 provider#androidx.startup.InitializationProvider
-INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:286:9-295:20
+INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:309:9-318:20
 MERGED from [androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:29:9-37:20
 MERGED from [androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:29:9-37:20
 MERGED from [androidx.emoji2:emoji2:1.2.0] C:\Users\Romulo\.gradle\caches\transforms-3\9453c601123cf8d7cb6885cadc312d33\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:24:9-32:20
@@ -23,19 +23,19 @@ MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\Romulo\.
 MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\Romulo\.gradle\caches\transforms-3\7d71cbf16a9632c82548e2b8f9c93a49\transformed\jetified-startup-runtime-1.1.1\AndroidManifest.xml:26:9-30:34
 MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\Romulo\.gradle\caches\transforms-3\7d71cbf16a9632c82548e2b8f9c93a49\transformed\jetified-startup-runtime-1.1.1\AndroidManifest.xml:26:9-30:34
 	tools:node
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:290:13-31
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:313:13-31
 	android:authorities
 		INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:288:13-68
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:311:13-68
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:289:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:312:13-37
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:287:13-67
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:310:13-67
 manifest
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:2:1-299:12
-INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:2:1-299:12
-INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:2:1-299:12
-INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:2:1-299:12
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:2:1-322:12
+INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:2:1-322:12
+INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:2:1-322:12
+INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:2:1-322:12
 MERGED from [androidx.databinding:databinding-adapters:8.1.4] C:\Users\Romulo\.gradle\caches\transforms-3\4b4268ed20ee3f9adbefed69151b7d50\transformed\databinding-adapters-8.1.4\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.databinding:databinding-ktx:8.1.4] C:\Users\Romulo\.gradle\caches\transforms-3\549fb84f045150c7efd680656802a63e\transformed\jetified-databinding-ktx-8.1.4\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.databinding:databinding-runtime:8.1.4] C:\Users\Romulo\.gradle\caches\transforms-3\99ea0a54e3cbea70a977018152a7d189\transformed\databinding-runtime-8.1.4\AndroidManifest.xml:2:1-7:12
@@ -51,6 +51,11 @@ MERGED from [androidx.navigation:navigation-ui:2.7.5] C:\Users\Romulo\.gradle\ca
 MERGED from [com.google.android.material:material:1.10.0] C:\Users\Romulo\.gradle\caches\transforms-3\e17e40cd43d86d439436bc05b87af86b\transformed\material-1.10.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] C:\Users\Romulo\.gradle\caches\transforms-3\03c816f7e241d393f72a85490118264d\transformed\constraintlayout-2.1.4\AndroidManifest.xml:2:1-11:12
 MERGED from [androidx.biometric:biometric:1.2.0-alpha05] C:\Users\Romulo\.gradle\caches\transforms-3\c145df49ff433e23a2685ccf9eecce98\transformed\biometric-1.2.0-alpha05\AndroidManifest.xml:17:1-27:12
+MERGED from [androidx.camera:camera-video:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\f11a385fd358ef705dacc4e9ba340872\transformed\jetified-camera-video-1.3.0\AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.camera:camera-core:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6c55933508d720681caae555f509fc3f\transformed\jetified-camera-core-1.3.0\AndroidManifest.xml:17:1-36:12
+MERGED from [androidx.camera:camera-lifecycle:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\0eff264225a7578c2376a983cd39dc31\transformed\jetified-camera-lifecycle-1.3.0\AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.camera:camera-camera2:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\e4fe65928907a79dada23cc8654b760f\transformed\jetified-camera-camera2-1.3.0\AndroidManifest.xml:17:1-36:12
+MERGED from [androidx.camera:camera-view:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\a23b0df0c54f7f723048831e08bc6153\transformed\jetified-camera-view-1.3.0\AndroidManifest.xml:2:1-7:12
 MERGED from [pub.devrel:easypermissions:3.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\0c9b111747a19d0b796b7a20f655a5d2\transformed\jetified-easypermissions-3.0.0\AndroidManifest.xml:2:1-19:12
 MERGED from [androidx.appcompat:appcompat-resources:1.6.1] C:\Users\Romulo\.gradle\caches\transforms-3\2cce4a89c228229dcd02928b5d98192a\transformed\jetified-appcompat-resources-1.6.1\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.appcompat:appcompat:1.6.1] C:\Users\Romulo\.gradle\caches\transforms-3\cfb5def2ec785a541d74e87794f3ae69\transformed\appcompat-1.6.1\AndroidManifest.xml:17:1-22:12
@@ -103,6 +108,7 @@ MERGED from [androidx.lifecycle:lifecycle-runtime-ktx:2.7.0] C:\Users\Romulo\.gr
 MERGED from [com.github.PhilJay:MPAndroidChart:v3.1.0] C:\Users\Romulo\.gradle\caches\transforms-3\8335e45b99437910e6b14aeb52704c7f\transformed\jetified-MPAndroidChart-v3.1.0\AndroidManifest.xml:2:1-20:12
 MERGED from [com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:17:1-56:12
 MERGED from [androidx.security:security-crypto:1.1.0-alpha06] C:\Users\Romulo\.gradle\caches\transforms-3\29e6543e170d9dcbede725fd3d40565b\transformed\jetified-security-crypto-1.1.0-alpha06\AndroidManifest.xml:17:1-22:12
+MERGED from [net.zetetic:android-database-sqlcipher:4.5.4] C:\Users\Romulo\.gradle\caches\transforms-3\a4cb9d60338a80119b58d68f6c053eb7\transformed\jetified-android-database-sqlcipher-4.5.4\AndroidManifest.xml:2:1-9:12
 MERGED from [com.jakewharton.threetenabp:threetenabp:1.4.6] C:\Users\Romulo\.gradle\caches\transforms-3\4ca520a184a690f383e75319716bc99c\transformed\jetified-threetenabp-1.4.6\AndroidManifest.xml:2:1-9:12
 MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\09f191501dbf9156b9dfffa53e420b6d\transformed\cursoradapter-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.cardview:cardview:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\658f0280516e6b44494d6ee30a1a646f\transformed\cardview-1.0.0\AndroidManifest.xml:17:1-22:12
@@ -119,7 +125,7 @@ MERGED from [androidx.tracing:tracing:1.0.0] C:\Users\Romulo\.gradle\caches\tran
 MERGED from [androidx.documentfile:documentfile:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\a48aa7850de6db1fb7eada3c41887138\transformed\documentfile-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\4c8f6e04641ce173f9430b976459c25a\transformed\localbroadcastmanager-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.print:print:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\088b6abe478898420fcafa49384a8c9f\transformed\print-1.0.0\AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.annotation:annotation-experimental:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\69b3df055c4e5adc4dd40472449687a7\transformed\jetified-annotation-experimental-1.3.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.annotation:annotation-experimental:1.3.1] C:\Users\Romulo\.gradle\caches\transforms-3\7b9cbf0f0e8d404e7bdb014f78864b50\transformed\jetified-annotation-experimental-1.3.1\AndroidManifest.xml:17:1-22:12
 MERGED from [com.google.dagger:dagger-lint-aar:2.48] C:\Users\Romulo\.gradle\caches\transforms-3\add1da82ab9e4e8816a09c2b75713459\transformed\jetified-dagger-lint-aar-2.48\AndroidManifest.xml:16:1-19:12
 	package
 		INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml
@@ -215,65 +221,61 @@ uses-permission#android.permission.POST_NOTIFICATIONS
 ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:38:5-77
 	android:name
 		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:38:22-74
-uses-permission#android.permission.SYSTEM_ALERT_WINDOW
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:41:5-78
-	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:41:22-75
-uses-permission#android.permission.USE_FULL_SCREEN_INTENT
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:42:5-81
-	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:42:22-78
 uses-feature#android.hardware.camera
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:45:5-47:35
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:47:5-49:35
 MERGED from [com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:25:5-27:36
 MERGED from [com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:25:5-27:36
 	android:required
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:47:9-32
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:49:9-32
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:46:9-47
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:48:9-47
 uses-feature#android.hardware.camera2
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:48:5-50:36
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:50:5-52:36
 	android:required
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:50:9-33
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:52:9-33
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:49:9-48
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:51:9-48
 uses-feature#android.hardware.camera.autofocus
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:51:5-53:36
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:53:5-55:36
 MERGED from [com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:33:5-35:36
 MERGED from [com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:33:5-35:36
 	android:required
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:53:9-33
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:55:9-33
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:52:9-57
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:54:9-57
 uses-feature#android.hardware.camera.flash
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:54:5-56:36
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:56:5-58:36
 MERGED from [com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:36:5-38:36
 MERGED from [com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:36:5-38:36
 	android:required
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:56:9-33
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:58:9-33
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:55:9-53
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:57:9-53
 uses-feature#android.hardware.camera.front
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:57:5-59:36
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:59:5-61:36
 MERGED from [com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:28:5-30:36
 MERGED from [com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:28:5-30:36
 	android:required
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:59:9-33
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:61:9-33
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:58:9-53
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:60:9-53
 uses-feature#android.hardware.camera.any
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:60:5-62:35
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:62:5-64:35
 	android:required
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:62:9-32
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:64:9-32
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:61:9-51
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:63:9-51
 application
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:64:5-297:19
-INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:64:5-297:19
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:66:5-320:19
+INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:66:5-320:19
 MERGED from [com.google.android.material:material:1.10.0] C:\Users\Romulo\.gradle\caches\transforms-3\e17e40cd43d86d439436bc05b87af86b\transformed\material-1.10.0\AndroidManifest.xml:22:5-20
 MERGED from [com.google.android.material:material:1.10.0] C:\Users\Romulo\.gradle\caches\transforms-3\e17e40cd43d86d439436bc05b87af86b\transformed\material-1.10.0\AndroidManifest.xml:22:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] C:\Users\Romulo\.gradle\caches\transforms-3\03c816f7e241d393f72a85490118264d\transformed\constraintlayout-2.1.4\AndroidManifest.xml:9:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] C:\Users\Romulo\.gradle\caches\transforms-3\03c816f7e241d393f72a85490118264d\transformed\constraintlayout-2.1.4\AndroidManifest.xml:9:5-20
+MERGED from [androidx.camera:camera-core:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6c55933508d720681caae555f509fc3f\transformed\jetified-camera-core-1.3.0\AndroidManifest.xml:23:5-34:19
+MERGED from [androidx.camera:camera-core:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6c55933508d720681caae555f509fc3f\transformed\jetified-camera-core-1.3.0\AndroidManifest.xml:23:5-34:19
+MERGED from [androidx.camera:camera-camera2:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\e4fe65928907a79dada23cc8654b760f\transformed\jetified-camera-camera2-1.3.0\AndroidManifest.xml:23:5-34:19
+MERGED from [androidx.camera:camera-camera2:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\e4fe65928907a79dada23cc8654b760f\transformed\jetified-camera-camera2-1.3.0\AndroidManifest.xml:23:5-34:19
 MERGED from [pub.devrel:easypermissions:3.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\0c9b111747a19d0b796b7a20f655a5d2\transformed\jetified-easypermissions-3.0.0\AndroidManifest.xml:11:5-17:19
 MERGED from [pub.devrel:easypermissions:3.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\0c9b111747a19d0b796b7a20f655a5d2\transformed\jetified-easypermissions-3.0.0\AndroidManifest.xml:11:5-17:19
 MERGED from [androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:28:5-143:19
@@ -301,323 +303,333 @@ MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\Romulo\.gradle\cac
 	android:extractNativeLibs
 		INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml
 	android:requestLegacyExternalStorage
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:76:9-53
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:77:9-53
 	android:roundIcon
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:71:9-54
-	android:icon
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:69:9-43
-	android:networkSecurityConfig
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:75:9-69
-	android:preserveLegacyExternalStorage
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:77:9-54
-	android:supportsRtl
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:72:9-35
-	android:label
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:70:9-41
-	android:appComponentFactory
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:79:9-77
-	android:fullBackupContent
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:68:9-54
-	tools:targetApi
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:80:9-29
-	android:allowBackup
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:66:9-35
-	android:theme
 		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:73:9-54
+	android:icon
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:71:9-43
+	android:networkSecurityConfig
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:76:9-69
+	android:preserveLegacyExternalStorage
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:78:9-54
+	android:supportsRtl
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:74:9-35
+	android:label
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:72:9-41
+	android:appComponentFactory
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:80:9-77
+	android:fullBackupContent
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:70:9-54
+	tools:targetApi
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:81:9-29
+	android:allowBackup
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:68:9-36
+	android:theme
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:75:9-54
 	android:enableOnBackInvokedCallback
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:78:9-51
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:79:9-51
 	android:dataExtractionRules
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:67:9-65
-	android:usesCleartextTraffic
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:74:9-44
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:69:9-65
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:65:9-52
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:67:9-52
 activity#com.inventario.mobile.ui.splash.SplashActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:83:9-91:20
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:84:9-92:20
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:85:13-36
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:86:13-36
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:86:13-65
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:87:13-65
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:84:13-53
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:85:13-53
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:87:13-90:29
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:88:13-91:29
 action#android.intent.action.MAIN
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:88:17-69
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:89:17-69
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:88:25-66
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:89:25-66
 category#android.intent.category.LAUNCHER
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:89:17-77
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:90:17-77
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:89:27-74
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:90:27-74
 activity#com.inventario.mobile.presentation.main.MainActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:94:9-99:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:95:9-100:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:97:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:98:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:99:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:100:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:96:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:97:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:98:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:99:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:95:13-59
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:96:13-59
 activity#com.inventario.mobile.presentation.login.LoginActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:102:9-106:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:103:9-107:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:105:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:106:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:106:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:107:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:104:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:105:13-37
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:103:13-61
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:104:13-61
 activity#com.inventario.mobile.presentation.scanner.ScannerActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:109:9-113:73
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:110:9-114:73
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:112:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:113:13-49
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:111:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:112:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:113:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:114:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:110:13-65
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:111:13-65
 activity#com.inventario.mobile.presentation.sala.SalaSelectionActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:116:9-121:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:117:9-122:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:119:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:120:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:121:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:122:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:118:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:119:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:120:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:121:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:117:13-68
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:118:13-68
 activity#com.inventario.mobile.presentation.sala.SalaSelectionPagingActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:124:9-129:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:125:9-130:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:127:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:128:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:129:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:130:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:126:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:127:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:128:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:129:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:125:13-74
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:126:13-74
 activity#com.inventario.mobile.presentation.coleta.ManualCollectionActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:132:9-137:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:133:9-138:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:135:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:136:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:137:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:138:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:134:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:135:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:136:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:137:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:133:13-73
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:134:13-73
 activity#com.inventario.mobile.presentation.coleta.CollectionViewActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:140:9-145:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:141:9-146:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:143:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:144:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:145:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:146:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:142:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:143:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:144:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:145:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:141:13-71
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:142:13-71
 activity#com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:148:9-153:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:162:9-167:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:151:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:165:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:153:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:167:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:150:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:164:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:152:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:166:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:149:13-78
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:163:13-78
 activity#com.inventario.mobile.presentation.activity.NetworkDiagnosticActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:156:9-161:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:170:9-175:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:159:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:173:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:161:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:175:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:158:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:172:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:160:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:174:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:157:13-76
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:171:13-76
 activity#com.inventario.mobile.presentation.settings.SettingsActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:164:9-169:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:178:9-183:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:167:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:181:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:169:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:183:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:166:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:180:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:168:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:182:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:165:13-67
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:179:13-67
 activity#com.inventario.mobile.presentation.statistics.StatisticsActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:172:9-177:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:186:9-191:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:175:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:189:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:177:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:191:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:174:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:188:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:176:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:190:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:173:13-71
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:187:13-71
 activity#com.inventario.mobile.presentation.sync.SyncActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:180:9-185:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:194:9-199:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:183:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:197:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:185:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:199:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:182:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:196:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:184:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:198:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:181:13-59
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:195:13-59
 activity#com.inventario.mobile.presentation.sync.PendingCollectionsActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:188:9-193:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:202:9-207:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:191:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:205:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:193:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:207:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:190:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:204:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:192:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:206:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:189:13-73
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:203:13-73
 activity#com.inventario.mobile.presentation.inventario.InventarioActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:196:9-201:55
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:210:9-215:55
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:199:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:213:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:201:13-52
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:215:13-52
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:198:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:212:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:200:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:214:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:197:13-71
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:211:13-71
 activity#com.inventario.mobile.presentation.inventario.InventarioTabsActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:204:9-209:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:218:9-223:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:207:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:221:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:209:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:223:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:206:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:220:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:208:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:222:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:205:13-75
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:219:13-75
 activity#com.inventario.mobile.presentation.filtros.FiltrosActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:212:9-217:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:226:9-231:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:215:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:229:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:217:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:231:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:214:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:228:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:216:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:230:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:213:13-65
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:227:13-65
 activity#com.inventario.mobile.presentation.coletas.ColetasActivityClean
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:220:9-225:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:234:9-239:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:223:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:237:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:225:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:239:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:222:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:236:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:224:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:238:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:221:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:235:13-70
+activity#com.inventario.mobile.presentation.coletas.ColetasUnificadaActivity
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:243:9-248:58
+	android:screenOrientation
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:246:13-49
+	android:windowSoftInputMode
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:248:13-55
+	android:exported
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:245:13-37
+	android:theme
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:247:13-70
+	android:name
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:244:13-74
 activity#com.inventario.mobile.presentation.coleta.ItemSemEtiquetaActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:228:9-233:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:251:9-256:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:231:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:254:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:233:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:256:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:230:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:253:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:232:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:255:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:229:13-72
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:252:13-72
 activity#com.inventario.mobile.presentation.search.QuickSearchActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:236:9-241:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:259:9-264:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:239:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:262:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:241:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:264:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:238:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:261:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:240:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:263:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:237:13-68
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:260:13-68
 activity#com.inventario.mobile.presentation.detail.PatrimonioDetailActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:244:9-249:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:267:9-272:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:247:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:270:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:249:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:272:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:246:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:269:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:248:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:271:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:245:13-73
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:268:13-73
 activity#com.inventario.mobile.presentation.export.ExportPdfActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:252:9-257:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:275:9-280:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:255:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:278:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:257:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:280:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:254:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:277:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:256:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:279:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:253:13-66
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:276:13-66
 activity#com.inventario.mobile.presentation.historico.HistoricoScansActivity
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:260:9-265:58
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:283:9-288:58
 	android:screenOrientation
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:263:13-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:286:13-49
 	android:windowSoftInputMode
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:265:13-55
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:288:13-55
 	android:exported
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:262:13-37
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:285:13-37
 	android:theme
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:264:13-70
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:287:13-70
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:261:13-74
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:284:13-74
 service#androidx.work.impl.foreground.SystemForegroundService
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:268:9-271:34
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:291:9-294:34
 MERGED from [androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:53:9-59:35
 MERGED from [androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:53:9-59:35
 	android:enabled
 		ADDED from [androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:56:13-77
 	tools:node
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:271:13-31
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:294:13-31
 	android:exported
 		ADDED from [androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:57:13-37
 	tools:ignore
@@ -627,24 +639,24 @@ MERGED from [androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\tr
 	android:directBootAware
 		ADDED from [androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:55:13-44
 	android:foregroundServiceType
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:270:13-53
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:293:13-53
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:269:13-81
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:292:13-81
 meta-data#android.support.FILE_PROVIDER_PATHS
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:279:13-281:54
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:302:13-304:54
 	android:resource
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:281:17-51
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:304:17-51
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:280:17-67
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:303:17-67
 meta-data#androidx.work.WorkManagerInitializer
-ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:291:13-294:39
+ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:314:13-317:39
 REJECTED from [androidx.work:work-runtime:2.9.0] C:\Users\Romulo\.gradle\caches\transforms-3\e333584c57b94cd29762193a123fb6e5\transformed\work-runtime-2.9.0\AndroidManifest.xml:34:13-36:52
 	tools:node
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:294:17-36
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:317:17-36
 	android:value
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:293:17-49
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:316:17-49
 	android:name
-		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:292:17-68
+		ADDED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml:315:17-68
 uses-sdk
 INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml
@@ -679,6 +691,16 @@ MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] C:\Users\Romulo\.
 MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] C:\Users\Romulo\.gradle\caches\transforms-3\03c816f7e241d393f72a85490118264d\transformed\constraintlayout-2.1.4\AndroidManifest.xml:5:5-7:41
 MERGED from [androidx.biometric:biometric:1.2.0-alpha05] C:\Users\Romulo\.gradle\caches\transforms-3\c145df49ff433e23a2685ccf9eecce98\transformed\biometric-1.2.0-alpha05\AndroidManifest.xml:20:5-44
 MERGED from [androidx.biometric:biometric:1.2.0-alpha05] C:\Users\Romulo\.gradle\caches\transforms-3\c145df49ff433e23a2685ccf9eecce98\transformed\biometric-1.2.0-alpha05\AndroidManifest.xml:20:5-44
+MERGED from [androidx.camera:camera-video:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\f11a385fd358ef705dacc4e9ba340872\transformed\jetified-camera-video-1.3.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.camera:camera-video:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\f11a385fd358ef705dacc4e9ba340872\transformed\jetified-camera-video-1.3.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.camera:camera-core:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6c55933508d720681caae555f509fc3f\transformed\jetified-camera-core-1.3.0\AndroidManifest.xml:21:5-44
+MERGED from [androidx.camera:camera-core:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6c55933508d720681caae555f509fc3f\transformed\jetified-camera-core-1.3.0\AndroidManifest.xml:21:5-44
+MERGED from [androidx.camera:camera-lifecycle:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\0eff264225a7578c2376a983cd39dc31\transformed\jetified-camera-lifecycle-1.3.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.camera:camera-lifecycle:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\0eff264225a7578c2376a983cd39dc31\transformed\jetified-camera-lifecycle-1.3.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.camera:camera-camera2:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\e4fe65928907a79dada23cc8654b760f\transformed\jetified-camera-camera2-1.3.0\AndroidManifest.xml:21:5-44
+MERGED from [androidx.camera:camera-camera2:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\e4fe65928907a79dada23cc8654b760f\transformed\jetified-camera-camera2-1.3.0\AndroidManifest.xml:21:5-44
+MERGED from [androidx.camera:camera-view:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\a23b0df0c54f7f723048831e08bc6153\transformed\jetified-camera-view-1.3.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.camera:camera-view:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\a23b0df0c54f7f723048831e08bc6153\transformed\jetified-camera-view-1.3.0\AndroidManifest.xml:5:5-44
 MERGED from [pub.devrel:easypermissions:3.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\0c9b111747a19d0b796b7a20f655a5d2\transformed\jetified-easypermissions-3.0.0\AndroidManifest.xml:7:5-9:41
 MERGED from [pub.devrel:easypermissions:3.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\0c9b111747a19d0b796b7a20f655a5d2\transformed\jetified-easypermissions-3.0.0\AndroidManifest.xml:7:5-9:41
 MERGED from [androidx.appcompat:appcompat-resources:1.6.1] C:\Users\Romulo\.gradle\caches\transforms-3\2cce4a89c228229dcd02928b5d98192a\transformed\jetified-appcompat-resources-1.6.1\AndroidManifest.xml:20:5-44
@@ -783,6 +805,8 @@ MERGED from [com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.grad
 MERGED from [com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6a457e971fd21f71af7f54abab69271d\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.security:security-crypto:1.1.0-alpha06] C:\Users\Romulo\.gradle\caches\transforms-3\29e6543e170d9dcbede725fd3d40565b\transformed\jetified-security-crypto-1.1.0-alpha06\AndroidManifest.xml:20:5-44
 MERGED from [androidx.security:security-crypto:1.1.0-alpha06] C:\Users\Romulo\.gradle\caches\transforms-3\29e6543e170d9dcbede725fd3d40565b\transformed\jetified-security-crypto-1.1.0-alpha06\AndroidManifest.xml:20:5-44
+MERGED from [net.zetetic:android-database-sqlcipher:4.5.4] C:\Users\Romulo\.gradle\caches\transforms-3\a4cb9d60338a80119b58d68f6c053eb7\transformed\jetified-android-database-sqlcipher-4.5.4\AndroidManifest.xml:5:5-7:41
+MERGED from [net.zetetic:android-database-sqlcipher:4.5.4] C:\Users\Romulo\.gradle\caches\transforms-3\a4cb9d60338a80119b58d68f6c053eb7\transformed\jetified-android-database-sqlcipher-4.5.4\AndroidManifest.xml:5:5-7:41
 MERGED from [com.jakewharton.threetenabp:threetenabp:1.4.6] C:\Users\Romulo\.gradle\caches\transforms-3\4ca520a184a690f383e75319716bc99c\transformed\jetified-threetenabp-1.4.6\AndroidManifest.xml:5:5-44
 MERGED from [com.jakewharton.threetenabp:threetenabp:1.4.6] C:\Users\Romulo\.gradle\caches\transforms-3\4ca520a184a690f383e75319716bc99c\transformed\jetified-threetenabp-1.4.6\AndroidManifest.xml:5:5-44
 MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\09f191501dbf9156b9dfffa53e420b6d\transformed\cursoradapter-1.0.0\AndroidManifest.xml:20:5-44
@@ -815,14 +839,32 @@ MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] C:\User
 MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\4c8f6e04641ce173f9430b976459c25a\transformed\localbroadcastmanager-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.print:print:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\088b6abe478898420fcafa49384a8c9f\transformed\print-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.print:print:1.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\088b6abe478898420fcafa49384a8c9f\transformed\print-1.0.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.annotation:annotation-experimental:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\69b3df055c4e5adc4dd40472449687a7\transformed\jetified-annotation-experimental-1.3.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.annotation:annotation-experimental:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\69b3df055c4e5adc4dd40472449687a7\transformed\jetified-annotation-experimental-1.3.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.3.1] C:\Users\Romulo\.gradle\caches\transforms-3\7b9cbf0f0e8d404e7bdb014f78864b50\transformed\jetified-annotation-experimental-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.3.1] C:\Users\Romulo\.gradle\caches\transforms-3\7b9cbf0f0e8d404e7bdb014f78864b50\transformed\jetified-annotation-experimental-1.3.1\AndroidManifest.xml:20:5-44
 MERGED from [com.google.dagger:dagger-lint-aar:2.48] C:\Users\Romulo\.gradle\caches\transforms-3\add1da82ab9e4e8816a09c2b75713459\transformed\jetified-dagger-lint-aar-2.48\AndroidManifest.xml:18:3-42
 MERGED from [com.google.dagger:dagger-lint-aar:2.48] C:\Users\Romulo\.gradle\caches\transforms-3\add1da82ab9e4e8816a09c2b75713459\transformed\jetified-dagger-lint-aar-2.48\AndroidManifest.xml:18:3-42
 	android:targetSdkVersion
 		INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml
 	android:minSdkVersion
 		INJECTED from C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\InventarioMobile\app\src\main\AndroidManifest.xml
+service#androidx.camera.core.impl.MetadataHolderService
+ADDED from [androidx.camera:camera-core:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6c55933508d720681caae555f509fc3f\transformed\jetified-camera-core-1.3.0\AndroidManifest.xml:29:9-33:78
+MERGED from [androidx.camera:camera-camera2:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\e4fe65928907a79dada23cc8654b760f\transformed\jetified-camera-camera2-1.3.0\AndroidManifest.xml:24:9-33:19
+MERGED from [androidx.camera:camera-camera2:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\e4fe65928907a79dada23cc8654b760f\transformed\jetified-camera-camera2-1.3.0\AndroidManifest.xml:24:9-33:19
+	android:enabled
+		ADDED from [androidx.camera:camera-core:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6c55933508d720681caae555f509fc3f\transformed\jetified-camera-core-1.3.0\AndroidManifest.xml:31:13-36
+	android:exported
+		ADDED from [androidx.camera:camera-core:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6c55933508d720681caae555f509fc3f\transformed\jetified-camera-core-1.3.0\AndroidManifest.xml:32:13-37
+	tools:ignore
+		ADDED from [androidx.camera:camera-core:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6c55933508d720681caae555f509fc3f\transformed\jetified-camera-core-1.3.0\AndroidManifest.xml:33:13-75
+	android:name
+		ADDED from [androidx.camera:camera-core:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\6c55933508d720681caae555f509fc3f\transformed\jetified-camera-core-1.3.0\AndroidManifest.xml:30:13-75
+meta-data#androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER
+ADDED from [androidx.camera:camera-camera2:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\e4fe65928907a79dada23cc8654b760f\transformed\jetified-camera-camera2-1.3.0\AndroidManifest.xml:30:13-32:89
+	android:value
+		ADDED from [androidx.camera:camera-camera2:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\e4fe65928907a79dada23cc8654b760f\transformed\jetified-camera-camera2-1.3.0\AndroidManifest.xml:32:17-86
+	android:name
+		ADDED from [androidx.camera:camera-camera2:1.3.0] C:\Users\Romulo\.gradle\caches\transforms-3\e4fe65928907a79dada23cc8654b760f\transformed\jetified-camera-camera2-1.3.0\AndroidManifest.xml:31:17-103
 activity#pub.devrel.easypermissions.AppSettingsDialogHolderActivity
 ADDED from [pub.devrel:easypermissions:3.0.0] C:\Users\Romulo\.gradle\caches\transforms-3\0c9b111747a19d0b796b7a20f655a5d2\transformed\jetified-easypermissions-3.0.0\AndroidManifest.xml:12:9-16:66
 	android:label

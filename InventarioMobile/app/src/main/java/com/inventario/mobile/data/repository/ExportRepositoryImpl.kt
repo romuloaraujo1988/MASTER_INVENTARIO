@@ -30,12 +30,20 @@ class ExportRepositoryImpl @Inject constructor(
     private val excelGenerator: ExcelGenerator,
     private val csvGenerator: CsvGenerator
 ) : ExportRepository {
-    
+
     companion object {
         private const val EXPORT_DIR = "exports"
-        private const val FILE_PROVIDER_AUTHORITY = "com.inventario.mobile.fileprovider"
     }
-    
+
+    /**
+     * Authority do FileProvider derivada de `context.packageName` — evita divergência
+     * entre debug/release caso alguém adicione `applicationIdSuffix` no futuro. O manifesto
+     * declara `android:authorities="${applicationId}.fileprovider"` (ver AndroidManifest.xml),
+     * portanto `packageName + ".fileprovider"` é sempre consistente.
+     */
+    private val fileProviderAuthority: String
+        get() = "${context.packageName}.fileprovider"
+
     override suspend fun generateReport(
         patrimonios: List<Patrimonio>,
         sala: Sala,
@@ -44,12 +52,17 @@ class ExportRepositoryImpl @Inject constructor(
         isOffline: Boolean
     ): Result<ExportResult> {
         return try {
-            // Criar diretório de exportação se não existir
+            // v2.20.3: validar criação do diretório — antes apenas chamávamos mkdirs()
+            // e ignorávamos o retorno, gerando FileNotFoundException opaco se falhava.
             val exportDir = getExportDirectory()
-            if (!exportDir.exists()) {
-                exportDir.mkdirs()
+            if (!exportDir.exists() && !exportDir.mkdirs()) {
+                return Result.failure(
+                    java.io.IOException(
+                        "Não foi possível criar o diretório de exportação: ${exportDir.absolutePath}"
+                    )
+                )
             }
-            
+
             // Gerar nome do arquivo
             val fileName = generateFileName(sala, filter, format)
             val outputFile = File(exportDir, fileName)
@@ -100,13 +113,15 @@ class ExportRepositoryImpl @Inject constructor(
     }
     
     override fun getExportDirectory(): File {
-        return File(context.getExternalFilesDir(null), EXPORT_DIR)
+        // getExternalFilesDir pode retornar null se armazenamento externo não estiver disponível
+        val baseDir = context.getExternalFilesDir(null) ?: context.filesDir
+        return File(baseDir, EXPORT_DIR)
     }
     
     override fun shareFile(filePath: String, format: ExportFormat): Intent {
         val file = File(filePath)
-        val uri = FileProvider.getUriForFile(context, FILE_PROVIDER_AUTHORITY, file)
-        
+        val uri = FileProvider.getUriForFile(context, fileProviderAuthority, file)
+
         return Intent(Intent.ACTION_SEND).apply {
             type = format.mimeType
             putExtra(Intent.EXTRA_STREAM, uri)
@@ -114,11 +129,11 @@ class ExportRepositoryImpl @Inject constructor(
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
     }
-    
+
     override fun openFile(filePath: String, format: ExportFormat): Intent {
         val file = File(filePath)
-        val uri = FileProvider.getUriForFile(context, FILE_PROVIDER_AUTHORITY, file)
-        
+        val uri = FileProvider.getUriForFile(context, fileProviderAuthority, file)
+
         return Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(uri, format.mimeType)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)

@@ -1,101 +1,113 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Cores Primárias - Dark Mode -->
-    <color name="primary">#90CAF9</color>
-    <color name="colorPrimary">#90CAF9</color>
-    <color name="primary_dark">#42A5F5</color>
-    <color name="primary_light">#1E3A5F</color>
-    <color name="primary_color">#90CAF9</color>
-    <color name="primary_color_light">#1E3A5F</color>
-    
-    <!-- Cores Secundárias - Dark Mode -->
-    <color name="secondary">#FFD54F</color>
-    <color name="colorSecondary">#FFD54F</color>
-    <color name="secondary_dark">#FFC107</color>
-    <color name="secondary_light">#3D3000</color>
-    
-    <!-- Cores de Estado - Dark Mode -->
-    <color name="success">#81C784</color>
-    <color name="warning">#FFB74D</color>
-    <color name="error">#EF5350</color>
-    <color name="info">#64B5F6</color>
-    
-    <!-- Cores de Texto - Dark Mode -->
-    <color name="text_primary">#FFFFFF</color>
-    <color name="text_secondary">#B0B0B0</color>
-    <color name="text_hint">#757575</color>
-    <color name="text_disabled">#616161</color>
-    
-    <!-- Cores de Fundo - Dark Mode -->
-    <color name="background">#121212</color>
-    <color name="background_color">#121212</color>
-    <color name="background_light">#1E1E1E</color>
-    <color name="surface">#1E1E1E</color>
-    <color name="divider">#2C2C2C</color>
-    <color name="divider_color">#2C2C2C</color>
-    <color name="card_stroke_color">#2C2C2C</color>
-    
-    <!-- Cores Padrão - Dark Mode -->
-    <color name="white">#FFFFFF</color>
-    <color name="black">#000000</color>
-    <color name="transparent">#00000000</color>
-    
-    <!-- Cores de Status - Dark Mode -->
-    <color name="status_pending">#FFB74D</color>
-    <color name="status_synced">#81C784</color>
-    <color name="status_error">#EF5350</color>
-    
-    <!-- Cores para Scanner - Dark Mode -->
-    <color name="black_transparent">#80000000</color>
-    <color name="scanner_overlay">#66000000</color>
-    
-    <!-- Material Design Colors - Dark Mode -->
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    
-    <!-- Additional Material Design Colors - Dark Mode -->
-    <color name="material_blue_600">#42A5F5</color>
-    <color name="material_blue_700">#2196F3</color>
-    <color name="material_blue_800">#1E88E5</color>
-    <color name="material_green_600">#66BB6A</color>
-    <color name="material_red_600">#EF5350</color>
-    <color name="material_orange_600">#FFA726</color>
-    <color name="material_grey_300">#424242</color>
-    <color name="material_grey_600">#9E9E9E</color>
-    <color name="material_grey_800">#BDBDBD</color>
-    <color name="material_grey_900">#E0E0E0</color>
 
-    <!-- Additional Colors for Collection View - Dark Mode -->
-    <color name="warning_light">#3D2800</color>
-    <color name="warning_dark">#FFB74D</color>
-    <color name="success_light">#1B3D1B</color>
-    <color name="success_dark">#81C784</color>
-    <color name="error_light">#3D1B1B</color>
-    <color name="error_dark">#EF5350</color>
-    <color name="info_light">#1B2D3D</color>
-    <color name="info_dark">#64B5F6</color>
-    <color name="background_secondary">#1E1E1E</color>
-    
-    <!-- Chart Colors - Dark Mode -->
-    <color name="success_color">#81C784</color>
-    <color name="warning_color">#FFB74D</color>
-    <color name="info_color">#64B5F6</color>
-    <color name="primary_text">#FFFFFF</color>
-    <color name="secondary_text">#B0B0B0</color>
-    
-    <!-- Progress Bar Colors - Dark Mode -->
-    <color name="progress_background">#2C2C2C</color>
-    <color name="white_70">#B3FFFFFF</color>
-    <color name="overlay_background">#80000000</color>
-    
-    <!-- Error Colors - Dark Mode -->
-    <color name="error_red">#EF5350</color>
-    
-    <!-- Status Background Colors - Dark Mode -->
-    <color name="status_background_success">#1B3D1B</color>
-    <color name="status_background_warning">#3D2800</color>
-    <color name="status_background_error">#3D1B1B</color>
+    <!--
+        Material Design 3 — Dark Mode Color System
+        Seed: #1976D2 (Blue 700)
+    -->
+
+    <!-- ── Primary ──────────────────────────────────────────────── -->
+    <color name="md3_dark_primary">#AAC7FF</color>
+    <color name="md3_dark_on_primary">#002F67</color>
+    <color name="md3_dark_primary_container">#0D4491</color>
+    <color name="md3_dark_on_primary_container">#D6E3FF</color>
+
+    <!-- ── Secondary ─────────────────────────────────────────────── -->
+    <color name="md3_dark_secondary">#BDC7DC</color>
+    <color name="md3_dark_on_secondary">#273141</color>
+    <color name="md3_dark_secondary_container">#3D4758</color>
+    <color name="md3_dark_on_secondary_container">#D9E3F8</color>
+
+    <!-- ── Tertiary ───────────────────────────────────────────────── -->
+    <color name="md3_dark_tertiary">#81D3E0</color>
+    <color name="md3_dark_on_tertiary">#00363D</color>
+    <color name="md3_dark_tertiary_container">#004F58</color>
+    <color name="md3_dark_on_tertiary_container">#9EEFFD</color>
+
+    <!-- ── Error ──────────────────────────────────────────────────── -->
+    <color name="md3_dark_error">#FFB4AB</color>
+    <color name="md3_dark_on_error">#690005</color>
+    <color name="md3_dark_error_container">#93000A</color>
+    <color name="md3_dark_on_error_container">#FFDAD6</color>
+
+    <!-- ── Background / Surface ───────────────────────────────────── -->
+    <color name="md3_dark_background">#111318</color>
+    <color name="md3_dark_on_background">#E2E2E9</color>
+    <color name="md3_dark_surface">#111318</color>
+    <color name="md3_dark_on_surface">#E2E2E9</color>
+    <color name="md3_dark_surface_variant">#43474E</color>
+    <color name="md3_dark_on_surface_variant">#C3C7CF</color>
+
+    <!-- ── Outline ────────────────────────────────────────────────── -->
+    <color name="md3_dark_outline">#8D9199</color>
+    <color name="md3_dark_outline_variant">#43474E</color>
+
+    <!-- ── Inverse ────────────────────────────────────────────────── -->
+    <color name="md3_dark_inverse_surface">#E2E2E9</color>
+    <color name="md3_dark_inverse_on_surface">#2E3135</color>
+    <color name="md3_dark_inverse_primary">#1B5EA7</color>
+
+    <!--
+        Aliases para compatibilidade com código existente (dark mode)
+        Apontam para as cores dark corretas
+    -->
+    <color name="primary">@color/md3_dark_primary</color>
+    <color name="colorPrimary">@color/md3_dark_primary</color>
+    <color name="primary_dark">@color/md3_dark_primary_container</color>
+    <color name="primary_light">@color/md3_dark_on_primary_container</color>
+    <color name="colorPrimaryLight">@color/md3_dark_primary_container</color>
+
+    <color name="secondary">@color/md3_dark_secondary</color>
+    <color name="colorSecondary">@color/md3_dark_secondary</color>
+    <color name="secondary_dark">@color/md3_dark_secondary_container</color>
+    <color name="secondary_light">@color/md3_dark_on_secondary_container</color>
+
+    <color name="success">#6DD58C</color>
+    <color name="success_light">#1A3D27</color>
+    <color name="success_dark">#C8F0D8</color>
+    <color name="warning">#FFB951</color>
+    <color name="warning_light">#3D2A00</color>
+    <color name="warning_dark">#FFECC7</color>
+    <color name="error">@color/md3_dark_error</color>
+    <color name="error_light">@color/md3_dark_error_container</color>
+    <color name="error_dark">@color/md3_dark_on_error_container</color>
+    <color name="info">@color/md3_dark_primary</color>
+    <color name="info_light">@color/md3_dark_primary_container</color>
+    <color name="info_dark">@color/md3_dark_on_primary_container</color>
+
+    <color name="text_primary">@color/md3_dark_on_surface</color>
+    <color name="text_secondary">@color/md3_dark_on_surface_variant</color>
+    <color name="text_hint">@color/md3_dark_outline</color>
+    <color name="primary_text">@color/md3_dark_on_surface</color>
+    <color name="secondary_text">@color/md3_dark_on_surface_variant</color>
+
+    <color name="background">@color/md3_dark_background</color>
+    <color name="background_color">@color/md3_dark_background</color>
+    <color name="background_light">#1D2024</color>
+    <color name="background_secondary">@color/md3_dark_surface_variant</color>
+    <color name="surface">@color/md3_dark_surface</color>
+    <color name="divider">@color/md3_dark_outline_variant</color>
+    <color name="divider_color">@color/md3_dark_outline_variant</color>
+    <color name="card_stroke_color">@color/md3_dark_outline_variant</color>
+
+    <color name="status_pending">@color/warning</color>
+    <color name="status_synced">@color/success</color>
+    <color name="status_error">@color/md3_dark_error</color>
+    <color name="status_background_success">@color/success_light</color>
+    <color name="status_background_warning">@color/warning_light</color>
+    <color name="status_background_error">@color/md3_dark_error_container</color>
+
+    <color name="progress_background">@color/md3_dark_surface_variant</color>
+    <color name="success_color">@color/success</color>
+    <color name="warning_color">@color/warning</color>
+    <color name="info_color">@color/md3_dark_primary</color>
+    <color name="error_red">@color/md3_dark_error</color>
+
+    <!-- Aliases legados -->
+    <color name="purple_200">@color/md3_dark_primary_container</color>
+    <color name="purple_500">@color/md3_dark_primary</color>
+    <color name="purple_700">@color/md3_dark_on_primary</color>
+    <color name="teal_200">@color/md3_dark_tertiary</color>
+    <color name="teal_700">@color/md3_dark_tertiary_container</color>
+
 </resources>

@@ -152,6 +152,16 @@ object ApiModule {
     fun provideColetaApi(retrofit: Retrofit): ColetaApi {
         return retrofit.create(ColetaApi::class.java)
     }
+
+    /**
+     * BUGFIX F6 (07/05/2026): FotoColetaApi injetado para habilitar upload real
+     * de fotos de coleta no `PhotoSyncWorker`, corrigindo perda silenciosa.
+     */
+    @Provides
+    @Singleton
+    fun provideFotoColetaApi(retrofit: Retrofit): com.inventario.mobile.data.remote.api.FotoColetaApi {
+        return retrofit.create(com.inventario.mobile.data.remote.api.FotoColetaApi::class.java)
+    }
     
     @Provides
     @Singleton
@@ -195,5 +205,11 @@ object ApiModule {
     @Singleton
     fun provideFotoReferenciaApi(retrofit: Retrofit): com.inventario.mobile.data.remote.api.FotoReferenciaApi {
         return retrofit.create(com.inventario.mobile.data.remote.api.FotoReferenciaApi::class.java)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideAuthApi(retrofit: Retrofit): com.inventario.mobile.data.remote.api.AuthApi {
+        return retrofit.create(com.inventario.mobile.data.remote.api.AuthApi::class.java)
     }
 }

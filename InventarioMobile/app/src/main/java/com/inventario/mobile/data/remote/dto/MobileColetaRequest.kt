@@ -62,5 +62,21 @@ data class MobileColetaRequest(
     val divergencia: Boolean? = false,
     
     @SerializedName("motivoDivergencia")
-    val motivoDivergencia: String? = null
+    val motivoDivergencia: String? = null,
+    
+    // ========== METRICAS V2 ==========
+    @SerializedName("tempoColetaSegundos")
+    val tempoColetaSegundos: Int? = null,
+    
+    @SerializedName("tempoScanSegundos")
+    val tempoScanSegundos: Int? = null,
+    
+    @SerializedName("tempoPreenchimentoSegundos")
+    val tempoPreenchimentoSegundos: Int? = null,
+    
+    @SerializedName("metodoColeta")
+    val metodoColeta: String? = null,
+    
+    @SerializedName("tipoScan")
+    val tipoScan: String? = null
 )

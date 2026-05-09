@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.inventario.mobile.app-mergeDebugResources-65:/values-watch-v20/values-watch-v20.xml",
+            "outputFile": "com.inventario.mobile.app-mergeDebugResources-71:/values-watch-v20/values-watch-v20.xml",
             "map": [
                 {
                     "source": "C:\\Users\\Romulo\\.gradle\\caches\\transforms-3\\cfb5def2ec785a541d74e87794f3ae69\\transformed\\appcompat-1.6.1\\res\\values-watch-v20\\values-watch-v20.xml",

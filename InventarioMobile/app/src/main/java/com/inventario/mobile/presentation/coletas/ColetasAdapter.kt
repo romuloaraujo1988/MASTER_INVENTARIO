@@ -14,13 +14,18 @@ import com.inventario.mobile.databinding.ItemColetaHeaderBinding
 import com.inventario.mobile.domain.usecase.ColetaListItem
 
 /**
- * Adapter para lista de coletas com suporte a headers de grupo
- * Usa DiffUtil para atualizações eficientes
- * 
+ * Adapter para lista de coletas com suporte a headers de grupo.
+ * Usa DiffUtil para atualizações eficientes.
+ *
+ * @param onColetaClick Callback invocado no clique simples em um item de coleta.
+ * @param onItemLongClick Callback opcional invocado no long-click em um item de coleta.
+ *   Usado pela [ColetasUnificadaActivity] para exibir menu de contexto (Requisitos 2.7, 2.10).
+ *
  * @see Requirements 7.4, 7.5, 10.1, 10.3, 10.4
  */
 class ColetasAdapter(
-    private val onColetaClick: (Coleta) -> Unit = {}
+    private val onColetaClick: (Coleta) -> Unit = {},
+    private val onItemLongClick: ((Coleta) -> Unit)? = null
 ) : ListAdapter<ColetaListItem, RecyclerView.ViewHolder>(ColetaListItemDiffCallback()) {
     
     companion object {
@@ -44,7 +49,7 @@ class ColetasAdapter(
             }
             VIEW_TYPE_ITEM -> {
                 val binding = ItemColetaBinding.inflate(inflater, parent, false)
-                ColetaViewHolder(binding, onColetaClick)
+                ColetaViewHolder(binding, onColetaClick, onItemLongClick)
             }
             else -> throw IllegalArgumentException("Unknown view type: $viewType")
         }
@@ -97,7 +102,8 @@ class ColetasAdapter(
      */
     class ColetaViewHolder(
         private val binding: ItemColetaBinding,
-        private val onColetaClick: (Coleta) -> Unit
+        private val onColetaClick: (Coleta) -> Unit,
+        private val onItemLongClick: ((Coleta) -> Unit)? = null
     ) : RecyclerView.ViewHolder(binding.root) {
         
         fun bind(coleta: Coleta) {
@@ -148,6 +154,12 @@ class ColetasAdapter(
             // Click listener
             binding.root.setOnClickListener {
                 onColetaClick(coleta)
+            }
+
+            // Long-click listener (Requisitos 2.7, 2.10)
+            binding.root.setOnLongClickListener {
+                onItemLongClick?.invoke(coleta)
+                onItemLongClick != null
             }
         }
         

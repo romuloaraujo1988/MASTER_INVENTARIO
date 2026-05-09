@@ -11,6 +11,8 @@ import javax.inject.Singleton
 /**
  * Helper para gerenciar vibração do dispositivo
  * Usado para feedback tátil ao coletar patrimônios
+ * 
+ * ✅ v2.20: Vibração com PRIORIDADE MÁXIMA e amplitude forte
  */
 @Singleton
 class VibrationHelper @Inject constructor(
@@ -20,12 +22,13 @@ class VibrationHelper @Inject constructor(
     
     companion object {
         // Duração da vibração em milissegundos
-        private const val VIBRATION_DURATION_SHORT = 50L   // Vibração curta
-        private const val VIBRATION_DURATION_MEDIUM = 100L // Vibração média
-        private const val VIBRATION_DURATION_LONG = 200L   // Vibração longa
+        private const val VIBRATION_DURATION_SHORT = 120L   // ✅ Aumentado de 80ms para 120ms
+        private const val VIBRATION_DURATION_MEDIUM = 200L  // ✅ Aumentado de 150ms para 200ms
+        private const val VIBRATION_DURATION_LONG = 400L    // ✅ Aumentado de 300ms para 400ms
         
-        // Amplitude da vibração (1-255, ou DEFAULT_AMPLITUDE)
-        private const val VIBRATION_AMPLITUDE = 128 // Amplitude média
+        // ✅ AMPLITUDE MÁXIMA (255) para vibração forte e perceptível
+        // Antes usava -1 (DEFAULT_AMPLITUDE) que era muito fraco
+        private const val VIBRATION_AMPLITUDE = 255  // Máximo = vibração mais forte
     }
     
     private val vibrator: Vibrator? by lazy {
@@ -87,19 +90,38 @@ class VibrationHelper @Inject constructor(
     }
     
     /**
-     * Vibração de sucesso - padrão curto-pausa-curto
+     * Vibração de sucesso — padrão FORTE e PERCEPTÍVEL
+     * ✅ v2.20: Amplitude MÁXIMA (255) + duração aumentada para 120ms
+     * Padrão: vibra-pausa-vibra para feedback tátil claro
+     * 
+     * Chamada ao coletar patrimônio com sucesso
      */
     fun vibrateSuccess() {
-        if (!isVibrationEnabled()) return
-        
-        val pattern = longArrayOf(0, 50, 50, 50) // delay, vibrate, pause, vibrate
-        
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val amplitudes = intArrayOf(0, VIBRATION_AMPLITUDE, 0, VIBRATION_AMPLITUDE)
-            vibrator?.vibrate(VibrationEffect.createWaveform(pattern, amplitudes, -1))
-        } else {
-            @Suppress("DEPRECATION")
-            vibrator?.vibrate(pattern, -1)
+        if (!isVibrationEnabled()) {
+            android.util.Log.d("VibrationHelper", "⚠️ Vibração desabilitada nas configurações")
+            return
+        }
+        if (vibrator == null || !hasVibrator()) {
+            android.util.Log.w("VibrationHelper", "⚠️ Dispositivo não suporta vibração")
+            return
+        }
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // ✅ Padrão FORTE: 120ms vibra, 80ms pausa, 120ms vibra
+                // Amplitude MÁXIMA (255) para garantir que seja perceptível
+                val pattern = longArrayOf(0, 120, 80, 120)
+                val amplitudes = intArrayOf(0, 255, 0, 255)  // ✅ MÁXIMO
+                vibrator?.vibrate(VibrationEffect.createWaveform(pattern, amplitudes, -1))
+                android.util.Log.d("VibrationHelper", "✅ vibrateSuccess executado (AMPLITUDE MÁXIMA 255)")
+            } else {
+                // API < 26: usar padrão simples (sem controle de amplitude)
+                @Suppress("DEPRECATION")
+                vibrator?.vibrate(longArrayOf(0, 120, 80, 120), -1)
+                android.util.Log.d("VibrationHelper", "✅ vibrateSuccess executado (API < 26)")
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("VibrationHelper", "❌ Erro ao vibrar (success)", e)
         }
     }
     

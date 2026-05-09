@@ -1,11 +1,16 @@
 package com.inventario.mobile.network
 
+import android.app.Activity
+import android.app.Application
+import android.os.Bundle
 import android.util.Log
 import com.inventario.mobile.utils.PreferencesManager
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONObject
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -29,6 +34,7 @@ class RefreshTokenInterceptor @Inject constructor(
     companion object {
         private const val TAG = "RefreshTokenInterceptor"
         private const val MAX_RETRY_ATTEMPTS = 1
+        private const val BIOMETRIC_TIMEOUT_SECONDS = 30L
     }
     
     /**
@@ -36,6 +42,39 @@ class RefreshTokenInterceptor @Inject constructor(
      * Será chamado quando renovação falhar
      */
     var tokenExpiredListener: TokenExpiredListener? = null
+    
+    /**
+     * Flag para evitar múltiplas renovações simultâneas
+     */
+    @Volatile
+    private var isRenewing = false
+
+    @Volatile
+    private var currentActivity: Activity? = null
+
+    /**
+     * Application para obter Activity atual.
+     * Setter customizado para registrar o listener apenas uma vez.
+     */
+    var application: Application? = null
+        set(value) {
+            field = value
+            field?.registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
+                override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+                override fun onActivityStarted(activity: Activity) {}
+                override fun onActivityResumed(activity: Activity) {
+                    currentActivity = activity
+                }
+                override fun onActivityPaused(activity: Activity) {}
+                override fun onActivityStopped(activity: Activity) {}
+                override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+                override fun onActivityDestroyed(activity: Activity) {
+                    if (currentActivity === activity) {
+                        currentActivity = null
+                    }
+                }
+            })
+        }
     
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
@@ -51,11 +90,32 @@ class RefreshTokenInterceptor @Inject constructor(
         
         // Se receber 401 (Unauthorized), tentar renovar token
         if (response.code == 401 && !isRefreshTokenRequest(originalRequest)) {
-            Log.w(TAG, "Recebido 401 Unauthorized, tentando renovar token...")
+            Log.w(TAG, "Recebido 401 Unauthorized, verificando biometria...")
             
             response.close() // Fechar resposta original
             
-            // Tentar renovar token
+            // Verificar se biometria está habilitada
+            val biometricEnabled = preferencesManager.isBiometricEnabled()
+            Log.d(TAG, "Biometria habilitada: $biometricEnabled")
+            
+            if (biometricEnabled) {
+                // Tentar renovação via biometria
+                Log.d(TAG, "Tentando renovação via biometria...")
+                val biometricSuccess = tentarRenovacaoComBiometria()
+                
+                if (biometricSuccess) {
+                    // Retry requisição original com novo token
+                    Log.d(TAG, "Token renovado via biometria, retrying requisição original...")
+                    val newRequest = originalRequest.newBuilder()
+                        .header("Authorization", "Bearer ${preferencesManager.getAccessToken()}")
+                        .build()
+                    
+                    return chain.proceed(newRequest)
+                }
+            }
+            
+            // Se biometria não habilitada ou falhou, tentar renovação normal
+            Log.d(TAG, "Tentando renovação normal de token...")
             val refreshSuccess = tryRefreshToken(chain)
             
             if (refreshSuccess) {
@@ -172,5 +232,172 @@ class RefreshTokenInterceptor @Inject constructor(
     private fun getBaseUrl(chain: Interceptor.Chain): String {
         val request = chain.request()
         return "${request.url.scheme}://${request.url.host}:${request.url.port}"
+    }
+    
+    /**
+     * Tenta renovação de token via biometria
+     * Usa CountDownLatch para sincronização entre threads
+     */
+    @Synchronized
+    private fun tentarRenovacaoComBiometria(): Boolean {
+        // Evitar múltiplas renovações simultâneas
+        if (isRenewing) {
+            Log.d(TAG, "Renovação já em andamento, aguardando...")
+            return false
+        }
+        
+        isRenewing = true
+        
+        try {
+            Log.d(TAG, "═══════════════════════════════════════════")
+            Log.d(TAG, "TENTANDO RENOVAÇÃO VIA BIOMETRIA")
+            
+            // Obter Activity atual
+            val activity = getCurrentActivity()
+            
+            if (activity == null) {
+                Log.w(TAG, "Activity atual não encontrada, não é possível mostrar prompt de biometria")
+                return false
+            }
+            
+            Log.d(TAG, "Activity atual: ${activity.javaClass.simpleName}")
+            
+            // Verificar se biometria está disponível
+            val biometricManager = com.inventario.mobile.security.BiometricAuthManager(activity)
+            val availability = biometricManager.isBiometricAvailable()
+            
+            if (!availability.isAvailable()) {
+                Log.w(TAG, "Biometria não disponível: ${availability.getMessage()}")
+                return false
+            }
+            
+            // Usar CountDownLatch para aguardar resultado da biometria
+            val latch = CountDownLatch(1)
+            var renovacaoSucesso = false
+            
+            // Mostrar prompt de biometria na UI thread
+            activity.runOnUiThread {
+                // Cast para FragmentActivity (necessário para BiometricAuthManager)
+                val fragmentActivity = activity as? androidx.fragment.app.FragmentActivity
+                
+                if (fragmentActivity == null) {
+                    Log.w(TAG, "Activity não é FragmentActivity, não é possível mostrar biometria")
+                    renovacaoSucesso = false
+                    latch.countDown()
+                    return@runOnUiThread
+                }
+                
+                biometricManager.authenticateWithCancel(
+                    activity = fragmentActivity,
+                    title = "Renovar Sessão",
+                    subtitle = "Use biometria para renovar token",
+                    description = "Toque no sensor para continuar",
+                    callback = object : com.inventario.mobile.security.BiometricCallback {
+                        override fun onAuthenticationSucceeded(authenticationType: String) {
+                            Log.d(TAG, "✅ Biometria validada, chamando Use Case de renovação...")
+                            
+                            try {
+                                // Criar instância do Use Case manualmente
+                                // Precisamos de AuthApi e PreferencesManager
+                                val context = activity.applicationContext
+                                
+                                // Obter Retrofit para criar AuthApi
+                                val serverConfigManager = com.inventario.mobile.utils.ServerConfigManager.getInstance(context)
+                                val baseUrl = serverConfigManager.getBaseUrl()
+                                val finalBaseUrl = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
+                                
+                                val retrofit = retrofit2.Retrofit.Builder()
+                                    .baseUrl(finalBaseUrl)
+                                    .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create())
+                                    .build()
+                                
+                                val authApi = retrofit.create(com.inventario.mobile.data.remote.api.AuthApi::class.java)
+                                
+                                // Criar Use Case
+                                val renovarTokenUseCase = com.inventario.mobile.domain.usecase.RenovarTokenComBiometriaUseCase(
+                                    authApi, 
+                                    preferencesManager,
+                                    context
+                                )
+                                
+                                // Chamar Use Case (precisa ser em coroutine)
+                                kotlinx.coroutines.runBlocking {
+                                    val result = renovarTokenUseCase()
+                                    
+                                    if (result.isSuccess) {
+                                        val loginResult = result.getOrNull()
+                                        Log.d(TAG, "✓ Token renovado via biometria com sucesso")
+                                        Log.d(TAG, "Usuário: ${loginResult?.fullName}")
+                                        Log.d(TAG, "Online: ${loginResult?.isOnline}")
+                                        renovacaoSucesso = true
+                                    } else {
+                                        val error = result.exceptionOrNull()
+                                        Log.e(TAG, "❌ Falha ao renovar token via Use Case: ${error?.message}")
+                                        renovacaoSucesso = false
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Erro ao renovar token via Use Case", e)
+                                renovacaoSucesso = false
+                            } finally {
+                                latch.countDown()
+                            }
+                        }
+                        
+                        override fun onAuthenticationFailed(message: String) {
+                            Log.w(TAG, "❌ Biometria falhou: $message")
+                            renovacaoSucesso = false
+                            latch.countDown()
+                        }
+                        
+                        override fun onAuthenticationError(errorCode: Int, errorMessage: String) {
+                            Log.e(TAG, "❌ Erro na biometria: $errorCode - $errorMessage")
+                            renovacaoSucesso = false
+                            latch.countDown()
+                        }
+                        
+                        override fun onAuthenticationCanceled() {
+                            Log.d(TAG, "Biometria cancelada pelo usuário")
+                            renovacaoSucesso = false
+                            latch.countDown()
+                        }
+                        
+                        override fun onAuthenticationLockout(message: String) {
+                            Log.e(TAG, "🔒 Biometria bloqueada: $message")
+                            renovacaoSucesso = false
+                            latch.countDown()
+                        }
+                    }
+                )
+            }
+            
+            // Aguardar resultado com timeout
+            val completed = latch.await(BIOMETRIC_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            
+            if (!completed) {
+                Log.e(TAG, "⏱️ Timeout aguardando biometria ($BIOMETRIC_TIMEOUT_SECONDS segundos)")
+                return false
+            }
+            
+            Log.d(TAG, "Resultado da renovação via biometria: $renovacaoSucesso")
+            Log.d(TAG, "═══════════════════════════════════════════")
+            
+            return renovacaoSucesso
+            
+        } finally {
+            isRenewing = false
+        }
+    }
+    
+    /**
+     * Obtém Activity atual usando ActivityLifecycleCallbacks
+     */
+    private fun getCurrentActivity(): Activity? {
+        if (application == null) {
+            Log.w(TAG, "Application não configurada no interceptor")
+            return null
+        }
+        
+        return currentActivity
     }
 }

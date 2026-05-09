@@ -37,9 +37,11 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     
+    <!-- Permissões revistas para Req 12 (spec correcoes-seguranca) -->
     <!-- Permissões para compatibilidade com Android 14 -->
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <!-- SYSTEM_ALERT_WINDOW removida: não há uso de overlay/TYPE_APPLICATION_OVERLAY no app. -->
+    <!-- USE_FULL_SCREEN_INTENT removida: nenhum chamador de NotificationCompat.Builder.setFullScreenIntent(). -->
+
     
     <!-- Features de câmera com configurações específicas para Android 14 -->
     <uses-feature
@@ -63,7 +65,7 @@
 
     <application
         android:name=".InventarioMobileApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -71,7 +73,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.InventarioMobile"
-        android:usesCleartextTraffic="true"
         android:networkSecurityConfig="@xml/network_security_config"
         android:requestLegacyExternalStorage="false"
         android:preserveLegacyExternalStorage="false"
@@ -143,6 +144,19 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.InventarioMobile.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
+        
+        <!-- Escolha Método Coleta Activity (IA ou Manual) -->
+        <!-- REMOVIDA DO FLUXO ATIVO — Requisito 1.2 (simplificacao-navegacao) -->
+        <!-- O fluxo DESCRICAO agora navega diretamente para DescricaoSelectionActivity. -->
+        <!-- O arquivo .kt é mantido como código morto para preservar histórico.       -->
+        <!--
+        <activity
+            android:name=".presentation.coleta.EscolhaMetodoColetaActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        -->
         
         <!-- Descricao Selection Activity -->
         <activity
@@ -219,6 +233,15 @@
         <!-- Coletas Activity Clean (Clean Architecture) -->
         <activity
             android:name=".presentation.coletas.ColetasActivityClean"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
+        
+        <!-- Coletas Unificada Activity (fusão de ColetasActivityClean + CollectionViewActivity) -->
+        <!-- Requisitos: 2.1–2.12, 3.1, 3.2, 3.4 -->
+        <activity
+            android:name=".presentation.coletas.ColetasUnificadaActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.InventarioMobile.NoActionBar"

@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    Regras de backup legado (Android < 12) — spec correcoes-seguranca Req 11.2
+    Exclui banco SQLCipher e prefs criptografadas.
+    Defesa em profundidade: mesmo com allowBackup=false, se alguém reverter,
+    este arquivo evita vazamento de dados sensíveis.
+-->
 <full-backup-content>
-    <!-- Exclude specific shared preferences that contain GCM registration Id -->
+    <exclude domain="database" path="."/>
+    <exclude domain="sharedpref" path="secure_prefs.xml"/>
+    <exclude domain="sharedpref" path="sqlcipher_key_prefs.xml"/>
 </full-backup-content>

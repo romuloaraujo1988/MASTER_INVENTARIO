@@ -47,6 +47,74 @@ class InventarioMobileApplication : Application(), Configuration.Provider, Token
         
         // Inicializar ThreeTenABP para manipulação de datas
         AndroidThreeTen.init(this)
+
+        // Bug-fix 08/05/2026: desativa automaticamente o Modo Offline Forçado
+        // no startup. O OfflineFallbackInterceptor podia ativá-lo após 3 falhas
+        // (limite agora elevado para 10, mas o app já estava em produção com
+        // a flag ligada em muitos dispositivos). Forçar desativação no startup
+        // garante que o usuário começa online e só cai em offline de novo se
+        // realmente perder conexão por muito tempo.
+        try {
+            val prefs = com.inventario.mobile.utils.PreferencesManager(this)
+            if (prefs.isForceOfflineMode()) {
+                Log.w(TAG, "⚠️ Modo Offline Forçado detectado no startup — desativando automaticamente")
+                prefs.setForceOfflineMode(false)
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Erro ao resetar modo offline forçado no startup", e)
+        }
+
+        // Bug-fix 08/05/2026: invalida o cache HTTP do OkHttp no startup para
+        // evitar que respostas antigas (ex.: um GET /dashboard/stats que caiu
+        // em erro na versão anterior) continuem sendo servidas do cache em
+        // vez de ir ao servidor. Custo: na primeira chamada após o startup,
+        // o OkHttp buscará tudo da rede (o que é exatamente o que queremos).
+        try {
+            val cacheDir = java.io.File(cacheDir, "okhttp")
+            if (cacheDir.exists()) {
+                val removed = cacheDir.deleteRecursively()
+                Log.d(TAG, "✓ Cache HTTP do OkHttp limpo no startup: $removed")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Erro ao limpar cache HTTP no startup", e)
+        }
+
+        // Bug-fix 08/05/2026 (v2.20.5): reset defensivo ÚNICO do banco Room.
+        // Várias telas estão falhando em queries do Room após instalar builds
+        // anteriores (#105-#109) em dispositivos com dados antigos; sintomas
+        // sugerem migration parcial ou schema inconsistente. Esta versão apaga
+        // o banco uma única vez para cada dispositivo, garantindo schema
+        // limpo. A flag `_schema_reset_v2205_done` marca que já foi feito,
+        // evitando apagar de novo em reboots futuros.
+        //
+        // Este bloco deve ser REMOVIDO na versão 2.20.6 ou posterior.
+        try {
+            val prefs = com.inventario.mobile.utils.PreferencesManager(this)
+            val alreadyDone = prefs.getBoolean("_schema_reset_v2205_done", false)
+            if (!alreadyDone) {
+                Log.w(TAG, "🗑️ v2.20.5 schema reset: apagando banco Room uma única vez")
+                listOf(
+                    "inventario_offline_secure.db",
+                    "inventario_offline_secure.db-journal",
+                    "inventario_offline_secure.db-shm",
+                    "inventario_offline_secure.db-wal",
+                    "inventario_offline.db"
+                ).forEach { fileName ->
+                    val dbFile = getDatabasePath(fileName)
+                    if (dbFile.exists()) {
+                        val ok = dbFile.delete()
+                        Log.w(TAG, "   removido $fileName: $ok")
+                    }
+                }
+                // Limpa também o CacheServerStats e flags relacionadas para
+                // forçar o app a buscar tudo do servidor novamente.
+                prefs.clearCacheServerStats()
+                prefs.putBoolean("_schema_reset_v2205_done", true)
+                Log.w(TAG, "✓ Banco apagado e CacheServerStats limpo — próxima chamada criará schema limpo")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Erro ao executar schema reset único no startup", e)
+        }
         
         // Criar canais de notificação
         com.inventario.mobile.utils.NotificationUtils.createNotificationChannels(this)

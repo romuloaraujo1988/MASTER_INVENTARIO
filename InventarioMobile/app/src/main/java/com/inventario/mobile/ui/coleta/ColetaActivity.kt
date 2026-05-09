@@ -18,6 +18,7 @@ import com.inventario.mobile.presentation.state.ColetaState
 import com.inventario.mobile.ui.base.BaseOfflineActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Activity para registro de coleta de patrimônio
@@ -30,6 +31,10 @@ class ColetaActivity : BaseOfflineActivity() {
     
     // ViewModel injetado via Hilt
     private val viewModel: ColetaViewModelClean by viewModels()
+    
+    // PreferencesManager injetado via Hilt
+    @Inject
+    lateinit var preferencesManager: com.inventario.mobile.utils.PreferencesManager
     
     private var salaId: Long = -1L
     private var salaNome: String = ""
@@ -49,6 +54,8 @@ class ColetaActivity : BaseOfflineActivity() {
             val patrimonioCodigo = result.data?.getStringExtra(ScannerActivity.EXTRA_PATRIMONIO_CODIGO)
             
             if (patrimonioId != -1L && patrimonioCodigo != null) {
+                viewModel.finalizarScan()
+                viewModel.iniciarPreenchimento()
                 viewModel.setPatrimonio(patrimonioId, patrimonioCodigo)
                 Toast.makeText(this, "Patrimônio $patrimonioCodigo escaneado!", Toast.LENGTH_SHORT).show()
             } else {
@@ -83,6 +90,9 @@ class ColetaActivity : BaseOfflineActivity() {
         } else {
             android.util.Log.e(TAG, "ERRO: Sala não foi recebida corretamente!")
         }
+        
+        // Iniciar timer da coleta
+        viewModel.iniciarColeta()
     }
     
     /**
@@ -183,6 +193,7 @@ class ColetaActivity : BaseOfflineActivity() {
     }
 
     private fun openScanner() {
+        viewModel.iniciarScan()
         val intent = Intent(this, ScannerActivity::class.java).apply {
             putExtra(ScannerActivity.EXTRA_ALLOW_COLLECTION, true)
         }
@@ -204,17 +215,30 @@ class ColetaActivity : BaseOfflineActivity() {
             return
         }
         
-        // TODO: Obter ID do usuário logado do PreferencesManager
-        val idUsuario = 1L // Placeholder
+        // Obter ID do usuário logado do PreferencesManager
+        val idUsuario = preferencesManager.getUserId()
         
-        // CORREÇÃO: Usar salaNome ao invés de campo editável
-        viewModel.registrarColeta(
+        // Validar se usuário está logado
+        if (idUsuario == null) {
+            Toast.makeText(
+                this, 
+                "Usuário não identificado. Faça login novamente.", 
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+        
+        // Log de rastreamento
+        Log.d(TAG, "Registrando coleta com ID do usuário: $idUsuario")
+        
+        // CORREÇÃO: Usar salaNome ao invés de campo editável e enviar métricas
+        viewModel.registrarColetaComMetricas(
             numeroPatrimonio = numeroPatrimonio,
             localizacaoAtual = salaNome, // ← Usar nome da sala selecionada
             observacoes = observacoes,
             latitude = null,
             longitude = null,
-            idUsuario = idUsuario
+            idUsuario = idUsuario.toLong()
         )
     }
 

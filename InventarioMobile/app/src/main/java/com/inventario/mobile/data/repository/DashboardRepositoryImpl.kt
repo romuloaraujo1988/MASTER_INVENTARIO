@@ -5,7 +5,10 @@ import com.inventario.mobile.data.mapper.DashboardMapper
 import com.inventario.mobile.data.remote.api.ApiService
 import com.inventario.mobile.domain.model.*
 import com.inventario.mobile.domain.repository.DashboardRepository
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
@@ -21,7 +24,9 @@ class DashboardRepositoryImpl @Inject constructor(
     private val apiService: ApiService,
     private val mapper: DashboardMapper,
     private val dashboardDao: com.inventario.mobile.data.local.dao.DashboardDao,
-    private val preferencesManager: com.inventario.mobile.utils.PreferencesManager
+    private val preferencesManager: com.inventario.mobile.utils.PreferencesManager,
+    private val patrimonioDao: com.inventario.mobile.data.local.dao.PatrimonioDao,
+    private val coletaDao: com.inventario.mobile.data.local.dao.ColetaDao
 ) : DashboardRepository {
     
     companion object {
@@ -59,9 +64,15 @@ class DashboardRepositoryImpl @Inject constructor(
                     Log.d(TAG, "DTO: totalPatrimonios=${dto.totalPatrimonios}, coletados=${dto.patrimoniosColetados}, pendentes=${dto.patrimoniosPendentes}")
                     
                     val stats = mapper.toDomain(dto)
-                    Log.d(TAG, "Stats mapeados: ${stats.percentualConclusao}% (${stats.totalColetados}/${stats.totalPatrimonios})")
+                    val statsParaCache = stats.copy(
+                        timestampUltimaSincronizacao = System.currentTimeMillis(),
+                        isOfflineData = false
+                    )
+                    preferencesManager.saveCacheServerStats(statsParaCache)
+                    Log.d(TAG, "💾 CacheServerStats persistido: timestamp=${statsParaCache.timestampUltimaSincronizacao}")
+                    Log.d(TAG, "Stats mapeados: ${statsParaCache.percentualConclusao}% (${statsParaCache.totalColetados}/${statsParaCache.totalPatrimonios})")
                     Log.d(TAG, "═══ SUCESSO ═══")
-                    Result.success(stats)
+                    Result.success(statsParaCache)
                 } else {
                     val error = "API retornou erro: ${apiResponse.message}"
                     Log.e(TAG, error)
@@ -82,37 +93,83 @@ class DashboardRepositoryImpl @Inject constructor(
     }
     
     override suspend fun buscarEstatisticasLocais(inventarioId: Int?): Result<com.inventario.mobile.domain.model.DashboardStats> {
-        return try {
+        val invId = inventarioId ?: preferencesManager.getInventarioAtivoId() ?: 0
+        val cache = preferencesManager.getCacheServerStats()
+
+        // Primeiro tentamos ler Room com proteção individual para cada query.
+        // Se uma falhar, caímos no cache do servidor (que contém os últimos dados
+        // bons conhecidos) em vez de retornar zeros.
+        return runCatching {
             Log.d(TAG, "═══ BUSCAR ESTATÍSTICAS LOCAIS (OFFLINE) ═══")
-            Log.d(TAG, "Inventário ID: $inventarioId")
-            
-            // TODO: Implementar busca no banco local (Room)
-            // Por enquanto, retornar estatísticas vazias
-            Log.w(TAG, "⚠️ Busca local ainda não implementada - retornando dados vazios")
-            
-            val emptyStats = com.inventario.mobile.domain.model.DashboardStats(
-                totalPatrimonios = 0,
-                totalColetados = 0,
-                totalPendentes = 0,
-                percentualConclusao = 0.0,
-                coletoresAtivos = 0,
-                divergencias = 0,
-                valorTotal = 0.0,
-                inventarioId = inventarioId,
-                inventarioNome = null,
+            Log.d(TAG, "Inventário ID efetivo: $invId (parâmetro: $inventarioId)")
+            Log.d(TAG, "CacheServerStats disponível: ${cache != null} (timestamp=${cache?.timestamp})")
+
+            val totalPatrimonios = cache?.totalPatrimonios
+                ?: runCatching { patrimonioDao.countAll() }
+                    .getOrElse {
+                        Log.w(TAG, "patrimonioDao.countAll() falhou, usando 0", it)
+                        0
+                    }
+
+            val totalColetadosLocais = runCatching {
+                coletaDao.buscarTodas(invId).distinctBy { it.idPatrimonio }.size
+            }.getOrElse {
+                Log.w(TAG, "coletaDao.buscarTodas($invId) falhou, usando cache do servidor", it)
+                // Se o Room falhou, usamos o total do cache (é melhor que 0)
+                cache?.totalColetados ?: 0
+            }
+
+            val totalPendentes = maxOf(0, totalPatrimonios - totalColetadosLocais)
+            val percentualConclusao = if (totalPatrimonios > 0) {
+                roundTo2((totalColetadosLocais * 100.0) / totalPatrimonios)
+            } else {
+                0.0
+            }
+
+            Log.d(TAG, "Stats locais calculados: total=$totalPatrimonios, coletados=$totalColetadosLocais, pendentes=$totalPendentes, percentual=$percentualConclusao")
+
+            com.inventario.mobile.domain.model.DashboardStats(
+                totalPatrimonios = totalPatrimonios,
+                totalColetados = totalColetadosLocais,
+                totalPendentes = totalPendentes,
+                percentualConclusao = percentualConclusao,
+                coletoresAtivos = cache?.coletoresAtivos ?: 0,
+                divergencias = cache?.divergencias ?: 0,
+                valorTotal = cache?.valorTotal ?: 0.0,
+                inventarioId = if (invId > 0) invId else null,
+                inventarioNome = cache?.inventarioNome,
                 coletasHoje = 0,
                 coletasSemana = 0,
                 coletasMes = 0,
                 tempoMedioColeta = 0.0,
-                isOfflineData = true
+                isOfflineData = true,
+                timestampUltimaSincronizacao = cache?.timestamp
             )
-            
-            Log.d(TAG, "═══ RETORNANDO DADOS VAZIOS (OFFLINE) ═══")
-            Result.success(emptyStats)
-            
-        } catch (e: Exception) {
-            Log.e(TAG, "Erro ao buscar estatísticas locais", e)
-            Result.failure(e)
+        }.recoverCatching { e ->
+            Log.e(TAG, "buscarEstatisticasLocais falhou — usando cache do servidor integralmente", e)
+            // Se tudo falhou (até o construtor do DashboardStats), usa apenas o
+            // CacheServerStats como fallback final. Só retorna empty() se o cache
+            // também estiver vazio (primeira execução sem sync prévia).
+            if (cache != null) {
+                com.inventario.mobile.domain.model.DashboardStats(
+                    totalPatrimonios = cache.totalPatrimonios,
+                    totalColetados = cache.totalColetados,
+                    totalPendentes = maxOf(0, cache.totalPatrimonios - cache.totalColetados),
+                    percentualConclusao = if (cache.totalPatrimonios > 0)
+                        roundTo2((cache.totalColetados * 100.0) / cache.totalPatrimonios)
+                    else 0.0,
+                    coletoresAtivos = cache.coletoresAtivos,
+                    divergencias = cache.divergencias,
+                    valorTotal = cache.valorTotal,
+                    inventarioId = cache.inventarioId,
+                    inventarioNome = cache.inventarioNome,
+                    isOfflineData = true,
+                    timestampUltimaSincronizacao = cache.timestamp
+                )
+            } else {
+                com.inventario.mobile.domain.model.DashboardStats
+                    .empty(inventarioId = if (invId > 0) invId else null, isOfflineData = true)
+            }
         }
     }
 
@@ -323,83 +380,95 @@ class DashboardRepositoryImpl @Inject constructor(
     }
     
     /**
-     * 🔄 MÉTODO HÍBRIDO INTELIGENTE - Servidor + Coletas Locais
-     * 
-     * Estratégia:
-     * 1. Busca estatísticas base do servidor (total correto de patrimônios)
-     * 2. Observa coletas locais em tempo real (todas, não apenas pendentes)
-     * 3. Calcula: Total Coletados = Coletas no Servidor + Coletas Locais Não Sincronizadas
-     * 
-     * Benefícios:
-     * - Total de patrimônios sempre correto (do servidor: 11428)
-     * - Coletas locais somadas instantaneamente
-     * - Atualização em tempo real sem esperar sincronização
-     * - Não duplica coletas já sincronizadas
-     * 
-     * @param inventarioId ID do inventário (null = todos)
-     * @return Flow que emite DashboardStats sempre que há mudanças
+     * 🔄 MÉTODO HÍBRIDO INTELIGENTE - Servidor + Coletas Locais (Task 4.3)
+     *
+     * Pipeline reativo (Req 2.8, 2.9, 2.10, 2.11, 3.12, 3.13):
+     *  1) Caminho feliz: `buscarEstatisticas` (servidor) + `emitAll(observarTotalColetas.map { ... })`.
+     *  2) Falha do servidor: `catch` emite uma vez `buscarEstatisticasLocais` (fallback imediato — Req 2.9)
+     *     e mantém reatividade local via `observarTotalColetas`.
+     *  3) Em cada emissão, aplica `totalPendentes = max(0, totalPatrimonios - coletadosAtualizado)` (Req 3.13)
+     *     e `percentualConclusao = roundTo2(...)` para consistência com `buscarEstatisticasLocais` (Req 3.2).
+     *  4) No catch, todas as emissões têm `isOfflineData = true` (Req 3.5, 4.1).
      */
-    fun observarEstatisticasHibridas(inventarioId: Int?): kotlinx.coroutines.flow.Flow<com.inventario.mobile.domain.model.DashboardStats> {
-        return kotlinx.coroutines.flow.flow {
-            Log.d(TAG, "🔄 Iniciando observação híbrida de estatísticas")
-            
-            // 1. Buscar estatísticas base do servidor (uma única vez)
-            val serverStatsResult = buscarEstatisticas(inventarioId)
-            
-            if (serverStatsResult.isFailure) {
-                Log.w(TAG, "⚠️ Falha ao buscar do servidor, usando apenas dados locais")
-                // Fallback para dados locais
-                dashboardDao.observarEstatisticas(inventarioId).collect { dto ->
-                    emit(mapDtoToDomain(dto, inventarioId))
+    override fun observarEstatisticasHibridas(inventarioId: Int?): Flow<com.inventario.mobile.domain.model.DashboardStats> {
+        val invId = inventarioId ?: preferencesManager.getInventarioAtivoId() ?: 0
+        Log.d(TAG, "🎯 observarEstatisticasHibridas iniciado (parametro=$inventarioId, efetivo=$invId)")
+        return flow {
+            // 1) Base do servidor (com persistência de cache). Se falhar, cai no catch.
+            Log.d(TAG, "🎯 observarEstatisticasHibridas: chamando buscarEstatisticas($inventarioId)")
+            val baseResult = buscarEstatisticas(inventarioId)
+            Log.d(TAG, "🎯 observarEstatisticasHibridas: buscarEstatisticas retornou isSuccess=${baseResult.isSuccess}")
+            val base = baseResult.getOrThrow()
+            Log.d(TAG, "🎯 observarEstatisticasHibridas: base obtida — total=${base.totalPatrimonios} coletados=${base.totalColetados} pendentes=${base.totalPendentes}")
+
+            // Emissão IMEDIATA da base do servidor (antes do combine com Room Flow).
+            // Isso garante que o Fragment receba os KPIs do servidor mesmo quando o
+            // Room Flow demora para emitir o primeiro valor.
+            emit(base)
+            Log.d(TAG, "🎯 observarEstatisticasHibridas: emitiu base imediata para upstream")
+
+            // 2) Combina com Flow de coletas locais não-sincronizadas (Room reativo).
+            // Envolvido com .catch { emit(0) } para que uma falha no Room (ex.:
+            // SQLiteException por migration incompleta) NÃO derrube toda a
+            // pipeline e force o .catch externo a zerar os dados do servidor.
+            // Sem isso: servidor emite 77, Room falha, ViewModel.catch emite
+            // DashboardStats.empty = 0 e sobrescreve os dados bons.
+            emitAll(
+                dashboardDao.observarTotalColetas(invId)
+                    .catch { e ->
+                        Log.w(TAG, "🎯 observarTotalColetas falhou, assumindo 0 coletas locais", e)
+                        emit(0)
+                    }
+                    .map { totalLocais ->
+                        Log.d(TAG, "🎯 observarTotalColetas emitiu $totalLocais coletas locais (invId=$invId)")
+                        val coletadosAtualizado = base.totalColetados + totalLocais
+                        val pendentesAtualizado = maxOf(0, base.totalPatrimonios - coletadosAtualizado)
+                        val percentual = if (base.totalPatrimonios > 0)
+                            (coletadosAtualizado * 100.0) / base.totalPatrimonios
+                        else 0.0
+                        base.copy(
+                            totalColetados = coletadosAtualizado,
+                            totalPendentes = pendentesAtualizado,
+                            percentualConclusao = roundTo2(percentual)
+                        )
+                    }
+            )
+        }.catch { e ->
+            Log.w(TAG, "🎯 observarEstatisticasHibridas: falha no servidor, caindo para fallback offline", e)
+            // 3) Fallback: uma emissão imediata de estatísticas locais (Req 2.9)
+            val local = buscarEstatisticasLocais(inventarioId)
+                .getOrElse {
+                    com.inventario.mobile.domain.model.DashboardStats.empty(
+                        inventarioId = if (invId > 0) invId else null,
+                        isOfflineData = true
+                    )
                 }
-                return@flow
-            }
-            
-            val serverStats = serverStatsResult.getOrNull()!!
-            Log.d(TAG, "📊 Estatísticas base do servidor:")
-            Log.d(TAG, "   Total Patrimônios: ${serverStats.totalPatrimonios}")
-            Log.d(TAG, "   Coletados (servidor): ${serverStats.totalColetados}")
-            Log.d(TAG, "   Pendentes (servidor): ${serverStats.totalPendentes}")
-            
-            // 2. Observar coletas locais em tempo real
-            // Conta apenas coletas NÃO sincronizadas (sincronizado = false)
-            val invId = inventarioId ?: preferencesManager.getInventarioAtivoId() ?: 0
-            
-            dashboardDao.observarTotalColetas(invId).collect { totalColetasLocais ->
-                Log.d(TAG, "💾 Total de coletas locais NÃO sincronizadas: $totalColetasLocais")
-                
-                // 3. Calcular estatísticas híbridas
-                // IMPORTANTE: O servidor já retorna o total de coletas sincronizadas
-                // O DAO agora filtra apenas coletas NÃO sincronizadas (sincronizado = 0 ou NULL)
-                // Então somamos: Servidor (sincronizadas) + Locais (não sincronizadas) = Total Real
-                val totalColetadosAtualizado = serverStats.totalColetados + totalColetasLocais
-                val totalPendentesAtualizado = serverStats.totalPatrimonios - totalColetadosAtualizado
-                val percentualAtualizado = if (serverStats.totalPatrimonios > 0) {
-                    (totalColetadosAtualizado * 100.0) / serverStats.totalPatrimonios
-                } else {
-                    0.0
+            emit(local.copy(isOfflineData = true))
+            // 4) Continua reativo às mudanças locais mesmo offline
+            emitAll(
+                dashboardDao.observarTotalColetas(invId).map { totalLocais ->
+                    val base = local
+                    val coletadosAtualizado = base.totalColetados + totalLocais
+                    val pendentesAtualizado = maxOf(0, base.totalPatrimonios - coletadosAtualizado)
+                    base.copy(
+                        totalColetados = coletadosAtualizado,
+                        totalPendentes = pendentesAtualizado,
+                        percentualConclusao = if (base.totalPatrimonios > 0)
+                            roundTo2((coletadosAtualizado * 100.0) / base.totalPatrimonios)
+                        else 0.0,
+                        isOfflineData = true
+                    )
                 }
-                
-                Log.d(TAG, "🔄 Estatísticas híbridas calculadas:")
-                Log.d(TAG, "   Total Patrimônios: ${serverStats.totalPatrimonios}")
-                Log.d(TAG, "   Coletados: $totalColetadosAtualizado (servidor: ${serverStats.totalColetados} + locais: $totalColetasLocais)")
-                Log.d(TAG, "   Pendentes: $totalPendentesAtualizado")
-                Log.d(TAG, "   Percentual: ${String.format("%.2f", percentualAtualizado)}%")
-                
-                // 4. Emitir estatísticas atualizadas
-                emit(serverStats.copy(
-                    totalColetados = totalColetadosAtualizado,
-                    totalPendentes = totalPendentesAtualizado,
-                    percentualConclusao = percentualAtualizado
-                ))
-            }
-        }
-        .catch { e ->
-            Log.e(TAG, "❌ Erro ao observar estatísticas híbridas", e)
-            emit(createEmptyStats(inventarioId))
+            )
         }
     }
     
+    /**
+     * Arredonda um Double para 2 casas decimais.
+     * Usado por `buscarEstatisticasLocais` no cálculo de `percentualConclusao` (Req 3.2).
+     */
+    private fun roundTo2(value: Double): Double = Math.round(value * 100.0) / 100.0
+
     /**
      * Converte DTO do Room para modelo de domínio
      */
@@ -409,28 +478,6 @@ class DashboardRepositoryImpl @Inject constructor(
             totalColetados = dto.totalColetados,
             totalPendentes = dto.totalPendentes,
             percentualConclusao = dto.percentualColetado.toDouble(),
-            coletoresAtivos = 0,
-            divergencias = 0,
-            valorTotal = 0.0,
-            inventarioId = inventarioId,
-            inventarioNome = null,
-            coletasHoje = 0,
-            coletasSemana = 0,
-            coletasMes = 0,
-            tempoMedioColeta = 0.0,
-            isOfflineData = true
-        )
-    }
-    
-    /**
-     * Cria estatísticas vazias para fallback
-     */
-    private fun createEmptyStats(inventarioId: Int?): com.inventario.mobile.domain.model.DashboardStats {
-        return com.inventario.mobile.domain.model.DashboardStats(
-            totalPatrimonios = 0,
-            totalColetados = 0,
-            totalPendentes = 0,
-            percentualConclusao = 0.0,
             coletoresAtivos = 0,
             divergencias = 0,
             valorTotal = 0.0,

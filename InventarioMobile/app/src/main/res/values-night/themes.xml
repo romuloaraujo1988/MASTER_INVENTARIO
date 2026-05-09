@@ -1,66 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme - Dark Mode -->
-    <style name="Theme.InventarioMobile" parent="Theme.Material3.DayNight">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryVariant">@color/primary_dark</item>
-        <item name="colorOnPrimary">@color/black</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/secondary</item>
-        <item name="colorSecondaryVariant">@color/secondary_dark</item>
-        <item name="colorOnSecondary">@color/black</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor" tools:targetApi="l">@color/background</item>
-        <!-- Background colors -->
-        <item name="android:windowBackground">@color/background</item>
-        <item name="android:colorBackground">@color/background</item>
-        <!-- Surface colors -->
-        <item name="colorSurface">@color/surface</item>
-        <item name="colorOnSurface">@color/text_primary</item>
-        <!-- Error colors -->
-        <item name="colorError">@color/error</item>
-        <item name="colorOnError">@color/black</item>
+
+    <!--
+        SIHCP Mobile — Material Design 3 Theme (Dark)
+        Seed: #1976D2 (Blue 700)
+    -->
+    <style name="Theme.InventarioMobile" parent="Theme.Material3.DayNight.NoActionBar">
+
+        <!-- Cores Primárias -->
+        <item name="colorPrimary">@color/md3_dark_primary</item>
+        <item name="colorOnPrimary">@color/md3_dark_on_primary</item>
+        <item name="colorPrimaryContainer">@color/md3_dark_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/md3_dark_on_primary_container</item>
+
+        <!-- Cores Secundárias -->
+        <item name="colorSecondary">@color/md3_dark_secondary</item>
+        <item name="colorOnSecondary">@color/md3_dark_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/md3_dark_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/md3_dark_on_secondary_container</item>
+
+        <!-- Cores Terciárias -->
+        <item name="colorTertiary">@color/md3_dark_tertiary</item>
+        <item name="colorOnTertiary">@color/md3_dark_on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/md3_dark_tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/md3_dark_on_tertiary_container</item>
+
+        <!-- Superfícies e Fundo -->
+        <item name="android:colorBackground">@color/md3_dark_background</item>
+        <item name="colorOnBackground">@color/md3_dark_on_background</item>
+        <item name="colorSurface">@color/md3_dark_surface</item>
+        <item name="colorOnSurface">@color/md3_dark_on_surface</item>
+        <item name="colorSurfaceVariant">@color/md3_dark_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/md3_dark_on_surface_variant</item>
+
+        <!-- Outline -->
+        <item name="colorOutline">@color/md3_dark_outline</item>
+        <item name="colorOutlineVariant">@color/md3_dark_outline_variant</item>
+
+        <!-- Erro -->
+        <item name="colorError">@color/md3_dark_error</item>
+        <item name="colorOnError">@color/md3_dark_on_error</item>
+        <item name="colorErrorContainer">@color/md3_dark_error_container</item>
+        <item name="colorOnErrorContainer">@color/md3_dark_on_error_container</item>
+
+        <!-- Status Bar -->
+        <item name="android:statusBarColor" tools:targetApi="l">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+
+        <!-- Shapes -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.App.SmallComponent</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.App.MediumComponent</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.App.LargeComponent</item>
+
     </style>
 
-    <!-- Splash screen theme - Dark Mode -->
+    <!-- Splash - Dark -->
     <style name="Theme.InventarioMobile.Splash" parent="Theme.InventarioMobile">
-        <item name="android:windowBackground">@color/primary_dark</item>
+        <item name="android:windowBackground">@color/md3_dark_background</item>
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
     </style>
 
-    <!-- No Action Bar theme - Dark Mode -->
-    <style name="Theme.InventarioMobile.NoActionBar" parent="Theme.InventarioMobile">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-    </style>
+    <!-- No Action Bar - Dark -->
+    <style name="Theme.InventarioMobile.NoActionBar" parent="Theme.InventarioMobile" />
 
-    <!-- AppBar Overlay - Dark Mode -->
+    <!-- AppBar Overlay - Dark -->
     <style name="Theme.InventarioMobile.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
-    <!-- Popup Overlay - Dark Mode -->
+    <!-- Popup Overlay - Dark -->
     <style name="Theme.InventarioMobile.PopupOverlay" parent="ThemeOverlay.AppCompat.Dark" />
 
-    <!-- PIN Keypad Button Style - Dark Mode -->
+    <!-- PIN Keypad Button - Dark -->
     <style name="PinKeypadButton">
         <item name="android:layout_width">64dp</item>
         <item name="android:layout_height">64dp</item>
         <item name="android:layout_margin">8dp</item>
         <item name="android:textSize">24sp</item>
         <item name="android:textStyle">bold</item>
-        <item name="backgroundTint">@color/primary_light</item>
+        <item name="backgroundTint">@color/md3_dark_primary_container</item>
     </style>
 
-    <!-- Tab Text Appearance - Dark Mode -->
-    <style name="TabTextAppearance" parent="TextAppearance.MaterialComponents.Button">
-        <item name="android:textSize">14sp</item>
-        <item name="android:textStyle">bold</item>
+    <!-- Tab Text Appearance - Dark -->
+    <style name="TabTextAppearance" parent="TextAppearance.Material3.LabelLarge">
         <item name="android:textAllCaps">false</item>
-        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColor">@color/md3_dark_on_surface</item>
     </style>
 
-    <!-- Full Screen Dialog Theme - Dark Mode -->
+    <!-- Full Screen Dialog - Dark -->
     <style name="Theme.InventarioMobile.FullScreenDialog" parent="Theme.Material3.DayNight.Dialog">
         <item name="android:windowIsFloating">false</item>
         <item name="android:windowBackground">@android:color/transparent</item>
@@ -69,4 +97,5 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
+
 </resources>

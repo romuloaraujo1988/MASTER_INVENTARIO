@@ -76,5 +76,16 @@ data class ColetaEntity(
     val fotoPath: String? = null,                   // Caminho do arquivo de foto (otimizado)
     val fotoThumbnailPath: String? = null,          // Caminho do thumbnail
     val fotoSincronizada: Boolean = false,          // Se a foto já foi enviada ao servidor
-    val motivoFoto: String? = null                  // DIVERGENCIA, ESTADO_RUIM, ATENCAO, OUTRO
+    val motivoFoto: String? = null,              // DIVERGENCIA, ESTADO_RUIM, ATENCAO, OUTRO
+
+    // ========== DIVERGÊNCIA AUTOMÁTICA (v2.13) ==========
+    val divergencia: Boolean = false,               // Se foi detectada divergência
+    val motivoDivergencia: String? = null,          // LOCALIZACAO_DIFERENTE, ESTADO_DIFERENTE, LOCALIZACAO_E_ESTADO
+
+    // ========== LOCALIZAÇÃO ENCONTRADA (v2.20.12) ==========
+    // Campo separado de `nomeSala` para registrar onde o item foi REALMENTE encontrado
+    // durante a coleta (pode ser diferente da sala de origem cadastrada no patrimônio).
+    // `nomeSala` continua sendo a sala de origem (do patrimônio), enquanto
+    // `localizacaoEncontrada` é onde o coletor efetivamente encontrou o item.
+    val localizacaoEncontrada: String? = null
 )

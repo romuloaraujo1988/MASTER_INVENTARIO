@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.inventario.mobile.app-mergeDebugResources-65:/values-en-rAU/values-en-rAU.xml",
+            "outputFile": "com.inventario.mobile.app-mergeDebugResources-71:/values-en-rAU/values-en-rAU.xml",
             "map": [
                 {
                     "source": "C:\\Users\\Romulo\\.gradle\\caches\\transforms-3\\c145df49ff433e23a2685ccf9eecce98\\transformed\\biometric-1.2.0-alpha05\\res\\values-en-rAU\\values-en-rAU.xml",

@@ -1,13 +1,17 @@
 @echo off
 REM ============================================
-REM Sistema de Inventario - Desktop
-REM Versao: ${project.version}
+REM Sistema de Inventario - Desktop (Modulado)
 REM ============================================
+
+setlocal enabledelayedexpansion
+
+REM Caminho relativo para o JAR do módulo desktop
+set "JAR_PATH=%~dp0..\sihcp-desktop\target\sihcp-desktop-2.7.0.jar"
 
 echo.
 echo ========================================
 echo  Sistema de Inventario - IFMT
-echo  Versao: ${project.version}
+echo  Versao: 2.7.0
 echo ========================================
 echo.
 
@@ -15,41 +19,25 @@ REM Verificar se Java esta instalado
 java -version >nul 2>&1
 if %errorlevel% neq 0 (
     echo ERRO: Java nao encontrado!
-    echo Por favor, instale o Java 21 ou superior.
+    echo Por favor, instale o Java 17 ou superior.
     echo.
     pause
     exit /b 1
 )
 
-REM Verificar versao do Java
-for /f tokens^=2-5^ delims^=.-_^" %%j in ('java -fullversion 2^>^&1') do set "jver=%%j"
-if %jver% LSS 21 (
-    echo AVISO: Java %jver% detectado. Recomendado Java 21 ou superior.
-    echo.
-)
-
-REM Configurar memoria JVM
-set JAVA_OPTS=-Xms512m -Xmx2048m
-
-REM Configurar encoding
-set JAVA_OPTS=%JAVA_OPTS% -Dfile.encoding=UTF-8
-
-REM Configurar Look and Feel nativo
-set JAVA_OPTS=%JAVA_OPTS% -Dswing.defaultlaf=com.sun.java.swing.plaf.windows.WindowsLookAndFeel
-
-REM Diretorio de logs
-if not exist "logs" mkdir logs
+REM Configurar memoria JVM e Look and Feel
+set JAVA_OPTS=-Xms512m -Xmx2048m -Dfile.encoding=UTF-8 -Dswing.defaultlaf=com.sun.java.swing.plaf.windows.WindowsLookAndFeel
 
 echo Iniciando aplicacao...
 echo.
 
-REM Executar aplicacao
-java %JAVA_OPTS% -jar sistema-inventario-${project.version}.jar
+REM Executar aplicacao a partir da raiz (um nivel acima de scripts/)
+cd /d "%~dp0.."
+java %JAVA_OPTS% -jar "%JAR_PATH%"
 
 if %errorlevel% neq 0 (
     echo.
     echo ERRO: Falha ao iniciar a aplicacao.
-    echo Verifique o arquivo de log em logs/sistema-inventario.log
     echo.
     pause
     exit /b 1

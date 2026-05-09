@@ -1,0 +1,13 @@
+Buscando 66 itens da Secretaria no arquivo Excel...
+
+--- ITENS DA SECRETARIA ENCONTRADOS NO EXCEL ---
+Patrimônio: 333960
+  Desc BD: CARTEIRA UNIVERSITARIA COM ASSENTO E ENCOSTO EM POLIPROPILEN...
+  Sala EXCEL: 'LAB. B1 Controle e Automação(BLOCO DE LABORATORIOS)'
+----------------------------------------
+Patrimônio: 126772
+  Desc BD: CADEIRA PARA LABORATÃ“RIO...
+  Sala EXCEL: 'LAB. B1 Controle e Automação(BLOCO DE LABORATORIOS)'
+----------------------------------------
+Patrimônio: 506131
+Error: 'charmap' codec can't encode character '\ufffd' in position 21: character maps to <undefined>

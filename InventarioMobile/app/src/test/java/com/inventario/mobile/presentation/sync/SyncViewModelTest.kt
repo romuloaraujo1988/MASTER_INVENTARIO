@@ -1,6 +1,7 @@
 package com.inventario.mobile.presentation.sync
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import com.inventario.mobile.data.cache.SearchCache
 import com.inventario.mobile.domain.usecase.SincronizarColetasPendentesUseCase
 import com.inventario.mobile.domain.usecase.SincronizarDadosUseCase
 import com.inventario.mobile.sync.SyncManager
@@ -29,6 +30,9 @@ class SyncViewModelTest {
     
     @Mock
     private lateinit var syncManager: SyncManager
+    
+    @Mock
+    private lateinit var searchCache: SearchCache
 
     private lateinit var viewModel: SyncViewModel
     private val testDispatcher = UnconfinedTestDispatcher()
@@ -40,7 +44,8 @@ class SyncViewModelTest {
         viewModel = SyncViewModel(
             sincronizarDadosUseCase = sincronizarDadosUseCase,
             sincronizarColetasPendentesUseCase = sincronizarColetasPendentesUseCase,
-            syncManager = syncManager
+            syncManager = syncManager,
+            searchCache = searchCache
         )
     }
 

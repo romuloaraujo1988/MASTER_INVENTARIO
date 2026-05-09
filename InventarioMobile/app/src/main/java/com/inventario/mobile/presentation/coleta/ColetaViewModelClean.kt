@@ -245,16 +245,19 @@ class ColetaViewModelClean @Inject constructor(
                 )
                 Log.d(TAG, resumo)
                 
-                // TODO: Passar métricas para o Use Case
-                // Por enquanto, registrar normalmente
+                // Repassar métricas para o Use Case e Banco de Dados
                 registrarColetaUseCase(
                     numeroPatrimonio = numeroPatrimonio,
                     localizacaoAtual = localizacaoAtual,
                     observacoes = observacoes,
                     latitude = latitude,
                     longitude = longitude,
-                    idUsuario = idUsuario
-                    // TODO: Adicionar parâmetros de métricas quando Use Case for atualizado
+                    idUsuario = idUsuario,
+                    tempoColetaSegundos = tempoTotal,
+                    tempoScanSegundos = tempoScan,
+                    tempoPreenchimentoSegundos = tempoPreenchimento,
+                    metodoColeta = metodoColeta,
+                    tipoScan = tipoScan
                 ).fold(
                     onSuccess = { coleta ->
                         _state.value = ColetaState.Success(coleta)

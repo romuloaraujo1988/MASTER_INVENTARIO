@@ -79,8 +79,10 @@ class PdfGenerator @Inject constructor(
         
         val writer = PdfWriter(outputFile)
         val pdfDoc = PdfDocument(writer)
-        val document = Document(pdfDoc, PageSize.A4)
-        
+        // BUGFIX (v2.20.4): usar paisagem (A4 rotacionado) porque com 9 colunas o
+        // retrato ficava ilegível. `PageSize.A4.rotate()` = 842 x 595 pontos.
+        val document = Document(pdfDoc, PageSize.A4.rotate())
+
         document.setMargins(MARGIN, MARGIN, MARGIN + 20, MARGIN) // Extra margin for footer
         
         // Adicionar handler para footer com numeração de páginas
@@ -89,17 +91,18 @@ class PdfGenerator @Inject constructor(
         try {
             // Header
             addHeader(document, sala, filter, isOffline)
-            
+
             // Tabela de patrimônios
-            addPatrimoniosTable(document, patrimonios)
-            
+            // v2.20.5: passar `filter` para decidir se a coluna "Status" aparece
+            addPatrimoniosTable(document, patrimonios, filter)
+
             // Resumo/Somatório
             addSummary(document, summary, filter)
-            
+
         } finally {
             document.close()
         }
-        
+
         return summary
     }
     
@@ -159,27 +162,51 @@ class PdfGenerator @Inject constructor(
         document.add(Paragraph("").setMarginBottom(10f))
     }
     
-    private fun addPatrimoniosTable(document: Document, patrimonios: List<Patrimonio>) {
-        // Definir larguras das colunas (proporcionais)
-        val columnWidths = floatArrayOf(1.5f, 3f, 1f, 1f, 1.5f)
+    private fun addPatrimoniosTable(
+        document: Document,
+        patrimonios: List<Patrimonio>,
+        filter: ExportFilter
+    ) {
+        // v2.20.5: coluna "Status" é omitida quando filtro = COLETADOS ou NAO_COLETADOS
+        // (redundante com o cabeçalho).
+        val incluirStatus = filter == ExportFilter.TODOS
+
+        // Larguras proporcionais. Com/sem Status:
+        //   COM:  Nº | Descrição | Estado | Status | Data | Coletado por | Local encontrado | Estado encontrado | Responsável
+        //   SEM:  Nº | Descrição | Estado |         | Data | Coletado por | Local encontrado | Estado encontrado | Responsável
+        val columnWidths = if (incluirStatus) {
+            floatArrayOf(1.3f, 2.6f, 0.9f, 0.9f, 1.2f, 1.4f, 1.6f, 1.1f, 1.4f)
+        } else {
+            floatArrayOf(1.3f, 2.8f, 1.0f, 1.3f, 1.5f, 1.7f, 1.2f, 1.5f)
+        }
         val table = Table(UnitValue.createPercentArray(columnWidths))
             .useAllAvailableWidth()
-        
+
         // Header da tabela
-        addTableHeader(table)
-        
+        addTableHeader(table, incluirStatus)
+
         // Dados
         patrimonios.forEachIndexed { index, patrimonio ->
             val isAlternate = index % 2 == 1
-            addPatrimonioRow(table, patrimonio, isAlternate)
+            addPatrimonioRow(table, patrimonio, isAlternate, incluirStatus)
         }
-        
+
         document.add(table)
     }
-    
-    private fun addTableHeader(table: Table) {
-        val headers = listOf("Nº Patrimônio", "Descrição", "Estado", "Status", "Data Coleta")
-        
+
+    private fun addTableHeader(table: Table, incluirStatus: Boolean) {
+        val headers = buildList {
+            add("Nº Patrimônio")
+            add("Descrição")
+            add("Estado")
+            if (incluirStatus) add("Status")
+            add("Data Coleta")
+            add("Coletado por")
+            add("Local encontrado")
+            add("Estado encontrado")
+            add("Responsável")
+        }
+
         headers.forEach { header ->
             val cell = Cell()
                 .add(Paragraph(header).setFontSize(TABLE_HEADER_FONT_SIZE).setBold())
@@ -191,32 +218,81 @@ class PdfGenerator @Inject constructor(
             table.addHeaderCell(cell)
         }
     }
-    
-    private fun addPatrimonioRow(table: Table, patrimonio: Patrimonio, isAlternate: Boolean) {
+
+    private fun addPatrimonioRow(
+        table: Table,
+        patrimonio: Patrimonio,
+        isAlternate: Boolean,
+        incluirStatus: Boolean
+    ) {
         val bgColor = if (isAlternate) ALTERNATE_ROW_COLOR else ColorConstants.WHITE
-        
+
         // Número do Patrimônio
         table.addCell(createCell(patrimonio.numeroPatrimonio, bgColor))
-        
-        // Descrição (truncar se muito longa)
+
+        // Descrição — até 50 chars para caber no PDF (PDF tem limite de largura;
+        // XLSX/CSV não truncam pois podem expandir a coluna).
         val descricao = patrimonio.descricao?.take(50) ?: "-"
         table.addCell(createCell(descricao, bgColor, TextAlignment.LEFT))
-        
-        // Estado
+
+        // Estado cadastrado
         table.addCell(createCell(patrimonio.estado ?: "-", bgColor))
-        
-        // Status de Coleta
-        val status = if (patrimonio.coletado) "✓" else "✗"
-        val statusColor = if (patrimonio.coletado) DeviceRgb(0, 128, 0) else DeviceRgb(200, 0, 0)
-        table.addCell(createCell(status, bgColor).setFontColor(statusColor))
-        
+
+        // Status de Coleta com cor (opcional, só para filtro TODOS)
+        if (incluirStatus) {
+            val status = if (patrimonio.coletado) "Coletado" else "Pendente"
+            val statusColor =
+                if (patrimonio.coletado) DeviceRgb(0, 128, 0) else DeviceRgb(200, 0, 0)
+            table.addCell(createCell(status, bgColor).setFontColor(statusColor))
+        }
+
         // Data de Coleta
         val dataColeta = if (patrimonio.coletado) {
-            patrimonio.dataColetaFormatada ?: patrimonio.dataColeta ?: "-"
+            patrimonio.dataColetaFormatada
+                ?: formatarDataColeta(patrimonio.dataColeta)
+                ?: "-"
         } else {
             "-"
         }
         table.addCell(createCell(dataColeta, bgColor))
+
+        // Campos de auditoria da coleta (só fazem sentido quando coletado)
+        val coletadoPor = if (patrimonio.coletado) patrimonio.coletadoPor ?: "-" else "-"
+        table.addCell(createCell(coletadoPor, bgColor))
+
+        // Localização onde foi encontrado (pode diferir da sala cadastrada → divergência)
+        val localizacaoEncontrada = if (patrimonio.coletado) {
+            patrimonio.localizacaoEncontrada?.take(30) ?: "-"
+        } else "-"
+        table.addCell(createCell(localizacaoEncontrada, bgColor))
+
+        // Estado registrado na coleta (pode diferir do cadastrado → divergência)
+        val estadoEncontrado =
+            if (patrimonio.coletado) patrimonio.estadoEncontrado ?: "-" else "-"
+        table.addCell(createCell(estadoEncontrado, bgColor))
+
+        // Responsável do cadastro
+        val responsavel = patrimonio.nomeResponsavel?.take(25) ?: "-"
+        table.addCell(createCell(responsavel, bgColor))
+    }
+
+    /**
+     * Formata o campo dataColeta que pode ser:
+     * - Uma string de timestamp numérico (ex: "1714392000000")
+     * - Uma string de data já formatada (ex: "29/04/2026 10:30")
+     * - null
+     */
+    private fun formatarDataColeta(dataColeta: String?): String? {
+        if (dataColeta.isNullOrBlank()) return null
+        return try {
+            // Tentar interpretar como timestamp Long
+            val timestamp = dataColeta.toLong()
+            val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
+            sdf.format(Date(timestamp))
+        } catch (e: NumberFormatException) {
+            // Já é uma string de data formatada, retornar como está
+            dataColeta
+        }
     }
     
     private fun createCell(

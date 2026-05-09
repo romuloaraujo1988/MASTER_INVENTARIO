@@ -3,12 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/action_export_pdf"
-        android:icon="@drawable/ic_pdf"
-        android:title="Exportar PDF"
-        app:showAsAction="never" />
-
-    <item
         android:id="@+id/action_settings"
         android:icon="@drawable/ic_settings"
         android:title="@string/menu_settings"

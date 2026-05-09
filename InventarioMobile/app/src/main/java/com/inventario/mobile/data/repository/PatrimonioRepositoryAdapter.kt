@@ -33,12 +33,16 @@ class PatrimonioRepositoryAdapter @Inject constructor(
             dataAquisicao = null, // data.model não tem este campo
             observacoes = this.observacoes,
             idSetor = this.setorId?.toInt(),
+            nomeSetor = this.setorNome,
             idSala = this.salaId?.toInt(),
+            nomeSala = this.salaNome,
+            idResponsavel = this.responsavelId?.toInt(),
+            nomeResponsavel = this.responsavelNome,
             qrCode = this.qrCode ?: this.numeroPatrimonio,
             sincronizado = this.sincronizado,
             coletado = this.coletado,
             dataColeta = this.dataColeta,
-            coletorId = this.responsavelId,
+            coletorId = null, // Coletor ID não mapeado no DataPatrimonio diretamente de forma separada
             coletadoPor = this.coletadoPor,
             dataColetaFormatada = this.dataColetaFormatada,
             localizacaoEncontrada = this.localizacaoEncontrada,
@@ -61,7 +65,7 @@ class PatrimonioRepositoryAdapter @Inject constructor(
             setorNome = this.nomeSetor,
             salaId = this.idSala?.toLong(),
             salaNome = this.nomeSala,
-            responsavelId = this.coletorId,
+            responsavelId = this.idResponsavel?.toLong(),
             responsavelNome = this.nomeResponsavel,
             qrCode = this.qrCode,
             observacoes = this.observacoes,
@@ -71,7 +75,9 @@ class PatrimonioRepositoryAdapter @Inject constructor(
             dataColetaFormatada = this.dataColetaFormatada,
             observacoesColeta = null,
             sincronizado = this.sincronizado,
-            servidorId = this.servidorId
+            servidorId = this.servidorId,
+            localizacaoEncontrada = this.localizacaoEncontrada,
+            estadoEncontrado = this.estadoEncontrado
         )
     }
     

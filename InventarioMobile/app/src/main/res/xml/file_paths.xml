@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <!-- Diretório para exportação de PDFs -->
+    <!-- Armazenamento externo do app (Android 4.4+, sem permissão necessária) -->
     <external-files-path name="exports" path="exports/" />
-    
+
+    <!-- Fallback: armazenamento interno do app (quando external não disponível) -->
+    <files-path name="internal_exports" path="exports/" />
+
     <!-- Cache para arquivos temporários -->
     <cache-path name="cache" path="exports/" />
-    
-    <!-- Diretório interno para PDFs -->
-    <files-path name="internal_exports" path="exports/" />
 </paths>

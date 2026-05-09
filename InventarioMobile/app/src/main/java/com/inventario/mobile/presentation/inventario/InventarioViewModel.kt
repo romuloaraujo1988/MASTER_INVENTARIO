@@ -78,7 +78,20 @@ class InventarioViewModel(private val repository: InventarioRepository) : ViewMo
             
             android.util.Log.d("InventarioViewModel", "Carregando patrimônios do responsável $responsavelId (coletado: $coletado, page: $page)")
             
-            val result = repository.getPatrimoniosByResponsavel(responsavelId, page, _uiState.value.pageSize, coletado)
+            // Timeout de 30 segundos para evitar travamento
+            val result = kotlinx.coroutines.withTimeoutOrNull(30_000L) {
+                repository.getPatrimoniosByResponsavel(responsavelId, page, _uiState.value.pageSize, coletado)
+            }
+            
+            if (result == null) {
+                android.util.Log.e("InventarioViewModel", "Timeout ao carregar patrimônios do responsável $responsavelId")
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    isLoadingMore = false,
+                    errorMessage = "Tempo limite excedido. Tente novamente."
+                )
+                return@launch
+            }
             
             result.fold(
                 onSuccess = { patrimonios ->

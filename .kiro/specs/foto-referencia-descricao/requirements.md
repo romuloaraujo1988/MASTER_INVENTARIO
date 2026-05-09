@@ -101,4 +101,3 @@ A foto de referência é uma imagem pequena e otimizada que representa uma categ
 2. WHEN o usuário seleciona uma foto THEN THE Sistema_Desktop SHALL permitir exclusão com confirmação
 3. WHEN uma foto é excluída THEN THE Sistema_Desktop SHALL marcar como inativa (soft delete) e notificar app na próxima sincronização
 4. THE Sistema_Desktop SHALL exibir estatísticas: total de fotos, descrições sem foto, uso de armazenamento
-5. WHEN o usuário exporta fotos THEN THE Sistema_Desktop SHALL gerar arquivo ZIP com todas as imagens e metadados

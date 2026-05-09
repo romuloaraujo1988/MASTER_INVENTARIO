@@ -73,6 +73,7 @@ class SalaSelectionActivity : BaseOfflineActivity() {
             setupRecyclerView()
             setupObservers()
             setupSalaFixada()
+            setupFixarEstado()
             
             // Carregar salas
             viewModel.loadSalas()
@@ -224,7 +225,7 @@ class SalaSelectionActivity : BaseOfflineActivity() {
                 finish()
             }
             "DESCRICAO" -> {
-                // Navegar para DescricaoSelectionActivity
+                // Navegar diretamente para DescricaoSelectionActivity (bypass da tela intermediária)
                 val intent = Intent(this, com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity::class.java).apply {
                     putExtra(com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity.EXTRA_SALA_ID, sala.id)
                     putExtra(com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity.EXTRA_SALA_NOME, sala.nome)
@@ -349,6 +350,90 @@ class SalaSelectionActivity : BaseOfflineActivity() {
             val salasFiltradas = allSalas.filter { it.id == salaFixadaId }
             salaAdapter.submitList(salasFiltradas)
             Log.d(TAG, "Lista filtrada para sala fixada: ${salasFiltradas.size} sala(s)")
+        }
+    }
+
+    /**
+     * Configura o card "Modo rápido" (fixar estado de conservação).
+     *
+     * Contexto: o `ScannerActivity` abre imediatamente a `CaptureActivity` do ZXing
+     * (tela cheia), escondendo o switch `switchFixarEstado` que existe no layout do
+     * scanner mas nunca é visto. Expondo essa preferência aqui — uma tela por onde
+     * o coletor obrigatoriamente passa antes de escanear — garantimos acesso ao
+     * "modo rápido" (pular o dialog de estado em cada coleta).
+     *
+     * Ao tocar no switch:
+     * - Se ligar: abre o `EstadoPatrimonioDialog` para escolher qual estado fixar.
+     *   Só marca como habilitado se o usuário confirmar um estado.
+     * - Se desligar: limpa a preferência e esconde o chip do estado.
+     *
+     * O chip abaixo do switch mostra o estado escolhido e também é clicável para
+     * trocar o estado sem precisar desligar/religar.
+     */
+    private fun setupFixarEstado() {
+        atualizarUIFixarEstado()
+
+        binding.switchFixarEstadoSala.setOnCheckedChangeListener { buttonView, isChecked ->
+            // `isPressed` evita reagir a mudanças programáticas (atualizarUIFixarEstado)
+            if (!buttonView.isPressed) return@setOnCheckedChangeListener
+
+            if (isChecked) {
+                abrirDialogEstado { estadoSelecionado ->
+                    preferencesManager.setEstadoFixoEnabled(true)
+                    preferencesManager.setEstadoFixo(estadoSelecionado.name)
+                    atualizarUIFixarEstado()
+                }.also {
+                    // Se o usuário cancelar o dialog, desmarcar o switch
+                    it.dialog?.setOnCancelListener {
+                        binding.switchFixarEstadoSala.isChecked = false
+                    }
+                }
+            } else {
+                preferencesManager.setEstadoFixoEnabled(false)
+                preferencesManager.setEstadoFixo(null)
+                atualizarUIFixarEstado()
+            }
+        }
+
+        // Permite trocar o estado sem precisar desligar/religar o switch
+        binding.chipEstadoFixoSala.setOnClickListener {
+            abrirDialogEstado { estadoSelecionado ->
+                preferencesManager.setEstadoFixoEnabled(true)
+                preferencesManager.setEstadoFixo(estadoSelecionado.name)
+                atualizarUIFixarEstado()
+            }
+        }
+    }
+
+    private fun abrirDialogEstado(
+        onSelecionado: (com.inventario.mobile.data.model.EstadoPatrimonio) -> Unit
+    ): com.inventario.mobile.presentation.dialog.EstadoPatrimonioDialog {
+        val dialog = com.inventario.mobile.presentation.dialog.EstadoPatrimonioDialog
+            .newInstance(onSelecionado)
+        dialog.show(supportFragmentManager, "EstadoFixoSalaDialog")
+        return dialog
+    }
+
+    private fun atualizarUIFixarEstado() {
+        val habilitado = preferencesManager.isEstadoFixoEnabled()
+        val estadoFixo = preferencesManager.getEstadoFixo()
+
+        binding.switchFixarEstadoSala.isChecked = habilitado && !estadoFixo.isNullOrEmpty()
+
+        if (habilitado && !estadoFixo.isNullOrEmpty()) {
+            val descricaoAmigavel = try {
+                com.inventario.mobile.data.model.EstadoPatrimonio.valueOf(estadoFixo).descricao
+            } catch (e: Exception) {
+                estadoFixo
+            }
+            binding.chipEstadoFixoSala.text = "Estado: $descricaoAmigavel"
+            binding.chipEstadoFixoSala.visibility = android.view.View.VISIBLE
+            binding.tvFixarEstadoDescricao.text =
+                "Modo rápido ligado: não pede confirmação de estado em cada coleta."
+        } else {
+            binding.chipEstadoFixoSala.visibility = android.view.View.GONE
+            binding.tvFixarEstadoDescricao.text =
+                "Fixa o estado da coleta. Não pede confirmação a cada scan."
         }
     }
 

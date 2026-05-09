@@ -4,12 +4,12 @@ package com.inventario.mobile.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
-import com.google.android.material.card.MaterialCardView;
 import com.inventario.mobile.R;
 import java.lang.NullPointerException;
 import java.lang.Override;
@@ -17,7 +17,7 @@ import java.lang.String;
 
 public final class ItemDescricaoBinding implements ViewBinding {
   @NonNull
-  private final MaterialCardView rootView;
+  private final LinearLayout rootView;
 
   @NonNull
   public final TextView tvCategoria;
@@ -31,7 +31,7 @@ public final class ItemDescricaoBinding implements ViewBinding {
   @NonNull
   public final TextView tvQuantidade;
 
-  private ItemDescricaoBinding(@NonNull MaterialCardView rootView, @NonNull TextView tvCategoria,
+  private ItemDescricaoBinding(@NonNull LinearLayout rootView, @NonNull TextView tvCategoria,
       @NonNull TextView tvDescricao, @NonNull TextView tvIcone, @NonNull TextView tvQuantidade) {
     this.rootView = rootView;
     this.tvCategoria = tvCategoria;
@@ -42,7 +42,7 @@ public final class ItemDescricaoBinding implements ViewBinding {
 
   @Override
   @NonNull
-  public MaterialCardView getRoot() {
+  public LinearLayout getRoot() {
     return rootView;
   }
 
@@ -91,8 +91,8 @@ public final class ItemDescricaoBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ItemDescricaoBinding((MaterialCardView) rootView, tvCategoria, tvDescricao,
-          tvIcone, tvQuantidade);
+      return new ItemDescricaoBinding((LinearLayout) rootView, tvCategoria, tvDescricao, tvIcone,
+          tvQuantidade);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

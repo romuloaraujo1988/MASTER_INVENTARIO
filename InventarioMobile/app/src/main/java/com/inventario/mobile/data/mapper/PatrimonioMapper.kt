@@ -29,18 +29,18 @@ object PatrimonioMapper {
             setorNome = dto.setorNome,
             idSala = dto.salaId?.toInt(), // DTO usa Long, Entity usa Int
             nomeSala = dto.salaNome,
-            salaId = dto.salaId?.toInt(),
-            salaNome = dto.salaNome,
             idResponsavel = dto.responsavelId?.toInt(),
             nomeResponsavel = dto.responsavelNome,
-            responsavelId = dto.responsavelId?.toInt(),
-            responsavelNome = dto.responsavelNome,
             status = dto.estado,
             coletado = dto.coletado,
             dataColeta = dto.dataColeta?.toLongOrNull(),
             coletadoPor = dto.coletadoPor,
             observacoesColeta = null,
             observacoes = dto.observacoes,
+            // v2.20.7: persistir campos de auditoria vindos do servidor para
+            // aparecerem corretamente nos relatórios exportados (PDF/Excel/CSV).
+            localizacaoEncontrada = dto.localizacaoEncontrada,
+            estadoEncontrado = dto.estadoEncontrado,
             dataUltimaAtualizacao = System.currentTimeMillis()
         )
     }
@@ -54,24 +54,27 @@ object PatrimonioMapper {
             id = entity.id.toLong(), // Entity usa Int, Model usa Long
             numeroPatrimonio = entity.numero,
             descricao = entity.descricao,
-            marca = null, // Entity não tem marca
-            modelo = null, // Entity não tem modelo
-            numeroSerie = null, // Entity não tem numeroSerie
-            estado = entity.status,
-            valor = null, // Entity não tem valor
-            setorId = null, // Entity não tem setorId direto
-            setorNome = null,
+            marca = entity.marca,
+            modelo = entity.modelo,
+            numeroSerie = entity.numeroSerie,
+            estado = entity.status ?: entity.estado,
+            valor = entity.valor,
+            setorId = entity.setorId?.toLong(),
+            setorNome = entity.setorNome,
             salaId = entity.idSala?.toLong(),
             salaNome = entity.nomeSala,
             responsavelId = entity.idResponsavel?.toLong(),
             responsavelNome = entity.nomeResponsavel,
             qrCode = entity.numero, // Usar numero como qrCode temporariamente
-            observacoes = null, // Entity não tem observacoes
+            observacoes = entity.observacoes,
             coletado = entity.coletado,
-            dataColeta = null,
-            coletadoPor = null,
-            dataColetaFormatada = null,
-            observacoesColeta = null,
+            dataColeta = entity.dataColeta?.toString(),
+            coletadoPor = entity.coletadoPor,
+            dataColetaFormatada = null, // Formatada na presentation, se necessário
+            observacoesColeta = entity.observacoesColeta,
+            // v2.20.7: propagar campos de auditoria persistidos
+            localizacaoEncontrada = entity.localizacaoEncontrada,
+            estadoEncontrado = entity.estadoEncontrado,
             sincronizado = true, // Dados do banco local são considerados sincronizados
             servidorId = null
         )

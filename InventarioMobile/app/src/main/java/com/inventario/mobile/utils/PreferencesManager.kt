@@ -2,13 +2,51 @@ package com.inventario.mobile.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
+import com.inventario.mobile.data.model.CacheServerStats
+import com.inventario.mobile.domain.model.DashboardStats
 
 /**
  * Gerenciador de preferências compartilhadas
  */
 class PreferencesManager(context: Context) {
     
-    private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val masterKey = MasterKey.Builder(context)
+        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+        .build()
+
+    private val prefs: SharedPreferences = try {
+        EncryptedSharedPreferences.create(
+            context,
+            "inventario_secure_prefs", // Novo nome isola dos dados antigos puramente em texto
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    } catch (e: Exception) {
+        android.util.Log.e("PreferencesManager", "Falha ao abrir EncryptedSharedPreferences, recriando...", e)
+        // Se a Keystore corromper, precisamos apagar o arquivo problemático
+        val prefsFile = java.io.File(context.applicationInfo.dataDir, "shared_prefs/inventario_secure_prefs.xml")
+        if (prefsFile.exists()) prefsFile.delete()
+        
+        EncryptedSharedPreferences.create(
+            context,
+            "inventario_secure_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
+    
+    init {
+        // Remove arquivo de preferências antigo (plaintext) por fins de segurança
+        val oldPrefsFile = java.io.File(context.applicationInfo.dataDir, "shared_prefs/inventario_mobile_prefs.xml")
+        if (oldPrefsFile.exists()) {
+            oldPrefsFile.delete()
+            android.util.Log.d("PreferencesManager", "Arquivo antigo de SharedPreferences apagado.")
+        }
+    }
     
     fun putString(key: String, value: String) {
         prefs.edit().putString(key, value).apply()
@@ -604,6 +642,43 @@ class PreferencesManager(context: Context) {
         android.util.Log.d("PreferencesManager", "Vibração ao coletar ${if (enabled) "HABILITADA" else "DESABILITADA"}")
     }
     
+    // ===== ESTADO FIXO PARA COLETA RÁPIDA =====
+    
+    /**
+     * Verifica se fixar o estado da coleta está habilitado
+     */
+    fun isEstadoFixoEnabled(): Boolean {
+        return getBoolean("estado_fixo_enabled", false)
+    }
+    
+    /**
+     * Habilita ou desabilita opção de estado fixo na coleta
+     */
+    fun setEstadoFixoEnabled(enabled: Boolean) {
+        putBoolean("estado_fixo_enabled", enabled)
+        android.util.Log.d("PreferencesManager", "Estado fixo da coleta ${if (enabled) "HABILITADO" else "DESABILITADO"}")
+    }
+
+    /**
+     * Obtém o valor do estado fixo da coleta
+     */
+    fun getEstadoFixo(): String? {
+        return getString("estado_fixo_valor", "").takeIf { it.isNotEmpty() }
+    }
+
+    /**
+     * Define o valor do estado fixo da coleta
+     */
+    fun setEstadoFixo(estado: String?) {
+        if (estado != null) {
+            putString("estado_fixo_valor", estado)
+            android.util.Log.d("PreferencesManager", "Estado fixo salvo: $estado")
+        } else {
+            remove("estado_fixo_valor")
+            android.util.Log.d("PreferencesManager", "Estado fixo removido")
+        }
+    }
+    
     // ===== FOTO OPCIONAL NA COLETA (v2.11) =====
     
     /**
@@ -661,6 +736,22 @@ class PreferencesManager(context: Context) {
         const val THEME_MODE_SYSTEM = 0  // Seguir sistema
         const val THEME_MODE_LIGHT = 1   // Sempre claro
         const val THEME_MODE_DARK = 2    // Sempre escuro
+
+        // ===== Cache de estatísticas do servidor (dashboard-refactor-clean, Req 3.6, 3.8, 3.9) =====
+        // Chaves usadas pelos métodos saveCacheServerStats / getCacheServerStats /
+        // getCacheServerStatsTimestamp / clearCacheServerStats. Persistidas no
+        // EncryptedSharedPreferences único deste PreferencesManager.
+        private const val KEY_CACHE_SERVER_TOTAL_PATRIMONIOS = "cache_server_total_patrimonios"
+        private const val KEY_CACHE_SERVER_TOTAL_COLETADOS = "cache_server_total_coletados"
+        private const val KEY_CACHE_SERVER_DIVERGENCIAS = "cache_server_divergencias"
+        private const val KEY_CACHE_SERVER_COLETORES_ATIVOS = "cache_server_coletores_ativos"
+        private const val KEY_CACHE_SERVER_VALOR_TOTAL = "cache_server_valor_total"
+        private const val KEY_CACHE_SERVER_INVENTARIO_NOME = "cache_server_inventario_nome"
+        private const val KEY_CACHE_SERVER_INVENTARIO_ID = "cache_server_inventario_id"
+        private const val KEY_CACHE_SERVER_TIMESTAMP = "cache_server_timestamp"
+
+        // Sentinel value para inventarioId ausente (nullable no domínio).
+        private const val CACHE_INVENTARIO_ID_NULL_SENTINEL = -1
     }
     
     /**
@@ -766,5 +857,120 @@ class PreferencesManager(context: Context) {
     fun clearFotoReferenciaSync() {
         remove("last_foto_referencia_sync_timestamp")
         android.util.Log.d("PreferencesManager", "Dados de sync de fotos limpos")
+    }
+
+    // ==========================================================================
+    // Cache do DashboardStats vindo do servidor (dashboard-refactor-clean)
+    // Requisitos: 3.6, 3.8, 3.9
+    //
+    // Contrato central: enquanto nunca houve uma sincronização bem-sucedida do
+    // endpoint base de estatísticas (`api/mobile/dashboard/stats*`),
+    // `getCacheServerStats()` retorna `null`. Esse `null` é o sinal usado por
+    // `DashboardRepositoryImpl.buscarEstatisticasLocais` para cair no fallback
+    // de Room (Req 3.9). Após o primeiro save, o timestamp passa a ser > 0 e
+    // o cache é reconstruído campo a campo.
+    // ==========================================================================
+
+    /**
+     * Persiste o snapshot mais recente de estatísticas do servidor no
+     * `EncryptedSharedPreferences`, registrando também o timestamp UTC de
+     * sincronização em [KEY_CACHE_SERVER_TIMESTAMP].
+     *
+     * Campos nullable ([DashboardStats.inventarioNome],
+     * [DashboardStats.inventarioId]) são gravados respectivamente como
+     * `putString(key, null)` e como o sentinel [CACHE_INVENTARIO_ID_NULL_SENTINEL]
+     * (-1), seguindo o padrão usado pelos demais métodos do arquivo para
+     * representar ausência sem criar chaves com semântica ambígua.
+     *
+     * Requisitos: 3.6, 3.8.
+     */
+    fun saveCacheServerStats(stats: DashboardStats) {
+        prefs.edit().apply {
+            putInt(KEY_CACHE_SERVER_TOTAL_PATRIMONIOS, stats.totalPatrimonios)
+            putInt(KEY_CACHE_SERVER_TOTAL_COLETADOS, stats.totalColetados)
+            putInt(KEY_CACHE_SERVER_DIVERGENCIAS, stats.divergencias)
+            putInt(KEY_CACHE_SERVER_COLETORES_ATIVOS, stats.coletoresAtivos)
+            putFloat(KEY_CACHE_SERVER_VALOR_TOTAL, stats.valorTotal.toFloat())
+            // inventarioNome é nullable: grava null explicitamente para permitir
+            // getString(key, null) recuperar a ausência.
+            putString(KEY_CACHE_SERVER_INVENTARIO_NOME, stats.inventarioNome)
+            // inventarioId é nullable: usa sentinel -1 já que putInt não aceita null.
+            putInt(
+                KEY_CACHE_SERVER_INVENTARIO_ID,
+                stats.inventarioId ?: CACHE_INVENTARIO_ID_NULL_SENTINEL
+            )
+            putLong(KEY_CACHE_SERVER_TIMESTAMP, System.currentTimeMillis())
+        }.apply()
+    }
+
+    /**
+     * Recupera o último snapshot de estatísticas do servidor persistido,
+     * ou `null` quando ainda não houve nenhuma sincronização bem-sucedida.
+     *
+     * A detecção de "nunca sincronizou" é feita via
+     * `cache_server_timestamp == 0L`. Qualquer valor diferente de 0 significa
+     * que [saveCacheServerStats] já foi chamado ao menos uma vez e o cache
+     * deve ser reconstruído campo a campo. `inventarioId` retorna `null`
+     * quando o valor armazenado é [CACHE_INVENTARIO_ID_NULL_SENTINEL];
+     * `inventarioNome` retorna `null` quando armazenado como `null` (ou
+     * ausente).
+     *
+     * Esse contrato de `null` é essencial para o fallback offline do
+     * `DashboardRepositoryImpl.buscarEstatisticasLocais` (Req 3.6, 3.9).
+     */
+    fun getCacheServerStats(): CacheServerStats? {
+        val ts = prefs.getLong(KEY_CACHE_SERVER_TIMESTAMP, 0L)
+        if (ts == 0L) return null
+
+        val storedInventarioId = prefs.getInt(
+            KEY_CACHE_SERVER_INVENTARIO_ID,
+            CACHE_INVENTARIO_ID_NULL_SENTINEL
+        )
+        val inventarioId = if (storedInventarioId == CACHE_INVENTARIO_ID_NULL_SENTINEL) {
+            null
+        } else {
+            storedInventarioId
+        }
+
+        return CacheServerStats(
+            totalPatrimonios = prefs.getInt(KEY_CACHE_SERVER_TOTAL_PATRIMONIOS, 0),
+            totalColetados = prefs.getInt(KEY_CACHE_SERVER_TOTAL_COLETADOS, 0),
+            divergencias = prefs.getInt(KEY_CACHE_SERVER_DIVERGENCIAS, 0),
+            coletoresAtivos = prefs.getInt(KEY_CACHE_SERVER_COLETORES_ATIVOS, 0),
+            valorTotal = prefs.getFloat(KEY_CACHE_SERVER_VALOR_TOTAL, 0f).toDouble(),
+            inventarioNome = prefs.getString(KEY_CACHE_SERVER_INVENTARIO_NOME, null),
+            inventarioId = inventarioId,
+            timestamp = ts
+        )
+    }
+
+    /**
+     * Retorna o timestamp (ms UTC) da última sincronização bem-sucedida do
+     * servidor ou `0L` quando o cache ainda não foi populado — mesmo sentinel
+     * usado por [getCacheServerStats] para retornar `null`.
+     *
+     * Requisitos: 3.6.
+     */
+    fun getCacheServerStatsTimestamp(): Long {
+        return prefs.getLong(KEY_CACHE_SERVER_TIMESTAMP, 0L)
+    }
+
+    /**
+     * Remove todas as chaves `cache_server_*` do [EncryptedSharedPreferences].
+     * Após esta chamada, [getCacheServerStats] volta a retornar `null` e
+     * [getCacheServerStatsTimestamp] volta a retornar `0L`, reproduzindo o
+     * estado inicial "nunca sincronizou" exigido pelos Req 3.6 e 3.9.
+     */
+    fun clearCacheServerStats() {
+        prefs.edit()
+            .remove(KEY_CACHE_SERVER_TOTAL_PATRIMONIOS)
+            .remove(KEY_CACHE_SERVER_TOTAL_COLETADOS)
+            .remove(KEY_CACHE_SERVER_DIVERGENCIAS)
+            .remove(KEY_CACHE_SERVER_COLETORES_ATIVOS)
+            .remove(KEY_CACHE_SERVER_VALOR_TOTAL)
+            .remove(KEY_CACHE_SERVER_INVENTARIO_NOME)
+            .remove(KEY_CACHE_SERVER_INVENTARIO_ID)
+            .remove(KEY_CACHE_SERVER_TIMESTAMP)
+            .apply()
     }
 }

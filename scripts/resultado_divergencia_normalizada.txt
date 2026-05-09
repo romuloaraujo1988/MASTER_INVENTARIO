@@ -1,0 +1,60 @@
+----------------------------------------------------------------------
+1. RESUMO GERAL — usando campo divergencia (fonte oficial do sistema)
+----------------------------------------------------------------------
+  Total coletas     : 8712
+  Total divergencias: 1596  (18.32%)
+  Sem divergencia   : 7116  (81.68%)
+
+----------------------------------------------------------------------
+2. AUDITORIO — dados atuais pelo campo divergencia (oficial)
+----------------------------------------------------------------------
+  'MEZANINO AUDITORIO(IFMT - PDL)' | Coletas: 604 | Div: 424 | Taxa: 70.20%
+  'AUDITÓRIO(IFMT - PDL)' | Coletas: 220 | Div: 213 | Taxa: 96.82%
+  'AUDITÓRIO' | Coletas: 1 | Div: 0 | Taxa: 0.00%
+
+  COMPLEXO TOTAL : 825 coletas | 637 divergencias (77.21%)
+
+----------------------------------------------------------------------
+3. RECALCULO NORMALIZADO — removendo sufixos '(IFMT - PDL)' etc antes de comparar
+----------------------------------------------------------------------
+  'MEZANINO AUDITORIO(IFMT - PDL)'
+    Coletas : 604
+    Flag    : 424 (70.20%)
+    Normaliz: 603 (99.83%)
+    Delta   : +179  >>> nomes identicos nao resolvem
+  'AUDITÓRIO(IFMT - PDL)'
+    Coletas : 220
+    Flag    : 213 (96.82%)
+    Normaliz: 38 (17.27%)
+    Delta   : -175  <<< sufixo causava falso positivo
+  'AUDITÓRIO'
+    Coletas : 1
+    Flag    : 0 (0.00%)
+    Normaliz: 0 (0.00%)
+    Delta   : +0  consistente
+
+----------------------------------------------------------------------
+4. TOP 20 SALAS — ranking por divergencia (campo oficial, min. 10 coletas)
+----------------------------------------------------------------------
+   #  Sala                                               Coletas    Div    Taxa  Impacto
+  --  -------------------------------------------------- ------- ------ ------- --------
+   1.  LAB. A4 QUIMICA(BLOCO DE LABORATORIOS)                  37     36  97.30%    2.26%
+   2.  AUDITÓRIO(IFMT - PDL)                                  220    213  96.82%   13.35%
+   3.  CORREDOR (IFMT - PDL)                                   61     58  95.08%    3.63%
+   4.  LAB. DE QUIMICA MODULAR(IFMT - PDL)                     54     51  94.44%    3.20%
+   5.  PREFEITURA(BLOCO DE LABORATORIOS)                       41     38  92.68%    2.38%
+   6.  SALA DE AULA B4(PREDIO ANTIGO)                          20     18  90.00%    1.13%
+   7.  SALA DE DESENHO(IFMT - PDL)                             46     41  89.13%    2.57%
+   8.  COORD. CONTABILIDADE(IFMT - PDL)                        20     16  80.00%    1.00%
+   9.  SALA DE AULA MODULAR(IFMT - PDL)                        17     12  70.59%    0.75%
+  10.  MEZANINO AUDITORIO(IFMT - PDL)                         604    424  70.20%   26.57%
+  11.  GABINETE (IFMT - PDL)                                  194    128  65.98%    8.02%
+  12.  LAB. B4 Automação industrial, Medidas elétricas e       47     29  61.70%    1.82%
+  13.  LAB. BIOLOGIA/ COVID(IFMT - PDL)                        18     11  61.11%    0.69%
+  14.  Área Externa (IFMT - PDL)                               91     48  52.75%    3.01%
+  15.  LAB. INFORMATICA A10(IFMT - PDL)                        90     47  52.22%    2.94%
+  16.  NAPNE(IFMT - PDL)                                       18      9  50.00%    0.56%
+  17.  CAE(IFMT - PDL)                                        113     54  47.79%    3.38%
+  18.  LAB. B2 Eletricidade básica, Automação Residencial      38     13  34.21%    0.81%
+  19.  SALA TI SERVIDOR DE REDE(IFMT - PDL)                    95     29  30.53%    1.82%
+  20.  SALA DE AULA B2(IFMT - PDL)                             10      3  30.00%    0.19%

@@ -3,32 +3,34 @@ package com.inventario.mobile.domain.usecase
 import android.util.Log
 import com.inventario.mobile.data.model.Coleta
 import com.inventario.mobile.data.remote.api.ApiService
+import com.inventario.mobile.utils.PreferencesManager
 import javax.inject.Inject
 
 /**
  * Use Case: Buscar coletas do servidor
- * 
- * Responsabilidade: Buscar coletas do servidor com todos os campos preenchidos
- * 
- * MUDANÇA: Agora busca do servidor ao invés do banco local para garantir dados corretos
+ *
+ * Responsabilidade: Buscar coletas do servidor com todos os campos preenchidos,
+ * filtrando pelo inventário ativo.
  */
 class BuscarColetasUseCase @Inject constructor(
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val preferencesManager: PreferencesManager
 ) {
     companion object {
         private const val TAG = "BuscarColetasUseCase"
     }
-    
+
     /**
-     * Busca todas as coletas do servidor com dados completos
-     * 
-     * @return Result com lista de coletas (data.model) ou erro
+     * Busca coletas do servidor filtradas pelo inventário ativo.
+     *
+     * @return Result com lista de coletas ou erro
      */
     suspend operator fun invoke(): Result<List<Coleta>> {
         return try {
-            Log.d(TAG, "Buscando coletas do servidor...")
-            
-            val response = apiService.buscarTodasColetasSemPaginacao()
+            val inventarioId = preferencesManager.getInventarioAtivoId()
+            Log.d(TAG, "Buscando coletas do servidor (inventárioId=$inventarioId)...")
+
+            val response = apiService.buscarTodasColetasSemPaginacao(inventarioId)
             
             if (response.isSuccessful && response.body() != null) {
                 val coletasAllResponse = response.body()!!

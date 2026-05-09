@@ -30,6 +30,8 @@ class ColetaMapper @Inject constructor(
             salaId = entity.idSala,
             dataColeta = entity.dataColeta,
             localizacaoAtual = entity.nomeSala,
+            // v2.20.12: mapear campo dedicado de onde o item foi encontrado
+            localizacaoEncontrada = entity.localizacaoEncontrada,
             observacoes = entity.observacao,
             status = if (entity.sincronizado) "SINCRONIZADO" else "PENDENTE",
             estadoEncontrado = entity.estadoPatrimonio,  // ✅ CORREÇÃO: Mapear estado de conservação
@@ -42,7 +44,15 @@ class ColetaMapper @Inject constructor(
             semEtiqueta = entity.semEtiqueta,
             descricaoItemSemEtiqueta = entity.descricaoItemSemEtiqueta,
             categoriaItemSemEtiqueta = entity.categoriaItemSemEtiqueta,
-            fotoPath = entity.fotoPatrimonio
+            fotoPath = entity.fotoPatrimonio,
+            tempoColetaSegundos = entity.tempoColetaSegundos,
+            tempoScanSegundos = entity.tempoScanSegundos,
+            tempoPreenchimentoSegundos = entity.tempoPreenchimentoSegundos,
+            metodoColeta = entity.metodoColeta,
+            tipoScan = entity.tipoScan,
+            // v2.13: Divergência
+            divergencia = entity.divergencia,
+            motivoDivergencia = entity.motivoDivergencia
         )
     }
     
@@ -107,12 +117,20 @@ class ColetaMapper @Inject constructor(
         
         // ✅ CRÍTICO: Priorizar salaId da coleta (onde está coletando AGORA)
         val salaIdReal = domain.salaId ?: patrimonio?.idSala
-        
+
+        // v2.20.12: separar "onde foi encontrado" de "sala de origem do patrimônio"
+        // localizacaoEncontrada = onde o coletor encontrou o item (domain.localizacaoAtual)
+        // nomeSala = sala de origem cadastrada no patrimônio (patrimonio.nomeSala)
+        val localizacaoEncontradaReal = domain.localizacaoAtual  // onde foi encontrado
+        val nomeSalaOrigem = patrimonio?.nomeSala                 // sala de origem
+
         Log.d(TAG, "═══════════════════════════════════════")
         Log.d(TAG, "MAPEANDO COLETA PARA ENTITY")
         Log.d(TAG, "Sala ID da coleta (atual): ${domain.salaId}")
         Log.d(TAG, "Sala ID do patrimônio (cadastrado): ${patrimonio?.idSala}")
         Log.d(TAG, "Sala ID FINAL (usado): $salaIdReal")
+        Log.d(TAG, "localizacaoEncontrada: $localizacaoEncontradaReal")
+        Log.d(TAG, "nomeSala (origem): $nomeSalaOrigem")
         Log.d(TAG, "═══════════════════════════════════════")
         
         return ColetaEntity(
@@ -121,7 +139,8 @@ class ColetaMapper @Inject constructor(
             numeroPatrimonio = patrimonio?.numero ?: "", // ✅ Preenchido do banco
             idInventario = inventarioAtivoId, // ✅ Do PreferencesManager
             idSala = salaIdReal, // ✅ CRÍTICO: Prioriza sala atual da coleta
-            nomeSala = salaReal, // ✅ PRIORIZA onde foi realmente encontrado
+            nomeSala = nomeSalaOrigem, // v2.20.12: sala de ORIGEM do patrimônio
+            localizacaoEncontrada = localizacaoEncontradaReal, // v2.20.12: onde foi ENCONTRADO
             idResponsavel = patrimonio?.idResponsavel,
             nomeResponsavel = patrimonio?.nomeResponsavel,
             observacao = domain.observacoes,
@@ -136,10 +155,18 @@ class ColetaMapper @Inject constructor(
             semEtiqueta = domain.semEtiqueta,
             descricaoItemSemEtiqueta = domain.descricaoItemSemEtiqueta,
             categoriaItemSemEtiqueta = domain.categoriaItemSemEtiqueta,
-            fotoPatrimonio = domain.fotoPath
+            fotoPatrimonio = domain.fotoPath,
+            tempoColetaSegundos = domain.tempoColetaSegundos,
+            tempoScanSegundos = domain.tempoScanSegundos,
+            tempoPreenchimentoSegundos = domain.tempoPreenchimentoSegundos,
+            metodoColeta = domain.metodoColeta,
+            tipoScan = domain.tipoScan,
+            // v2.13: Divergência
+            divergencia = domain.divergencia,
+            motivoDivergencia = domain.motivoDivergencia
         )
     }
-    
+
     /**
      * Converte Domain para Entity sem buscar dados adicionais
      * Usado quando os dados já estão completos
@@ -182,7 +209,15 @@ class ColetaMapper @Inject constructor(
             semEtiqueta = domain.semEtiqueta,
             descricaoItemSemEtiqueta = domain.descricaoItemSemEtiqueta,
             categoriaItemSemEtiqueta = domain.categoriaItemSemEtiqueta,
-            fotoPatrimonio = domain.fotoPath
+            fotoPatrimonio = domain.fotoPath,
+            tempoColetaSegundos = domain.tempoColetaSegundos,
+            tempoScanSegundos = domain.tempoScanSegundos,
+            tempoPreenchimentoSegundos = domain.tempoPreenchimentoSegundos,
+            metodoColeta = domain.metodoColeta,
+            tipoScan = domain.tipoScan,
+            // v2.13: Divergência
+            divergencia = domain.divergencia,
+            motivoDivergencia = domain.motivoDivergencia
         )
     }
     

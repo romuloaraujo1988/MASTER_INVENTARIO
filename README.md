@@ -17,6 +17,10 @@ Sistema de gestão de inventário patrimonial desenvolvido para o Instituto Fede
 - **[Documentação Completa](DOCUMENTACAO_CONSOLIDADA.md)** - Arquitetura, funcionalidades e desenvolvimento
 - **[Guia de Implementação](IMPLEMENTACAO_ESTATISTICAS_APP.md)** - Roadmap técnico
 
+> **Pacote raiz Java:** `com.inventario.sihcp`
+> - Aplicação desktop: `mvn exec:java -Dexec.mainClass="com.inventario.sihcp.SistemaInventarioApplication"`
+> - Servidor mobile: `mvn exec:java -Dexec.mainClass="com.inventario.sihcp.MobileApiApplication"`
+
 ### 🚀 Para Deploy e Operações
 - **[Plano de Implantação](PLANO_IMPLANTACAO_PRODUCAO.md)** - Guia detalhado de deploy
 - **[Checklist de Deploy](CHECKLIST_DEPLOY.md)** - Passo a passo

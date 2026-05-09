@@ -122,4 +122,40 @@ interface SalaDao {
         ORDER BY nome ASC
     """)
     suspend fun buscarPorNomeOuNumero(query: String): List<SalaEntity>
+    
+    // ========================================
+    // Queries para Sincronização Incremental
+    // ========================================
+    
+    /**
+     * Deleta salas por lista de IDs.
+     * Usado na sincronização incremental para remover salas inativadas.
+     * 
+     * @param ids Lista de IDs de salas a remover
+     */
+    @Query("DELETE FROM sala WHERE id IN (:ids)")
+    suspend fun deletarPorIds(ids: List<Int>)
+    
+    /**
+     * Busca o timestamp da última atualização.
+     * Usado para determinar o lastSync na sincronização incremental.
+     * 
+     * @return Timestamp da última atualização ou 0 se não houver salas
+     */
+    @Query("SELECT COALESCE(MAX(dataUltimaAtualizacao), 0) FROM sala")
+    suspend fun buscarUltimaAtualizacao(): Long
+    
+    /**
+     * Atualiza ou insere uma sala (upsert).
+     * Usado na sincronização incremental para atualizar salas modificadas.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(sala: SalaEntity)
+    
+    /**
+     * Atualiza ou insere múltiplas salas (upsert em lote).
+     * Usado na sincronização incremental para atualizar salas modificadas.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertTodas(salas: List<SalaEntity>)
 }

@@ -208,9 +208,10 @@ class ScannerViewModel(
     fun loadColetasCount() {
         viewModelScope.launch {
             try {
-                val coletas = inventarioRepository.getColetas()
+                // Utiliza o contador do PreferencesManager que monitora as coletas da sessão
+                val count = preferencesManager.getCollectionCount()
                 _uiState.value = _uiState.value.copy(
-                    totalColetas = coletas.size
+                    totalColetas = count
                 )
             } catch (e: Exception) {
                 // Silently fail for count
@@ -395,11 +396,13 @@ class ScannerViewModel(
                         Log.d("ScannerViewModel", "  Sala: $salaNome")
                         Log.d("ScannerViewModel", "  Estado: $estadoEncontrado")
                         
+                        // ✅ v2.20: VIBRAR IMEDIATAMENTE com PRIORIDADE MÁXIMA
+                        // Vibração ANTES de qualquer outra operação para feedback instantâneo
+                        vibrationHelper.vibrateSuccess()
+                        Log.d("ScannerViewModel", "✅ Vibração executada com PRIORIDADE MÁXIMA")
+                        
                         // Incrementar contador de coletas
                         preferencesManager.incrementCollectionCount()
-                        
-                        // v2.10: Vibrar ao coletar (se habilitado nas configurações)
-                        vibrationHelper.vibrateOnCollection()
                         
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
@@ -455,7 +458,7 @@ class ScannerViewModel(
             setorNome = domain.nomeSetor,
             salaId = domain.idSala?.toLong(),
             salaNome = domain.nomeSala,
-            responsavelId = domain.coletorId,
+            responsavelId = domain.idResponsavel?.toLong(),
             responsavelNome = domain.nomeResponsavel,
             qrCode = domain.qrCode,
             observacoes = domain.observacoes,

@@ -215,20 +215,21 @@ object NetworkModule {
             val request = chain.request()
             val response = chain.proceed(request)
             
-            // Logar resposta descomprimida
-            val responseBody = response.body
-            val source = responseBody?.source()
-            source?.request(Long.MAX_VALUE) // Buffer the entire body
-            val buffer = source?.buffer
-            
-            val responseString = buffer?.clone()?.readString(Charsets.UTF_8) ?: ""
-            android.util.Log.d("NetworkModule", "═══ RESPONSE AFTER DECOMPRESSION ═══")
-            android.util.Log.d("NetworkModule", "URL: ${request.url}")
-            android.util.Log.d("NetworkModule", "Status: ${response.code}")
-            android.util.Log.d("NetworkModule", "Content-Encoding: ${response.header("Content-Encoding")}")
-            android.util.Log.d("NetworkModule", "Body length: ${responseString.length}")
-            android.util.Log.d("NetworkModule", "Body (first 1000 chars): ${responseString.take(1000)}")
-            android.util.Log.d("NetworkModule", "═══════════════════════════════════")
+            if (com.inventario.mobile.BuildConfig.DEBUG) {
+                val responseBody = response.body
+                val source = responseBody?.source()
+                source?.request(Long.MAX_VALUE) // Buffer the entire body
+                val buffer = source?.buffer
+                
+                val responseString = buffer?.clone()?.readString(Charsets.UTF_8) ?: ""
+                android.util.Log.d("NetworkModule", "═══ RESPONSE AFTER DECOMPRESSION ═══")
+                android.util.Log.d("NetworkModule", "URL: ${request.url}")
+                android.util.Log.d("NetworkModule", "Status: ${response.code}")
+                android.util.Log.d("NetworkModule", "Content-Encoding: ${response.header("Content-Encoding")}")
+                android.util.Log.d("NetworkModule", "Body length: ${responseString.length}")
+                android.util.Log.d("NetworkModule", "Body (first 1000 chars): ${responseString.take(1000)}")
+                android.util.Log.d("NetworkModule", "═══════════════════════════════════")
+            }
             
             response
         }
@@ -239,6 +240,9 @@ object NetworkModule {
         // ✅ Interceptor para renovação automática de token
         val preferencesManager = com.inventario.mobile.utils.PreferencesManager(context)
         val refreshTokenInterceptor = com.inventario.mobile.network.RefreshTokenInterceptor(preferencesManager)
+        // Configurar Application para obter Activity atual (necessário para biometria)
+        refreshTokenInterceptor.application = context.applicationContext as? android.app.Application
+        android.util.Log.d("NetworkModule", "RefreshTokenInterceptor configurado com Application: ${refreshTokenInterceptor.application != null}")
         
         return OkHttpClient.Builder()
             .cache(cache)  // Cache HTTP

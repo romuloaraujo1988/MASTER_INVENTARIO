@@ -23,7 +23,6 @@ interface PatrimonioDao {
      */
     @Query("""
         SELECT p.*, 
-               s.nome as salaNome,
                s.nome as nomeSala,
                CASE WHEN c.id IS NOT NULL THEN 1 ELSE 0 END as coletado,
                c.nomeUsuario as coletadoPor,
@@ -54,6 +53,9 @@ interface PatrimonioDao {
     
     @Query("SELECT * FROM patrimonio WHERE descricao = :descricao AND coletado = 0")
     suspend fun buscarPorDescricaoNaoColetados(descricao: String): List<PatrimonioEntity>
+    
+    @Query("SELECT COUNT(*) FROM patrimonio WHERE descricao = :descricao AND coletado = 0")
+    suspend fun contarPorDescricaoNaoColetados(descricao: String): Int
     
     @Query("SELECT * FROM patrimonio WHERE idSala = :idSala AND coletado = 0")
     suspend fun buscarPorSalaNaoColetados(idSala: Int): List<PatrimonioEntity>

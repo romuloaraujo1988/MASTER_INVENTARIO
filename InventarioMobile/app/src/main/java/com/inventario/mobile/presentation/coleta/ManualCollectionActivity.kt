@@ -1,35 +1,52 @@
 package com.inventario.mobile.presentation.coleta
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
+import com.inventario.mobile.R
 import com.inventario.mobile.databinding.ActivityManualCollectionBinding
+import com.inventario.mobile.data.model.EstadoPatrimonio
 import com.inventario.mobile.utils.PreferencesManager
 import com.inventario.mobile.utils.NavigationHelper
 import com.inventario.mobile.utils.SoundUtils
 import com.inventario.mobile.utils.VoiceSearchManager
 import com.inventario.mobile.presentation.dialog.EstadoPatrimonioDialog
+import com.inventario.mobile.presentation.historico.HistoricoScansActivity
 import com.inventario.mobile.ui.base.BaseOfflineActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class ManualCollectionActivity : BaseOfflineActivity() {
 
     private lateinit var binding: ActivityManualCollectionBinding
     private val viewModel: ManualCollectionViewModel by viewModels()
-    private lateinit var preferencesManager: PreferencesManager
     private var voiceSearchManager: VoiceSearchManager? = null
+
+    // PreferencesManager injetado via Hilt
+    @Inject
+    lateinit var preferencesManager: PreferencesManager
     
     private var salaId: Long = -1L
     private var salaNome: String = ""
+    
+    // Guarda a descrição do último patrimônio coletado para "Coletar Similar"
+    private var lastCollectedDescricao: String? = null
+
+    // ✅ Injetar RegistrarColetaUseCase para coleta similar
+    @Inject
+    lateinit var registrarColetaUseCase: com.inventario.mobile.domain.usecase.RegistrarColetaUseCase
     
     // ✅ v2.11: Injetar PhotoHelper para captura de fotos
     @javax.inject.Inject
@@ -58,7 +75,7 @@ class ManualCollectionActivity : BaseOfflineActivity() {
         binding = ActivityManualCollectionBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        preferencesManager = PreferencesManager(this)
+        // preferencesManager já é injetado via Hilt (@Inject)
         
         // Receber dados da sala selecionada
         salaId = intent.getLongExtra(EXTRA_SALA_ID, -1L)
@@ -160,6 +177,37 @@ class ManualCollectionActivity : BaseOfflineActivity() {
         binding.btnBackToDashboard.setOnClickListener {
             goBackToDashboard()
         }
+
+        // Botão Coletar Similar (sem placa)
+        binding.btnColetarSimilar.setOnClickListener {
+            lastCollectedDescricao?.let { descricao ->
+                showColetarSimilarDialog(descricao)
+            } ?: run {
+                Toast.makeText(this, "Nenhum patrimônio de referência", Toast.LENGTH_SHORT).show()
+            }
+        }
+        
+        // v2.12: Mostrar indicador visual se estado fixo está ativo
+        atualizarIndicadorEstadoFixo()
+    }
+    
+    /**
+     * v2.12: Atualiza o subtítulo da toolbar para indicar estado fixo ativo
+     */
+    private fun atualizarIndicadorEstadoFixo() {
+        if (preferencesManager.isEstadoFixoEnabled()) {
+            val estadoFixo = preferencesManager.getEstadoFixo()
+            if (estadoFixo != null) {
+                val descricao = try {
+                    EstadoPatrimonio.valueOf(estadoFixo).descricao
+                } catch (e: IllegalArgumentException) {
+                    estadoFixo
+                }
+                supportActionBar?.subtitle = "⚡ Estado fixo: $descricao"
+            }
+        } else {
+            supportActionBar?.subtitle = null
+        }
     }
     
     /**
@@ -246,6 +294,15 @@ class ManualCollectionActivity : BaseOfflineActivity() {
             // Tocar som suave de sucesso
             SoundUtils.playSuccessSound()
             
+            // Guardar descrição do patrimônio coletado para "Coletar Similar"
+            state.patrimonio?.let { p ->
+                if (!p.descricao.isNullOrBlank()) {
+                    lastCollectedDescricao = p.descricao
+                    binding.btnColetarSimilar.visibility = android.view.View.VISIBLE
+                    binding.btnColetarSimilar.text = "Coletar similar: ${p.descricao.take(40)}${if (p.descricao.length > 40) "..." else ""}"
+                }
+            }
+            
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
             viewModel.clearMessages()
             clearForm()
@@ -258,7 +315,25 @@ class ManualCollectionActivity : BaseOfflineActivity() {
     }
 
     private fun collectPatrimonio() {
-        // Mostrar dialog para selecionar estado do patrimônio
+        // v2.12: Verificar se estado fixo está habilitado (evita abrir dialog)
+        if (preferencesManager.isEstadoFixoEnabled()) {
+            val estadoFixo = preferencesManager.getEstadoFixo()
+            if (estadoFixo != null) {
+                Log.d("ManualCollection", "✓ Estado fixo ativo: $estadoFixo — coletando diretamente")
+                viewModel.coletarPatrimonio(estadoFixo)
+                return
+            } else {
+                // Estado fixo habilitado mas sem valor configurado — avisar o usuário
+                Toast.makeText(
+                    this,
+                    "Estado fixo ativado, mas nenhum estado foi configurado. Acesse Configurações.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return
+            }
+        }
+        
+        // Estado fixo desabilitado: mostrar dialog de seleção
         val dialog = EstadoPatrimonioDialog.newInstance { estadoSelecionado ->
             // Após seleção, realizar a coleta com o estado
             viewModel.coletarPatrimonio(estadoSelecionado.name)
@@ -279,9 +354,126 @@ class ManualCollectionActivity : BaseOfflineActivity() {
         photoCaptureHelper?.hidePhotoCard()
     }
 
+    // ========== COLETAR SIMILAR (sem placa) ==========
+
+    private fun showColetarSimilarDialog(descricao: String) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("🔄 Coletar Similar")
+            .setMessage("Registrar coleta de item similar:\n\n\"$descricao\"\n\nLocal: $salaNome\n\nEste item será registrado SEM número de patrimônio.")
+            .setPositiveButton("Coletar") { _, _ ->
+                if (preferencesManager.isEstadoFixoEnabled()) {
+                    val estadoFixo = preferencesManager.getEstadoFixo()
+                    if (!estadoFixo.isNullOrEmpty()) {
+                        registrarColetaSimilar(descricao, estadoFixo)
+                        return@setPositiveButton
+                    }
+                }
+                showEstadoDialogParaSimilar(descricao)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun showEstadoDialogParaSimilar(descricao: String) {
+        val dialog = EstadoPatrimonioDialog.newInstance { estadoSelecionado ->
+            registrarColetaSimilar(descricao, estadoSelecionado.name)
+        }
+        dialog.show(supportFragmentManager, "EstadoPatrimonioDialogSimilar")
+    }
+
+    private fun registrarColetaSimilar(descricao: String, estadoConservacao: String) {
+        Log.d("ManualCollection", "Registrando coleta similar: $descricao | Estado: $estadoConservacao")
+
+        binding.progressBar?.visibility = android.view.View.VISIBLE
+
+        lifecycleScope.launch {
+            try {
+                val inventarioId = preferencesManager.getInventarioAtivoId() ?: 0
+                val usuarioId = preferencesManager.getUserId() ?: 0
+                val usuarioNome = preferencesManager.getUserName() ?: "Usuário"
+
+                registrarColetaUseCase.registrarColetaPorDescricao(
+                    descricao = descricao,
+                    salaId = salaId.toInt(),
+                    salaNome = salaNome,
+                    estadoConservacao = estadoConservacao,
+                    inventarioId = inventarioId,
+                    usuarioId = usuarioId.toLong(),
+                    usuarioNome = usuarioNome
+                ).fold(
+                    onSuccess = {
+                        runOnUiThread {
+                            binding.progressBar?.visibility = android.view.View.GONE
+                            SoundUtils.playSuccessSound()
+                            Toast.makeText(this@ManualCollectionActivity, "✓ Coleta similar registrada!", Toast.LENGTH_SHORT).show()
+                            // Recarregar contagem de coletas
+                            viewModel.setSalaInfo(salaId, salaNome)
+                        }
+                    },
+                    onFailure = { error ->
+                        runOnUiThread {
+                            binding.progressBar?.visibility = android.view.View.GONE
+                            Toast.makeText(this@ManualCollectionActivity, "Erro: ${error.message}", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                )
+            } catch (e: Exception) {
+                runOnUiThread {
+                    binding.progressBar?.visibility = android.view.View.GONE
+                    Toast.makeText(this@ManualCollectionActivity, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
     override fun onSupportNavigateUp(): Boolean {
         NavigationHelper.goBack(this)
         return true
+    }
+    
+    // ========== MENU DA TOOLBAR ==========
+    
+    /**
+     * v2.12: Infla o menu com botão de histórico
+     */
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_manual_collection, menu)
+        return true
+    }
+    
+    /**
+     * v2.12: Trata cliques no menu da toolbar
+     */
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                NavigationHelper.goBack(this)
+                true
+            }
+            R.id.action_historico -> {
+                abrirHistoricoColetas()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+    
+    /**
+     * v2.12: Abre a tela de histórico de scans/coletas
+     */
+    private fun abrirHistoricoColetas() {
+        Log.d("ManualCollection", "Abrindo histórico de coletas...")
+        val intent = Intent(this, HistoricoScansActivity::class.java)
+        startActivity(intent)
+    }
+    
+    /**
+     * v2.12: Atualiza indicador de estado fixo quando a activity volta ao foco
+     * (usuário pode ter alterado nas configurações)
+     */
+    override fun onResume() {
+        super.onResume()
+        atualizarIndicadorEstadoFixo()
     }
     
     // ========== BUSCA POR VOZ ==========

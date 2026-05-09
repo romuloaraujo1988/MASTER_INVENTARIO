@@ -29,9 +29,31 @@ class OfflineFallbackInterceptor @Inject constructor(
 
     companion object {
         private const val TAG = "OfflineFallbackInterceptor"
-        private const val MAX_CONSECUTIVE_FAILURES = 3
-        private var consecutiveFailures = 0
+        // Bug-fix 08/05/2026: aumentado de 3 para 10. O limite anterior era
+        // agressivo demais — travava todo o app em modo offline após três
+        // falhas de rede transitórias (ex.: servidor reiniciando). 10 falhas
+        // consecutivas sem nenhum sucesso é um sinal mais confiável de que
+        // o servidor realmente está indisponível.
+        private const val MAX_CONSECUTIVE_FAILURES = 10
+        
+        // Endpoints de busca/consulta que NÃO devem ativar modo offline forçado
+        // pois são operações de leitura que podem falhar sem impacto crítico
+        private val SEARCH_ENDPOINTS = listOf(
+            "/buscar",
+            "/patrimonio/numero/",
+            "/patrimonio/buscar",
+            // Endpoints de leitura do dashboard: uma falha transitória não deve
+            // ativar modo offline forçado, senão a tela inteira fica travada.
+            "/dashboard/stats",
+            "/dashboard/evolucao",
+            "/dashboard/top-itens",
+            "/dashboard/distribuicao-por-sala",
+            "/dashboard/estatisticas-por-status"
+        )
     }
+    
+    // Instância por objeto (não estático) para evitar estado compartilhado entre testes
+    private var consecutiveFailures = 0
     
 
 
@@ -78,8 +100,11 @@ class OfflineFallbackInterceptor @Inject constructor(
                 Log.w(TAG, "Mensagem: ${e.message}")
                 Log.w(TAG, "Falhas consecutivas: $consecutiveFailures")
                 
-                // Se atingiu o limite de falhas, ativar modo offline forçado
-                if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                // Verificar se é um endpoint de busca/consulta
+                val isSearchEndpoint = SEARCH_ENDPOINTS.any { request.url.toString().contains(it) }
+                
+                // Se atingiu o limite de falhas E não é endpoint de busca, ativar modo offline forçado
+                if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES && !isSearchEndpoint) {
                     if (!preferencesManager.isForceOfflineMode()) {
                         Log.w(TAG, "⚠️ ATIVANDO MODO OFFLINE FORÇADO")
                         Log.w(TAG, "Motivo: $MAX_CONSECUTIVE_FAILURES falhas consecutivas")
@@ -88,6 +113,8 @@ class OfflineFallbackInterceptor @Inject constructor(
                         // Notificar usuário via notificação
                         notificationManager.showOfflineModeNotification(hasLocalData = true)
                     }
+                } else if (isSearchEndpoint) {
+                    Log.d(TAG, "ℹ️ Falha em endpoint de busca - não ativa modo offline forçado")
                 }
                 
                 Log.w(TAG, "═══════════════════════════════════════")

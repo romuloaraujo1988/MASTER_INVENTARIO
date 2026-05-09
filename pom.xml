@@ -11,17 +11,24 @@
         <relativePath/>
     </parent>
     
-    <groupId>com.inventario</groupId>
+    <groupId>com.inventario.sihcp</groupId>
     <artifactId>sistema-inventario</artifactId>
     <version>2.7.0</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
     <name>Sistema de Coleta de Inventário</name>
     <description>Sistema de Controle de Coleta de Inventário de Patrimônio</description>
     
+    <!-- Módulos do projeto multi-módulo -->
+    <modules>
+        <module>sihcp-core</module>
+        <module>sihcp-desktop</module>
+        <module>sihcp-server</module>
+    </modules>
+    
     <properties>
-        <java.version>21</java.version>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <java.version>17</java.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
         <!-- Versões mais recentes do Apache POI e dependências -->
@@ -34,10 +41,12 @@
         <xmlbeans.version>5.2.2</xmlbeans.version>
     </properties>
     
-    <!-- Dependency Management para forçar versões específicas -->
+    <!-- Dependency Management — versões centralizadas para todos os módulos -->
     <dependencyManagement>
         <dependencies>
-            <!-- Apache POI 5.x - Versões atualizadas -->
+            <!-- ========================================= -->
+            <!-- Apache POI 5.x e dependências             -->
+            <!-- ========================================= -->
             <dependency>
                 <groupId>org.apache.poi</groupId>
                 <artifactId>poi</artifactId>
@@ -53,340 +62,217 @@
                 <artifactId>poi-scratchpad</artifactId>
                 <version>${poi.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml-full</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
             
-            <!-- Commons IO - Versão compatível com POI 5.x -->
+            <!-- Commons IO -->
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
                 <version>${commons-io.version}</version>
             </dependency>
             
-            <!-- Commons Compress - Versão compatível com POI 5.x -->
+            <!-- Commons Compress -->
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-compress</artifactId>
                 <version>${commons-compress.version}</version>
             </dependency>
             
-            <!-- Commons Collections4 - Necessário para POI 5.x -->
+            <!-- Commons Collections4 -->
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-collections4</artifactId>
                 <version>${commons-collections4.version}</version>
             </dependency>
             
-            <!-- Commons Math3 - Necessário para POI 5.x -->
+            <!-- Commons Math3 -->
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-math3</artifactId>
                 <version>${commons-math3.version}</version>
             </dependency>
+            
+            <!-- ========================================= -->
+            <!-- Spring Boot Starters (versões do parent)  -->
+            <!-- ========================================= -->
+            <!-- Nota: versões gerenciadas pelo spring-boot-starter-parent -->
+            <!-- Aqui declaramos apenas para centralizar exclusions -->
+            
+            <!-- ========================================= -->
+            <!-- Bibliotecas com versão explícita           -->
+            <!-- ========================================= -->
+            
+            <!-- SQLite for offline mode -->
+            <dependency>
+                <groupId>org.xerial</groupId>
+                <artifactId>sqlite-jdbc</artifactId>
+                <version>3.44.1.0</version>
+            </dependency>
+            
+            <!-- Javax Annotation API for @PostConstruct -->
+            <dependency>
+                <groupId>javax.annotation</groupId>
+                <artifactId>javax.annotation-api</artifactId>
+                <version>1.3.2</version>
+            </dependency>
+            
+            <!-- Charts for Dashboard -->
+            <dependency>
+                <groupId>org.jfree</groupId>
+                <artifactId>jfreechart</artifactId>
+                <version>1.5.5</version>
+            </dependency>
+            
+            <!-- SparseBitSet - Dependência do POI 5.x -->
+            <dependency>
+                <groupId>com.zaxxer</groupId>
+                <artifactId>SparseBitSet</artifactId>
+                <version>1.3</version>
+            </dependency>
+            
+            <!-- XMLBeans - Necessário para Apache POI OOXML -->
+            <dependency>
+                <groupId>org.apache.xmlbeans</groupId>
+                <artifactId>xmlbeans</artifactId>
+                <version>${xmlbeans.version}</version>
+            </dependency>
+            
+            <!-- Curvesapi - Necessário para Apache POI -->
+            <dependency>
+                <groupId>com.github.virtuald</groupId>
+                <artifactId>curvesapi</artifactId>
+                <version>1.08</version>
+            </dependency>
+            
+            <!-- iText for PDF Export -->
+            <dependency>
+                <groupId>com.itextpdf</groupId>
+                <artifactId>kernel</artifactId>
+                <version>7.2.5</version>
+            </dependency>
+            <dependency>
+                <groupId>com.itextpdf</groupId>
+                <artifactId>layout</artifactId>
+                <version>7.2.5</version>
+            </dependency>
+            <dependency>
+                <groupId>com.itextpdf</groupId>
+                <artifactId>io</artifactId>
+                <version>7.2.5</version>
+            </dependency>
+            
+            <!-- ZXing for QR Code generation and reading -->
+            <dependency>
+                <groupId>com.google.zxing</groupId>
+                <artifactId>core</artifactId>
+                <version>3.5.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.zxing</groupId>
+                <artifactId>javase</artifactId>
+                <version>3.5.2</version>
+            </dependency>
+            
+            <!-- JWT Dependencies -->
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-api</artifactId>
+                <version>0.11.5</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>0.11.5</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-jackson</artifactId>
+                <version>0.11.5</version>
+            </dependency>
+            
+            <!-- Swagger/OpenAPI Documentation -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>2.0.2</version>
+            </dependency>
+            
+            <!-- Property-Based Testing - JUnit-Quickcheck -->
+            <dependency>
+                <groupId>com.pholser</groupId>
+                <artifactId>junit-quickcheck-core</artifactId>
+                <version>1.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pholser</groupId>
+                <artifactId>junit-quickcheck-generators</artifactId>
+                <version>1.0</version>
+            </dependency>
+            
+            <!-- Mockito for Mocking -->
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>5.8.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
+                <version>5.8.0</version>
+            </dependency>
+            
+            <!-- JaCoCo for Code Coverage -->
+            <dependency>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.11</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     
+    <!-- Dependências diretas no parent POM para os testes na raiz (IDE) -->
     <dependencies>
-        <!-- Spring Boot Starters -->
+        <!-- Property-Based Testing - JUnit-Quickcheck -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        
-        <!-- Spring Boot Log4j2 Starter -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-log4j2</artifactId>
-        </dependency>
-        
-        <!-- SLF4J API - Explicitamente adicionado -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-websocket</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        
-        <!-- Jakarta Servlet API - Necessário para Spring Boot 3.x -->
-        <dependency>
-            <groupId>jakarta.servlet</groupId>
-            <artifactId>jakarta.servlet-api</artifactId>
-        </dependency>
-        
-        <!-- Database -->
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        
-        <!-- SQLite for offline mode -->
-        <dependency>
-            <groupId>org.xerial</groupId>
-            <artifactId>sqlite-jdbc</artifactId>
-            <version>3.44.1.0</version>
-        </dependency>
-        
-        <!-- Utilities -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-        </dependency>
-        
-        <!-- Javax Annotation API for @PostConstruct -->
-        <dependency>
-            <groupId>javax.annotation</groupId>
-            <artifactId>javax.annotation-api</artifactId>
-            <version>1.3.2</version>
-        </dependency>
-        
-        <!-- Charts for Dashboard -->
-        <dependency>
-            <groupId>org.jfree</groupId>
-            <artifactId>jfreechart</artifactId>
-            <version>1.5.5</version>
-        </dependency>
-        
-        <!-- Apache POI 5.x for Excel Export - Versões controladas por dependencyManagement -->
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi-ooxml</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi-scratchpad</artifactId>
-        </dependency>
-        
-        <!-- Apache Commons Collections4 - Necessário para Apache POI 5.x -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
-        </dependency>
-        
-        <!-- Apache Commons IO - Versão compatível com POI 5.x -->
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-        </dependency>
-        
-        <!-- Apache Commons Compress - Versão compatível com POI 5.x -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-        </dependency>
-        
-        <!-- Apache Commons Math3 - Necessário para POI 5.x -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-math3</artifactId>
-        </dependency>
-        
-        <!-- SparseBitSet - Dependência do POI 5.x -->
-        <dependency>
-            <groupId>com.zaxxer</groupId>
-            <artifactId>SparseBitSet</artifactId>
-            <version>1.3</version>
-        </dependency>
-        
-        <!-- XMLBeans - Necessário para Apache POI OOXML -->
-        <dependency>
-            <groupId>org.apache.xmlbeans</groupId>
-            <artifactId>xmlbeans</artifactId>
-            <version>${xmlbeans.version}</version>
-        </dependency>
-        
-        <!-- Apache POI OOXML Schemas FULL - Contém todos os schemas necessários -->
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi-ooxml-full</artifactId>
-            <version>${poi.version}</version>
-        </dependency>
-        
-        <!-- Curvesapi - Necessário para Apache POI -->
-        <dependency>
-            <groupId>com.github.virtuald</groupId>
-            <artifactId>curvesapi</artifactId>
-            <version>1.08</version>
-        </dependency>
-        
-        <!-- iText for PDF Export -->
-        <dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>kernel</artifactId>
-            <version>7.2.5</version>
+            <groupId>com.pholser</groupId>
+            <artifactId>junit-quickcheck-core</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>layout</artifactId>
-            <version>7.2.5</version>
+            <groupId>com.pholser</groupId>
+            <artifactId>junit-quickcheck-generators</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- JUnit 4 (Para Quickcheck) -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- JUnit 5 (Jupiter) -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>io</artifactId>
-            <version>7.2.5</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
         </dependency>
-        
-        <!-- ZXing for QR Code generation and reading -->
         <dependency>
-            <groupId>com.google.zxing</groupId>
-            <artifactId>core</artifactId>
-            <version>3.5.2</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
         </dependency>
         
+        <!-- Spring Boot Test (Para testes de integração no Controller, etc) -->
         <dependency>
-            <groupId>com.google.zxing</groupId>
-            <artifactId>javase</artifactId>
-            <version>3.5.2</version>
-        </dependency>
-        
-        <!-- ========================================= -->
-        <!-- INTELIGÊNCIA ARTIFICIAL                   -->
-        <!-- ========================================= -->
-
-        <!-- ========================================= -->
-        <!-- API MOBILE - JWT E SEGURANÇA             -->
-        <!-- ========================================= -->
-        
-        <!-- JWT Dependencies -->
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-api</artifactId>
-            <version>0.11.5</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-impl</artifactId>
-            <version>0.11.5</version>
-            <scope>runtime</scope>
-        </dependency>
-        
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-jackson</artifactId>
-            <version>0.11.5</version>
-            <scope>runtime</scope>
-        </dependency>
-        
-        <!-- Swagger/OpenAPI Documentation -->
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.0.2</version>
-        </dependency>
-        
-        <!-- Cache Redis (opcional para produção) -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
-            <optional>true</optional>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        
-        <!-- ========================================= -->
-        <!-- ESCALABILIDADE E PERFORMANCE             -->
-        <!-- ========================================= -->
-        
-        <!-- Spring Boot Cache -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-cache</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        
-        <!-- Caffeine Cache (cache em memória de alta performance) -->
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-        </dependency>
-        
-        <!-- Micrometer Prometheus (métricas para Prometheus) -->
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-registry-prometheus</artifactId>
-        </dependency>
-        
-        <!-- Micrometer Core (métricas) -->
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-core</artifactId>
-        </dependency>
-        
-        <!-- Testing -->
-        <dependency>                                          
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
@@ -395,261 +281,156 @@
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-starter-logging</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-to-slf4j</artifactId>
+                </exclusion>
             </exclusions>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        
-        <!-- Property-Based Testing - JUnit-Quickcheck -->
-        <dependency>
-            <groupId>com.pholser</groupId>
-            <artifactId>junit-quickcheck-core</artifactId>
-            <version>1.0</version>
-            <scope>test</scope>
-        </dependency>
-        
-        <dependency>
-            <groupId>com.pholser</groupId>
-            <artifactId>junit-quickcheck-generators</artifactId>
-            <version>1.0</version>
-            <scope>test</scope>
-        </dependency>
-        
-        <!-- Mockito for Mocking -->
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>5.8.0</version>
-            <scope>test</scope>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
-            <version>5.8.0</version>
-            <scope>test</scope>
-        </dependency>
-        
-        <!-- JaCoCo for Code Coverage -->
-        <dependency>
-            <groupId>org.jacoco</groupId>
-            <artifactId>jacoco-maven-plugin</artifactId>
-            <version>0.8.11</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
     
     <build>
-        <finalName>sistema-inventario-${project.version}</finalName>
-        
-        <plugins>
-            <!-- Maven Compiler Plugin -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>21</source>
-                    <target>21</target>
-                    <encoding>UTF-8</encoding>
-                </configuration>
-            </plugin>
-            
-            <!-- Maven Dependency Plugin para copiar dependências -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.6.1</version>
-                <executions>
-                    <execution>
-                        <id>copy-dependencies</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/mobile-server/lib</outputDirectory>
-                            <overWriteReleases>false</overWriteReleases>
-                            <overWriteSnapshots>false</overWriteSnapshots>
-                            <overWriteIfNewer>true</overWriteIfNewer>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            
-            <!-- Maven JAR Plugin para criar JAR sem dependências -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.3.0</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>com.inventario.MobileApiApplication</mainClass>
-                        </manifest>
-                    </archive>
-                    <outputDirectory>${project.build.directory}/mobile-server</outputDirectory>
-                </configuration>
-            </plugin>
-            
-            <!-- Antrun Plugin para organizar estrutura final -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <execution>
-                        <id>prepare-mobile-server</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <target>
-                                <!-- Criar diretório mobile-server se não existir -->
-                                <mkdir dir="${project.build.directory}/mobile-server"/>
-                                
-                                <!-- Copiar arquivos de configuração -->
-                                <copy todir="${project.build.directory}/mobile-server">
-                                    <fileset dir="${project.build.outputDirectory}">
-                                        <include name="application*.properties"/>
-                                        <include name="application*.yml"/>
-                                    </fileset>
-                                </copy>
-                                
-                                <!-- Criar script de execução Windows -->
-                                <echo file="${project.build.directory}/mobile-server/start-mobile-server.bat">@echo off
-echo Iniciando Servidor Mobile do Sistema de Inventario...
-java -jar sistema-inventario-${project.version}.jar --spring.profiles.active=mobile
-pause</echo>
-                                
-                                <!-- Criar script de execução Linux/Mac -->
-                                <echo file="${project.build.directory}/mobile-server/start-mobile-server.sh">#!/bin/bash
-echo "Iniciando Servidor Mobile do Sistema de Inventario..."
-java -jar sistema-inventario-${project.version}.jar --spring.profiles.active=mobile</echo>
-                                
-                                <!-- Tornar script executável no Linux/Mac -->
-                                <chmod file="${project.build.directory}/mobile-server/start-mobile-server.sh" perm="755"/>
-                                
-                                <!-- Criar arquivo README -->
-                                <echo file="${project.build.directory}/mobile-server/README.txt">SERVIDOR MOBILE - SISTEMA DE INVENTARIO
-========================================
-
-Este diretório contém o servidor mobile do Sistema de Inventário.
-
-ESTRUTURA:
-- sistema-inventario-${project.version}.jar: Aplicação principal
-- lib/: Dependências externas
-- application-mobile.properties: Configurações do servidor mobile
-- start-mobile-server.bat: Script para Windows
-- start-mobile-server.sh: Script para Linux/Mac
-
-EXECUÇÃO:
-Windows: Execute start-mobile-server.bat
-Linux/Mac: Execute ./start-mobile-server.sh
-Manual: java -jar sistema-inventario-${project.version}.jar --spring.profiles.active=mobile
-
-ACESSO:
-URL: http://localhost:8080/inventario
-Swagger: http://localhost:8080/inventario/swagger-ui.html
-
-REQUISITOS:
-- Java 21 ou superior
-- PostgreSQL configurado e rodando
-- Configurações de banco em application-mobile.properties</echo>
-                            </target>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            
-            <!-- Spring Boot Maven Plugin -->
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <mainClass>com.inventario.SistemaInventarioApplication</mainClass>
-                    <executable>true</executable>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>exec</classifier>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            
-            <!-- Exec Maven Plugin para executar a aplicação -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.1.0</version>
-                <configuration>
-                    <mainClass>com.inventario.SistemaInventarioApplication</mainClass>
-                </configuration>
-            </plugin>
-            
-            <!-- JaCoCo Plugin para cobertura de código -->
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.11</version>
-                <executions>
-                    <execution>
-                        <id>prepare-agent</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>report</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>jacoco-check</id>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <rule>
-                                    <element>PACKAGE</element>
-                                    <limits>
-                                        <limit>
-                                            <counter>LINE</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.80</minimum>
-                                        </limit>
-                                    </limits>
-                                </rule>
-                            </rules>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
+        <pluginManagement>
+            <plugins>
+                <!-- Maven Compiler Plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <source>17</source>
+                        <target>17</target>
+                        <encoding>UTF-8</encoding>
+                    </configuration>
+                </plugin>
+                
+                <!-- Maven Dependency Plugin para copiar dependências -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>3.6.1</version>
+                </plugin>
+                
+                <!-- Maven JAR Plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.3.0</version>
+                </plugin>
+                
+                <!-- Antrun Plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>3.1.0</version>
+                </plugin>
+                
+                <!-- Spring Boot Maven Plugin -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <configuration>
+                        <skip>true</skip>
+                    </configuration>
+                </plugin>
+                
+                <!-- Exec Maven Plugin -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>3.1.0</version>
+                </plugin>
+                
+                <!-- JaCoCo Plugin para cobertura de código -->
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.8.11</version>
+                    <executions>
+                        <execution>
+                            <id>prepare-agent</id>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>report</id>
+                            <phase>test</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>jacoco-check</id>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <rule>
+                                        <element>PACKAGE</element>
+                                        <limits>
+                                            <limit>
+                                                <counter>LINE</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>0.80</minimum>
+                                            </limit>
+                                        </limits>
+                                    </rule>
+                                </rules>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                
+                <!-- Maven Assembly Plugin -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>3.6.0</version>
+                </plugin>
+                
+                <!-- ================================================ -->
+                <!-- m2e Eclipse lifecycle mapping                     -->
+                <!-- Ignora goals que não fazem sentido no Eclipse IDE -->
+                <!-- Resolve o erro MDEP-187 no build incremental      -->
+                <!-- ================================================ -->
+                <plugin>
+                    <groupId>org.eclipse.m2e</groupId>
+                    <artifactId>lifecycle-mapping</artifactId>
+                    <version>1.0.0</version>
+                    <configuration>
+                        <lifecycleMappingMetadata>
+                            <pluginExecutions>
+                                <!-- Ignorar copy-dependencies no build incremental do Eclipse -->
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-dependency-plugin</artifactId>
+                                        <versionRange>[1.0,)</versionRange>
+                                        <goals>
+                                            <goal>copy-dependencies</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore/>
+                                    </action>
+                                </pluginExecution>
+                            </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
     
-    <!-- Profile para criar fat JAR quando necessário -->
+    <!-- Profiles existentes — serão ajustados nas fases seguintes -->
     <profiles>
         <!-- Profile para Mobile API -->
         <profile>
             <id>mobile</id>
             <properties>
                 <spring.profiles.active>mobile</spring.profiles.active>
-                <main.class>com.inventario.MobileApiApplication</main.class>
+                <main.class>com.inventario.sihcp.MobileApiApplication</main.class>
             </properties>
             <build>
                 <plugins>
@@ -657,7 +438,7 @@ REQUISITOS:
                         <groupId>org.springframework.boot</groupId>
                         <artifactId>spring-boot-maven-plugin</artifactId>
                         <configuration>
-                            <mainClass>com.inventario.MobileApiApplication</mainClass>
+                            <mainClass>com.inventario.sihcp.MobileApiApplication</mainClass>
                             <profiles>
                                 <profile>mobile</profile>
                             </profiles>
@@ -675,7 +456,7 @@ REQUISITOS:
                         <groupId>org.springframework.boot</groupId>
                         <artifactId>spring-boot-maven-plugin</artifactId>
                         <configuration>
-                            <mainClass>com.inventario.SistemaInventarioApplication</mainClass>
+                            <mainClass>com.inventario.sihcp.SistemaInventarioApplication</mainClass>
                             <executable>true</executable>
                             <layout>JAR</layout>
                             <skip>false</skip>
@@ -696,7 +477,6 @@ REQUISITOS:
         <profile>
             <id>thin-jar</id>
             <properties>
-                <!-- Desabilita completamente o Spring Boot plugin -->
                 <spring-boot.repackage.skip>true</spring-boot.repackage.skip>
             </properties>
             <build>
@@ -711,7 +491,7 @@ REQUISITOS:
                                 <manifest>
                                     <addClasspath>true</addClasspath>
                                     <classpathPrefix>lib/</classpathPrefix>
-                                    <mainClass>com.inventario.SistemaInventarioApplication</mainClass>
+                                    <mainClass>com.inventario.sihcp.SistemaInventarioApplication</mainClass>
                                 </manifest>
                             </archive>
                         </configuration>
@@ -731,6 +511,7 @@ REQUISITOS:
                                 </goals>
                                 <configuration>
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                                    <includeScope>runtime</includeScope>
                                     <overWriteReleases>false</overWriteReleases>
                                     <overWriteSnapshots>false</overWriteSnapshots>
                                     <overWriteIfNewer>true</overWriteIfNewer>
@@ -787,7 +568,7 @@ REQUISITOS:
                                 <manifest>
                                     <addClasspath>true</addClasspath>
                                     <classpathPrefix>lib/</classpathPrefix>
-                                    <mainClass>com.inventario.SistemaInventarioApplication</mainClass>
+                                    <mainClass>com.inventario.sihcp.SistemaInventarioApplication</mainClass>
                                 </manifest>
                                 <manifestEntries>
                                     <Implementation-Title>${project.name}</Implementation-Title>

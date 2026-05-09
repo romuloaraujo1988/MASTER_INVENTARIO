@@ -9,6 +9,7 @@ import com.inventario.mobile.domain.usecase.BuscarPatrimoniosPorDescricaoUseCase
 import com.inventario.mobile.domain.usecase.RegistrarColetaUseCase
 import com.inventario.mobile.domain.usecase.RegistrarColetaPorDescricaoUseCase
 import com.inventario.mobile.presentation.state.DescricaoState
+import com.inventario.mobile.utils.PreferencesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -49,7 +50,8 @@ class DescricaoSelectionViewModelClean @Inject constructor(
     private val buscarDescricoesNaoColetadasUseCase: BuscarDescricoesNaoColetadasUseCase,
     private val buscarPatrimoniosPorDescricaoUseCase: BuscarPatrimoniosPorDescricaoUseCase,
     private val registrarColetaUseCase: RegistrarColetaUseCase,
-    private val registrarColetaPorDescricaoUseCase: RegistrarColetaPorDescricaoUseCase
+    private val registrarColetaPorDescricaoUseCase: RegistrarColetaPorDescricaoUseCase,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
     
     companion object {
@@ -131,6 +133,9 @@ class DescricaoSelectionViewModelClean @Inject constructor(
             ).fold(
                 onSuccess = { coleta ->
                     Log.d(TAG, "✓ Coleta registrada com sucesso")
+                    // Feature scanner-coleta-sem-etiqueta (Task 10.1): garantir que o contador
+                    // em ScannerActivity reflita a nova coleta ao retornar. Requirement 6.1.
+                    preferencesManager.incrementCollectionCount()
                     _coletaState.value = ColetaState.Success(patrimonio)
                 },
                 onFailure = { error ->
@@ -165,6 +170,9 @@ class DescricaoSelectionViewModelClean @Inject constructor(
             ).fold(
                 onSuccess = { coleta ->
                     Log.d(TAG, "✓ Coleta por descrição registrada com sucesso")
+                    // Feature scanner-coleta-sem-etiqueta (Task 10.1): garantir que o contador
+                    // em ScannerActivity reflita a nova coleta ao retornar. Requirement 6.1.
+                    preferencesManager.incrementCollectionCount()
                     // Criar patrimônio fake para mostrar sucesso
                     val patrimonioFake = Patrimonio(
                         id = 0,

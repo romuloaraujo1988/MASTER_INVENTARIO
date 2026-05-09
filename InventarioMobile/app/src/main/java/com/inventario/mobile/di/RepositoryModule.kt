@@ -67,6 +67,10 @@ abstract class RepositoryModule {
     abstract fun bindFotoReferenciaRepository(
         impl: FotoReferenciaRepositoryImpl
     ): FotoReferenciaRepository
+
+    // NOTE: DashboardRepository já é provido via DashboardModule.provideDashboardRepository.
+    // Manter um @Binds aqui gera "Dagger/DuplicateBindings". A injeção da interface no
+    // DashboardViewModelClean funciona pelo DashboardModule existente.
     
     companion object {
         /**

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.inventario.mobile.data.repository.InventarioRepository
 import com.inventario.mobile.domain.usecase.BuscarPatrimonioUseCase
 import com.inventario.mobile.domain.usecase.RegistrarColetaUseCase
+import com.inventario.mobile.utils.PreferencesManager
 import com.inventario.mobile.utils.VibrationHelper
 
 /**
@@ -18,7 +19,8 @@ class ManualCollectionViewModelFactory(
     private val registrarColetaUseCase: RegistrarColetaUseCase,
     private val repository: InventarioRepository,
     private val coletaDao: com.inventario.mobile.data.local.dao.ColetaDao,
-    private val vibrationHelper: VibrationHelper // v2.10: Feedback tátil
+    private val vibrationHelper: VibrationHelper,
+    private val preferencesManager: PreferencesManager
 ) : ViewModelProvider.Factory {
     
     @Suppress("UNCHECKED_CAST")
@@ -29,7 +31,8 @@ class ManualCollectionViewModelFactory(
                 registrarColetaUseCase,
                 repository,
                 coletaDao,
-                vibrationHelper
+                vibrationHelper,
+                preferencesManager
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")

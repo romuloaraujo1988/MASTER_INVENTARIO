@@ -1,108 +1,142 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:ns1="http://schemas.android.com/tools">
-    <color name="background">#121212</color>
-    <color name="background_color">#121212</color>
-    <color name="background_light">#1E1E1E</color>
-    <color name="background_secondary">#1E1E1E</color>
-    <color name="black">#000000</color>
-    <color name="black_transparent">#80000000</color>
-    <color name="card_stroke_color">#2C2C2C</color>
-    <color name="colorPrimary">#90CAF9</color>
-    <color name="colorSecondary">#FFD54F</color>
-    <color name="divider">#2C2C2C</color>
-    <color name="divider_color">#2C2C2C</color>
-    <color name="error">#EF5350</color>
-    <color name="error_dark">#EF5350</color>
-    <color name="error_light">#3D1B1B</color>
-    <color name="error_red">#EF5350</color>
-    <color name="info">#64B5F6</color>
-    <color name="info_color">#64B5F6</color>
-    <color name="info_dark">#64B5F6</color>
-    <color name="info_light">#1B2D3D</color>
-    <color name="material_blue_600">#42A5F5</color>
-    <color name="material_blue_700">#2196F3</color>
-    <color name="material_blue_800">#1E88E5</color>
-    <color name="material_green_600">#66BB6A</color>
-    <color name="material_grey_300">#424242</color>
-    <color name="material_grey_600">#9E9E9E</color>
-    <color name="material_grey_800">#BDBDBD</color>
-    <color name="material_grey_900">#E0E0E0</color>
-    <color name="material_orange_600">#FFA726</color>
-    <color name="material_red_600">#EF5350</color>
-    <color name="overlay_background">#80000000</color>
-    <color name="primary">#90CAF9</color>
-    <color name="primary_color">#90CAF9</color>
-    <color name="primary_color_light">#1E3A5F</color>
-    <color name="primary_dark">#42A5F5</color>
-    <color name="primary_light">#1E3A5F</color>
-    <color name="primary_text">#FFFFFF</color>
-    <color name="progress_background">#2C2C2C</color>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="scanner_overlay">#66000000</color>
-    <color name="secondary">#FFD54F</color>
-    <color name="secondary_dark">#FFC107</color>
-    <color name="secondary_light">#3D3000</color>
-    <color name="secondary_text">#B0B0B0</color>
-    <color name="status_background_error">#3D1B1B</color>
-    <color name="status_background_success">#1B3D1B</color>
-    <color name="status_background_warning">#3D2800</color>
-    <color name="status_error">#EF5350</color>
-    <color name="status_pending">#FFB74D</color>
-    <color name="status_synced">#81C784</color>
-    <color name="success">#81C784</color>
-    <color name="success_color">#81C784</color>
-    <color name="success_dark">#81C784</color>
-    <color name="success_light">#1B3D1B</color>
-    <color name="surface">#1E1E1E</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="text_disabled">#616161</color>
-    <color name="text_hint">#757575</color>
-    <color name="text_primary">#FFFFFF</color>
-    <color name="text_secondary">#B0B0B0</color>
-    <color name="transparent">#00000000</color>
-    <color name="warning">#FFB74D</color>
-    <color name="warning_color">#FFB74D</color>
-    <color name="warning_dark">#FFB74D</color>
-    <color name="warning_light">#3D2800</color>
-    <color name="white">#FFFFFF</color>
-    <color name="white_70">#B3FFFFFF</color>
+    <color name="background">@color/md3_dark_background</color>
+    <color name="background_color">@color/md3_dark_background</color>
+    <color name="background_light">#1D2024</color>
+    <color name="background_secondary">@color/md3_dark_surface_variant</color>
+    <color name="card_stroke_color">@color/md3_dark_outline_variant</color>
+    <color name="colorPrimary">@color/md3_dark_primary</color>
+    <color name="colorPrimaryLight">@color/md3_dark_primary_container</color>
+    <color name="colorSecondary">@color/md3_dark_secondary</color>
+    <color name="divider">@color/md3_dark_outline_variant</color>
+    <color name="divider_color">@color/md3_dark_outline_variant</color>
+    <color name="error">@color/md3_dark_error</color>
+    <color name="error_dark">@color/md3_dark_on_error_container</color>
+    <color name="error_light">@color/md3_dark_error_container</color>
+    <color name="error_red">@color/md3_dark_error</color>
+    <color name="info">@color/md3_dark_primary</color>
+    <color name="info_color">@color/md3_dark_primary</color>
+    <color name="info_dark">@color/md3_dark_on_primary_container</color>
+    <color name="info_light">@color/md3_dark_primary_container</color>
+    <color name="md3_dark_background">#111318</color>
+    <color name="md3_dark_error">#FFB4AB</color>
+    <color name="md3_dark_error_container">#93000A</color>
+    <color name="md3_dark_inverse_on_surface">#2E3135</color>
+    <color name="md3_dark_inverse_primary">#1B5EA7</color>
+    <color name="md3_dark_inverse_surface">#E2E2E9</color>
+    <color name="md3_dark_on_background">#E2E2E9</color>
+    <color name="md3_dark_on_error">#690005</color>
+    <color name="md3_dark_on_error_container">#FFDAD6</color>
+    <color name="md3_dark_on_primary">#002F67</color>
+    <color name="md3_dark_on_primary_container">#D6E3FF</color>
+    <color name="md3_dark_on_secondary">#273141</color>
+    <color name="md3_dark_on_secondary_container">#D9E3F8</color>
+    <color name="md3_dark_on_surface">#E2E2E9</color>
+    <color name="md3_dark_on_surface_variant">#C3C7CF</color>
+    <color name="md3_dark_on_tertiary">#00363D</color>
+    <color name="md3_dark_on_tertiary_container">#9EEFFD</color>
+    <color name="md3_dark_outline">#8D9199</color>
+    <color name="md3_dark_outline_variant">#43474E</color>
+    <color name="md3_dark_primary">#AAC7FF</color>
+    <color name="md3_dark_primary_container">#0D4491</color>
+    <color name="md3_dark_secondary">#BDC7DC</color>
+    <color name="md3_dark_secondary_container">#3D4758</color>
+    <color name="md3_dark_surface">#111318</color>
+    <color name="md3_dark_surface_variant">#43474E</color>
+    <color name="md3_dark_tertiary">#81D3E0</color>
+    <color name="md3_dark_tertiary_container">#004F58</color>
+    <color name="primary">@color/md3_dark_primary</color>
+    <color name="primary_dark">@color/md3_dark_primary_container</color>
+    <color name="primary_light">@color/md3_dark_on_primary_container</color>
+    <color name="primary_text">@color/md3_dark_on_surface</color>
+    <color name="progress_background">@color/md3_dark_surface_variant</color>
+    <color name="purple_200">@color/md3_dark_primary_container</color>
+    <color name="purple_500">@color/md3_dark_primary</color>
+    <color name="purple_700">@color/md3_dark_on_primary</color>
+    <color name="secondary">@color/md3_dark_secondary</color>
+    <color name="secondary_dark">@color/md3_dark_secondary_container</color>
+    <color name="secondary_light">@color/md3_dark_on_secondary_container</color>
+    <color name="secondary_text">@color/md3_dark_on_surface_variant</color>
+    <color name="status_background_error">@color/md3_dark_error_container</color>
+    <color name="status_background_success">@color/success_light</color>
+    <color name="status_background_warning">@color/warning_light</color>
+    <color name="status_error">@color/md3_dark_error</color>
+    <color name="status_pending">@color/warning</color>
+    <color name="status_synced">@color/success</color>
+    <color name="success">#6DD58C</color>
+    <color name="success_color">@color/success</color>
+    <color name="success_dark">#C8F0D8</color>
+    <color name="success_light">#1A3D27</color>
+    <color name="surface">@color/md3_dark_surface</color>
+    <color name="teal_200">@color/md3_dark_tertiary</color>
+    <color name="teal_700">@color/md3_dark_tertiary_container</color>
+    <color name="text_hint">@color/md3_dark_outline</color>
+    <color name="text_primary">@color/md3_dark_on_surface</color>
+    <color name="text_secondary">@color/md3_dark_on_surface_variant</color>
+    <color name="warning">#FFB951</color>
+    <color name="warning_color">@color/warning</color>
+    <color name="warning_dark">#FFECC7</color>
+    <color name="warning_light">#3D2A00</color>
     <style name="PinKeypadButton">
         <item name="android:layout_width">64dp</item>
         <item name="android:layout_height">64dp</item>
         <item name="android:layout_margin">8dp</item>
         <item name="android:textSize">24sp</item>
         <item name="android:textStyle">bold</item>
-        <item name="backgroundTint">@color/primary_light</item>
+        <item name="backgroundTint">@color/md3_dark_primary_container</item>
     </style>
-    <style name="TabTextAppearance" parent="TextAppearance.MaterialComponents.Button">
-        <item name="android:textSize">14sp</item>
-        <item name="android:textStyle">bold</item>
+    <style name="TabTextAppearance" parent="TextAppearance.Material3.LabelLarge">
         <item name="android:textAllCaps">false</item>
-        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColor">@color/md3_dark_on_surface</item>
     </style>
-    <style name="Theme.InventarioMobile" parent="Theme.Material3.DayNight">
+    <style name="Theme.InventarioMobile" parent="Theme.Material3.DayNight.NoActionBar">
+
         
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryVariant">@color/primary_dark</item>
-        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorPrimary">@color/md3_dark_primary</item>
+        <item name="colorOnPrimary">@color/md3_dark_on_primary</item>
+        <item name="colorPrimaryContainer">@color/md3_dark_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/md3_dark_on_primary_container</item>
+
         
-        <item name="colorSecondary">@color/secondary</item>
-        <item name="colorSecondaryVariant">@color/secondary_dark</item>
-        <item name="colorOnSecondary">@color/black</item>
+        <item name="colorSecondary">@color/md3_dark_secondary</item>
+        <item name="colorOnSecondary">@color/md3_dark_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/md3_dark_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/md3_dark_on_secondary_container</item>
+
         
-        <item name="android:statusBarColor" ns1:targetApi="l">@color/background</item>
+        <item name="colorTertiary">@color/md3_dark_tertiary</item>
+        <item name="colorOnTertiary">@color/md3_dark_on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/md3_dark_tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/md3_dark_on_tertiary_container</item>
+
         
-        <item name="android:windowBackground">@color/background</item>
-        <item name="android:colorBackground">@color/background</item>
+        <item name="android:colorBackground">@color/md3_dark_background</item>
+        <item name="colorOnBackground">@color/md3_dark_on_background</item>
+        <item name="colorSurface">@color/md3_dark_surface</item>
+        <item name="colorOnSurface">@color/md3_dark_on_surface</item>
+        <item name="colorSurfaceVariant">@color/md3_dark_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/md3_dark_on_surface_variant</item>
+
         
-        <item name="colorSurface">@color/surface</item>
-        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOutline">@color/md3_dark_outline</item>
+        <item name="colorOutlineVariant">@color/md3_dark_outline_variant</item>
+
         
-        <item name="colorError">@color/error</item>
-        <item name="colorOnError">@color/black</item>
+        <item name="colorError">@color/md3_dark_error</item>
+        <item name="colorOnError">@color/md3_dark_on_error</item>
+        <item name="colorErrorContainer">@color/md3_dark_error_container</item>
+        <item name="colorOnErrorContainer">@color/md3_dark_on_error_container</item>
+
+        
+        <item name="android:statusBarColor" ns1:targetApi="l">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar" ns1:targetApi="m">false</item>
+
+        
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.App.SmallComponent</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.App.MediumComponent</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.App.LargeComponent</item>
+
     </style>
     <style name="Theme.InventarioMobile.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
     <style name="Theme.InventarioMobile.FullScreenDialog" parent="Theme.Material3.DayNight.Dialog">
@@ -113,14 +147,12 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
-    <style name="Theme.InventarioMobile.NoActionBar" parent="Theme.InventarioMobile">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-    </style>
+    <style name="Theme.InventarioMobile.NoActionBar" parent="Theme.InventarioMobile"/>
     <style name="Theme.InventarioMobile.PopupOverlay" parent="ThemeOverlay.AppCompat.Dark"/>
     <style name="Theme.InventarioMobile.Splash" parent="Theme.InventarioMobile">
-        <item name="android:windowBackground">@color/primary_dark</item>
+        <item name="android:windowBackground">@color/md3_dark_background</item>
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowLightStatusBar" ns1:targetApi="m">false</item>
     </style>
 </resources>

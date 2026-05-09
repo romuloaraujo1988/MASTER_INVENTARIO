@@ -18,8 +18,41 @@ data class DashboardStats(
     val coletasSemana: Int = 0,
     val coletasMes: Int = 0,
     val tempoMedioColeta: Double = 0.0,
-    val isOfflineData: Boolean = false  // Flag indicando se são dados offline/locais
+    val isOfflineData: Boolean = false,  // Flag indicando se são dados offline/locais
+    // Timestamp (ms UTC) da última sincronização bem-sucedida do servidor;
+    // null quando ainda não houve sincronização (Req 3.6, 4.3, 4.4).
+    val timestampUltimaSincronizacao: Long? = null
 ) {
+    init {
+        // Invariantes de não-negatividade (Property 2 / Req 2.12).
+        require(totalColetados >= 0) { "totalColetados deve ser >= 0 (recebido: $totalColetados)" }
+        require(totalPendentes >= 0) { "totalPendentes deve ser >= 0 (recebido: $totalPendentes)" }
+        require(totalPatrimonios >= 0) { "totalPatrimonios deve ser >= 0 (recebido: $totalPatrimonios)" }
+    }
+
+    companion object {
+        /**
+         * Retorna um [DashboardStats] zerado, usado como valor inicial da
+         * FonteEstatisticas e como fallback em caminhos de erro do repositório.
+         *
+         * @param inventarioId id do inventário ativo, se conhecido (opcional).
+         * @param isOfflineData marca a instância como dado offline; default `false`
+         *                      mantém retrocompatibilidade com chamadores antigos.
+         */
+        fun empty(
+            inventarioId: Int? = null,
+            isOfflineData: Boolean = false
+        ): DashboardStats = DashboardStats(
+            totalPatrimonios = 0,
+            totalColetados = 0,
+            totalPendentes = 0,
+            percentualConclusao = 0.0,
+            inventarioId = inventarioId,
+            isOfflineData = isOfflineData,
+            timestampUltimaSincronizacao = null
+        )
+    }
+
     /**
      * Verifica se o inventário está completo
      */

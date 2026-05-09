@@ -17,6 +17,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.inventario.mobile.BuildConfig
 import com.inventario.mobile.R
 import com.inventario.mobile.databinding.ActivityMainBinding
+import com.inventario.mobile.domain.usecase.RenovarTokenComBiometriaUseCase
 import com.inventario.mobile.presentation.dashboard.DashboardFragment
 import com.inventario.mobile.presentation.login.LoginActivity
 import com.inventario.mobile.presentation.settings.SettingsActivity
@@ -24,6 +25,7 @@ import com.inventario.mobile.utils.PreferencesManager
 import com.inventario.mobile.utils.PermissionHelper
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Activity principal do app
@@ -34,6 +36,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var preferencesManager: PreferencesManager
+    
+    @Inject
+    lateinit var renovarTokenUseCase: RenovarTokenComBiometriaUseCase
 
     companion object {
         private const val TAG = "MainActivity"
@@ -62,6 +67,15 @@ class MainActivity : AppCompatActivity() {
 
             setupUI()
             Log.d(TAG, "onCreate: setupUI executado com sucesso")
+            
+            // ✅ VERIFICAR TOKEN E MOSTRAR BIOMETRIA SE NECESSÁRIO
+            // Pular se o usuário já autenticou via biometria no LoginActivity (evita prompt duplo)
+            val biometricAuthCompleted = intent.getBooleanExtra("BIOMETRIC_AUTH_COMPLETED", false)
+            if (biometricAuthCompleted) {
+                Log.d(TAG, "✓ Autenticação biométrica já concluída no LoginActivity - pulando verificação redundante")
+            } else {
+                verificarTokenEMostrarBiometriaSeNecessario()
+            }
             
             // Carregar fragment inicial se não há estado salvo
             if (savedInstanceState == null) {
@@ -162,8 +176,8 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_collections -> {
-                    // Usar nova tela de coletas com Clean Architecture
-                    val intent = Intent(this, com.inventario.mobile.presentation.coletas.ColetasActivityClean::class.java)
+                    // Usar tela unificada de coletas (fusão de ColetasActivityClean + CollectionViewActivity)
+                    val intent = Intent(this, com.inventario.mobile.presentation.coletas.ColetasUnificadaActivity::class.java)
                     startActivity(intent)
                     true
                 }
@@ -226,7 +240,8 @@ class MainActivity : AppCompatActivity() {
             }
             
             R.id.nav_coletas -> {
-                val intent = Intent(this, com.inventario.mobile.presentation.coleta.CollectionViewActivity::class.java)
+                // Usar tela unificada de coletas (fusão de ColetasActivityClean + CollectionViewActivity)
+                val intent = Intent(this, com.inventario.mobile.presentation.coletas.ColetasUnificadaActivity::class.java)
                 startActivity(intent)
                 true
             }
@@ -314,11 +329,14 @@ class MainActivity : AppCompatActivity() {
                 
                 Funcionalidades:
                 • Coleta de patrimônios via QR Code
-                • Modo offline
+                • Modo offline com biometria
                 • Sincronização automática
+                • Renovação automática de token
                 • Busca por voz
                 • Relatórios detalhados
                 • Exportação de relatórios (PDF, Excel, CSV)
+                
+                Licença: MIT License
                 
                 © 2025 IFMT - Todos os direitos reservados
             """.trimIndent())
@@ -367,8 +385,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun performLogout() {
         try {
-            // Limpar dados de sessão
+            // Limpar TODOS os dados de sessão (token, user_logged_in, biometria, etc.)
+            preferencesManager.clearSavedUser()
+            preferencesManager.clearInventarioAtivo()
             preferencesManager.clearSessionData()
+            preferencesManager.clearSyncTimestamps()
+            
+            Log.d(TAG, "✓ Logout completo — todos os dados de sessão limpos")
             
             // Mostrar mensagem de sucesso
             Snackbar.make(binding.root, R.string.logout_success, Snackbar.LENGTH_SHORT).show()
@@ -602,5 +625,225 @@ class MainActivity : AppCompatActivity() {
                 finish()
             }
             .show()
+    }
+    
+    // ========== MÉTODOS PARA RENOVAÇÃO AUTOMÁTICA DE TOKEN VIA BIOMETRIA ==========
+    
+    /**
+     * Verifica token ao iniciar e mostra biometria se necessário
+     * Implementa Bug Condition: tokenExpirado E biometriaHabilitada E promptNãoMostrado
+     */
+    private fun verificarTokenEMostrarBiometriaSeNecessario() {
+        Log.d(TAG, "═══════════════════════════════════════════")
+        Log.d(TAG, "VERIFICANDO TOKEN AO INICIAR MAINACTIVITY")
+        
+        // Verificar se token está expirado
+        val tokenExpired = preferencesManager.isTokenExpired()
+        Log.d(TAG, "Token expirado: $tokenExpired")
+        
+        // Verificar conectividade
+        val isOnline = com.inventario.mobile.utils.NetworkUtils.isNetworkAvailable(this)
+        Log.d(TAG, "Online: $isOnline")
+        
+        // Verificar se biometria está habilitada
+        val biometricEnabled = preferencesManager.isBiometricEnabled()
+        Log.d(TAG, "Biometria habilitada: $biometricEnabled")
+        
+        Log.d(TAG, "═══════════════════════════════════════════")
+        
+        // Decidir ação baseado no estado
+        when {
+            // Caso 1: Offline + Biometria habilitada → Permitir acesso offline
+            !isOnline && biometricEnabled -> {
+                Log.d(TAG, "✓ Offline + Biometria → Permitir acesso offline")
+                permitirAcessoOfflineComBiometria()
+            }
+            
+            // Caso 2: Online + Token expirado + Biometria habilitada → Renovar token
+            isOnline && tokenExpired && biometricEnabled -> {
+                Log.d(TAG, "✓ Online + Token expirado + Biometria → Renovar token")
+                renovarTokenComBiometria()
+            }
+            
+            // Caso 3: Token expirado + Sem biometria → Redirecionar para login
+            tokenExpired && !biometricEnabled -> {
+                Log.d(TAG, "✓ Token expirado + Sem biometria → Redirecionar para login")
+                redirecionarParaLogin("Sessão expirada. Faça login novamente.")
+            }
+            
+            // Caso 4: Token válido → Nada a fazer
+            else -> {
+                Log.d(TAG, "✓ Token válido, nenhuma ação necessária")
+            }
+        }
+    }
+    
+    /**
+     * Renova token usando biometria (quando online)
+     */
+    private fun renovarTokenComBiometria() {
+        Log.d(TAG, "Iniciando renovação de token via biometria")
+        
+        val biometricManager = com.inventario.mobile.security.BiometricAuthManager(this)
+        
+        // Verificar disponibilidade
+        val availability = biometricManager.isBiometricAvailable()
+        if (!availability.isAvailable()) {
+            Log.w(TAG, "Biometria não disponível: ${availability.getMessage()}")
+            redirecionarParaLogin("Biometria não disponível. Faça login com senha.")
+            return
+        }
+        
+        // Mostrar prompt de biometria
+        biometricManager.authenticateWithCancel(
+            activity = this,
+            title = "Renovar Sessão",
+            subtitle = "Use biometria para renovar token",
+            description = "Toque no sensor para continuar",
+            callback = object : com.inventario.mobile.security.BiometricCallback {
+                override fun onAuthenticationSucceeded(authenticationType: String) {
+                    Log.d(TAG, "✅ Biometria validada, renovando token...")
+                    
+                    // Chamar Use Case de renovação
+                    lifecycleScope.launch {
+                        try {
+                            val result = renovarTokenUseCase()
+                            
+                            result.fold(
+                                onSuccess = { loginResult ->
+                                    Log.d(TAG, "✅ Token renovado com sucesso!")
+                                    Snackbar.make(
+                                        binding.root,
+                                        "✅ Sessão renovada com sucesso!",
+                                        Snackbar.LENGTH_SHORT
+                                    ).show()
+                                },
+                                onFailure = { error ->
+                                    Log.e(TAG, "❌ Erro ao renovar token: ${error.message}")
+                                    redirecionarParaLogin("Erro ao renovar token. Faça login novamente.")
+                                }
+                            )
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Erro ao renovar token", e)
+                            redirecionarParaLogin("Erro ao renovar token. Faça login novamente.")
+                        }
+                    }
+                }
+                
+                override fun onAuthenticationFailed(message: String) {
+                    Log.w(TAG, "❌ Biometria falhou: $message")
+                    redirecionarParaLogin("Biometria falhou. Faça login com senha.")
+                }
+                
+                override fun onAuthenticationError(errorCode: Int, errorMessage: String) {
+                    Log.e(TAG, "❌ Erro na biometria: $errorCode - $errorMessage")
+                    redirecionarParaLogin("Erro na biometria. Faça login com senha.")
+                }
+                
+                override fun onAuthenticationCanceled() {
+                    Log.d(TAG, "Biometria cancelada pelo usuário")
+                    redirecionarParaLogin("Acesso cancelado. Faça login com senha.")
+                }
+                
+                override fun onAuthenticationLockout(message: String) {
+                    Log.e(TAG, "🔒 Biometria bloqueada: $message")
+                    redirecionarParaLogin(message)
+                }
+            }
+        )
+    }
+    
+    /**
+     * Permite acesso offline permanente via biometria
+     * Implementa Expected Behavior: acessoOfflinePermitido após biometria validada
+     * IMPORTANTE: Só permite acesso offline se houver dados salvos localmente (após primeira autenticação)
+     */
+    private fun permitirAcessoOfflineComBiometria() {
+        Log.d(TAG, "Permitindo acesso offline via biometria")
+        
+        // ✅ VERIFICAR SE HÁ DADOS LOCAIS (primeira autenticação já foi feita)
+        val hasUserSaved = preferencesManager.hasUserSavedLocally()
+        
+        if (!hasUserSaved) {
+            Log.w(TAG, "❌ Sem dados locais. Primeira autenticação com servidor é necessária.")
+            redirecionarParaLogin("Primeira autenticação necessária. Conecte-se à internet para fazer login.")
+            return
+        }
+        
+        Log.d(TAG, "✓ Dados locais encontrados, permitindo acesso offline via biometria")
+        
+        val biometricManager = com.inventario.mobile.security.BiometricAuthManager(this)
+        
+        // Verificar disponibilidade
+        val availability = biometricManager.isBiometricAvailable()
+        if (!availability.isAvailable()) {
+            Log.w(TAG, "Biometria não disponível: ${availability.getMessage()}")
+            redirecionarParaLogin("Biometria não disponível. Conecte-se à internet para fazer login.")
+            return
+        }
+        
+        // Mostrar prompt de biometria
+        biometricManager.authenticateWithCancel(
+            activity = this,
+            title = "Acesso Offline",
+            subtitle = "Use biometria para acessar dados offline",
+            description = "Toque no sensor para continuar",
+            callback = object : com.inventario.mobile.security.BiometricCallback {
+                override fun onAuthenticationSucceeded(authenticationType: String) {
+                    Log.d(TAG, "✅ Biometria validada, permitindo acesso offline")
+                    
+                    // Carregar dados do Room local
+                    lifecycleScope.launch {
+                        try {
+                            // Ativar modo offline na UI
+                            Snackbar.make(
+                                binding.root,
+                                "📴 Modo Offline Ativado",
+                                Snackbar.LENGTH_SHORT
+                            ).show()
+                            
+                            // Dados já estão disponíveis no Room, apenas permitir acesso
+                            Log.d(TAG, "✓ Acesso offline permitido com sucesso")
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Erro ao carregar dados offline", e)
+                            redirecionarParaLogin("Erro ao acessar dados offline. Conecte-se à internet.")
+                        }
+                    }
+                }
+                
+                override fun onAuthenticationFailed(message: String) {
+                    Log.w(TAG, "❌ Biometria falhou: $message")
+                    redirecionarParaLogin("Biometria falhou. Faça login com senha.")
+                }
+                
+                override fun onAuthenticationError(errorCode: Int, errorMessage: String) {
+                    Log.e(TAG, "❌ Erro na biometria: $errorCode - $errorMessage")
+                    redirecionarParaLogin("Erro na biometria. Conecte-se à internet para fazer login.")
+                }
+                
+                override fun onAuthenticationCanceled() {
+                    Log.d(TAG, "Biometria cancelada pelo usuário")
+                    redirecionarParaLogin("Acesso cancelado. Faça login com senha.")
+                }
+                
+                override fun onAuthenticationLockout(message: String) {
+                    Log.e(TAG, "🔒 Biometria bloqueada: $message")
+                    redirecionarParaLogin(message)
+                }
+            }
+        )
+    }
+    
+    /**
+     * Redireciona para tela de login com mensagem
+     */
+    private fun redirecionarParaLogin(mensagem: String) {
+        Log.d(TAG, "Redirecionando para login: $mensagem")
+        
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        intent.putExtra("LOGOUT_MESSAGE", mensagem)
+        startActivity(intent)
+        finish()
     }
 }

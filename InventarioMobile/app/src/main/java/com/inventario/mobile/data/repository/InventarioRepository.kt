@@ -125,7 +125,8 @@ class InventarioRepository(
             android.util.Log.d("InventarioRepository", "Buscando patrimônio por número: $numero")
             
             // Primeiro tentar buscar do banco local (Room)
-            val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(context)
+            // v2.15: Usar AppDatabase (inventario_offline.db) - banco padronizado
+            val database = com.inventario.mobile.data.local.database.AppDatabase.getInstance(context)
             val patrimonioDao = database.patrimonioDao()
             
             // ✅ CORREÇÃO: Usar query otimizada que busca nome da sala e status de coleta
@@ -139,8 +140,8 @@ class InventarioRepository(
                 android.util.Log.d("InventarioRepository", "✓ Patrimônio encontrado no banco local")
                 android.util.Log.d("InventarioRepository", "  ID: ${patrimonioEntity.id}")
                 android.util.Log.d("InventarioRepository", "  Número: ${patrimonioEntity.numeroPatrimonio}")
-                android.util.Log.d("InventarioRepository", "  Sala ID: ${patrimonioEntity.salaId ?: patrimonioEntity.idSala}")
-                android.util.Log.d("InventarioRepository", "  Sala Nome: ${patrimonioEntity.salaNome ?: patrimonioEntity.nomeSala}")
+                android.util.Log.d("InventarioRepository", "  Sala ID: ${patrimonioEntity.idSala}")
+                android.util.Log.d("InventarioRepository", "  Sala Nome: ${patrimonioEntity.nomeSala}")
                 android.util.Log.d("InventarioRepository", "  Coletado: ${patrimonioEntity.coletado}")
                 android.util.Log.d("InventarioRepository", "  Coletado Por: ${patrimonioEntity.coletadoPor}")
                 
@@ -155,10 +156,10 @@ class InventarioRepository(
                     valor = patrimonioEntity.valor,
                     setorId = patrimonioEntity.setorId?.toLong(),
                     setorNome = patrimonioEntity.setorNome,
-                    salaId = patrimonioEntity.salaId?.toLong() ?: patrimonioEntity.idSala?.toLong(),
-                    salaNome = patrimonioEntity.salaNome ?: patrimonioEntity.nomeSala,  // ✅ CORREÇÃO: Prioriza salaNome
-                    responsavelId = patrimonioEntity.responsavelId?.toLong() ?: patrimonioEntity.idResponsavel?.toLong(),
-                    responsavelNome = patrimonioEntity.responsavelNome ?: patrimonioEntity.nomeResponsavel,
+                    salaId = patrimonioEntity.idSala?.toLong(),
+                    salaNome = patrimonioEntity.nomeSala,
+                    responsavelId = patrimonioEntity.idResponsavel?.toLong(),
+                    responsavelNome = patrimonioEntity.nomeResponsavel,
                     coletado = patrimonioEntity.coletado,  // ✅ CORREÇÃO: Agora vem do JOIN
                     dataColeta = patrimonioEntity.dataColeta?.toString(),
                     coletadoPor = patrimonioEntity.coletadoPor,  // ✅ CORREÇÃO: Agora vem do JOIN
@@ -232,12 +233,8 @@ class InventarioRepository(
                             setorNome = patrimonio.setorNome,
                             idSala = patrimonio.salaId?.toInt(),
                             nomeSala = patrimonio.salaNome,
-                            salaId = patrimonio.salaId?.toInt(),
-                            salaNome = patrimonio.salaNome,
                             idResponsavel = patrimonio.responsavelId?.toInt(),
                             nomeResponsavel = patrimonio.responsavelNome,
-                            responsavelId = patrimonio.responsavelId?.toInt(),
-                            responsavelNome = patrimonio.responsavelNome,
                             status = patrimonio.estado,
                             coletado = patrimonio.coletado,
                             dataColeta = patrimonio.dataColeta?.toLongOrNull(),
@@ -355,7 +352,8 @@ class InventarioRepository(
                         
                         // Salvar no banco local
                         try {
-                            val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(context)
+                            // v2.15: Usar AppDatabase (inventario_offline.db) - banco padronizado
+                            val database = com.inventario.mobile.data.local.database.AppDatabase.getInstance(context)
                             val coletaDao = database.coletaDao()
                             
                             val coletaEntity = com.inventario.mobile.data.local.entity.ColetaEntity(
@@ -364,7 +362,8 @@ class InventarioRepository(
                                 numeroPatrimonio = coleta.numeroPatrimonio ?: patrimonio.numeroPatrimonio,
                                 idInventario = inventarioId,
                                 idSala = patrimonio.salaId?.toInt(),
-                                nomeSala = salaNome,
+                                nomeSala = patrimonio.salaNome,          // sala de ORIGEM do patrimônio
+                                localizacaoEncontrada = salaNome,        // onde foi ENCONTRADO
                                 idResponsavel = patrimonio.responsavelId?.toInt(),
                                 nomeResponsavel = patrimonio.responsavelNome,
                                 observacao = coleta.observacoes,
@@ -421,7 +420,8 @@ class InventarioRepository(
             // Se chegou aqui, salvar apenas localmente (modo offline)
             android.util.Log.d("InventarioRepository", "Salvando coleta no modo OFFLINE")
             
-            val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(context)
+            // v2.15: Usar AppDatabase (inventario_offline.db) - banco padronizado
+            val database = com.inventario.mobile.data.local.database.AppDatabase.getInstance(context)
             val coletaDao = database.coletaDao()
             val patrimonioDao = database.patrimonioDao()
             
@@ -432,7 +432,8 @@ class InventarioRepository(
                 numeroPatrimonio = patrimonio.numeroPatrimonio,
                 idInventario = inventarioId,
                 idSala = patrimonio.salaId?.toInt(),
-                nomeSala = salaNome,
+                nomeSala = patrimonio.salaNome,          // sala de ORIGEM do patrimônio
+                localizacaoEncontrada = salaNome,        // onde foi ENCONTRADO
                 idResponsavel = patrimonio.responsavelId?.toInt(),
                 nomeResponsavel = patrimonio.responsavelNome,
                 observacao = observacoes,
@@ -586,11 +587,14 @@ class InventarioRepository(
     /**
      * Fallback: Calcula estatísticas localmente quando o endpoint otimizado falha
      * Usa cache do Room Database para melhor performance
+     * 
+     * v2.15: Migrado para usar AppDatabase (inventario_offline.db) - banco padronizado
      */
     private suspend fun calcularEstatisticasLocalmente(): Result<DashboardStats> {
         return try {
             // Tentar buscar do banco local primeiro (mais rápido)
-            val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(context)
+            // v2.15: Usar AppDatabase (inventario_offline.db) - banco padronizado
+            val database = com.inventario.mobile.data.local.database.AppDatabase.getInstance(context)
             val patrimonioDao = database.patrimonioDao()
             
             val total = patrimonioDao.contarTodos()
@@ -708,12 +712,15 @@ class InventarioRepository(
     /**
      * v2.6: Busca coletas pendentes do banco Room
      * Inclui informações de erro de sincronização
+     * 
+     * v2.15: Migrado para usar AppDatabase (inventario_offline.db) - banco padronizado
      */
     suspend fun getColetasPendentes(): List<Coleta> {
         return try {
             android.util.Log.d("InventarioRepository", "Buscando coletas pendentes do banco local...")
             
-            val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(context)
+            // v2.15: Usar AppDatabase (inventario_offline.db) - banco padronizado
+            val database = com.inventario.mobile.data.local.database.AppDatabase.getInstance(context)
             val coletaDao = database.coletaDao()
             
             val coletasEntity = coletaDao.buscarPendentes()
@@ -824,12 +831,15 @@ class InventarioRepository(
     /**
      * v2.7: Limpa erro de sincronização de uma coleta específica
      * Permite nova tentativa de sincronização
+     * 
+     * v2.15: Migrado para usar AppDatabase (inventario_offline.db) - banco padronizado
      */
     suspend fun limparErroColeta(coletaId: Long): Result<Unit> {
         return try {
             android.util.Log.d("InventarioRepository", "Limpando erro da coleta $coletaId...")
             
-            val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(context)
+            // v2.15: Usar AppDatabase (inventario_offline.db) - banco padronizado
+            val database = com.inventario.mobile.data.local.database.AppDatabase.getInstance(context)
             database.coletaDao().limparErroSincronizacao(coletaId)
             
             android.util.Log.d("InventarioRepository", "✓ Erro da coleta $coletaId limpo")
@@ -843,12 +853,15 @@ class InventarioRepository(
     /**
      * v2.7: Limpa erros de todas as coletas pendentes
      * Permite nova tentativa de sincronização em lote
+     * 
+     * v2.15: Migrado para usar AppDatabase (inventario_offline.db) - banco padronizado
      */
     suspend fun limparTodosErrosColetas(): Result<Int> {
         return try {
             android.util.Log.d("InventarioRepository", "Limpando erros de todas as coletas pendentes...")
             
-            val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(context)
+            // v2.15: Usar AppDatabase (inventario_offline.db) - banco padronizado
+            val database = com.inventario.mobile.data.local.database.AppDatabase.getInstance(context)
             val quantidade = database.coletaDao().limparTodosErrosSincronizacao()
             
             android.util.Log.d("InventarioRepository", "✓ Erros limpos de $quantidade coletas")

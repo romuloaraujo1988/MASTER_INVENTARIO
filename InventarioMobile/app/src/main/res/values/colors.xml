@@ -1,102 +1,200 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Cores Primárias -->
-    <color name="primary">#1976D2</color>
-    <color name="colorPrimary">#1976D2</color>
-    <color name="primary_dark">#1565C0</color>
-    <color name="primary_light">#BBDEFB</color>
-    <color name="primary_color">#1976D2</color>
-    <color name="primary_color_light">#BBDEFB</color>
-    
+
+    <!--
+        SIHCP Mobile — Material Design 3 Color System (Light)
+        Seed: #1976D2 (Blue 700)
+        https://m3.material.io/theme-builder
+    -->
+
+    <!-- ── Primary ──────────────────────────────────────────────── -->
+    <color name="md3_primary">#1B5EA7</color>
+    <color name="md3_on_primary">#FFFFFF</color>
+    <color name="md3_primary_container">#D6E3FF</color>
+    <color name="md3_on_primary_container">#001B3E</color>
+
+    <!-- ── Secondary ─────────────────────────────────────────────── -->
+    <color name="md3_secondary">#555F71</color>
+    <color name="md3_on_secondary">#FFFFFF</color>
+    <color name="md3_secondary_container">#D9E3F8</color>
+    <color name="md3_on_secondary_container">#121C2B</color>
+
+    <!-- ── Tertiary (Teal accent) ─────────────────────────────────── -->
+    <color name="md3_tertiary">#006874</color>
+    <color name="md3_on_tertiary">#FFFFFF</color>
+    <color name="md3_tertiary_container">#9EEFFD</color>
+    <color name="md3_on_tertiary_container">#001F24</color>
+
+    <!-- ── Error ──────────────────────────────────────────────────── -->
+    <color name="md3_error">#BA1A1A</color>
+    <color name="md3_on_error">#FFFFFF</color>
+    <color name="md3_error_container">#FFDAD6</color>
+    <color name="md3_on_error_container">#410002</color>
+
+    <!-- ── Background / Surface ───────────────────────────────────── -->
+    <color name="md3_background">#F8F9FF</color>
+    <color name="md3_on_background">#191C20</color>
+    <color name="md3_surface">#F8F9FF</color>
+    <color name="md3_on_surface">#191C20</color>
+    <color name="md3_surface_variant">#DFE2EB</color>
+    <color name="md3_on_surface_variant">#43474E</color>
+
+    <!-- ── Surface Tones (Elevation overlays) ────────────────────── -->
+    <color name="md3_surface_1">#EEF1FA</color>
+    <color name="md3_surface_2">#E8EDF7</color>
+    <color name="md3_surface_3">#E2E8F4</color>
+    <color name="md3_surface_4">#E0E6F3</color>
+    <color name="md3_surface_5">#DCE3F1</color>
+
+    <!-- ── Outline ────────────────────────────────────────────────── -->
+    <color name="md3_outline">#73777F</color>
+    <color name="md3_outline_variant">#C3C7CF</color>
+
+    <!-- ── Inverse ────────────────────────────────────────────────── -->
+    <color name="md3_inverse_surface">#2E3135</color>
+    <color name="md3_inverse_on_surface">#EFF0F7</color>
+    <color name="md3_inverse_primary">#AAC7FF</color>
+
+    <!-- ── Scrim ──────────────────────────────────────────────────── -->
+    <color name="md3_scrim">#000000</color>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         CORES SEMÂNTICAS DO APP
+    ══════════════════════════════════════════════════════════════ -->
+
+    <!-- Cores Primárias (aliases para compatibilidade) -->
+    <color name="primary">#1B5EA7</color>
+    <color name="colorPrimary">#1B5EA7</color>
+    <color name="colorPrimaryLight">#D6E3FF</color>
+    <color name="primary_dark">#0D47A1</color>
+    <color name="primary_light">#D6E3FF</color>
+    <color name="primary_color">#1B5EA7</color>
+    <color name="primary_color_light">#D6E3FF</color>
+
     <!-- Cores Secundárias -->
-    <color name="secondary">#FFC107</color>
-    <color name="colorSecondary">#FFC107</color>
-    <color name="secondary_dark">#FFA000</color>
-    <color name="secondary_light">#FFF8E1</color>
-    
+    <color name="secondary">#555F71</color>
+    <color name="colorSecondary">#555F71</color>
+    <color name="secondary_dark">#3A4455</color>
+    <color name="secondary_light">#D9E3F8</color>
+
     <!-- Cores de Estado -->
-    <color name="success">#4CAF50</color>
-    <color name="warning">#FF9800</color>
-    <color name="error">#F44336</color>
-    <color name="info">#2196F3</color>
-    
+    <color name="success">#1A6B3A</color>
+    <color name="success_light">#C8F0D8</color>
+    <color name="success_dark">#0D4023</color>
+    <color name="warning">#7A4F00</color>
+    <color name="warning_light">#FFECC7</color>
+    <color name="warning_dark">#4D3000</color>
+    <color name="error">#BA1A1A</color>
+    <color name="error_light">#FFDAD6</color>
+    <color name="error_dark">#410002</color>
+    <color name="info">#1B5EA7</color>
+    <color name="info_light">#D6E3FF</color>
+    <color name="info_dark">#001B3E</color>
+
     <!-- Cores de Texto -->
-    <color name="text_primary">#212121</color>
-    <color name="text_secondary">#757575</color>
-    <color name="text_hint">#BDBDBD</color>
+    <color name="text_primary">#191C20</color>
+    <color name="text_secondary">#43474E</color>
+    <color name="text_hint">#73777F</color>
     <color name="text_disabled">#9E9E9E</color>
-    
+    <color name="primary_text">#191C20</color>
+    <color name="secondary_text">#43474E</color>
+
     <!-- Cores de Fundo -->
-    <color name="background">#FAFAFA</color>
-    <color name="background_color">#FAFAFA</color>
-    <color name="background_light">#F5F5F5</color>
-    <color name="surface">#FFFFFF</color>
-    <color name="divider">#E0E0E0</color>
-    <color name="divider_color">#E0E0E0</color>
-    <color name="card_stroke_color">#E0E0E0</color>
-    
-    <!-- Cores Padrão do Material Design -->
+    <color name="background">#F8F9FF</color>
+    <color name="background_color">#F8F9FF</color>
+    <color name="background_light">#EEF1FA</color>
+    <color name="background_secondary">#DFE2EB</color>
+    <color name="surface">#F8F9FF</color>
+    <color name="divider">#C3C7CF</color>
+    <color name="divider_color">#C3C7CF</color>
+    <color name="card_stroke_color">#C3C7CF</color>
+
+    <!-- Cores Padrão -->
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
     <color name="transparent">#00000000</color>
-    
+
     <!-- Cores de Status -->
-    <color name="status_pending">#FF9800</color>
-    <color name="status_synced">#4CAF50</color>
-    <color name="status_error">#F44336</color>
-    
+    <color name="status_pending">#7A4F00</color>
+    <color name="status_synced">#1A6B3A</color>
+    <color name="status_error">#BA1A1A</color>
+    <color name="status_background_success">#C8F0D8</color>
+    <color name="status_background_warning">#FFECC7</color>
+    <color name="status_background_error">#FFDAD6</color>
+
     <!-- Cores para Scanner -->
     <color name="black_transparent">#80000000</color>
     <color name="scanner_overlay">#66000000</color>
-    
-    <!-- Material Design Colors -->
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    
-    <!-- Additional Material Design Colors -->
-    <color name="material_blue_600">#1E88E5</color>
-    <color name="material_blue_700">#1976D2</color>
-    <color name="material_blue_800">#1565C0</color>
-    <color name="material_green_600">#43A047</color>
-    <color name="material_red_600">#E53935</color>
-    <color name="material_orange_600">#FB8C00</color>
-    <color name="material_grey_300">#E0E0E0</color>
-    <color name="material_grey_600">#757575</color>
-    <color name="material_grey_800">#424242</color>
-    <color name="material_grey_900">#212121</color>
-
-    <!-- Additional Colors for Collection View -->
-    <color name="warning_light">#FFF3E0</color>
-    <color name="warning_dark">#E65100</color>
-    <color name="success_light">#E8F5E8</color>
-    <color name="success_dark">#2E7D32</color>
-    <color name="error_light">#FFEBEE</color>
-    <color name="error_dark">#C62828</color>
-    <color name="info_light">#E3F2FD</color>
-    <color name="info_dark">#1565C0</color>
-    <color name="background_secondary">#F5F5F5</color>
-    
-    <!-- Chart Colors -->
-    <color name="success_color">#4CAF50</color>
-    <color name="warning_color">#FF9800</color>
-    <color name="info_color">#2196F3</color>
-    <color name="primary_text">#212121</color>
-    <color name="secondary_text">#757575</color>
-    
-    <!-- Progress Bar Colors -->
-    <color name="progress_background">#E0E0E0</color>
-    <color name="white_70">#B3FFFFFF</color>
     <color name="overlay_background">#80000000</color>
-    
-    <!-- Error Colors -->
-    <color name="error_red">#F44336</color>
-    
-    <!-- Status Background Colors -->
-    <color name="status_background_success">#E8F5E9</color>
-    <color name="status_background_warning">#FFF3E0</color>
-    <color name="status_background_error">#FFEBEE</color>
-     
+
+    <!-- Aliases legados (mantidos para compatibilidade) -->
+    <color name="purple_200">#D6E3FF</color>
+    <color name="purple_500">#1B5EA7</color>
+    <color name="purple_700">#0D47A1</color>
+    <color name="teal_200">#9EEFFD</color>
+    <color name="teal_700">#006874</color>
+
+    <!-- Material Colors (aliases) -->
+    <color name="material_blue_600">#1B5EA7</color>
+    <color name="material_blue_700">#1B5EA7</color>
+    <color name="material_blue_800">#0D47A1</color>
+    <color name="material_green_600">#1A6B3A</color>
+    <color name="material_red_600">#BA1A1A</color>
+    <color name="material_orange_600">#7A4F00</color>
+    <color name="material_grey_300">#C3C7CF</color>
+    <color name="material_grey_600">#43474E</color>
+    <color name="material_grey_800">#191C20</color>
+    <color name="material_grey_900">#191C20</color>
+
+    <!-- Progress Bar -->
+    <color name="progress_background">#DFE2EB</color>
+    <color name="white_70">#B3FFFFFF</color>
+
+    <!-- Chart Colors -->
+    <color name="success_color">#1A6B3A</color>
+    <color name="warning_color">#7A4F00</color>
+    <color name="info_color">#1B5EA7</color>
+
+    <!-- Error aliases -->
+    <color name="error_red">#BA1A1A</color>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         Fallbacks para cores md3_dark_* (definidas em values-night/colors.xml)
+         Lint exige que todo nome usado em values-night tenha declaração
+         base; aqui apontamos cada md3_dark_* para seu equivalente light.
+    ══════════════════════════════════════════════════════════════ -->
+    <color name="md3_dark_primary">@color/md3_primary</color>
+    <color name="md3_dark_on_primary">@color/md3_on_primary</color>
+    <color name="md3_dark_primary_container">@color/md3_primary_container</color>
+    <color name="md3_dark_on_primary_container">@color/md3_on_primary_container</color>
+
+    <color name="md3_dark_secondary">@color/md3_secondary</color>
+    <color name="md3_dark_on_secondary">@color/md3_on_secondary</color>
+    <color name="md3_dark_secondary_container">@color/md3_secondary_container</color>
+    <color name="md3_dark_on_secondary_container">@color/md3_on_secondary_container</color>
+
+    <color name="md3_dark_tertiary">@color/md3_tertiary</color>
+    <color name="md3_dark_on_tertiary">@color/md3_on_tertiary</color>
+    <color name="md3_dark_tertiary_container">@color/md3_tertiary_container</color>
+    <color name="md3_dark_on_tertiary_container">@color/md3_on_tertiary_container</color>
+
+    <color name="md3_dark_error">@color/md3_error</color>
+    <color name="md3_dark_on_error">@color/md3_on_error</color>
+    <color name="md3_dark_error_container">@color/md3_error_container</color>
+    <color name="md3_dark_on_error_container">@color/md3_on_error_container</color>
+
+    <color name="md3_dark_background">@color/md3_background</color>
+    <color name="md3_dark_on_background">@color/md3_on_background</color>
+    <color name="md3_dark_surface">@color/md3_surface</color>
+    <color name="md3_dark_on_surface">@color/md3_on_surface</color>
+    <color name="md3_dark_surface_variant">@color/md3_surface_variant</color>
+    <color name="md3_dark_on_surface_variant">@color/md3_on_surface_variant</color>
+
+    <color name="md3_dark_outline">@color/md3_outline</color>
+    <color name="md3_dark_outline_variant">@color/md3_outline_variant</color>
+
+    <color name="md3_dark_inverse_surface">@color/md3_inverse_surface</color>
+    <color name="md3_dark_inverse_on_surface">@color/md3_inverse_on_surface</color>
+    <color name="md3_dark_inverse_primary">@color/md3_inverse_primary</color>
+
 </resources>

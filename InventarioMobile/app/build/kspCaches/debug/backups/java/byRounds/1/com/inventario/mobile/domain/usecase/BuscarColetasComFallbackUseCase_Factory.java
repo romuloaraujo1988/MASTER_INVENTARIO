@@ -3,6 +3,7 @@ package com.inventario.mobile.domain.usecase;
 import com.inventario.mobile.data.local.dao.ColetaDao;
 import com.inventario.mobile.data.remote.api.ApiService;
 import com.inventario.mobile.util.NetworkChecker;
+import com.inventario.mobile.utils.PreferencesManager;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
 import dagger.internal.QualifierMetadata;
@@ -30,26 +31,31 @@ public final class BuscarColetasComFallbackUseCase_Factory implements Factory<Bu
 
   private final Provider<NetworkChecker> networkCheckerProvider;
 
+  private final Provider<PreferencesManager> preferencesManagerProvider;
+
   public BuscarColetasComFallbackUseCase_Factory(Provider<ApiService> apiServiceProvider,
-      Provider<ColetaDao> coletaDaoProvider, Provider<NetworkChecker> networkCheckerProvider) {
+      Provider<ColetaDao> coletaDaoProvider, Provider<NetworkChecker> networkCheckerProvider,
+      Provider<PreferencesManager> preferencesManagerProvider) {
     this.apiServiceProvider = apiServiceProvider;
     this.coletaDaoProvider = coletaDaoProvider;
     this.networkCheckerProvider = networkCheckerProvider;
+    this.preferencesManagerProvider = preferencesManagerProvider;
   }
 
   @Override
   public BuscarColetasComFallbackUseCase get() {
-    return newInstance(apiServiceProvider.get(), coletaDaoProvider.get(), networkCheckerProvider.get());
+    return newInstance(apiServiceProvider.get(), coletaDaoProvider.get(), networkCheckerProvider.get(), preferencesManagerProvider.get());
   }
 
   public static BuscarColetasComFallbackUseCase_Factory create(
       Provider<ApiService> apiServiceProvider, Provider<ColetaDao> coletaDaoProvider,
-      Provider<NetworkChecker> networkCheckerProvider) {
-    return new BuscarColetasComFallbackUseCase_Factory(apiServiceProvider, coletaDaoProvider, networkCheckerProvider);
+      Provider<NetworkChecker> networkCheckerProvider,
+      Provider<PreferencesManager> preferencesManagerProvider) {
+    return new BuscarColetasComFallbackUseCase_Factory(apiServiceProvider, coletaDaoProvider, networkCheckerProvider, preferencesManagerProvider);
   }
 
   public static BuscarColetasComFallbackUseCase newInstance(ApiService apiService,
-      ColetaDao coletaDao, NetworkChecker networkChecker) {
-    return new BuscarColetasComFallbackUseCase(apiService, coletaDao, networkChecker);
+      ColetaDao coletaDao, NetworkChecker networkChecker, PreferencesManager preferencesManager) {
+    return new BuscarColetasComFallbackUseCase(apiService, coletaDao, networkChecker, preferencesManager);
   }
 }

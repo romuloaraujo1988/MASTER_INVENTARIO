@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.inventario.mobile.app-mergeDebugResources-65:/values-pt/values-pt.xml",
+            "outputFile": "com.inventario.mobile.app-mergeDebugResources-71:/values-pt/values-pt.xml",
             "map": [
                 {
                     "source": "C:\\Users\\Romulo\\.gradle\\caches\\transforms-3\\0da192f72ee12ad675f84ec1138f5401\\transformed\\navigation-ui-2.7.5\\res\\values-pt\\values-pt.xml",

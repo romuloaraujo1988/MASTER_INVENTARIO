@@ -66,6 +66,9 @@ class SalaSelectionViewModel(
     /**
      * ✅ CORREÇÃO OFFLINE-FIRST: Busca do SQLite PRIMEIRO
      * Carrega TODAS as salas de uma vez (sem paginação)
+     * 
+     * v2.14.1: CORRIGIDO - Usar AppDatabase ao invés de InventarioDatabase
+     * para evitar conflito entre bancos de dados diferentes
      */
     private suspend fun loadAllSalas() {
         Log.d(TAG, "loadAllSalas: Iniciando carregamento OFFLINE-FIRST")
@@ -75,7 +78,8 @@ class SalaSelectionViewModel(
             // PASSO 1: Buscar do banco local (Room) PRIMEIRO
             // ========================================
             Log.d(TAG, "📱 PASSO 1: Buscando salas do SQLite local...")
-            val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(getApplication())
+            // v2.14.1: Usar AppDatabase (inventario_offline.db) ao invés de InventarioDatabase
+            val database = com.inventario.mobile.data.local.database.AppDatabase.getInstance(getApplication())
             val salaDao = database.salaDao()
             val salasEntity = salaDao.buscarTodas()
             
@@ -155,7 +159,8 @@ class SalaSelectionViewModel(
             // ========================================
             // Salvar no SQLite para próxima vez
             // ========================================
-            val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(getApplication())
+            // v2.14.1: Usar AppDatabase (inventario_offline.db) ao invés de InventarioDatabase
+            val database = com.inventario.mobile.data.local.database.AppDatabase.getInstance(getApplication())
             val salaDao = database.salaDao()
             
             val entities = salasDto.map { dto ->
@@ -216,7 +221,8 @@ class SalaSelectionViewModel(
         try {
             Log.d(TAG, "🔄 Tentando fallback para SQLite...")
             
-            val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(getApplication())
+            // v2.14.1: Usar AppDatabase (inventario_offline.db) ao invés de InventarioDatabase
+            val database = com.inventario.mobile.data.local.database.AppDatabase.getInstance(getApplication())
             val salaDao = database.salaDao()
             val salasEntity = salaDao.buscarTodas()
             

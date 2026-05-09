@@ -1,0 +1,15 @@
+Tables in 'sispatrimonio' public schema:
+backup_coleta_componente_20260211, backup_participante_inventario, backup_tabela_coleta, tabela_categoria_patrimonio, log_remocao_orfaos_20260211, tabela_campus, tabela_coletor, dispositivo_mobile, tabela_inventario, tabela_coleta, tabela_coleta_componente, tabela_item_composto, tabela_patrimonio, tabela_participante_inventario, tabela_inventario_setor, tabela_responsavel, tabela_sala, tabela_setor, tabela_sala_inventario, vw_auditoria_integridade_coleta_componente, vw_inventario_setores, vw_monitoramento_integridade_diario, vw_salas_escopo_inventario, tabela_subcategoria_patrimonio, tabela_usuario
+
+Total rows in 'backup_coleta_componente_20260211': 584
+Columns in backup_coleta_componente_20260211: ['id', 'id_item_composto', 'id_inventario', 'id_coletor', 'quantidade_encontrada', 'status_componente', 'observacao_coleta', 'data_coleta', 'localizacao_encontrada']
+Total rows in 'backup_tabela_coleta': 1
+Columns in backup_tabela_coleta: ['id', 'id_inventario', 'id_patrimonio', 'id_coletor', 'data_coleta', 'status_coleta', 'observacao_coleta', 'localizacao_atual', 'localizacao_encontrada', 'estado_encontrado', 'divergencia', 'motivo_divergencia', 'latitude', 'longitude', 'foto_patrimonio', 'sem_etiqueta', 'descricao_item_sem_etiqueta', 'categoria_item_sem_etiqueta', 'id_participante_inventario']
+Total rows in 'tabela_coletor': 8
+Columns in tabela_coletor: ['id', 'nome_coletor', 'cpf', 'email', 'telefone', 'matricula', 'cargo', 'id_setor', 'ativo', 'data_cadastro', 'observacoes']
+Total rows in 'tabela_coleta': 8712
+Columns in tabela_coleta: ['id', 'id_inventario', 'id_patrimonio', 'id_coletor', 'data_coleta', 'status_coleta', 'observacao_coleta', 'localizacao_atual', 'localizacao_encontrada', 'estado_encontrado', 'divergencia', 'motivo_divergencia', 'latitude', 'longitude', 'foto_patrimonio', 'sem_etiqueta', 'descricao_item_sem_etiqueta', 'categoria_item_sem_etiqueta', 'id_participante_inventario', 'observacao', 'tempo_coleta_segundos', 'tempo_scan_segundos', 'tempo_preenchimento_segundos', 'metodo_coleta', 'hora_coleta', 'dia_semana', 'periodo_coleta', 'tipo_scan', 'tentativas_scan', 'erros_scan', 'qualidade_etiqueta']
+Total rows in 'tabela_coleta_componente': 580
+Columns in tabela_coleta_componente: ['id', 'id_item_composto', 'id_inventario', 'id_coletor', 'quantidade_encontrada', 'status_componente', 'observacao_coleta', 'data_coleta', 'localizacao_encontrada']
+Total rows in 'vw_auditoria_integridade_coleta_componente': 580
+Columns in vw_auditoria_integridade_coleta_componente: ['id_coleta_componente', 'id_item_composto', 'status_integridade', 'id_inventario', 'id_coletor', 'data_coleta', 'id_patrimonio_principal', 'tipo_componente']

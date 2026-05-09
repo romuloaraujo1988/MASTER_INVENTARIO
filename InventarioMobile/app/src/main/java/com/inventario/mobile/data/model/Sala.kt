@@ -6,5 +6,7 @@ data class Sala(
     val descricao: String? = null,
     val andar: String? = null,
     val bloco: String? = null,
-    val ativa: Boolean = true
+    val ativa: Boolean = true,
+    val idSetor: Int? = null,
+    val nomeSetor: String? = null
 )

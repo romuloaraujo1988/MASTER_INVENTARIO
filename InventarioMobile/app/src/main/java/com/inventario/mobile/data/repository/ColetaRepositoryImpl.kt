@@ -229,13 +229,21 @@ class ColetaRepositoryImpl @Inject constructor(
                             
                             // ⚠️ VALIDAÇÃO: Verificar se inventário está configurado
                             if (inventarioId <= 0) {
-                                val erro = "Inventário ativo não configurado no app"
-                                android.util.Log.e("ColetaRepositoryImpl", "❌ $erro")
-                                coletaDao.registrarErroSincronizacao(id, erro)
+                                // Buscar tentativas atuais da coleta para decidir se registra erro permanente
+                                val tentativasAtuais = coletaDao.buscarPorId(id)?.tentativasSincronizacao ?: 0
+                                if (tentativasAtuais >= 3) {
+                                    val erro = "Inventário ativo não configurado no app"
+                                    android.util.Log.e("ColetaRepositoryImpl", "❌ $erro (tentativa $tentativasAtuais — registrando erro permanente)")
+                                    coletaDao.registrarErroSincronizacao(id, erro)
+                                } else {
+                                    // Nas primeiras tentativas, apenas incrementar contador sem registrar erro
+                                    // A coleta ficará pendente e será retentada no próximo ciclo de sync
+                                    android.util.Log.w("ColetaRepositoryImpl",
+                                        "⚠️ Inventário não configurado ainda (tentativa ${tentativasAtuais + 1}/3) — coleta $id ficará pendente para retry")
+                                    coletaDao.registrarErroSincronizacao(id, null)  // incrementa tentativas sem erro
+                                }
                                 return@withTimeout
                             }
-                            
-                            // ✅ LOG: Estado de conservação sendo enviado
                             android.util.Log.d("ColetaRepositoryImpl", "📤 Sincronizando coleta:")
                             android.util.Log.d("ColetaRepositoryImpl", "   Patrimônio: $numeroPatrimonio")
                             android.util.Log.d("ColetaRepositoryImpl", "   Estado de Conservação: ${coleta.estadoEncontrado ?: "BOM (padrão)"}")
@@ -246,7 +254,7 @@ class ColetaRepositoryImpl @Inject constructor(
                                 idInventario = inventarioId,
                                 usuarioId = coleta.usuarioId.toInt(),
                                 idSala = patrimonio?.idSala,
-                                localizacaoEncontrada = coleta.localizacaoAtual,
+                                localizacaoEncontrada = coleta.localizacaoEncontrada ?: coleta.localizacaoAtual,
                                 estadoEncontrado = coleta.estadoEncontrado ?: "BOM",
                                 observacaoColeta = coleta.observacoes,
                                 dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
@@ -259,8 +267,13 @@ class ColetaRepositoryImpl @Inject constructor(
                                 categoriaItemSemEtiqueta = null,
                                 deviceId = android.os.Build.MODEL,
                                 appVersion = "1.2",
-                                divergencia = false,
-                                motivoDivergencia = null
+                                divergencia = coleta.divergencia,          // v2.13: real value
+                                motivoDivergencia = coleta.motivoDivergencia, // v2.13: real value
+                                tempoColetaSegundos = coleta.tempoColetaSegundos,
+                                tempoScanSegundos = coleta.tempoScanSegundos,
+                                tempoPreenchimentoSegundos = coleta.tempoPreenchimentoSegundos,
+                                metodoColeta = coleta.metodoColeta,
+                                tipoScan = coleta.tipoScan
                             )
                             
                             android.util.Log.d("ColetaRepositoryImpl", "🔄 Sincronizando coleta em background (rede: $networkQuality)")
@@ -340,9 +353,17 @@ class ColetaRepositoryImpl @Inject constructor(
                             
                             // ⚠️ VALIDAÇÃO: Verificar se inventário está configurado
                             if (inventarioId <= 0) {
-                                val erro = "Inventário ativo não configurado no app"
-                                android.util.Log.e("ColetaRepositoryImpl", "❌ $erro")
-                                coletaDao.registrarErroSincronizacao(id, erro)
+                                // Buscar tentativas atuais da coleta para decidir se registra erro permanente
+                                val tentativasAtuais = coletaDao.buscarPorId(id)?.tentativasSincronizacao ?: 0
+                                if (tentativasAtuais >= 3) {
+                                    val erro = "Inventário ativo não configurado no app"
+                                    android.util.Log.e("ColetaRepositoryImpl", "❌ $erro (tentativa $tentativasAtuais — registrando erro permanente)")
+                                    coletaDao.registrarErroSincronizacao(id, erro)
+                                } else {
+                                    android.util.Log.w("ColetaRepositoryImpl",
+                                        "⚠️ Inventário não configurado ainda (tentativa ${tentativasAtuais + 1}/3) — coleta $id ficará pendente para retry")
+                                    coletaDao.registrarErroSincronizacao(id, null)  // incrementa tentativas sem erro
+                                }
                                 return@withTimeout
                             }
                             
@@ -353,7 +374,7 @@ class ColetaRepositoryImpl @Inject constructor(
                                 idInventario = inventarioId,
                                 usuarioId = coleta.usuarioId.toInt(),
                                 idSala = patrimonioLocal?.idSala,
-                                localizacaoEncontrada = coleta.localizacaoAtual,
+                                localizacaoEncontrada = coleta.localizacaoEncontrada ?: coleta.localizacaoAtual,
                                 estadoEncontrado = coleta.estadoEncontrado ?: "BOM",
                                 observacaoColeta = coleta.observacoes,
                                 dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
@@ -366,8 +387,13 @@ class ColetaRepositoryImpl @Inject constructor(
                                 categoriaItemSemEtiqueta = null,
                                 deviceId = android.os.Build.MODEL,
                                 appVersion = "1.2",
-                                divergencia = false,
-                                motivoDivergencia = null
+                                divergencia = coleta.divergencia,          // v2.13: real value
+                                motivoDivergencia = coleta.motivoDivergencia, // v2.13: real value
+                                tempoColetaSegundos = coleta.tempoColetaSegundos,
+                                tempoScanSegundos = coleta.tempoScanSegundos,
+                                tempoPreenchimentoSegundos = coleta.tempoPreenchimentoSegundos,
+                                metodoColeta = coleta.metodoColeta,
+                                tipoScan = coleta.tipoScan
                             )
                             
                             android.util.Log.d("ColetaRepositoryImpl", "🔄 Tentativa de sync (fallback) - rede: $networkQuality")
@@ -418,7 +444,29 @@ class ColetaRepositoryImpl @Inject constructor(
         return try {
             android.util.Log.d("ColetaRepositoryImpl", "═══════════════════════════════════════════")
             android.util.Log.d("ColetaRepositoryImpl", "🔄 INICIANDO SINCRONIZAÇÃO DE COLETAS PENDENTES")
-            
+
+            // Reset automático de erros recuperáveis (Bug 5)
+            // Coletas com 5+ tentativas e erros transitórios recebem nova chance
+            try {
+                val coletasComMuitasTentativas = coletaDao.buscarColetasComMuitasTentativas(5)
+                val errosRecuperaveis = listOf("timeout", "Timeout", "conexão", "connection", "network", "rede", "Rede")
+                var resetadas = 0
+                coletasComMuitasTentativas.forEach { entity ->
+                    val erro = entity.erroSincronizacao ?: return@forEach
+                    val ehRecuperavel = errosRecuperaveis.any { erro.contains(it, ignoreCase = true) }
+                    if (ehRecuperavel) {
+                        coletaDao.limparErroSincronizacao(entity.id)
+                        resetadas++
+                        android.util.Log.i("ColetaRepositoryImpl", "♻️ Erro recuperável resetado para coleta ${entity.id}: $erro")
+                    }
+                }
+                if (resetadas > 0) {
+                    android.util.Log.i("ColetaRepositoryImpl", "♻️ $resetadas coleta(s) com erro recuperável resetadas para nova tentativa")
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("ColetaRepositoryImpl", "Aviso: falha ao resetar erros recuperáveis", e)
+            }
+
             val coletasPendentes = coletaDao.buscarPendentes()
             val pendentesAntes = coletasPendentes.size
             
@@ -434,6 +482,10 @@ class ColetaRepositoryImpl @Inject constructor(
             }
             
             // Estratégia: Tentar batch primeiro, se falhar, sincronizar uma por uma
+            // IMPORTANTE: buscarPendentes() retorna coletas de QUALQUER inventário (sem filtro).
+            // O idInventario correto de cada coleta é lido da própria ColetaEntity (entity.idInventario),
+            // que foi salvo no momento da coleta. O PreferencesManager NÃO é usado como fonte primária
+            // para o idInventario no lote — apenas como fallback que agora rejeita coletas inválidas.
             val sincronizadas = try {
                 sincronizarEmLote(coletasPendentes)
             } catch (e: Exception) {
@@ -479,15 +531,24 @@ class ColetaRepositoryImpl @Inject constructor(
                 val coleta = mapper.toDomain(entity)
                 val patrimonio = patrimonioDao.buscarPorId(coleta.patrimonioId.toInt())
                 
-                // ✅ Obter ID do inventário ativo
-                val inventarioId = preferencesManager.getInventarioAtivoId() ?: 0
+                // ✅ Usar idInventario da própria entity (salvo no momento da coleta)
+                // Não usar PreferencesManager pois o inventário ativo pode ter mudado
+                val inventarioId = entity.idInventario.takeIf { it > 0 } ?: run {
+                    android.util.Log.w("ColetaRepositoryImpl",
+                        "⚠️ Coleta ${entity.id} (${entity.numeroPatrimonio}) ignorada no lote: idInventario inválido (0)")
+                    coletaDao.registrarErroSincronizacao(
+                        entity.id,
+                        "idInventario inválido (0) — coleta não pode ser enviada sem inventário definido"
+                    )
+                    return@mapNotNull null  // pular esta coleta no lote
+                }
                 
                 com.inventario.mobile.data.remote.dto.MobileColetaRequest(
                     numeroPatrimonio = patrimonio?.numero ?: entity.numeroPatrimonio,
-                    idInventario = inventarioId, // ✅ Do PreferencesManager
+                    idInventario = inventarioId,
                     usuarioId = coleta.usuarioId.toInt(),
                     idSala = patrimonio?.idSala,
-                    localizacaoEncontrada = coleta.localizacaoAtual,
+                    localizacaoEncontrada = coleta.localizacaoEncontrada ?: coleta.localizacaoAtual,
                     estadoEncontrado = coleta.estadoEncontrado ?: "BOM",
                     observacaoColeta = coleta.observacoes,
                     dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
@@ -495,13 +556,20 @@ class ColetaRepositoryImpl @Inject constructor(
                     latitude = coleta.latitude,
                     longitude = coleta.longitude,
                     fotoPatrimonio = null,
-                    semEtiqueta = false,
-                    descricaoItemSemEtiqueta = null,
-                    categoriaItemSemEtiqueta = null,
+                    // ✅ Preservar campos de item sem etiqueta da entity
+                    semEtiqueta = entity.semEtiqueta,
+                    descricaoItemSemEtiqueta = entity.descricaoItemSemEtiqueta,
+                    categoriaItemSemEtiqueta = entity.categoriaItemSemEtiqueta,
                     deviceId = android.os.Build.MODEL,
                     appVersion = "1.2",
                     divergencia = false,
-                    motivoDivergencia = null
+                    motivoDivergencia = null,
+                    // ✅ Preservar métricas de tempo
+                    tempoColetaSegundos = entity.tempoColetaSegundos,
+                    tempoScanSegundos = entity.tempoScanSegundos,
+                    tempoPreenchimentoSegundos = entity.tempoPreenchimentoSegundos,
+                    metodoColeta = entity.metodoColeta,
+                    tipoScan = entity.tipoScan
                 )
             } catch (e: Exception) {
                 android.util.Log.e("ColetaRepositoryImpl", "Erro ao converter coleta ${entity.id}", e)
@@ -513,10 +581,26 @@ class ColetaRepositoryImpl @Inject constructor(
             return 0
         }
         
+        // ✅ Preservar mapeamento request ↔ entity para rastrear qual coleta local foi
+        //    enviada em cada posição do lote. O lote ENVIADO ao servidor é `requests`,
+        //    mas `coletasPendentes` pode conter entries que foram puladas (idInventario<=0
+        //    via mapNotNull). Reconstruímos a lista paralela de entities ENVIADAS.
+        val entitiesEnviadas = coletasPendentes.filter { entity ->
+            entity.idInventario > 0
+        }
+
+        if (entitiesEnviadas.size != requests.size) {
+            android.util.Log.w(
+                "ColetaRepositoryImpl",
+                "⚠️ Desalinhamento entre requests (${requests.size}) e entitiesEnviadas " +
+                        "(${entitiesEnviadas.size}). Verificar lógica de filtro."
+            )
+        }
+
         // Enviar em lote
         val batchRequest = com.inventario.mobile.data.remote.dto.MobileColetaBatchRequest(requests)
         val response = coletaApi.registrarColetasEmLote(batchRequest)
-        
+
         if (response.success) {
             // Extrair resultado do response
             val resultado = response.data
@@ -524,19 +608,132 @@ class ColetaRepositoryImpl @Inject constructor(
             val falhas = (resultado?.get("falhas") as? Number)?.toInt() ?: 0
             @Suppress("UNCHECKED_CAST")
             val erros = (resultado?.get("erros") as? List<String>) ?: emptyList()
-            
+
+            // ✅ BUGFIX F7 (07/05/2026): preferir a nova estrutura estruturada `resultados[]`
+            //    que o servidor passou a devolver. Cada item tem { indice, numeroPatrimonio,
+            //    status (SUCESSO/DUPLICADA/FALHA), coletaId, mensagem }. Com ela, marcamos
+            //    apenas as coletas que foram REALMENTE persistidas pelo servidor, em vez
+            //    de usar regex frágil sobre as mensagens de erro.
+            @Suppress("UNCHECKED_CAST")
+            val resultadosEstruturados = resultado?.get("resultados") as? List<Map<String, Any?>>
+
             android.util.Log.d("ColetaRepositoryImpl", "═══════════════════════════════════════════")
             android.util.Log.d("ColetaRepositoryImpl", "📊 RESULTADO DO BATCH SYNC:")
             android.util.Log.d("ColetaRepositoryImpl", "   ✅ Sucesso: $sucesso")
             android.util.Log.d("ColetaRepositoryImpl", "   ❌ Falhas: $falhas")
-            
+            android.util.Log.d(
+                "ColetaRepositoryImpl",
+                "   📦 Resultados estruturados disponíveis: ${resultadosEstruturados != null}"
+            )
+
+            // Caminho 1: servidor moderno devolveu `resultados[]` — fonte da verdade
+            if (!resultadosEstruturados.isNullOrEmpty() &&
+                resultadosEstruturados.size == entitiesEnviadas.size
+            ) {
+                var marcadasComSucesso = 0
+                resultadosEstruturados.forEachIndexed { indice, item ->
+                    val entity = entitiesEnviadas.getOrNull(indice)
+                    if (entity == null) {
+                        android.util.Log.w(
+                            "ColetaRepositoryImpl",
+                            "⚠️ resultados[$indice] sem entity correspondente, ignorando"
+                        )
+                        return@forEachIndexed
+                    }
+                    val status = (item["status"] as? String).orEmpty()
+                    val mensagem = item["mensagem"] as? String
+                    val servidorId = (item["coletaId"] as? Number)?.toLong()
+
+                    when (status) {
+                        "SUCESSO" -> {
+                            try {
+                                if (servidorId != null && servidorId > 0) {
+                                    coletaDao.marcarSincronizadaComServidor(entity.id, servidorId)
+                                } else {
+                                    coletaDao.marcarSincronizada(entity.id)
+                                }
+                                marcadasComSucesso++
+                                android.util.Log.d(
+                                    "ColetaRepositoryImpl",
+                                    "✅ Coleta ${entity.id} (${entity.numeroPatrimonio}) sincronizada (servidorId=$servidorId)"
+                                )
+                            } catch (e: Exception) {
+                                android.util.Log.e(
+                                    "ColetaRepositoryImpl",
+                                    "❌ Erro ao marcar coleta ${entity.id} como sincronizada",
+                                    e
+                                )
+                            }
+                        }
+                        "DUPLICADA" -> {
+                            // Servidor detectou duplicata — coleta já existe lá. Do ponto
+                            // de vista do app, não há mais nada a fazer: marcar como
+                            // sincronizada para sair da fila. `servidorId` aponta para
+                            // a coleta original.
+                            try {
+                                if (servidorId != null && servidorId > 0) {
+                                    coletaDao.marcarSincronizadaComServidor(entity.id, servidorId)
+                                } else {
+                                    coletaDao.marcarSincronizada(entity.id)
+                                }
+                                marcadasComSucesso++
+                                android.util.Log.d(
+                                    "ColetaRepositoryImpl",
+                                    "♻️ Coleta ${entity.id} (${entity.numeroPatrimonio}) DUPLICADA no servidor (original=$servidorId)"
+                                )
+                            } catch (e: Exception) {
+                                android.util.Log.e(
+                                    "ColetaRepositoryImpl",
+                                    "❌ Erro ao marcar coleta duplicada ${entity.id}",
+                                    e
+                                )
+                            }
+                        }
+                        "FALHA" -> {
+                            val erroMsg = mensagem ?: "Erro desconhecido no batch"
+                            android.util.Log.w(
+                                "ColetaRepositoryImpl",
+                                "⚠️ Coleta ${entity.id} (${entity.numeroPatrimonio}) falhou: $erroMsg"
+                            )
+                            coletaDao.registrarErroSincronizacao(entity.id, erroMsg)
+                        }
+                        else -> {
+                            // Status desconhecido — tratar conservadoramente como falha
+                            // (não marcar como sincronizada) para evitar perda silenciosa.
+                            val erroMsg = "Status desconhecido do servidor: '$status'. ${mensagem ?: ""}"
+                            android.util.Log.w(
+                                "ColetaRepositoryImpl",
+                                "⚠️ Coleta ${entity.id} — $erroMsg"
+                            )
+                            coletaDao.registrarErroSincronizacao(entity.id, erroMsg)
+                        }
+                    }
+                }
+
+                android.util.Log.d("ColetaRepositoryImpl", "═══════════════════════════════════════════")
+                android.util.Log.d(
+                    "ColetaRepositoryImpl",
+                    "✅ Batch sync (estruturado): $marcadasComSucesso marcadas como sincronizadas"
+                )
+                return marcadasComSucesso
+            }
+
+            // Caminho 2 (retrocompatibilidade): servidor antigo sem `resultados[]`.
+            // Fluxo antigo preservado para não quebrar transições de deploy.
+            android.util.Log.w(
+                "ColetaRepositoryImpl",
+                "⚠️ Servidor não retornou `resultados[]` estruturados — usando fallback legado"
+            )
+
             // Se TODAS as coletas foram sincronizadas com sucesso
-            if (falhas == 0 && sucesso == coletasPendentes.size) {
-                // Marcar TODAS como sincronizadas
-                coletasPendentes.forEach { entity ->
+            if (falhas == 0 && sucesso == entitiesEnviadas.size) {
+                entitiesEnviadas.forEach { entity ->
                     try {
                         coletaDao.marcarSincronizada(entity.id)
-                        android.util.Log.d("ColetaRepositoryImpl", "✅ Coleta ${entity.id} marcada como sincronizada")
+                        android.util.Log.d(
+                            "ColetaRepositoryImpl",
+                            "✅ Coleta ${entity.id} marcada como sincronizada (fallback)"
+                        )
                     } catch (e: Exception) {
                         android.util.Log.e("ColetaRepositoryImpl", "❌ Erro ao marcar coleta ${entity.id}", e)
                     }
@@ -544,42 +741,26 @@ class ColetaRepositoryImpl @Inject constructor(
                 android.util.Log.d("ColetaRepositoryImpl", "═══════════════════════════════════════════")
                 return sucesso
             }
-            
-            // Se houve falhas parciais, precisamos identificar quais falharam
-            // O servidor retorna os erros no formato: "Patrimônio XXXXX: mensagem de erro"
-            val patrimoniosComErro = erros.mapNotNull { erro ->
-                // Extrair número do patrimônio do erro
-                val regex = "Patrimônio\\s+(\\S+):".toRegex()
-                regex.find(erro)?.groupValues?.getOrNull(1)
-            }.toSet()
-            
-            android.util.Log.d("ColetaRepositoryImpl", "   📋 Patrimônios com erro: $patrimoniosComErro")
-            
-            // Marcar apenas as coletas que NÃO tiveram erro
-            var marcadasComSucesso = 0
-            coletasPendentes.forEach { entity ->
-                val numeroPatrimonio = entity.numeroPatrimonio
-                
-                if (patrimoniosComErro.contains(numeroPatrimonio)) {
-                    // Esta coleta falhou - registrar erro
-                    val erroMsg = erros.find { it.contains(numeroPatrimonio) } ?: "Erro desconhecido no batch"
-                    android.util.Log.w("ColetaRepositoryImpl", "⚠️ Coleta ${entity.id} (${numeroPatrimonio}) falhou: $erroMsg")
-                    coletaDao.registrarErroSincronizacao(entity.id, erroMsg)
-                } else {
-                    // Esta coleta foi sincronizada com sucesso
-                    try {
-                        coletaDao.marcarSincronizada(entity.id)
-                        marcadasComSucesso++
-                        android.util.Log.d("ColetaRepositoryImpl", "✅ Coleta ${entity.id} (${numeroPatrimonio}) sincronizada")
-                    } catch (e: Exception) {
-                        android.util.Log.e("ColetaRepositoryImpl", "❌ Erro ao marcar coleta ${entity.id}", e)
-                    }
-                }
+
+            // ✅ BUGFIX F7 (fallback seguro): se houve falhas e não temos estrutura
+            //    `resultados[]`, NÃO marcar nenhuma coleta como sincronizada para evitar
+            //    perda silenciosa. Registrar erro em todas com a mensagem agregada.
+            //    O sync periódico tentará novamente na próxima execução.
+            android.util.Log.w(
+                "ColetaRepositoryImpl",
+                "⚠️ Falhas parciais sem `resultados[]`: marcando todas como pendentes para retry. " +
+                        "sucesso=$sucesso, falhas=$falhas, erros=${erros.size}"
+            )
+            val mensagemAgregada = if (erros.isNotEmpty()) {
+                "Batch com falhas parciais — servidor antigo: ${erros.joinToString("; ").take(200)}"
+            } else {
+                "Batch com $falhas falha(s) — servidor antigo sem resultados estruturados"
             }
-            
+            entitiesEnviadas.forEach { entity ->
+                coletaDao.registrarErroSincronizacao(entity.id, mensagemAgregada)
+            }
             android.util.Log.d("ColetaRepositoryImpl", "═══════════════════════════════════════════")
-            android.util.Log.d("ColetaRepositoryImpl", "✅ Batch sync: $marcadasComSucesso coletas sincronizadas, $falhas com erro")
-            return marcadasComSucesso
+            return 0
         } else {
             android.util.Log.e("ColetaRepositoryImpl", "❌ Batch sync falhou completamente: ${response.message}")
             throw Exception("Batch sync falhou: ${response.message}")
@@ -598,16 +779,25 @@ class ColetaRepositoryImpl @Inject constructor(
                 val coleta = mapper.toDomain(entity)
                 val patrimonio = patrimonioDao.buscarPorId(coleta.patrimonioId.toInt())
                 
-                // ✅ Obter ID do inventário ativo
-                val inventarioId = preferencesManager.getInventarioAtivoId() ?: 0
+                // ✅ Usar idInventario da própria entity (salvo no momento da coleta)
+                val inventarioId = entity.idInventario.takeIf { it > 0 } ?: run {
+                    android.util.Log.w("ColetaRepositoryImpl",
+                        "⚠️ Coleta ${entity.id} (${entity.numeroPatrimonio}) ignorada: idInventario inválido (0)")
+                    coletaDao.registrarErroSincronizacao(
+                        entity.id,
+                        "idInventario inválido (0) — coleta não pode ser enviada sem inventário definido"
+                    )
+                    -1
+                }
+                if (inventarioId <= 0) continue
                 
                 // Converter para MobileColetaRequest
                 val request = com.inventario.mobile.data.remote.dto.MobileColetaRequest(
                     numeroPatrimonio = patrimonio?.numero ?: entity.numeroPatrimonio,
-                    idInventario = inventarioId, // ✅ Do PreferencesManager
+                    idInventario = inventarioId,
                     usuarioId = coleta.usuarioId.toInt(),
                     idSala = patrimonio?.idSala,
-                    localizacaoEncontrada = coleta.localizacaoAtual,
+                    localizacaoEncontrada = coleta.localizacaoEncontrada ?: coleta.localizacaoAtual,
                     estadoEncontrado = coleta.estadoEncontrado ?: "BOM",
                     observacaoColeta = coleta.observacoes,
                     dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
@@ -615,13 +805,20 @@ class ColetaRepositoryImpl @Inject constructor(
                     latitude = coleta.latitude,
                     longitude = coleta.longitude,
                     fotoPatrimonio = null,
-                    semEtiqueta = false,
-                    descricaoItemSemEtiqueta = null,
-                    categoriaItemSemEtiqueta = null,
+                    // ✅ Preservar campos de item sem etiqueta da entity
+                    semEtiqueta = entity.semEtiqueta,
+                    descricaoItemSemEtiqueta = entity.descricaoItemSemEtiqueta,
+                    categoriaItemSemEtiqueta = entity.categoriaItemSemEtiqueta,
                     deviceId = android.os.Build.MODEL,
                     appVersion = "1.2",
                     divergencia = false,
-                    motivoDivergencia = null
+                    motivoDivergencia = null,
+                    // ✅ Preservar métricas de tempo
+                    tempoColetaSegundos = entity.tempoColetaSegundos,
+                    tempoScanSegundos = entity.tempoScanSegundos,
+                    tempoPreenchimentoSegundos = entity.tempoPreenchimentoSegundos,
+                    metodoColeta = entity.metodoColeta,
+                    tipoScan = entity.tipoScan
                 )
                 
                 val response = coletaApi.registrarColeta(request)
@@ -738,8 +935,10 @@ class ColetaRepositoryImpl @Inject constructor(
             val coleta = mapper.toDomain(entity)
             val patrimonio = patrimonioDao.buscarPorId(coleta.patrimonioId.toInt())
             
-            // Obter inventário ativo
-            val inventarioId = preferencesManager.getInventarioAtivoId() ?: 0
+            // Obter inventário ativo — preferir o da entity, fallback para PreferencesManager
+            val inventarioId = entity.idInventario.takeIf { it > 0 }
+                ?: preferencesManager.getInventarioAtivoId()
+                ?: 0
             
             if (inventarioId <= 0) {
                 android.util.Log.e("ColetaRepositoryImpl", "❌ Inventário não configurado")
@@ -753,7 +952,7 @@ class ColetaRepositoryImpl @Inject constructor(
                 idInventario = inventarioId,
                 usuarioId = coleta.usuarioId.toInt(),
                 idSala = patrimonio?.idSala,
-                localizacaoEncontrada = coleta.localizacaoAtual,
+                localizacaoEncontrada = coleta.localizacaoEncontrada ?: coleta.localizacaoAtual,
                 estadoEncontrado = coleta.estadoEncontrado ?: "BOM",
                 observacaoColeta = coleta.observacoes,
                 dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())
@@ -761,13 +960,20 @@ class ColetaRepositoryImpl @Inject constructor(
                 latitude = coleta.latitude,
                 longitude = coleta.longitude,
                 fotoPatrimonio = null,
-                semEtiqueta = false,
-                descricaoItemSemEtiqueta = null,
-                categoriaItemSemEtiqueta = null,
+                // ✅ Preservar campos de item sem etiqueta da entity
+                semEtiqueta = entity.semEtiqueta,
+                descricaoItemSemEtiqueta = entity.descricaoItemSemEtiqueta,
+                categoriaItemSemEtiqueta = entity.categoriaItemSemEtiqueta,
                 deviceId = android.os.Build.MODEL,
                 appVersion = "1.2",
                 divergencia = false,
-                motivoDivergencia = null
+                motivoDivergencia = null,
+                // ✅ Preservar métricas de tempo
+                tempoColetaSegundos = entity.tempoColetaSegundos,
+                tempoScanSegundos = entity.tempoScanSegundos,
+                tempoPreenchimentoSegundos = entity.tempoPreenchimentoSegundos,
+                metodoColeta = entity.metodoColeta,
+                tipoScan = entity.tipoScan
             )
             
             // Enviar para servidor
@@ -852,7 +1058,8 @@ class ColetaRepositoryImpl @Inject constructor(
                 numeroPatrimonio = "",
                 idInventario = inventarioId,
                 idSala = coleta.salaId,
-                nomeSala = coleta.localizacaoAtual,
+                nomeSala = null,                                                    // sem etiqueta não tem sala de origem
+                localizacaoEncontrada = coleta.localizacaoAtual,                    // onde foi encontrado
                 idResponsavel = null,
                 nomeResponsavel = null,
                 observacao = coleta.observacoes,
@@ -884,7 +1091,7 @@ class ColetaRepositoryImpl @Inject constructor(
                             idInventario = inventarioId,
                             usuarioId = coleta.usuarioId.toInt(),
                             idSala = coleta.salaId,
-                            localizacaoEncontrada = coleta.localizacaoAtual,
+                            localizacaoEncontrada = coleta.localizacaoEncontrada ?: coleta.localizacaoAtual,
                             estadoEncontrado = coleta.estadoEncontrado ?: "BOM",
                             observacaoColeta = coleta.observacoes,
                             dataColeta = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", java.util.Locale.getDefault())

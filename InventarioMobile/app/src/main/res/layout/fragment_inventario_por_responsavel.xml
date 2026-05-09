@@ -73,6 +73,27 @@
 
                 </com.google.android.material.chip.ChipGroup>
 
+                <!-- Campo de Busca por Descrição -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilBuscaDescricao"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:hint="Buscar por descrição"
+                    app:startIconDrawable="@drawable/ic_search"
+                    app:endIconMode="clear_text">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/edtBuscaDescricao"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:imeOptions="actionSearch"
+                        android:maxLines="1" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
                 <!-- Botão Limpar Filtros -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnLimparFiltros"

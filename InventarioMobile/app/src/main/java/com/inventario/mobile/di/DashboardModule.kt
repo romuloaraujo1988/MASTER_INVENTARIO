@@ -38,8 +38,17 @@ object DashboardModule {
         apiService: ApiService,
         mapper: DashboardMapper,
         dashboardDao: com.inventario.mobile.data.local.dao.DashboardDao,
-        preferencesManager: com.inventario.mobile.utils.PreferencesManager
+        preferencesManager: com.inventario.mobile.utils.PreferencesManager,
+        patrimonioDao: com.inventario.mobile.data.local.dao.PatrimonioDao,
+        coletaDao: com.inventario.mobile.data.local.dao.ColetaDao
     ): DashboardRepository {
-        return DashboardRepositoryImpl(apiService, mapper, dashboardDao, preferencesManager)
+        return DashboardRepositoryImpl(
+            apiService,
+            mapper,
+            dashboardDao,
+            preferencesManager,
+            patrimonioDao,
+            coletaDao
+        )
     }
 }

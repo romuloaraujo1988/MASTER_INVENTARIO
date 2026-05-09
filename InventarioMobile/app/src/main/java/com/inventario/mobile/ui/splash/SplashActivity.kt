@@ -7,6 +7,7 @@ import android.os.Looper
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.inventario.mobile.BuildConfig
 import com.inventario.mobile.databinding.ActivitySplashBinding
 import com.inventario.mobile.presentation.login.LoginActivity
 import com.inventario.mobile.presentation.main.MainActivity
@@ -134,8 +135,10 @@ class SplashActivity : AppCompatActivity() {
                 val isLoggedIn = preferencesManager.isLoggedIn()
                 Log.d(TAG, "navigateToNextScreen: isLoggedIn = $isLoggedIn")
                 
-                // Log de debug dos tokens
-                Log.d(TAG, tokenManager.getTokenDebugInfo())
+                // Log de debug dos tokens (sanitizado para segurança)
+                if (BuildConfig.DEBUG) {
+                    com.inventario.mobile.security.LogSanitizer.d(TAG, tokenManager.getTokenDebugInfo())
+                }
                 
                 val intent = if (isLoggedIn) {
                     // ✅ Verificar se precisa fazer login novamente (em background)

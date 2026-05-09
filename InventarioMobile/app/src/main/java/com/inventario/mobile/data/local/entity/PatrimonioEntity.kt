@@ -20,7 +20,7 @@ import androidx.room.Index
         Index(value = ["idSala"]),
         Index(value = ["coletado"]),
         Index(value = ["nomeSala"]),
-        Index(value = ["responsavelNome"]),
+        Index(value = ["nomeResponsavel"]),
         
         // Índices compostos para filtros de busca (otimização)
         Index(value = ["coletado", "numeroPatrimonio"]),
@@ -44,17 +44,19 @@ data class PatrimonioEntity(
     val setorNome: String? = null,
     val idSala: Int? = null,
     val nomeSala: String? = null,
-    val salaId: Int? = null,
-    val salaNome: String? = null,
     val idResponsavel: Int? = null,
     val nomeResponsavel: String? = null,
-    val responsavelId: Int? = null,
-    val responsavelNome: String? = null,
     val status: String? = null,
     val coletado: Boolean = false,
     val dataColeta: Long? = null,
     val coletadoPor: String? = null,
     val observacoesColeta: String? = null,
     val observacoes: String? = null,
+    // v2.20.7: campos de auditoria da coleta — persistidos no patrimônio
+    // para sobreviverem à limpeza de coletas sincronizadas (limparSincronizadas).
+    // Assim o relatório exportado continua mostrando localização/estado mesmo
+    // após a coleta ter sido apagada do banco local.
+    val localizacaoEncontrada: String? = null,
+    val estadoEncontrado: String? = null,
     val dataUltimaAtualizacao: Long = System.currentTimeMillis()
 )

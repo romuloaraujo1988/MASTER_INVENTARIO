@@ -299,7 +299,7 @@ class MockApiService : ApiService {
         return Response.success(apiResponse)
     }
     
-    override suspend fun buscarTodasColetasSemPaginacao(): Response<ColetasAllResponse> {
+    override suspend fun buscarTodasColetasSemPaginacao(inventarioId: Int?): Response<ColetasAllResponse> {
         val pagedData = ColetasPagedData(
             content = emptyList(),
             page = 0,

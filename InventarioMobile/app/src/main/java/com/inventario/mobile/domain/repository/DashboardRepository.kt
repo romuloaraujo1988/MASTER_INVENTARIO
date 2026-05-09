@@ -1,6 +1,7 @@
 package com.inventario.mobile.domain.repository
 
 import com.inventario.mobile.domain.model.*
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Repository interface para Dashboard
@@ -72,4 +73,22 @@ interface DashboardRepository {
     suspend fun buscarEstatisticasPorStatus(
         inventarioId: Int? = null
     ): Result<List<EstatisticaStatus>>
+
+    /**
+     * 🔄 Observa estatísticas híbridas (servidor + coletas locais) em tempo real.
+     *
+     * Estratégia:
+     * 1. Busca estatísticas base do servidor (total correto de patrimônios).
+     * 2. Observa coletas locais pendentes via Room Flow.
+     * 3. Emite `DashboardStats` com `totalColetados = servidor + locais não sincronizadas`.
+     *
+     * Flow é atualizado automaticamente quando qualquer coleta é registrada/sincronizada,
+     * sem necessidade de chamar refresh manualmente.
+     *
+     * Em caso de falha de rede no passo 1, faz fallback para dados do Room.
+     *
+     * @param inventarioId ID do inventário (null = inventário ativo)
+     * @return Flow que emite estatísticas atualizadas em tempo real
+     */
+    fun observarEstatisticasHibridas(inventarioId: Int? = null): Flow<DashboardStats>
 }

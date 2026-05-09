@@ -8,6 +8,7 @@ import com.inventario.mobile.domain.model.Patrimonio as DomainPatrimonio
 import com.inventario.mobile.data.model.Patrimonio as DataPatrimonio
 import com.inventario.mobile.data.model.Coleta
 import com.inventario.mobile.data.repository.InventarioRepository
+import com.inventario.mobile.utils.PreferencesManager
 import com.inventario.mobile.utils.VibrationHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,9 +26,10 @@ import javax.inject.Inject
 class ManualCollectionViewModel @Inject constructor(
     private val buscarPatrimonioUseCase: BuscarPatrimonioUseCase,
     private val registrarColetaUseCase: RegistrarColetaUseCase,
-    private val inventarioRepository: InventarioRepository, // Temporário para compatibilidade
-    private val coletaDao: com.inventario.mobile.data.local.dao.ColetaDao, // v2.7: Para contar coletas por sala
-    private val vibrationHelper: VibrationHelper // v2.10: Feedback tátil
+    private val inventarioRepository: InventarioRepository,
+    private val coletaDao: com.inventario.mobile.data.local.dao.ColetaDao,
+    private val vibrationHelper: VibrationHelper,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ManualCollectionUiState())
@@ -123,7 +125,7 @@ class ManualCollectionViewModel @Inject constructor(
             setorNome = this.nomeSetor,
             salaId = this.idSala?.toLong(),
             salaNome = this.nomeSala,
-            responsavelId = this.coletorId,
+            responsavelId = this.idResponsavel?.toLong(),
             responsavelNome = this.nomeResponsavel,
             qrCode = this.qrCode,
             observacoes = this.observacoes,
@@ -228,14 +230,16 @@ class ManualCollectionViewModel @Inject constructor(
             try {
                 Log.d("ManualCollectionVM", "Carregando contagem de coletas para sala: $salaNome (ID: $salaId)")
                 
-                // Buscar coletas da sala usando ColetaDao
-                val coletasDaSala = if (salaId > 0) {
+                // Buscar coletas da sala APENAS do inventário ativo
+                val idInventarioAtivo = preferencesManager.getInventarioAtivoId() ?: 0
+                val coletasDaSala = if (salaId > 0 && idInventarioAtivo > 0) {
+                    coletaDao.buscarPorSala(salaId.toInt(), idInventarioAtivo)
+                } else if (salaId > 0) {
                     coletaDao.buscarPorSala(salaId.toInt())
+                } else if (idInventarioAtivo > 0) {
+                    coletaDao.buscarTodas(idInventarioAtivo).filter { it.nomeSala == salaNome }
                 } else {
-                    // Fallback: buscar todas e filtrar por nome
-                    coletaDao.buscarTodas().filter { coleta ->
-                        coleta.nomeSala == salaNome
-                    }
+                    coletaDao.buscarTodas().filter { it.nomeSala == salaNome }
                 }
                 
                 Log.d("ManualCollectionVM", "Total de coletas na sala '$salaNome': ${coletasDaSala.size}")

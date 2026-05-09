@@ -14,7 +14,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.widget.NestedScrollView;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.google.android.material.button.MaterialButton;
@@ -28,7 +28,7 @@ import java.lang.String;
 
 public final class ActivityManualCollectionBinding implements ViewBinding {
   @NonNull
-  private final ConstraintLayout rootView;
+  private final NestedScrollView rootView;
 
   @NonNull
   public final MaterialButton btnAddPhoto;
@@ -38,6 +38,9 @@ public final class ActivityManualCollectionBinding implements ViewBinding {
 
   @NonNull
   public final Button btnClear;
+
+  @NonNull
+  public final MaterialButton btnColetarSimilar;
 
   @NonNull
   public final Button btnCollect;
@@ -90,21 +93,22 @@ public final class ActivityManualCollectionBinding implements ViewBinding {
   @NonNull
   public final TextView tvSalaInfo;
 
-  private ActivityManualCollectionBinding(@NonNull ConstraintLayout rootView,
+  private ActivityManualCollectionBinding(@NonNull NestedScrollView rootView,
       @NonNull MaterialButton btnAddPhoto, @NonNull MaterialButton btnBackToDashboard,
-      @NonNull Button btnClear, @NonNull Button btnCollect, @NonNull ImageButton btnRemovePhoto,
-      @NonNull Button btnSearch, @NonNull MaterialCardView cardFotoOpcional,
-      @NonNull MaterialCardView cardInput, @NonNull MaterialCardView cardPatrimonioInfo,
-      @NonNull TextInputEditText etPatrimonioNumber, @NonNull ImageView imgPhotoPreview,
-      @NonNull LinearLayout layoutDicas, @NonNull TextInputLayout layoutMotivoFoto,
-      @NonNull FrameLayout layoutPhotoPreview, @NonNull ProgressBar progressBar,
-      @NonNull AutoCompleteTextView spinnerMotivoFoto, @NonNull TextView textFotoLabel,
-      @NonNull TextView tvCollectionCount, @NonNull TextView tvPatrimonioInfo,
-      @NonNull TextView tvSalaInfo) {
+      @NonNull Button btnClear, @NonNull MaterialButton btnColetarSimilar,
+      @NonNull Button btnCollect, @NonNull ImageButton btnRemovePhoto, @NonNull Button btnSearch,
+      @NonNull MaterialCardView cardFotoOpcional, @NonNull MaterialCardView cardInput,
+      @NonNull MaterialCardView cardPatrimonioInfo, @NonNull TextInputEditText etPatrimonioNumber,
+      @NonNull ImageView imgPhotoPreview, @NonNull LinearLayout layoutDicas,
+      @NonNull TextInputLayout layoutMotivoFoto, @NonNull FrameLayout layoutPhotoPreview,
+      @NonNull ProgressBar progressBar, @NonNull AutoCompleteTextView spinnerMotivoFoto,
+      @NonNull TextView textFotoLabel, @NonNull TextView tvCollectionCount,
+      @NonNull TextView tvPatrimonioInfo, @NonNull TextView tvSalaInfo) {
     this.rootView = rootView;
     this.btnAddPhoto = btnAddPhoto;
     this.btnBackToDashboard = btnBackToDashboard;
     this.btnClear = btnClear;
+    this.btnColetarSimilar = btnColetarSimilar;
     this.btnCollect = btnCollect;
     this.btnRemovePhoto = btnRemovePhoto;
     this.btnSearch = btnSearch;
@@ -126,7 +130,7 @@ public final class ActivityManualCollectionBinding implements ViewBinding {
 
   @Override
   @NonNull
-  public ConstraintLayout getRoot() {
+  public NestedScrollView getRoot() {
     return rootView;
   }
 
@@ -166,6 +170,12 @@ public final class ActivityManualCollectionBinding implements ViewBinding {
       id = R.id.btnClear;
       Button btnClear = ViewBindings.findChildViewById(rootView, id);
       if (btnClear == null) {
+        break missingId;
+      }
+
+      id = R.id.btnColetarSimilar;
+      MaterialButton btnColetarSimilar = ViewBindings.findChildViewById(rootView, id);
+      if (btnColetarSimilar == null) {
         break missingId;
       }
 
@@ -271,11 +281,11 @@ public final class ActivityManualCollectionBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ActivityManualCollectionBinding((ConstraintLayout) rootView, btnAddPhoto,
-          btnBackToDashboard, btnClear, btnCollect, btnRemovePhoto, btnSearch, cardFotoOpcional,
-          cardInput, cardPatrimonioInfo, etPatrimonioNumber, imgPhotoPreview, layoutDicas,
-          layoutMotivoFoto, layoutPhotoPreview, progressBar, spinnerMotivoFoto, textFotoLabel,
-          tvCollectionCount, tvPatrimonioInfo, tvSalaInfo);
+      return new ActivityManualCollectionBinding((NestedScrollView) rootView, btnAddPhoto,
+          btnBackToDashboard, btnClear, btnColetarSimilar, btnCollect, btnRemovePhoto, btnSearch,
+          cardFotoOpcional, cardInput, cardPatrimonioInfo, etPatrimonioNumber, imgPhotoPreview,
+          layoutDicas, layoutMotivoFoto, layoutPhotoPreview, progressBar, spinnerMotivoFoto,
+          textFotoLabel, tvCollectionCount, tvPatrimonioInfo, tvSalaInfo);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

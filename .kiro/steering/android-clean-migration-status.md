@@ -11,6 +11,28 @@ inclusion: always
 - ✅ Room Database com 5 entidades
 - ✅ Módulos DI: `DatabaseModule`, `RepositoryModule`, `ApiModule`, `MapperModule`
 - ✅ Estrutura de pacotes Clean Architecture
+- ✅ **v2.15: Banco de dados padronizado para AppDatabase (inventario_offline.db)**
+
+### 1.1 Padronização do Banco de Dados (v2.15) ✨ **NOVO**
+- ✅ `AppDatabase` (`inventario_offline.db`) é o banco ÚNICO e padronizado
+- ✅ `InventarioDatabase` marcado como `@Deprecated` - NÃO USAR
+- ✅ Todos os repositórios migrados para usar `AppDatabase`
+- ✅ Workers migrados para usar `AppDatabase`
+- ✅ Código legado comentado não afeta a migração
+
+**Arquivos migrados:**
+- `InventarioRepository.kt` - 7 referências migradas
+- `DatabaseCleanupWorker.kt` - 1 referência migrada
+- `ScannerActivity.kt` - import atualizado
+
+**Regra obrigatória:**
+```kotlin
+// ✅ CORRETO - Usar sempre
+val database = AppDatabase.getInstance(context)
+
+// ❌ ERRADO - NÃO USAR (deprecated)
+val database = InventarioDatabase.getDatabase(context)
+```
 
 ### 2. Camada Domain
 - ✅ Models puros (sem dependências Android)

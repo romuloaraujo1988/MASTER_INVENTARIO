@@ -1,0 +1,85 @@
+================================================================================
+ESTATÍSTICAS ATUALIZADAS DO INVENTÁRIO PATRIMONIAL 2025
+================================================================================
+
+## DADOS GERAIS
+Total de Patrimônios Cadastrados: 11570
+Total de Patrimônios 'Baixados' no Sistema: 500
+Total de Coletas Registradas: 8712
+Total de Patrimônios Únicos Coletados: 8606
+Taxa de Localização (coletados/cadastrados): 74.38%
+Total de Coletas com Sala de Origem e Destino previstas: 8654
+Total de Divergências: 8384
+Taxa de Divergência: 96.88%
+
+## ESTADO DE CONSERVAÇÃO
+BOM: 7313
+IRRECUPERAVEL: 740
+IRRECUPERÁVEL: 390
+OCIOSO: 89
+PENDENTE: 81
+N/A: 68
+RECUPERAVEL: 18
+RECUPERÁVEL: 12
+COLETADO: 1
+
+## TOP 15 SALAS POR DIVERGÊNCIA (LOCALIZAÇÃO ATUAL DO PATRIMÔNIO)
+Sala                                                         |    Total |     Divs |   Taxa%
+BIBLIOTECA(IFMT - PDL)                                       |     4155 |     4155 | 100.00%
+MEZANINO AUDITORIO(IFMT - PDL)                               |      903 |      903 | 100.00%
+AUDITÓRIO(IFMT - PDL)                                        |      220 |      220 | 100.00%
+GABINETE (IFMT - PDL)                                        |      197 |      197 | 100.00%
+SALA DOS COMPUTADORES(IFMT - PDL)                            |      195 |      195 | 100.00%
+SALA DE PROF.(IFMT - PDL)                                    |      174 |      174 | 100.00%
+ALMOXARIFADO PDL - 1 SALA PREFEITURA(IFMT - PDL)             |      160 |      160 | 100.00%
+Área do Campus(IFMT - PDL)                                   |      150 |      150 | 100.00%
+DAP(IFMT - PDL)                                              |      136 |      136 | 100.00%
+CAE(IFMT - PDL)                                              |      118 |      118 | 100.00%
+LAB. INFORMATICA A9(IFMT - PDL)                              |      115 |      115 | 100.00%
+SALA TI SERVIDOR DE REDE(IFMT - PDL)                         |      112 |      112 | 100.00%
+Área Externa (IFMT - PDL)                                    |      108 |      108 | 100.00%
+LAB. A2 TECN. MATERIAIS(BLOCO DE LABORATORIOS)               |       99 |       99 | 100.00%
+LAB. INFORMATICA A10(IFMT - PDL)                             |       93 |       93 | 100.00%
+
+## TOP 15 DESTINOS DAS DIVERGÊNCIAS
+BIBLIOTECA: 4157
+SALA  DO DESFAZIMENTO(PREDIO ANTIGO): 1179
+AUDITÓRIO: 378
+SALA DE PROF.: 201
+ALMOXARIFADO 1: 140
+LAB. INFORMATICA A9: 129
+DAP: 126
+HANGAR(PROJETO  HANGAR): 113
+LAB. INFORMATICA A10: 112
+Protocolo: 110
+MEZANINO AUDITORIO: 95
+LAB. B3 Eletrônica analógica e de Potência: 93
+Área do Campus: 90
+CORREDOR: 84
+LAB. DE BIOLOGIA: 83
+
+## ANÁLISE POR COLETOR
+Coletor                                  |   Total |    Divs |   Taxa%
+Beatriz Araujo                           |    3145 |    3145 | 100.00%
+Romulo Araujo                            |    1841 |    1813 |  98.48%
+Administrador do Sistema                 |     691 |     691 | 100.00%
+Rosana Fatima Barbieri de Morais         |     532 |     509 |  95.68%
+Lidiane Ferreira                         |     456 |     456 | 100.00%
+Jhessika Melo dos Santos                 |     396 |     361 |  91.16%
+Joao Victor Nunes Bombarda               |     372 |     316 |  84.95%
+Aurya Dayanny Dias de Abreu              |     293 |     265 |  90.44%
+Aline Felix                              |     290 |     290 | 100.00%
+Gabriela Santos Marinho da Silva         |     253 |     253 | 100.00%
+Adelmo Carlos Ciqueira Silva             |     213 |     142 |  66.67%
+Debora de Almeida Souza                  |     129 |     129 | 100.00%
+Mateus Rasia                             |      43 |      14 |  32.56%
+
+## TEMPO DE COLETA
+Tempo Médio (segundos): 12.65s
+Tempo Mínimo (segundos): 2
+Tempo Máximo (segundos): 22
+
+## PERÍODO
+Início: 2025-11-18 15:47:30.302000
+Fim: 2026-02-19 08:16:38.497000
+Dias com coletas registradas: 34

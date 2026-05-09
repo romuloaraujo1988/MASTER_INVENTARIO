@@ -49,7 +49,7 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR REPLACE INTO `patrimonio` (`id`,`numero`,`numeroPatrimonio`,`descricao`,`marca`,`modelo`,`numeroSerie`,`estado`,`valor`,`setorId`,`setorNome`,`idSala`,`nomeSala`,`salaId`,`salaNome`,`idResponsavel`,`nomeResponsavel`,`responsavelId`,`responsavelNome`,`status`,`coletado`,`dataColeta`,`coletadoPor`,`observacoesColeta`,`observacoes`,`dataUltimaAtualizacao`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        return "INSERT OR REPLACE INTO `patrimonio` (`id`,`numero`,`numeroPatrimonio`,`descricao`,`marca`,`modelo`,`numeroSerie`,`estado`,`valor`,`setorId`,`setorNome`,`idSala`,`nomeSala`,`idResponsavel`,`nomeResponsavel`,`status`,`coletado`,`dataColeta`,`coletadoPor`,`observacoesColeta`,`observacoes`,`localizacaoEncontrada`,`estadoEncontrado`,`dataUltimaAtualizacao`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override
@@ -104,64 +104,54 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
         } else {
           statement.bindString(13, entity.getNomeSala());
         }
-        if (entity.getSalaId() == null) {
+        if (entity.getIdResponsavel() == null) {
           statement.bindNull(14);
         } else {
-          statement.bindLong(14, entity.getSalaId());
-        }
-        if (entity.getSalaNome() == null) {
-          statement.bindNull(15);
-        } else {
-          statement.bindString(15, entity.getSalaNome());
-        }
-        if (entity.getIdResponsavel() == null) {
-          statement.bindNull(16);
-        } else {
-          statement.bindLong(16, entity.getIdResponsavel());
+          statement.bindLong(14, entity.getIdResponsavel());
         }
         if (entity.getNomeResponsavel() == null) {
-          statement.bindNull(17);
+          statement.bindNull(15);
         } else {
-          statement.bindString(17, entity.getNomeResponsavel());
-        }
-        if (entity.getResponsavelId() == null) {
-          statement.bindNull(18);
-        } else {
-          statement.bindLong(18, entity.getResponsavelId());
-        }
-        if (entity.getResponsavelNome() == null) {
-          statement.bindNull(19);
-        } else {
-          statement.bindString(19, entity.getResponsavelNome());
+          statement.bindString(15, entity.getNomeResponsavel());
         }
         if (entity.getStatus() == null) {
-          statement.bindNull(20);
+          statement.bindNull(16);
         } else {
-          statement.bindString(20, entity.getStatus());
+          statement.bindString(16, entity.getStatus());
         }
         final int _tmp = entity.getColetado() ? 1 : 0;
-        statement.bindLong(21, _tmp);
+        statement.bindLong(17, _tmp);
         if (entity.getDataColeta() == null) {
-          statement.bindNull(22);
+          statement.bindNull(18);
         } else {
-          statement.bindLong(22, entity.getDataColeta());
+          statement.bindLong(18, entity.getDataColeta());
         }
         if (entity.getColetadoPor() == null) {
-          statement.bindNull(23);
+          statement.bindNull(19);
         } else {
-          statement.bindString(23, entity.getColetadoPor());
+          statement.bindString(19, entity.getColetadoPor());
         }
         if (entity.getObservacoesColeta() == null) {
-          statement.bindNull(24);
+          statement.bindNull(20);
         } else {
-          statement.bindString(24, entity.getObservacoesColeta());
+          statement.bindString(20, entity.getObservacoesColeta());
         }
         if (entity.getObservacoes() == null) {
-          statement.bindNull(25);
+          statement.bindNull(21);
         } else {
-          statement.bindString(25, entity.getObservacoes());
+          statement.bindString(21, entity.getObservacoes());
         }
-        statement.bindLong(26, entity.getDataUltimaAtualizacao());
+        if (entity.getLocalizacaoEncontrada() == null) {
+          statement.bindNull(22);
+        } else {
+          statement.bindString(22, entity.getLocalizacaoEncontrada());
+        }
+        if (entity.getEstadoEncontrado() == null) {
+          statement.bindNull(23);
+        } else {
+          statement.bindString(23, entity.getEstadoEncontrado());
+        }
+        statement.bindLong(24, entity.getDataUltimaAtualizacao());
       }
     };
     this.__preparedStmtOfMarcarComoColetado = new SharedSQLiteStatement(__db) {
@@ -295,18 +285,16 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
           final int _cursorIndexOfSetorNome = CursorUtil.getColumnIndexOrThrow(_cursor, "setorNome");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
-          final int _cursorIndexOfSalaId = CursorUtil.getColumnIndexOrThrow(_cursor, "salaId");
-          final int _cursorIndexOfSalaNome = CursorUtil.getColumnIndexOrThrow(_cursor, "salaNome");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
           final int _cursorIndexOfNomeResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeResponsavel");
-          final int _cursorIndexOfResponsavelId = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelId");
-          final int _cursorIndexOfResponsavelNome = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelNome");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfColetado = CursorUtil.getColumnIndexOrThrow(_cursor, "coletado");
           final int _cursorIndexOfDataColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "dataColeta");
           final int _cursorIndexOfColetadoPor = CursorUtil.getColumnIndexOrThrow(_cursor, "coletadoPor");
           final int _cursorIndexOfObservacoesColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoesColeta");
           final int _cursorIndexOfObservacoes = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoes");
+          final int _cursorIndexOfLocalizacaoEncontrada = CursorUtil.getColumnIndexOrThrow(_cursor, "localizacaoEncontrada");
+          final int _cursorIndexOfEstadoEncontrado = CursorUtil.getColumnIndexOrThrow(_cursor, "estadoEncontrado");
           final int _cursorIndexOfDataUltimaAtualizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "dataUltimaAtualizacao");
           final PatrimonioEntity _result;
           if (_cursor.moveToFirst()) {
@@ -372,18 +360,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpNomeSala = _cursor.getString(_cursorIndexOfNomeSala);
             }
-            final Integer _tmpSalaId;
-            if (_cursor.isNull(_cursorIndexOfSalaId)) {
-              _tmpSalaId = null;
-            } else {
-              _tmpSalaId = _cursor.getInt(_cursorIndexOfSalaId);
-            }
-            final String _tmpSalaNome;
-            if (_cursor.isNull(_cursorIndexOfSalaNome)) {
-              _tmpSalaNome = null;
-            } else {
-              _tmpSalaNome = _cursor.getString(_cursorIndexOfSalaNome);
-            }
             final Integer _tmpIdResponsavel;
             if (_cursor.isNull(_cursorIndexOfIdResponsavel)) {
               _tmpIdResponsavel = null;
@@ -395,18 +371,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
               _tmpNomeResponsavel = null;
             } else {
               _tmpNomeResponsavel = _cursor.getString(_cursorIndexOfNomeResponsavel);
-            }
-            final Integer _tmpResponsavelId;
-            if (_cursor.isNull(_cursorIndexOfResponsavelId)) {
-              _tmpResponsavelId = null;
-            } else {
-              _tmpResponsavelId = _cursor.getInt(_cursorIndexOfResponsavelId);
-            }
-            final String _tmpResponsavelNome;
-            if (_cursor.isNull(_cursorIndexOfResponsavelNome)) {
-              _tmpResponsavelNome = null;
-            } else {
-              _tmpResponsavelNome = _cursor.getString(_cursorIndexOfResponsavelNome);
             }
             final String _tmpStatus;
             if (_cursor.isNull(_cursorIndexOfStatus)) {
@@ -442,9 +406,21 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpObservacoes = _cursor.getString(_cursorIndexOfObservacoes);
             }
+            final String _tmpLocalizacaoEncontrada;
+            if (_cursor.isNull(_cursorIndexOfLocalizacaoEncontrada)) {
+              _tmpLocalizacaoEncontrada = null;
+            } else {
+              _tmpLocalizacaoEncontrada = _cursor.getString(_cursorIndexOfLocalizacaoEncontrada);
+            }
+            final String _tmpEstadoEncontrado;
+            if (_cursor.isNull(_cursorIndexOfEstadoEncontrado)) {
+              _tmpEstadoEncontrado = null;
+            } else {
+              _tmpEstadoEncontrado = _cursor.getString(_cursorIndexOfEstadoEncontrado);
+            }
             final long _tmpDataUltimaAtualizacao;
             _tmpDataUltimaAtualizacao = _cursor.getLong(_cursorIndexOfDataUltimaAtualizacao);
-            _result = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpSalaId,_tmpSalaNome,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpResponsavelId,_tmpResponsavelNome,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpDataUltimaAtualizacao);
+            _result = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpLocalizacaoEncontrada,_tmpEstadoEncontrado,_tmpDataUltimaAtualizacao);
           } else {
             _result = null;
           }
@@ -462,7 +438,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
       final Continuation<? super PatrimonioEntity> $completion) {
     final String _sql = "\n"
             + "        SELECT p.*, \n"
-            + "               s.nome as salaNome,\n"
             + "               s.nome as nomeSala,\n"
             + "               CASE WHEN c.id IS NOT NULL THEN 1 ELSE 0 END as coletado,\n"
             + "               c.nomeUsuario as coletadoPor,\n"
@@ -499,18 +474,16 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
           final int _cursorIndexOfSetorNome = CursorUtil.getColumnIndexOrThrow(_cursor, "setorNome");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
-          final int _cursorIndexOfSalaId = CursorUtil.getColumnIndexOrThrow(_cursor, "salaId");
-          final int _cursorIndexOfSalaNome = CursorUtil.getColumnIndexOrThrow(_cursor, "salaNome");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
           final int _cursorIndexOfNomeResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeResponsavel");
-          final int _cursorIndexOfResponsavelId = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelId");
-          final int _cursorIndexOfResponsavelNome = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelNome");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfColetado = CursorUtil.getColumnIndexOrThrow(_cursor, "coletado");
           final int _cursorIndexOfDataColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "dataColeta");
           final int _cursorIndexOfColetadoPor = CursorUtil.getColumnIndexOrThrow(_cursor, "coletadoPor");
           final int _cursorIndexOfObservacoesColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoesColeta");
           final int _cursorIndexOfObservacoes = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoes");
+          final int _cursorIndexOfLocalizacaoEncontrada = CursorUtil.getColumnIndexOrThrow(_cursor, "localizacaoEncontrada");
+          final int _cursorIndexOfEstadoEncontrado = CursorUtil.getColumnIndexOrThrow(_cursor, "estadoEncontrado");
           final int _cursorIndexOfDataUltimaAtualizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "dataUltimaAtualizacao");
           final PatrimonioEntity _result;
           if (_cursor.moveToFirst()) {
@@ -576,18 +549,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpNomeSala = _cursor.getString(_cursorIndexOfNomeSala);
             }
-            final Integer _tmpSalaId;
-            if (_cursor.isNull(_cursorIndexOfSalaId)) {
-              _tmpSalaId = null;
-            } else {
-              _tmpSalaId = _cursor.getInt(_cursorIndexOfSalaId);
-            }
-            final String _tmpSalaNome;
-            if (_cursor.isNull(_cursorIndexOfSalaNome)) {
-              _tmpSalaNome = null;
-            } else {
-              _tmpSalaNome = _cursor.getString(_cursorIndexOfSalaNome);
-            }
             final Integer _tmpIdResponsavel;
             if (_cursor.isNull(_cursorIndexOfIdResponsavel)) {
               _tmpIdResponsavel = null;
@@ -599,18 +560,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
               _tmpNomeResponsavel = null;
             } else {
               _tmpNomeResponsavel = _cursor.getString(_cursorIndexOfNomeResponsavel);
-            }
-            final Integer _tmpResponsavelId;
-            if (_cursor.isNull(_cursorIndexOfResponsavelId)) {
-              _tmpResponsavelId = null;
-            } else {
-              _tmpResponsavelId = _cursor.getInt(_cursorIndexOfResponsavelId);
-            }
-            final String _tmpResponsavelNome;
-            if (_cursor.isNull(_cursorIndexOfResponsavelNome)) {
-              _tmpResponsavelNome = null;
-            } else {
-              _tmpResponsavelNome = _cursor.getString(_cursorIndexOfResponsavelNome);
             }
             final String _tmpStatus;
             if (_cursor.isNull(_cursorIndexOfStatus)) {
@@ -646,9 +595,21 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpObservacoes = _cursor.getString(_cursorIndexOfObservacoes);
             }
+            final String _tmpLocalizacaoEncontrada;
+            if (_cursor.isNull(_cursorIndexOfLocalizacaoEncontrada)) {
+              _tmpLocalizacaoEncontrada = null;
+            } else {
+              _tmpLocalizacaoEncontrada = _cursor.getString(_cursorIndexOfLocalizacaoEncontrada);
+            }
+            final String _tmpEstadoEncontrado;
+            if (_cursor.isNull(_cursorIndexOfEstadoEncontrado)) {
+              _tmpEstadoEncontrado = null;
+            } else {
+              _tmpEstadoEncontrado = _cursor.getString(_cursorIndexOfEstadoEncontrado);
+            }
             final long _tmpDataUltimaAtualizacao;
             _tmpDataUltimaAtualizacao = _cursor.getLong(_cursorIndexOfDataUltimaAtualizacao);
-            _result = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpSalaId,_tmpSalaNome,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpResponsavelId,_tmpResponsavelNome,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpDataUltimaAtualizacao);
+            _result = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpLocalizacaoEncontrada,_tmpEstadoEncontrado,_tmpDataUltimaAtualizacao);
           } else {
             _result = null;
           }
@@ -688,18 +649,16 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
           final int _cursorIndexOfSetorNome = CursorUtil.getColumnIndexOrThrow(_cursor, "setorNome");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
-          final int _cursorIndexOfSalaId = CursorUtil.getColumnIndexOrThrow(_cursor, "salaId");
-          final int _cursorIndexOfSalaNome = CursorUtil.getColumnIndexOrThrow(_cursor, "salaNome");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
           final int _cursorIndexOfNomeResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeResponsavel");
-          final int _cursorIndexOfResponsavelId = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelId");
-          final int _cursorIndexOfResponsavelNome = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelNome");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfColetado = CursorUtil.getColumnIndexOrThrow(_cursor, "coletado");
           final int _cursorIndexOfDataColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "dataColeta");
           final int _cursorIndexOfColetadoPor = CursorUtil.getColumnIndexOrThrow(_cursor, "coletadoPor");
           final int _cursorIndexOfObservacoesColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoesColeta");
           final int _cursorIndexOfObservacoes = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoes");
+          final int _cursorIndexOfLocalizacaoEncontrada = CursorUtil.getColumnIndexOrThrow(_cursor, "localizacaoEncontrada");
+          final int _cursorIndexOfEstadoEncontrado = CursorUtil.getColumnIndexOrThrow(_cursor, "estadoEncontrado");
           final int _cursorIndexOfDataUltimaAtualizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "dataUltimaAtualizacao");
           final PatrimonioEntity _result;
           if (_cursor.moveToFirst()) {
@@ -765,18 +724,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpNomeSala = _cursor.getString(_cursorIndexOfNomeSala);
             }
-            final Integer _tmpSalaId;
-            if (_cursor.isNull(_cursorIndexOfSalaId)) {
-              _tmpSalaId = null;
-            } else {
-              _tmpSalaId = _cursor.getInt(_cursorIndexOfSalaId);
-            }
-            final String _tmpSalaNome;
-            if (_cursor.isNull(_cursorIndexOfSalaNome)) {
-              _tmpSalaNome = null;
-            } else {
-              _tmpSalaNome = _cursor.getString(_cursorIndexOfSalaNome);
-            }
             final Integer _tmpIdResponsavel;
             if (_cursor.isNull(_cursorIndexOfIdResponsavel)) {
               _tmpIdResponsavel = null;
@@ -788,18 +735,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
               _tmpNomeResponsavel = null;
             } else {
               _tmpNomeResponsavel = _cursor.getString(_cursorIndexOfNomeResponsavel);
-            }
-            final Integer _tmpResponsavelId;
-            if (_cursor.isNull(_cursorIndexOfResponsavelId)) {
-              _tmpResponsavelId = null;
-            } else {
-              _tmpResponsavelId = _cursor.getInt(_cursorIndexOfResponsavelId);
-            }
-            final String _tmpResponsavelNome;
-            if (_cursor.isNull(_cursorIndexOfResponsavelNome)) {
-              _tmpResponsavelNome = null;
-            } else {
-              _tmpResponsavelNome = _cursor.getString(_cursorIndexOfResponsavelNome);
             }
             final String _tmpStatus;
             if (_cursor.isNull(_cursorIndexOfStatus)) {
@@ -835,9 +770,21 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpObservacoes = _cursor.getString(_cursorIndexOfObservacoes);
             }
+            final String _tmpLocalizacaoEncontrada;
+            if (_cursor.isNull(_cursorIndexOfLocalizacaoEncontrada)) {
+              _tmpLocalizacaoEncontrada = null;
+            } else {
+              _tmpLocalizacaoEncontrada = _cursor.getString(_cursorIndexOfLocalizacaoEncontrada);
+            }
+            final String _tmpEstadoEncontrado;
+            if (_cursor.isNull(_cursorIndexOfEstadoEncontrado)) {
+              _tmpEstadoEncontrado = null;
+            } else {
+              _tmpEstadoEncontrado = _cursor.getString(_cursorIndexOfEstadoEncontrado);
+            }
             final long _tmpDataUltimaAtualizacao;
             _tmpDataUltimaAtualizacao = _cursor.getLong(_cursorIndexOfDataUltimaAtualizacao);
-            _result = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpSalaId,_tmpSalaNome,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpResponsavelId,_tmpResponsavelNome,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpDataUltimaAtualizacao);
+            _result = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpLocalizacaoEncontrada,_tmpEstadoEncontrado,_tmpDataUltimaAtualizacao);
           } else {
             _result = null;
           }
@@ -873,18 +820,16 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
           final int _cursorIndexOfSetorNome = CursorUtil.getColumnIndexOrThrow(_cursor, "setorNome");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
-          final int _cursorIndexOfSalaId = CursorUtil.getColumnIndexOrThrow(_cursor, "salaId");
-          final int _cursorIndexOfSalaNome = CursorUtil.getColumnIndexOrThrow(_cursor, "salaNome");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
           final int _cursorIndexOfNomeResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeResponsavel");
-          final int _cursorIndexOfResponsavelId = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelId");
-          final int _cursorIndexOfResponsavelNome = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelNome");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfColetado = CursorUtil.getColumnIndexOrThrow(_cursor, "coletado");
           final int _cursorIndexOfDataColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "dataColeta");
           final int _cursorIndexOfColetadoPor = CursorUtil.getColumnIndexOrThrow(_cursor, "coletadoPor");
           final int _cursorIndexOfObservacoesColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoesColeta");
           final int _cursorIndexOfObservacoes = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoes");
+          final int _cursorIndexOfLocalizacaoEncontrada = CursorUtil.getColumnIndexOrThrow(_cursor, "localizacaoEncontrada");
+          final int _cursorIndexOfEstadoEncontrado = CursorUtil.getColumnIndexOrThrow(_cursor, "estadoEncontrado");
           final int _cursorIndexOfDataUltimaAtualizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "dataUltimaAtualizacao");
           final List<PatrimonioEntity> _result = new ArrayList<PatrimonioEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
@@ -951,18 +896,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpNomeSala = _cursor.getString(_cursorIndexOfNomeSala);
             }
-            final Integer _tmpSalaId;
-            if (_cursor.isNull(_cursorIndexOfSalaId)) {
-              _tmpSalaId = null;
-            } else {
-              _tmpSalaId = _cursor.getInt(_cursorIndexOfSalaId);
-            }
-            final String _tmpSalaNome;
-            if (_cursor.isNull(_cursorIndexOfSalaNome)) {
-              _tmpSalaNome = null;
-            } else {
-              _tmpSalaNome = _cursor.getString(_cursorIndexOfSalaNome);
-            }
             final Integer _tmpIdResponsavel;
             if (_cursor.isNull(_cursorIndexOfIdResponsavel)) {
               _tmpIdResponsavel = null;
@@ -974,18 +907,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
               _tmpNomeResponsavel = null;
             } else {
               _tmpNomeResponsavel = _cursor.getString(_cursorIndexOfNomeResponsavel);
-            }
-            final Integer _tmpResponsavelId;
-            if (_cursor.isNull(_cursorIndexOfResponsavelId)) {
-              _tmpResponsavelId = null;
-            } else {
-              _tmpResponsavelId = _cursor.getInt(_cursorIndexOfResponsavelId);
-            }
-            final String _tmpResponsavelNome;
-            if (_cursor.isNull(_cursorIndexOfResponsavelNome)) {
-              _tmpResponsavelNome = null;
-            } else {
-              _tmpResponsavelNome = _cursor.getString(_cursorIndexOfResponsavelNome);
             }
             final String _tmpStatus;
             if (_cursor.isNull(_cursorIndexOfStatus)) {
@@ -1021,9 +942,21 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpObservacoes = _cursor.getString(_cursorIndexOfObservacoes);
             }
+            final String _tmpLocalizacaoEncontrada;
+            if (_cursor.isNull(_cursorIndexOfLocalizacaoEncontrada)) {
+              _tmpLocalizacaoEncontrada = null;
+            } else {
+              _tmpLocalizacaoEncontrada = _cursor.getString(_cursorIndexOfLocalizacaoEncontrada);
+            }
+            final String _tmpEstadoEncontrado;
+            if (_cursor.isNull(_cursorIndexOfEstadoEncontrado)) {
+              _tmpEstadoEncontrado = null;
+            } else {
+              _tmpEstadoEncontrado = _cursor.getString(_cursorIndexOfEstadoEncontrado);
+            }
             final long _tmpDataUltimaAtualizacao;
             _tmpDataUltimaAtualizacao = _cursor.getLong(_cursorIndexOfDataUltimaAtualizacao);
-            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpSalaId,_tmpSalaNome,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpResponsavelId,_tmpResponsavelNome,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpDataUltimaAtualizacao);
+            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpLocalizacaoEncontrada,_tmpEstadoEncontrado,_tmpDataUltimaAtualizacao);
             _result.add(_item);
           }
           return _result;
@@ -1068,18 +1001,16 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
           final int _cursorIndexOfSetorNome = CursorUtil.getColumnIndexOrThrow(_cursor, "setorNome");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
-          final int _cursorIndexOfSalaId = CursorUtil.getColumnIndexOrThrow(_cursor, "salaId");
-          final int _cursorIndexOfSalaNome = CursorUtil.getColumnIndexOrThrow(_cursor, "salaNome");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
           final int _cursorIndexOfNomeResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeResponsavel");
-          final int _cursorIndexOfResponsavelId = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelId");
-          final int _cursorIndexOfResponsavelNome = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelNome");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfColetado = CursorUtil.getColumnIndexOrThrow(_cursor, "coletado");
           final int _cursorIndexOfDataColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "dataColeta");
           final int _cursorIndexOfColetadoPor = CursorUtil.getColumnIndexOrThrow(_cursor, "coletadoPor");
           final int _cursorIndexOfObservacoesColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoesColeta");
           final int _cursorIndexOfObservacoes = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoes");
+          final int _cursorIndexOfLocalizacaoEncontrada = CursorUtil.getColumnIndexOrThrow(_cursor, "localizacaoEncontrada");
+          final int _cursorIndexOfEstadoEncontrado = CursorUtil.getColumnIndexOrThrow(_cursor, "estadoEncontrado");
           final int _cursorIndexOfDataUltimaAtualizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "dataUltimaAtualizacao");
           final List<PatrimonioEntity> _result = new ArrayList<PatrimonioEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
@@ -1146,18 +1077,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpNomeSala = _cursor.getString(_cursorIndexOfNomeSala);
             }
-            final Integer _tmpSalaId;
-            if (_cursor.isNull(_cursorIndexOfSalaId)) {
-              _tmpSalaId = null;
-            } else {
-              _tmpSalaId = _cursor.getInt(_cursorIndexOfSalaId);
-            }
-            final String _tmpSalaNome;
-            if (_cursor.isNull(_cursorIndexOfSalaNome)) {
-              _tmpSalaNome = null;
-            } else {
-              _tmpSalaNome = _cursor.getString(_cursorIndexOfSalaNome);
-            }
             final Integer _tmpIdResponsavel;
             if (_cursor.isNull(_cursorIndexOfIdResponsavel)) {
               _tmpIdResponsavel = null;
@@ -1169,18 +1088,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
               _tmpNomeResponsavel = null;
             } else {
               _tmpNomeResponsavel = _cursor.getString(_cursorIndexOfNomeResponsavel);
-            }
-            final Integer _tmpResponsavelId;
-            if (_cursor.isNull(_cursorIndexOfResponsavelId)) {
-              _tmpResponsavelId = null;
-            } else {
-              _tmpResponsavelId = _cursor.getInt(_cursorIndexOfResponsavelId);
-            }
-            final String _tmpResponsavelNome;
-            if (_cursor.isNull(_cursorIndexOfResponsavelNome)) {
-              _tmpResponsavelNome = null;
-            } else {
-              _tmpResponsavelNome = _cursor.getString(_cursorIndexOfResponsavelNome);
             }
             final String _tmpStatus;
             if (_cursor.isNull(_cursorIndexOfStatus)) {
@@ -1216,9 +1123,21 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpObservacoes = _cursor.getString(_cursorIndexOfObservacoes);
             }
+            final String _tmpLocalizacaoEncontrada;
+            if (_cursor.isNull(_cursorIndexOfLocalizacaoEncontrada)) {
+              _tmpLocalizacaoEncontrada = null;
+            } else {
+              _tmpLocalizacaoEncontrada = _cursor.getString(_cursorIndexOfLocalizacaoEncontrada);
+            }
+            final String _tmpEstadoEncontrado;
+            if (_cursor.isNull(_cursorIndexOfEstadoEncontrado)) {
+              _tmpEstadoEncontrado = null;
+            } else {
+              _tmpEstadoEncontrado = _cursor.getString(_cursorIndexOfEstadoEncontrado);
+            }
             final long _tmpDataUltimaAtualizacao;
             _tmpDataUltimaAtualizacao = _cursor.getLong(_cursorIndexOfDataUltimaAtualizacao);
-            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpSalaId,_tmpSalaNome,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpResponsavelId,_tmpResponsavelNome,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpDataUltimaAtualizacao);
+            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpLocalizacaoEncontrada,_tmpEstadoEncontrado,_tmpDataUltimaAtualizacao);
             _result.add(_item);
           }
           return _result;
@@ -1283,18 +1202,16 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
           final int _cursorIndexOfSetorNome = CursorUtil.getColumnIndexOrThrow(_cursor, "setorNome");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
-          final int _cursorIndexOfSalaId = CursorUtil.getColumnIndexOrThrow(_cursor, "salaId");
-          final int _cursorIndexOfSalaNome = CursorUtil.getColumnIndexOrThrow(_cursor, "salaNome");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
           final int _cursorIndexOfNomeResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeResponsavel");
-          final int _cursorIndexOfResponsavelId = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelId");
-          final int _cursorIndexOfResponsavelNome = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelNome");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfColetado = CursorUtil.getColumnIndexOrThrow(_cursor, "coletado");
           final int _cursorIndexOfDataColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "dataColeta");
           final int _cursorIndexOfColetadoPor = CursorUtil.getColumnIndexOrThrow(_cursor, "coletadoPor");
           final int _cursorIndexOfObservacoesColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoesColeta");
           final int _cursorIndexOfObservacoes = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoes");
+          final int _cursorIndexOfLocalizacaoEncontrada = CursorUtil.getColumnIndexOrThrow(_cursor, "localizacaoEncontrada");
+          final int _cursorIndexOfEstadoEncontrado = CursorUtil.getColumnIndexOrThrow(_cursor, "estadoEncontrado");
           final int _cursorIndexOfDataUltimaAtualizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "dataUltimaAtualizacao");
           final List<PatrimonioEntity> _result = new ArrayList<PatrimonioEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
@@ -1361,18 +1278,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpNomeSala = _cursor.getString(_cursorIndexOfNomeSala);
             }
-            final Integer _tmpSalaId;
-            if (_cursor.isNull(_cursorIndexOfSalaId)) {
-              _tmpSalaId = null;
-            } else {
-              _tmpSalaId = _cursor.getInt(_cursorIndexOfSalaId);
-            }
-            final String _tmpSalaNome;
-            if (_cursor.isNull(_cursorIndexOfSalaNome)) {
-              _tmpSalaNome = null;
-            } else {
-              _tmpSalaNome = _cursor.getString(_cursorIndexOfSalaNome);
-            }
             final Integer _tmpIdResponsavel;
             if (_cursor.isNull(_cursorIndexOfIdResponsavel)) {
               _tmpIdResponsavel = null;
@@ -1384,18 +1289,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
               _tmpNomeResponsavel = null;
             } else {
               _tmpNomeResponsavel = _cursor.getString(_cursorIndexOfNomeResponsavel);
-            }
-            final Integer _tmpResponsavelId;
-            if (_cursor.isNull(_cursorIndexOfResponsavelId)) {
-              _tmpResponsavelId = null;
-            } else {
-              _tmpResponsavelId = _cursor.getInt(_cursorIndexOfResponsavelId);
-            }
-            final String _tmpResponsavelNome;
-            if (_cursor.isNull(_cursorIndexOfResponsavelNome)) {
-              _tmpResponsavelNome = null;
-            } else {
-              _tmpResponsavelNome = _cursor.getString(_cursorIndexOfResponsavelNome);
             }
             final String _tmpStatus;
             if (_cursor.isNull(_cursorIndexOfStatus)) {
@@ -1431,10 +1324,53 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpObservacoes = _cursor.getString(_cursorIndexOfObservacoes);
             }
+            final String _tmpLocalizacaoEncontrada;
+            if (_cursor.isNull(_cursorIndexOfLocalizacaoEncontrada)) {
+              _tmpLocalizacaoEncontrada = null;
+            } else {
+              _tmpLocalizacaoEncontrada = _cursor.getString(_cursorIndexOfLocalizacaoEncontrada);
+            }
+            final String _tmpEstadoEncontrado;
+            if (_cursor.isNull(_cursorIndexOfEstadoEncontrado)) {
+              _tmpEstadoEncontrado = null;
+            } else {
+              _tmpEstadoEncontrado = _cursor.getString(_cursorIndexOfEstadoEncontrado);
+            }
             final long _tmpDataUltimaAtualizacao;
             _tmpDataUltimaAtualizacao = _cursor.getLong(_cursorIndexOfDataUltimaAtualizacao);
-            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpSalaId,_tmpSalaNome,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpResponsavelId,_tmpResponsavelNome,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpDataUltimaAtualizacao);
+            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpLocalizacaoEncontrada,_tmpEstadoEncontrado,_tmpDataUltimaAtualizacao);
             _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object contarPorDescricaoNaoColetados(final String descricao,
+      final Continuation<? super Integer> $completion) {
+    final String _sql = "SELECT COUNT(*) FROM patrimonio WHERE descricao = ? AND coletado = 0";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
+    int _argIndex = 1;
+    _statement.bindString(_argIndex, descricao);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<Integer>() {
+      @Override
+      @NonNull
+      public Integer call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final Integer _result;
+          if (_cursor.moveToFirst()) {
+            final int _tmp;
+            _tmp = _cursor.getInt(0);
+            _result = _tmp;
+          } else {
+            _result = 0;
           }
           return _result;
         } finally {
@@ -1472,18 +1408,16 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
           final int _cursorIndexOfSetorNome = CursorUtil.getColumnIndexOrThrow(_cursor, "setorNome");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
-          final int _cursorIndexOfSalaId = CursorUtil.getColumnIndexOrThrow(_cursor, "salaId");
-          final int _cursorIndexOfSalaNome = CursorUtil.getColumnIndexOrThrow(_cursor, "salaNome");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
           final int _cursorIndexOfNomeResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeResponsavel");
-          final int _cursorIndexOfResponsavelId = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelId");
-          final int _cursorIndexOfResponsavelNome = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelNome");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfColetado = CursorUtil.getColumnIndexOrThrow(_cursor, "coletado");
           final int _cursorIndexOfDataColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "dataColeta");
           final int _cursorIndexOfColetadoPor = CursorUtil.getColumnIndexOrThrow(_cursor, "coletadoPor");
           final int _cursorIndexOfObservacoesColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoesColeta");
           final int _cursorIndexOfObservacoes = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoes");
+          final int _cursorIndexOfLocalizacaoEncontrada = CursorUtil.getColumnIndexOrThrow(_cursor, "localizacaoEncontrada");
+          final int _cursorIndexOfEstadoEncontrado = CursorUtil.getColumnIndexOrThrow(_cursor, "estadoEncontrado");
           final int _cursorIndexOfDataUltimaAtualizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "dataUltimaAtualizacao");
           final List<PatrimonioEntity> _result = new ArrayList<PatrimonioEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
@@ -1550,18 +1484,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpNomeSala = _cursor.getString(_cursorIndexOfNomeSala);
             }
-            final Integer _tmpSalaId;
-            if (_cursor.isNull(_cursorIndexOfSalaId)) {
-              _tmpSalaId = null;
-            } else {
-              _tmpSalaId = _cursor.getInt(_cursorIndexOfSalaId);
-            }
-            final String _tmpSalaNome;
-            if (_cursor.isNull(_cursorIndexOfSalaNome)) {
-              _tmpSalaNome = null;
-            } else {
-              _tmpSalaNome = _cursor.getString(_cursorIndexOfSalaNome);
-            }
             final Integer _tmpIdResponsavel;
             if (_cursor.isNull(_cursorIndexOfIdResponsavel)) {
               _tmpIdResponsavel = null;
@@ -1573,18 +1495,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
               _tmpNomeResponsavel = null;
             } else {
               _tmpNomeResponsavel = _cursor.getString(_cursorIndexOfNomeResponsavel);
-            }
-            final Integer _tmpResponsavelId;
-            if (_cursor.isNull(_cursorIndexOfResponsavelId)) {
-              _tmpResponsavelId = null;
-            } else {
-              _tmpResponsavelId = _cursor.getInt(_cursorIndexOfResponsavelId);
-            }
-            final String _tmpResponsavelNome;
-            if (_cursor.isNull(_cursorIndexOfResponsavelNome)) {
-              _tmpResponsavelNome = null;
-            } else {
-              _tmpResponsavelNome = _cursor.getString(_cursorIndexOfResponsavelNome);
             }
             final String _tmpStatus;
             if (_cursor.isNull(_cursorIndexOfStatus)) {
@@ -1620,9 +1530,21 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpObservacoes = _cursor.getString(_cursorIndexOfObservacoes);
             }
+            final String _tmpLocalizacaoEncontrada;
+            if (_cursor.isNull(_cursorIndexOfLocalizacaoEncontrada)) {
+              _tmpLocalizacaoEncontrada = null;
+            } else {
+              _tmpLocalizacaoEncontrada = _cursor.getString(_cursorIndexOfLocalizacaoEncontrada);
+            }
+            final String _tmpEstadoEncontrado;
+            if (_cursor.isNull(_cursorIndexOfEstadoEncontrado)) {
+              _tmpEstadoEncontrado = null;
+            } else {
+              _tmpEstadoEncontrado = _cursor.getString(_cursorIndexOfEstadoEncontrado);
+            }
             final long _tmpDataUltimaAtualizacao;
             _tmpDataUltimaAtualizacao = _cursor.getLong(_cursorIndexOfDataUltimaAtualizacao);
-            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpSalaId,_tmpSalaNome,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpResponsavelId,_tmpResponsavelNome,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpDataUltimaAtualizacao);
+            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpLocalizacaoEncontrada,_tmpEstadoEncontrado,_tmpDataUltimaAtualizacao);
             _result.add(_item);
           }
           return _result;
@@ -1743,18 +1665,16 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
           final int _cursorIndexOfSetorNome = CursorUtil.getColumnIndexOrThrow(_cursor, "setorNome");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
-          final int _cursorIndexOfSalaId = CursorUtil.getColumnIndexOrThrow(_cursor, "salaId");
-          final int _cursorIndexOfSalaNome = CursorUtil.getColumnIndexOrThrow(_cursor, "salaNome");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
           final int _cursorIndexOfNomeResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeResponsavel");
-          final int _cursorIndexOfResponsavelId = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelId");
-          final int _cursorIndexOfResponsavelNome = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelNome");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfColetado = CursorUtil.getColumnIndexOrThrow(_cursor, "coletado");
           final int _cursorIndexOfDataColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "dataColeta");
           final int _cursorIndexOfColetadoPor = CursorUtil.getColumnIndexOrThrow(_cursor, "coletadoPor");
           final int _cursorIndexOfObservacoesColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoesColeta");
           final int _cursorIndexOfObservacoes = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoes");
+          final int _cursorIndexOfLocalizacaoEncontrada = CursorUtil.getColumnIndexOrThrow(_cursor, "localizacaoEncontrada");
+          final int _cursorIndexOfEstadoEncontrado = CursorUtil.getColumnIndexOrThrow(_cursor, "estadoEncontrado");
           final int _cursorIndexOfDataUltimaAtualizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "dataUltimaAtualizacao");
           final List<PatrimonioEntity> _result = new ArrayList<PatrimonioEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
@@ -1821,18 +1741,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpNomeSala = _cursor.getString(_cursorIndexOfNomeSala);
             }
-            final Integer _tmpSalaId;
-            if (_cursor.isNull(_cursorIndexOfSalaId)) {
-              _tmpSalaId = null;
-            } else {
-              _tmpSalaId = _cursor.getInt(_cursorIndexOfSalaId);
-            }
-            final String _tmpSalaNome;
-            if (_cursor.isNull(_cursorIndexOfSalaNome)) {
-              _tmpSalaNome = null;
-            } else {
-              _tmpSalaNome = _cursor.getString(_cursorIndexOfSalaNome);
-            }
             final Integer _tmpIdResponsavel;
             if (_cursor.isNull(_cursorIndexOfIdResponsavel)) {
               _tmpIdResponsavel = null;
@@ -1844,18 +1752,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
               _tmpNomeResponsavel = null;
             } else {
               _tmpNomeResponsavel = _cursor.getString(_cursorIndexOfNomeResponsavel);
-            }
-            final Integer _tmpResponsavelId;
-            if (_cursor.isNull(_cursorIndexOfResponsavelId)) {
-              _tmpResponsavelId = null;
-            } else {
-              _tmpResponsavelId = _cursor.getInt(_cursorIndexOfResponsavelId);
-            }
-            final String _tmpResponsavelNome;
-            if (_cursor.isNull(_cursorIndexOfResponsavelNome)) {
-              _tmpResponsavelNome = null;
-            } else {
-              _tmpResponsavelNome = _cursor.getString(_cursorIndexOfResponsavelNome);
             }
             final String _tmpStatus;
             if (_cursor.isNull(_cursorIndexOfStatus)) {
@@ -1891,9 +1787,21 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpObservacoes = _cursor.getString(_cursorIndexOfObservacoes);
             }
+            final String _tmpLocalizacaoEncontrada;
+            if (_cursor.isNull(_cursorIndexOfLocalizacaoEncontrada)) {
+              _tmpLocalizacaoEncontrada = null;
+            } else {
+              _tmpLocalizacaoEncontrada = _cursor.getString(_cursorIndexOfLocalizacaoEncontrada);
+            }
+            final String _tmpEstadoEncontrado;
+            if (_cursor.isNull(_cursorIndexOfEstadoEncontrado)) {
+              _tmpEstadoEncontrado = null;
+            } else {
+              _tmpEstadoEncontrado = _cursor.getString(_cursorIndexOfEstadoEncontrado);
+            }
             final long _tmpDataUltimaAtualizacao;
             _tmpDataUltimaAtualizacao = _cursor.getLong(_cursorIndexOfDataUltimaAtualizacao);
-            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpSalaId,_tmpSalaNome,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpResponsavelId,_tmpResponsavelNome,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpDataUltimaAtualizacao);
+            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpLocalizacaoEncontrada,_tmpEstadoEncontrado,_tmpDataUltimaAtualizacao);
             _result.add(_item);
           }
           return _result;
@@ -1929,18 +1837,16 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
           final int _cursorIndexOfSetorNome = CursorUtil.getColumnIndexOrThrow(_cursor, "setorNome");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
-          final int _cursorIndexOfSalaId = CursorUtil.getColumnIndexOrThrow(_cursor, "salaId");
-          final int _cursorIndexOfSalaNome = CursorUtil.getColumnIndexOrThrow(_cursor, "salaNome");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
           final int _cursorIndexOfNomeResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeResponsavel");
-          final int _cursorIndexOfResponsavelId = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelId");
-          final int _cursorIndexOfResponsavelNome = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelNome");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfColetado = CursorUtil.getColumnIndexOrThrow(_cursor, "coletado");
           final int _cursorIndexOfDataColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "dataColeta");
           final int _cursorIndexOfColetadoPor = CursorUtil.getColumnIndexOrThrow(_cursor, "coletadoPor");
           final int _cursorIndexOfObservacoesColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoesColeta");
           final int _cursorIndexOfObservacoes = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoes");
+          final int _cursorIndexOfLocalizacaoEncontrada = CursorUtil.getColumnIndexOrThrow(_cursor, "localizacaoEncontrada");
+          final int _cursorIndexOfEstadoEncontrado = CursorUtil.getColumnIndexOrThrow(_cursor, "estadoEncontrado");
           final int _cursorIndexOfDataUltimaAtualizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "dataUltimaAtualizacao");
           final List<PatrimonioEntity> _result = new ArrayList<PatrimonioEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
@@ -2007,18 +1913,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpNomeSala = _cursor.getString(_cursorIndexOfNomeSala);
             }
-            final Integer _tmpSalaId;
-            if (_cursor.isNull(_cursorIndexOfSalaId)) {
-              _tmpSalaId = null;
-            } else {
-              _tmpSalaId = _cursor.getInt(_cursorIndexOfSalaId);
-            }
-            final String _tmpSalaNome;
-            if (_cursor.isNull(_cursorIndexOfSalaNome)) {
-              _tmpSalaNome = null;
-            } else {
-              _tmpSalaNome = _cursor.getString(_cursorIndexOfSalaNome);
-            }
             final Integer _tmpIdResponsavel;
             if (_cursor.isNull(_cursorIndexOfIdResponsavel)) {
               _tmpIdResponsavel = null;
@@ -2030,18 +1924,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
               _tmpNomeResponsavel = null;
             } else {
               _tmpNomeResponsavel = _cursor.getString(_cursorIndexOfNomeResponsavel);
-            }
-            final Integer _tmpResponsavelId;
-            if (_cursor.isNull(_cursorIndexOfResponsavelId)) {
-              _tmpResponsavelId = null;
-            } else {
-              _tmpResponsavelId = _cursor.getInt(_cursorIndexOfResponsavelId);
-            }
-            final String _tmpResponsavelNome;
-            if (_cursor.isNull(_cursorIndexOfResponsavelNome)) {
-              _tmpResponsavelNome = null;
-            } else {
-              _tmpResponsavelNome = _cursor.getString(_cursorIndexOfResponsavelNome);
             }
             final String _tmpStatus;
             if (_cursor.isNull(_cursorIndexOfStatus)) {
@@ -2077,9 +1959,21 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpObservacoes = _cursor.getString(_cursorIndexOfObservacoes);
             }
+            final String _tmpLocalizacaoEncontrada;
+            if (_cursor.isNull(_cursorIndexOfLocalizacaoEncontrada)) {
+              _tmpLocalizacaoEncontrada = null;
+            } else {
+              _tmpLocalizacaoEncontrada = _cursor.getString(_cursorIndexOfLocalizacaoEncontrada);
+            }
+            final String _tmpEstadoEncontrado;
+            if (_cursor.isNull(_cursorIndexOfEstadoEncontrado)) {
+              _tmpEstadoEncontrado = null;
+            } else {
+              _tmpEstadoEncontrado = _cursor.getString(_cursorIndexOfEstadoEncontrado);
+            }
             final long _tmpDataUltimaAtualizacao;
             _tmpDataUltimaAtualizacao = _cursor.getLong(_cursorIndexOfDataUltimaAtualizacao);
-            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpSalaId,_tmpSalaNome,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpResponsavelId,_tmpResponsavelNome,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpDataUltimaAtualizacao);
+            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpLocalizacaoEncontrada,_tmpEstadoEncontrado,_tmpDataUltimaAtualizacao);
             _result.add(_item);
           }
           return _result;
@@ -2321,18 +2215,16 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
           final int _cursorIndexOfSetorNome = CursorUtil.getColumnIndexOrThrow(_cursor, "setorNome");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
-          final int _cursorIndexOfSalaId = CursorUtil.getColumnIndexOrThrow(_cursor, "salaId");
-          final int _cursorIndexOfSalaNome = CursorUtil.getColumnIndexOrThrow(_cursor, "salaNome");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
           final int _cursorIndexOfNomeResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeResponsavel");
-          final int _cursorIndexOfResponsavelId = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelId");
-          final int _cursorIndexOfResponsavelNome = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelNome");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfColetado = CursorUtil.getColumnIndexOrThrow(_cursor, "coletado");
           final int _cursorIndexOfDataColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "dataColeta");
           final int _cursorIndexOfColetadoPor = CursorUtil.getColumnIndexOrThrow(_cursor, "coletadoPor");
           final int _cursorIndexOfObservacoesColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoesColeta");
           final int _cursorIndexOfObservacoes = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoes");
+          final int _cursorIndexOfLocalizacaoEncontrada = CursorUtil.getColumnIndexOrThrow(_cursor, "localizacaoEncontrada");
+          final int _cursorIndexOfEstadoEncontrado = CursorUtil.getColumnIndexOrThrow(_cursor, "estadoEncontrado");
           final int _cursorIndexOfDataUltimaAtualizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "dataUltimaAtualizacao");
           final List<PatrimonioEntity> _result = new ArrayList<PatrimonioEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
@@ -2399,18 +2291,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpNomeSala = _cursor.getString(_cursorIndexOfNomeSala);
             }
-            final Integer _tmpSalaId;
-            if (_cursor.isNull(_cursorIndexOfSalaId)) {
-              _tmpSalaId = null;
-            } else {
-              _tmpSalaId = _cursor.getInt(_cursorIndexOfSalaId);
-            }
-            final String _tmpSalaNome;
-            if (_cursor.isNull(_cursorIndexOfSalaNome)) {
-              _tmpSalaNome = null;
-            } else {
-              _tmpSalaNome = _cursor.getString(_cursorIndexOfSalaNome);
-            }
             final Integer _tmpIdResponsavel;
             if (_cursor.isNull(_cursorIndexOfIdResponsavel)) {
               _tmpIdResponsavel = null;
@@ -2422,18 +2302,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
               _tmpNomeResponsavel = null;
             } else {
               _tmpNomeResponsavel = _cursor.getString(_cursorIndexOfNomeResponsavel);
-            }
-            final Integer _tmpResponsavelId;
-            if (_cursor.isNull(_cursorIndexOfResponsavelId)) {
-              _tmpResponsavelId = null;
-            } else {
-              _tmpResponsavelId = _cursor.getInt(_cursorIndexOfResponsavelId);
-            }
-            final String _tmpResponsavelNome;
-            if (_cursor.isNull(_cursorIndexOfResponsavelNome)) {
-              _tmpResponsavelNome = null;
-            } else {
-              _tmpResponsavelNome = _cursor.getString(_cursorIndexOfResponsavelNome);
             }
             final String _tmpStatus;
             if (_cursor.isNull(_cursorIndexOfStatus)) {
@@ -2469,9 +2337,21 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpObservacoes = _cursor.getString(_cursorIndexOfObservacoes);
             }
+            final String _tmpLocalizacaoEncontrada;
+            if (_cursor.isNull(_cursorIndexOfLocalizacaoEncontrada)) {
+              _tmpLocalizacaoEncontrada = null;
+            } else {
+              _tmpLocalizacaoEncontrada = _cursor.getString(_cursorIndexOfLocalizacaoEncontrada);
+            }
+            final String _tmpEstadoEncontrado;
+            if (_cursor.isNull(_cursorIndexOfEstadoEncontrado)) {
+              _tmpEstadoEncontrado = null;
+            } else {
+              _tmpEstadoEncontrado = _cursor.getString(_cursorIndexOfEstadoEncontrado);
+            }
             final long _tmpDataUltimaAtualizacao;
             _tmpDataUltimaAtualizacao = _cursor.getLong(_cursorIndexOfDataUltimaAtualizacao);
-            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpSalaId,_tmpSalaNome,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpResponsavelId,_tmpResponsavelNome,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpDataUltimaAtualizacao);
+            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpLocalizacaoEncontrada,_tmpEstadoEncontrado,_tmpDataUltimaAtualizacao);
             _result.add(_item);
           }
           return _result;
@@ -2613,18 +2493,16 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
           final int _cursorIndexOfSetorNome = CursorUtil.getColumnIndexOrThrow(_cursor, "setorNome");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
-          final int _cursorIndexOfSalaId = CursorUtil.getColumnIndexOrThrow(_cursor, "salaId");
-          final int _cursorIndexOfSalaNome = CursorUtil.getColumnIndexOrThrow(_cursor, "salaNome");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
           final int _cursorIndexOfNomeResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeResponsavel");
-          final int _cursorIndexOfResponsavelId = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelId");
-          final int _cursorIndexOfResponsavelNome = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelNome");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfColetado = CursorUtil.getColumnIndexOrThrow(_cursor, "coletado");
           final int _cursorIndexOfDataColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "dataColeta");
           final int _cursorIndexOfColetadoPor = CursorUtil.getColumnIndexOrThrow(_cursor, "coletadoPor");
           final int _cursorIndexOfObservacoesColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoesColeta");
           final int _cursorIndexOfObservacoes = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoes");
+          final int _cursorIndexOfLocalizacaoEncontrada = CursorUtil.getColumnIndexOrThrow(_cursor, "localizacaoEncontrada");
+          final int _cursorIndexOfEstadoEncontrado = CursorUtil.getColumnIndexOrThrow(_cursor, "estadoEncontrado");
           final int _cursorIndexOfDataUltimaAtualizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "dataUltimaAtualizacao");
           final List<PatrimonioEntity> _result = new ArrayList<PatrimonioEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
@@ -2691,18 +2569,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpNomeSala = _cursor.getString(_cursorIndexOfNomeSala);
             }
-            final Integer _tmpSalaId;
-            if (_cursor.isNull(_cursorIndexOfSalaId)) {
-              _tmpSalaId = null;
-            } else {
-              _tmpSalaId = _cursor.getInt(_cursorIndexOfSalaId);
-            }
-            final String _tmpSalaNome;
-            if (_cursor.isNull(_cursorIndexOfSalaNome)) {
-              _tmpSalaNome = null;
-            } else {
-              _tmpSalaNome = _cursor.getString(_cursorIndexOfSalaNome);
-            }
             final Integer _tmpIdResponsavel;
             if (_cursor.isNull(_cursorIndexOfIdResponsavel)) {
               _tmpIdResponsavel = null;
@@ -2714,18 +2580,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
               _tmpNomeResponsavel = null;
             } else {
               _tmpNomeResponsavel = _cursor.getString(_cursorIndexOfNomeResponsavel);
-            }
-            final Integer _tmpResponsavelId;
-            if (_cursor.isNull(_cursorIndexOfResponsavelId)) {
-              _tmpResponsavelId = null;
-            } else {
-              _tmpResponsavelId = _cursor.getInt(_cursorIndexOfResponsavelId);
-            }
-            final String _tmpResponsavelNome;
-            if (_cursor.isNull(_cursorIndexOfResponsavelNome)) {
-              _tmpResponsavelNome = null;
-            } else {
-              _tmpResponsavelNome = _cursor.getString(_cursorIndexOfResponsavelNome);
             }
             final String _tmpStatus;
             if (_cursor.isNull(_cursorIndexOfStatus)) {
@@ -2761,9 +2615,21 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpObservacoes = _cursor.getString(_cursorIndexOfObservacoes);
             }
+            final String _tmpLocalizacaoEncontrada;
+            if (_cursor.isNull(_cursorIndexOfLocalizacaoEncontrada)) {
+              _tmpLocalizacaoEncontrada = null;
+            } else {
+              _tmpLocalizacaoEncontrada = _cursor.getString(_cursorIndexOfLocalizacaoEncontrada);
+            }
+            final String _tmpEstadoEncontrado;
+            if (_cursor.isNull(_cursorIndexOfEstadoEncontrado)) {
+              _tmpEstadoEncontrado = null;
+            } else {
+              _tmpEstadoEncontrado = _cursor.getString(_cursorIndexOfEstadoEncontrado);
+            }
             final long _tmpDataUltimaAtualizacao;
             _tmpDataUltimaAtualizacao = _cursor.getLong(_cursorIndexOfDataUltimaAtualizacao);
-            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpSalaId,_tmpSalaNome,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpResponsavelId,_tmpResponsavelNome,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpDataUltimaAtualizacao);
+            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpLocalizacaoEncontrada,_tmpEstadoEncontrado,_tmpDataUltimaAtualizacao);
             _result.add(_item);
           }
           return _result;
@@ -2814,18 +2680,16 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
           final int _cursorIndexOfSetorNome = CursorUtil.getColumnIndexOrThrow(_cursor, "setorNome");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
-          final int _cursorIndexOfSalaId = CursorUtil.getColumnIndexOrThrow(_cursor, "salaId");
-          final int _cursorIndexOfSalaNome = CursorUtil.getColumnIndexOrThrow(_cursor, "salaNome");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
           final int _cursorIndexOfNomeResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeResponsavel");
-          final int _cursorIndexOfResponsavelId = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelId");
-          final int _cursorIndexOfResponsavelNome = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelNome");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfColetado = CursorUtil.getColumnIndexOrThrow(_cursor, "coletado");
           final int _cursorIndexOfDataColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "dataColeta");
           final int _cursorIndexOfColetadoPor = CursorUtil.getColumnIndexOrThrow(_cursor, "coletadoPor");
           final int _cursorIndexOfObservacoesColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoesColeta");
           final int _cursorIndexOfObservacoes = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoes");
+          final int _cursorIndexOfLocalizacaoEncontrada = CursorUtil.getColumnIndexOrThrow(_cursor, "localizacaoEncontrada");
+          final int _cursorIndexOfEstadoEncontrado = CursorUtil.getColumnIndexOrThrow(_cursor, "estadoEncontrado");
           final int _cursorIndexOfDataUltimaAtualizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "dataUltimaAtualizacao");
           final List<PatrimonioEntity> _result = new ArrayList<PatrimonioEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
@@ -2892,18 +2756,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpNomeSala = _cursor.getString(_cursorIndexOfNomeSala);
             }
-            final Integer _tmpSalaId;
-            if (_cursor.isNull(_cursorIndexOfSalaId)) {
-              _tmpSalaId = null;
-            } else {
-              _tmpSalaId = _cursor.getInt(_cursorIndexOfSalaId);
-            }
-            final String _tmpSalaNome;
-            if (_cursor.isNull(_cursorIndexOfSalaNome)) {
-              _tmpSalaNome = null;
-            } else {
-              _tmpSalaNome = _cursor.getString(_cursorIndexOfSalaNome);
-            }
             final Integer _tmpIdResponsavel;
             if (_cursor.isNull(_cursorIndexOfIdResponsavel)) {
               _tmpIdResponsavel = null;
@@ -2915,18 +2767,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
               _tmpNomeResponsavel = null;
             } else {
               _tmpNomeResponsavel = _cursor.getString(_cursorIndexOfNomeResponsavel);
-            }
-            final Integer _tmpResponsavelId;
-            if (_cursor.isNull(_cursorIndexOfResponsavelId)) {
-              _tmpResponsavelId = null;
-            } else {
-              _tmpResponsavelId = _cursor.getInt(_cursorIndexOfResponsavelId);
-            }
-            final String _tmpResponsavelNome;
-            if (_cursor.isNull(_cursorIndexOfResponsavelNome)) {
-              _tmpResponsavelNome = null;
-            } else {
-              _tmpResponsavelNome = _cursor.getString(_cursorIndexOfResponsavelNome);
             }
             final String _tmpStatus;
             if (_cursor.isNull(_cursorIndexOfStatus)) {
@@ -2962,9 +2802,21 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpObservacoes = _cursor.getString(_cursorIndexOfObservacoes);
             }
+            final String _tmpLocalizacaoEncontrada;
+            if (_cursor.isNull(_cursorIndexOfLocalizacaoEncontrada)) {
+              _tmpLocalizacaoEncontrada = null;
+            } else {
+              _tmpLocalizacaoEncontrada = _cursor.getString(_cursorIndexOfLocalizacaoEncontrada);
+            }
+            final String _tmpEstadoEncontrado;
+            if (_cursor.isNull(_cursorIndexOfEstadoEncontrado)) {
+              _tmpEstadoEncontrado = null;
+            } else {
+              _tmpEstadoEncontrado = _cursor.getString(_cursorIndexOfEstadoEncontrado);
+            }
             final long _tmpDataUltimaAtualizacao;
             _tmpDataUltimaAtualizacao = _cursor.getLong(_cursorIndexOfDataUltimaAtualizacao);
-            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpSalaId,_tmpSalaNome,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpResponsavelId,_tmpResponsavelNome,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpDataUltimaAtualizacao);
+            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpLocalizacaoEncontrada,_tmpEstadoEncontrado,_tmpDataUltimaAtualizacao);
             _result.add(_item);
           }
           return _result;
@@ -3015,18 +2867,16 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
           final int _cursorIndexOfSetorNome = CursorUtil.getColumnIndexOrThrow(_cursor, "setorNome");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
-          final int _cursorIndexOfSalaId = CursorUtil.getColumnIndexOrThrow(_cursor, "salaId");
-          final int _cursorIndexOfSalaNome = CursorUtil.getColumnIndexOrThrow(_cursor, "salaNome");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
           final int _cursorIndexOfNomeResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeResponsavel");
-          final int _cursorIndexOfResponsavelId = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelId");
-          final int _cursorIndexOfResponsavelNome = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelNome");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfColetado = CursorUtil.getColumnIndexOrThrow(_cursor, "coletado");
           final int _cursorIndexOfDataColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "dataColeta");
           final int _cursorIndexOfColetadoPor = CursorUtil.getColumnIndexOrThrow(_cursor, "coletadoPor");
           final int _cursorIndexOfObservacoesColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoesColeta");
           final int _cursorIndexOfObservacoes = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoes");
+          final int _cursorIndexOfLocalizacaoEncontrada = CursorUtil.getColumnIndexOrThrow(_cursor, "localizacaoEncontrada");
+          final int _cursorIndexOfEstadoEncontrado = CursorUtil.getColumnIndexOrThrow(_cursor, "estadoEncontrado");
           final int _cursorIndexOfDataUltimaAtualizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "dataUltimaAtualizacao");
           final List<PatrimonioEntity> _result = new ArrayList<PatrimonioEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
@@ -3093,18 +2943,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpNomeSala = _cursor.getString(_cursorIndexOfNomeSala);
             }
-            final Integer _tmpSalaId;
-            if (_cursor.isNull(_cursorIndexOfSalaId)) {
-              _tmpSalaId = null;
-            } else {
-              _tmpSalaId = _cursor.getInt(_cursorIndexOfSalaId);
-            }
-            final String _tmpSalaNome;
-            if (_cursor.isNull(_cursorIndexOfSalaNome)) {
-              _tmpSalaNome = null;
-            } else {
-              _tmpSalaNome = _cursor.getString(_cursorIndexOfSalaNome);
-            }
             final Integer _tmpIdResponsavel;
             if (_cursor.isNull(_cursorIndexOfIdResponsavel)) {
               _tmpIdResponsavel = null;
@@ -3116,18 +2954,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
               _tmpNomeResponsavel = null;
             } else {
               _tmpNomeResponsavel = _cursor.getString(_cursorIndexOfNomeResponsavel);
-            }
-            final Integer _tmpResponsavelId;
-            if (_cursor.isNull(_cursorIndexOfResponsavelId)) {
-              _tmpResponsavelId = null;
-            } else {
-              _tmpResponsavelId = _cursor.getInt(_cursorIndexOfResponsavelId);
-            }
-            final String _tmpResponsavelNome;
-            if (_cursor.isNull(_cursorIndexOfResponsavelNome)) {
-              _tmpResponsavelNome = null;
-            } else {
-              _tmpResponsavelNome = _cursor.getString(_cursorIndexOfResponsavelNome);
             }
             final String _tmpStatus;
             if (_cursor.isNull(_cursorIndexOfStatus)) {
@@ -3163,9 +2989,21 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpObservacoes = _cursor.getString(_cursorIndexOfObservacoes);
             }
+            final String _tmpLocalizacaoEncontrada;
+            if (_cursor.isNull(_cursorIndexOfLocalizacaoEncontrada)) {
+              _tmpLocalizacaoEncontrada = null;
+            } else {
+              _tmpLocalizacaoEncontrada = _cursor.getString(_cursorIndexOfLocalizacaoEncontrada);
+            }
+            final String _tmpEstadoEncontrado;
+            if (_cursor.isNull(_cursorIndexOfEstadoEncontrado)) {
+              _tmpEstadoEncontrado = null;
+            } else {
+              _tmpEstadoEncontrado = _cursor.getString(_cursorIndexOfEstadoEncontrado);
+            }
             final long _tmpDataUltimaAtualizacao;
             _tmpDataUltimaAtualizacao = _cursor.getLong(_cursorIndexOfDataUltimaAtualizacao);
-            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpSalaId,_tmpSalaNome,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpResponsavelId,_tmpResponsavelNome,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpDataUltimaAtualizacao);
+            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpLocalizacaoEncontrada,_tmpEstadoEncontrado,_tmpDataUltimaAtualizacao);
             _result.add(_item);
           }
           return _result;
@@ -3221,18 +3059,16 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
           final int _cursorIndexOfSetorNome = CursorUtil.getColumnIndexOrThrow(_cursor, "setorNome");
           final int _cursorIndexOfIdSala = CursorUtil.getColumnIndexOrThrow(_cursor, "idSala");
           final int _cursorIndexOfNomeSala = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeSala");
-          final int _cursorIndexOfSalaId = CursorUtil.getColumnIndexOrThrow(_cursor, "salaId");
-          final int _cursorIndexOfSalaNome = CursorUtil.getColumnIndexOrThrow(_cursor, "salaNome");
           final int _cursorIndexOfIdResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "idResponsavel");
           final int _cursorIndexOfNomeResponsavel = CursorUtil.getColumnIndexOrThrow(_cursor, "nomeResponsavel");
-          final int _cursorIndexOfResponsavelId = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelId");
-          final int _cursorIndexOfResponsavelNome = CursorUtil.getColumnIndexOrThrow(_cursor, "responsavelNome");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfColetado = CursorUtil.getColumnIndexOrThrow(_cursor, "coletado");
           final int _cursorIndexOfDataColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "dataColeta");
           final int _cursorIndexOfColetadoPor = CursorUtil.getColumnIndexOrThrow(_cursor, "coletadoPor");
           final int _cursorIndexOfObservacoesColeta = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoesColeta");
           final int _cursorIndexOfObservacoes = CursorUtil.getColumnIndexOrThrow(_cursor, "observacoes");
+          final int _cursorIndexOfLocalizacaoEncontrada = CursorUtil.getColumnIndexOrThrow(_cursor, "localizacaoEncontrada");
+          final int _cursorIndexOfEstadoEncontrado = CursorUtil.getColumnIndexOrThrow(_cursor, "estadoEncontrado");
           final int _cursorIndexOfDataUltimaAtualizacao = CursorUtil.getColumnIndexOrThrow(_cursor, "dataUltimaAtualizacao");
           final List<PatrimonioEntity> _result = new ArrayList<PatrimonioEntity>(_cursor.getCount());
           while (_cursor.moveToNext()) {
@@ -3299,18 +3135,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpNomeSala = _cursor.getString(_cursorIndexOfNomeSala);
             }
-            final Integer _tmpSalaId;
-            if (_cursor.isNull(_cursorIndexOfSalaId)) {
-              _tmpSalaId = null;
-            } else {
-              _tmpSalaId = _cursor.getInt(_cursorIndexOfSalaId);
-            }
-            final String _tmpSalaNome;
-            if (_cursor.isNull(_cursorIndexOfSalaNome)) {
-              _tmpSalaNome = null;
-            } else {
-              _tmpSalaNome = _cursor.getString(_cursorIndexOfSalaNome);
-            }
             final Integer _tmpIdResponsavel;
             if (_cursor.isNull(_cursorIndexOfIdResponsavel)) {
               _tmpIdResponsavel = null;
@@ -3322,18 +3146,6 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
               _tmpNomeResponsavel = null;
             } else {
               _tmpNomeResponsavel = _cursor.getString(_cursorIndexOfNomeResponsavel);
-            }
-            final Integer _tmpResponsavelId;
-            if (_cursor.isNull(_cursorIndexOfResponsavelId)) {
-              _tmpResponsavelId = null;
-            } else {
-              _tmpResponsavelId = _cursor.getInt(_cursorIndexOfResponsavelId);
-            }
-            final String _tmpResponsavelNome;
-            if (_cursor.isNull(_cursorIndexOfResponsavelNome)) {
-              _tmpResponsavelNome = null;
-            } else {
-              _tmpResponsavelNome = _cursor.getString(_cursorIndexOfResponsavelNome);
             }
             final String _tmpStatus;
             if (_cursor.isNull(_cursorIndexOfStatus)) {
@@ -3369,9 +3181,21 @@ public final class PatrimonioDao_AppDatabase_Impl implements PatrimonioDao {
             } else {
               _tmpObservacoes = _cursor.getString(_cursorIndexOfObservacoes);
             }
+            final String _tmpLocalizacaoEncontrada;
+            if (_cursor.isNull(_cursorIndexOfLocalizacaoEncontrada)) {
+              _tmpLocalizacaoEncontrada = null;
+            } else {
+              _tmpLocalizacaoEncontrada = _cursor.getString(_cursorIndexOfLocalizacaoEncontrada);
+            }
+            final String _tmpEstadoEncontrado;
+            if (_cursor.isNull(_cursorIndexOfEstadoEncontrado)) {
+              _tmpEstadoEncontrado = null;
+            } else {
+              _tmpEstadoEncontrado = _cursor.getString(_cursorIndexOfEstadoEncontrado);
+            }
             final long _tmpDataUltimaAtualizacao;
             _tmpDataUltimaAtualizacao = _cursor.getLong(_cursorIndexOfDataUltimaAtualizacao);
-            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpSalaId,_tmpSalaNome,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpResponsavelId,_tmpResponsavelNome,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpDataUltimaAtualizacao);
+            _item = new PatrimonioEntity(_tmpId,_tmpNumero,_tmpNumeroPatrimonio,_tmpDescricao,_tmpMarca,_tmpModelo,_tmpNumeroSerie,_tmpEstado,_tmpValor,_tmpSetorId,_tmpSetorNome,_tmpIdSala,_tmpNomeSala,_tmpIdResponsavel,_tmpNomeResponsavel,_tmpStatus,_tmpColetado,_tmpDataColeta,_tmpColetadoPor,_tmpObservacoesColeta,_tmpObservacoes,_tmpLocalizacaoEncontrada,_tmpEstadoEncontrado,_tmpDataUltimaAtualizacao);
             _result.add(_item);
           }
           return _result;

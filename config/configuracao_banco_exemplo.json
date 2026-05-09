@@ -1,0 +1,14 @@
+{
+  "host": "localhost",
+  "port": 5432,
+  "database": "sispatrimonio",
+  "username": "inventario",
+  "password": "ALTERAR_SENHA_AQUI",
+  "schema": "public",
+  "ssl": false,
+  "maxPoolSize": 20,
+  "minIdle": 5,
+  "connectionTimeout": 30000,
+  "idleTimeout": 600000,
+  "maxLifetime": 1800000
+}

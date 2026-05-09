@@ -4,24 +4,22 @@ package com.inventario.mobile.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AutoCompleteTextView;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import com.inventario.mobile.R;
 import java.lang.NullPointerException;
 import java.lang.Override;
@@ -35,10 +33,7 @@ public final class ActivityScannerBinding implements ViewBinding {
   public final AppBarLayout appBarLayout;
 
   @NonNull
-  public final MaterialButton btnAddPhoto;
-
-  @NonNull
-  public final ImageButton btnRemovePhoto;
+  public final ConstraintLayout bottomSheet;
 
   @NonNull
   public final MaterialButton buttonCancel;
@@ -53,37 +48,58 @@ public final class ActivityScannerBinding implements ViewBinding {
   public final MaterialButton buttonRetry;
 
   @NonNull
-  public final FrameLayout cameraPreview;
+  public final FrameLayout cameraContainer;
 
   @NonNull
-  public final MaterialCardView cardFotoOpcional;
+  public final LinearLayout cardContadorColetas;
 
   @NonNull
-  public final MaterialCardView cardPatrimonioInfo;
+  public final Chip chipEstado;
 
   @NonNull
-  public final ImageView imgPhotoPreview;
+  public final Chip chipSala;
 
   @NonNull
-  public final LinearLayout layoutButtons;
+  public final View divider;
+
+  @NonNull
+  public final View dragHandle;
+
+  @NonNull
+  public final ExtendedFloatingActionButton fabColetarSemEtiqueta;
+
+  @NonNull
+  public final LinearLayout layoutAcoesSecundarias;
+
+  @NonNull
+  public final LinearLayout layoutChipsFlutantes;
+
+  @NonNull
+  public final LinearLayout layoutDetalhesExpandidos;
+
+  @NonNull
+  public final LinearLayout layoutFixarEstado;
 
   @NonNull
   public final LinearLayout layoutInfoColeta;
 
   @NonNull
-  public final TextInputLayout layoutMotivoFoto;
+  public final LinearLayout layoutMetaInfo;
 
   @NonNull
-  public final FrameLayout layoutPhotoPreview;
+  public final LinearLayout layoutNumeroStatus;
+
+  @NonNull
+  public final LinearLayout layoutStatus;
 
   @NonNull
   public final ProgressBar progressBar;
 
   @NonNull
-  public final ScrollView scrollContent;
+  public final View scrimOverlay;
 
   @NonNull
-  public final AutoCompleteTextView spinnerMotivoFoto;
+  public final MaterialSwitch switchFixarEstado;
 
   @NonNull
   public final TextView textColetadoPor;
@@ -95,7 +111,19 @@ public final class ActivityScannerBinding implements ViewBinding {
   public final TextView textDataColeta;
 
   @NonNull
-  public final TextView textFotoLabel;
+  public final TextView textDetalheEstado;
+
+  @NonNull
+  public final TextView textDetalheMarca;
+
+  @NonNull
+  public final TextView textDetalheModelo;
+
+  @NonNull
+  public final TextView textDetalheValor;
+
+  @NonNull
+  public final TextView textEstadoFixoSelecionado;
 
   @NonNull
   public final TextView textLocalizacaoEncontrada;
@@ -107,6 +135,9 @@ public final class ActivityScannerBinding implements ViewBinding {
   public final TextView textPatrimonioNumero;
 
   @NonNull
+  public final TextView textPatrimonioResponsavel;
+
+  @NonNull
   public final TextView textPatrimonioSala;
 
   @NonNull
@@ -116,53 +147,73 @@ public final class ActivityScannerBinding implements ViewBinding {
   public final TextView textStatus;
 
   @NonNull
+  public final TextView textVerDetalhes;
+
+  @NonNull
   public final Toolbar toolbar;
 
   private ActivityScannerBinding(@NonNull CoordinatorLayout rootView,
-      @NonNull AppBarLayout appBarLayout, @NonNull MaterialButton btnAddPhoto,
-      @NonNull ImageButton btnRemovePhoto, @NonNull MaterialButton buttonCancel,
-      @NonNull MaterialButton buttonColetar, @NonNull MaterialButton buttonColetarSimilar,
-      @NonNull MaterialButton buttonRetry, @NonNull FrameLayout cameraPreview,
-      @NonNull MaterialCardView cardFotoOpcional, @NonNull MaterialCardView cardPatrimonioInfo,
-      @NonNull ImageView imgPhotoPreview, @NonNull LinearLayout layoutButtons,
-      @NonNull LinearLayout layoutInfoColeta, @NonNull TextInputLayout layoutMotivoFoto,
-      @NonNull FrameLayout layoutPhotoPreview, @NonNull ProgressBar progressBar,
-      @NonNull ScrollView scrollContent, @NonNull AutoCompleteTextView spinnerMotivoFoto,
-      @NonNull TextView textColetadoPor, @NonNull TextView textColetasCount,
-      @NonNull TextView textDataColeta, @NonNull TextView textFotoLabel,
-      @NonNull TextView textLocalizacaoEncontrada, @NonNull TextView textPatrimonioDescricao,
-      @NonNull TextView textPatrimonioNumero, @NonNull TextView textPatrimonioSala,
+      @NonNull AppBarLayout appBarLayout, @NonNull ConstraintLayout bottomSheet,
+      @NonNull MaterialButton buttonCancel, @NonNull MaterialButton buttonColetar,
+      @NonNull MaterialButton buttonColetarSimilar, @NonNull MaterialButton buttonRetry,
+      @NonNull FrameLayout cameraContainer, @NonNull LinearLayout cardContadorColetas,
+      @NonNull Chip chipEstado, @NonNull Chip chipSala, @NonNull View divider,
+      @NonNull View dragHandle, @NonNull ExtendedFloatingActionButton fabColetarSemEtiqueta,
+      @NonNull LinearLayout layoutAcoesSecundarias, @NonNull LinearLayout layoutChipsFlutantes,
+      @NonNull LinearLayout layoutDetalhesExpandidos, @NonNull LinearLayout layoutFixarEstado,
+      @NonNull LinearLayout layoutInfoColeta, @NonNull LinearLayout layoutMetaInfo,
+      @NonNull LinearLayout layoutNumeroStatus, @NonNull LinearLayout layoutStatus,
+      @NonNull ProgressBar progressBar, @NonNull View scrimOverlay,
+      @NonNull MaterialSwitch switchFixarEstado, @NonNull TextView textColetadoPor,
+      @NonNull TextView textColetasCount, @NonNull TextView textDataColeta,
+      @NonNull TextView textDetalheEstado, @NonNull TextView textDetalheMarca,
+      @NonNull TextView textDetalheModelo, @NonNull TextView textDetalheValor,
+      @NonNull TextView textEstadoFixoSelecionado, @NonNull TextView textLocalizacaoEncontrada,
+      @NonNull TextView textPatrimonioDescricao, @NonNull TextView textPatrimonioNumero,
+      @NonNull TextView textPatrimonioResponsavel, @NonNull TextView textPatrimonioSala,
       @NonNull TextView textPatrimonioStatus, @NonNull TextView textStatus,
-      @NonNull Toolbar toolbar) {
+      @NonNull TextView textVerDetalhes, @NonNull Toolbar toolbar) {
     this.rootView = rootView;
     this.appBarLayout = appBarLayout;
-    this.btnAddPhoto = btnAddPhoto;
-    this.btnRemovePhoto = btnRemovePhoto;
+    this.bottomSheet = bottomSheet;
     this.buttonCancel = buttonCancel;
     this.buttonColetar = buttonColetar;
     this.buttonColetarSimilar = buttonColetarSimilar;
     this.buttonRetry = buttonRetry;
-    this.cameraPreview = cameraPreview;
-    this.cardFotoOpcional = cardFotoOpcional;
-    this.cardPatrimonioInfo = cardPatrimonioInfo;
-    this.imgPhotoPreview = imgPhotoPreview;
-    this.layoutButtons = layoutButtons;
+    this.cameraContainer = cameraContainer;
+    this.cardContadorColetas = cardContadorColetas;
+    this.chipEstado = chipEstado;
+    this.chipSala = chipSala;
+    this.divider = divider;
+    this.dragHandle = dragHandle;
+    this.fabColetarSemEtiqueta = fabColetarSemEtiqueta;
+    this.layoutAcoesSecundarias = layoutAcoesSecundarias;
+    this.layoutChipsFlutantes = layoutChipsFlutantes;
+    this.layoutDetalhesExpandidos = layoutDetalhesExpandidos;
+    this.layoutFixarEstado = layoutFixarEstado;
     this.layoutInfoColeta = layoutInfoColeta;
-    this.layoutMotivoFoto = layoutMotivoFoto;
-    this.layoutPhotoPreview = layoutPhotoPreview;
+    this.layoutMetaInfo = layoutMetaInfo;
+    this.layoutNumeroStatus = layoutNumeroStatus;
+    this.layoutStatus = layoutStatus;
     this.progressBar = progressBar;
-    this.scrollContent = scrollContent;
-    this.spinnerMotivoFoto = spinnerMotivoFoto;
+    this.scrimOverlay = scrimOverlay;
+    this.switchFixarEstado = switchFixarEstado;
     this.textColetadoPor = textColetadoPor;
     this.textColetasCount = textColetasCount;
     this.textDataColeta = textDataColeta;
-    this.textFotoLabel = textFotoLabel;
+    this.textDetalheEstado = textDetalheEstado;
+    this.textDetalheMarca = textDetalheMarca;
+    this.textDetalheModelo = textDetalheModelo;
+    this.textDetalheValor = textDetalheValor;
+    this.textEstadoFixoSelecionado = textEstadoFixoSelecionado;
     this.textLocalizacaoEncontrada = textLocalizacaoEncontrada;
     this.textPatrimonioDescricao = textPatrimonioDescricao;
     this.textPatrimonioNumero = textPatrimonioNumero;
+    this.textPatrimonioResponsavel = textPatrimonioResponsavel;
     this.textPatrimonioSala = textPatrimonioSala;
     this.textPatrimonioStatus = textPatrimonioStatus;
     this.textStatus = textStatus;
+    this.textVerDetalhes = textVerDetalhes;
     this.toolbar = toolbar;
   }
 
@@ -199,15 +250,9 @@ public final class ActivityScannerBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.btnAddPhoto;
-      MaterialButton btnAddPhoto = ViewBindings.findChildViewById(rootView, id);
-      if (btnAddPhoto == null) {
-        break missingId;
-      }
-
-      id = R.id.btnRemovePhoto;
-      ImageButton btnRemovePhoto = ViewBindings.findChildViewById(rootView, id);
-      if (btnRemovePhoto == null) {
+      id = R.id.bottomSheet;
+      ConstraintLayout bottomSheet = ViewBindings.findChildViewById(rootView, id);
+      if (bottomSheet == null) {
         break missingId;
       }
 
@@ -235,33 +280,69 @@ public final class ActivityScannerBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.cameraPreview;
-      FrameLayout cameraPreview = ViewBindings.findChildViewById(rootView, id);
-      if (cameraPreview == null) {
+      id = R.id.cameraContainer;
+      FrameLayout cameraContainer = ViewBindings.findChildViewById(rootView, id);
+      if (cameraContainer == null) {
         break missingId;
       }
 
-      id = R.id.cardFotoOpcional;
-      MaterialCardView cardFotoOpcional = ViewBindings.findChildViewById(rootView, id);
-      if (cardFotoOpcional == null) {
+      id = R.id.cardContadorColetas;
+      LinearLayout cardContadorColetas = ViewBindings.findChildViewById(rootView, id);
+      if (cardContadorColetas == null) {
         break missingId;
       }
 
-      id = R.id.cardPatrimonioInfo;
-      MaterialCardView cardPatrimonioInfo = ViewBindings.findChildViewById(rootView, id);
-      if (cardPatrimonioInfo == null) {
+      id = R.id.chipEstado;
+      Chip chipEstado = ViewBindings.findChildViewById(rootView, id);
+      if (chipEstado == null) {
         break missingId;
       }
 
-      id = R.id.imgPhotoPreview;
-      ImageView imgPhotoPreview = ViewBindings.findChildViewById(rootView, id);
-      if (imgPhotoPreview == null) {
+      id = R.id.chipSala;
+      Chip chipSala = ViewBindings.findChildViewById(rootView, id);
+      if (chipSala == null) {
         break missingId;
       }
 
-      id = R.id.layoutButtons;
-      LinearLayout layoutButtons = ViewBindings.findChildViewById(rootView, id);
-      if (layoutButtons == null) {
+      id = R.id.divider;
+      View divider = ViewBindings.findChildViewById(rootView, id);
+      if (divider == null) {
+        break missingId;
+      }
+
+      id = R.id.dragHandle;
+      View dragHandle = ViewBindings.findChildViewById(rootView, id);
+      if (dragHandle == null) {
+        break missingId;
+      }
+
+      id = R.id.fabColetarSemEtiqueta;
+      ExtendedFloatingActionButton fabColetarSemEtiqueta = ViewBindings.findChildViewById(rootView, id);
+      if (fabColetarSemEtiqueta == null) {
+        break missingId;
+      }
+
+      id = R.id.layoutAcoesSecundarias;
+      LinearLayout layoutAcoesSecundarias = ViewBindings.findChildViewById(rootView, id);
+      if (layoutAcoesSecundarias == null) {
+        break missingId;
+      }
+
+      id = R.id.layoutChipsFlutantes;
+      LinearLayout layoutChipsFlutantes = ViewBindings.findChildViewById(rootView, id);
+      if (layoutChipsFlutantes == null) {
+        break missingId;
+      }
+
+      id = R.id.layoutDetalhesExpandidos;
+      LinearLayout layoutDetalhesExpandidos = ViewBindings.findChildViewById(rootView, id);
+      if (layoutDetalhesExpandidos == null) {
+        break missingId;
+      }
+
+      id = R.id.layoutFixarEstado;
+      LinearLayout layoutFixarEstado = ViewBindings.findChildViewById(rootView, id);
+      if (layoutFixarEstado == null) {
         break missingId;
       }
 
@@ -271,15 +352,21 @@ public final class ActivityScannerBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.layoutMotivoFoto;
-      TextInputLayout layoutMotivoFoto = ViewBindings.findChildViewById(rootView, id);
-      if (layoutMotivoFoto == null) {
+      id = R.id.layoutMetaInfo;
+      LinearLayout layoutMetaInfo = ViewBindings.findChildViewById(rootView, id);
+      if (layoutMetaInfo == null) {
         break missingId;
       }
 
-      id = R.id.layoutPhotoPreview;
-      FrameLayout layoutPhotoPreview = ViewBindings.findChildViewById(rootView, id);
-      if (layoutPhotoPreview == null) {
+      id = R.id.layoutNumeroStatus;
+      LinearLayout layoutNumeroStatus = ViewBindings.findChildViewById(rootView, id);
+      if (layoutNumeroStatus == null) {
+        break missingId;
+      }
+
+      id = R.id.layoutStatus;
+      LinearLayout layoutStatus = ViewBindings.findChildViewById(rootView, id);
+      if (layoutStatus == null) {
         break missingId;
       }
 
@@ -289,15 +376,15 @@ public final class ActivityScannerBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.scrollContent;
-      ScrollView scrollContent = ViewBindings.findChildViewById(rootView, id);
-      if (scrollContent == null) {
+      id = R.id.scrimOverlay;
+      View scrimOverlay = ViewBindings.findChildViewById(rootView, id);
+      if (scrimOverlay == null) {
         break missingId;
       }
 
-      id = R.id.spinnerMotivoFoto;
-      AutoCompleteTextView spinnerMotivoFoto = ViewBindings.findChildViewById(rootView, id);
-      if (spinnerMotivoFoto == null) {
+      id = R.id.switchFixarEstado;
+      MaterialSwitch switchFixarEstado = ViewBindings.findChildViewById(rootView, id);
+      if (switchFixarEstado == null) {
         break missingId;
       }
 
@@ -319,9 +406,33 @@ public final class ActivityScannerBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.textFotoLabel;
-      TextView textFotoLabel = ViewBindings.findChildViewById(rootView, id);
-      if (textFotoLabel == null) {
+      id = R.id.textDetalheEstado;
+      TextView textDetalheEstado = ViewBindings.findChildViewById(rootView, id);
+      if (textDetalheEstado == null) {
+        break missingId;
+      }
+
+      id = R.id.textDetalheMarca;
+      TextView textDetalheMarca = ViewBindings.findChildViewById(rootView, id);
+      if (textDetalheMarca == null) {
+        break missingId;
+      }
+
+      id = R.id.textDetalheModelo;
+      TextView textDetalheModelo = ViewBindings.findChildViewById(rootView, id);
+      if (textDetalheModelo == null) {
+        break missingId;
+      }
+
+      id = R.id.textDetalheValor;
+      TextView textDetalheValor = ViewBindings.findChildViewById(rootView, id);
+      if (textDetalheValor == null) {
+        break missingId;
+      }
+
+      id = R.id.textEstadoFixoSelecionado;
+      TextView textEstadoFixoSelecionado = ViewBindings.findChildViewById(rootView, id);
+      if (textEstadoFixoSelecionado == null) {
         break missingId;
       }
 
@@ -343,6 +454,12 @@ public final class ActivityScannerBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.textPatrimonioResponsavel;
+      TextView textPatrimonioResponsavel = ViewBindings.findChildViewById(rootView, id);
+      if (textPatrimonioResponsavel == null) {
+        break missingId;
+      }
+
       id = R.id.textPatrimonioSala;
       TextView textPatrimonioSala = ViewBindings.findChildViewById(rootView, id);
       if (textPatrimonioSala == null) {
@@ -361,19 +478,28 @@ public final class ActivityScannerBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.textVerDetalhes;
+      TextView textVerDetalhes = ViewBindings.findChildViewById(rootView, id);
+      if (textVerDetalhes == null) {
+        break missingId;
+      }
+
       id = R.id.toolbar;
       Toolbar toolbar = ViewBindings.findChildViewById(rootView, id);
       if (toolbar == null) {
         break missingId;
       }
 
-      return new ActivityScannerBinding((CoordinatorLayout) rootView, appBarLayout, btnAddPhoto,
-          btnRemovePhoto, buttonCancel, buttonColetar, buttonColetarSimilar, buttonRetry,
-          cameraPreview, cardFotoOpcional, cardPatrimonioInfo, imgPhotoPreview, layoutButtons,
-          layoutInfoColeta, layoutMotivoFoto, layoutPhotoPreview, progressBar, scrollContent,
-          spinnerMotivoFoto, textColetadoPor, textColetasCount, textDataColeta, textFotoLabel,
-          textLocalizacaoEncontrada, textPatrimonioDescricao, textPatrimonioNumero,
-          textPatrimonioSala, textPatrimonioStatus, textStatus, toolbar);
+      return new ActivityScannerBinding((CoordinatorLayout) rootView, appBarLayout, bottomSheet,
+          buttonCancel, buttonColetar, buttonColetarSimilar, buttonRetry, cameraContainer,
+          cardContadorColetas, chipEstado, chipSala, divider, dragHandle, fabColetarSemEtiqueta,
+          layoutAcoesSecundarias, layoutChipsFlutantes, layoutDetalhesExpandidos, layoutFixarEstado,
+          layoutInfoColeta, layoutMetaInfo, layoutNumeroStatus, layoutStatus, progressBar,
+          scrimOverlay, switchFixarEstado, textColetadoPor, textColetasCount, textDataColeta,
+          textDetalheEstado, textDetalheMarca, textDetalheModelo, textDetalheValor,
+          textEstadoFixoSelecionado, textLocalizacaoEncontrada, textPatrimonioDescricao,
+          textPatrimonioNumero, textPatrimonioResponsavel, textPatrimonioSala, textPatrimonioStatus,
+          textStatus, textVerDetalhes, toolbar);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

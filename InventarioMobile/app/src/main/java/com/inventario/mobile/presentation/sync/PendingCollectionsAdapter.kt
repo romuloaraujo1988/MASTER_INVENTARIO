@@ -51,8 +51,14 @@ class PendingCollectionsAdapter(
                 // Patrimonio description
                 tvPatrimonioDescricao.text = coleta.descricaoPatrimonio ?: "Descrição não disponível"
 
-                // Location info - priorizar localizacaoAtual (que contém localizacaoEncontrada)
-                val salaInfo = coleta.localizacaoAtual ?: coleta.nomeSala ?: "Local não informado"
+                // Location info - PRIORIZAR localizacaoEncontrada (onde o item FOI ENCONTRADO)
+                // localizacaoEncontrada = onde o item foi encontrado durante a coleta
+                // localizacaoAtual = campo legado (mapeado da sala de origem em alguns fluxos)
+                // nomeSala = localização ORIGINAL do patrimônio no cadastro
+                val salaInfo = coleta.localizacaoEncontrada
+                    ?: coleta.localizacaoAtual
+                    ?: coleta.nomeSala
+                    ?: "Local não informado"
                 tvSalaInfo.text = salaInfo
 
                 // User info

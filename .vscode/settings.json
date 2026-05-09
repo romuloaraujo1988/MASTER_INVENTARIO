@@ -19,7 +19,7 @@
     "java.clean.workspace": true,
     "java.configuration.runtimes": [],
     "java.import.gradle.enabled": false,
-    "java.import.maven.enabled": false,
+    "java.import.maven.enabled": true,
     "java.configuration.maven.globalSettings": null,
     "java.configuration.maven.userSettings": null,
     "java.import.maven.offline": true,

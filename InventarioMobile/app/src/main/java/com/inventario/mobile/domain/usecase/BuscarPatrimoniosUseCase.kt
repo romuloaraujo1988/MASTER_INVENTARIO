@@ -15,11 +15,13 @@ import javax.inject.Inject
 /**
  * Use Case: Buscar patrimônios com filtros para busca rápida
  * 
- * Estratégia: 
- * 1. Verificar cache primeiro (100-1000x mais rápido)
- * 2. Se não estiver em cache, buscar do servidor
- * 3. Fallback para local se offline
- * 4. Cachear resultado para próximas buscas
+ * Estratégia OTIMIZADA (Local First):
+ * 1. Verificar cache primeiro (instantâneo)
+ * 2. Buscar do BANCO LOCAL (muito rápido, ~10-50ms)
+ * 3. Servidor apenas se forçado ou dados muito antigos
+ * 
+ * IMPORTANTE: Prioriza dados locais para velocidade máxima.
+ * Dados são atualizados via sincronização periódica.
  * 
  * @see Requirements 1.1, 3.1, 3.2, 3.3
  * @see OTIMIZACAO_BUSCA_RAPIDA_ANDROID.md
@@ -35,15 +37,17 @@ class BuscarPatrimoniosUseCase @Inject constructor(
     }
     
     /**
-     * Executa o caso de uso
+     * Executa o caso de uso - PRIORIZA BANCO LOCAL
      * 
      * @param query Termo de busca (mínimo 3 caracteres)
      * @param filtro Filtro de status (ALL, COLETADOS, PENDENTES, DIVERGENCIAS)
+     * @param forceServer Se true, força busca no servidor (ignora local)
      * @return Result com lista de patrimônios ou erro
      */
     suspend operator fun invoke(
         query: String,
-        filtro: SearchFilter = SearchFilter.ALL
+        filtro: SearchFilter = SearchFilter.ALL,
+        forceServer: Boolean = false
     ): Result<List<PatrimonioComColeta>> {
         return try {
             // Validações de negócio
@@ -62,42 +66,57 @@ class BuscarPatrimoniosUseCase @Inject constructor(
             // Chave do cache: query + filtro + inventário
             val cacheKey = "$queryLimpa:$filtro:${inventarioId ?: 0}"
             
-            Log.d(TAG, "Buscando patrimônios: query='$queryLimpa', filtro=$filtro, inventarioId=$inventarioId")
+            Log.d(TAG, "🔍 Buscando patrimônios: query='$queryLimpa', filtro=$filtro")
             
-            // 1. VERIFICAR CACHE PRIMEIRO (100-1000x mais rápido)
-            searchCache.get(cacheKey)?.let { resultadoCache ->
-                Log.d(TAG, "✓ Cache hit! Retornando ${resultadoCache.size} resultados do cache")
-                return Result.success(resultadoCache)
+            // 1. VERIFICAR CACHE PRIMEIRO (instantâneo)
+            if (!forceServer) {
+                searchCache.get(cacheKey)?.let { resultadoCache ->
+                    Log.d(TAG, "⚡ Cache hit! ${resultadoCache.size} resultados em 0ms")
+                    return Result.success(resultadoCache)
+                }
             }
             
-            // 2. Tentar buscar do servidor
+            // 2. BUSCAR DO BANCO LOCAL (muito rápido: ~10-50ms)
+            if (!forceServer) {
+                val startTime = System.currentTimeMillis()
+                val resultadoLocal = buscarLocal(queryLimpa, filtro, inventarioId)
+                val tempoLocal = System.currentTimeMillis() - startTime
+                
+                if (resultadoLocal.isSuccess) {
+                    val resultados = resultadoLocal.getOrNull() ?: emptyList()
+                    Log.d(TAG, "✅ Busca LOCAL: ${resultados.size} resultados em ${tempoLocal}ms")
+                    
+                    // Só retorna o resultado local se encontrou dados OU se não há internet
+                    // (evita retornar lista vazia quando o banco local ainda não foi sincronizado)
+                    if (resultados.isNotEmpty()) {
+                        // Cachear resultado local
+                        searchCache.put(cacheKey, resultados)
+                        return resultadoLocal
+                    }
+                    
+                    Log.d(TAG, "⚠️ Banco local vazio para '$queryLimpa' - tentando servidor...")
+                }
+            }
+            
+            // 3. FALLBACK: Buscar do servidor (se local falhou ou forceServer=true)
+            Log.d(TAG, "🌐 Buscando do servidor...")
+            val startTime = System.currentTimeMillis()
             val resultadoServidor = buscarDoServidor(queryLimpa, filtro, inventarioId)
+            val tempoServidor = System.currentTimeMillis() - startTime
             
             if (resultadoServidor.isSuccess) {
                 val resultados = resultadoServidor.getOrNull() ?: emptyList()
-                Log.d(TAG, "✓ Busca no servidor bem-sucedida: ${resultados.size} resultados")
+                Log.d(TAG, "✅ Busca SERVIDOR: ${resultados.size} resultados em ${tempoServidor}ms")
                 
                 // Cachear resultado do servidor
                 searchCache.put(cacheKey, resultados)
-                
-                return resultadoServidor
             }
             
-            // 3. Fallback para busca local
-            Log.w(TAG, "Servidor indisponível, usando busca local")
-            val resultadoLocal = buscarLocal(queryLimpa, filtro, inventarioId)
-            
-            // Cachear resultado local também
-            resultadoLocal.onSuccess { resultados ->
-                searchCache.put(cacheKey, resultados)
-            }
-            
-            resultadoLocal
+            resultadoServidor
             
         } catch (e: CancellationException) {
-            // Job foi cancelado (normal durante debounce/navegação)
             Log.d(TAG, "ℹ️ Busca cancelada - operação normal")
-            throw e // Re-throw para não quebrar o fluxo de coroutines
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao buscar patrimônios", e)
             Result.failure(Exception("Erro ao buscar patrimônios: ${e.message}", e))
@@ -111,6 +130,17 @@ class BuscarPatrimoniosUseCase @Inject constructor(
     fun limparCache() {
         searchCache.clear()
         Log.d(TAG, "✓ Cache de busca limpo")
+    }
+    
+    /**
+     * Força busca no servidor (ignora cache e banco local)
+     * Útil quando usuário quer dados mais recentes
+     */
+    suspend fun buscarDoServidorForced(
+        query: String,
+        filtro: SearchFilter = SearchFilter.ALL
+    ): Result<List<PatrimonioComColeta>> {
+        return invoke(query, filtro, forceServer = true)
     }
     
     /**

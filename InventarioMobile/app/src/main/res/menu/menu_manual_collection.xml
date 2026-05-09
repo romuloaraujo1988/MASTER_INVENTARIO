@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Histórico de scans (v2.11) -->
+    <item
+        android:id="@+id/action_historico"
+        android:title="Histórico"
+        android:icon="@drawable/ic_history"
+        android:contentDescription="Ver histórico de coletas"
+        app:showAsAction="ifRoom" />
+
+</menu>

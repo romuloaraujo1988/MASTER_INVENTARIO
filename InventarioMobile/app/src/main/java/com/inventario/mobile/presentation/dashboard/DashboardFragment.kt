@@ -126,8 +126,12 @@ class DashboardFragment : BaseOfflineFragment() {
         )
         binding.swipeRefresh.setOnRefreshListener {
             Log.d(TAG, "Pull-to-refresh acionado")
-            val inventarioId = preferencesManager.getInventarioAtivoId()
-            viewModel.refreshData(inventarioId)
+            // Task 7.1 (Req 2.5): invalida o StateFlow via refreshTrigger — sem
+            // disparar chamada HTTP direta no Fragment.
+            viewModel.refresh()
+            // Mantém o gráfico de evolução atualizado (área secundária, não faz
+            // parte da FonteEstatisticas).
+            viewModel.loadColetasEvolucao(preferencesManager.getInventarioAtivoId())
         }
         
         // Estatísticas acessíveis via Navigation Drawer
@@ -189,166 +193,145 @@ class DashboardFragment : BaseOfflineFragment() {
     }
 
     private fun observeViewModel() {
-        // Usar repeatOnLifecycle para melhor gerenciamento do ciclo de vida
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect { state ->
-                    updateUI(state)
-                }
-            }
-        }
-        
         // ========================================
-        // 🔄 OBSERVAÇÃO HÍBRIDA (v2.5) - ATIVADA
+        // 🔄 FONTE ÚNICA DE VERDADE (task 7.1 / Req 2.1, 2.3, 2.4)
         // ========================================
-        
-        // SOLUÇÃO IMPLEMENTADA:
-        // - Busca estatísticas base do servidor (total correto de patrimônios)
-        // - Observa coletas locais pendentes (não sincronizadas)
-        // - Soma: Servidor + Coletas Locais = Total Atualizado
         //
-        // Benefícios:
-        // - Total de patrimônios sempre correto (11428 do servidor)
-        // - Coletas locais somadas instantaneamente
-        // - Atualização em tempo real sem esperar sincronização
-        
+        // Consome APENAS `viewModel.fonteEstatisticas` como origem dos KPIs.
+        // A coleta do Flow antigo `observarEstatisticasHibridas(...)` foi
+        // removida — Req 2.4 (nenhum Flow distinto alimentando os mesmos
+        // TextViews).
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                val inventarioId = preferencesManager.getInventarioAtivoId()
-                
-                Log.d(TAG, "🔄 Iniciando observação híbrida de estatísticas (inventário: $inventarioId)")
-                
-                viewModel.observarEstatisticasHibridas(inventarioId).collect { stats ->
-                    Log.d(TAG, "🔄 Estatísticas híbridas recebidas!")
+                viewModel.fonteEstatisticas.collect { stats ->
+                    Log.d(TAG, "🔄 FonteEstatisticas emitiu novo valor")
                     Log.d(TAG, "   Total: ${stats.totalPatrimonios}")
                     Log.d(TAG, "   Coletados: ${stats.totalColetados}")
                     Log.d(TAG, "   Pendentes: ${stats.totalPendentes}")
                     Log.d(TAG, "   Percentual: ${stats.percentualConclusao}%")
-                    
-                    updateStatsUI(stats)
+                    Log.d(TAG, "   isOfflineData: ${stats.isOfflineData}")
+
+                    renderizarKpis(stats)
+                    atualizarIndicadorOffline(stats.isOfflineData)
+                    atualizarTimestampUltimaSync(stats.timestampUltimaSincronizacao)
+                }
+            }
+        }
+
+        // ========================================
+        // 🎯 UI Secundária: loading / erro / evolução (Req 2.4 permite)
+        // ========================================
+        //
+        // `uiState` alimenta APENAS loading/erro/gráfico — NÃO os TextViews de
+        // KPI (esses vêm exclusivamente de `fonteEstatisticas`).
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    try {
+                        binding.progressBar.visibility = if (state.isLoading) View.VISIBLE else View.GONE
+                        if (!state.isLoading) {
+                            binding.swipeRefresh.isRefreshing = false
+                        }
+
+                        if (state.error != null) {
+                            binding.tvError.text = state.error
+                            binding.tvError.visibility = View.VISIBLE
+                        } else {
+                            binding.tvError.visibility = View.GONE
+                        }
+
+                        // Salvar inventário ativo caso venha do uiState (lógica
+                        // preservada do updateUI antigo — inventarioId pode vir
+                        // tanto pelo uiState quanto pela fonteEstatisticas).
+                        state.dashboardStats?.inventarioId?.let { invId ->
+                            if (!preferencesManager.hasInventarioAtivo() && invId > 0) {
+                                preferencesManager.saveInventarioAtivo(
+                                    id = invId,
+                                    nome = state.dashboardStats.inventarioNome
+                                        ?: "Inventário $invId"
+                                )
+                                Log.d(TAG, "observeViewModel: Inventário ativo salvo - ID: $invId")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Erro ao atualizar UI secundária (loading/erro)", e)
+                    }
                 }
             }
         }
     }
-    
+
     /**
-     * Atualiza apenas as estatísticas na UI
-     * Chamado automaticamente quando banco muda via Room Flow
-     * 
-     * Views corretas do layout:
-     * - tvKpiColetados (não tvColetados)
-     * - tvKpiPendentes (não tvPendentes)
-     * - tvKpiDivergencias
-     * - tvKpiColetores
+     * Renderiza os KPIs do dashboard a partir de `DashboardStats` emitido pela
+     * FonteEstatisticas. Única função responsável por atualizar os TextViews
+     * de KPI (Req 2.3).
      */
-    private fun updateStatsUI(stats: com.inventario.mobile.domain.model.DashboardStats) {
+    private fun renderizarKpis(stats: com.inventario.mobile.domain.model.DashboardStats) {
         try {
-            // Atualizar KPIs principais
             binding.tvKpiColetados.text = stats.totalColetados.toString()
             binding.tvKpiPendentes.text = stats.totalPendentes.toString()
             binding.tvKpiDivergencias.text = stats.divergencias.toString()
             binding.tvKpiColetores.text = stats.coletoresAtivos.toString()
-            
-            Log.d(TAG, "✅ UI atualizada com estatísticas reativas")
-            Log.d(TAG, "   Coletados: ${stats.totalColetados}")
-            Log.d(TAG, "   Pendentes: ${stats.totalPendentes}")
-            Log.d(TAG, "   Percentual: ${stats.percentualConclusao}%")
+            binding.swipeRefresh.isRefreshing = false
+
+            // Salvar inventário ativo caso ainda não salvo (lógica preservada
+            // do updateUI antigo).
+            stats.inventarioId?.let { invId ->
+                if (!preferencesManager.hasInventarioAtivo() && invId > 0) {
+                    preferencesManager.saveInventarioAtivo(
+                        id = invId,
+                        nome = stats.inventarioNome ?: "Inventário $invId"
+                    )
+                }
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Erro ao atualizar UI com estatísticas", e)
+            Log.e(TAG, "Erro ao renderizar KPIs", e)
         }
     }
 
-    private fun updateUI(state: DashboardUiStateClean) {
+    /**
+     * Atualiza o indicador de modo offline baseado no flag `isOfflineData` da
+     * FonteEstatisticas (Req 4.1, 4.2).
+     *
+     * Se os dados estão marcados como offline, força a visibilidade do
+     * indicador mesmo que `networkMonitor` reporte online. Caso contrário,
+     * delega para `updateOfflineIndicator()` que combina
+     * `isForceOfflineMode + networkMonitor`.
+     */
+    private fun atualizarIndicadorOffline(isOfflineData: Boolean) {
         try {
-            // Dados do usuário e estatísticas acessíveis via Navigation Drawer e Estatísticas
-            state.dashboardStats?.let { stats ->
-                
-                // Salvar inventário ativo se não estiver salvo
-                stats.inventarioId?.let { invId ->
-                    if (!preferencesManager.hasInventarioAtivo() && invId > 0) {
-                        preferencesManager.saveInventarioAtivo(
-                            id = invId,
-                            nome = stats.inventarioNome ?: "Inventário $invId"
-                        )
-                        Log.d(TAG, "updateUI: Inventário ativo salvo - ID: $invId")
-                    }
-                }
-                
-                // Atualizar KPIs detalhados (sem animação para melhor performance)
-                try {
-                    binding.tvKpiColetados.text = stats.totalColetados.toString()
-                    binding.tvKpiPendentes.text = stats.totalPendentes.toString()
-                    binding.tvKpiDivergencias.text = stats.divergencias.toString()
-                    binding.tvKpiColetores.text = stats.coletoresAtivos.toString()
-                } catch (e: Exception) {
-                    Log.e(TAG, "Erro ao atualizar KPIs", e)
-                }
-            }
-            
-            // Atualizar estado de loading
-            binding.progressBar.visibility = if (state.isLoading) View.VISIBLE else View.GONE
-            binding.swipeRefresh.isRefreshing = state.isLoading
-            
-            // Atualizar mensagem de erro
-            if (state.error != null) {
-                binding.tvError.text = state.error
-                binding.tvError.visibility = View.VISIBLE
+            if (isOfflineData) {
+                binding.layoutOfflineIndicator.visibility = View.VISIBLE
+                binding.tvOfflineStatus.text = "Dados locais"
+                binding.tvOfflineInfo.text = "Exibindo cache offline"
             } else {
-                binding.tvError.visibility = View.GONE
+                // Não esconde incondicionalmente — delega para
+                // `updateOfflineIndicator()`, que respeita
+                // `isForceOfflineMode` + `networkMonitor`.
+                updateOfflineIndicator()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao atualizar UI", e)
+            Log.e(TAG, "Erro ao atualizar indicador offline", e)
         }
     }
-    
-    private fun formatNumber(number: Int): String {
-        return String.format("%,d", number).replace(",", ".")
-    }
-    
-    private fun formatNumberShort(number: Int): String {
-        return when {
-            number >= 1000000 -> String.format("%.1fM", number / 1000000.0)
-            number >= 1000 -> String.format("%.1fK", number / 1000.0)
-            else -> number.toString()
+
+    /**
+     * Atualiza a área de timestamp da última sincronização (Req 4.3, 4.4, 4.5).
+     *
+     * Se o layout não expõe um TextView dedicado, a função registra em log e
+     * mantém no-op — Req 4.4/4.5 permitem "área de timestamp oculta quando
+     * null".
+     */
+    private fun atualizarTimestampUltimaSync(timestamp: Long?) {
+        if (timestamp == null) {
+            Log.d(TAG, "Timestamp última sync: null (ainda não houve sincronização)")
+        } else {
+            val formatado = java.text.SimpleDateFormat(
+                "dd/MM HH:mm",
+                java.util.Locale.getDefault()
+            ).format(java.util.Date(timestamp))
+            Log.d(TAG, "Última sync do servidor: $formatado")
         }
-    }
-    
-    private fun formatCurrency(value: Double): String {
-        return String.format("R$ %,.2f", value).replace(",", "X").replace(".", ",").replace("X", ".")
-    }
-    
-    private fun animateNumber(textView: android.widget.TextView, targetValue: Int) {
-        val animator = android.animation.ValueAnimator.ofInt(0, targetValue)
-        animator.duration = 800
-        animator.interpolator = android.view.animation.DecelerateInterpolator()
-        animator.addUpdateListener { animation ->
-            textView.text = formatNumber(animation.animatedValue as Int)
-        }
-        animator.start()
-    }
-    
-    private fun animateProgressBar(progressBar: android.widget.ProgressBar, targetProgress: Int) {
-        val animator = android.animation.ObjectAnimator.ofInt(progressBar, "progress", 0, targetProgress)
-        animator.duration = 1000
-        animator.interpolator = android.view.animation.DecelerateInterpolator()
-        animator.start()
-    }
-    
-    private fun animateCardEntrance(view: View, delay: Long) {
-        view.alpha = 0f
-        view.translationY = 50f
-        view.scaleX = 0.95f
-        view.scaleY = 0.95f
-        
-        view.animate()
-            .alpha(1f)
-            .translationY(0f)
-            .scaleX(1f)
-            .scaleY(1f)
-            .setDuration(500)
-            .setStartDelay(delay)
-            .setInterpolator(android.view.animation.DecelerateInterpolator())
-            .start()
     }
 
     

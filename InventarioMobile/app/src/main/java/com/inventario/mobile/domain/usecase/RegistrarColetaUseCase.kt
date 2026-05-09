@@ -28,7 +28,12 @@ class RegistrarColetaUseCase @Inject constructor(
         observacoes: String? = null,
         latitude: Double? = null,
         longitude: Double? = null,
-        idUsuario: Long? = null
+        idUsuario: Long? = null,
+        tempoColetaSegundos: Int? = null,
+        tempoScanSegundos: Int? = null,
+        tempoPreenchimentoSegundos: Int? = null,
+        metodoColeta: String? = null,
+        tipoScan: String? = null
     ): Result<Coleta> {
         return try {
             // 1. Validar entrada
@@ -50,7 +55,34 @@ class RegistrarColetaUseCase @Inject constructor(
             val patrimonio = patrimonioRepository.buscarPorNumero(numeroPatrimonio)
                 ?: return Result.failure(Exception("Patrimônio não encontrado"))
             
-            // 4. Criar coleta com número do patrimônio
+            // 4. Detectar divergência automaticamente (v2.13)
+            val salaPatrimonioCadastrada = patrimonio.idSala
+            val divergenciaLocalizacao = salaId != null
+                && salaPatrimonioCadastrada != null
+                && salaId != salaPatrimonioCadastrada
+
+            val estadoCadastrado = patrimonio.estado?.uppercase()?.trim()
+            val estadoColetado = estadoEncontrado?.uppercase()?.trim()
+            val divergenciaEstado = estadoCadastrado != null
+                && estadoColetado != null
+                && estadoCadastrado != estadoColetado
+
+            val temDivergencia = divergenciaLocalizacao || divergenciaEstado
+            val motivoDivergencia = when {
+                divergenciaLocalizacao && divergenciaEstado -> "LOCALIZACAO_E_ESTADO"
+                divergenciaLocalizacao -> "LOCALIZACAO_DIFERENTE"
+                divergenciaEstado -> "ESTADO_DIFERENTE"
+                else -> null
+            }
+
+            if (temDivergencia) {
+                android.util.Log.w("RegistrarColetaUseCase",
+                    "⚠️ DIVERGÊNCIA detectada para ${patrimonio.numeroPatrimonio}: motivo=$motivoDivergencia" +
+                    " | Sala cadastrada=${patrimonio.nomeSala}(${salaPatrimonioCadastrada}) vs coletada=$salaId" +
+                    " | Estado cadastrado=$estadoCadastrado vs coletado=$estadoColetado")
+            }
+
+            // 5. Criar coleta com campos de divergência
             val coleta = Coleta(
                 id = 0,
                 patrimonioId = patrimonio.id.toLong(),
@@ -60,11 +92,18 @@ class RegistrarColetaUseCase @Inject constructor(
                 dataColeta = System.currentTimeMillis(),
                 localizacaoAtual = localizacaoAtual,
                 observacoes = observacoes,
-                status = "COLETADO",  // Status da coleta (COLETADO, PENDENTE, ERRO)
-                estadoEncontrado = estadoEncontrado ?: "BOM",  // Estado de conservação conforme legislação
+                status = "COLETADO",
+                estadoEncontrado = estadoEncontrado ?: "BOM",
                 latitude = latitude,
                 longitude = longitude,
-                sincronizado = false
+                sincronizado = false,
+                tempoColetaSegundos = tempoColetaSegundos,
+                tempoScanSegundos = tempoScanSegundos,
+                tempoPreenchimentoSegundos = tempoPreenchimentoSegundos,
+                metodoColeta = metodoColeta,
+                tipoScan = tipoScan,
+                divergencia = temDivergencia,
+                motivoDivergencia = motivoDivergencia
             )
             
             android.util.Log.d("RegistrarColetaUseCase", "✓ Coleta criada: Patrimônio ${coleta.numeroPatrimonio}, Usuário ${coleta.usuarioId}, Sala ${coleta.salaId}")

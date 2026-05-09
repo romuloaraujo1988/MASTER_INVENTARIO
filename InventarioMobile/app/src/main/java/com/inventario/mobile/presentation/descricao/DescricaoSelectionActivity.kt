@@ -1,5 +1,6 @@
 package com.inventario.mobile.presentation.descricao
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -15,9 +16,11 @@ import com.inventario.mobile.domain.model.DescricaoItem
 import com.inventario.mobile.domain.model.Patrimonio
 import com.inventario.mobile.presentation.dialog.EstadoPatrimonioDialog
 import com.inventario.mobile.presentation.state.DescricaoState
+import com.inventario.mobile.utils.PreferencesManager
 import com.inventario.mobile.utils.SoundUtils
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Activity para seleção de descrição (coleta sem etiqueta)
@@ -37,6 +40,14 @@ class DescricaoSelectionActivity : AppCompatActivity() {
     // ViewModel injetado via Hilt
     private val viewModel: DescricaoSelectionViewModelClean by viewModels()
     
+    @Inject
+    lateinit var preferencesManager: PreferencesManager
+
+    // Injetado via Hilt para feedback tátil após coleta bem-sucedida.
+    // Validates: Requirements 5.2, 5.3
+    @Inject
+    lateinit var vibrationHelper: com.inventario.mobile.utils.VibrationHelper
+
     private lateinit var adapter: DescricaoAdapter
 
     private var salaId: Long = 0
@@ -194,15 +205,23 @@ class DescricaoSelectionActivity : AppCompatActivity() {
                     is ColetaState.Loading -> showLoading()
                     is ColetaState.Success -> {
                         hideLoading()
+                        // Requirement 5.1: Som de sucesso após coleta bem-sucedida.
                         SoundUtils.playSuccessSound()
-                        Toast.makeText(this@DescricaoSelectionActivity, 
-                            "✓ Coleta registrada: ${state.patrimonio.numeroPatrimonio}", 
+                        // Requirements 5.2, 5.3: Vibração condicional conforme preferência do usuário.
+                        if (preferencesManager.isVibrationOnCollectionEnabled()) {
+                            vibrationHelper.vibrateSuccess()
+                        }
+                        Toast.makeText(this@DescricaoSelectionActivity,
+                            "✓ Coleta registrada: ${state.patrimonio.numeroPatrimonio}",
                             Toast.LENGTH_SHORT).show()
                         // Recarregar descrições (a coletada deve sumir da lista)
                         loadDescricoes()
                         viewModel.limparColetaState()
                     }
                     is ColetaState.Error -> {
+                        // Requirements 3.5, 5.4: em falha, NÃO tocar som, NÃO vibrar e NÃO
+                        // finalizar a Activity. Apenas esconder o loading, exibir a mensagem
+                        // de erro como Toast e limpar o estado para permitir nova tentativa.
                         hideLoading()
                         showError(state.message)
                         viewModel.limparColetaState()
@@ -224,14 +243,36 @@ class DescricaoSelectionActivity : AppCompatActivity() {
     /**
      * Mostra dialog de confirmação para coletar por descrição
      * O número do patrimônio será null, apenas a descrição será salva
+     *
+     * Respeita o estado fixo:
+     * - Se `isEstadoFixoEnabled() == true` e `getEstadoFixo()` não for vazio/nulo,
+     *   registra a coleta diretamente sem abrir EstadoPatrimonioDialog.
+     * - Caso contrário, delega para `showEstadoDialogParaDescricao(descricao)`
+     *   para que o usuário selecione o estado manualmente.
+     *
+     * Validates: Requirements 4.1, 4.2, 4.3, 4.4
      */
     private fun showConfirmacaoColetaDialog(quantidade: Int, descricao: String) {
         AlertDialog.Builder(this)
             .setTitle("Coletar por Descrição")
             .setMessage("Encontrados $quantidade itens com a descrição:\n\n\"$descricao\"\n\nDeseja registrar a coleta?")
             .setPositiveButton("Coletar") { _, _ ->
-                // Mostrar dialog de estado de conservação
-                showEstadoDialogParaDescricao(descricao)
+                val estadoFixoHabilitado = preferencesManager.isEstadoFixoEnabled()
+                val estadoFixo = preferencesManager.getEstadoFixo()
+
+                if (estadoFixoHabilitado && !estadoFixo.isNullOrBlank()) {
+                    // Requirement 4.1: estado fixo habilitado e não vazio → registrar direto
+                    Log.d(TAG, "Estado fixo habilitado: usando '$estadoFixo' para descrição: $descricao")
+                    viewModel.registrarColetaPorDescricao(
+                        descricao = descricao,
+                        salaId = salaId.toInt(),
+                        salaNome = salaNome,
+                        estadoConservacao = estadoFixo
+                    )
+                } else {
+                    // Requirement 4.2/4.3: abrir dialog para o usuário selecionar o estado
+                    showEstadoDialogParaDescricao(descricao)
+                }
             }
             .setNegativeButton("Cancelar", null)
             .show()

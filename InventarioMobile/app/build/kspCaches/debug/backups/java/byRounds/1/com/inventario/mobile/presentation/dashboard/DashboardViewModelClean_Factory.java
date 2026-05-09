@@ -1,8 +1,9 @@
 package com.inventario.mobile.presentation.dashboard;
 
-import com.inventario.mobile.data.repository.DashboardRepositoryImpl;
+import com.inventario.mobile.domain.repository.DashboardRepository;
 import com.inventario.mobile.domain.usecase.BuscarEstatisticasDashboardUseCase;
 import com.inventario.mobile.domain.usecase.BuscarEvolucaoColetasUseCase;
+import com.inventario.mobile.utils.PreferencesManager;
 import dagger.internal.DaggerGenerated;
 import dagger.internal.Factory;
 import dagger.internal.QualifierMetadata;
@@ -28,33 +29,38 @@ public final class DashboardViewModelClean_Factory implements Factory<DashboardV
 
   private final Provider<BuscarEvolucaoColetasUseCase> buscarEvolucaoColetasUseCaseProvider;
 
-  private final Provider<DashboardRepositoryImpl> dashboardRepositoryProvider;
+  private final Provider<DashboardRepository> dashboardRepositoryProvider;
+
+  private final Provider<PreferencesManager> preferencesManagerProvider;
 
   public DashboardViewModelClean_Factory(
       Provider<BuscarEstatisticasDashboardUseCase> buscarEstatisticasDashboardUseCaseProvider,
       Provider<BuscarEvolucaoColetasUseCase> buscarEvolucaoColetasUseCaseProvider,
-      Provider<DashboardRepositoryImpl> dashboardRepositoryProvider) {
+      Provider<DashboardRepository> dashboardRepositoryProvider,
+      Provider<PreferencesManager> preferencesManagerProvider) {
     this.buscarEstatisticasDashboardUseCaseProvider = buscarEstatisticasDashboardUseCaseProvider;
     this.buscarEvolucaoColetasUseCaseProvider = buscarEvolucaoColetasUseCaseProvider;
     this.dashboardRepositoryProvider = dashboardRepositoryProvider;
+    this.preferencesManagerProvider = preferencesManagerProvider;
   }
 
   @Override
   public DashboardViewModelClean get() {
-    return newInstance(buscarEstatisticasDashboardUseCaseProvider.get(), buscarEvolucaoColetasUseCaseProvider.get(), dashboardRepositoryProvider.get());
+    return newInstance(buscarEstatisticasDashboardUseCaseProvider.get(), buscarEvolucaoColetasUseCaseProvider.get(), dashboardRepositoryProvider.get(), preferencesManagerProvider.get());
   }
 
   public static DashboardViewModelClean_Factory create(
       Provider<BuscarEstatisticasDashboardUseCase> buscarEstatisticasDashboardUseCaseProvider,
       Provider<BuscarEvolucaoColetasUseCase> buscarEvolucaoColetasUseCaseProvider,
-      Provider<DashboardRepositoryImpl> dashboardRepositoryProvider) {
-    return new DashboardViewModelClean_Factory(buscarEstatisticasDashboardUseCaseProvider, buscarEvolucaoColetasUseCaseProvider, dashboardRepositoryProvider);
+      Provider<DashboardRepository> dashboardRepositoryProvider,
+      Provider<PreferencesManager> preferencesManagerProvider) {
+    return new DashboardViewModelClean_Factory(buscarEstatisticasDashboardUseCaseProvider, buscarEvolucaoColetasUseCaseProvider, dashboardRepositoryProvider, preferencesManagerProvider);
   }
 
   public static DashboardViewModelClean newInstance(
       BuscarEstatisticasDashboardUseCase buscarEstatisticasDashboardUseCase,
       BuscarEvolucaoColetasUseCase buscarEvolucaoColetasUseCase,
-      DashboardRepositoryImpl dashboardRepository) {
-    return new DashboardViewModelClean(buscarEstatisticasDashboardUseCase, buscarEvolucaoColetasUseCase, dashboardRepository);
+      DashboardRepository dashboardRepository, PreferencesManager preferencesManager) {
+    return new DashboardViewModelClean(buscarEstatisticasDashboardUseCase, buscarEvolucaoColetasUseCase, dashboardRepository, preferencesManager);
   }
 }

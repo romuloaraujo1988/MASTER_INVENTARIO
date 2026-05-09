@@ -1,0 +1,92 @@
+----------------------------------------------------------------------
+1. SCHEMA ATUAL — tabela_sala (todas as colunas)
+----------------------------------------------------------------------
+  id_sala                        | tipo: integer              | nullable: NO
+  descricao                      | tipo: character varying    | nullable: NO
+  numero_sala                    | tipo: character varying    | nullable: YES
+  andar                          | tipo: integer              | nullable: YES
+  bloco                          | tipo: character varying    | nullable: YES
+  id_setor                       | tipo: integer              | nullable: YES
+  capacidade                     | tipo: integer              | nullable: YES
+  area_m2                        | tipo: double precision     | nullable: YES
+  tipo_sala                      | tipo: character varying    | nullable: YES
+  ativo                          | tipo: boolean              | nullable: YES
+  data_cadastro                  | tipo: timestamp without time zone | nullable: YES
+  observacoes                    | tipo: text                 | nullable: YES
+  created_at                     | tipo: timestamp without time zone | nullable: YES
+  numero                         | tipo: character varying    | nullable: YES
+  tipo                           | tipo: character varying    | nullable: YES
+
+----------------------------------------------------------------------
+2. AMOSTRA — primeiros 10 registros de tabela_sala
+----------------------------------------------------------------------
+  (31, 'LAB. B2 Eletricidade básica, Automação Residencial(BLOCO DE LABORATORIOS)', 'LAB. B2 Eletricidade básica, Automação Residencial(BLOCO DE LABORATORIOS)', 0, '', 12, 0, 0.0, 'Laboratório', True, datetime.datetime(2025, 7, 12, 22, 28, 14, 263860), '', None, None, None)
+  (26, 'LAB. B5 Máquinas Elétricas, Instalações elétricas e Comandos elétricos.(BLOCO DE LABORATORIOS)', 'LAB. B5 Máquinas Elétricas, Instalações elétricas e Comandos elétricos.(BLOCO DE LABORATORIOS)', 1, '', 12, 0, 0.0, 'Laboratório', True, datetime.datetime(2025, 7, 12, 22, 28, 6, 801053), '', None, None, None)
+  (16, 'Ginásio poliesportivo', 'GIN-POL', 0, '', 12, 10, 50.0, 'Outros', True, datetime.datetime(2025, 7, 12, 16, 1, 25, 205995), '', None, None, None)
+  (22, 'CAE(IFMT - PDL)', 'CAE', 1, '', 22, 0, 0.0, 'Outros', True, datetime.datetime(2025, 7, 12, 22, 13, 18, 635393), '', None, None, None)
+  (19, 'DAP(IFMT - PDL)', 'DAP', 1, '', 15, 0, 0.0, 'Outros', True, datetime.datetime(2025, 7, 12, 22, 12, 34, 829581), '', None, None, None)
+  (14, 'Secretaria', 'SEC-01', 1, 'A', None, 8, None, 'ADMINISTRATIVA', False, datetime.datetime(2025, 6, 22, 11, 57, 56, 814837), None, None, None, None)
+  (50, 'Nucleo de cultura PDL(BLOCO DE LABORATORIOS)', 'Nucleo de cultura PDL', 1, '', 12, 0, 0.0, 'Sala de Aula', True, datetime.datetime(2025, 7, 12, 22, 28, 37, 372574), '', None, None, None)
+  (59, 'SALA DE T.I.(IFMT - PDL)', 'SALA DE T.I.', 1, '', 19, 0, 0.0, 'Coordenação', True, datetime.datetime(2025, 7, 12, 22, 28, 43, 170946), '', None, None, None)
+  (35, 'OBSERVATORIO(BLOCO DE LABORATORIOS)', 'OBSERVATORIO', 1, '', 12, 0, 0.0, 'Sala de Aula', True, datetime.datetime(2025, 7, 12, 22, 28, 18, 235088), '', None, None, None)
+  (32, 'PREFEITURA(BLOCO DE LABORATORIOS)', 'PREFEITURA', 1, '', 16, 0, 0.0, 'Sala de Aula', True, datetime.datetime(2025, 7, 12, 22, 28, 16, 609939), '', None, None, None)
+
+----------------------------------------------------------------------
+3. LÓGICA DE DIVERGÊNCIA — como o campo 'divergencia' é gerado
+----------------------------------------------------------------------
+  Colunas relevantes em tabela_coleta:
+    localizacao_atual                   | character varying
+    localizacao_encontrada              | character varying
+    divergencia                         | boolean
+
+----------------------------------------------------------------------
+4. DIVERGÊNCIA RECALCULADA — comparando localizacao_atual vs localizacao_encontrada
+----------------------------------------------------------------------
+  Auditório + Mezanino:
+  Sala: 'MEZANINO AUDITORIO(IFMT - PDL)'
+    Total coletas  : 604
+    Div recalculada: 604  (100.00%)
+    Div flag (campo): 424
+    Diferenca      : +180  DIVERGEM!
+  Sala: 'AUDITÓRIO(IFMT - PDL)'
+    Total coletas  : 220
+    Div recalculada: 220  (100.00%)
+    Div flag (campo): 213
+    Diferenca      : +7  DIVERGEM!
+  Sala: 'AUDITÓRIO'
+    Total coletas  : 1
+    Div recalculada: 0  (0.00%)
+    Div flag (campo): 0
+    Diferenca      : +0  OK (campo correto)
+
+----------------------------------------------------------------------
+5. TOTAIS GERAIS — flag vs recalculado
+----------------------------------------------------------------------
+  Total coletas     : 8712
+  Div (flag campo)  : 1596  (18.32%)
+  Div (recalculada) : 7695  (88.33%)
+  Diferenca total   : -6099  campos divergem do recalculo
+
+----------------------------------------------------------------------
+6. TOP 10 SALAS — maior discrepância entre flag e recálculo
+----------------------------------------------------------------------
+   1. 'BIBLIOTECA(IFMT - PDL)'
+      Total: 4153 | Flag: 69 | Recalc: 4153 | Discrepancia: +4084
+   2. 'MEZANINO AUDITORIO(IFMT - PDL)'
+      Total: 604 | Flag: 424 | Recalc: 604 | Discrepancia: +180
+   3. 'ALMOXARIFADO PDL - 1 SALA PREFEITURA(IFMT - PDL)'
+      Total: 160 | Flag: 6 | Recalc: 160 | Discrepancia: +154
+   4. 'SALA DE PROF.(IFMT - PDL)'
+      Total: 169 | Flag: 17 | Recalc: 169 | Discrepancia: +152
+   5. 'Área do Campus(IFMT - PDL)'
+      Total: 150 | Flag: 24 | Recalc: 150 | Discrepancia: +126
+   6. 'DAP(IFMT - PDL)'
+      Total: 126 | Flag: 18 | Recalc: 126 | Discrepancia: +108
+   7. 'LAB. INFORMATICA A9(IFMT - PDL)'
+      Total: 109 | Flag: 5 | Recalc: 109 | Discrepancia: +104
+   8. 'LAB. A2 TECN. MATERIAIS(BLOCO DE LABORATORIOS)'
+      Total: 99 | Flag: 10 | Recalc: 99 | Discrepancia: +89
+   9. 'LAB. DE BIOLOGIA(IFMT - PDL)'
+      Total: 75 | Flag: 0 | Recalc: 75 | Discrepancia: +75
+  10. 'GABINETE (IFMT - PDL)'
+      Total: 194 | Flag: 128 | Recalc: 194 | Discrepancia: +66

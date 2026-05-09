@@ -1,0 +1,83 @@
+----------------------------------------------------------------------
+1. RESUMO GERAL — coletas onde a sala CADASTRADA é AUDITÓRIO
+----------------------------------------------------------------------
+  Sala: 'MEZANINO AUDITORIO(IFMT - PDL)' | Coletas: 604 | Divergências: 424 | Taxa: 70.20%
+  Sala: 'AUDITÓRIO(IFMT - PDL)' | Coletas: 220 | Divergências: 213 | Taxa: 96.82%
+  Sala: 'AUDITÓRIO' | Coletas: 1 | Divergências: 0 | Taxa: 0.00%
+
+----------------------------------------------------------------------
+2. DESTINO — onde foram ENCONTRADOS os itens cadastrados no Auditório
+----------------------------------------------------------------------
+  Encontrado em: 'SALA  DO DESFAZIMENTO(PREDIO ANTIGO)' | Qtd: 457 | Div: 398 | Taxa: 87.09% <- divergencia
+  Encontrado em: 'AUDITÓRIO' | Qtd: 187 | Div: 186 | Taxa: 99.47% <- divergencia
+  Encontrado em: 'Protocolo' | Qtd: 32 | Div: 0 | Taxa: 0.00%
+  Encontrado em: 'MEZANINO AUDITORIO' | Qtd: 30 | Div: 30 | Taxa: 100.00% <- divergencia
+  Encontrado em: 'HANGAR(PROJETO  HANGAR)' | Qtd: 22 | Div: 8 | Taxa: 36.36% <- divergencia
+  Encontrado em: 'SALA DE PROF.' | Qtd: 14 | Div: 0 | Taxa: 0.00%
+  Encontrado em: 'BIBLIOTECA' | Qtd: 11 | Div: 0 | Taxa: 0.00%
+  Encontrado em: 'LAB. INFORMATICA A9' | Qtd: 10 | Div: 0 | Taxa: 0.00%
+  Encontrado em: 'LAB. INFORMATICA A10' | Qtd: 9 | Div: 6 | Taxa: 66.67% <- divergencia
+  Encontrado em: 'CORREDOR 2º ANDAR' | Qtd: 7 | Div: 0 | Taxa: 0.00%
+  Encontrado em: 'SALA DE T.I.' | Qtd: 7 | Div: 2 | Taxa: 28.57% <- divergencia
+  Encontrado em: 'Área do Campus' | Qtd: 6 | Div: 2 | Taxa: 33.33% <- divergencia
+  Encontrado em: 'LAB. B3 Eletrônica analógica e de Potência' | Qtd: 6 | Div: 0 | Taxa: 0.00%
+  Encontrado em: 'SALA DOS PROFESSORES 2(PREDIO ANTIGO)' | Qtd: 5 | Div: 0 | Taxa: 0.00%
+  Encontrado em: 'ALMOXARIFADO 2' | Qtd: 4 | Div: 0 | Taxa: 0.00%
+  Encontrado em: 'OBSERVATÓRIO' | Qtd: 2 | Div: 0 | Taxa: 0.00%
+  Encontrado em: 'GABINETE' | Qtd: 2 | Div: 1 | Taxa: 50.00% <- divergencia
+  Encontrado em: 'DAP' | Qtd: 2 | Div: 0 | Taxa: 0.00%
+  Encontrado em: 'RECEPÇÃO ENSINO' | Qtd: 2 | Div: 0 | Taxa: 0.00%
+  Encontrado em: 'SALA TI SERVIDOR DE REDE' | Qtd: 1 | Div: 0 | Taxa: 0.00%
+
+----------------------------------------------------------------------
+3. ORIGENS — itens de OUTRAS salas encontrados DENTRO do Auditorio
+----------------------------------------------------------------------
+  Origem: 'GABINETE (IFMT - PDL)' | Qtd: 126 | Div: 126
+  Origem: 'BIBLIOTECA(IFMT - PDL)' | Qtd: 62 | Div: 7
+  Origem: 'SALA DE DESENHO(IFMT - PDL)' | Qtd: 41 | Div: 41
+  Origem: 'DAP(IFMT - PDL)' | Qtd: 11 | Div: 11
+  Origem: 'LAB. B3 Eletrônica analógica e de Potência(BLOCO DE LABORATORIOS)' | Qtd: 4 | Div: 4
+  Origem: 'ALMOXARIFADO PDL - 1 SALA PREFEITURA(IFMT - PDL)' | Qtd: 2 | Div: 2
+  Origem: 'NAPNE(IFMT - PDL)' | Qtd: 2 | Div: 2
+  Origem: 'HANGAR(PROJETO  HANGAR)' | Qtd: 1 | Div: 1
+  Origem: 'SALA TI SERVIDOR DE REDE(IFMT - PDL)' | Qtd: 1 | Div: 1
+  Origem: 'REFEITÓRIO MODULAR(IFMT - PDL)' | Qtd: 1 | Div: 1
+  Origem: 'Robótica Júnior(IFMT - PDL)' | Qtd: 1 | Div: 1
+  Origem: 'SALA  DO DESFAZIMENTO(PREDIO ANTIGO)' | Qtd: 1 | Div: 1
+  Origem: 'SALA DE AULA B3(IFMT - PDL)' | Qtd: 1 | Div: 1
+  Origem: 'BIBLIOTECA SUP.(IFMT - PDL)' | Qtd: 1 | Div: 1
+  Origem: 'SALA DE MAT. ESPORTIVO(IFMT - PDL)' | Qtd: 1 | Div: 1
+  Origem: 'LAB. B1 Controle e Automação(BLOCO DE LABORATORIOS)' | Qtd: 1 | Div: 1
+
+----------------------------------------------------------------------
+4. COMPLEXO AUDITORIO + MEZANINO — coletas encontradas no local
+----------------------------------------------------------------------
+  Local: 'AUDITÓRIO' | Total: 379 | Div: 323 | Taxa: 85.22%
+  Local: 'MEZANINO AUDITORIO' | Total: 95 | Div: 95 | Taxa: 100.00%
+
+  TOTAL no complexo : 474 coletas
+  TOTAL divergencias: 418 (88.19%)
+
+----------------------------------------------------------------------
+5. RANKING ATUAL — Top 20 salas por taxa de divergencia (min. 10 coletas)
+----------------------------------------------------------------------
+   1. 'LAB. A4 QUIMICA(BLOCO DE LABORATORIOS)' | Coletas: 37 | Div: 36 | Taxa: 97.30%
+   2. 'AUDITÓRIO(IFMT - PDL)' | Coletas: 220 | Div: 213 | Taxa: 96.82%
+   3. 'CORREDOR (IFMT - PDL)' | Coletas: 61 | Div: 58 | Taxa: 95.08%
+   4. 'LAB. DE QUIMICA MODULAR(IFMT - PDL)' | Coletas: 54 | Div: 51 | Taxa: 94.44%
+   5. 'PREFEITURA(BLOCO DE LABORATORIOS)' | Coletas: 41 | Div: 38 | Taxa: 92.68%
+   6. 'SALA DE AULA B4(PREDIO ANTIGO)' | Coletas: 20 | Div: 18 | Taxa: 90.00%
+   7. 'SALA DE DESENHO(IFMT - PDL)' | Coletas: 46 | Div: 41 | Taxa: 89.13%
+   8. 'COORD. CONTABILIDADE(IFMT - PDL)' | Coletas: 20 | Div: 16 | Taxa: 80.00%
+   9. 'SALA DE AULA MODULAR(IFMT - PDL)' | Coletas: 17 | Div: 12 | Taxa: 70.59%
+  10. 'MEZANINO AUDITORIO(IFMT - PDL)' | Coletas: 604 | Div: 424 | Taxa: 70.20%
+  11. 'GABINETE (IFMT - PDL)' | Coletas: 194 | Div: 128 | Taxa: 65.98%
+  12. 'LAB. B4 Automação industrial, Medidas elétricas e Eficiência energéticas(BLOCO DE LABORATORIOS)' | Coletas: 47 | Div: 29 | Taxa: 61.70%
+  13. 'LAB. BIOLOGIA/ COVID(IFMT - PDL)' | Coletas: 18 | Div: 11 | Taxa: 61.11%
+  14. 'Área Externa (IFMT - PDL)' | Coletas: 91 | Div: 48 | Taxa: 52.75%
+  15. 'LAB. INFORMATICA A10(IFMT - PDL)' | Coletas: 90 | Div: 47 | Taxa: 52.22%
+  16. 'NAPNE(IFMT - PDL)' | Coletas: 18 | Div: 9 | Taxa: 50.00%
+  17. 'CAE(IFMT - PDL)' | Coletas: 113 | Div: 54 | Taxa: 47.79%
+  18. 'LAB. B2 Eletricidade básica, Automação Residencial(BLOCO DE LABORATORIOS)' | Coletas: 38 | Div: 13 | Taxa: 34.21%
+  19. 'SALA TI SERVIDOR DE REDE(IFMT - PDL)' | Coletas: 95 | Div: 29 | Taxa: 30.53%
+  20. 'SALA DE AULA B2(IFMT - PDL)' | Coletas: 10 | Div: 3 | Taxa: 30.00%

@@ -1,0 +1,62 @@
+# =====================================================
+# Modelo de Configuracao Local - SIHCP Mobile API
+# =====================================================
+#
+# ATENCAO: Este eh um arquivo-MODELO versionado no Git.
+#
+# Para configurar seu ambiente de desenvolvimento local:
+#
+# 1. Copie este arquivo para o mesmo diretorio com o nome:
+#      application-mobile-local.properties
+#    (sem o sufixo ".example")
+#
+# 2. Preencha os valores reais dos segredos abaixo.
+#
+# 3. NUNCA versione o arquivo "application-mobile-local.properties".
+#    Ele ja esta listado no .gitignore do projeto.
+#
+# 4. Em producao, prefira injetar os segredos via variaveis
+#    de ambiente (DATASOURCE_PASSWORD e JWT_SECRET) ao inves
+#    de usar arquivos de properties locais.
+#
+# Como este arquivo eh carregado:
+# - O Spring Boot carrega automaticamente o perfil "local"
+#   quando a aplicacao eh executada com:
+#     --spring.profiles.active=mobile,local
+# - As propriedades definidas aqui sobrescrevem os placeholders
+#   ${DATASOURCE_PASSWORD} e ${JWT_SECRET} declarados em
+#   application-mobile.properties.
+# =====================================================
+
+
+# =====================================================
+# Senha do banco de dados PostgreSQL (desenvolvimento)
+# =====================================================
+# Use a senha do usuario configurado em spring.datasource.username
+# do application-mobile.properties (por padrao: postgres).
+#
+# Exemplo (NAO use este valor em producao):
+#   spring.datasource.password=MinhaSenhaLocalForte123
+spring.datasource.password=
+
+
+# =====================================================
+# Segredo JWT (HMAC-SHA256) para assinatura de tokens
+# =====================================================
+# REQUISITO: minimo de 32 caracteres.
+# O SecretsBootstrap aborta a inicializacao do servidor caso
+# o valor esteja vazio ou tenha menos de 32 caracteres.
+#
+# Recomendacao: gere um valor aleatorio forte com 48 bytes
+# codificados em Base64 (resulta em 64 caracteres).
+#
+# Sugestoes de geracao:
+#   Linux/macOS (bash):
+#     openssl rand -base64 48
+#
+#   Windows (PowerShell):
+#     [Convert]::ToBase64String((1..48 | %{Get-Random -Max 256}))
+#
+# Exemplo (NAO use este valor em producao - gere o seu):
+#   jwt.secret=K7pQ2vN4xR8mL1jB5yH3wZ9tC6aE0dF2gS4uI7oP3qM5nV8rX1yK6tJ4hG2b
+jwt.secret=
