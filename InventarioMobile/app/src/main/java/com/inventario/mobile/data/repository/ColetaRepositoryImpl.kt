@@ -1075,7 +1075,10 @@ class ColetaRepositoryImpl @Inject constructor(
                 semEtiqueta = true,
                 descricaoItemSemEtiqueta = coleta.descricaoItemSemEtiqueta,
                 categoriaItemSemEtiqueta = coleta.categoriaItemSemEtiqueta,
-                fotoPatrimonio = coleta.fotoPath
+                // v2.21: caminho do arquivo de foto (não Base64)
+                fotoPath = coleta.fotoPath,
+                fotoThumbnailPath = coleta.fotoThumbnailPath,
+                fotoSincronizada = false
             )
             
             // 3. Salvar localmente

@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.gson.GsonBuilder
 import com.inventario.mobile.data.remote.api.ColetaApi
 import com.inventario.mobile.data.remote.api.PatrimonioApi
+import com.inventario.mobile.data.remote.api.RelatorioFotoApi
 import com.inventario.mobile.network.DeviceInfoInterceptor
 import com.inventario.mobile.utils.PreferencesManager
 import com.inventario.mobile.utils.ServerConfigManager
@@ -211,5 +212,40 @@ object ApiModule {
     @Singleton
     fun provideAuthApi(retrofit: Retrofit): com.inventario.mobile.data.remote.api.AuthApi {
         return retrofit.create(com.inventario.mobile.data.remote.api.AuthApi::class.java)
+    }
+
+    /**
+     * Provider da API Retrofit de sugestões de descrição.
+     *
+     * Feature: coleta-descricao-livre-com-sugestao (tarefa 14.2).
+     * Endpoint: `GET /api/mobile/descricoes/sugestoes` (Req 5.1).
+     *
+     * Usa o mesmo `Retrofit` já configurado (mesma baseUrl, mesmo OkHttp com
+     * interceptors de auth/offline/device), garantindo que a chamada herde a
+     * matriz de segurança `@RequireColetor` e o fallback offline existente.
+     */
+    @Provides
+    @Singleton
+    fun provideDescricaoSugestaoApi(
+        retrofit: Retrofit
+    ): com.inventario.mobile.data.remote.api.DescricaoSugestaoApi {
+        return retrofit.create(com.inventario.mobile.data.remote.api.DescricaoSugestaoApi::class.java)
+    }
+
+    /**
+     * Provider da API Retrofit de Relatório Fotográfico.
+     *
+     * Feature: relatorio-fotografico-sem-etiqueta (tarefa 1.2).
+     * Endpoints:
+     *   - `GET api/mobile/relatorios/fotos/{inventarioId}/info` (Req 4.1)
+     *   - `GET api/mobile/relatorios/fotos/{inventarioId}?tipo=sem_etiqueta` (Req 4.2)
+     *
+     * Usa o mesmo `Retrofit` já configurado, herdando os interceptors de
+     * autenticação JWT, device info e fallback offline (Req 4.3).
+     */
+    @Provides
+    @Singleton
+    fun provideRelatorioFotoApi(retrofit: Retrofit): RelatorioFotoApi {
+        return retrofit.create(RelatorioFotoApi::class.java)
     }
 }

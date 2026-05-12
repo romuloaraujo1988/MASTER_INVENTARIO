@@ -3782,6 +3782,7 @@ id fabBackToDashboard
 id fabBiometric
 id fabColetarSemEtiqueta
 id fabExport
+id fabRelatorioFoto
 id fabScanQr
 id fabSearch
 id fabVoiceSearch
@@ -4061,6 +4062,7 @@ id progressBar
 id progressBarGrafico
 id progressBarInventario
 id progressBarMore
+id progressBarRelatorio
 id progressBarSync
 id progressConclusao
 id progressFotoReferencia
@@ -4100,6 +4102,7 @@ id rounded
 id row_index_key
 id rtl
 id rvSearchResults
+id rvSugestoes
 id rvTimeline
 id save_non_transition_alpha
 id save_overlay_view
@@ -4287,6 +4290,7 @@ id title
 id titleDividerNoCustom
 id title_template
 id toggle
+id toggleSugestao
 id toolbar
 id top
 id topPanel
@@ -4334,6 +4338,7 @@ id tvEstado
 id tvEstadoEncontrado
 id tvFixarEstadoDescricao
 id tvFotoStatus
+id tvFotosBadge
 id tvGraficoError
 id tvHorario
 id tvIcone
@@ -4685,6 +4690,7 @@ layout item_patrimonio_search
 layout item_pending_coleta
 layout item_sala
 layout item_sala_dropdown
+layout item_sugestao_descricao
 layout item_timeline_coleta
 layout m3_alert_dialog
 layout m3_alert_dialog_actions

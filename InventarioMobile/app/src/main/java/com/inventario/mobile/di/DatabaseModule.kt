@@ -83,4 +83,16 @@ object DatabaseModule {
     fun provideFotoReferenciaDao(database: AppDatabase): FotoReferenciaDao {
         return database.fotoReferenciaDao()
     }
+
+    /**
+     * Provider do DAO de sugestões de descrição.
+     *
+     * Feature: coleta-descricao-livre-com-sugestao (tarefa 14.1).
+     * Requirements: 7.1 — cache offline isolado por inventário, consumido
+     * pelo `SugestaoDescricaoRepositoryImpl` para fallback em perda de rede.
+     */
+    @Provides
+    fun provideSugestaoDescricaoDao(database: AppDatabase): SugestaoDescricaoDao {
+        return database.sugestaoDescricaoDao()
+    }
 }

@@ -2,6 +2,7 @@ package com.inventario.mobile.util
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.inventario.mobile.utils.ServerConfigManager
 import org.junit.Test
 import org.junit.Assert.*
 import org.junit.runner.RunWith

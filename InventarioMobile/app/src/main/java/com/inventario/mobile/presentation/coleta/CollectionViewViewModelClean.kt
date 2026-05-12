@@ -4,11 +4,16 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inventario.mobile.data.model.Coleta
+import com.inventario.mobile.domain.model.PermissaoNegadaException
+import com.inventario.mobile.domain.model.SemFotosException
+import com.inventario.mobile.domain.usecase.BaixarRelatorioFotoPdfUseCase
 import com.inventario.mobile.domain.usecase.BuscarColetasUseCase
+import com.inventario.mobile.domain.usecase.BuscarInfoRelatorioFotoUseCase
 import com.inventario.mobile.domain.usecase.ObterUsuarioAtualUseCase
 import com.inventario.mobile.domain.usecase.RemoverColetaUseCase
 import com.inventario.mobile.domain.usecase.FonteDados
 import com.inventario.mobile.presentation.state.CollectionViewState
+import com.inventario.mobile.presentation.state.RelatorioFotoState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,7 +39,9 @@ class CollectionViewViewModelClean @Inject constructor(
     private val sincronizarColetasUseCase: com.inventario.mobile.domain.usecase.SincronizarColetasDoServidorUseCase,
     private val coletaMigration: com.inventario.mobile.data.migration.ColetaMigration,
     private val reenviarColetaUseCase: com.inventario.mobile.domain.usecase.ReenviarColetaUseCase,
-    private val excluirColetaPendenteUseCase: com.inventario.mobile.domain.usecase.ExcluirColetaPendenteUseCase
+    private val excluirColetaPendenteUseCase: com.inventario.mobile.domain.usecase.ExcluirColetaPendenteUseCase,
+    private val buscarInfoRelatorioFotoUseCase: BuscarInfoRelatorioFotoUseCase,
+    private val baixarRelatorioFotoPdfUseCase: BaixarRelatorioFotoPdfUseCase
 ) : ViewModel() {
 
     companion object {
@@ -55,6 +62,9 @@ class CollectionViewViewModelClean @Inject constructor(
 
     private val _state = MutableStateFlow<CollectionViewState>(CollectionViewState.Idle)
     val state: StateFlow<CollectionViewState> = _state.asStateFlow()
+
+    private val _relatorioFotoState = MutableStateFlow<RelatorioFotoState>(RelatorioFotoState.Idle)
+    val relatorioFotoState: StateFlow<RelatorioFotoState> = _relatorioFotoState.asStateFlow()
 
     // Filtros atuais
     private var filtroUsuario: FiltroUsuario = FiltroUsuario.TODAS
@@ -591,5 +601,51 @@ class CollectionViewViewModelClean @Inject constructor(
      */
     fun limparEstado() {
         _state.value = CollectionViewState.Idle
+    }
+
+    // -------------------------------------------------------------------------
+    // Relatório Fotográfico — Itens Sem Etiqueta
+    // Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6
+    // -------------------------------------------------------------------------
+
+    fun carregarInfoRelatorioFoto(inventarioId: Int) {
+        viewModelScope.launch {
+            _relatorioFotoState.value = RelatorioFotoState.Loading
+            buscarInfoRelatorioFotoUseCase(inventarioId).fold(
+                onSuccess = { info ->
+                    _relatorioFotoState.value = RelatorioFotoState.InfoCarregada(info)
+                },
+                onFailure = { error ->
+                    Log.e(TAG, "Erro ao buscar info de fotos", error)
+                    _relatorioFotoState.value = RelatorioFotoState.Erro(
+                        "Não foi possível carregar informações de fotos"
+                    )
+                }
+            )
+        }
+    }
+
+    fun baixarRelatorioFoto(inventarioId: Int) {
+        viewModelScope.launch {
+            _relatorioFotoState.value = RelatorioFotoState.Downloading
+            baixarRelatorioFotoPdfUseCase(inventarioId).fold(
+                onSuccess = { arquivo ->
+                    _relatorioFotoState.value = RelatorioFotoState.PdfPronto(arquivo)
+                },
+                onFailure = { error ->
+                    Log.e(TAG, "Erro ao baixar relatório fotográfico", error)
+                    val mensagem = when (error) {
+                        is SemFotosException        -> error.message ?: "Nenhuma foto disponível"
+                        is PermissaoNegadaException -> error.message ?: "Sem permissão"
+                        else -> "Erro de conexão. Verifique a rede e tente novamente"
+                    }
+                    _relatorioFotoState.value = RelatorioFotoState.Erro(mensagem)
+                }
+            )
+        }
+    }
+
+    fun limparEstadoRelatorioFoto() {
+        _relatorioFotoState.value = RelatorioFotoState.Idle
     }
 }

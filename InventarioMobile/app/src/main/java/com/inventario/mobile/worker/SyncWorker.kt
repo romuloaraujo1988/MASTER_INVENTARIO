@@ -7,6 +7,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.inventario.mobile.domain.usecase.SincronizarColetasPendentesUseCase
 import com.inventario.mobile.domain.usecase.SincronizarFotosReferenciaUseCase
+import com.inventario.mobile.domain.usecase.SincronizarSugestoesDescricaoUseCase
 import com.inventario.mobile.utils.OfflineNotificationManager
 import com.inventario.mobile.utils.NetworkMonitor
 import com.inventario.mobile.utils.PreferencesManager
@@ -16,6 +17,13 @@ import dagger.assisted.AssistedInject
 /**
  * Worker para sincronização em background
  * Sincroniza coletas pendentes e fotos de referência automaticamente quando há conexão
+ *
+ * v2.22 (feature `coleta-descricao-livre-com-sugestao`):
+ *   Após coletas sincronizadas com sucesso, recarrega o cache local de
+ *   sugestões de descrição (Req 8.6). Falha nessa etapa é engolida para
+ *   preservar o cache anterior (Req 8.7) e não interromper o resultado
+ *   do worker — coletas e fotos continuam sendo a métrica principal de
+ *   sucesso.
  */
 @HiltWorker
 class SyncWorker @AssistedInject constructor(
@@ -23,6 +31,7 @@ class SyncWorker @AssistedInject constructor(
     @Assisted workerParams: WorkerParameters,
     private val sincronizarColetasPendentesUseCase: SincronizarColetasPendentesUseCase,
     private val sincronizarFotosReferenciaUseCase: SincronizarFotosReferenciaUseCase,
+    private val sincronizarSugestoesDescricaoUseCase: SincronizarSugestoesDescricaoUseCase,
     private val preferencesManager: PreferencesManager
 ) : CoroutineWorker(context, workerParams) {
     
@@ -53,8 +62,17 @@ class SyncWorker @AssistedInject constructor(
             
             // 3. Sincronizar fotos de referência (se habilitado)
             val fotosResult = sincronizarFotos()
+
+            // 4. Recarregar cache de sugestões de descrição
+            //    Feature: coleta-descricao-livre-com-sugestao (Req 8.6)
+            //    Só faz sentido após sincronizar coletas — assim o servidor
+            //    já reflete o estado corrente. Falha é engolida (Req 8.7 —
+            //    cache anterior permanece intocado via atualizarCache).
+            if (coletasResult) {
+                sincronizarSugestoesDescricao()
+            }
             
-            // 4. Determinar resultado final
+            // 5. Determinar resultado final
             if (coletasResult && fotosResult) {
                 Log.d(TAG, "✅ Sincronização completa concluída com sucesso")
                 Log.d(TAG, "═══════════════════════════════════════")
@@ -147,6 +165,42 @@ class SyncWorker @AssistedInject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "💥 Exceção na sincronização de fotos", e)
             false
+        }
+    }
+
+    /**
+     * Recarrega o cache local de sugestões de descrição para o inventário
+     * ativo (feature `coleta-descricao-livre-com-sugestao`).
+     *
+     * Falha (timeout de 10s, erro de rede, ausência de inventário ativo)
+     * é engolida deliberadamente — o use case já garante que o cache
+     * anterior permanece intocado em caso de erro (Req 8.7), e este passo
+     * é auxiliar ao worker: não deve alterar o resultado principal
+     * (sucesso/retry) baseado em coletas e fotos.
+     */
+    private suspend fun sincronizarSugestoesDescricao() {
+        try {
+            val idInventarioAtivo = preferencesManager.getInventarioAtivoId()
+            if (idInventarioAtivo == null) {
+                Log.d(TAG, "ℹ️ Sem inventário ativo — pulando sync de sugestões")
+                return
+            }
+            Log.d(TAG, "🔄 Recarregando cache de sugestões para inventário $idInventarioAtivo...")
+            val result = sincronizarSugestoesDescricaoUseCase(idInventarioAtivo)
+            if (result.isSuccess) {
+                val quantidade = result.getOrNull() ?: 0
+                Log.d(TAG, "✅ Cache de sugestões recarregado: $quantidade sugestão(ões)")
+            } else {
+                val error = result.exceptionOrNull()
+                // Req 8.7 — cache anterior preservado; apenas loga como warn
+                Log.w(
+                    TAG,
+                    "⚠️ Falha ao recarregar cache de sugestões (cache anterior preservado): ${error?.message}"
+                )
+            }
+        } catch (e: Exception) {
+            // Blindagem extra — nunca propagar para o doWork()
+            Log.w(TAG, "⚠️ Exceção ao recarregar cache de sugestões (ignorada)", e)
         }
     }
 }

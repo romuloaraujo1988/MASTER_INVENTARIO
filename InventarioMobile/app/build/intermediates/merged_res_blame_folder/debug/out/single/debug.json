@@ -4,10 +4,6 @@
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-75:\\drawable\\ic_collections.xml"
     },
     {
-        "merged": "com.inventario.mobile.app-merged_res-73:/xml_network_security_config.xml.flat",
-        "source": "com.inventario.mobile.app-main-75:/xml/network_security_config.xml"
-    },
-    {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-merged_res-73:\\drawable_ic_home.xml.flat",
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-75:\\drawable\\ic_home.xml"
     },
@@ -158,6 +154,10 @@
     {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-merged_res-73:\\layout_fragment_statistics_rankings.xml.flat",
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-75:\\layout\\fragment_statistics_rankings.xml"
+    },
+    {
+        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-merged_res-73:\\layout_item_sugestao_descricao.xml.flat",
+        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-75:\\layout\\item_sugestao_descricao.xml"
     },
     {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-merged_res-73:\\layout_activity_inventario_tabs.xml.flat",
@@ -332,6 +332,10 @@
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-75:\\layout\\fragment_charts.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-merged_res-73:/layout_activity_collection_view.xml.flat",
+        "source": "com.inventario.mobile.app-main-75:/layout/activity_collection_view.xml"
+    },
+    {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-merged_res-73:\\layout_item_coleta.xml.flat",
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-75:\\layout\\item_coleta.xml"
     },
@@ -492,10 +496,6 @@
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-75:\\drawable\\ic_mic_off.xml"
     },
     {
-        "merged": "com.inventario.mobile.app-merged_res-73:/xml_backup_rules.xml.flat",
-        "source": "com.inventario.mobile.app-main-75:/xml/backup_rules.xml"
-    },
-    {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-merged_res-73:\\drawable_bg_badge_pendente.xml.flat",
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-75:\\drawable\\bg_badge_pendente.xml"
     },
@@ -558,6 +558,10 @@
     {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-merged_res-73:\\drawable_ic_camera.xml.flat",
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-75:\\drawable\\ic_camera.xml"
+    },
+    {
+        "merged": "com.inventario.mobile.app-merged_res-73:/xml_file_paths.xml.flat",
+        "source": "com.inventario.mobile.app-main-75:/xml/file_paths.xml"
     },
     {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-merged_res-73:\\xml_network_security_config.xml.flat",
@@ -754,10 +758,6 @@
     {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-merged_res-73:\\layout_item_descricao.xml.flat",
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-75:\\layout\\item_descricao.xml"
-    },
-    {
-        "merged": "com.inventario.mobile.app-merged_res-73:/xml_data_extraction_rules.xml.flat",
-        "source": "com.inventario.mobile.app-main-75:/xml/data_extraction_rules.xml"
     },
     {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-merged_res-73:\\drawable_ic_calendar.xml.flat",

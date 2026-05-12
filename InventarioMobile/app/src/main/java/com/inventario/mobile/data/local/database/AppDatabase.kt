@@ -21,9 +21,10 @@ import com.inventario.mobile.data.local.entity.*
         SyncLogEntity::class,
         LogColetaEntity::class,  // v2.2: Log de auditoria
         HistoricoScanEntity::class,  // v2.11: Histórico de scans
-        FotoReferenciaEntity::class  // v2.9: Fotos de referência por descrição
+        FotoReferenciaEntity::class,  // v2.9: Fotos de referência por descrição
+        SugestaoDescricaoEntity::class  // feature: coleta-descricao-livre-com-sugestao — cache de sugestões
     ],
-    version = 16,  // v2.20.12: adiciona localizacaoEncontrada na tabela coleta
+    version = 17,  // feature: coleta-descricao-livre-com-sugestao — tabela sugestao_descricao
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -38,6 +39,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun dashboardDao(): DashboardDao  // v2.4: DAO reativo para estatísticas
     abstract fun historicoScanDao(): HistoricoScanDao  // v2.11: DAO de histórico de scans
     abstract fun fotoReferenciaDao(): FotoReferenciaDao  // v2.9: DAO de fotos de referência
+    abstract fun sugestaoDescricaoDao(): SugestaoDescricaoDao  // feature: coleta-descricao-livre-com-sugestao
     
     companion object {
         @Volatile
@@ -355,6 +357,61 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Migração da versão 16 para 17.
+         * Cria a tabela `sugestao_descricao` usada como cache offline do
+         * Autocomplete de sugestões de descrição na tela de coleta de item
+         * sem etiqueta (feature `coleta-descricao-livre-com-sugestao`).
+         *
+         * - Chave composta (idInventario, idPatrimonio) isola o cache por
+         *   inventário e evita duplicatas quando múltiplos patrimônios
+         *   compartilham a mesma descrição (Req 7.1, 8.4).
+         * - Coluna `descricaoNormalizada` é pré-computada via `TextNormalizer`
+         *   no upsert, permitindo filtro acento/caso-insensível idêntico ao
+         *   do servidor sem custo em caminho quente (Req 7.2).
+         * - Coluna `coletadoLocal` é marcada imediatamente após a coleta,
+         *   fazendo a sugestão sumir do autocomplete sem esperar sync (Req 8.1).
+         *
+         * Os nomes dos índices seguem a convenção padrão do Room
+         * (`index_<tabela>_<colunas_separadas_por_underscore>`) para permanecer
+         * consistentes com o schema gerado a partir da @Entity.
+         *
+         * Nenhuma tabela pré-existente é alterada nesta migração.
+         *
+         * Visibilidade `internal` + `@VisibleForTesting` para permitir que o
+         * teste instrumentado `Migration16To17Test` aplique a migração direto
+         * sobre um `SupportSQLiteDatabase` sintético, sem depender de
+         * `MigrationTestHelper` ou de schema JSON exportado.
+         */
+        @androidx.annotation.VisibleForTesting
+        internal val MIGRATION_16_17 = object : androidx.room.migration.Migration(16, 17) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS sugestao_descricao (
+                        idInventario INTEGER NOT NULL,
+                        idPatrimonio INTEGER NOT NULL,
+                        numeroPatrimonio TEXT NOT NULL,
+                        descricao TEXT NOT NULL,
+                        descricaoNormalizada TEXT NOT NULL,
+                        coletadoLocal INTEGER NOT NULL DEFAULT 0,
+                        dataAtualizacao INTEGER NOT NULL DEFAULT 0,
+                        PRIMARY KEY(idInventario, idPatrimonio)
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_sugestao_descricao_idInventario_coletadoLocal ON sugestao_descricao (idInventario, coletadoLocal)"
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_sugestao_descricao_idInventario_descricaoNormalizada ON sugestao_descricao (idInventario, descricaoNormalizada)"
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_sugestao_descricao_descricaoNormalizada ON sugestao_descricao (descricaoNormalizada)"
+                )
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 // Passphrase do SQLCipher via Android Keystore — spec correcoes-seguranca Req 3
@@ -395,7 +452,7 @@ abstract class AppDatabase : RoomDatabase() {
                     dbName
                 )
                     .openHelperFactory(factory)
-                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)  // v2.20.12: localizacaoEncontrada na coleta
+                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17)  // feature: coleta-descricao-livre-com-sugestao — sugestao_descricao
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

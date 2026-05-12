@@ -54,17 +54,43 @@
                 android:layout_height="wrap_content"
                 android:hint="Descrição do item *"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_marginBottom="16dp">
+                app:counterEnabled="true"
+                app:counterMaxLength="255"
+                android:layout_marginBottom="8dp">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/edtDescricao"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textCapSentences|textMultiLine"
+                    android:maxLength="255"
                     android:maxLines="3"
                     android:minLines="2" />
 
             </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Toggle de Sugestão de Descrições -->
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/toggleSugestao"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:text="Sugerir descrições cadastradas"
+                android:textSize="14sp"
+                android:layout_marginBottom="8dp" />
+
+            <!-- RecyclerView de Sugestões -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvSugestoes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxHeight="240dp"
+                android:nestedScrollingEnabled="true"
+                android:visibility="gone"
+                android:background="@android:color/white"
+                android:elevation="2dp"
+                android:layout_marginBottom="16dp"
+                tools:visibility="visible" />
 
             <!-- Categoria -->
             <com.google.android.material.textfield.TextInputLayout

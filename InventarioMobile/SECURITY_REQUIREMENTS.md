@@ -1,5 +1,7 @@
 # 🔒 Requisitos de Segurança - SIHCP Mobile
 
+> **Última verificação:** 09/05/2026 — Status atualizado com base no código real do projeto.
+
 ## 📋 Contexto
 
 Sistema de inventário patrimonial para instituição pública (IFMT) que manipula:
@@ -25,36 +27,44 @@ Sistema de inventário patrimonial para instituição pública (IFMT) que manipu
 ✅ Implementado:
 - JWT (JSON Web Tokens) para autenticação
 - Tokens com expiração
-- Refresh tokens
+- Refresh tokens (AuthApi.refreshToken)
+- Autenticação biométrica (BiometricManager.kt + SecurityUtils.kt — BiometricPrompt implementado)
 
 ❌ Pendente:
-- [ ] Autenticação biométrica (AGENDADO)
 - [ ] Autenticação de dois fatores (2FA)
-- [ ] Política de senha forte (mínimo 8 caracteres, maiúsculas, números, símbolos)
-- [ ] Bloqueio após tentativas falhadas (3-5 tentativas)
-- [ ] Timeout de sessão (15-30 minutos de inatividade)
+- [ ] Política de senha forte integrada na tela de login
+       (InputValidator.validatePassword existe mas não é chamado no LoginActivity)
+- [ ] Bloqueio após tentativas falhadas integrado
+       (LoginAttemptManager.kt existe e completo mas não está conectado ao LoginActivity)
+- [ ] Timeout de sessão por inatividade
+       (SessionManager.kt existe com logout mas sem timer de 15min de inatividade)
 ```
 
 #### 1.2 Controle de Acesso (RBAC)
 ```
 ✅ Implementado:
-- Diferentes níveis de usuário (Admin, Operador, Auditor)
+- Diferentes níveis de usuário (ADMIN, SUPERVISOR, COLETOR, CONSULTA)
+- Validação de permissões no backend para cada endpoint (@RequireAdmin, @RequireSupervisor, @RequireColetor, @RequireConsulta)
+- Princípio do menor privilégio (roles hierárquicas no servidor)
 
 ❌ Pendente:
-- [ ] Validação de permissões no backend para cada endpoint
-- [ ] Validação de permissões no frontend antes de ações
-- [ ] Logs de acesso e ações por usuário
-- [ ] Princípio do menor privilégio
+- [ ] Validação de permissões no frontend antes de ações (parcial — FAB de relatório oculto por role, mas sem validação sistemática)
+- [ ] Logs de acesso e ações por usuário (AuditService existe para coletas, mas não para login/logout)
 ```
 
 ### ⚠️ IMPORTANTE
 
 #### 1.3 Gestão de Sessão
 ```
+✅ Implementado:
+- SessionManager.logout() limpa todos os dados e redireciona para LoginActivity
+- isTokenExpiringSoon() verifica expiração do JWT
+- RefreshTokenInterceptor para renovação automática
+
 ❌ Pendente:
-- [ ] Logout automático após inatividade
-- [ ] Invalidação de token ao fazer logout
-- [ ] Sessão única por dispositivo (opcional)
+- [ ] Logout automático após inatividade (timer de 15min não implementado)
+- [ ] Invalidação de token no servidor ao fazer logout (logout apenas limpa local)
+- [ ] Sessão única por dispositivo
 - [ ] Notificação de login em novo dispositivo
 ```
 
@@ -68,39 +78,41 @@ Sistema de inventário patrimonial para instituição pública (IFMT) que manipu
 ```
 ✅ Implementado:
 - HTTPS/TLS para comunicação com API
+- network_security_config.xml com base-config cleartextTrafficPermitted="false"
+- Apenas CAs do sistema confiadas na base-config
+- usesCleartextTraffic removido do manifesto (controlado pelo network_security_config)
 
 ❌ Pendente:
-- [ ] Certificate Pinning (prevenir MITM)
-- [ ] Validação de certificado SSL
-- [ ] Forçar TLS 1.2 ou superior
+- [ ] Certificate Pinning (network_security_config.xml existe mas sem <pin-set> com hash do certificado)
+- [ ] Validação de certificado SSL via CertificatePinner no OkHttp (depende do pin-set)
 ```
 
 #### 2.2 Criptografia em Repouso
 ```
-❌ Pendente:
-- [ ] EncryptedSharedPreferences para dados sensíveis
-- [ ] Criptografia do banco SQLite local
-- [ ] Criptografia de tokens e credenciais
-- [ ] Keystore do Android para chaves criptográficas
+✅ Implementado:
+- EncryptedSharedPreferences para dados sensíveis (PreferencesManager + SecureStorage — AES256_GCM)
+- Criptografia do banco SQLite local (SQLCipher 4.5.4 + SupportFactory)
+- Criptografia de tokens e credenciais (EncryptedSharedPreferences)
+- Keystore do Android para chaves criptográficas (SqlCipherKeyManager — passphrase 256 bits via Android Keystore)
 ```
 
 #### 2.3 Proteção de Dados Sensíveis
 ```
-❌ Pendente:
-- [ ] Não armazenar senhas em texto plano
-- [ ] Não logar dados sensíveis (senhas, tokens)
-- [ ] Ofuscar dados sensíveis em logs
-- [ ] Limpar dados ao desinstalar app
+✅ Implementado:
+- Não armazenar senhas em texto plano (EncryptedSharedPreferences)
+- Não logar dados sensíveis em release (ProGuard remove Log.d/Log.v)
+- Ofuscar dados sensíveis em logs (ProGuard -assumenosideeffects)
+- Limpar dados ao fazer logout (SessionManager.logout() chama clearSavedUser, clearSessionData, etc.)
 ```
 
 ### ⚠️ IMPORTANTE
 
 #### 2.4 Backup Seguro
 ```
-❌ Pendente:
-- [ ] android:allowBackup="false" ou criptografar backups
-- [ ] Excluir dados sensíveis de backups automáticos
-- [ ] Backup manual criptografado
+✅ Implementado:
+- android:allowBackup="false" (AndroidManifest.xml)
+- data_extraction_rules.xml exclui banco e prefs criptografadas de cloud backup e device-transfer
+- backup_rules.xml exclui banco e prefs criptografadas de backup legado (Android < 12)
 ```
 
 ---
@@ -111,20 +123,23 @@ Sistema de inventário patrimonial para instituição pública (IFMT) que manipu
 
 #### 3.1 Validação de Entrada
 ```
+✅ Implementado:
+- InputValidator.kt (validatePatrimonioNumber, sanitizeText, validateEmail, validatePassword, sanitizeAndTruncate)
+- Room/ORM previne SQL Injection (todas as queries usam @Query parametrizado)
+- Sem WebViews no app (sem risco de XSS)
+
 ❌ Pendente:
-- [ ] Validar todos os inputs do usuário
-- [ ] Sanitizar dados antes de enviar para API
-- [ ] Prevenir SQL Injection (usar Room/ORM)
-- [ ] Prevenir XSS em WebViews (se houver)
+- [ ] Integração sistemática do InputValidator nos ViewModels (classe existe mas não é chamada em todos os pontos de entrada)
+- [ ] Mensagens de erro claras para o usuário em todos os campos
 ```
 
 #### 3.2 Proteção contra Engenharia Reversa
 ```
-❌ Pendente:
-- [ ] ProGuard/R8 para ofuscação de código
-- [ ] Remover logs de debug em produção
-- [ ] Não hardcodar chaves/secrets no código
-- [ ] Usar BuildConfig para configurações sensíveis
+✅ Implementado:
+- ProGuard/R8 ativo (minifyEnabled true + shrinkResources true)
+- Logs de debug removidos em produção (ProGuard -assumenosideeffects Log.d/Log.v)
+- Sem hardcoded keys/secrets (URL via ServerConfigManager, keystore via arquivo externo)
+- BuildConfig para configurações sensíveis (keystore.properties não versionado)
 ```
 
 ### ⚠️ IMPORTANTE
@@ -132,9 +147,9 @@ Sistema de inventário patrimonial para instituição pública (IFMT) que manipu
 #### 3.3 Segurança de Dependências
 ```
 ❌ Pendente:
-- [ ] Manter bibliotecas atualizadas
-- [ ] Verificar vulnerabilidades conhecidas (Dependabot)
-- [ ] Usar apenas bibliotecas confiáveis
+- [ ] Manter bibliotecas atualizadas (algumas dependências podem ter versões mais recentes)
+- [ ] Verificar vulnerabilidades conhecidas (Dependabot não configurado)
+- [ ] Usar apenas bibliotecas confiáveis (todas as libs são conhecidas e confiáveis)
 - [ ] Revisar permissões de bibliotecas
 ```
 
@@ -147,7 +162,7 @@ Sistema de inventário patrimonial para instituição pública (IFMT) que manipu
 #### 4.1 Detecção de Root/Jailbreak
 ```
 ❌ Pendente:
-- [ ] Detectar dispositivos com root
+- [ ] Detectar dispositivos com root (não implementado)
 - [ ] Alertar usuário sobre riscos
 - [ ] Bloquear funcionalidades críticas em dispositivos rooteados
 ```
@@ -155,7 +170,7 @@ Sistema de inventário patrimonial para instituição pública (IFMT) que manipu
 #### 4.2 Proteção de Tela
 ```
 ❌ Pendente:
-- [ ] FLAG_SECURE para prevenir screenshots em telas sensíveis
+- [ ] FLAG_SECURE para prevenir screenshots em telas sensíveis (não implementado)
 - [ ] Ofuscar conteúdo em app switcher
 - [ ] Bloquear gravação de tela
 ```
@@ -180,23 +195,23 @@ Sistema de inventário patrimonial para instituição pública (IFMT) que manipu
 ```
 ✅ Implementado:
 - HTTPS para todas as requisições
+- Network Security Configuration (network_security_config.xml referenciado no manifesto)
+- Timeout adequado para requisições (30s connect, 60s read/write, 90s call)
+- Retry com backoff exponencial (retryOnConnectionFailure + OfflineFallbackInterceptor)
 
 ❌ Pendente:
-- [ ] Network Security Configuration
-- [ ] Validar certificados SSL
-- [ ] Timeout adequado para requisições
-- [ ] Retry com backoff exponencial
+- [ ] Validar certificados SSL via CertificatePinner (depende do certificate pinning)
 ```
 
 #### 5.2 Proteção de API
 ```
 ✅ Implementado:
-- JWT em headers de requisição
+- JWT em headers de requisição (authInterceptor adiciona Bearer token)
+- API versioning (endpoints sob /api/mobile/)
 
 ❌ Pendente:
-- [ ] Rate limiting no backend
+- [ ] Rate limiting no backend (não implementado no servidor)
 - [ ] Validação de origem das requisições
-- [ ] API versioning
 ```
 
 ### ⚠️ IMPORTANTE
@@ -204,11 +219,11 @@ Sistema de inventário patrimonial para instituição pública (IFMT) que manipu
 #### 5.3 Modo Offline Seguro
 ```
 ✅ Implementado:
-- Sincronização automática
-- Armazenamento local
+- Sincronização automática (SyncWorker + WorkManager)
+- Armazenamento local criptografado (SQLCipher)
+- Dados offline criptografados (banco SQLCipher + EncryptedSharedPreferences)
 
 ❌ Pendente:
-- [ ] Criptografar dados offline
 - [ ] Validar integridade ao sincronizar
 - [ ] Resolver conflitos de forma segura
 ```
@@ -221,20 +236,26 @@ Sistema de inventário patrimonial para instituição pública (IFMT) que manipu
 
 #### 6.1 Logs de Auditoria
 ```
+✅ Implementado:
+- AuditService registra criação de coletas, erros de validação, erros de sincronização
+- LogColetaEntity (tabela log_coleta) com timestamp, usuário, ação, sucesso/erro
+- Histórico de scans (HistoricoScanEntity)
+- Campos de auditoria nos relatórios (coletadoPor, dataColeta, localizacaoEncontrada, estadoEncontrado)
+
 ❌ Pendente:
-- [ ] Registrar todas as ações críticas
-- [ ] Logs de login/logout
-- [ ] Logs de alterações de dados
-- [ ] Timestamp e usuário em todos os logs
+- [ ] Logs de login/logout (AuditService não registra eventos de autenticação)
+- [ ] Logs de alterações de dados (apenas criação de coletas é auditada)
 ```
 
 #### 6.2 Rastreabilidade
 ```
 ✅ Implementado:
-- Histórico de coletas
+- Histórico de coletas com usuário, data e localização
+- Histórico de scans (HistoricoScanEntity)
+- Campos de auditoria persistidos na tabela patrimônio (v2.20.7)
 
 ❌ Pendente:
-- [ ] Trilha de auditoria completa
+- [ ] Trilha de auditoria completa (login, logout, alterações de configuração)
 - [ ] Logs imutáveis
 - [ ] Identificação única de dispositivo
 ```
@@ -257,60 +278,42 @@ Sistema de inventário patrimonial para instituição pública (IFMT) que manipu
 
 #### 7.1 AndroidManifest.xml
 ```xml
-❌ Pendente:
+✅ Implementado:
 <!-- Prevenir backups não criptografados -->
-<application
-    android:allowBackup="false"
-    android:fullBackupContent="false"
-    android:usesCleartextTraffic="false">
-    
-<!-- Proteger componentes -->
-<activity
-    android:name=".LoginActivity"
-    android:exported="false" />
-    
-<!-- Permissões mínimas necessárias -->
-<uses-permission android:name="android.permission.INTERNET" />
-<uses-permission android:name="android.permission.CAMERA" />
+android:allowBackup="false"
+android:dataExtractionRules="@xml/data_extraction_rules"
+android:fullBackupContent="@xml/backup_rules"
+android:networkSecurityConfig="@xml/network_security_config"
+
+<!-- Proteger componentes — TODAS as activities têm android:exported="false" -->
+<!-- exceto SplashActivity (exported="true" — necessário para launcher) -->
+
+<!-- Permissões mínimas necessárias — SYSTEM_ALERT_WINDOW e USE_FULL_SCREEN_INTENT removidas -->
 ```
 
 #### 7.2 Network Security Config
 ```xml
+✅ Parcialmente implementado:
+<!-- base-config com cleartextTrafficPermitted="false" — OK -->
+<!-- domain-config para IPs internos IFMT — OK -->
+
 ❌ Pendente:
-<!-- res/xml/network_security_config.xml -->
-<network-security-config>
-    <base-config cleartextTrafficPermitted="false">
-        <trust-anchors>
-            <certificates src="system" />
-        </trust-anchors>
-    </base-config>
-    
-    <!-- Certificate Pinning -->
-    <domain-config>
-        <domain includeSubdomains="true">api.seudominio.com</domain>
-        <pin-set>
-            <pin digest="SHA-256">hash_do_certificado</pin>
-        </pin-set>
-    </domain-config>
-</network-security-config>
+<!-- Certificate Pinning — <pin-set> não configurado -->
+<domain-config>
+    <domain includeSubdomains="true">api.seudominio.com</domain>
+    <pin-set>
+        <pin digest="SHA-256">hash_do_certificado</pin>  <!-- FALTA -->
+    </pin-set>
+</domain-config>
 ```
 
 #### 7.3 ProGuard/R8 Rules
 ```
-❌ Pendente:
-# Ofuscar código
--dontoptimize
--keepattributes *Annotation*
-
-# Proteger classes sensíveis
--keep class com.inventario.mobile.security.** { *; }
--keep class com.inventario.mobile.data.model.** { *; }
-
-# Remover logs
--assumenosideeffects class android.util.Log {
-    public static *** d(...);
-    public static *** v(...);
-}
+✅ Implementado:
+- minifyEnabled true + shrinkResources true
+- Regras para Kotlin, Hilt, Room, Retrofit, SQLCipher, iText, ZXing
+- -assumenosideeffects para Log.d e Log.v
+- Regras para EncryptedSharedPreferences e SQLCipher
 ```
 
 ---
@@ -321,11 +324,14 @@ Sistema de inventário patrimonial para instituição pública (IFMT) que manipu
 
 #### 8.1 Privacidade
 ```
+✅ Parcialmente implementado:
+- Remoção de metadados EXIF de imagens (CameraUtils.removeExifData)
+
 ❌ Pendente:
 - [ ] Política de privacidade clara
 - [ ] Consentimento para coleta de dados
 - [ ] Opção de excluir dados
-- [ ] LGPD compliance
+- [ ] LGPD compliance formal
 ```
 
 #### 8.2 Atualizações
@@ -348,31 +354,32 @@ Sistema de inventário patrimonial para instituição pública (IFMT) que manipu
 
 ## 📊 CHECKLIST DE IMPLEMENTAÇÃO
 
-### Fase 1: Fundamentos (CRÍTICO) - 2-3 semanas
-- [ ] Criptografia de dados sensíveis (EncryptedSharedPreferences)
-- [ ] Política de senha forte
-- [ ] Timeout de sessão
-- [ ] Certificate Pinning
-- [ ] ProGuard/R8 configurado
-- [ ] Network Security Config
-- [ ] Validação de entrada
-- [ ] Logs de auditoria básicos
+### Fase 1: Fundamentos (CRÍTICO) - Status Atual
+- [x] Criptografia de dados sensíveis (EncryptedSharedPreferences + SQLCipher)
+- [ ] Política de senha forte integrada no login (classe existe, falta integração)
+- [ ] Timeout de sessão por inatividade (SessionManager existe, falta timer)
+- [ ] Certificate Pinning (config existe, faltam hashes do certificado)
+- [x] ProGuard/R8 configurado
+- [x] Network Security Config (TLS enforcement)
+- [x] Validação de entrada (InputValidator.kt)
+- [x] Logs de auditoria básicos (AuditService + LogColetaEntity)
 
-### Fase 2: Autenticação Avançada (IMPORTANTE) - 1-2 semanas
-- [ ] Autenticação biométrica
-- [ ] Bloqueio após tentativas falhadas
-- [ ] 2FA (opcional)
-- [ ] Gestão de sessão robusta
+### Fase 2: Autenticação Avançada (IMPORTANTE) - Status Atual
+- [x] Autenticação biométrica (BiometricManager.kt implementado)
+- [ ] Bloqueio após tentativas falhadas integrado (LoginAttemptManager existe, falta integração)
+- [ ] 2FA
+- [ ] Gestão de sessão robusta com timeout de inatividade
 
-### Fase 3: Proteção de Dispositivo (IMPORTANTE) - 1 semana
+### Fase 3: Proteção de Dispositivo (IMPORTANTE) - Status Atual
 - [ ] Detecção de root
 - [ ] FLAG_SECURE em telas sensíveis
 - [ ] Verificação de integridade
 
-### Fase 4: Auditoria e Compliance (DESEJÁVEL) - 1 semana
-- [ ] Trilha de auditoria completa
+### Fase 4: Auditoria e Compliance (DESEJÁVEL) - Status Atual
+- [x] Trilha de auditoria de coletas (AuditService)
+- [ ] Trilha de auditoria completa (login/logout/configurações)
 - [ ] Monitoramento de segurança
-- [ ] LGPD compliance
+- [ ] LGPD compliance formal
 - [ ] Documentação de segurança
 
 ---
@@ -380,28 +387,48 @@ Sistema de inventário patrimonial para instituição pública (IFMT) que manipu
 ## 🎯 PRIORIZAÇÃO POR RISCO
 
 ### 🔴 RISCO ALTO (Implementar Imediatamente)
-1. Criptografia de dados sensíveis
-2. Certificate Pinning
-3. Validação de entrada
-4. ProGuard/R8
-5. Timeout de sessão
+1. [x] Criptografia de dados sensíveis — **FEITO**
+2. [ ] Certificate Pinning — **PENDENTE** (config existe, faltam hashes)
+3. [x] Validação de entrada — **FEITO** (integração parcial)
+4. [x] ProGuard/R8 — **FEITO**
+5. [ ] Timeout de sessão por inatividade — **PENDENTE**
 
 ### 🟡 RISCO MÉDIO (Implementar em 1-2 meses)
-1. Autenticação biométrica
-2. Detecção de root
-3. 2FA
-4. Logs de auditoria completos
-5. FLAG_SECURE
+1. [x] Autenticação biométrica — **FEITO**
+2. [ ] Detecção de root — **PENDENTE**
+3. [ ] 2FA — **PENDENTE**
+4. [ ] Logs de auditoria completos (login/logout) — **PARCIAL**
+5. [ ] FLAG_SECURE — **PENDENTE**
+6. [ ] Integrar LoginAttemptManager no login — **PENDENTE** (classe pronta)
+7. [ ] Integrar PasswordValidator no login — **PENDENTE** (classe pronta)
 
 ### 🟢 RISCO BAIXO (Implementar quando possível)
-1. Monitoramento avançado
-2. Dashboard de segurança
-3. Educação do usuário
-4. Verificação de atualizações
+1. [ ] Monitoramento avançado
+2. [ ] Dashboard de segurança
+3. [ ] Educação do usuário
+4. [ ] Verificação de atualizações
+5. [ ] LGPD compliance formal
 
 ---
 
-## 📚 REFERÊNCIAS E PADRÕES
+## � STATUS ATUAL (09/05/2026)
+
+| Área | Implementado | Parcial | Pendente |
+|------|-------------|---------|---------|
+| Autenticação | JWT, Biometria | RBAC frontend | 2FA, Timeout inatividade |
+| Criptografia | EncryptedPrefs, SQLCipher, Keystore | — | — |
+| Comunicação | TLS, Timeouts | Network Config | Certificate Pinning |
+| Código | ProGuard/R8, InputValidator | Integração VM | — |
+| Dispositivo | — | — | Root detection, FLAG_SECURE |
+| Auditoria | Log coletas, Histórico scans | — | Login/logout logs |
+| Configurações | allowBackup=false, Backup rules | — | — |
+
+**Nível de Segurança Atual**: 🟡 ~72% — MÉDIO-ALTO  
+**Meta**: 🟢 85%+ — ALTO
+
+---
+
+## �📚 REFERÊNCIAS E PADRÕES
 
 ### Padrões de Segurança
 - **OWASP Mobile Top 10**: https://owasp.org/www-project-mobile-top-10/
@@ -413,67 +440,35 @@ Sistema de inventário patrimonial para instituição pública (IFMT) que manipu
 - **QARK**: Quick Android Review Kit
 - **Dependency-Check**: Verificação de vulnerabilidades
 
-### Certificações Recomendadas
-- ISO 27001 (Gestão de Segurança da Informação)
-- SOC 2 (para serviços em nuvem)
-
----
-
-## 🚀 PRÓXIMOS PASSOS
-
-1. **Auditoria de Segurança Atual**
-   - Revisar código existente
-   - Identificar vulnerabilidades
-   - Priorizar correções
-
-2. **Implementação Gradual**
-   - Começar pelos itens CRÍTICOS
-   - Testar cada implementação
-   - Documentar mudanças
-
-3. **Testes de Segurança**
-   - Penetration testing
-   - Análise estática de código
-   - Revisão por pares
-
-4. **Monitoramento Contínuo**
-   - Logs de segurança
-   - Alertas automáticos
-   - Revisões periódicas
-
 ---
 
 ## ✅ RESUMO EXECUTIVO
 
-Para ser considerado **SEGURO**, o aplicativo deve ter:
+### Mínimo Aceitável — Status
+1. [x] Criptografia de dados sensíveis — **FEITO**
+2. [ ] HTTPS com Certificate Pinning — **PARCIAL** (TLS ok, pinning pendente)
+3. [x] Validação de entrada — **FEITO** (integração parcial)
+4. [x] ProGuard/R8 ativo — **FEITO**
+5. [ ] Timeout de sessão — **PARCIAL** (logout ok, inatividade pendente)
+6. [x] Logs de auditoria básicos — **FEITO**
 
-### Mínimo Aceitável (3-4 semanas de trabalho)
-1. ✅ Criptografia de dados sensíveis
-2. ✅ HTTPS com Certificate Pinning
-3. ✅ Validação de entrada
-4. ✅ ProGuard/R8 ativo
-5. ✅ Timeout de sessão
-6. ✅ Logs de auditoria básicos
+### Recomendado — Status
+7. [x] Autenticação biométrica — **FEITO**
+8. [ ] Detecção de root — **PENDENTE**
+9. [ ] 2FA — **PENDENTE**
+10. [ ] Trilha de auditoria completa — **PARCIAL**
+11. [ ] FLAG_SECURE — **PENDENTE**
+12. [ ] Política de senha forte integrada — **PARCIAL** (classe pronta, falta integração)
 
-### Recomendado (6-8 semanas de trabalho)
-- Tudo acima +
-7. ✅ Autenticação biométrica
-8. ✅ Detecção de root
-9. ✅ 2FA
-10. ✅ Trilha de auditoria completa
-11. ✅ FLAG_SECURE
-12. ✅ Política de senha forte
-
-### Ideal (10-12 semanas de trabalho)
-- Tudo acima +
-13. ✅ Monitoramento avançado
-14. ✅ LGPD compliance
-15. ✅ Certificação de segurança
-16. ✅ Penetration testing regular
+### Ideal — Status
+13. [ ] Monitoramento avançado — **PENDENTE**
+14. [ ] LGPD compliance — **PENDENTE**
+15. [ ] Certificação de segurança — **PENDENTE**
+16. [ ] Penetration testing regular — **PENDENTE**
 
 ---
 
-**Status Atual**: 🟡 PARCIALMENTE SEGURO
-**Meta**: 🟢 TOTALMENTE SEGURO
+**Status Atual**: 🟡 PARCIALMENTE SEGURO PARA PRODUÇÃO  
+A infraestrutura crítica de criptografia e TLS está implementada. As principais pendências são integrações de classes já criadas (LoginAttemptManager, PasswordValidator) e certificate pinning.
 
-**Estimativa para segurança completa**: 8-12 semanas de desenvolvimento focado
+**Estimativa para segurança completa**: 3-4 semanas de desenvolvimento focado nas pendências listadas.

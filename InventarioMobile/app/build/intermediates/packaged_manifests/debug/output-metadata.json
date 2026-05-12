@@ -11,8 +11,8 @@
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 69,
-      "versionName": "2.21.0-security",
+      "versionCode": 70,
+      "versionName": "2.22.0",
       "outputFile": "AndroidManifest.xml"
     }
   ],

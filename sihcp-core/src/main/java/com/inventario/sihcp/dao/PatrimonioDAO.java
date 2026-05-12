@@ -1355,4 +1355,140 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
         
         return resultado;
     }
+
+    /**
+     * Busca sugestões de descrições de patrimônios NÃO coletados no inventário
+     * indicado, com filtro acento/caso-insensível sobre a descrição, paginação e
+     * ordenação estável.
+     *
+     * <p>Retorna linha-a-linha (não agrupado) para permitir que o cliente associe
+     * cada sugestão a um {@code idPatrimonio} específico. Este método é usado
+     * pelo endpoint mobile dedicado a sugestões e NÃO substitui
+     * {@link #buscarDescricoesNaoColetadasAgrupadas(Integer)}, que permanece em
+     * uso pelo endpoint legado {@code GET /api/mobile/descricoes/nao-coletadas}.</p>
+     *
+     * <p>SQL utilizado (PostgreSQL, requer extensão {@code unaccent}):</p>
+     * <pre>
+     * SELECT p.ID, p.NUMERO, p.DESCRICAO
+     * FROM TABELA_PATRIMONIO p
+     * WHERE (p.STATUS IS NULL OR UPPER(p.STATUS) NOT IN ('BAIXADO', 'INATIVO'))
+     *   AND p.DESCRICAO IS NOT NULL
+     *   AND TRIM(p.DESCRICAO) &lt;&gt; ''
+     *   AND NOT EXISTS (
+     *       SELECT 1 FROM TABELA_COLETA c
+     *       WHERE c.ID_PATRIMONIO = p.ID
+     *         AND c.ID_INVENTARIO = ?
+     *   )
+     *   AND (? = '' OR unaccent(lower(p.DESCRICAO)) LIKE '%' || unaccent(lower(?)) || '%')
+     * ORDER BY unaccent(lower(p.DESCRICAO)) ASC, p.NUMERO ASC
+     * LIMIT ? OFFSET ?;
+     * </pre>
+     *
+     * <p>A ordenação por {@code unaccent(lower(p.DESCRICAO))} com desempate
+     * determinístico por {@code p.NUMERO} garante estabilidade entre páginas
+     * (Property 12). Um segundo {@code SELECT COUNT(*)} com os mesmos filtros
+     * calcula {@code totalElements}.</p>
+     *
+     * <p>Quando {@code termoBusca} é {@code null} ou vazio, ele é enviado como
+     * string vazia e o predicado {@code (? = '' OR ...)} faz o curto-circuito,
+     * efetivamente desabilitando o filtro {@code LIKE} sem necessidade de SQL
+     * alternativo.</p>
+     *
+     * <p>Todos os valores são passados via {@link PreparedStatement} sem
+     * interpolação de strings, preservando a proteção contra SQL injection
+     * já adotada pelos demais métodos deste DAO.</p>
+     *
+     * <p>Requirements: 5.2, 5.4, 5.5, 5.6, 6.4, 9.9.</p>
+     *
+     * @param idInventario identificador do inventário ativo usado no filtro
+     *                     {@code NOT EXISTS} contra {@code TABELA_COLETA}
+     * @param termoBusca   termo de busca já normalizado pela camada de service
+     *                     (trim e truncado a 100 chars); {@code null} é tratado
+     *                     como string vazia (sem filtro LIKE)
+     * @param page         índice da página, iniciando em {@code 0} (deve ser
+     *                     não-negativo; saneamento é responsabilidade do service)
+     * @param size         tamanho da página em número de itens (deve estar em
+     *                     {@code [1, 100]}; saneamento é responsabilidade do service)
+     * @return página com os itens correspondentes e o total de elementos para
+     *         os mesmos filtros
+     * @throws SQLException se ocorrer erro de acesso ao banco
+     */
+    public PagedResult<SugestaoDescricaoRow> buscarSugestoesNaoColetadasPaginado(
+            int idInventario,
+            String termoBusca,
+            int page,
+            int size
+    ) throws SQLException {
+        // Termo nulo é equivalente a "sem filtro" — o predicado (? = '' OR ...)
+        // trata esse caso sem necessidade de SQL alternativo.
+        final String termo = (termoBusca == null) ? "" : termoBusca;
+        final int offset = page * size;
+
+        final String sqlData =
+                "SELECT p.ID, p.NUMERO, p.DESCRICAO " +
+                "FROM TABELA_PATRIMONIO p " +
+                "WHERE (p.STATUS IS NULL OR UPPER(p.STATUS) NOT IN ('BAIXADO', 'INATIVO')) " +
+                "  AND p.DESCRICAO IS NOT NULL " +
+                "  AND TRIM(p.DESCRICAO) <> '' " +
+                "  AND NOT EXISTS ( " +
+                "      SELECT 1 FROM TABELA_COLETA c " +
+                "      WHERE c.ID_PATRIMONIO = p.ID " +
+                "        AND c.ID_INVENTARIO = ? " +
+                "  ) " +
+                "  AND (? = '' OR unaccent(lower(p.DESCRICAO)) LIKE '%' || unaccent(lower(?)) || '%') " +
+                "ORDER BY unaccent(lower(p.DESCRICAO)) ASC, p.NUMERO ASC " +
+                "LIMIT ? OFFSET ?";
+
+        final String sqlCount =
+                "SELECT COUNT(*) FROM TABELA_PATRIMONIO p " +
+                "WHERE (p.STATUS IS NULL OR UPPER(p.STATUS) NOT IN ('BAIXADO', 'INATIVO')) " +
+                "  AND p.DESCRICAO IS NOT NULL " +
+                "  AND TRIM(p.DESCRICAO) <> '' " +
+                "  AND NOT EXISTS ( " +
+                "      SELECT 1 FROM TABELA_COLETA c " +
+                "      WHERE c.ID_PATRIMONIO = p.ID " +
+                "        AND c.ID_INVENTARIO = ? " +
+                "  ) " +
+                "  AND (? = '' OR unaccent(lower(p.DESCRICAO)) LIKE '%' || unaccent(lower(?)) || '%')";
+
+        final List<SugestaoDescricaoRow> items = new ArrayList<>();
+        long totalElements = 0L;
+
+        try (Connection conn = com.inventario.sihcp.util.ConnectionManager.getConnection()) {
+
+            // Consulta principal (página corrente)
+            try (PreparedStatement stmt = conn.prepareStatement(sqlData)) {
+                stmt.setInt(1, idInventario);
+                stmt.setString(2, termo);
+                stmt.setString(3, termo);
+                stmt.setInt(4, size);
+                stmt.setInt(5, offset);
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        items.add(new SugestaoDescricaoRow(
+                                rs.getInt("ID"),
+                                rs.getString("NUMERO"),
+                                rs.getString("DESCRICAO")
+                        ));
+                    }
+                }
+            }
+
+            // Contagem total com os mesmos filtros (sem LIMIT/OFFSET)
+            try (PreparedStatement stmt = conn.prepareStatement(sqlCount)) {
+                stmt.setInt(1, idInventario);
+                stmt.setString(2, termo);
+                stmt.setString(3, termo);
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        totalElements = rs.getLong(1);
+                    }
+                }
+            }
+        }
+
+        return new PagedResult<>(items, totalElements, page, size);
+    }
 }

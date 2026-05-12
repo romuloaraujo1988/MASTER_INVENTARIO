@@ -20,6 +20,8 @@ import org.slf4j.LoggerFactory;
 
 import jakarta.validation.Valid;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,6 +45,15 @@ public class MobileColetaController {
     private static final Logger logger = LoggerFactory.getLogger(MobileColetaController.class);
     
     private static final int MAX_COLETAS_ALL = 500;
+
+    // Spec coleta-descricao-livre-com-sugestao (Req 1.7, 9.7, 9.8):
+    // Quando `descricaoItemSemEtiqueta` é informado, o valor após trim DEVE ter
+    // tamanho no intervalo fechado [3, 255]. Campo AUSENTE (null) é aceito
+    // silenciosamente para preservar compatibilidade com clientes legados (Req 9.8).
+    private static final int DESCRICAO_ITEM_MIN_LENGTH = 3;
+    private static final int DESCRICAO_ITEM_MAX_LENGTH = 255;
+    private static final String DESCRICAO_ITEM_RANGE_MSG =
+            "descricaoItemSemEtiqueta deve ter entre 3 e 255 caracteres (após trim)";
     
     @Autowired
     private MobileColetaService mobileColetaService;
@@ -81,6 +92,15 @@ public class MobileColetaController {
                         .body(ApiResponse.error("É obrigatório informar o usuário que está realizando a coleta", "USUARIO_OBRIGATORIO"));
             }
             
+            // Spec coleta-descricao-livre-com-sugestao Req 1.7, 9.7, 9.8:
+            // Validar tamanho de descricaoItemSemEtiqueta se presente (legado = null passa).
+            String descricaoError = validarDescricaoItemSemEtiqueta(coletaRequest.getDescricaoItemSemEtiqueta());
+            if (descricaoError != null) {
+                logger.warn("Descrição inválida em registrarColeta: {}", descricaoError);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.error(descricaoError, "VALIDATION_ERROR"));
+            }
+            
             logger.info("Registrando coleta para patrimônio {} por usuário: {} (usuarioId: {})", 
                     coletaRequest.getNumeroPatrimonio(), username, coletaRequest.getUsuarioId());
             
@@ -116,11 +136,99 @@ public class MobileColetaController {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
             
+            List<MobileColetaRequest> todasColetas = batchRequest.getColetas();
             logger.info("Registrando {} coletas em lote por usuário: {}", 
-                    batchRequest.getColetas().size(), username);
+                    todasColetas.size(), username);
             
-            Map<String, Object> resultado = mobileColetaService.registrarColetasEmLote(
-                    batchRequest.getColetas(), username);
+            // Spec coleta-descricao-livre-com-sugestao Req 1.7, 9.7, 9.8:
+            // Pré-validar descricaoItemSemEtiqueta item a item. Itens inválidos não são
+            // enviados ao service — retornam FALHA individual preservando a semântica
+            // atual do batch (erro por item, não por requisição inteira).
+            List<MobileColetaRequest> coletasValidas = new ArrayList<>();
+            List<Integer> indicesOriginaisValidos = new ArrayList<>();
+            List<Map<String, Object>> resultadosPreValidacao = new ArrayList<>();
+            List<String> errosPreValidacao = new ArrayList<>();
+            int falhasPreValidacao = 0;
+            
+            for (int i = 0; i < todasColetas.size(); i++) {
+                MobileColetaRequest item = todasColetas.get(i);
+                String erro = validarDescricaoItemSemEtiqueta(item.getDescricaoItemSemEtiqueta());
+                if (erro == null) {
+                    coletasValidas.add(item);
+                    indicesOriginaisValidos.add(i);
+                } else {
+                    falhasPreValidacao++;
+                    Map<String, Object> preInvalido = new HashMap<>();
+                    preInvalido.put("indice", i);
+                    preInvalido.put("numeroPatrimonio", item.getNumeroPatrimonio());
+                    preInvalido.put("status", "FALHA");
+                    preInvalido.put("coletaId", null);
+                    preInvalido.put("mensagem", erro);
+                    resultadosPreValidacao.add(preInvalido);
+                    errosPreValidacao.add("Patrimônio " + item.getNumeroPatrimonio() + ": " + erro);
+                    logger.warn("Item batch [{}] com descrição inválida: {}", i, erro);
+                }
+            }
+            
+            Map<String, Object> resultadoServico;
+            if (!coletasValidas.isEmpty()) {
+                resultadoServico = mobileColetaService.registrarColetasEmLote(
+                        coletasValidas, username);
+            } else {
+                resultadoServico = new HashMap<>();
+                resultadoServico.put("total", 0);
+                resultadoServico.put("sucesso", 0);
+                resultadoServico.put("falhas", 0);
+                resultadoServico.put("duplicadas", 0);
+                resultadoServico.put("erros", new ArrayList<String>());
+                resultadoServico.put("coletasDuplicadas", new ArrayList<String>());
+                resultadoServico.put("resultados", new ArrayList<Map<String, Object>>());
+            }
+            
+            // Mesclar resultados preservando os índices originais do batch.
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> resultadosServico =
+                    (List<Map<String, Object>>) resultadoServico.get("resultados");
+            List<Map<String, Object>> resultadosFinais = new ArrayList<>();
+            if (resultadosServico != null) {
+                for (Map<String, Object> r : resultadosServico) {
+                    Map<String, Object> copy = new HashMap<>(r);
+                    Object indiceServicoObj = copy.get("indice");
+                    if (indiceServicoObj instanceof Integer) {
+                        int indiceServico = (Integer) indiceServicoObj;
+                        if (indiceServico >= 0 && indiceServico < indicesOriginaisValidos.size()) {
+                            copy.put("indice", indicesOriginaisValidos.get(indiceServico));
+                        }
+                    }
+                    resultadosFinais.add(copy);
+                }
+            }
+            resultadosFinais.addAll(resultadosPreValidacao);
+            resultadosFinais.sort((a, b) -> {
+                int ia = a.get("indice") instanceof Integer ? (Integer) a.get("indice") : 0;
+                int ib = b.get("indice") instanceof Integer ? (Integer) b.get("indice") : 0;
+                return Integer.compare(ia, ib);
+            });
+            
+            @SuppressWarnings("unchecked")
+            List<String> errosServico = (List<String>) resultadoServico.getOrDefault(
+                    "erros", new ArrayList<String>());
+            List<String> errosFinais = new ArrayList<>(errosServico);
+            errosFinais.addAll(errosPreValidacao);
+            
+            int sucessoServico = ((Number) resultadoServico.getOrDefault("sucesso", 0)).intValue();
+            int falhasServico = ((Number) resultadoServico.getOrDefault("falhas", 0)).intValue();
+            int duplicadasServico = ((Number) resultadoServico.getOrDefault("duplicadas", 0)).intValue();
+            
+            Map<String, Object> resultado = new HashMap<>();
+            resultado.put("total", todasColetas.size());
+            resultado.put("sucesso", sucessoServico);
+            resultado.put("falhas", falhasServico + falhasPreValidacao);
+            resultado.put("duplicadas", duplicadasServico);
+            resultado.put("erros", errosFinais);
+            resultado.put("coletasDuplicadas", resultadoServico.getOrDefault(
+                    "coletasDuplicadas", new ArrayList<String>()));
+            resultado.put("resultados", resultadosFinais);
             
             return ResponseEntity.ok(
                     ApiResponse.success(resultado, "Coletas processadas em lote"));
@@ -604,6 +712,38 @@ public class MobileColetaController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro na sincronização incremental: " + e.getMessage(), "SYNC_ERROR"));
         }
+    }
+
+    /**
+     * Valida o campo {@code descricaoItemSemEtiqueta} conforme a spec
+     * <em>coleta-descricao-livre-com-sugestao</em> (Req 1.7, 9.7, 9.8).
+     *
+     * <p>Regra:</p>
+     * <ul>
+     *   <li>Se o campo for {@code null} (cliente legado — Req 9.8), aceita silenciosamente
+     *       e retorna {@code null} (sem erro).</li>
+     *   <li>Se presente, aplica {@code trim()} e verifica que o tamanho está no
+     *       intervalo fechado [3, 255]. Fora desse intervalo, retorna uma mensagem
+     *       de erro descritiva.</li>
+     * </ul>
+     *
+     * <p>Este método apenas valida; não modifica o request e não altera URL,
+     * método HTTP ou estrutura de campos dos endpoints (regra steering
+     * {@code endpoints-nao-alterar.md}).</p>
+     *
+     * @param descricao valor do campo no payload (pode ser {@code null})
+     * @return mensagem de erro quando inválido, ou {@code null} quando válido
+     */
+    private String validarDescricaoItemSemEtiqueta(String descricao) {
+        if (descricao == null) {
+            // Campo ausente = cliente legado. Aceitar normalmente (Req 9.8).
+            return null;
+        }
+        int tamanho = descricao.trim().length();
+        if (tamanho < DESCRICAO_ITEM_MIN_LENGTH || tamanho > DESCRICAO_ITEM_MAX_LENGTH) {
+            return DESCRICAO_ITEM_RANGE_MSG;
+        }
+        return null;
     }
 
 }

@@ -8,4 +8,10 @@
 
     <!-- Cache para arquivos temporários -->
     <cache-path name="cache" path="exports/" />
+
+    <!-- Raiz do cacheDir — cobre arquivos salvos diretamente em context.cacheDir -->
+    <cache-path name="cache_root" path="." />
+
+    <!-- Raiz do cacheDir — cobre arquivos salvos diretamente em context.cacheDir -->
+    <cache-path name="cache_root" path="." />
 </paths>

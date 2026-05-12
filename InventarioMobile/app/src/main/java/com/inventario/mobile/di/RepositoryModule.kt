@@ -68,6 +68,19 @@ abstract class RepositoryModule {
         impl: FotoReferenciaRepositoryImpl
     ): FotoReferenciaRepository
 
+    /**
+     * Binding do repositório de sugestões de descrição.
+     *
+     * Feature: coleta-descricao-livre-com-sugestao (tarefa 14.3).
+     * Liga a interface de domínio à implementação offline-first em data/,
+     * mantendo o padrão Clean Architecture (steering `clean-architecture.md`).
+     */
+    @Binds
+    @Singleton
+    abstract fun bindSugestaoDescricaoRepository(
+        impl: com.inventario.mobile.data.repository.SugestaoDescricaoRepositoryImpl
+    ): com.inventario.mobile.domain.repository.SugestaoDescricaoRepository
+
     // NOTE: DashboardRepository já é provido via DashboardModule.provideDashboardRepository.
     // Manter um @Binds aqui gera "Dagger/DuplicateBindings". A injeção da interface no
     // DashboardViewModelClean funciona pelo DashboardModule existente.

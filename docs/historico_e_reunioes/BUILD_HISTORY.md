@@ -4,6 +4,124 @@ Este arquivo registra todas as compilações do APK Android para rastreabilidade
 
 ---
 
+## Build #124 - 09/05/2026 (v2.23.0 — relatorio-fotografico-sem-etiqueta)
+
+- **Tipo:** Release (assinado, com ProGuard/R8)
+- **Versão:** 2.23.0
+- **Build Code:** 71
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.23.0.apk`
+- **Tamanho:** ~15,66 MB
+- **Mudanças (feature: relatorio-fotografico-sem-etiqueta):**
+  - **`RelatorioFotoApi.kt`** — Interface Retrofit com `@Streaming` para download do PDF e endpoint `/info` para contagem de fotos
+  - **`RelatorioFotoInfo.kt`** — Modelo de domínio com contagens por tipo (semEtiqueta, patrimonio, divergencia)
+  - **`RelatorioFotoExceptions.kt`** — `SemFotosException` (HTTP 204) e `PermissaoNegadaException` (HTTP 403)
+  - **`BuscarInfoRelatorioFotoUseCase.kt`** — Chama `/info` e mapeia para `RelatorioFotoInfo`
+  - **`BaixarRelatorioFotoPdfUseCase.kt`** — Baixa PDF com buffer 8KB, salva em `cacheDir`
+  - **`RelatorioFotoState.kt`** — Sealed class: Idle, Loading, InfoCarregada, Downloading, PdfPronto, Erro
+  - **`ApiModule.kt`** — Provider do `RelatorioFotoApi`
+  - **`CollectionViewViewModelClean.kt`** — Novo StateFlow + métodos `carregarInfoRelatorioFoto`, `baixarRelatorioFoto`, `limparEstadoRelatorioFoto`
+  - **`CollectionViewActivity.kt`** — FAB de download (SUPERVISOR+), badge de contagem, observer de estado, `abrirPdfNativo` via FileProvider, limpeza de cache em `onDestroy`
+  - **`activity_collection_view.xml`** — FAB `fabRelatorioFoto`, badge `tvFotosBadge`, `progressBarRelatorio`
+  - **`file_paths.xml`** — Adicionado `<cache-path name="cache_root" path="." />` para cobrir `cacheDir`
+- **Fluxo:** Chip "Sem Etiqueta" → badge com contagem de fotos → FAB (SUPERVISOR+) → download → PDF abre no visualizador nativo
+- **Status:** ✅ BUILD SUCCESS
+
+---
+
+## Build #123 - 09/05/2026 (v2.22.0 — coleta-descricao-livre-com-sugestao)
+
+- **Tipo:** Release (assinado, com ProGuard/R8) + Servidor
+- **Versão Android:** 2.22.0
+- **Build Code:** 70
+- **Arquivo APK:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.22.0.apk`
+- **Tamanho APK:** ~15,66 MB
+- **Versão Servidor:** 2.8.0
+- **Arquivo JAR:** `sihcp-server/target/sihcp-server-2.8.0.jar`
+- **Tamanho JAR:** ~80,71 MB
+- **Mudanças (feature: coleta-descricao-livre-com-sugestao):**
+  - **Servidor (sihcp-core + sihcp-server):**
+    - `SugestaoDescricaoDTO` e `PagedResponseDTO<T>` (records Java 21) — contrato HTTP do novo endpoint
+    - `SugestaoDescricaoRow` e `PagedResult<T>` — transporte interno DAO → service
+    - `PatrimonioDAO.buscarSugestoesNaoColetadasPaginado` — SQL com `NOT EXISTS`, `unaccent(lower(...))`, paginação e ordenação estável
+    - `MobileSugestaoDescricaoService` — normalização silenciosa, sanitização de page/size, resolução de inventário ativo
+    - `GET /api/mobile/descricoes/sugestoes` em `MobileDescricaoController` — endpoint novo sem tocar nos existentes
+    - Validação `3 ≤ trim(descricaoItemSemEtiqueta).length ≤ 255` em `POST /api/mobile/coletas` e `/batch` (compatível com clientes legados)
+    - `sql/adicionar_indices_sugestoes_descricao.sql` — 3 índices PostgreSQL para performance
+  - **App Android (Kotlin / Clean Architecture):**
+    - Domain: `SugestaoDescricao`, `OrigemSugestoes`, `ResultadoSugestoes`, interface `SugestaoDescricaoRepository`
+    - Data: `TextNormalizer`, `SugestaoDescricaoEntity` (Room v17), `SugestaoDescricaoDao`, migração `MIGRATION_16_17`
+    - Data: `SugestaoDescricaoDto`, `PagedResponseDto<T>`, `DescricaoSugestaoApi` (Retrofit), `SugestaoDescricaoMapper`
+    - Data: `SugestaoDescricaoRepositoryImpl` (offline-first, `withTimeout(10s)`, fallback para cache)
+    - Domain: `BuscarSugestoesDescricaoUseCase`, `MarcarPatrimonioColetadoLocalmenteUseCase`, `SincronizarSugestoesDescricaoUseCase`, `LimparCacheDeOutrosInventariosUseCase`
+    - DI: providers em `DatabaseModule`, `ApiModule`, `RepositoryModule`
+    - Presentation: `SugestaoDescricaoState` (sealed class), `ItemSemEtiquetaViewModel` evoluído (toggle + debounce 300ms + `SharedFlow<Event>`)
+    - UI: `activity_item_sem_etiqueta.xml` atualizado (toggle, RecyclerView), `SugestaoDescricaoAdapter`, `ItemSemEtiquetaActivity` com observers
+    - `SyncWorker` dispara `SincronizarSugestoesDescricaoUseCase` após sync bem-sucedido
+  - **Testes (24 arquivos):** property tests P1–P18 + smoke tests de schema e contrato
+- **Banco Room:** versão 16 → 17 (nova tabela `sugestao_descricao`)
+- **Atenção:** executar `sql/adicionar_indices_sugestoes_descricao.sql` no PostgreSQL antes de subir o servidor
+- **Status:** ✅ BUILD SUCCESS
+
+---
+
+## Build #122 - 09/05/2026 (servidor: relatório fotográfico de coletas)
+
+- **Tipo:** Compilação do servidor (sihcp-core + sihcp-server)
+- **Mudanças:**
+  - **`RelatorioFotoColetaDAO.java` (novo — sihcp-core):** query SQL que busca coletas com `FOTO_PATH IS NOT NULL`, com filtros por tipo (`patrimonio`, `sem_etiqueta`, `divergencia`) e por sala. Retorna: coletaId, fotoPath, tipo, número/descrição do patrimônio, localização encontrada, estado, data, coletor, sala de origem, motivo de divergência.
+  - **`RelatorioFotoPDFGenerator.java` (novo — sihcp-server):** gerador de PDF com iText 7. Layout em cards: foto (150×112pt) à esquerda + dados à direita. Badge colorido por tipo (verde/laranja/vermelho). Placeholder cinza quando foto não está no disco. Cabeçalho com nome do inventário, filtro e contagem.
+  - **`MobileRelatorioFotoController.java` (novo — sihcp-server):** dois endpoints:
+    - `GET /api/mobile/relatorios/fotos/{inventarioId}` — retorna PDF como download (SUPERVISOR+)
+    - `GET /api/mobile/relatorios/fotos/{inventarioId}/info` — retorna contagem por tipo sem gerar PDF (CONSULTA+)
+  - **`sihcp-server/pom.xml`:** adicionadas dependências `com.itextpdf:kernel`, `layout` e `io` (versão gerenciada pelo BOM raiz 7.2.5).
+- **Status:** ✅ BUILD SUCCESS
+
+---
+
+## Build #121 - 08/05/2026 (v2.21.0-security: nomenclatura e organização de fotos)
+
+- **Tipo:** Release (assinado, com ProGuard/R8)
+- **Versão:** 2.21.0-security
+- **Build Code:** 69
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.21.0-security.apk`
+- **Tamanho:** ~15,6 MB
+- **Mudanças (nomenclatura de fotos — v2.22):**
+  - **`FotoTipo.kt` (novo):** enum com os três tipos de coleta (`PATRIMONIO`, `SEM_ETIQUETA`, `DIVERGENCIA`) e método `resolver(semEtiqueta, divergencia)`.
+  - **`PhotoHelper.kt`:** reestruturado para organizar arquivos em `files/fotos/inventario_{id}/{tipo}/` e `files/thumbnails/inventario_{id}/{tipo}/`. Nome do arquivo: `{coletaId}_{identificador}_{yyyyMMdd_HHmmss}.jpg`. Sobrecarga de compatibilidade mantida para código legado.
+  - **`FotoColetaApi.kt`:** adicionados parâmetros `tipo` e `identificador` no multipart de upload.
+  - **`PhotoSyncWorker.kt`:** resolve `FotoTipo` e `identificador` a partir dos campos da coleta (`semEtiqueta`, `divergencia`, `numeroPatrimonio`) e os passa no upload.
+  - **`ItemSemEtiquetaActivity.kt`:** injeta `PreferencesManager`, passa `inventarioId`, `FotoTipo.SEM_ETIQUETA` e `PhotoHelper.ID_SEM_ETIQUETA` ao `compressAndSavePhoto()`.
+  - **`FotoColetaStorageService.java` (servidor):** nova estrutura `inventario_{id}/{YYYY-MM}/{tipo}/coleta_{coletaId}_{identificador}.jpg`. Sanitização do identificador. Sobrecarga `@Deprecated` para compatibilidade.
+  - **`MobileFotoColetaController.java` (servidor):** recebe `tipo` e `identificador` como `@RequestParam` com `defaultValue` para retrocompatibilidade.
+- **Estrutura final no servidor:**
+  ```
+  data/fotos/inventario_3/2026-05/patrimonio/coleta_523_12345.jpg
+  data/fotos/inventario_3/2026-05/sem_etiqueta/coleta_525_SE.jpg
+  data/fotos/inventario_3/2026-05/divergencia/coleta_527_67890.jpg
+  ```
+- **Status:** ✅ Sucesso
+
+---
+
+## Build #120 - 08/05/2026 (v2.21.0-security: correção sistema de fotos — item sem etiqueta)
+
+- **Tipo:** Release (assinado, com ProGuard/R8)
+- **Versão:** 2.21.0-security
+- **Build Code:** 69
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.21.0-security.apk`
+- **Tamanho:** 15,63 MB
+- **Mudanças (correção sistema de fotos):**
+  - **ItemSemEtiquetaActivity:** substituída captura via `ACTION_IMAGE_CAPTURE` (thumbnail ~160×120px em Base64) por captura em arquivo real usando `FileProvider` + `TakePicture`. Foto comprimida via `PhotoHelper` (800×600, JPEG 65%, ≤100 KB). Injeção de `PhotoHelper` via Hilt.
+  - **ItemSemEtiquetaViewModel:** parâmetro `fotoBase64: String` substituído por `fotoPath: String` + `fotoThumbnailPath: String?`.
+  - **RegistrarColetaUseCase.registrarItemSemEtiqueta:** parâmetro `fotoBase64` substituído por `fotoPath` + `fotoThumbnailPath`. Objeto `Coleta` criado com os campos corretos.
+  - **ColetaMapper (toDomain + toEntity + toEntitySimple):** corrigido mapeamento — `fotoPath` agora usa `entity.fotoPath` (caminho de arquivo) em vez de `entity.fotoPatrimonio` (Base64 legado). `fotoThumbnailPath` mapeado corretamente. `fotoSincronizada = false` definido explicitamente.
+  - **ColetaRepositoryImpl.registrarColetaSemEtiqueta:** entity criada com `fotoPath` e `fotoThumbnailPath` nos campos corretos (não mais em `fotoPatrimonio`). `PhotoSyncWorker` agora encontra as fotos via `WHERE fotoPath IS NOT NULL AND fotoSincronizada = 0`.
+  - **Coleta (domain model):** adicionado campo `fotoThumbnailPath: String?`.
+- **Impacto:** fotos de itens sem etiqueta agora são capturadas em resolução completa, salvas em arquivo local e enviadas ao servidor pelo `PhotoSyncWorker` em background (Wi-Fi, a cada 6h).
+- **Status:** ✅ Sucesso
+
+---
+
 ## Build #119 - 08/05/2026 (v2.21.0-security: correções de segurança)
 
 - **Tipo:** Release (assinado, com ProGuard/R8)

@@ -46,6 +46,7 @@ data class Coleta(
     val localizacaoAtual: String? = null,
     val observacoes: String? = null,
     val fotoPath: String? = null,
+    val fotoThumbnailPath: String? = null,  // v2.21: caminho do thumbnail local
     
     // Status da coleta
     val status: String, // COLETADO, PENDENTE, ERRO

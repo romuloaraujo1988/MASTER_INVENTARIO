@@ -118,7 +118,11 @@ class RegistrarColetaUseCase @Inject constructor(
     }
     
     /**
-     * v2.7: Registra coleta de item SEM etiqueta
+     * v2.7: Registra coleta de item SEM etiqueta.
+     *
+     * v2.21: parâmetro fotoBase64 substituído por fotoPath + fotoThumbnailPath.
+     * A foto é salva em arquivo pelo PhotoHelper na Activity e o caminho é
+     * armazenado na entity. O upload para o servidor é feito pelo PhotoSyncWorker.
      */
     suspend fun registrarItemSemEtiqueta(
         descricao: String,
@@ -129,7 +133,8 @@ class RegistrarColetaUseCase @Inject constructor(
         observacoes: String? = null,
         latitude: Double? = null,
         longitude: Double? = null,
-        fotoBase64: String? = null
+        fotoPath: String? = null,
+        fotoThumbnailPath: String? = null
     ): Result<Coleta> {
         return try {
             // 1. Validar entrada
@@ -165,7 +170,9 @@ class RegistrarColetaUseCase @Inject constructor(
                 semEtiqueta = true,
                 descricaoItemSemEtiqueta = descricao,
                 categoriaItemSemEtiqueta = categoria,
-                fotoPath = fotoBase64
+                // v2.21: caminho do arquivo de foto (não Base64)
+                fotoPath = fotoPath,
+                fotoThumbnailPath = fotoThumbnailPath
             )
             
             android.util.Log.d("RegistrarColetaUseCase", "✓ Coleta SEM ETIQUETA criada: $descricao, Categoria: $categoria")

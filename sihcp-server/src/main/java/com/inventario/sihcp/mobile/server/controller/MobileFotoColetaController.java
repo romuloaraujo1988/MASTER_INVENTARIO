@@ -21,23 +21,33 @@ import java.util.Map;
 /**
  * Controller REST para upload e download de fotos de coleta.
  *
- * <p>Endpoints:</p>
+ * <h2>Endpoints</h2>
  * <ul>
  *   <li>{@code POST /api/mobile/fotos/upload} — Upload de foto (COLETOR+)</li>
- *   <li>{@code GET /api/mobile/fotos/{coletaId}} — Download de foto (CONSULTA+)</li>
+ *   <li>{@code GET  /api/mobile/fotos/{coletaId}} — Download de foto (CONSULTA+)</li>
  *   <li>{@code DELETE /api/mobile/fotos/{coletaId}} — Remover foto (COLETOR+)</li>
  * </ul>
  *
- * <p>As fotos são armazenadas em disco no diretório {@code data/fotos/}
- * e o caminho relativo é gravado na coluna {@code FOTO_PATH} da
- * {@code TABELA_COLETA}.</p>
+ * <h2>Estrutura de armazenamento</h2>
+ * <pre>
+ * data/fotos/
+ *   inventario_{id}/
+ *     {YYYY-MM}/
+ *       patrimonio/
+ *         coleta_{coletaId}_{numeroPatrimonio}.jpg
+ *       sem_etiqueta/
+ *         coleta_{coletaId}_SE.jpg
+ *       divergencia/
+ *         coleta_{coletaId}_{numeroPatrimonio}.jpg
+ * </pre>
+ *
+ * O caminho relativo é gravado na coluna {@code FOTO_PATH} da {@code TABELA_COLETA}.
  *
  * @author Sistema de Inventário IFMT
- * @version 1.0.0
+ * @version 2.22
  */
 @RestController
 @RequestMapping("/api/mobile/fotos")
-// @CrossOrigin removido — ver MobileSecurityConfig.corsConfigurationSource() (spec correcoes-seguranca Req 6.1)
 public class MobileFotoColetaController {
 
     private static final Logger logger = LoggerFactory.getLogger(MobileFotoColetaController.class);
@@ -48,55 +58,66 @@ public class MobileFotoColetaController {
     @Autowired
     private ColetaDAO coletaDAO;
 
+    // ─── Upload ───────────────────────────────────────────────────────────────
+
     /**
      * Upload de foto de coleta.
      *
-     * <p>Recebe a foto via multipart/form-data, salva em disco e atualiza
-     * o campo {@code FOTO_PATH} da coleta no banco.</p>
+     * <p>Recebe a foto via multipart/form-data, salva em disco com a estrutura
+     * de pastas correta e atualiza o campo {@code FOTO_PATH} da coleta no banco.</p>
      *
-     * @param foto         arquivo da foto (multipart)
-     * @param coletaId     ID da coleta
-     * @param inventarioId ID do inventário
-     * @return resposta com o caminho da foto salva
+     * @param foto          arquivo da foto (multipart)
+     * @param coletaId      ID da coleta no servidor
+     * @param inventarioId  ID do inventário
+     * @param tipo          Tipo da coleta: {@code patrimonio}, {@code sem_etiqueta} ou {@code divergencia}
+     * @param identificador Número do patrimônio ou {@code SE} para itens sem etiqueta
+     * @return resposta com o caminho relativo da foto salva
      */
     @PostMapping("/upload")
     @RequireColetor
     public ResponseEntity<ApiResponse<Map<String, Object>>> uploadFoto(
-            @RequestParam("foto") MultipartFile foto,
-            @RequestParam("coletaId") int coletaId,
-            @RequestParam("inventarioId") int inventarioId) {
+            @RequestParam("foto")          MultipartFile foto,
+            @RequestParam("coletaId")      int coletaId,
+            @RequestParam("inventarioId")  int inventarioId,
+            @RequestParam(value = "tipo",          defaultValue = "patrimonio") String tipo,
+            @RequestParam(value = "identificador", defaultValue = "")           String identificador) {
 
-        logger.info("POST /api/mobile/fotos/upload — coletaId={}, inventarioId={}, tamanho={}KB",
-                coletaId, inventarioId, foto.getSize() / 1024);
+        logger.info("POST /api/mobile/fotos/upload — coletaId={}, inventarioId={}, tipo={}, id={}, tamanho={}KB",
+                coletaId, inventarioId, tipo, identificador, foto.getSize() / 1024);
 
         try {
-            // Validar que o arquivo não está vazio
             if (foto.isEmpty()) {
                 return ResponseEntity.badRequest()
                         .body(ApiResponse.error("Arquivo de foto vazio", "FOTO_VAZIA"));
             }
 
-            // Salvar foto em disco
+            // Normalizar identificador: se vazio, usar coletaId como fallback
+            String idFinal = (identificador == null || identificador.isBlank())
+                    ? String.valueOf(coletaId)
+                    : identificador;
+
             String caminhoRelativo = storageService.salvarFoto(
                     foto.getInputStream(),
                     inventarioId,
                     coletaId,
+                    tipo,
+                    idFinal,
                     foto.getOriginalFilename(),
                     foto.getSize()
             );
 
-            // Atualizar FOTO_PATH no banco
             coletaDAO.atualizarFotoPath(coletaId, caminhoRelativo);
 
             Map<String, Object> resultado = new HashMap<>();
-            resultado.put("coletaId", coletaId);
-            resultado.put("fotoPath", caminhoRelativo);
-            resultado.put("tamanhoKB", foto.getSize() / 1024);
+            resultado.put("coletaId",    coletaId);
+            resultado.put("fotoPath",    caminhoRelativo);
+            resultado.put("tamanhoKB",   foto.getSize() / 1024);
+            resultado.put("tipo",        tipo);
+            resultado.put("identificador", idFinal);
 
-            logger.info("Foto salva com sucesso: {} ({}KB)", caminhoRelativo, foto.getSize() / 1024);
+            logger.info("Foto salva: {} ({}KB)", caminhoRelativo, foto.getSize() / 1024);
 
-            return ResponseEntity.ok(
-                    ApiResponse.success(resultado, "Foto salva com sucesso"));
+            return ResponseEntity.ok(ApiResponse.success(resultado, "Foto salva com sucesso"));
 
         } catch (IllegalArgumentException e) {
             logger.warn("Foto rejeitada: {}", e.getMessage());
@@ -110,6 +131,8 @@ public class MobileFotoColetaController {
         }
     }
 
+    // ─── Download ─────────────────────────────────────────────────────────────
+
     /**
      * Download de foto de coleta.
      *
@@ -122,7 +145,6 @@ public class MobileFotoColetaController {
         logger.debug("GET /api/mobile/fotos/{}", coletaId);
 
         try {
-            // Buscar caminho da foto no banco
             String fotoPath = coletaDAO.buscarFotoPath(coletaId);
 
             if (fotoPath == null || fotoPath.isBlank()) {
@@ -151,6 +173,8 @@ public class MobileFotoColetaController {
         }
     }
 
+    // ─── Remoção ──────────────────────────────────────────────────────────────
+
     /**
      * Remove foto de uma coleta.
      *
@@ -169,15 +193,13 @@ public class MobileFotoColetaController {
                 storageService.removerFoto(fotoPath);
             }
 
-            // Limpar FOTO_PATH no banco
             coletaDAO.atualizarFotoPath(coletaId, null);
 
             Map<String, Object> resultado = new HashMap<>();
             resultado.put("coletaId", coletaId);
             resultado.put("removida", true);
 
-            return ResponseEntity.ok(
-                    ApiResponse.success(resultado, "Foto removida com sucesso"));
+            return ResponseEntity.ok(ApiResponse.success(resultado, "Foto removida com sucesso"));
 
         } catch (Exception e) {
             logger.error("Erro ao remover foto da coleta {}", coletaId, e);

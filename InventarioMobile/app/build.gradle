@@ -21,9 +21,9 @@ android {
         applicationId "com.inventario.mobile"
         minSdk 23  // Atualizado para suportar biometria
         targetSdk 34
-        // v2.21.0-security — correcoes-seguranca (SQLCipher keystore, ProGuard, network config, permissões)
-        versionCode 69
-        versionName "2.21.0-security"
+        // v2.23.0 — relatorio-fotografico-sem-etiqueta (visualização de fotos de itens sem etiqueta via PDF)
+        versionCode 71
+        versionName "2.23.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

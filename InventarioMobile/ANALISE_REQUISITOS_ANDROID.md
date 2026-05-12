@@ -1,405 +1,632 @@
-# 📱 Análise de Requisitos - Sistema de Inventário Mobile (Android)
+# Analise de Requisitos - SiHCP Mobile (Android) v2.23.0
 
-## 1. Visão Geral do Produto
+## 1. Visao Geral do Produto
 
-O Sistema de Inventário Mobile é um aplicativo Android desenvolvido para instituições públicas (IFMT) que permite o gerenciamento e coleta de dados de patrimônio de forma offline-first. O app integra-se com o sistema desktop existente, oferecendo funcionalidades de escaneamento por QR Code, coleta móvel, sincronização automática e gestão completa do inventário patrimonial.
+O **SiHCP Mobile** e um aplicativo Android nativo desenvolvido em Kotlin para o Instituto Federal de Mato Grosso (IFMT). Permite coleta de patrimonios via QR Code, codigo de barras ou busca manual, com suporte completo a modo offline, sincronizacao inteligente e exportacao de relatorios.
 
-**Problema a resolver**: Eliminar a necessidade de coleta manual em planilhas, permitir trabalho offline em áreas sem conectividade, garantir integridade dos dados e fornecer auditoria completa das operações.
+**Problema resolvido**: Eliminar coleta manual em planilhas, permitir trabalho offline em areas sem conectividade, garantir integridade dos dados com criptografia e fornecer auditoria completa das operacoes.
 
-**Público-alvo**: Servidores públicos, técnicos de patrimônio, auditores e administradores responsáveis pelo inventário institucional.
+**Publico-alvo**: Servidores publicos, tecnicos de patrimonio, auditores e administradores responsaveis pelo inventario institucional.
 
-**Valor de mercado**: Solução específica para instituições públicas e privadas que necessitam de controle patrimonial móvel com conformidade legal e auditoria.
+**Status**: Producao (v2.23.0, versionCode 71)
+
+---
 
 ## 2. Requisitos Funcionais
 
-### 2.1 Módulos Principais
+### 2.1 Modulos Implementados
 
-1. **Autenticação e Segurança**: Login com JWT, biometria, controle de sessão
-2. **Dashboard**: Visualização de estatísticas e métricas do inventário
-3. **Coleta de Patrimônio**: Registro via QR Code ou entrada manual
-4. **Scanner QR Code**: Leitura rápida de códigos de patrimônio
-5. **Seleção de Salas**: Navegação hierárquica por setores e salas
-6. **Sincronização**: Upload/download de dados com servidor
-7. **Modo Offline**: Funcionamento completo sem conectividade
-8. **Filtros e Busca**: Localização rápida de itens
-9. **Estatísticas**: Relatórios e gráficos de progresso
-10. **Configurações**: Personalização do aplicativo
+```mermaid
+graph TD
+    subgraph Core["Modulos Core"]
+        AUTH["Autenticacao<br/>JWT + Biometria"]
+        DASH["Dashboard<br/>Estatisticas + Graficos"]
+        COLETA["Coleta<br/>QR/Barcode/Manual/Descricao"]
+        SCAN["Scanner<br/>QR Code + Codigo Barras"]
+    end
+
+    subgraph Data["Modulos de Dados"]
+        SYNC["Sincronizacao<br/>Batch + Background"]
+        OFFLINE["Modo Offline<br/>SQLCipher + Room"]
+        EXPORT["Exportacao<br/>PDF/Excel/CSV"]
+    end
+
+    subgraph Support["Modulos de Suporte"]
+        SALAS["Selecao de Salas<br/>Paginacao + Busca"]
+        FILTROS["Filtros e Busca<br/>Avancados"]
+        STATS["Estatisticas<br/>Metricas + Graficos"]
+        CONFIG["Configuracoes<br/>Rede + Sync + Seguranca"]
+        HIST["Historico<br/>Scans + Coletas"]
+    end
+
+    AUTH --> DASH
+    DASH --> COLETA
+    DASH --> SCAN
+    COLETA --> SYNC
+    SYNC --> OFFLINE
+
+    style Core fill:#E3F2FD
+    style Data fill:#E8F5E9
+    style Support fill:#FFF3E0
+```
 
 ### 2.2 Detalhamento de Funcionalidades
 
-| Módulo | Funcionalidade | Descrição |
-|--------|---------------|-----------|
-| Autenticação | Login com credenciais | Autenticação via email/senha com JWT |
-| Autenticação | Login biométrico | Uso de impressão digital ou facial |
-| Autenticação | Controle de sessão | Timeout automático após inatividade |
-| Dashboard | Visão geral | Total de patrimônios, coletados, pendentes |
-| Dashboard | Gráficos de progresso | Visualização por setor, sala, período |
-| Dashboard | Alertas | Notificações de sincronização pendente |
-| Coleta | Escanear QR Code | Leitura rápida com câmera do dispositivo |
-| Coleta | Entrada manual | Digitação do número de patrimônio |
-| Coleta | Confirmação de dados | Visualização e validação antes de salvar |
-| Coleta | Adicionar observações | Texto livre sobre o estado do item |
-| Coleta | Tirar foto | Registro visual do patrimônio coletado |
-| Coleta | Geolocalização | Captura automática de coordenadas |
-| Scanner | Leitura multipla | Suporte a diferentes formatos de QR |
-| Scanner | Validação instantânea | Verificação de existência no banco |
-| Salas | Hierarquia por setor | Navegação em árvore |
-| Salas | Busca rápida | Localização por nome ou código |
-| Salas | Visualização de mapa | Layout das salas e setores |
-| Sincronização | Upload automático | Envio de coletas quando online |
-| Sincronização | Download incremental | Atualização de dados do servidor |
-| Sincronização | Resolução de conflitos | Tratamento de divergências |
-| Sincronização | Controle de versão | Gestão de múltiplas versões |
-| Offline | Armazenamento local | Banco SQLite completo |
-| Offline | Cache inteligente | Dados prioritários armazenados |
-| Offline | Fila de operações | Registro de ações pendentes |
-| Filtros | Por descrição | Busca por tipo de item |
-| Filtros | Por sala/setor | Filtragem por localização |
-| Filtros | Por estado | Situação do patrimônio |
-| Filtros | Por data | Período de coleta |
-| Estatísticas | Progresso por usuário | Individual e coletivo |
-| Estatísticas | Taxa de coleta | Percentual de completude |
-| Estatísticas | Tempo médio | Eficiência da operação |
-| Estatísticas | Exportação | Geração de relatórios |
-| Configurações | Tema visual | Claro/escuro automático |
-| Configurações | Notificações | Controle de alertas |
-| Configurações | Armazenamento | Limite de cache |
-| Configurações | Idioma | Português/inglês |
+| ID | Modulo | Funcionalidade | Status |
+|----|--------|---------------|--------|
+| RF-M01 | Autenticacao | Login com credenciais (JWT) | Implementado |
+| RF-M02 | Autenticacao | Login biometrico (fingerprint/face) | Implementado |
+| RF-M03 | Autenticacao | Refresh token automatico (interceptor) | Implementado |
+| RF-M04 | Autenticacao | Controle de sessao com timeout | Implementado |
+| RF-M05 | Autenticacao | Perfis de acesso (ADMIN/SUPERVISOR/COLETOR/CONSULTA) | Implementado |
+| RF-M06 | Dashboard | KPIs: total, coletados, pendentes, percentual | Implementado |
+| RF-M07 | Dashboard | Graficos de evolucao (MPAndroidChart) | Implementado |
+| RF-M08 | Dashboard | Distribuicao por sala/setor | Implementado |
+| RF-M09 | Dashboard | Busca por voz | Implementado |
+| RF-M10 | Dashboard | Ranking de coletores | Implementado |
+| RF-M11 | Coleta | Coleta por QR Code | Implementado |
+| RF-M12 | Coleta | Coleta por codigo de barras | Implementado |
+| RF-M13 | Coleta | Coleta manual (digitacao) | Implementado |
+| RF-M14 | Coleta | Coleta por descricao (autocomplete + sugestoes) | Implementado |
+| RF-M15 | Coleta | Item sem etiqueta (foto obrigatoria) | Implementado |
+| RF-M16 | Coleta | Validacao pre-coleta (patrimonio existe/ativo) | Implementado |
+| RF-M17 | Coleta | Verificacao de duplicata | Implementado |
+| RF-M18 | Coleta | Deteccao automatica de divergencia | Implementado |
+| RF-M19 | Coleta | Registro de localizacao encontrada | Implementado |
+| RF-M20 | Coleta | Registro de estado de conservacao | Implementado |
+| RF-M21 | Coleta | Captura de foto (opcional/obrigatoria) | Implementado |
+| RF-M22 | Coleta | Geolocalizacao GPS | Implementado |
+| RF-M23 | Coleta | Observacoes em texto livre | Implementado |
+| RF-M24 | Coleta | Feedback visual + sonoro + vibracoes | Implementado |
+| RF-M25 | Coleta | Metricas de tempo (scan, preenchimento, total) | Implementado |
+| RF-M26 | Scanner | Leitura QR Code (ZXing) | Implementado |
+| RF-M27 | Scanner | Leitura codigo de barras | Implementado |
+| RF-M28 | Scanner | Validacao instantanea no banco local | Implementado |
+| RF-M29 | Scanner | Foto de referencia por descricao | Implementado |
+| RF-M30 | Scanner | Historico de scans | Implementado |
+| RF-M31 | Sincronizacao | Modo offline-first | Implementado |
+| RF-M32 | Sincronizacao | Sync manual sob demanda | Implementado |
+| RF-M33 | Sincronizacao | Sync automatico (WorkManager 30min) | Implementado |
+| RF-M34 | Sincronizacao | Batch sync (multiplas coletas) | Implementado |
+| RF-M35 | Sincronizacao | Fallback individual (se batch falhar) | Implementado |
+| RF-M36 | Sincronizacao | Retry com backoff exponencial | Implementado |
+| RF-M37 | Sincronizacao | Smart sync (qualidade de rede) | Implementado |
+| RF-M38 | Sincronizacao | Photo sync (apenas Wi-Fi) | Implementado |
+| RF-M39 | Sincronizacao | Sync de sugestoes de descricao | Implementado |
+| RF-M40 | Sincronizacao | Indicador de status (pendentes/erros) | Implementado |
+| RF-M41 | Sincronizacao | Diagnostico de coletas com erro | Implementado |
+| RF-M42 | Sincronizacao | Reset de erros recuperaveis | Implementado |
+| RF-M43 | Salas | Listagem com paginacao (Paging 3) | Implementado |
+| RF-M44 | Salas | Busca rapida por nome | Implementado |
+| RF-M45 | Salas | Filtro por setor | Implementado |
+| RF-M46 | Filtros | Filtro por status (coletado/pendente) | Implementado |
+| RF-M47 | Filtros | Filtro por sala/setor | Implementado |
+| RF-M48 | Filtros | Filtro por responsavel | Implementado |
+| RF-M49 | Filtros | Busca por numero/descricao | Implementado |
+| RF-M50 | Exportacao | Exportar PDF com estatisticas | Implementado |
+| RF-M51 | Exportacao | Exportar Excel (TSV) | Implementado |
+| RF-M52 | Exportacao | Exportar CSV | Implementado |
+| RF-M53 | Exportacao | Relatorio fotografico (itens sem etiqueta) | Implementado |
+| RF-M54 | Exportacao | Filtros de exportacao (status/sala) | Implementado |
+| RF-M55 | Estatisticas | Progresso do inventario | Implementado |
+| RF-M56 | Estatisticas | Metricas de tempo medio | Implementado |
+| RF-M57 | Estatisticas | Distribuicao por metodo de coleta | Implementado |
+| RF-M58 | Configuracoes | Endereco do servidor | Implementado |
+| RF-M59 | Configuracoes | Sync automatico on/off | Implementado |
+| RF-M60 | Configuracoes | Sync apenas Wi-Fi | Implementado |
+| RF-M61 | Configuracoes | Diagnostico de rede | Implementado |
+| RF-M62 | Configuracoes | Limpeza de cache | Implementado |
+| RF-M63 | Inventario | Selecao de inventario ativo | Implementado |
+| RF-M64 | Inventario | Listagem com Paging 3 | Implementado |
+| RF-M65 | Inventario | Detalhes do patrimonio | Implementado |
 
-## 3. Requisitos Não-Funcionais
+---
+
+## 3. Requisitos Nao-Funcionais
 
 ### 3.1 Performance
-- **Tempo de resposta**: < 2 segundos para operações locais
-- **Sincronização**: < 30 segundos para 1000 registros
-- **Scanner QR**: < 1 segundo para leitura e validação
-- **Busca local**: < 500ms para 10.000+ patrimônios
 
-### 3.2 Segurança
-- **Autenticação**: JWT com refresh tokens
-- **Criptografia**: AES-256 para dados locais
-- **Comunicação**: HTTPS com certificate pinning
-- **Armazenamento**: EncryptedSharedPreferences
-- **Biometria**: Android Keystore para chaves
+| Metrica | Requisito | Status |
+|---------|-----------|--------|
+| Tempo de login | < 2 segundos | Atendido |
+| Leitura QR Code | < 1 segundo | Atendido |
+| Busca local (10k+ itens) | < 100ms | Atendido |
+| Sync batch (50 coletas) | < 5 segundos | Atendido |
+| Carregamento inicial | < 3 segundos | Atendido |
+| Geracao de PDF | < 10 segundos | Atendido |
+| Uso de memoria | < 150 MB | Atendido |
+
+### 3.2 Seguranca
+
+| Recurso | Implementacao | Status |
+|---------|---------------|--------|
+| Banco de dados | SQLCipher AES-256 | Implementado |
+| Passphrase | Android Keystore (aleatoria) | Implementado |
+| Autenticacao | JWT + Refresh Token | Implementado |
+| Biometria | AndroidX Biometric | Implementado |
+| Preferencias | EncryptedSharedPreferences | Implementado |
+| Build release | R8 + ProGuard (ofuscacao) | Implementado |
+| Comunicacao | HTTPS obrigatorio | Implementado |
+| Auditoria | Log de todas as operacoes | Implementado |
 
 ### 3.3 Confiabilidade
-- **Disponibilidade**: 99.5% em modo offline
-- **Integridade**: Validação de checksum
-- **Recuperação**: Backup automático a cada 24h
-- **Conflitos**: Algoritmo de resolução inteligente
+
+| Recurso | Implementacao | Status |
+|---------|---------------|--------|
+| Modo offline | 100% funcional para coletas | Implementado |
+| Persistencia | 0% perda de dados | Implementado |
+| Retry automatico | Backoff exponencial (3 tentativas) | Implementado |
+| Backup local | DatabaseBackupWorker | Implementado |
+| Tolerancia a falhas | Graceful degradation | Implementado |
+| Consistencia | Eventual consistency (offline-first) | Implementado |
 
 ### 3.4 Usabilidade
-- **Interface**: Material Design 3
-- **Acessibilidade**: WCAG 2.1 nível AA
-- **Idiomas**: Português (BR) primário
-- **Dispositivos**: Smartphones e tablets Android
 
-### 3.5 Manutenibilidade
-- **Arquitetura**: MVVM com Clean Architecture
-- **Testes**: Unitários (80% cobertura) e instrumentados
-- **Documentação**: Código documentado em português
-- **Versionamento**: Semver com changelog
+| Recurso | Implementacao | Status |
+|---------|---------------|--------|
+| Design system | Material Design 3 | Implementado |
+| Idioma | Portugues (BR) | Implementado |
+| Feedback | Visual + Sonoro + Vibracao | Implementado |
+| Acessibilidade | Content descriptions | Implementado |
+| Orientacao | Portrait fixo | Implementado |
+| Teclado | adjustResize em todas as telas | Implementado |
 
-### 3.6 Portabilidade
-- **Android**: API 21+ (Android 5.0)
-- **Processador**: ARM64 e x86_64
-- **Memória**: Mínimo 2GB RAM
-- **Armazenamento**: 500MB disponíveis
+### 3.5 Compatibilidade
+
+| Recurso | Valor |
+|---------|-------|
+| Min SDK | 23 (Android 6.0) |
+| Target SDK | 34 (Android 14) |
+| Compile SDK | 34 |
+| Processadores | ARM64 + x86_64 |
+| Telas | 4" a 10" |
+| Memoria minima | 2 GB RAM |
+
+### 3.6 Manutenibilidade
+
+| Recurso | Implementacao |
+|---------|---------------|
+| Arquitetura | Clean Architecture + MVVM |
+| DI | Hilt 2.48 |
+| Testes | Kotest + MockK + JUnit |
+| Versionamento | Git + Semver |
+| CI/CD | Gradle + Keystore signing |
+| Documentacao | KDoc + Markdown |
+
+---
 
 ## 4. Arquitetura e Tecnologias
 
-### 4.1 Arquitetura Geral
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    CAMADA DE APRESENTAÇÃO                  │
-│  Activities, Fragments, ViewModels, UI Components          │
-└────────────────────┬───────────────────────────────────────┘
-                     │
-┌─────────────────────────────────────────────────────────────┐
-│                    CAMADA DE DOMÍNIO                       │
-│  Use Cases, Models de Negócio, Regras de Negócio         │
-└────────────────────┬───────────────────────────────────────┘
-                     │
-┌─────────────────────────────────────────────────────────────┐
-│                    CAMADA DE DADOS                         │
-│  Repositories, DAOs, APIs, Cache, Sincronização         │
-└────────────────────┬───────────────────────────────────────┘
-                     │
-┌─────────────────────────────────────────────────────────────┐
-│                    INFRAESTRUTURA                          │
-│  Room Database, Retrofit, WorkManager, Security          │
-└─────────────────────────────────────────────────────────────┘
+### 4.1 Arquitetura
+
+```mermaid
+graph TB
+    subgraph Presentation["Presentation Layer"]
+        ACT["25+ Activities<br/>@AndroidEntryPoint"]
+        FRAG["10+ Fragments"]
+        VM["15+ ViewModels<br/>@HiltViewModel"]
+        ADAPT["Adapters<br/>Paging + List"]
+    end
+
+    subgraph Domain["Domain Layer"]
+        UC["12+ Use Cases"]
+        MODEL["Domain Models<br/>(Kotlin puro)"]
+        REPO_IF["Repository Interfaces"]
+        VALID["Validators"]
+    end
+
+    subgraph Data["Data Layer"]
+        REPO["Repository Impls<br/>(Offline-first)"]
+        ROOM["Room DB v17<br/>(SQLCipher)"]
+        RETRO["Retrofit APIs<br/>(40+ endpoints)"]
+        MAP["Mappers"]
+    end
+
+    subgraph Infra["Infrastructure"]
+        WORK["7 Workers<br/>(WorkManager)"]
+        NET["Network Monitors"]
+        SEC["Security<br/>(Keystore + Biometric)"]
+        AUDIT["Audit Service"]
+    end
+
+    ACT --> VM
+    VM --> UC
+    UC --> REPO_IF
+    REPO_IF -.-> REPO
+    REPO --> ROOM
+    REPO --> RETRO
+    WORK --> UC
+
+    style Presentation fill:#E3F2FD
+    style Domain fill:#E8F5E9
+    style Data fill:#FFF3E0
+    style Infra fill:#FCE4EC
 ```
 
 ### 4.2 Tecnologias Utilizadas
 
-| Camada | Tecnologia | Versão | Propósito |
-|--------|------------|---------|-----------|
-| UI | Jetpack Compose | 1.5.0 | Interface declarativa moderna |
-| UI | Material Design 3 | Latest | Design system Google |
-| Arquitetura | MVVM | Pattern | Separação de responsabilidades |
-| DI | Hilt | 2.48 | Injeção de dependências |
-| Async | Coroutines | 1.7.3 | Programação assíncrona |
-| DB Local | Room | 2.6.1 | Persistência SQLite |
-| Network | Retrofit | 2.9.0 | Cliente HTTP |
-| JSON | Moshi | 1.15.0 | Serialização JSON |
-| Images | Coil | 2.4.0 | Carregamento de imagens |
-| Scanner | ZXing | 4.3.0 | Leitura de QR codes |
-| Security | AndroidX Security | 1.1.0 | Criptografia e biometria |
-| Work | WorkManager | 2.9.0 | Tarefas em background |
-| Location | Play Services | 21.0.1 | Geolocalização |
-| Camera | CameraX | 1.3.0 | Captura de fotos |
+| Camada | Tecnologia | Versao | Proposito |
+|--------|------------|--------|-----------|
+| UI | View Binding + Data Binding | - | Interface XML |
+| UI | Material Design 3 | 1.10.0 | Design system |
+| UI | MPAndroidChart | 3.1.0 | Graficos |
+| Arquitetura | MVVM + Clean Architecture | - | Separacao de camadas |
+| DI | Hilt | 2.48 | Injecao de dependencias |
+| Async | Coroutines + Flow | 1.7.3 | Programacao assincrona |
+| DB Local | Room + Paging 3 | 2.6.1 / 3.2.1 | Persistencia + Scroll infinito |
+| Criptografia | SQLCipher | 4.5.4 | Banco criptografado |
+| Network | Retrofit + OkHttp | 2.9.0 / 4.12.0 | Cliente HTTP |
+| JSON | Gson | (via Retrofit) | Serializacao |
+| Imagens | Glide | 4.16.0 | Carregamento de imagens |
+| Scanner | ZXing | 4.3.0 / 3.5.2 | QR Code + Barcode |
+| Camera | CameraX | 1.3.0 | Preview + Captura |
+| Security | AndroidX Security | 1.1.0-alpha06 | Prefs criptografadas |
+| Biometria | AndroidX Biometric | 1.2.0-alpha05 | Autenticacao biometrica |
+| Background | WorkManager | 2.9.0 | Tarefas em background |
+| PDF | iText 7 | 7.2.5 | Geracao de relatorios |
+| Navegacao | Navigation Component | 2.7.5 | Navegacao entre telas |
+| Testes | Kotest + MockK | 5.8.0 / 1.12.8 | Property-based + Mocking |
 
 ### 4.3 Estrutura de Pacotes
+
 ```
 com.inventario.mobile/
-├── presentation/          # UI e ViewModels
-│   ├── main/
-│   ├── login/
-│   ├── dashboard/
-│   ├── scanner/
-│   ├── coleta/
-│   └── settings/
-├── domain/               # Modelos e casos de uso
-│   ├── model/
-│   ├── usecase/
-│   └── repository/
-├── data/                 # Acesso a dados
-│   ├── local/
-│   ├── remote/
-│   ├── repository/
-│   └── mapper/
-├── di/                   # Injeção de dependências
-├── security/             # Criptografia e auth
-└── utils/                # Utilitários
+|-- api/                    # Interfaces Retrofit (legado)
+|-- auth/                   # Autenticacao e tokens
+|-- config/                 # Configuracoes
+|-- data/                   # Camada de Dados
+|   |-- audit/              #   Servico de auditoria
+|   |-- local/              #   Room DB (10 entities, 11 DAOs)
+|   |-- model/              #   DTOs
+|   |-- remote/             #   APIs Retrofit
+|   |-- mapper/             #   Conversores
+|   +-- repository/         #   Implementacoes
+|-- di/                     # Modulos Hilt
+|-- domain/                 # Camada de Dominio
+|   |-- model/              #   Modelos puros
+|   |-- repository/         #   Interfaces
+|   |-- usecase/            #   Casos de uso
+|   +-- validator/          #   Validadores
+|-- network/                # Monitoramento de rede
+|-- presentation/           # Camada de Apresentacao (27 subpacotes)
+|-- security/               # SQLCipher + Keystore
+|-- sync/                   # SyncManager + AutoSyncManager
+|-- worker/                 # 7 Workers (background)
++-- utils/                  # Utilitarios
 ```
-
-## 5. Integração com Sistema Desktop
-
-### 5.1 Sincronização de Dados
-- **Protocolo**: HTTPS REST API
-- **Autenticação**: JWT Bearer tokens
-- **Formato**: JSON com Moshi
-- **Compressão**: GZIP para grandes volumes
-
-### 5.2 Endpoints Principais
-```
-POST   /api/auth/login                    # Autenticação
-POST   /api/auth/refresh                  # Renovar token
-GET    /api/patrimonios?page=&size=       # Listar patrimônios
-GET    /api/patrimonios/{numero}          # Buscar específico
-POST   /api/coletas/bulk                  # Enviar coletas
-GET    /api/salas/hierarquia              # Estrutura organizacional
-GET    /api/sincronizacao/updates?since=  # Atualizações incrementais
-```
-
-### 5.3 Mapeamento de Entidades
-| Mobile | Desktop | Observações |
-|--------|---------|-------------|
-| PatrimonioEntity | Patrimonio | Campos adicionais para mobile |
-| ColetaEntity | HistoricoColeta | Inclui geolocalização |
-| SalaEntity | Sala | Mesma estrutura |
-| SetorEntity | Setor | Mesma estrutura |
-| UsuarioEntity | Usuario | Credenciais compartilhadas |
-
-### 5.4 Controle de Versão
-- **API Versioning**: Header `X-API-Version: 1.0`
-- **Backward Compatibility**: 2 versões anteriores
-- **Migration Scripts**: Atualização automática de schema
-
-## 6. Requisitos de Dados e Armazenamento
-
-### 6.1 Banco de Dados Local (Room)
-```kotlin
-@Database(
-    entities = [
-        PatrimonioEntity::class,
-        ColetaEntity::class,
-        SalaEntity::class,
-        SetorEntity::class,
-        UsuarioEntity::class,
-        SincronizacaoEntity::class
-    ],
-    version = 1,
-    exportSchema = true
-)
-@TypeConverters(Converters::class)
-abstract class InventarioDatabase : RoomDatabase() {
-    // DAOs...
-}
-```
-
-### 6.2 Capacidade de Armazenamento
-- **Patrimônios**: 100.000+ registros (50MB)
-- **Coletas**: 500.000+ registros (100MB)
-- **Imagens**: Compressão JPEG 80% (500KB/foto)
-- **Cache Total**: Máximo 500MB configurável
-
-### 6.3 Estratégia de Cache
-- **Prioritários**: Dados da sala atual e adjacentes
-- **Tempo de Vida**: 7 dias para dados não acessados
-- **Limpeza**: Automática quando atinge 80% do limite
-- **Inteligente**: Baseado em localização e horário
-
-### 6.4 Backup e Recuperação
-- **Frequência**: Diário às 02:00
-- **Local**: Diretório privado do app
-- **Retenção**: 7 dias de histórico
-- **Export**: JSON criptografado para compartilhamento
-
-## 7. Fluxos de Trabalho Principais
-
-### 7.1 Fluxo de Coleta com QR Code
-```mermaid
-graph TD
-    A[Usuário autenticado] --> B[Seleciona sala]
-    B --> C[Abre scanner QR]
-    C --> D{QR Code válido?}
-    D -->|Sim| E[Busca patrimônio]
-    D -->|Não| F[Mostra erro]
-    E --> G{Encontrou?}
-    G -->|Sim| H[Mostra dados]
-    G -->|Não| I[Pergunta cadastrar]
-    H --> J[Confirma coleta]
-    J --> K[Salva localmente]
-    K --> L{Tenta sincronizar}
-    L -->|Online| M[Envia servidor]
-    L -->|Offline| N[Marca pendente]
-```
-
-### 7.2 Fluxo de Sincronização
-```mermaid
-graph TD
-    A[WorkManager agendado] --> B[Verifica conexão]
-    B --> C{Conectado?}
-    C -->|Sim| D[Busca pendentes]
-    C -->|Não| Z[Agenda próxima tentativa]
-    D --> E[Upload coletas]
-    E --> F{Sucesso?}
-    F -->|Sim| G[Atualiza status]
-    F -->|Não| H[Incrementa tentativas]
-    H --> I{Tentativas < 3?}
-    I -->|Sim| J[Reagenda]
-    I -->|Não| K[Marca erro]
-    G --> L[Download updates]
-    L --> M[Atualiza cache]
-    M --> N[Notifica UI]
-```
-
-### 7.3 Fluxo de Login com Biometria
-```mermaid
-graph TD
-    A[Usuário abre app] --> B[Verifica sessão]
-    B --> C{Sessão válida?}
-    C -->|Sim| D[Dashboard]
-    C -->|Não| E[Tela de login]
-    E --> F{Biometria habilitada?}
-    F -->|Sim| G[Autentica biométrica]
-    F -->|Não| H[Login senha]
-    G --> I{Sucesso?}
-    I -->|Sim| J[Busca dados usuário]
-    I -->|Não| H
-    J --> K[Salva credenciais]
-    K --> D
-    H --> L[Valida servidor]
-    L --> M{Sucesso?}
-    M -->|Sim| J
-    M -->|Não| N[Mostra erro]
-```
-
-## 8. Requisitos de Segurança
-
-### 8.1 Autenticação e Autorização
-- **JWT**: Tokens com expiração de 1 hora
-- **Refresh**: Valido por 7 dias
-- **Biometria**: Android Keystore para chaves
-- **Sessão**: Timeout de 15 minutos
-- **Permissões**: RBAC com 3 níveis (Admin, Operador, Auditor)
-
-### 8.2 Criptografia
-- **Dados Locais**: AES-256-GCM
-- **Comunicação**: TLS 1.3 com certificate pinning
-- **Senhas**: Argon2id com salt aleatório
-- **Backup**: Criptografia com senha do usuário
-
-### 8.3 Conformidade Legal
-- **LGPD**: Consentimento e direitos do titular
-- **Audit Trail**: Logs imutáveis de todas operações
-- **Retenção**: Política de exclusão automática (5 anos)
-- **Portabilidade**: Exportação em formatos abertos
-
-## 9. Requisitos de Performance
-
-### 9.1 Tempos de Resposta
-- **Login**: < 3 segundos
-- **Scanner QR**: < 1 segundo
-- **Busca local**: < 500ms para 10k registros
-- **Sincronização**: < 30s para 1000 coletas
-- **Carregamento inicial**: < 5 segundos
-
-### 9.2 Eficiência de Recursos
-- **Bateria**: < 5% consumo por hora de uso
-- **Memória**: < 200MB em uso normal
-- **Armazenamento**: < 500MB total
-- **Rede**: Compressão e batching de requisições
-
-### 9.3 Escalabilidade
-- **Usuários**: Suporte a 100+ usuários simultâneos
-- **Dados**: Performance estável com 1M+ registros
-- **Imagens**: Thumbnails automáticos e lazy loading
-
-## 10. Cronograma e Entregas
-
-### Fase 1 - MVP (8 semanas)
-- [ ] Autenticação básica e dashboard
-- [ ] Scanner QR e coleta manual
-- [ ] Modo offline e sincronização
-- [ ] Integração com API existente
-
-### Fase 2 - Funcionalidades Avançadas (6 semanas)
-- [ ] Biometria e segurança reforçada
-- [ ] Filtros avançados e busca
-- [ ] Estatísticas e relatórios
-- [ ] Exportação de dados
-
-### Fase 3 - Otimização e Testes (4 semanas)
-- [ ] Testes de performance e segurança
-- [ ] Otimização de bateria e memória
-- [ ] Testes de usabilidade
-- [ ] Documentação final
-
-### Fase 4 - Deploy e Suporte (2 semanas)
-- [ ] Publicação na Play Store
-- [ ] Treinamento de usuários
-- [ ] Monitoramento e métricas
-- [ ] Suporte técnico
-
-## 11. Riscos e Mitigações
-
-| Risco | Probabilidade | Impacto | Mitigação |
-|-------|---------------|---------|-----------|
-| Falta de conectividade frequente | Alta | Alto | Modo offline robusto com cache inteligente |
-| Resistência à adoção | Média | Alto | Treinamento e interface intuitiva |
-| Performance com grandes volumes | Média | Médio | Otimização de queries e índices |
-| Segurança de dados sensíveis | Baixa | Alto | Criptografia e auditoria completa |
-| Compatibilidade de devices | Alta | Médio | Teste em diversos modelos e APIs |
-
-## 12. Métricas de Sucesso
-
-### 12.1 KPIs Técnicos
-- **Disponibilidade**: > 99.5%
-- **Performance**: < 2s tempo médio de resposta
-- **Sincronização**: > 95% sucesso na primeira tentativa
-- **Crash Rate**: < 0.1% das sessões
-
-### 12.2 KPIs de Negócio
-- **Adoção**: > 80% dos usuários ativos em 30 dias
-- **Eficiência**: Redução de 70% no tempo de coleta
-- **Acurácia**: > 99% de dados corretos
-- **Satisfação**: > 4.0/5.0 em surveys
 
 ---
 
-**Documento versão**: 1.0.0  
-**Data de criação**: 09/11/2025  
-**Status**: Em análise  
-**Próxima revisão**: 16/11/2025
+## 5. Integracao com Sistema Desktop
+
+### 5.1 Comunicacao
+
+| Aspecto | Implementacao |
+|---------|---------------|
+| Protocolo | HTTPS REST API |
+| Autenticacao | JWT Bearer Token |
+| Formato | JSON (Gson) |
+| Base URL | `api/mobile/` |
+| Porta | 8080 ou 8081 |
+
+### 5.2 Endpoints Principais
+
+```
+POST   /api/mobile/auth/login              # Login
+POST   /api/mobile/auth/refresh            # Refresh token
+GET    /api/mobile/patrimonio              # Listar patrimonios
+GET    /api/mobile/patrimonio/numero/{n}   # Buscar por numero
+GET    /api/mobile/patrimonio/qr/{code}    # Buscar por QR
+POST   /api/mobile/coletas                 # Registrar coleta
+POST   /api/mobile/coletas/batch           # Batch sync
+POST   /api/mobile/coletas/verificar-duplicata  # Verificar duplicata
+GET    /api/mobile/salas                   # Listar salas
+GET    /api/mobile/inventario/ativo        # Inventario ativo
+GET    /api/mobile/dashboard/stats         # Estatisticas
+GET    /api/mobile/descricoes/nao-coletadas  # Sugestoes
+GET    /api/mobile/responsaveis            # Responsaveis
+```
+
+### 5.3 Mapeamento de Entidades
+
+| Mobile (Room) | Servidor (PostgreSQL) | Observacoes |
+|---------------|----------------------|-------------|
+| PatrimonioEntity | tabela_patrimonio | + campos de auditoria local |
+| ColetaEntity | tabela_coleta | + metricas + foto + divergencia |
+| SalaEntity | tabela_sala | Mesma estrutura |
+| ResponsavelEntity | tabela_responsavel | Mesma estrutura |
+| HistoricoScanEntity | - | Apenas local |
+| FotoReferenciaEntity | - | Cache local de fotos |
+| SugestaoDescricaoEntity | - | Cache de sugestoes |
+| LogColetaEntity | - | Auditoria local |
+
+---
+
+## 6. Banco de Dados Local
+
+### 6.1 Configuracao
+
+| Campo | Valor |
+|-------|-------|
+| Nome | `inventario_offline_secure.db` |
+| Versao | 17 |
+| Criptografia | SQLCipher (AES-256) |
+| Passphrase | Android Keystore (aleatoria) |
+| Entities | 10 |
+| DAOs | 11 |
+| Migracoes | 13 (v4 a v17) |
+
+### 6.2 Entities
+
+```mermaid
+erDiagram
+    PATRIMONIO {
+        long id PK
+        string numero UK
+        string descricao
+        string marca
+        int idSala FK
+        boolean coletado
+        string localizacaoEncontrada
+        string estadoEncontrado
+    }
+
+    COLETA {
+        long id PK
+        int idPatrimonio FK
+        int idInventario
+        boolean sincronizado
+        string metodoColeta
+        boolean divergencia
+        string fotoPath
+        boolean semEtiqueta
+        string localizacaoEncontrada
+    }
+
+    SALA {
+        long id PK
+        string nome
+        int setorId
+    }
+
+    RESPONSAVEL {
+        long id PK
+        string nome
+    }
+
+    FOTO_REFERENCIA {
+        long id PK
+        string descricaoNormalizada UK
+        blob imagemBlob
+    }
+
+    SUGESTAO_DESCRICAO {
+        int idInventario PK
+        int idPatrimonio PK
+        string descricao
+        boolean coletadoLocal
+    }
+
+    HISTORICO_SCAN {
+        long id PK
+        string numeroPatrimonio
+        string tipoAcesso
+        long timestamp
+    }
+
+    LOG_COLETA {
+        long id PK
+        long coletaId FK
+        string acao
+        boolean sucesso
+    }
+
+    PATRIMONIO ||--o{ COLETA : "coletado em"
+    SALA ||--o{ PATRIMONIO : "contem"
+    COLETA ||--o{ LOG_COLETA : "auditado"
+```
+
+---
+
+## 7. Fluxos de Trabalho
+
+### 7.1 Fluxo de Coleta com QR Code
+
+```mermaid
+sequenceDiagram
+    actor C as Coletor
+    participant S as ScannerActivity
+    participant VM as ViewModel
+    participant UC as BuscarPatrimonioUseCase
+    participant DB as Room (SQLite)
+    participant API as Servidor
+
+    C->>S: Aponta camera para QR Code
+    S->>S: ZXing decodifica
+    S->>VM: validarPatrimonio(numero)
+    VM->>UC: invoke(numero)
+    UC->>DB: buscarPorNumero(numero)
+    DB-->>UC: PatrimonioEntity
+    UC-->>VM: Result.success(patrimonio)
+    VM-->>S: Exibe dados + estado
+
+    C->>S: Confirma coleta
+    S->>VM: registrarColeta(dados)
+    VM->>DB: inserir ColetaEntity (sincronizado=false)
+    DB-->>VM: ID local
+
+    opt Online (NetworkQualityMonitor)
+        VM->>API: POST /coletas
+        API-->>VM: success + servidorId
+        VM->>DB: marcarSincronizada(id, servidorId)
+    end
+
+    VM-->>S: ColetaState.Success
+    S-->>C: Feedback visual + sonoro
+```
+
+### 7.2 Fluxo de Sincronizacao
+
+```mermaid
+sequenceDiagram
+    participant WM as WorkManager
+    participant SW as SyncWorker
+    participant UC as SincronizarColetasUseCase
+    participant REPO as ColetaRepositoryImpl
+    participant API as Servidor
+
+    WM->>SW: doWork() [a cada 30 min]
+    SW->>SW: Verificar conectividade
+    SW->>UC: invoke()
+    UC->>REPO: sincronizarColetasPendentes()
+
+    REPO->>REPO: buscarPendentes()
+
+    alt Batch Sync
+        REPO->>API: POST /coletas/batch
+        API-->>REPO: resultados estruturados
+        REPO->>REPO: marcar sincronizadas
+    else Fallback Individual
+        loop Para cada coleta
+            REPO->>API: POST /coletas
+            API-->>REPO: success/error
+        end
+    end
+
+    SW->>SW: sincronizarFotos()
+    SW->>SW: sincronizarSugestoes()
+    SW-->>WM: Result.success()
+```
+
+### 7.3 Fluxo de Exportacao
+
+```mermaid
+graph TD
+    A["Usuario abre ExportFragment"] --> B["Seleciona formato"]
+    B --> C{"Formato?"}
+    C -->|PDF| D["GerarRelatorioUseCase (PDF)"]
+    C -->|Excel| E["GerarRelatorioUseCase (TSV)"]
+    C -->|CSV| F["GerarRelatorioUseCase (CSV)"]
+    D --> G["Arquivo gerado no storage"]
+    E --> G
+    F --> G
+    G --> H{"Acao?"}
+    H -->|Abrir| I["Intent.ACTION_VIEW"]
+    H -->|Compartilhar| J["Intent.ACTION_SEND"]
+
+    style D fill:#FFCDD2
+    style E fill:#C8E6C9
+    style F fill:#B3E5FC
+```
+
+---
+
+## 8. Seguranca
+
+```mermaid
+graph TD
+    subgraph Autenticacao
+        JWT["JWT Token<br/>(24h expiracao)"]
+        REFRESH["Refresh Token<br/>(7 dias)"]
+        BIO["Biometria<br/>(AndroidX Biometric)"]
+        INTERCEPTOR["RefreshTokenInterceptor<br/>(renovacao automatica)"]
+    end
+
+    subgraph Armazenamento
+        CIPHER["SQLCipher<br/>(AES-256-CBC)"]
+        KEYSTORE["Android Keystore<br/>(passphrase aleatoria)"]
+        ESP["EncryptedSharedPreferences"]
+    end
+
+    subgraph Build
+        R8["R8 Ofuscacao"]
+        PROGUARD["ProGuard Rules"]
+        SIGN["Keystore Signing<br/>(release)"]
+    end
+
+    subgraph Rede
+        HTTPS["HTTPS obrigatorio"]
+        CERT["Network Security Config"]
+        QUALITY["NetworkQualityMonitor"]
+    end
+
+    JWT --> INTERCEPTOR
+    REFRESH --> INTERCEPTOR
+    BIO --> KEYSTORE
+    CIPHER --> KEYSTORE
+
+    style Autenticacao fill:#FFCDD2
+    style Armazenamento fill:#C8E6C9
+    style Build fill:#FFF9C4
+    style Rede fill:#E3F2FD
+```
+
+---
+
+## 9. Workers (Background Tasks)
+
+| Worker | Funcao | Intervalo | Constraints |
+|--------|--------|-----------|-------------|
+| `SyncWorker` | Coletas + Fotos + Sugestoes | 30 min | Rede + Bateria |
+| `PhotoSyncWorker` | Upload de fotos (multipart) | Periodico | Wi-Fi + Bateria |
+| `SmartSyncWorker` | Sync inteligente | Condicional | Rede + Bateria > 20% |
+| `ColetaSyncWorker` | Sync de coletas | Sob demanda | Rede |
+| `DatabaseCleanupWorker` | Limpeza do banco | Periodico | - |
+| `DatabaseBackupWorker` | Backup do banco | Periodico | - |
+| `BackupWorker` | Backup geral | Periodico | - |
+
+---
+
+## 10. Metricas de Sucesso
+
+### 10.1 KPIs Tecnicos
+
+| Metrica | Meta | Status |
+|---------|------|--------|
+| Disponibilidade offline | 100% | Atendido |
+| Taxa de sync (1a tentativa) | > 95% | Atendido |
+| Tempo medio de resposta | < 2s | Atendido |
+| Crash rate | < 0.1% | Atendido |
+| Cobertura de testes | > 50% | Em progresso |
+
+### 10.2 KPIs de Negocio
+
+| Metrica | Meta | Status |
+|---------|------|--------|
+| Reducao tempo de coleta | > 70% | Atendido |
+| Acuracia dos dados | > 99% | Atendido |
+| Adocao pelos usuarios | > 80% | Atendido |
+| Coletas perdidas | 0% | Atendido |
+
+---
+
+## 11. Riscos e Mitigacoes
+
+| Risco | Probabilidade | Impacto | Mitigacao Implementada |
+|-------|---------------|---------|------------------------|
+| Falta de conectividade | Alta | Alto | Offline-first + SQLCipher + WorkManager |
+| Perda de dados | Baixa | Critico | Backup automatico + retry + auditoria |
+| Seguranca de dados | Baixa | Alto | SQLCipher + Keystore + R8 |
+| Performance com grandes volumes | Media | Medio | Paging 3 + indices compostos |
+| Compatibilidade de devices | Media | Medio | minSdk 23 + testes em multiplos devices |
+| Token expirado durante uso | Media | Medio | RefreshTokenInterceptor automatico |
+
+---
+
+## 12. Cronograma (Concluido)
+
+| Fase | Periodo | Status |
+|------|---------|--------|
+| MVP (Auth + Coleta + Sync) | Nov/2025 | Concluido |
+| Clean Architecture + Hilt | Nov-Dez/2025 | Concluido |
+| Paging 3 + Exportacao | Dez/2025 | Concluido |
+| Seguranca (SQLCipher + Biometria) | Jan-Fev/2026 | Concluido |
+| Fotos + Divergencia + Metricas | Mar-Abr/2026 | Concluido |
+| Sugestoes + Relatorio Fotografico | Mai/2026 | Concluido |
+
+---
+
+**Versao do documento**: 3.0.0
+**Data**: 09/05/2026
+**Status**: Producao
+**Versao do app**: 2.23.0 (versionCode 71)

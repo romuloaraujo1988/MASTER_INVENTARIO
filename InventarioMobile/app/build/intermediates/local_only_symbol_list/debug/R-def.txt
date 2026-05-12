@@ -470,6 +470,7 @@ id fabBackToDashboard
 id fabBiometric
 id fabColetarSemEtiqueta
 id fabExport
+id fabRelatorioFoto
 id fabScanQr
 id fabSearch
 id fabVoiceSearch
@@ -563,6 +564,7 @@ id progressBar
 id progressBarGrafico
 id progressBarInventario
 id progressBarMore
+id progressBarRelatorio
 id progressBarSync
 id progressConclusao
 id progressFotoReferencia
@@ -588,6 +590,7 @@ id responsavelInputLayout
 id rgFilter
 id rgFormat
 id rvSearchResults
+id rvSugestoes
 id rvTimeline
 id scrimOverlay
 id scrollChips
@@ -677,6 +680,7 @@ id tilSala
 id tilServerIp
 id timelineDot
 id timelineLine
+id toggleSugestao
 id toolbar
 id tvAppName
 id tvAttempts
@@ -713,6 +717,7 @@ id tvEstado
 id tvEstadoEncontrado
 id tvFixarEstadoDescricao
 id tvFotoStatus
+id tvFotosBadge
 id tvGraficoError
 id tvHorario
 id tvIcone
@@ -894,6 +899,7 @@ layout item_patrimonio_search
 layout item_pending_coleta
 layout item_sala
 layout item_sala_dropdown
+layout item_sugestao_descricao
 layout item_timeline_coleta
 layout nav_header_main
 layout numeric_keypad

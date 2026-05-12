@@ -19,21 +19,39 @@ import java.nio.file.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Serviço de armazenamento de fotos de coleta em disco.
  *
- * <p>Organiza as fotos no sistema de arquivos seguindo a estrutura:</p>
+ * <h2>Estrutura de pastas</h2>
  * <pre>
- *   data/fotos/inventario_{id}/{YYYY-MM}/coleta_{id}.jpg
+ * data/fotos/
+ *   inventario_{id}/
+ *     {YYYY-MM}/
+ *       patrimonio/
+ *         coleta_{coletaId}_{numeroPatrimonio}.jpg
+ *       sem_etiqueta/
+ *         coleta_{coletaId}_SE.jpg
+ *       divergencia/
+ *         coleta_{coletaId}_{numeroPatrimonio}.jpg
  * </pre>
  *
- * <p>Todas as fotos são comprimidas automaticamente para no máximo 100 KB
- * antes de serem salvas, redimensionando e ajustando a qualidade JPEG
- * conforme necessário.</p>
+ * <h2>Regras de nomenclatura</h2>
+ * <ul>
+ *   <li>Sempre {@code .jpg} — todas as imagens são convertidas para JPEG.</li>
+ *   <li>{@code coleta_{coletaId}_{identificador}.jpg}
+ *       onde {@code identificador} é o número do patrimônio ou {@code SE} para
+ *       itens sem etiqueta.</li>
+ *   <li>Tipos aceitos: {@code patrimonio}, {@code sem_etiqueta}, {@code divergencia}.</li>
+ * </ul>
+ *
+ * <h2>Compressão</h2>
+ * Todas as fotos são comprimidas para no máximo 100 KB antes de serem salvas,
+ * redimensionando (máx. 800×600) e ajustando a qualidade JPEG progressivamente.
  *
  * @author Sistema de Inventário IFMT
- * @version 1.0.0
+ * @version 2.22
  */
 @Service
 public class FotoColetaStorageService {
@@ -58,22 +76,38 @@ public class FotoColetaStorageService {
     /** Extensões de imagem aceitas. */
     private static final String[] EXTENSOES_ACEITAS = {".jpg", ".jpeg", ".png", ".webp"};
 
+    /** Tipos de coleta aceitos como subpasta. */
+    private static final Set<String> TIPOS_ACEITOS = Set.of("patrimonio", "sem_etiqueta", "divergencia");
+
+    /** Identificador usado para itens sem etiqueta. */
+    public static final String ID_SEM_ETIQUETA = "SE";
+
+    // ─── API pública ──────────────────────────────────────────────────────────
+
     /**
      * Salva uma foto de coleta no disco.
      *
-     * @param inputStream  stream da foto recebida
-     * @param inventarioId ID do inventário
-     * @param coletaId     ID da coleta
-     * @param nomeOriginal nome original do arquivo (para extrair extensão)
-     * @param tamanho      tamanho do arquivo em bytes
+     * <p>Estrutura gerada:</p>
+     * <pre>
+     *   data/fotos/inventario_{inventarioId}/{YYYY-MM}/{tipo}/coleta_{coletaId}_{identificador}.jpg
+     * </pre>
+     *
+     * @param inputStream   stream da foto recebida
+     * @param inventarioId  ID do inventário
+     * @param coletaId      ID da coleta no banco
+     * @param tipo          Tipo da coleta: {@code patrimonio}, {@code sem_etiqueta} ou {@code divergencia}
+     * @param identificador Número do patrimônio ou {@value #ID_SEM_ETIQUETA} para sem etiqueta
+     * @param nomeOriginal  nome original do arquivo (para extrair extensão e validar)
+     * @param tamanho       tamanho do arquivo em bytes
      * @return caminho relativo da foto salva (para gravar no banco)
      * @throws IOException              se ocorrer erro de I/O
-     * @throws IllegalArgumentException se o arquivo for inválido
+     * @throws IllegalArgumentException se o arquivo ou parâmetros forem inválidos
      */
     public String salvarFoto(InputStream inputStream, int inventarioId, int coletaId,
+                             String tipo, String identificador,
                              String nomeOriginal, long tamanho) throws IOException {
 
-        // Validar tamanho do upload
+        // Validar tamanho
         if (tamanho > MAX_UPLOAD_SIZE) {
             throw new IllegalArgumentException(
                     "Foto excede o tamanho máximo de upload (5 MB). Tamanho recebido: "
@@ -88,11 +122,15 @@ public class FotoColetaStorageService {
                     + ". Formatos aceitos: jpg, jpeg, png, webp");
         }
 
-        // Ler imagem original
+        // Validar e normalizar tipo
+        String tipoNormalizado = normalizarTipo(tipo);
+
+        // Sanitizar identificador (apenas alfanumérico + hífen + underscore)
+        String idSanitizado = sanitizarIdentificador(identificador);
+
+        // Ler e comprimir imagem
         byte[] bytesOriginais = inputStream.readAllBytes();
         long tamanhoOriginal = bytesOriginais.length;
-
-        // Comprimir para no máximo 100 KB
         byte[] bytesComprimidos = comprimirParaTamanhoAlvo(bytesOriginais);
         long tamanhoFinal = bytesComprimidos.length;
 
@@ -101,140 +139,37 @@ public class FotoColetaStorageService {
                 tamanhoFinal / 1024,
                 tamanhoOriginal > 0 ? (100 - (tamanhoFinal * 100 / tamanhoOriginal)) : 0);
 
-        // Montar caminho: data/fotos/inventario_{id}/{YYYY-MM}/coleta_{id}.jpg
+        // Montar caminho:
+        // data/fotos/inventario_{id}/{YYYY-MM}/{tipo}/coleta_{coletaId}_{identificador}.jpg
         String mesAno = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
-        String diretorioRelativo = String.format("inventario_%d/%s", inventarioId, mesAno);
-        String nomeArquivo = String.format("coleta_%d.jpg", coletaId); // Sempre .jpg após compressão
+        String diretorioRelativo = String.format("inventario_%d/%s/%s", inventarioId, mesAno, tipoNormalizado);
+        String nomeArquivo = String.format("coleta_%d_%s.jpg", coletaId, idSanitizado);
         String caminhoRelativo = diretorioRelativo + "/" + nomeArquivo;
 
         Path diretorioCompleto = Paths.get(FOTOS_BASE_DIR, diretorioRelativo);
-        Path arquivoCompleto = Paths.get(FOTOS_BASE_DIR, caminhoRelativo);
+        Path arquivoCompleto   = Paths.get(FOTOS_BASE_DIR, caminhoRelativo);
 
-        // Criar diretórios se não existirem
         Files.createDirectories(diretorioCompleto);
+        Files.write(arquivoCompleto, bytesComprimidos,
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
-        // Salvar arquivo comprimido
-        Files.write(arquivoCompleto, bytesComprimidos, StandardOpenOption.CREATE,
-                StandardOpenOption.TRUNCATE_EXISTING);
-
-        logger.info("Foto salva: {} ({}KB) — Inventário: {}, Coleta: {}",
-                caminhoRelativo, tamanhoFinal / 1024, inventarioId, coletaId);
+        logger.info("Foto salva: {} ({}KB) — Inventário: {}, Coleta: {}, Tipo: {}, ID: {}",
+                caminhoRelativo, tamanhoFinal / 1024, inventarioId, coletaId, tipoNormalizado, idSanitizado);
 
         return caminhoRelativo;
     }
 
     /**
-     * Comprime uma imagem para no máximo {@value #TAMANHO_ALVO} bytes (100 KB).
+     * Sobrecarga de compatibilidade para código legado que não passa tipo/identificador.
+     * Usa tipo {@code patrimonio} e identificador {@code coletaId} como fallback.
      *
-     * <p>Estratégia em 2 etapas:</p>
-     * <ol>
-     *   <li>Redimensionar para no máximo 800x600 se necessário</li>
-     *   <li>Reduzir qualidade JPEG progressivamente até caber em 100 KB</li>
-     * </ol>
-     *
-     * @param bytesOriginais bytes da imagem original
-     * @return bytes da imagem comprimida (JPEG)
-     * @throws IOException se ocorrer erro no processamento
+     * @deprecated Use {@link #salvarFoto(InputStream, int, int, String, String, String, long)}.
      */
-    private byte[] comprimirParaTamanhoAlvo(byte[] bytesOriginais) throws IOException {
-        BufferedImage imagem = ImageIO.read(new ByteArrayInputStream(bytesOriginais));
-        if (imagem == null) {
-            throw new IOException("Não foi possível decodificar a imagem");
-        }
-
-        // Etapa 1: Redimensionar se necessário
-        imagem = redimensionar(imagem, LARGURA_MAX, ALTURA_MAX);
-
-        // Etapa 2: Comprimir com qualidade decrescente até caber em 100 KB
-        float qualidade = 0.7f; // Começar com 70%
-        byte[] resultado = comprimirJpeg(imagem, qualidade);
-
-        // Se já está dentro do limite, retornar
-        if (resultado.length <= TAMANHO_ALVO) {
-            return resultado;
-        }
-
-        // Reduzir qualidade progressivamente
-        float[] qualidades = {0.5f, 0.35f, 0.25f, 0.15f, 0.10f};
-        for (float q : qualidades) {
-            resultado = comprimirJpeg(imagem, q);
-            if (resultado.length <= TAMANHO_ALVO) {
-                return resultado;
-            }
-        }
-
-        // Se ainda não coube, redimensionar mais agressivamente
-        imagem = redimensionar(imagem, 640, 480);
-        resultado = comprimirJpeg(imagem, 0.3f);
-        if (resultado.length <= TAMANHO_ALVO) {
-            return resultado;
-        }
-
-        // Último recurso: 400x300 com qualidade mínima
-        imagem = redimensionar(imagem, 400, 300);
-        return comprimirJpeg(imagem, 0.2f);
-    }
-
-    /**
-     * Redimensiona uma imagem mantendo a proporção.
-     */
-    private BufferedImage redimensionar(BufferedImage original, int larguraMax, int alturaMax) {
-        int larguraOriginal = original.getWidth();
-        int alturaOriginal = original.getHeight();
-
-        // Se já está dentro dos limites, não redimensionar
-        if (larguraOriginal <= larguraMax && alturaOriginal <= alturaMax) {
-            return original;
-        }
-
-        // Calcular nova dimensão mantendo proporção
-        double escala = Math.min(
-                (double) larguraMax / larguraOriginal,
-                (double) alturaMax / alturaOriginal
-        );
-
-        int novaLargura = (int) (larguraOriginal * escala);
-        int novaAltura = (int) (alturaOriginal * escala);
-
-        BufferedImage redimensionada = new BufferedImage(novaLargura, novaAltura, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g2d = redimensionada.createGraphics();
-        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        g2d.drawImage(original, 0, 0, novaLargura, novaAltura, null);
-        g2d.dispose();
-
-        return redimensionada;
-    }
-
-    /**
-     * Comprime uma imagem para JPEG com a qualidade especificada.
-     *
-     * @param imagem    imagem a comprimir
-     * @param qualidade qualidade JPEG (0.0 a 1.0)
-     * @return bytes do JPEG comprimido
-     */
-    private byte[] comprimirJpeg(BufferedImage imagem, float qualidade) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-        Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
-        if (!writers.hasNext()) {
-            throw new IOException("Writer JPEG não disponível");
-        }
-
-        ImageWriter writer = writers.next();
-        try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
-            writer.setOutput(ios);
-
-            ImageWriteParam param = writer.getDefaultWriteParam();
-            param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-            param.setCompressionQuality(qualidade);
-
-            writer.write(null, new IIOImage(imagem, null, null), param);
-        } finally {
-            writer.dispose();
-        }
-
-        return baos.toByteArray();
+    @Deprecated
+    public String salvarFoto(InputStream inputStream, int inventarioId, int coletaId,
+                             String nomeOriginal, long tamanho) throws IOException {
+        return salvarFoto(inputStream, inventarioId, coletaId,
+                "patrimonio", String.valueOf(coletaId), nomeOriginal, tamanho);
     }
 
     /**
@@ -246,43 +181,29 @@ public class FotoColetaStorageService {
      */
     public byte[] lerFoto(String caminhoRelativo) throws IOException {
         Path arquivo = Paths.get(FOTOS_BASE_DIR, caminhoRelativo);
-
         if (!Files.exists(arquivo)) {
             throw new IOException("Foto não encontrada: " + caminhoRelativo);
         }
-
         return Files.readAllBytes(arquivo);
     }
 
     /**
      * Verifica se uma foto existe no disco.
-     *
-     * @param caminhoRelativo caminho relativo da foto
-     * @return true se o arquivo existe
      */
     public boolean fotoExiste(String caminhoRelativo) {
-        if (caminhoRelativo == null || caminhoRelativo.isBlank()) {
-            return false;
-        }
+        if (caminhoRelativo == null || caminhoRelativo.isBlank()) return false;
         return Files.exists(Paths.get(FOTOS_BASE_DIR, caminhoRelativo));
     }
 
     /**
      * Remove uma foto do disco.
-     *
-     * @param caminhoRelativo caminho relativo da foto
-     * @return true se removida com sucesso
      */
     public boolean removerFoto(String caminhoRelativo) {
-        if (caminhoRelativo == null || caminhoRelativo.isBlank()) {
-            return false;
-        }
+        if (caminhoRelativo == null || caminhoRelativo.isBlank()) return false;
         try {
             Path arquivo = Paths.get(FOTOS_BASE_DIR, caminhoRelativo);
             boolean removido = Files.deleteIfExists(arquivo);
-            if (removido) {
-                logger.info("Foto removida: {}", caminhoRelativo);
-            }
+            if (removido) logger.info("Foto removida: {}", caminhoRelativo);
             return removido;
         } catch (IOException e) {
             logger.error("Erro ao remover foto: {}", caminhoRelativo, e);
@@ -291,32 +212,107 @@ public class FotoColetaStorageService {
     }
 
     /**
-     * Retorna o content type baseado na extensão do arquivo.
+     * Retorna o content-type baseado na extensão do arquivo.
      */
     public String getContentType(String caminhoRelativo) {
         String ext = extrairExtensao(caminhoRelativo).toLowerCase();
         return switch (ext) {
-            case ".png" -> "image/png";
+            case ".png"  -> "image/png";
             case ".webp" -> "image/webp";
-            default -> "image/jpeg";
+            default      -> "image/jpeg";
         };
     }
 
-    // ─── Métodos auxiliares ──────────────────────────────────────
+    // ─── Compressão ──────────────────────────────────────────────────────────
+
+    private byte[] comprimirParaTamanhoAlvo(byte[] bytesOriginais) throws IOException {
+        BufferedImage imagem = ImageIO.read(new ByteArrayInputStream(bytesOriginais));
+        if (imagem == null) throw new IOException("Não foi possível decodificar a imagem");
+
+        imagem = redimensionar(imagem, LARGURA_MAX, ALTURA_MAX);
+
+        float qualidade = 0.7f;
+        byte[] resultado = comprimirJpeg(imagem, qualidade);
+        if (resultado.length <= TAMANHO_ALVO) return resultado;
+
+        for (float q : new float[]{0.5f, 0.35f, 0.25f, 0.15f, 0.10f}) {
+            resultado = comprimirJpeg(imagem, q);
+            if (resultado.length <= TAMANHO_ALVO) return resultado;
+        }
+
+        imagem = redimensionar(imagem, 640, 480);
+        resultado = comprimirJpeg(imagem, 0.3f);
+        if (resultado.length <= TAMANHO_ALVO) return resultado;
+
+        imagem = redimensionar(imagem, 400, 300);
+        return comprimirJpeg(imagem, 0.2f);
+    }
+
+    private BufferedImage redimensionar(BufferedImage original, int larguraMax, int alturaMax) {
+        int w = original.getWidth(); int h = original.getHeight();
+        if (w <= larguraMax && h <= alturaMax) return original;
+
+        double escala = Math.min((double) larguraMax / w, (double) alturaMax / h);
+        int nw = (int) (w * escala); int nh = (int) (h * escala);
+
+        BufferedImage dest = new BufferedImage(nw, nh, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = dest.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g.drawImage(original, 0, 0, nw, nh, null);
+        g.dispose();
+        return dest;
+    }
+
+    private byte[] comprimirJpeg(BufferedImage imagem, float qualidade) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
+        if (!writers.hasNext()) throw new IOException("Writer JPEG não disponível");
+
+        ImageWriter writer = writers.next();
+        try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
+            writer.setOutput(ios);
+            ImageWriteParam param = writer.getDefaultWriteParam();
+            param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+            param.setCompressionQuality(qualidade);
+            writer.write(null, new IIOImage(imagem, null, null), param);
+        } finally {
+            writer.dispose();
+        }
+        return baos.toByteArray();
+    }
+
+    // ─── Auxiliares ──────────────────────────────────────────────────────────
 
     private String extrairExtensao(String nomeArquivo) {
-        if (nomeArquivo == null || !nomeArquivo.contains(".")) {
-            return ".jpg"; // padrão
-        }
+        if (nomeArquivo == null || !nomeArquivo.contains(".")) return ".jpg";
         return nomeArquivo.substring(nomeArquivo.lastIndexOf('.')).toLowerCase();
     }
 
     private boolean extensaoAceita(String extensao) {
         for (String aceita : EXTENSOES_ACEITAS) {
-            if (aceita.equals(extensao)) {
-                return true;
-            }
+            if (aceita.equals(extensao)) return true;
         }
         return false;
+    }
+
+    /**
+     * Normaliza o tipo para um dos valores aceitos.
+     * Retorna {@code patrimonio} se o tipo for desconhecido.
+     */
+    private String normalizarTipo(String tipo) {
+        if (tipo == null) return "patrimonio";
+        String t = tipo.trim().toLowerCase();
+        return TIPOS_ACEITOS.contains(t) ? t : "patrimonio";
+    }
+
+    /**
+     * Sanitiza o identificador para uso seguro em nome de arquivo.
+     * Mantém apenas letras, dígitos, hífen e underscore. Máx. 50 chars.
+     */
+    private String sanitizarIdentificador(String identificador) {
+        if (identificador == null || identificador.isBlank()) return "X";
+        String sanitizado = identificador.trim().replaceAll("[^a-zA-Z0-9_\\-]", "_");
+        return sanitizado.length() > 50 ? sanitizado.substring(0, 50) : sanitizado;
     }
 }

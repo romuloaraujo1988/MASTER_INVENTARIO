@@ -29,6 +29,8 @@ import com.inventario.mobile.data.local.dao.SalaDao;
 import com.inventario.mobile.data.local.dao.SalaDao_Impl;
 import com.inventario.mobile.data.local.dao.SincronizacaoDao;
 import com.inventario.mobile.data.local.dao.SincronizacaoDao_Impl;
+import com.inventario.mobile.data.local.dao.SugestaoDescricaoDao;
+import com.inventario.mobile.data.local.dao.SugestaoDescricaoDao_Impl;
 import com.inventario.mobile.data.local.dao.SyncLogDao;
 import com.inventario.mobile.data.local.dao.SyncLogDao_Impl;
 import java.lang.Class;
@@ -67,10 +69,12 @@ public final class AppDatabase_Impl extends AppDatabase {
 
   private volatile FotoReferenciaDao _fotoReferenciaDao;
 
+  private volatile SugestaoDescricaoDao _sugestaoDescricaoDao;
+
   @Override
   @NonNull
   protected SupportSQLiteOpenHelper createOpenHelper(@NonNull final DatabaseConfiguration config) {
-    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(16) {
+    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(17) {
       @Override
       public void createAllTables(@NonNull final SupportSQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS `patrimonio` (`id` INTEGER NOT NULL, `numero` TEXT NOT NULL, `numeroPatrimonio` TEXT NOT NULL, `descricao` TEXT NOT NULL, `marca` TEXT, `modelo` TEXT, `numeroSerie` TEXT, `estado` TEXT, `valor` REAL, `setorId` INTEGER, `setorNome` TEXT, `idSala` INTEGER, `nomeSala` TEXT, `idResponsavel` INTEGER, `nomeResponsavel` TEXT, `status` TEXT, `coletado` INTEGER NOT NULL, `dataColeta` INTEGER, `coletadoPor` TEXT, `observacoesColeta` TEXT, `observacoes` TEXT, `localizacaoEncontrada` TEXT, `estadoEncontrado` TEXT, `dataUltimaAtualizacao` INTEGER NOT NULL, PRIMARY KEY(`id`))");
@@ -115,8 +119,12 @@ public final class AppDatabase_Impl extends AppDatabase {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_foto_referencia_dataAtualizacao` ON `foto_referencia` (`dataAtualizacao`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_foto_referencia_ativo` ON `foto_referencia` (`ativo`)");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_foto_referencia_ativo_dataAtualizacao` ON `foto_referencia` (`ativo`, `dataAtualizacao`)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS `sugestao_descricao` (`idInventario` INTEGER NOT NULL, `idPatrimonio` INTEGER NOT NULL, `numeroPatrimonio` TEXT NOT NULL, `descricao` TEXT NOT NULL, `descricaoNormalizada` TEXT NOT NULL, `coletadoLocal` INTEGER NOT NULL, `dataAtualizacao` INTEGER NOT NULL, PRIMARY KEY(`idInventario`, `idPatrimonio`))");
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_sugestao_descricao_idInventario_coletadoLocal` ON `sugestao_descricao` (`idInventario`, `coletadoLocal`)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_sugestao_descricao_idInventario_descricaoNormalizada` ON `sugestao_descricao` (`idInventario`, `descricaoNormalizada`)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_sugestao_descricao_descricaoNormalizada` ON `sugestao_descricao` (`descricaoNormalizada`)");
         db.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)");
-        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3943eefdf57a1649def1ab2a4e8382eb')");
+        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '703f9bc60bd3d1e86b76dd572398acce')");
       }
 
       @Override
@@ -130,6 +138,7 @@ public final class AppDatabase_Impl extends AppDatabase {
         db.execSQL("DROP TABLE IF EXISTS `log_coleta`");
         db.execSQL("DROP TABLE IF EXISTS `historico_scan`");
         db.execSQL("DROP TABLE IF EXISTS `foto_referencia`");
+        db.execSQL("DROP TABLE IF EXISTS `sugestao_descricao`");
         final List<? extends RoomDatabase.Callback> _callbacks = mCallbacks;
         if (_callbacks != null) {
           for (RoomDatabase.Callback _callback : _callbacks) {
@@ -418,9 +427,29 @@ public final class AppDatabase_Impl extends AppDatabase {
                   + " Expected:\n" + _infoFotoReferencia + "\n"
                   + " Found:\n" + _existingFotoReferencia);
         }
+        final HashMap<String, TableInfo.Column> _columnsSugestaoDescricao = new HashMap<String, TableInfo.Column>(7);
+        _columnsSugestaoDescricao.put("idInventario", new TableInfo.Column("idInventario", "INTEGER", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsSugestaoDescricao.put("idPatrimonio", new TableInfo.Column("idPatrimonio", "INTEGER", true, 2, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsSugestaoDescricao.put("numeroPatrimonio", new TableInfo.Column("numeroPatrimonio", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsSugestaoDescricao.put("descricao", new TableInfo.Column("descricao", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsSugestaoDescricao.put("descricaoNormalizada", new TableInfo.Column("descricaoNormalizada", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsSugestaoDescricao.put("coletadoLocal", new TableInfo.Column("coletadoLocal", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsSugestaoDescricao.put("dataAtualizacao", new TableInfo.Column("dataAtualizacao", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        final HashSet<TableInfo.ForeignKey> _foreignKeysSugestaoDescricao = new HashSet<TableInfo.ForeignKey>(0);
+        final HashSet<TableInfo.Index> _indicesSugestaoDescricao = new HashSet<TableInfo.Index>(3);
+        _indicesSugestaoDescricao.add(new TableInfo.Index("index_sugestao_descricao_idInventario_coletadoLocal", false, Arrays.asList("idInventario", "coletadoLocal"), Arrays.asList("ASC", "ASC")));
+        _indicesSugestaoDescricao.add(new TableInfo.Index("index_sugestao_descricao_idInventario_descricaoNormalizada", false, Arrays.asList("idInventario", "descricaoNormalizada"), Arrays.asList("ASC", "ASC")));
+        _indicesSugestaoDescricao.add(new TableInfo.Index("index_sugestao_descricao_descricaoNormalizada", false, Arrays.asList("descricaoNormalizada"), Arrays.asList("ASC")));
+        final TableInfo _infoSugestaoDescricao = new TableInfo("sugestao_descricao", _columnsSugestaoDescricao, _foreignKeysSugestaoDescricao, _indicesSugestaoDescricao);
+        final TableInfo _existingSugestaoDescricao = TableInfo.read(db, "sugestao_descricao");
+        if (!_infoSugestaoDescricao.equals(_existingSugestaoDescricao)) {
+          return new RoomOpenHelper.ValidationResult(false, "sugestao_descricao(com.inventario.mobile.data.local.entity.SugestaoDescricaoEntity).\n"
+                  + " Expected:\n" + _infoSugestaoDescricao + "\n"
+                  + " Found:\n" + _existingSugestaoDescricao);
+        }
         return new RoomOpenHelper.ValidationResult(true, null);
       }
-    }, "3943eefdf57a1649def1ab2a4e8382eb", "365e8a684c32216bf025e157537ecfd5");
+    }, "703f9bc60bd3d1e86b76dd572398acce", "35c62cd8d0b863ea8a5033498c1526e8");
     final SupportSQLiteOpenHelper.Configuration _sqliteConfig = SupportSQLiteOpenHelper.Configuration.builder(config.context).name(config.name).callback(_openCallback).build();
     final SupportSQLiteOpenHelper _helper = config.sqliteOpenHelperFactory.create(_sqliteConfig);
     return _helper;
@@ -431,7 +460,7 @@ public final class AppDatabase_Impl extends AppDatabase {
   protected InvalidationTracker createInvalidationTracker() {
     final HashMap<String, String> _shadowTablesMap = new HashMap<String, String>(0);
     final HashMap<String, Set<String>> _viewTables = new HashMap<String, Set<String>>(0);
-    return new InvalidationTracker(this, _shadowTablesMap, _viewTables, "patrimonio","sala","responsavel","coleta","sincronizacao","sync_log","log_coleta","historico_scan","foto_referencia");
+    return new InvalidationTracker(this, _shadowTablesMap, _viewTables, "patrimonio","sala","responsavel","coleta","sincronizacao","sync_log","log_coleta","historico_scan","foto_referencia","sugestao_descricao");
   }
 
   @Override
@@ -449,6 +478,7 @@ public final class AppDatabase_Impl extends AppDatabase {
       _db.execSQL("DELETE FROM `log_coleta`");
       _db.execSQL("DELETE FROM `historico_scan`");
       _db.execSQL("DELETE FROM `foto_referencia`");
+      _db.execSQL("DELETE FROM `sugestao_descricao`");
       super.setTransactionSuccessful();
     } finally {
       super.endTransaction();
@@ -473,6 +503,7 @@ public final class AppDatabase_Impl extends AppDatabase {
     _typeConvertersMap.put(DashboardDao.class, DashboardDao_Impl.getRequiredConverters());
     _typeConvertersMap.put(HistoricoScanDao.class, HistoricoScanDao_Impl.getRequiredConverters());
     _typeConvertersMap.put(FotoReferenciaDao.class, FotoReferenciaDao_Impl.getRequiredConverters());
+    _typeConvertersMap.put(SugestaoDescricaoDao.class, SugestaoDescricaoDao_Impl.getRequiredConverters());
     return _typeConvertersMap;
   }
 
@@ -627,6 +658,20 @@ public final class AppDatabase_Impl extends AppDatabase {
           _fotoReferenciaDao = new FotoReferenciaDao_Impl(this);
         }
         return _fotoReferenciaDao;
+      }
+    }
+  }
+
+  @Override
+  public SugestaoDescricaoDao sugestaoDescricaoDao() {
+    if (_sugestaoDescricaoDao != null) {
+      return _sugestaoDescricaoDao;
+    } else {
+      synchronized(this) {
+        if(_sugestaoDescricaoDao == null) {
+          _sugestaoDescricaoDao = new SugestaoDescricaoDao_Impl(this);
+        }
+        return _sugestaoDescricaoDao;
       }
     }
   }

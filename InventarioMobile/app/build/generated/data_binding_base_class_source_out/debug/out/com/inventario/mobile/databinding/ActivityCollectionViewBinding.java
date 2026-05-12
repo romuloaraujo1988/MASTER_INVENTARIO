@@ -63,6 +63,9 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
   public final FloatingActionButton fabBackToDashboard;
 
   @NonNull
+  public final FloatingActionButton fabRelatorioFoto;
+
+  @NonNull
   public final LinearLayout layoutEmptyState;
 
   @NonNull
@@ -73,6 +76,9 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
 
   @NonNull
   public final ProgressBar progressBar;
+
+  @NonNull
+  public final ProgressBar progressBarRelatorio;
 
   @NonNull
   public final RecyclerView recyclerViewColetas;
@@ -87,6 +93,9 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
   public final Toolbar toolbar;
 
   @NonNull
+  public final TextView tvFotosBadge;
+
+  @NonNull
   public final TextView tvPendingSync;
 
   @NonNull
@@ -97,11 +106,14 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
       @NonNull Chip chipAll, @NonNull Chip chipAllUsers, @NonNull ChipGroup chipGroupFilters,
       @NonNull ChipGroup chipGroupUser, @NonNull Chip chipMyCollections, @NonNull Chip chipPending,
       @NonNull Chip chipSemEtiqueta, @NonNull Chip chipSynced,
-      @NonNull FloatingActionButton fabBackToDashboard, @NonNull LinearLayout layoutEmptyState,
+      @NonNull FloatingActionButton fabBackToDashboard,
+      @NonNull FloatingActionButton fabRelatorioFoto, @NonNull LinearLayout layoutEmptyState,
       @NonNull LinearLayout layoutFilters, @NonNull LinearLayout layoutSelectSala,
-      @NonNull ProgressBar progressBar, @NonNull RecyclerView recyclerViewColetas,
-      @NonNull Spinner spinnerSalas, @NonNull SwipeRefreshLayout swipeRefreshLayout,
-      @NonNull Toolbar toolbar, @NonNull TextView tvPendingSync, @NonNull TextView tvTotalColetas) {
+      @NonNull ProgressBar progressBar, @NonNull ProgressBar progressBarRelatorio,
+      @NonNull RecyclerView recyclerViewColetas, @NonNull Spinner spinnerSalas,
+      @NonNull SwipeRefreshLayout swipeRefreshLayout, @NonNull Toolbar toolbar,
+      @NonNull TextView tvFotosBadge, @NonNull TextView tvPendingSync,
+      @NonNull TextView tvTotalColetas) {
     this.rootView = rootView;
     this.cardHeader = cardHeader;
     this.cardSalaFilter = cardSalaFilter;
@@ -114,14 +126,17 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
     this.chipSemEtiqueta = chipSemEtiqueta;
     this.chipSynced = chipSynced;
     this.fabBackToDashboard = fabBackToDashboard;
+    this.fabRelatorioFoto = fabRelatorioFoto;
     this.layoutEmptyState = layoutEmptyState;
     this.layoutFilters = layoutFilters;
     this.layoutSelectSala = layoutSelectSala;
     this.progressBar = progressBar;
+    this.progressBarRelatorio = progressBarRelatorio;
     this.recyclerViewColetas = recyclerViewColetas;
     this.spinnerSalas = spinnerSalas;
     this.swipeRefreshLayout = swipeRefreshLayout;
     this.toolbar = toolbar;
+    this.tvFotosBadge = tvFotosBadge;
     this.tvPendingSync = tvPendingSync;
     this.tvTotalColetas = tvTotalColetas;
   }
@@ -219,6 +234,12 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.fabRelatorioFoto;
+      FloatingActionButton fabRelatorioFoto = ViewBindings.findChildViewById(rootView, id);
+      if (fabRelatorioFoto == null) {
+        break missingId;
+      }
+
       id = R.id.layoutEmptyState;
       LinearLayout layoutEmptyState = ViewBindings.findChildViewById(rootView, id);
       if (layoutEmptyState == null) {
@@ -240,6 +261,12 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
       id = R.id.progressBar;
       ProgressBar progressBar = ViewBindings.findChildViewById(rootView, id);
       if (progressBar == null) {
+        break missingId;
+      }
+
+      id = R.id.progressBarRelatorio;
+      ProgressBar progressBarRelatorio = ViewBindings.findChildViewById(rootView, id);
+      if (progressBarRelatorio == null) {
         break missingId;
       }
 
@@ -267,6 +294,12 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.tvFotosBadge;
+      TextView tvFotosBadge = ViewBindings.findChildViewById(rootView, id);
+      if (tvFotosBadge == null) {
+        break missingId;
+      }
+
       id = R.id.tvPendingSync;
       TextView tvPendingSync = ViewBindings.findChildViewById(rootView, id);
       if (tvPendingSync == null) {
@@ -281,9 +314,10 @@ public final class ActivityCollectionViewBinding implements ViewBinding {
 
       return new ActivityCollectionViewBinding((ConstraintLayout) rootView, cardHeader,
           cardSalaFilter, chipAll, chipAllUsers, chipGroupFilters, chipGroupUser, chipMyCollections,
-          chipPending, chipSemEtiqueta, chipSynced, fabBackToDashboard, layoutEmptyState,
-          layoutFilters, layoutSelectSala, progressBar, recyclerViewColetas, spinnerSalas,
-          swipeRefreshLayout, toolbar, tvPendingSync, tvTotalColetas);
+          chipPending, chipSemEtiqueta, chipSynced, fabBackToDashboard, fabRelatorioFoto,
+          layoutEmptyState, layoutFilters, layoutSelectSala, progressBar, progressBarRelatorio,
+          recyclerViewColetas, spinnerSalas, swipeRefreshLayout, toolbar, tvFotosBadge,
+          tvPendingSync, tvTotalColetas);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

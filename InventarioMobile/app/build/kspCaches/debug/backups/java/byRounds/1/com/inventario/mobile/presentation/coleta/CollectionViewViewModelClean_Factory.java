@@ -1,8 +1,10 @@
 package com.inventario.mobile.presentation.coleta;
 
 import com.inventario.mobile.data.migration.ColetaMigration;
+import com.inventario.mobile.domain.usecase.BaixarRelatorioFotoPdfUseCase;
 import com.inventario.mobile.domain.usecase.BuscarColetasComFallbackUseCase;
 import com.inventario.mobile.domain.usecase.BuscarColetasUseCase;
+import com.inventario.mobile.domain.usecase.BuscarInfoRelatorioFotoUseCase;
 import com.inventario.mobile.domain.usecase.ExcluirColetaPendenteUseCase;
 import com.inventario.mobile.domain.usecase.ObterUsuarioAtualUseCase;
 import com.inventario.mobile.domain.usecase.ReenviarColetaUseCase;
@@ -45,6 +47,10 @@ public final class CollectionViewViewModelClean_Factory implements Factory<Colle
 
   private final Provider<ExcluirColetaPendenteUseCase> excluirColetaPendenteUseCaseProvider;
 
+  private final Provider<BuscarInfoRelatorioFotoUseCase> buscarInfoRelatorioFotoUseCaseProvider;
+
+  private final Provider<BaixarRelatorioFotoPdfUseCase> baixarRelatorioFotoPdfUseCaseProvider;
+
   public CollectionViewViewModelClean_Factory(
       Provider<BuscarColetasUseCase> buscarColetasUseCaseProvider,
       Provider<BuscarColetasComFallbackUseCase> buscarColetasComFallbackUseCaseProvider,
@@ -53,7 +59,9 @@ public final class CollectionViewViewModelClean_Factory implements Factory<Colle
       Provider<SincronizarColetasDoServidorUseCase> sincronizarColetasUseCaseProvider,
       Provider<ColetaMigration> coletaMigrationProvider,
       Provider<ReenviarColetaUseCase> reenviarColetaUseCaseProvider,
-      Provider<ExcluirColetaPendenteUseCase> excluirColetaPendenteUseCaseProvider) {
+      Provider<ExcluirColetaPendenteUseCase> excluirColetaPendenteUseCaseProvider,
+      Provider<BuscarInfoRelatorioFotoUseCase> buscarInfoRelatorioFotoUseCaseProvider,
+      Provider<BaixarRelatorioFotoPdfUseCase> baixarRelatorioFotoPdfUseCaseProvider) {
     this.buscarColetasUseCaseProvider = buscarColetasUseCaseProvider;
     this.buscarColetasComFallbackUseCaseProvider = buscarColetasComFallbackUseCaseProvider;
     this.obterUsuarioAtualUseCaseProvider = obterUsuarioAtualUseCaseProvider;
@@ -62,11 +70,13 @@ public final class CollectionViewViewModelClean_Factory implements Factory<Colle
     this.coletaMigrationProvider = coletaMigrationProvider;
     this.reenviarColetaUseCaseProvider = reenviarColetaUseCaseProvider;
     this.excluirColetaPendenteUseCaseProvider = excluirColetaPendenteUseCaseProvider;
+    this.buscarInfoRelatorioFotoUseCaseProvider = buscarInfoRelatorioFotoUseCaseProvider;
+    this.baixarRelatorioFotoPdfUseCaseProvider = baixarRelatorioFotoPdfUseCaseProvider;
   }
 
   @Override
   public CollectionViewViewModelClean get() {
-    return newInstance(buscarColetasUseCaseProvider.get(), buscarColetasComFallbackUseCaseProvider.get(), obterUsuarioAtualUseCaseProvider.get(), removerColetaUseCaseProvider.get(), sincronizarColetasUseCaseProvider.get(), coletaMigrationProvider.get(), reenviarColetaUseCaseProvider.get(), excluirColetaPendenteUseCaseProvider.get());
+    return newInstance(buscarColetasUseCaseProvider.get(), buscarColetasComFallbackUseCaseProvider.get(), obterUsuarioAtualUseCaseProvider.get(), removerColetaUseCaseProvider.get(), sincronizarColetasUseCaseProvider.get(), coletaMigrationProvider.get(), reenviarColetaUseCaseProvider.get(), excluirColetaPendenteUseCaseProvider.get(), buscarInfoRelatorioFotoUseCaseProvider.get(), baixarRelatorioFotoPdfUseCaseProvider.get());
   }
 
   public static CollectionViewViewModelClean_Factory create(
@@ -77,8 +87,10 @@ public final class CollectionViewViewModelClean_Factory implements Factory<Colle
       Provider<SincronizarColetasDoServidorUseCase> sincronizarColetasUseCaseProvider,
       Provider<ColetaMigration> coletaMigrationProvider,
       Provider<ReenviarColetaUseCase> reenviarColetaUseCaseProvider,
-      Provider<ExcluirColetaPendenteUseCase> excluirColetaPendenteUseCaseProvider) {
-    return new CollectionViewViewModelClean_Factory(buscarColetasUseCaseProvider, buscarColetasComFallbackUseCaseProvider, obterUsuarioAtualUseCaseProvider, removerColetaUseCaseProvider, sincronizarColetasUseCaseProvider, coletaMigrationProvider, reenviarColetaUseCaseProvider, excluirColetaPendenteUseCaseProvider);
+      Provider<ExcluirColetaPendenteUseCase> excluirColetaPendenteUseCaseProvider,
+      Provider<BuscarInfoRelatorioFotoUseCase> buscarInfoRelatorioFotoUseCaseProvider,
+      Provider<BaixarRelatorioFotoPdfUseCase> baixarRelatorioFotoPdfUseCaseProvider) {
+    return new CollectionViewViewModelClean_Factory(buscarColetasUseCaseProvider, buscarColetasComFallbackUseCaseProvider, obterUsuarioAtualUseCaseProvider, removerColetaUseCaseProvider, sincronizarColetasUseCaseProvider, coletaMigrationProvider, reenviarColetaUseCaseProvider, excluirColetaPendenteUseCaseProvider, buscarInfoRelatorioFotoUseCaseProvider, baixarRelatorioFotoPdfUseCaseProvider);
   }
 
   public static CollectionViewViewModelClean newInstance(BuscarColetasUseCase buscarColetasUseCase,
@@ -86,7 +98,9 @@ public final class CollectionViewViewModelClean_Factory implements Factory<Colle
       ObterUsuarioAtualUseCase obterUsuarioAtualUseCase, RemoverColetaUseCase removerColetaUseCase,
       SincronizarColetasDoServidorUseCase sincronizarColetasUseCase,
       ColetaMigration coletaMigration, ReenviarColetaUseCase reenviarColetaUseCase,
-      ExcluirColetaPendenteUseCase excluirColetaPendenteUseCase) {
-    return new CollectionViewViewModelClean(buscarColetasUseCase, buscarColetasComFallbackUseCase, obterUsuarioAtualUseCase, removerColetaUseCase, sincronizarColetasUseCase, coletaMigration, reenviarColetaUseCase, excluirColetaPendenteUseCase);
+      ExcluirColetaPendenteUseCase excluirColetaPendenteUseCase,
+      BuscarInfoRelatorioFotoUseCase buscarInfoRelatorioFotoUseCase,
+      BaixarRelatorioFotoPdfUseCase baixarRelatorioFotoPdfUseCase) {
+    return new CollectionViewViewModelClean(buscarColetasUseCase, buscarColetasComFallbackUseCase, obterUsuarioAtualUseCase, removerColetaUseCase, sincronizarColetasUseCase, coletaMigration, reenviarColetaUseCase, excluirColetaPendenteUseCase, buscarInfoRelatorioFotoUseCase, baixarRelatorioFotoPdfUseCase);
   }
 }

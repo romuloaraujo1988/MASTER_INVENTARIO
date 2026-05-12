@@ -12,6 +12,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.inventario.mobile.data.local.dao.ColetaDao
 import com.inventario.mobile.data.remote.api.FotoColetaApi
+import com.inventario.mobile.utils.FotoTipo
 import com.inventario.mobile.utils.PhotoHelper
 import com.inventario.mobile.utils.PreferencesManager
 import dagger.assisted.Assisted
@@ -148,12 +149,29 @@ class PhotoSyncWorker @AssistedInject constructor(
                         continue
                     }
 
-                    val sucessoUpload = uploadFoto(servidorId.toInt(), inventarioId, file)
+                    // Determinar tipo e identificador a partir dos campos da coleta
+                    val tipo = FotoTipo.resolver(
+                        semEtiqueta = coleta.semEtiqueta,
+                        divergencia = coleta.divergencia
+                    )
+                    val identificador = when {
+                        coleta.semEtiqueta -> PhotoHelper.ID_SEM_ETIQUETA
+                        !coleta.numeroPatrimonio.isNullOrBlank() -> coleta.numeroPatrimonio
+                        else -> coleta.id.toString()
+                    }
+
+                    val sucessoUpload = uploadFoto(
+                        coletaServidorId = servidorId.toInt(),
+                        inventarioId = inventarioId,
+                        file = file,
+                        tipo = tipo,
+                        identificador = identificador
+                    )
 
                     if (sucessoUpload) {
                         coletaDao.marcarFotoSincronizada(coleta.id)
                         syncCount++
-                        Log.d(TAG, "✓ Foto sincronizada: coleta local=${coleta.id} servidor=$servidorId")
+                        Log.d(TAG, "✓ Foto sincronizada: coleta local=${coleta.id} servidor=$servidorId tipo=${tipo.pasta} id=$identificador")
                     } else {
                         Log.w(TAG, "⚠️ Upload falhou para coleta ${coleta.id}, tentar novamente depois")
                         errorCount++
@@ -192,15 +210,25 @@ class PhotoSyncWorker @AssistedInject constructor(
      * Envia a foto via multipart/form-data para o endpoint
      * `POST /api/mobile/fotos/upload`.
      *
-     * @return `true` se o servidor respondeu `success = true`; `false` caso contrário
-     *         (falha de rede, resposta negativa, exceção).
+     * @param coletaServidorId ID da coleta no servidor
+     * @param inventarioId     ID do inventário
+     * @param file             Arquivo de foto local
+     * @param tipo             Tipo da coleta ([FotoTipo])
+     * @param identificador    Número do patrimônio ou `SE`
+     * @return `true` se o servidor respondeu `success = true`
      */
-    private suspend fun uploadFoto(coletaServidorId: Int, inventarioId: Int, file: File): Boolean {
+    private suspend fun uploadFoto(
+        coletaServidorId: Int,
+        inventarioId: Int,
+        file: File,
+        tipo: FotoTipo,
+        identificador: String
+    ): Boolean {
         return try {
             val mediaType = when (file.extension.lowercase()) {
-                "png" -> "image/png"
+                "png"  -> "image/png"
                 "webp" -> "image/webp"
-                else -> "image/jpeg"
+                else   -> "image/jpeg"
             }.toMediaTypeOrNull()
 
             val requestFile: RequestBody = file.asRequestBody(mediaType)
@@ -211,20 +239,21 @@ class PhotoSyncWorker @AssistedInject constructor(
             )
 
             val textMedia = "text/plain".toMediaTypeOrNull()
-            val coletaIdBody = coletaServidorId.toString().toRequestBody(textMedia)
-            val inventarioIdBody = inventarioId.toString().toRequestBody(textMedia)
+            val coletaIdBody      = coletaServidorId.toString().toRequestBody(textMedia)
+            val inventarioIdBody  = inventarioId.toString().toRequestBody(textMedia)
+            val tipoBody          = tipo.pasta.toRequestBody(textMedia)
+            val identificadorBody = identificador.toRequestBody(textMedia)
 
             val response = fotoColetaApi.uploadFoto(
-                foto = fotoPart,
-                coletaId = coletaIdBody,
-                inventarioId = inventarioIdBody
+                foto          = fotoPart,
+                coletaId      = coletaIdBody,
+                inventarioId  = inventarioIdBody,
+                tipo          = tipoBody,
+                identificador = identificadorBody
             )
 
             if (response.success) {
-                Log.d(
-                    TAG,
-                    "✓ Servidor aceitou foto (coletaId=$coletaServidorId, tamanho=${file.length() / 1024}KB)"
-                )
+                Log.d(TAG, "✓ Servidor aceitou foto (coletaId=$coletaServidorId tipo=${tipo.pasta} id=$identificador tamanho=${file.length() / 1024}KB)")
                 true
             } else {
                 Log.w(TAG, "⚠ Servidor rejeitou foto: ${response.message} (code=${response.errorCode})")

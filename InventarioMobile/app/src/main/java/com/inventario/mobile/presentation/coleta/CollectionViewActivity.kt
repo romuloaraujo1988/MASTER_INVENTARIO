@@ -13,7 +13,10 @@ import com.inventario.mobile.R
 import com.inventario.mobile.data.model.Coleta
 import com.inventario.mobile.databinding.ActivityCollectionViewBinding
 import com.inventario.mobile.presentation.state.CollectionViewState
+import com.inventario.mobile.presentation.state.RelatorioFotoState
+import com.inventario.mobile.utils.PreferencesManager
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * Activity para visualização de coletas
@@ -36,6 +39,9 @@ class CollectionViewActivity : AppCompatActivity() {
     // ViewModel Clean Architecture (injetado via Hilt)
     private val viewModel: CollectionViewViewModelClean by viewModels()
 
+    // PreferencesManager injetado via Hilt (Task 5.2, 5.3)
+    @Inject lateinit var preferencesManager: PreferencesManager
+
     // Adapter com callback para long click
     private val adapter = CollectionAdapter(
         onItemLongClick = { coleta ->
@@ -56,6 +62,7 @@ class CollectionViewActivity : AppCompatActivity() {
         setupSwipeRefresh()
         setupFilters()
         setupBackButton()
+        setupRelatorioFab()
         observeViewModel()
 
         Log.d(TAG, "onCreate: carregando coletas via Use Case")
@@ -124,15 +131,33 @@ class CollectionViewActivity : AppCompatActivity() {
                 when (checkedIds[0]) {
                     binding.chipAll.id -> {
                         viewModel.filtrarPorStatus(CollectionViewViewModelClean.FiltroStatus.TODOS)
+                        binding.fabRelatorioFoto.visibility = View.GONE
+                        binding.tvFotosBadge.visibility = View.GONE
+                        viewModel.limparEstadoRelatorioFoto()
                     }
                     binding.chipSynced.id -> {
                         viewModel.filtrarPorStatus(CollectionViewViewModelClean.FiltroStatus.SINCRONIZADOS)
+                        binding.fabRelatorioFoto.visibility = View.GONE
+                        binding.tvFotosBadge.visibility = View.GONE
+                        viewModel.limparEstadoRelatorioFoto()
                     }
                     binding.chipPending.id -> {
                         viewModel.filtrarPorStatus(CollectionViewViewModelClean.FiltroStatus.PENDENTES)
+                        binding.fabRelatorioFoto.visibility = View.GONE
+                        binding.tvFotosBadge.visibility = View.GONE
+                        viewModel.limparEstadoRelatorioFoto()
                     }
                     binding.chipSemEtiqueta.id -> {
                         viewModel.filtrarPorStatus(CollectionViewViewModelClean.FiltroStatus.SEM_ETIQUETA)
+                        // Relatório fotográfico — mostrar FAB apenas para SUPERVISOR+
+                        val perfil = preferencesManager.getUserProfile()
+                        val isSupervisor = perfil == "SUPERVISOR" || perfil == "ADMIN"
+                        binding.fabRelatorioFoto.visibility = if (isSupervisor) View.VISIBLE else View.GONE
+                        // Buscar info de fotos para qualquer role
+                        val inventarioId = preferencesManager.getInventarioAtivoId()
+                        if (inventarioId != null) {
+                            viewModel.carregarInfoRelatorioFoto(inventarioId)
+                        }
                     }
                 }
             }
@@ -210,6 +235,43 @@ class CollectionViewActivity : AppCompatActivity() {
                         hideLoading()
                         android.widget.Toast.makeText(this@CollectionViewActivity, state.message, android.widget.Toast.LENGTH_SHORT).show()
                         viewModel.carregarColetas()
+                    }
+                }
+            }
+        }
+
+        // Task 5.1 — Observar relatorioFotoState (Requirements: 6.1, 3.3, 3.4, 3.5, 3.6, 3.8)
+        lifecycleScope.launchWhenStarted {
+            viewModel.relatorioFotoState.collect { state ->
+                when (state) {
+                    is RelatorioFotoState.Idle -> {
+                        binding.fabRelatorioFoto.isEnabled = true
+                    }
+                    is RelatorioFotoState.Loading -> {
+                        // Aguardando info — sem indicador visual extra
+                    }
+                    is RelatorioFotoState.InfoCarregada -> {
+                        atualizarBadgeFotos(state.info.semEtiqueta)
+                    }
+                    is RelatorioFotoState.Downloading -> {
+                        binding.fabRelatorioFoto.isEnabled = false
+                        binding.progressBarRelatorio.visibility = View.VISIBLE
+                    }
+                    is RelatorioFotoState.PdfPronto -> {
+                        binding.fabRelatorioFoto.isEnabled = true
+                        binding.progressBarRelatorio.visibility = View.GONE
+                        abrirPdfNativo(state.arquivo)
+                        viewModel.limparEstadoRelatorioFoto()
+                    }
+                    is RelatorioFotoState.Erro -> {
+                        binding.fabRelatorioFoto.isEnabled = true
+                        binding.progressBarRelatorio.visibility = View.GONE
+                        android.widget.Toast.makeText(
+                            this@CollectionViewActivity,
+                            state.mensagem,
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                        viewModel.limparEstadoRelatorioFoto()
                     }
                 }
             }
@@ -373,5 +435,80 @@ class CollectionViewActivity : AppCompatActivity() {
             }
             .setNegativeButton("Cancelar", null)
             .show()
+    }
+
+    // -------------------------------------------------------------------------
+    // Task 5.3 — FAB do relatório fotográfico e abertura de PDF nativo
+    // Requirements: 3.1, 3.3, 7.1, 7.2, 7.3
+    // -------------------------------------------------------------------------
+
+    /**
+     * Configura o FAB de download do relatório fotográfico.
+     * Chamado em onCreate após setupBackButton().
+     */
+    private fun setupRelatorioFab() {
+        binding.fabRelatorioFoto.setOnClickListener {
+            val inventarioId = preferencesManager.getInventarioAtivoId()
+            if (inventarioId != null) {
+                viewModel.baixarRelatorioFoto(inventarioId)
+            } else {
+                android.widget.Toast.makeText(
+                    this,
+                    "Nenhum inventário ativo encontrado",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    /**
+     * Abre o arquivo PDF no visualizador nativo do Android via FileProvider.
+     * Req 7.1, 7.2, 7.3
+     */
+    private fun abrirPdfNativo(arquivo: java.io.File) {
+        try {
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                this,
+                "${packageName}.fileprovider",
+                arquivo
+            )
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/pdf")
+                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(intent)
+        } catch (e: android.content.ActivityNotFoundException) {
+            android.widget.Toast.makeText(
+                this,
+                "Nenhum visualizador de PDF encontrado. Instale um app para abrir PDFs",
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Task 5.4 — Badge de fotos e limpeza de cache em onDestroy
+    // Requirements: 1.2, 1.3, 8.1
+    // -------------------------------------------------------------------------
+
+    /**
+     * Atualiza o badge de contagem de fotos disponíveis para itens sem etiqueta.
+     * Req 1.2 (quantidade > 0) e Req 1.3 (quantidade == 0).
+     */
+    private fun atualizarBadgeFotos(quantidade: Int) {
+        if (quantidade > 0) {
+            binding.tvFotosBadge.text = "$quantidade foto(s) disponível(is)"
+        } else {
+            binding.tvFotosBadge.text = "Nenhum item sem etiqueta possui foto registrada"
+        }
+        binding.tvFotosBadge.visibility = View.VISIBLE
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Limpar PDFs temporários do cache (Req 8.1)
+        cacheDir.listFiles { file ->
+            file.name.startsWith("relatorio_sem_etiqueta_")
+        }?.forEach { it.delete() }
     }
 }

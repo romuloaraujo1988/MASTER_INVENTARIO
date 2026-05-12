@@ -13,8 +13,10 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatSpinner;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
 import com.inventario.mobile.R;
 import java.lang.NullPointerException;
@@ -53,10 +55,16 @@ public final class ActivityItemSemEtiquetaBinding implements ViewBinding {
   public final ProgressBar progressBar;
 
   @NonNull
+  public final RecyclerView rvSugestoes;
+
+  @NonNull
   public final AppCompatSpinner spinnerCategoria;
 
   @NonNull
   public final AppCompatSpinner spinnerEstado;
+
+  @NonNull
+  public final SwitchMaterial toggleSugestao;
 
   @NonNull
   public final Toolbar toolbar;
@@ -69,7 +77,8 @@ public final class ActivityItemSemEtiquetaBinding implements ViewBinding {
       @NonNull Button btnTirarFoto, @NonNull TextInputEditText edtDescricao,
       @NonNull TextInputEditText edtLocalizacao, @NonNull TextInputEditText edtObservacoes,
       @NonNull ImageView imgPreview, @NonNull ProgressBar progressBar,
-      @NonNull AppCompatSpinner spinnerCategoria, @NonNull AppCompatSpinner spinnerEstado,
+      @NonNull RecyclerView rvSugestoes, @NonNull AppCompatSpinner spinnerCategoria,
+      @NonNull AppCompatSpinner spinnerEstado, @NonNull SwitchMaterial toggleSugestao,
       @NonNull Toolbar toolbar, @NonNull TextView tvFotoStatus) {
     this.rootView = rootView;
     this.btnCancelar = btnCancelar;
@@ -81,8 +90,10 @@ public final class ActivityItemSemEtiquetaBinding implements ViewBinding {
     this.edtObservacoes = edtObservacoes;
     this.imgPreview = imgPreview;
     this.progressBar = progressBar;
+    this.rvSugestoes = rvSugestoes;
     this.spinnerCategoria = spinnerCategoria;
     this.spinnerEstado = spinnerEstado;
+    this.toggleSugestao = toggleSugestao;
     this.toolbar = toolbar;
     this.tvFotoStatus = tvFotoStatus;
   }
@@ -168,6 +179,12 @@ public final class ActivityItemSemEtiquetaBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.rvSugestoes;
+      RecyclerView rvSugestoes = ViewBindings.findChildViewById(rootView, id);
+      if (rvSugestoes == null) {
+        break missingId;
+      }
+
       id = R.id.spinnerCategoria;
       AppCompatSpinner spinnerCategoria = ViewBindings.findChildViewById(rootView, id);
       if (spinnerCategoria == null) {
@@ -177,6 +194,12 @@ public final class ActivityItemSemEtiquetaBinding implements ViewBinding {
       id = R.id.spinnerEstado;
       AppCompatSpinner spinnerEstado = ViewBindings.findChildViewById(rootView, id);
       if (spinnerEstado == null) {
+        break missingId;
+      }
+
+      id = R.id.toggleSugestao;
+      SwitchMaterial toggleSugestao = ViewBindings.findChildViewById(rootView, id);
+      if (toggleSugestao == null) {
         break missingId;
       }
 
@@ -194,7 +217,8 @@ public final class ActivityItemSemEtiquetaBinding implements ViewBinding {
 
       return new ActivityItemSemEtiquetaBinding((CoordinatorLayout) rootView, btnCancelar,
           btnRegistrar, btnRemoverFoto, btnTirarFoto, edtDescricao, edtLocalizacao, edtObservacoes,
-          imgPreview, progressBar, spinnerCategoria, spinnerEstado, toolbar, tvFotoStatus);
+          imgPreview, progressBar, rvSugestoes, spinnerCategoria, spinnerEstado, toggleSugestao,
+          toolbar, tvFotoStatus);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

@@ -9,9 +9,11 @@ import javax.inject.Inject
 
 /**
  * Mapper: Converte entre Entity (Room) e Model (Domain)
- * 
- * ATUALIZADO: Agora preenche campos completos ao converter para Entity
+ *
  * v2.0: Usa PreferencesManager para obter inventário ativo e nome do usuário
+ * v2.21: Corrigido mapeamento de fotoPath — usa entity.fotoPath (caminho de arquivo)
+ *        em vez de entity.fotoPatrimonio (Base64 legado). O campo fotoPatrimonio
+ *        é mantido apenas para compatibilidade com dados antigos.
  */
 class ColetaMapper @Inject constructor(
     private val patrimonioDao: PatrimonioDao,
@@ -20,62 +22,60 @@ class ColetaMapper @Inject constructor(
     companion object {
         private const val TAG = "ColetaMapper"
     }
-    
+
     fun toDomain(entity: ColetaEntity): Coleta {
         return Coleta(
             id = entity.id,
             patrimonioId = entity.idPatrimonio.toLong(),
-            numeroPatrimonio = entity.numeroPatrimonio,  // v2.6: Incluir número
+            numeroPatrimonio = entity.numeroPatrimonio,
             usuarioId = entity.idUsuario.toLong(),
             salaId = entity.idSala,
             dataColeta = entity.dataColeta,
             localizacaoAtual = entity.nomeSala,
-            // v2.20.12: mapear campo dedicado de onde o item foi encontrado
             localizacaoEncontrada = entity.localizacaoEncontrada,
             observacoes = entity.observacao,
             status = if (entity.sincronizado) "SINCRONIZADO" else "PENDENTE",
-            estadoEncontrado = entity.estadoPatrimonio,  // ✅ CORREÇÃO: Mapear estado de conservação
+            estadoEncontrado = entity.estadoPatrimonio,
             latitude = entity.latitude,
             longitude = entity.longitude,
             sincronizado = entity.sincronizado,
-            tentativasSincronizacao = entity.tentativasSincronizacao,  // v2.6
-            erroSincronizacao = entity.erroSincronizacao,  // v2.6
+            tentativasSincronizacao = entity.tentativasSincronizacao,
+            erroSincronizacao = entity.erroSincronizacao,
             // v2.7: Campos de item sem etiqueta
             semEtiqueta = entity.semEtiqueta,
             descricaoItemSemEtiqueta = entity.descricaoItemSemEtiqueta,
             categoriaItemSemEtiqueta = entity.categoriaItemSemEtiqueta,
-            fotoPath = entity.fotoPatrimonio,
+            // v2.21: fotoPath = caminho do arquivo em disco (não Base64)
+            fotoPath = entity.fotoPath,
+            fotoThumbnailPath = entity.fotoThumbnailPath,
             tempoColetaSegundos = entity.tempoColetaSegundos,
             tempoScanSegundos = entity.tempoScanSegundos,
             tempoPreenchimentoSegundos = entity.tempoPreenchimentoSegundos,
             metodoColeta = entity.metodoColeta,
             tipoScan = entity.tipoScan,
-            // v2.13: Divergência
             divergencia = entity.divergencia,
             motivoDivergencia = entity.motivoDivergencia
         )
     }
-    
+
     /**
-     * Converte Domain para Entity, preenchendo campos completos
-     * Busca dados do patrimônio se necessário
-     * v2.0: Usa PreferencesManager para obter inventário ativo e nome do usuário
+     * Converte Domain para Entity, preenchendo campos completos.
+     * Busca dados do patrimônio se necessário.
+     *
      * v2.3: PRIORIZA localizacaoAtual da coleta (onde foi realmente encontrado)
      * v2.4: GARANTE que usuarioId seja preenchido do PreferencesManager se não informado
+     * v2.21: fotoPath salvo no campo correto (não em fotoPatrimonio)
      */
     suspend fun toEntity(domain: Coleta, idInventario: Int? = null): ColetaEntity {
-        // Buscar dados do patrimônio para preencher campos
         val patrimonio = try {
             patrimonioDao.buscarPorId(domain.patrimonioId.toInt())
         } catch (e: Exception) {
             Log.w(TAG, "Erro ao buscar patrimônio ${domain.patrimonioId}", e)
             null
         }
-        
-        // ✅ Obter ID do inventário ativo do PreferencesManager
+
         val inventarioAtivoId = idInventario ?: preferencesManager.getInventarioAtivoId() ?: 0
-        
-        // ✅ CRÍTICO: Obter ID do usuário - prioriza domain, fallback para PreferencesManager
+
         val usuarioIdFinal = if (domain.usuarioId > 0) {
             domain.usuarioId.toInt()
         } else {
@@ -88,41 +88,17 @@ class ColetaMapper @Inject constructor(
                 0
             }
         }
-        
-        // ✅ Obter nome do usuário do PreferencesManager
+
         val nomeUsuario = preferencesManager.getUserName().takeIf { it.isNotEmpty() }
             ?: "Usuário $usuarioIdFinal"
-        
+
         if (inventarioAtivoId == 0) {
             Log.w(TAG, "⚠️ Inventário ativo não encontrado! Usando 0 como fallback")
         }
-        
-        // ✅ CORREÇÃO CRÍTICA: Priorizar localizacaoAtual da coleta (onde foi realmente encontrado)
-        // Se localizacaoAtual está preenchida, usar ela (é onde o item foi REALMENTE encontrado)
-        // Caso contrário, usar nomeSala do patrimônio (sala cadastrada)
-        val salaReal = when {
-            !domain.localizacaoAtual.isNullOrBlank() -> {
-                Log.d(TAG, "✓ Usando localizacaoAtual da coleta: ${domain.localizacaoAtual}")
-                domain.localizacaoAtual
-            }
-            !patrimonio?.nomeSala.isNullOrBlank() -> {
-                Log.d(TAG, "⚠ localizacaoAtual vazia, usando nomeSala do patrimônio: ${patrimonio?.nomeSala}")
-                patrimonio?.nomeSala
-            }
-            else -> {
-                Log.w(TAG, "⚠ Nenhuma sala disponível!")
-                null
-            }
-        }
-        
-        // ✅ CRÍTICO: Priorizar salaId da coleta (onde está coletando AGORA)
-        val salaIdReal = domain.salaId ?: patrimonio?.idSala
 
-        // v2.20.12: separar "onde foi encontrado" de "sala de origem do patrimônio"
-        // localizacaoEncontrada = onde o coletor encontrou o item (domain.localizacaoAtual)
-        // nomeSala = sala de origem cadastrada no patrimônio (patrimonio.nomeSala)
-        val localizacaoEncontradaReal = domain.localizacaoAtual  // onde foi encontrado
-        val nomeSalaOrigem = patrimonio?.nomeSala                 // sala de origem
+        val salaIdReal = domain.salaId ?: patrimonio?.idSala
+        val localizacaoEncontradaReal = domain.localizacaoAtual
+        val nomeSalaOrigem = patrimonio?.nomeSala
 
         Log.d(TAG, "═══════════════════════════════════════")
         Log.d(TAG, "MAPEANDO COLETA PARA ENTITY")
@@ -131,98 +107,100 @@ class ColetaMapper @Inject constructor(
         Log.d(TAG, "Sala ID FINAL (usado): $salaIdReal")
         Log.d(TAG, "localizacaoEncontrada: $localizacaoEncontradaReal")
         Log.d(TAG, "nomeSala (origem): $nomeSalaOrigem")
+        Log.d(TAG, "fotoPath: ${domain.fotoPath}")
         Log.d(TAG, "═══════════════════════════════════════")
-        
+
         return ColetaEntity(
             id = domain.id,
             idPatrimonio = domain.patrimonioId.toInt(),
-            numeroPatrimonio = patrimonio?.numero ?: "", // ✅ Preenchido do banco
-            idInventario = inventarioAtivoId, // ✅ Do PreferencesManager
-            idSala = salaIdReal, // ✅ CRÍTICO: Prioriza sala atual da coleta
-            nomeSala = nomeSalaOrigem, // v2.20.12: sala de ORIGEM do patrimônio
-            localizacaoEncontrada = localizacaoEncontradaReal, // v2.20.12: onde foi ENCONTRADO
+            numeroPatrimonio = patrimonio?.numero ?: "",
+            idInventario = inventarioAtivoId,
+            idSala = salaIdReal,
+            nomeSala = nomeSalaOrigem,
+            localizacaoEncontrada = localizacaoEncontradaReal,
             idResponsavel = patrimonio?.idResponsavel,
             nomeResponsavel = patrimonio?.nomeResponsavel,
             observacao = domain.observacoes,
-            estadoPatrimonio = domain.estadoEncontrado,  // ✅ CORREÇÃO: Mapear estado de conservação
+            estadoPatrimonio = domain.estadoEncontrado,
             latitude = domain.latitude,
             longitude = domain.longitude,
             dataColeta = domain.dataColeta,
-            idUsuario = usuarioIdFinal, // ✅ CRÍTICO: Usa usuarioIdFinal que garante valor válido
-            nomeUsuario = nomeUsuario, // ✅ Do PreferencesManager
+            idUsuario = usuarioIdFinal,
+            nomeUsuario = nomeUsuario,
             sincronizado = domain.sincronizado,
             // v2.7: Campos de item sem etiqueta
             semEtiqueta = domain.semEtiqueta,
             descricaoItemSemEtiqueta = domain.descricaoItemSemEtiqueta,
             categoriaItemSemEtiqueta = domain.categoriaItemSemEtiqueta,
-            fotoPatrimonio = domain.fotoPath,
+            // v2.21: salvar no campo correto (fotoPath = arquivo em disco)
+            fotoPath = domain.fotoPath,
+            fotoThumbnailPath = domain.fotoThumbnailPath,
+            fotoSincronizada = false,
             tempoColetaSegundos = domain.tempoColetaSegundos,
             tempoScanSegundos = domain.tempoScanSegundos,
             tempoPreenchimentoSegundos = domain.tempoPreenchimentoSegundos,
             metodoColeta = domain.metodoColeta,
             tipoScan = domain.tipoScan,
-            // v2.13: Divergência
             divergencia = domain.divergencia,
             motivoDivergencia = domain.motivoDivergencia
         )
     }
 
     /**
-     * Converte Domain para Entity sem buscar dados adicionais
-     * Usado quando os dados já estão completos
-     * v2.0: Usa PreferencesManager para obter inventário ativo
+     * Converte Domain para Entity sem buscar dados adicionais.
+     * Usado quando os dados já estão completos.
+     *
      * v2.4: GARANTE que usuarioId seja preenchido do PreferencesManager se não informado
+     * v2.21: fotoPath salvo no campo correto
      */
     fun toEntitySimple(domain: Coleta, idInventario: Int? = null): ColetaEntity {
-        // ✅ Obter ID do inventário ativo do PreferencesManager
         val inventarioAtivoId = idInventario ?: preferencesManager.getInventarioAtivoId() ?: 0
-        
-        // ✅ CRÍTICO: Obter ID do usuário - prioriza domain, fallback para PreferencesManager
+
         val usuarioIdFinal = if (domain.usuarioId > 0) {
             domain.usuarioId.toInt()
         } else {
             preferencesManager.getUserId() ?: 0
         }
-        
-        // ✅ Obter nome do usuário do PreferencesManager
+
         val nomeUsuario = preferencesManager.getUserName().takeIf { it.isNotEmpty() }
             ?: "Usuário $usuarioIdFinal"
-        
+
         return ColetaEntity(
             id = domain.id,
             idPatrimonio = domain.patrimonioId.toInt(),
             numeroPatrimonio = "",
-            idInventario = inventarioAtivoId, // ✅ Do PreferencesManager
+            idInventario = inventarioAtivoId,
             idSala = null,
             nomeSala = domain.localizacaoAtual,
             idResponsavel = null,
             nomeResponsavel = null,
             observacao = domain.observacoes,
-            estadoPatrimonio = domain.estadoEncontrado,  // ✅ CORREÇÃO: Mapear estado de conservação
+            estadoPatrimonio = domain.estadoEncontrado,
             latitude = domain.latitude,
             longitude = domain.longitude,
             dataColeta = domain.dataColeta,
-            idUsuario = usuarioIdFinal, // ✅ CRÍTICO: Usa usuarioIdFinal que garante valor válido
-            nomeUsuario = nomeUsuario, // ✅ Do PreferencesManager
+            idUsuario = usuarioIdFinal,
+            nomeUsuario = nomeUsuario,
             sincronizado = domain.sincronizado,
             // v2.7: Campos de item sem etiqueta
             semEtiqueta = domain.semEtiqueta,
             descricaoItemSemEtiqueta = domain.descricaoItemSemEtiqueta,
             categoriaItemSemEtiqueta = domain.categoriaItemSemEtiqueta,
-            fotoPatrimonio = domain.fotoPath,
+            // v2.21: salvar no campo correto (fotoPath = arquivo em disco)
+            fotoPath = domain.fotoPath,
+            fotoThumbnailPath = domain.fotoThumbnailPath,
+            fotoSincronizada = false,
             tempoColetaSegundos = domain.tempoColetaSegundos,
             tempoScanSegundos = domain.tempoScanSegundos,
             tempoPreenchimentoSegundos = domain.tempoPreenchimentoSegundos,
             metodoColeta = domain.metodoColeta,
             tipoScan = domain.tipoScan,
-            // v2.13: Divergência
             divergencia = domain.divergencia,
             motivoDivergencia = domain.motivoDivergencia
         )
     }
-    
+
     fun toDomainList(entities: List<ColetaEntity>): List<Coleta> {
         return entities.map { toDomain(it) }
     }
 }
-

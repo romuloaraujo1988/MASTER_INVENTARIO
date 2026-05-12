@@ -44,6 +44,10 @@
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-75:\\layout\\activity_coletas_clean.xml"
     },
     {
+        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-72:\\layout\\item_sugestao_descricao.xml",
+        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-75:\\layout\\item_sugestao_descricao.xml"
+    },
+    {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-72:\\layout\\item_coleta_header.xml",
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-75:\\layout\\item_coleta_header.xml"
     },
@@ -90,6 +94,10 @@
     {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-72:\\layout\\activity_collection_history.xml",
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-75:\\layout\\activity_collection_history.xml"
+    },
+    {
+        "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-72:\\layout\\activity_coletas_unificada.xml",
+        "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-75:\\layout\\activity_coletas_unificada.xml"
     },
     {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-72:\\layout\\fragment_charts.xml",
@@ -248,6 +256,10 @@
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-75:\\layout\\item_patrimonio_search.xml"
     },
     {
+        "merged": "com.inventario.mobile.app-mergeDebugResources-72:/layout/activity_collection_view.xml",
+        "source": "com.inventario.mobile.app-main-75:/layout/activity_collection_view.xml"
+    },
+    {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-72:\\layout\\fragment_biometric_settings.xml",
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-75:\\layout\\fragment_biometric_settings.xml"
     },
@@ -258,10 +270,6 @@
     {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-72:\\layout\\activity_statistics.xml",
         "source": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-main-75:\\layout\\activity_statistics.xml"
-    },
-    {
-        "merged": "com.inventario.mobile.app-mergeDebugResources-72:/layout/activity_coletas_unificada.xml",
-        "source": "com.inventario.mobile.app-main-75:/layout/activity_coletas_unificada.xml"
     },
     {
         "merged": "C:\\Users\\Romulo\\.gradle\\daemon\\8.4\\com.inventario.mobile.app-mergeDebugResources-72:\\layout\\activity_offline_sync.xml",

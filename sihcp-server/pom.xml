@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.inventario.sihcp</groupId>
         <artifactId>sistema-inventario</artifactId>
-        <version>2.7.0</version>
+        <version>2.8.0</version>
     </parent>
     
     <artifactId>sihcp-server</artifactId>
@@ -138,6 +138,22 @@
             <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j-core</artifactId>
             <version>8.10.1</version>
+        </dependency>
+
+        <!-- ========================================= -->
+        <!-- iText 7 — Geração de PDF (relatório foto) -->
+        <!-- ========================================= -->
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>kernel</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>layout</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>io</artifactId>
         </dependency>
         
         <!-- ========================================= -->

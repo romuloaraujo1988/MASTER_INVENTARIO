@@ -1,6 +1,9 @@
 package com.inventario.sihcp.mobile.server.controller;
 
 import com.inventario.sihcp.mobile.server.dto.ApiResponse;
+import com.inventario.sihcp.mobile.server.dto.PagedResponseDTO;
+import com.inventario.sihcp.mobile.server.dto.SugestaoDescricaoDTO;
+import com.inventario.sihcp.mobile.server.service.MobileSugestaoDescricaoService;
 import com.inventario.sihcp.dao.PatrimonioDAO;
 import com.inventario.sihcp.security.annotation.RequireColetor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +36,9 @@ public class MobileDescricaoController {
     
     @Autowired
     private PatrimonioDAO patrimonioDAO;
+
+    @Autowired
+    private MobileSugestaoDescricaoService mobileSugestaoDescricaoService;
     
     /**
      * Listar descrições únicas de patrimônios
@@ -160,5 +166,68 @@ public class MobileDescricaoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Erro ao buscar descrições não coletadas", "FETCH_ERROR"));
         }
+    }
+
+    /**
+     * Lista paginada de sugestões de descrições de patrimônios
+     * <b>não coletados</b> no inventário alvo (ativo, por padrão).
+     *
+     * <p>Endpoint novo da feature {@code coleta-descricao-livre-com-sugestao},
+     * adicionado <b>sem alterar</b> os endpoints existentes sob
+     * {@code /api/mobile/descricoes/} (regra steering
+     * {@code endpoints-nao-alterar.md}). A URL completa é
+     * {@code GET /api/mobile/descricoes/sugestoes}.</p>
+     *
+     * <p>Segurança: herda {@link RequireColetor} do nível de classe, sem
+     * anotação no método. Perfis aceitos: {@code ADMIN}, {@code SUPERVISOR},
+     * {@code COLETOR}. {@code CONSULTA} recebe HTTP 403; ausência/expiração
+     * de JWT recebe HTTP 401 (Req 10.1, 10.2, 10.3).</p>
+     *
+     * <p>Todos os parâmetros são opcionais (Req 5.3, 5.5, 5.6, 5.7, 5.8):</p>
+     * <ul>
+     *   <li>{@code q}            — termo de busca (0–100 chars após trim);
+     *       excedente é truncado silenciosamente pelo service;</li>
+     *   <li>{@code page}         — índice da página (0-based); valores
+     *       nulos/negativos são coagidos a {@code 0} pelo service;</li>
+     *   <li>{@code size}         — tamanho da página; valores fora de
+     *       {@code [1, 100]} (ou nulos) são substituídos pelo padrão
+     *       {@code 50} silenciosamente pelo service (Req 5.7, 6.3);</li>
+     *   <li>{@code idInventario} — id do inventário alvo; quando ausente,
+     *       o service resolve via inventário ativo, e na ausência deste
+     *       retorna {@link PagedResponseDTO#empty(boolean)} com
+     *       {@code semInventarioAtivo=true} (Req 5.8).</li>
+     * </ul>
+     *
+     * <p>A mensagem de {@link ApiResponse} inclui o tempo de processamento
+     * observado no servidor para apoio a diagnóstico de performance
+     * (Req 6.1).</p>
+     *
+     * @param termoBusca   termo de busca opcional ({@code q})
+     * @param page         número da página (0-based), opcional
+     * @param size         tamanho da página, opcional
+     * @param idInventario id do inventário alvo, opcional
+     * @return resposta paginada com sugestões de descrições
+     *
+     * Requirements: 5.1, 5.9, 10.1, 10.2, 10.3.
+     */
+    @GetMapping("/sugestoes")
+    public ResponseEntity<ApiResponse<PagedResponseDTO<SugestaoDescricaoDTO>>> listarSugestoes(
+            @RequestParam(name = "q", required = false) String termoBusca,
+            @RequestParam(name = "page", required = false) Integer page,
+            @RequestParam(name = "size", required = false) Integer size,
+            @RequestParam(name = "idInventario", required = false) Integer idInventario) {
+        long startTime = System.currentTimeMillis();
+        logger.info("Buscando sugestões de descrições (q='{}', page={}, size={}, idInventario={})",
+                termoBusca, page, size, idInventario);
+
+        PagedResponseDTO<SugestaoDescricaoDTO> resultado =
+                mobileSugestaoDescricaoService.listarSugestoes(termoBusca, page, size, idInventario);
+
+        long duration = System.currentTimeMillis() - startTime;
+        String message = "Sugestões retornadas em " + duration + "ms";
+        logger.info("✓ {} sugestão(ões) retornada(s) em {}ms (totalElements={}, semInventarioAtivo={})",
+                resultado.content().size(), duration, resultado.totalElements(), resultado.semInventarioAtivo());
+
+        return ResponseEntity.ok(ApiResponse.success(resultado, message));
     }
 }

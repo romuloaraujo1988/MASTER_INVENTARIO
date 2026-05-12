@@ -2,8 +2,8 @@
 
 ## Sistema de Histórico e Coleta Patrimonial
 
-**Versão:** 2.7.1  
-**Data:** Março de 2026  
+**Versão:** 3.0.0  
+**Data:** Maio de 2026  
 **Instituição:** Instituto Federal de Mato Grosso (IFMT)
 
 ---
@@ -115,8 +115,8 @@ O sistema abrange três componentes principais:
 | **RF035** | Verificação de Duplicata | O sistema deve verificar e alertar sobre coletas duplicadas | Essencial | ✅ Implementado |
 | **RF036** | Registro de Localização | O app deve registrar a localização onde o patrimônio foi encontrado | Essencial | ✅ Implementado |
 | **RF037** | Registro de Estado | O app deve registrar o estado de conservação encontrado | Essencial | ✅ Implementado |
-| **RF038** | Captura de Foto | O app deve permitir captura de foto do patrimônio como evidência. ⚠️ Atualmente o app salva fotos apenas localmente no dispositivo; não há estrutura no servidor (API/banco) para persistência e consulta centralizada de imagens | Importante | ⚠️ Parcial |
-| **RF039** | Foto Obrigatória (Sem Etiqueta) | Para itens sem etiqueta, a foto deve ser obrigatória | Essencial | ⏳ Pendente |
+| **RF038** | Captura de Foto | O app deve permitir captura de foto do patrimônio como evidência. Fotos são salvas localmente (path otimizado) e sincronizadas via `PhotoSyncWorker` + `FotoColetaApi` (multipart upload) quando em Wi-Fi | Importante | ✅ Implementado |
+| **RF039** | Foto Obrigatória (Sem Etiqueta) | Para itens sem etiqueta, a foto deve ser obrigatória. Implementado em `ItemSemEtiquetaActivity` com validação no ViewModel | Essencial | ✅ Implementado |
 | **RF040** | Geolocalização | O app deve capturar coordenadas GPS da coleta (quando disponível) | Desejável | ✅ Implementado |
 | **RF041** | Observações | O app deve permitir registro de observações na coleta | Importante | ✅ Implementado |
 | **RF042** | Detecção de Divergência | O sistema deve detectar automaticamente divergências de localização | Essencial | ✅ Implementado |
@@ -125,7 +125,15 @@ O sistema abrange três componentes principais:
 | **RF045** | Histórico de Coletas | O app deve exibir histórico de coletas realizadas pelo usuário | Importante | ✅ Implementado |
 | **RF046** | Filtro de Coletas | O app deve permitir filtrar coletas por status, sala, data | Importante | ✅ Implementado |
 | **RF047** | Métricas de Tempo | O sistema deve registrar tempo de coleta para analytics | Desejável | ✅ Implementado |
-| **RF092** | Verificar Status de Coleta | O app deve permitir consultar o status de coleta de um patrimônio específico (por digitação ou leitura de QR Code), retornando: status (coletado/não coletado), coletor, data/hora e localização. **Requer conexão com servidor** — se offline, o sistema deve informar "Sem conexão — não é possível verificar" em vez de consultar dados locais potencialmente desatualizados | Importante | ⏳ Pendente |
+| **RF092** | Verificar Status de Coleta | O app deve permitir consultar o status de coleta de um patrimônio específico (por digitação ou leitura de QR Code), retornando: status (coletado/não coletado), coletor, data/hora e localização. **Requer conexão com servidor** — se offline, o sistema deve informar "Sem conexão — não é possível verificar" em vez de consultar dados locais potencialmente desatualizados | Importante | ✅ Implementado |
+| **RF093** | Coleta por Descrição | O app deve permitir coleta selecionando descrição de patrimônios não coletados, com autocomplete e sugestões | Importante | ✅ Implementado |
+| **RF094** | Sugestões de Descrição | O app deve exibir sugestões de descrição com cache offline, filtro acento/caso-insensível e atualização automática pós-sync | Desejável | ✅ Implementado |
+| **RF095** | Foto de Referência | O app deve exibir foto de referência do patrimônio (por descrição) para auxiliar na identificação visual durante a coleta | Desejável | ✅ Implementado |
+| **RF096** | Relatório Fotográfico | O app deve gerar relatório fotográfico de itens sem etiqueta em formato PDF | Importante | ✅ Implementado |
+| **RF097** | Histórico de Scans | O app deve manter histórico de patrimônios escaneados/consultados com tipo de acesso e timestamp | Desejável | ✅ Implementado |
+| **RF098** | Busca por Voz | O app deve suportar busca por voz no dashboard e telas de listagem | Desejável | ✅ Implementado |
+| **RF099** | Diagnóstico de Rede | O app deve oferecer tela de diagnóstico de rede para troubleshooting de conectividade | Desejável | ✅ Implementado |
+| **RF100** | Coletas Pendentes com Diagnóstico | O app deve exibir coletas pendentes com detalhes de erro e opções de retry/remoção individual | Importante | ✅ Implementado |
 
 ### 2.5 Módulo de Sincronização
 
@@ -238,13 +246,13 @@ O sistema abrange três componentes principais:
 | **RNF022** | HTTPS | Comunicação deve ser criptografada | TLS 1.2+ | ✅ Atendido |
 | **RNF023** | Controle de Acesso | Acesso baseado em perfis (RBAC) | 4 perfis | ✅ Atendido |
 | **RNF024** | Proteção contra SQL Injection | Sistema deve prevenir SQL Injection | Prepared Statements | ✅ Atendido |
-| **RNF025** | Armazenamento Seguro | Dados sensíveis no app devem ser criptografados | EncryptedSharedPreferences ¹ | ✅ Atendido |
+| **RNF025** | Armazenamento Seguro | Dados sensíveis no app devem ser criptografados | SQLCipher (banco) + Android Keystore (passphrase) + EncryptedSharedPreferences (prefs) | ✅ Atendido |
 | **RNF026** | Validação de Entrada | Todas as entradas devem ser validadas | Server + Client | ✅ Atendido |
 | **RNF027** | Log de Auditoria | Operações críticas devem ser registradas em log | Todas as coletas | ✅ Atendido |
 | **RNF028** | Bloqueio por Tentativas | Bloqueio após tentativas de login inválidas | 5 tentativas | ✅ Atendido |
 | **RNF029** | Sessão Segura | Sessões devem expirar após inatividade | 30 minutos | ✅ Atendido |
 
-*Nota complementar (RNF025): A biblioteca `EncryptedSharedPreferences` (Jetpack Security) foi recentemente deprecada pelo Google. A implementação atual permanece funcional e segura, mas versões futuras devem considerar migração para `DataStore` com criptografia manual.*
+*Nota complementar (RNF025): O banco de dados local é criptografado com SQLCipher (AES-256), cuja passphrase é gerada aleatoriamente e armazenada no Android Keystore. Preferências sensíveis usam `EncryptedSharedPreferences` (Jetpack Security). A biblioteca ESP foi deprecada pelo Google; versões futuras devem considerar migração para `DataStore` com criptografia manual.*
 
 ### 3.4 Usabilidade
 
@@ -309,7 +317,7 @@ O sistema abrange três componentes principais:
 | **RNF066** | Instalação Simples | Sistema deve ter instalação simplificada | Scripts automatizados | ✅ Atendido |
 | **RNF067** | Documentação de Deploy | Sistema deve ter documentação de implantação | Guias em Markdown | ✅ Atendido |
 | **RNF068** | Docker Support | Sistema deve suportar containerização | Dockerfile | ✅ Atendido |
-| **RNF073** | Gerenciamento de Arquivos de Evidência | O servidor deve gerenciar automaticamente o armazenamento de arquivos de evidência (fotos) em sistema de arquivos local, com referência no banco de dados (path/hash), sem impactar o desempenho das consultas principais. Deve suportar: upload via API REST, organização por inventário/coleta, limpeza automática de órfãos, e limite configurável de armazenamento | Filesystem + referência no BD | ⏳ Pendente |
+| **RNF073** | Gerenciamento de Arquivos de Evidência | O servidor deve gerenciar automaticamente o armazenamento de arquivos de evidência (fotos) em sistema de arquivos local, com referência no banco de dados (path/hash), sem impactar o desempenho das consultas principais. Deve suportar: upload via API REST, organização por inventário/coleta, limpeza automática de órfãos, e limite configurável de armazenamento | Filesystem + referência no BD | ✅ Implementado |
 
 ### 3.9 Conformidade e Regulamentação
 
@@ -338,13 +346,13 @@ O sistema abrange três componentes principais:
 | Autenticação | RF001-RF010 | 10 |
 | Patrimônios | RF011-RF022 | 12 |
 | Inventários | RF023-RF030 | 8 |
-| Coleta | RF031-RF047, RF092 | 17 |
+| Coleta | RF031-RF047, RF092-RF100 | 26 |
 | Sincronização | RF048-RF058 | 11 |
 | Relatórios | RF059-RF069 | 11 |
 | Dashboard | RF070-RF077 | 8 |
 | Cadastros | RF078-RF085 | 8 |
 | Servidor Mobile | RF086-RF091 | 6 |
-| **TOTAL RF** | | **91** |
+| **TOTAL RF** | | **100** |
 
 | Categoria | Requisitos | Qtd |
 |-----------|-----------|-----|
@@ -363,7 +371,7 @@ O sistema abrange três componentes principais:
 
 ![Cobertura de Requisitos do SIHCP](./images/cobertura_requisitos.png)
 
-**Figura 2** — Cobertura de implementação dos requisitos. 164 requisitos totais (91 funcionais + 73 não funcionais). 162 implementados, 1 parcial (RF038), 1 pendente (RNF073).
+**Figura 2** — Cobertura de implementação dos requisitos. 173 requisitos totais (100 funcionais + 73 não funcionais). **100% implementados** (v2.23.0).
 
 ---
 
@@ -660,8 +668,8 @@ flowchart TD
     subgraph DispositivoMobile["App Android (Mobile)"]
         direction TB
         App["App SIHCP
-(Flutter/Kotlin)"] <--> SQLite[("SQLite Local
-(Cache offline)")]
+(Kotlin/Android)"] <--> SQLite[("SQLite Local
+(SQLCipher encrypted)")]
         Cam["Câmera/Leitor"] -->|QR Code| App
     end
 
@@ -762,7 +770,7 @@ stateDiagram-v2
 | **RN017** | Coleta Única | Cada patrimônio deve ser coletado apenas uma vez por inventário. Tentativas de recoleta devem ser bloqueadas com alerta ao usuário |
 | **RN018** | Coleta Duplicada | Sistema deve alertar sobre tentativa de coleta duplicada |
 | **RN019** | Divergência Automática | Divergência detectada quando localização encontrada ≠ localização cadastrada |
-| **RN020** | Foto Obrigatória | Foto é obrigatória para itens sem etiqueta (⏳ não implementado — requer infraestrutura de armazenamento de imagens no servidor, ex.: armazenamento em disco com referência no banco, sem impacto nas consultas principais) |
+| **RN020** | Foto Obrigatória | Foto é obrigatória para itens sem etiqueta. Implementado via `ItemSemEtiquetaActivity` com validação no ViewModel. Upload via `PhotoSyncWorker` + `FotoColetaApi` (multipart) |
 | **RN021** | Participante Obrigatório | Coleta deve estar vinculada a um participante do inventário |
 | **RN022** | Data Automática | Data/hora da coleta é registrada automaticamente |
 | **RN023** | Localização Obrigatória | Localização encontrada é campo obrigatório |
@@ -828,6 +836,7 @@ stateDiagram-v2
 | 2.5 | Dez/2025 | Equipe IFMT | Adição de casos de uso, regras de negócio e glossário |
 | 2.7 | Dez/2025 | Equipe IFMT | Revisão de conformidade legal e requisitos de segurança |
 | 2.7.1 | Mar/2026 | Equipe IFMT | Correção: Decreto 9.373/2018 revogado (Decreto 12.785/2025), estados de conservação alinhados com dados reais, nota de depreciação EncryptedSharedPreferences |
+| 3.0.0 | Mai/2026 | Equipe IFMT | Atualização completa: RF038/RF039/RF092/RNF073 implementados, 9 novos RFs (RF093-RF100), segurança atualizada (SQLCipher + Keystore), 100% cobertura |
 
 ---
 
@@ -835,10 +844,11 @@ stateDiagram-v2
 
 ![Resumo de Requisitos do SIHCP](./images/resumo_requisitos.png)
 
-**Figura 3** — Resumo estatístico do documento: 91 requisitos funcionais distribuídos em 9 módulos, 72 requisitos não funcionais em 9 categorias, 41 regras de negócio e 11 casos de uso — todos 100% implementados.
+**Figura 3** — Resumo estatístico do documento: 100 requisitos funcionais distribuídos em 9 módulos, 73 requisitos não funcionais em 9 categorias, 41 regras de negócio e 11 casos de uso — todos 100% implementados.
 
 ---
 
-**Documento gerado em:** Dezembro de 2025 (atualizado em Março de 2026)  
-**Versão do Sistema:** 2.7.1  
+**Documento gerado em:** Dezembro de 2025 (atualizado em Maio de 2026)  
+**Versão do Sistema:** 2.23.0  
+**Versão do Documento:** 3.0.0  
 **Instituição:** Instituto Federal de Mato Grosso (IFMT)
