@@ -1,12 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 
+<!--
     Regras de backup legado (Android < 12) — spec correcoes-seguranca Req 11.2
     Exclui banco SQLCipher e prefs criptografadas.
-    Defesa em profundidade: mesmo com allowBackup=false, se alguém reverter,
-    este arquivo evita vazamento de dados sensíveis.
+
+    Defesa em profundidade: `android:allowBackup="false"` no manifest já
+    desativa backup globalmente, porém este arquivo protege contra reversão
+    acidental dessa flag.
+
+    AL-03 (correcoes-seguranca — maio/2026): a lista original só continha
+    `secure_prefs.xml` (usado por `SecureStorage`) e `sqlcipher_key_prefs.xml`.
+    Faltava explicitamente **`inventario_secure_prefs.xml`**, onde o
+    `PreferencesManager` armazena o access_token/refresh_token JWT, e os
+    demais arquivos abaixo.
 -->
 <full-backup-content>
-    <exclude domain="database" path="."/>
-    <exclude domain="sharedpref" path="secure_prefs.xml"/>
-    <exclude domain="sharedpref" path="sqlcipher_key_prefs.xml"/>
+    <!-- Todos os bancos de dados (SQLCipher) -->
+    <exclude domain="database" path="." />
+
+    <!-- SharedPreferences criptografadas (Jetpack Security) -->
+    <exclude domain="sharedpref" path="inventario_secure_prefs.xml" />
+    <exclude domain="sharedpref" path="secure_prefs.xml" />
+    <exclude domain="sharedpref" path="sqlcipher_key_prefs.xml" />
+
+    <!-- SharedPreferences com dados sensíveis (username, controle de login) -->
+    <exclude domain="sharedpref" path="user_prefs.xml" />
+    <exclude domain="sharedpref" path="login_attempts_prefs.xml" />
 </full-backup-content>

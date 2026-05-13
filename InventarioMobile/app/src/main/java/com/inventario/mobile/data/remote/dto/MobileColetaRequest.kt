@@ -78,5 +78,19 @@ data class MobileColetaRequest(
     val metodoColeta: String? = null,
     
     @SerializedName("tipoScan")
-    val tipoScan: String? = null
+    val tipoScan: String? = null,
+    
+    /**
+     * B3 (idempotência — maio/2026): UUID gerado pelo cliente no momento da coleta.
+     * Serve como chave de deduplicação no servidor — se o POST for reenviado (timeout
+     * de rede, retry do WorkManager), o servidor reconhece e retorna a coleta existente
+     * em vez de criar duplicata.
+     *
+     * Formato: UUID padrão ({@code java.util.UUID#randomUUID()}), 36 caracteres.
+     * Gerado em {@code ColetaMapper.toEntity}/{@code toEntitySimple} no momento da
+     * criação da {@code ColetaEntity}; sempre não-nulo para coletas geradas a partir
+     * da v2.27.
+     */
+    @SerializedName("clienteUuid")
+    val clienteUuid: String? = null
 )

@@ -142,7 +142,9 @@ class ColetaMapper @Inject constructor(
             metodoColeta = domain.metodoColeta,
             tipoScan = domain.tipoScan,
             divergencia = domain.divergencia,
-            motivoDivergencia = domain.motivoDivergencia
+            motivoDivergencia = domain.motivoDivergencia,
+            // A2/A3 (auditoria-sync maio/2026): UUID único por coleta.
+            clienteUuid = java.util.UUID.randomUUID().toString()
         )
     }
 
@@ -196,7 +198,8 @@ class ColetaMapper @Inject constructor(
             metodoColeta = domain.metodoColeta,
             tipoScan = domain.tipoScan,
             divergencia = domain.divergencia,
-            motivoDivergencia = domain.motivoDivergencia
+            motivoDivergencia = domain.motivoDivergencia,
+            clienteUuid = java.util.UUID.randomUUID().toString()
         )
     }
 

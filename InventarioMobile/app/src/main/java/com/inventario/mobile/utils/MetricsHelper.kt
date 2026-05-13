@@ -49,19 +49,47 @@ object MetricsHelper {
     }
     
     /**
-     * Calcula tempo decorrido em segundos
-     * @param inicioMs Timestamp de início em milissegundos
-     * @return Tempo em segundos
+     * Calcula tempo decorrido em segundos a partir de um marco em
+     * `System.currentTimeMillis()` (wall-clock).
+     *
+     * AL-06 (maio/2026): **use preferencialmente [calcularTempoElapsedSegundos]**
+     * com [android.os.SystemClock.elapsedRealtime]. Esta função permanece
+     * apenas para compatibilidade com consumidores antigos que ainda não
+     * foram migrados.
+     *
+     * @param inicioMs Timestamp de início em milissegundos (wall-clock)
+     * @return Tempo em segundos, sempre >= 0 (coerceAtLeast)
      */
     fun calcularTempoSegundos(inicioMs: Long): Int {
         if (inicioMs <= 0) return 0
-        
+
         val fimMs = System.currentTimeMillis()
-        val tempoMs = fimMs - inicioMs
+        val tempoMs = (fimMs - inicioMs).coerceAtLeast(0)
         val segundos = (tempoMs / 1000).toInt()
-        
-        Log.d(TAG, "Tempo calculado: ${segundos}s (${tempoMs}ms)")
+
+        Log.d(TAG, "Tempo calculado (wall-clock): ${segundos}s (${tempoMs}ms)")
         return segundos
+    }
+
+    /**
+     * Calcula tempo decorrido em segundos a partir de um marco em
+     * `SystemClock.elapsedRealtime()` (monotônico).
+     *
+     * AL-06 (correcoes-seguranca — maio/2026): preferir este método para
+     * medir durações de operações do usuário (coleta, scan, preenchimento).
+     * `elapsedRealtime` não é afetado por mudança de fuso horário, ajuste
+     * NTP ou usuário mexendo no relógio, então os tempos sempre refletem
+     * o tempo real decorrido.
+     *
+     * @param inicioElapsedMs Marco inicial em `SystemClock.elapsedRealtime()`
+     * @return Tempo em segundos, sempre >= 0
+     */
+    fun calcularTempoElapsedSegundos(inicioElapsedMs: Long): Int {
+        if (inicioElapsedMs <= 0) return 0
+
+        val fimMs = android.os.SystemClock.elapsedRealtime()
+        val tempoMs = (fimMs - inicioElapsedMs).coerceAtLeast(0)
+        return (tempoMs / 1000).toInt()
     }
     
     /**

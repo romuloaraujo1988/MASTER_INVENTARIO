@@ -4,6 +4,7 @@ import com.inventario.mobile.domain.model.Coleta
 import com.inventario.mobile.domain.repository.ColetaRepository
 import com.inventario.mobile.domain.repository.PatrimonioRepository
 import com.inventario.mobile.data.local.LocalDataManager
+import com.inventario.mobile.utils.PreferencesManager
 import javax.inject.Inject
 
 /**
@@ -15,7 +16,8 @@ import javax.inject.Inject
 class RegistrarColetaUseCase @Inject constructor(
     private val coletaRepository: ColetaRepository,
     private val patrimonioRepository: PatrimonioRepository,
-    private val localDataManager: LocalDataManager
+    private val localDataManager: LocalDataManager,
+    private val preferencesManager: PreferencesManager
 ) {
     /**
      * Registra coleta de patrimônio COM etiqueta
@@ -41,15 +43,45 @@ class RegistrarColetaUseCase @Inject constructor(
                 return Result.failure(Exception("Número do patrimônio é obrigatório"))
             }
             
-            // 2. Obter usuário atual (CRÍTICO para modo offline)
-            val usuarioAtual = localDataManager.getCurrentUser()
-            if (usuarioAtual == null) {
-                return Result.failure(Exception("[USUARIO_NAO_IDENTIFICADO] Usuário não está logado. Faça login novamente."))
+            // 2. Obter identidade do usuário logado.
+            //
+            // Fonte primária: PreferencesManager, que persiste userId e userName
+            // em SharedPreferences puro (Int/String direto) no momento do login.
+            // Esse canal é resistente a R8/Gson e espelha exatamente o que o
+            // servidor retornou em MobileUserInfoDto.
+            //
+            // LocalDataManager (JSON via Gson) é consultado apenas como
+            // complemento — útil em cenários offline antigos, mas não é a
+            // fonte de verdade.
+            val userIdFromPrefs = preferencesManager.getUserId() ?: 0
+            val userNameFromPrefs = preferencesManager.getUserName()
+
+            val usuarioIdFinal: Long = when {
+                idUsuario != null && idUsuario > 0 -> idUsuario
+                userIdFromPrefs > 0 -> userIdFromPrefs.toLong()
+                else -> {
+                    // Último recurso: JSON do LocalDataManager
+                    val usuarioJson = localDataManager.getCurrentUser()
+                    if (usuarioJson != null && usuarioJson.id > 0) {
+                        usuarioJson.id
+                    } else {
+                        return Result.failure(
+                            Exception(
+                                "[USUARIO_NAO_IDENTIFICADO] Usuário não está logado. Faça login novamente."
+                            )
+                        )
+                    }
+                }
             }
-            
-            val usuarioIdFinal = idUsuario ?: usuarioAtual.id.toLong()
-            
-            android.util.Log.d("RegistrarColetaUseCase", "✓ Usuário identificado: ${usuarioAtual.nome} (ID: $usuarioIdFinal)")
+
+            val nomeUsuario = userNameFromPrefs.takeIf { it.isNotBlank() }
+                ?: localDataManager.getCurrentUser()?.nome?.takeIf { it.isNotBlank() }
+                ?: "Usuário $usuarioIdFinal"
+
+            android.util.Log.d(
+                "RegistrarColetaUseCase",
+                "✓ Usuário identificado: $nomeUsuario (ID: $usuarioIdFinal)"
+            )
             
             // 3. Buscar patrimônio
             val patrimonio = patrimonioRepository.buscarPorNumero(numeroPatrimonio)

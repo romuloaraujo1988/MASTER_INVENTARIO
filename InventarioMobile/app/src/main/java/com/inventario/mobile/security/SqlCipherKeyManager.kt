@@ -48,7 +48,8 @@ import java.security.SecureRandom
  *
  * ```kotlin
  * val passphraseBytes = SqlCipherKeyManager.getInstance(context).getOrCreatePassphrase()
- * val factory = net.sqlcipher.database.SupportFactory(passphraseBytes)
+ * System.loadLibrary("sqlcipher")
+ * val factory = net.zetetic.database.sqlcipher.SupportOpenHelperFactory(passphraseBytes)
  * Room.databaseBuilder(context, AppDatabase::class.java, "inventario_offline_secure.db")
  *     .openHelperFactory(factory)
  *     .build()
@@ -72,7 +73,7 @@ import java.security.SecureRandom
  *
  * @see MasterKey
  * @see EncryptedSharedPreferences
- * @see net.sqlcipher.database.SupportFactory
+ * @see net.zetetic.database.sqlcipher.SupportOpenHelperFactory
  */
 class SqlCipherKeyManager private constructor(context: Context) {
 
@@ -166,6 +167,49 @@ class SqlCipherKeyManager private constructor(context: Context) {
             return random
         } catch (e: Exception) {
             throw SqlCipherKeyException("Falha ao ler/gerar passphrase SQLCipher", e)
+        }
+    }
+
+    /**
+     * Limpa a passphrase persistida, forçando a regeneração no próximo acesso.
+     *
+     * CR-02 (correcoes-seguranca — maio/2026): método adicionado como parte da
+     * estratégia de recuperação quando o Android Keystore é invalidado
+     * (usuário troca lock screen, ativa biometria em alguns OEMs, realiza
+     * factory reset parcial ou restaura *backup* em novo dispositivo). Nessas
+     * situações a `MasterKey` original fica inacessível e o banco
+     * `inventario_offline_secure.db` torna-se ilegível.
+     *
+     * O chamador (normalmente `KeystoreRecoveryActivity`) deve, em sequência:
+     * 1. Limpar tokens em `PreferencesManager` (força novo login);
+     * 2. Deletar `inventario_offline_secure.db*` (não pode ser aberto sem a chave);
+     * 3. Invocar este método para descartar a chave inválida;
+     * 4. Chamar [getOrCreatePassphrase] de novo, que gera nova passphrase.
+     *
+     * Este método é intencionalmente tolerante a falhas — se a limpeza das
+     * prefs criptografadas falhar, apagamos o arquivo direto do disco como
+     * fallback, para que o usuário não fique preso em um loop de crash.
+     */
+    fun resetPassphrase(context: Context) {
+        try {
+            prefs.edit().remove(KEY_PASSPHRASE).commit()
+        } catch (e: Exception) {
+            // Fallback: apagar o arquivo de prefs direto do disco.
+            try {
+                val prefsFile = java.io.File(
+                    context.applicationInfo.dataDir,
+                    "shared_prefs/$PREFS_NAME.xml"
+                )
+                if (prefsFile.exists()) prefsFile.delete()
+            } catch (_: Exception) {
+                // Último recurso: desistir silenciosamente. O próximo acesso
+                // vai relançar SqlCipherKeyException, que será tratada de novo.
+            }
+        }
+        // Invalidar singleton: na próxima chamada a getInstance(),
+        // uma nova instância é criada e recria o arquivo de prefs.
+        synchronized(SqlCipherKeyManager::class.java) {
+            instance = null
         }
     }
 

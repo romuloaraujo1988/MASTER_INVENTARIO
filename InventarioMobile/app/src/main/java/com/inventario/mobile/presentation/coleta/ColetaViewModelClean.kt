@@ -1,6 +1,8 @@
 package com.inventario.mobile.presentation.coleta
 
+import android.os.SystemClock
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inventario.mobile.domain.usecase.BuscarPatrimonioUseCase
@@ -8,7 +10,6 @@ import com.inventario.mobile.domain.usecase.RegistrarColetaUseCase
 import com.inventario.mobile.presentation.state.ColetaState
 import com.inventario.mobile.utils.MetricsHelper
 import com.inventario.mobile.utils.ScanMetrics
-import com.inventario.mobile.utils.ScanMetricsTracker
 import com.inventario.mobile.utils.VibrationHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,48 +19,92 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * ViewModel refatorado para coleta de patrimônios
- * Segue Clean Architecture + MVVM
- * 
+ * ViewModel refatorado para coleta de patrimônios.
+ *
+ * - Segue Clean Architecture + MVVM
  * - Usa Use Cases para lógica de negócio
  * - Gerencia estado da UI
  * - Validações no Use Case (não aqui)
- * 
- * v2.1: Adicionado tracking de métricas para análise de performance
- * v2.10: Adicionado feedback tátil (vibração) ao coletar
+ *
+ * ## Histórico
+ * - **v2.1:** tracking de métricas para análise de performance.
+ * - **v2.10:** feedback tátil (vibração) ao coletar.
+ * - **v2.24 (AL-06, correcoes-seguranca maio/2026):**
+ *   1. Marcos de tempo migrados de `System.currentTimeMillis()` (wall-clock,
+ *      corrompe com mudança de fuso ou sync NTP) para
+ *      [SystemClock.elapsedRealtime] (monotônico).
+ *   2. Marcos persistidos em [SavedStateHandle] para sobreviver a
+ *      ProcessDeath. Sem isso, o Android podia matar o processo durante a
+ *      coleta e ao retornar `inicioColeta=0` gerava métrica zerada.
+ *   3. Guard `isInitialized` evita que a Activity reinicie o cronômetro
+ *      após restauração de estado (seria zerar o tempo válido).
+ *
+ * **Observação:** os marcos em `elapsedRealtime()` são relativos ao último
+ * boot do dispositivo. Se o usuário reiniciou o aparelho entre a abertura
+ * da tela e o envio da coleta, o cálculo do tempo retornaria negativo —
+ * blindamos com `coerceAtLeast(0)` no [MetricsHelper].
  */
 @HiltViewModel
 class ColetaViewModelClean @Inject constructor(
     private val buscarPatrimonioUseCase: BuscarPatrimonioUseCase,
     private val registrarColetaUseCase: RegistrarColetaUseCase,
     private val syncScheduler: com.inventario.mobile.sync.SyncScheduler,
-    private val vibrationHelper: VibrationHelper
+    private val vibrationHelper: VibrationHelper,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-    
+
     companion object {
         private const val TAG = "ColetaViewModelClean"
+
+        // Chaves do SavedStateHandle — os marcos de tempo são preservados
+        // durante ProcessDeath para garantir continuidade da métrica.
+        private const val KEY_INICIO_COLETA = "ml_inicio_coleta"
+        private const val KEY_INICIO_SCAN = "ml_inicio_scan"
+        private const val KEY_FIM_SCAN = "ml_fim_scan"
+        private const val KEY_INICIO_PREENCH = "ml_inicio_preench"
+        private const val KEY_METODO_COLETA = "ml_metodo_coleta"
     }
-    
+
     private val _state = MutableStateFlow<ColetaState>(ColetaState.Idle)
     val state: StateFlow<ColetaState> = _state.asStateFlow()
-    
+
     // ========== TRACKING DE MÉTRICAS (v2.1) ==========
-    private var inicioColeta: Long = 0
-    private var inicioScan: Long = 0
-    private var fimScan: Long = 0
-    private var inicioPreenchimento: Long = 0
-    private var metodoColeta: String = MetricsHelper.METODO_QR_CODE
+    //
+    // AL-06: ao invés de `private var` em memória, todos os marcos são
+    // acessados via SavedStateHandle para sobreviver a ProcessDeath.
+    // Os getters/setters mascaram a leitura do handle para manter o código
+    // consumidor inalterado.
+
+    private var inicioColeta: Long
+        get() = savedStateHandle[KEY_INICIO_COLETA] ?: 0L
+        set(value) { savedStateHandle[KEY_INICIO_COLETA] = value }
+
+    private var inicioScan: Long
+        get() = savedStateHandle[KEY_INICIO_SCAN] ?: 0L
+        set(value) { savedStateHandle[KEY_INICIO_SCAN] = value }
+
+    private var fimScan: Long
+        get() = savedStateHandle[KEY_FIM_SCAN] ?: 0L
+        set(value) { savedStateHandle[KEY_FIM_SCAN] = value }
+
+    private var inicioPreenchimento: Long
+        get() = savedStateHandle[KEY_INICIO_PREENCH] ?: 0L
+        set(value) { savedStateHandle[KEY_INICIO_PREENCH] = value }
+
+    // O nome interno `_metodoColeta` evita colisão de JVM signature com
+    // o método público `setMetodoColeta(String)` — ambos gerariam a mesma
+    // assinatura `setMetodoColeta(Ljava/lang/String;)V`.
+    private var _metodoColeta: String
+        get() = savedStateHandle[KEY_METODO_COLETA] ?: MetricsHelper.METODO_QR_CODE
+        set(value) { savedStateHandle[KEY_METODO_COLETA] = value }
+
+    // ScanMetrics é transitório: se o processo morrer durante o scan, a
+    // métrica específica do scanner é reiniciada (aceitável, já que o
+    // usuário precisaria refazer o scan mesmo assim).
     private var scanMetrics: ScanMetrics? = null
-    
+
     /**
-     * Registra uma coleta de patrimônio
-     * 
-     * @param numeroPatrimonio Número do patrimônio (QR Code ou manual)
-     * @param localizacaoAtual Localização onde foi encontrado
-     * @param observacoes Observações (opcional)
-     * @param latitude Latitude GPS (opcional)
-     * @param longitude Longitude GPS (opcional)
-     * @param idUsuario ID do usuário coletor
+     * Registra uma coleta de patrimônio.
      */
     fun registrarColeta(
         numeroPatrimonio: String,
@@ -71,7 +116,7 @@ class ColetaViewModelClean @Inject constructor(
     ) {
         viewModelScope.launch {
             _state.value = ColetaState.Loading
-            
+
             registrarColetaUseCase(
                 numeroPatrimonio = numeroPatrimonio,
                 localizacaoAtual = localizacaoAtual,
@@ -82,10 +127,10 @@ class ColetaViewModelClean @Inject constructor(
             ).fold(
                 onSuccess = { coleta ->
                     _state.value = ColetaState.Success(coleta)
-                    
+
                     // Incrementar contador de coletas para sincronização automática
                     syncScheduler.incrementCollectionCount()
-                    
+
                     // v2.10: Vibrar ao coletar (se habilitado nas configurações)
                     vibrationHelper.vibrateOnCollection()
                 },
@@ -97,17 +142,16 @@ class ColetaViewModelClean @Inject constructor(
             )
         }
     }
-    
+
     /**
-     * Busca patrimônio por número (para validação antes da coleta)
+     * Busca patrimônio por número (para validação antes da coleta).
      */
     fun buscarPatrimonio(numero: String) {
         viewModelScope.launch {
             _state.value = ColetaState.Loading
-            
+
             buscarPatrimonioUseCase(numero).fold(
-                onSuccess = { patrimonio ->
-                    // Patrimônio encontrado, pode prosseguir
+                onSuccess = { _ ->
                     _state.value = ColetaState.Idle
                 },
                 onFailure = { error ->
@@ -118,102 +162,111 @@ class ColetaViewModelClean @Inject constructor(
             )
         }
     }
-    
+
     /**
-     * Define patrimônio escaneado (para compatibilidade com scanner)
+     * Define patrimônio escaneado (para compatibilidade com scanner).
      */
     fun setPatrimonio(patrimonioId: Long, patrimonioCodigo: String) {
-        // TODO: Implementar se necessário armazenar estado do patrimônio
-        // Por enquanto, apenas log
-        android.util.Log.d("ColetaViewModelClean", "Patrimônio definido: ID=$patrimonioId, Código=$patrimonioCodigo")
+        Log.d(TAG, "Patrimônio definido: ID=$patrimonioId, Código=$patrimonioCodigo")
     }
-    
+
     /**
-     * Limpa o estado
+     * Limpa o estado.
      */
     fun limparEstado() {
         _state.value = ColetaState.Idle
     }
-    
-    // ========== MÉTODOS DE TRACKING DE MÉTRICAS (v2.1) ==========
-    
+
+    // ========== MÉTODOS DE TRACKING DE MÉTRICAS (v2.1 + AL-06) ==========
+
     /**
-     * Inicia tracking de tempo da coleta
-     * Chamar no onCreate da Activity
+     * Inicia tracking de tempo da coleta.
+     *
+     * AL-06: idempotente — se já houver marco (restauração de
+     * `SavedStateHandle`), o marco anterior é preservado. Assim, uma
+     * Activity recriada após mudança de config ou ProcessDeath não zera
+     * o tempo válido.
      */
     fun iniciarColeta() {
-        inicioColeta = System.currentTimeMillis()
-        Log.d(TAG, "Coleta iniciada: timestamp=$inicioColeta")
+        if (inicioColeta > 0) {
+            Log.d(TAG, "Coleta já iniciada (restaurada): elapsed=$inicioColeta")
+            return
+        }
+        inicioColeta = SystemClock.elapsedRealtime()
+        Log.d(TAG, "Coleta iniciada: elapsed=$inicioColeta")
     }
-    
+
     /**
-     * Inicia tracking de tempo do scan
-     * Chamar ao abrir o scanner
+     * Inicia tracking de tempo do scan.
      */
     fun iniciarScan() {
-        inicioScan = System.currentTimeMillis()
-        Log.d(TAG, "Scan iniciado: timestamp=$inicioScan")
+        inicioScan = SystemClock.elapsedRealtime()
+        fimScan = 0L
+        Log.d(TAG, "Scan iniciado: elapsed=$inicioScan")
     }
-    
+
     /**
-     * Finaliza tracking de tempo do scan
-     * Chamar após scan bem-sucedido
+     * Finaliza tracking de tempo do scan.
      */
     fun finalizarScan() {
-        fimScan = System.currentTimeMillis()
-        Log.d(TAG, "Scan finalizado: timestamp=$fimScan")
+        fimScan = SystemClock.elapsedRealtime()
+        Log.d(TAG, "Scan finalizado: elapsed=$fimScan")
     }
-    
+
     /**
-     * Inicia tracking de tempo de preenchimento
-     * Chamar ao mostrar formulário de coleta
+     * Inicia tracking de tempo de preenchimento.
      */
     fun iniciarPreenchimento() {
-        inicioPreenchimento = System.currentTimeMillis()
-        Log.d(TAG, "Preenchimento iniciado: timestamp=$inicioPreenchimento")
+        if (inicioPreenchimento > 0) {
+            Log.d(TAG, "Preenchimento já iniciado (restaurado): elapsed=$inicioPreenchimento")
+            return
+        }
+        inicioPreenchimento = SystemClock.elapsedRealtime()
+        Log.d(TAG, "Preenchimento iniciado: elapsed=$inicioPreenchimento")
     }
-    
+
     /**
-     * Define método de coleta
-     * Chamar ao selecionar método (QR, Barcode, Manual, etc)
+     * Define método de coleta.
      */
     fun setMetodoColeta(metodo: String) {
-        metodoColeta = metodo
+        _metodoColeta = metodo
         Log.d(TAG, "Método de coleta definido: $metodo")
     }
-    
+
     /**
-     * Define métricas do scan (vindo do ScanMetricsTracker)
-     * Chamar após scan bem-sucedido
+     * Define métricas do scan (vindo do ScanMetricsTracker).
      */
     fun setScanMetrics(metrics: ScanMetrics) {
         scanMetrics = metrics
-        metodoColeta = metrics.tipoScan // Atualizar método baseado no tipo de scan
+        _metodoColeta = metrics.tipoScan
         Log.d(TAG, "Métricas de scan definidas: $metrics")
     }
-    
+
     /**
-     * Calcula métricas de tempo
+     * Calcula métricas de tempo.
+     *
+     * AL-06: usa [MetricsHelper.calcularTempoElapsedSegundos], que consome
+     * marcos de `SystemClock.elapsedRealtime()` com proteção contra
+     * diferenças negativas.
      */
     private fun calcularMetricasTempo(): Triple<Int, Int?, Int?> {
-        val tempoTotal = if (inicioColeta > 0) {
-            MetricsHelper.calcularTempoSegundos(inicioColeta)
-        } else 0
-        
+        val tempoTotal = MetricsHelper.calcularTempoElapsedSegundos(inicioColeta)
+
         val tempoScan = if (inicioScan > 0 && fimScan > 0) {
-            ((fimScan - inicioScan) / 1000).toInt()
-        } else scanMetrics?.tempoSegundos
-        
+            ((fimScan - inicioScan).coerceAtLeast(0) / 1000).toInt()
+        } else {
+            scanMetrics?.tempoSegundos
+        }
+
         val tempoPreenchimento = if (inicioPreenchimento > 0) {
-            MetricsHelper.calcularTempoSegundos(inicioPreenchimento)
+            MetricsHelper.calcularTempoElapsedSegundos(inicioPreenchimento)
         } else null
-        
+
         return Triple(tempoTotal, tempoScan, tempoPreenchimento)
     }
-    
+
     /**
-     * Registra coleta COM métricas
-     * Versão atualizada que inclui tracking de performance
+     * Registra coleta COM métricas.
      */
     fun registrarColetaComMetricas(
         numeroPatrimonio: String,
@@ -226,26 +279,17 @@ class ColetaViewModelClean @Inject constructor(
         viewModelScope.launch {
             try {
                 _state.value = ColetaState.Loading
-                
-                // Calcular métricas de tempo
+
                 val (tempoTotal, tempoScan, tempoPreenchimento) = calcularMetricasTempo()
-                
-                // Calcular horário
-                val (hora, dia, periodo) = MetricsHelper.calcularHorario()
-                
-                // Obter métricas de scan
+                val (_, _, periodo) = MetricsHelper.calcularHorario()
+
                 val tipoScan = scanMetrics?.tipoScan
-                val tentativasScan = scanMetrics?.tentativas ?: 1
-                val errosScan = scanMetrics?.erros ?: 0
-                val qualidadeEtiqueta = scanMetrics?.qualidadeEtiqueta
-                
-                // Log das métricas
+
                 val resumo = MetricsHelper.criarResumoMetricas(
-                    tempoTotal, tempoScan, tempoPreenchimento, metodoColeta, periodo
+                    tempoTotal, tempoScan, tempoPreenchimento, _metodoColeta, periodo
                 )
                 Log.d(TAG, resumo)
-                
-                // Repassar métricas para o Use Case e Banco de Dados
+
                 registrarColetaUseCase(
                     numeroPatrimonio = numeroPatrimonio,
                     localizacaoAtual = localizacaoAtual,
@@ -256,17 +300,16 @@ class ColetaViewModelClean @Inject constructor(
                     tempoColetaSegundos = tempoTotal,
                     tempoScanSegundos = tempoScan,
                     tempoPreenchimentoSegundos = tempoPreenchimento,
-                    metodoColeta = metodoColeta,
+                    metodoColeta = _metodoColeta,
                     tipoScan = tipoScan
                 ).fold(
                     onSuccess = { coleta ->
                         _state.value = ColetaState.Success(coleta)
                         syncScheduler.incrementCollectionCount()
-                        
-                        // v2.10: Vibrar ao coletar (se habilitado nas configurações)
                         vibrationHelper.vibrateOnCollection()
-                        
-                        // Resetar métricas para próxima coleta
+
+                        // Só resetar métricas após confirmação do Use Case —
+                        // em caso de falha preservamos os marcos para retry.
                         resetarMetricas()
                     },
                     onFailure = { error ->
@@ -275,36 +318,36 @@ class ColetaViewModelClean @Inject constructor(
                         )
                     }
                 )
-                
+
             } catch (e: Exception) {
                 Log.e(TAG, "Erro ao registrar coleta com métricas", e)
                 _state.value = ColetaState.Error("Erro ao registrar coleta: ${e.message}")
             }
         }
     }
-    
+
     /**
-     * Reseta métricas para próxima coleta
+     * Reseta métricas para próxima coleta.
      */
     private fun resetarMetricas() {
-        inicioColeta = 0
-        inicioScan = 0
-        fimScan = 0
-        inicioPreenchimento = 0
-        metodoColeta = MetricsHelper.METODO_QR_CODE
+        inicioColeta = 0L
+        inicioScan = 0L
+        fimScan = 0L
+        inicioPreenchimento = 0L
+        _metodoColeta = MetricsHelper.METODO_QR_CODE
         scanMetrics = null
         Log.d(TAG, "Métricas resetadas")
     }
-    
+
     /**
-     * Retorna resumo das métricas atuais (para debug/testes)
+     * Retorna resumo das métricas atuais (para debug/testes).
      */
     fun getMetricasResumo(): String {
         val (tempoTotal, tempoScan, tempoPreenchimento) = calcularMetricasTempo()
         val (_, _, periodo) = MetricsHelper.calcularHorario()
-        
+
         return MetricsHelper.criarResumoMetricas(
-            tempoTotal, tempoScan, tempoPreenchimento, metodoColeta, periodo
+            tempoTotal, tempoScan, tempoPreenchimento, _metodoColeta, periodo
         )
     }
 }

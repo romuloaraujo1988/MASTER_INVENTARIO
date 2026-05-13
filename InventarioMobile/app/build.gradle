@@ -21,9 +21,23 @@ android {
         applicationId "com.inventario.mobile"
         minSdk 23  // Atualizado para suportar biometria
         targetSdk 34
-        // v2.23.0 — relatorio-fotografico-sem-etiqueta (visualização de fotos de itens sem etiqueta via PDF)
-        versionCode 71
-        versionName "2.23.0"
+        // v2.24.0 — correcoes-seguranca (maio/2026):
+        //   CR-01 fallbackToDestructiveMigration removido
+        //   CR-02 SqlCipherKeyException + KeystoreRecoveryActivity
+        //   CR-03 LegacyPhotoMigrator (fotos v2.20 → v2.21+)
+        //   CR-04 RefreshTokenInterceptor no pipeline Hilt
+        //   CR-05 / AL-01 Refresh sem runBlocking + synchronized + cooldown
+        //   AL-03 backup_rules / data_extraction_rules corrigidos
+        //   AL-05 / MD-09 OfflineFallback reset em qualquer resposta + CancellationException
+        //   AL-06 Métricas com elapsedRealtime + SavedStateHandle
+        //   AL-07 Binding duplicado PhotoHelper removido
+        //   AL-08 TokenAuthenticator (código morto) removido
+        //   AL-10 Índice composto (idPatrimonio, dataColeta) + MIGRATION_17_18
+        //   AL-13 Bloco "schema reset v2.20.5" removido
+        //   MD-01 ProGuard preserva Tink
+        //   MD-05 HttpLoggingInterceptor NONE em release
+        versionCode 76
+        versionName "2.28.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -164,8 +178,23 @@ dependencies {
     
     // Security & Biometric Authentication
     implementation 'androidx.security:security-crypto:1.1.0-alpha06'
-    implementation 'androidx.biometric:biometric:1.2.0-alpha05'
-    implementation "net.zetetic:android-database-sqlcipher:4.5.4"
+    // MD-06 (correcoes-seguranca — maio/2026): downgrade de 1.2.0-alpha05 (alpha
+    // travada desde set/2022) para 1.1.0 stable (recomendação oficial da Google —
+    // androidx.biometric release notes). O app só usa a API BiometricPrompt base
+    // (sem AuthPrompt / biometric-ktx / PromptContentView) — todas essas APIs
+    // existem em 1.1.0 stable.
+    implementation 'androidx.biometric:biometric:1.1.0'
+    // MD-02 (correcoes-seguranca — maio/2026): migração da biblioteca legada
+    // `net.zetetic:android-database-sqlcipher` (end-of-life desde 2023) para
+    // `net.zetetic:sqlcipher-android:4.6.1`, ativa e recomendada pela Zetetic.
+    // Requer chamada explícita de `System.loadLibrary("sqlcipher")` antes do
+    // primeiro acesso ao banco.
+    // O formato do arquivo é compatível entre as duas bibliotecas — bancos
+    // criados com a versão anterior continuam abrindo com a mesma passphrase.
+    // Nota: versão 4.6.1 usada (em vez de 4.15.0) por compatibilidade com
+    // Kotlin 1.9.x do projeto — versões ≥ 4.7 dependem de sqlite:2.6.x que
+    // requer Kotlin 2.1+. Atualizar junto com o upgrade de Kotlin.
+    implementation 'net.zetetic:sqlcipher-android:4.6.1'
     
     // Image Loading
     implementation 'com.github.bumptech.glide:glide:4.16.0'

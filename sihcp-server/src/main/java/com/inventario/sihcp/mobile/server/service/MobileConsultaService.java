@@ -89,7 +89,11 @@ public class MobileConsultaService {
     public PatrimonioDetalheDTO obterDetalhesCompletos(Long id) throws SQLException {
         logger.debug("Buscando detalhes completos do patrimônio ID: {}", id);
         
-        Patrimonio patrimonio = patrimonioDAO.findById(id.intValue());
+        // Usar buscarPorIdComJoins para trazer nomeSala, nomeResponsavel, etc.
+        // O findById() herdado do BaseDAO faz apenas SELECT * sem JOIN, o que
+        // deixa os campos de relacionamento (nomeSala, nomeResponsavel) nulos —
+        // por isso o app mostrava "Cadastrado em 'null'" na tela de detalhes.
+        Patrimonio patrimonio = patrimonioDAO.buscarPorIdComJoins(id.intValue());
         
         if (patrimonio == null) {
             logger.warn("Patrimônio não encontrado: ID {}", id);

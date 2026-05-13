@@ -63,10 +63,10 @@ class LocalDataManager(context: Context) {
             android.util.Log.d("LocalDataManager", "═══════════════════════════════════════════")
             android.util.Log.d("LocalDataManager", "RECUPERANDO USUÁRIO")
             android.util.Log.d("LocalDataManager", "JSON armazenado: $userJson")
-            
+
             if (userJson != null) {
                 val usuario = gson.fromJson(userJson, com.inventario.mobile.data.model.Usuario::class.java)
-                android.util.Log.d("LocalDataManager", "Usuário deserializado - ID: ${usuario.id}, Nome: ${usuario.nome}")
+                android.util.Log.d("LocalDataManager", "Usuário deserializado - ID: ${usuario?.id}, Nome: ${usuario?.nome}")
                 android.util.Log.d("LocalDataManager", "═══════════════════════════════════════════")
                 usuario
             } else {

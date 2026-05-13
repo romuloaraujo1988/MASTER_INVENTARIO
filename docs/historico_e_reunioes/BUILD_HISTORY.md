@@ -4,6 +4,461 @@ Este arquivo registra todas as compilações do APK Android para rastreabilidade
 
 ---
 
+## Build #129 - 12/05/2026 (v2.28.0 — Correções de estabilidade: ANR, crash R8, NPE, WorkManager)
+
+- **Tipo:** Debug (assinado com debug keystore)
+- **Versão:** 2.28.0
+- **Build Code:** 76
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/debug/SiHCP-debug-v2.28.0.apk`
+- **Tamanho:** 29,88 MB
+- **Banco Room:** versão 19 (sem alteração)
+
+### Problemas resolvidos
+
+**#1 — ANR eliminado (`NetworkModule.kt`) 🔴 CRÍTICO**
+- Removido `runBlocking { localDataManager.getCurrentUser() }` do interceptor OkHttp.
+- Token agora lido diretamente do `PreferencesManager` (SharedPreferences síncrono, O(1)).
+- `runBlocking` bloqueava a thread de I/O do OkHttp em uso intenso (batch sync), causando ANR.
+
+**#2 — Crash R8 eliminado (`PreferencesManager.kt`) 🟠 ALTO**
+- Substituída reflexão `getDeclaredField("nome")` por `when (usuario)` com cast direto.
+- R8 renomeia campos em release → `NoSuchFieldException` silenciosa → nome do usuário nunca salvo.
+- Suporta `UsuarioDto`, `data.model.Usuario` e `domain.model.Usuario`.
+
+**#3 — NPE eliminado (`SalaSelectionViewModelEnhanced.kt`) 🟠 ALTO**
+- `response.body()!!.data` → `response.body()?.data ?: emptyList()`
+- `body()` pode ser null mesmo com `isSuccessful=true` (body vazio, timeout parcial).
+
+**#4 — ANR potencial eliminado (`SyncScheduler.kt`) 🟡 MÉDIO**
+- `.get()` sem timeout → `.get(100, MILLISECONDS)` com fallback para false/null.
+- Evita bloqueio indefinido da thread chamadora se WorkManager estiver ocupado.
+
+**#5 — Sync periódico nunca executava (`SyncScheduler.kt`) 🟡 MÉDIO**
+- `ExistingPeriodicWorkPolicy.REPLACE` → `KEEP`.
+- `REPLACE` cancelava e reiniciava o timer a cada login, impedindo execução do sync.
+
+### Arquivos modificados
+- `di/NetworkModule.kt`
+- `utils/PreferencesManager.kt`
+- `presentation/sala/SalaSelectionViewModelEnhanced.kt`
+- `sync/SyncScheduler.kt`
+
+---
+
+- **Tipo:** Release (assinado, com ProGuard/R8)
+- **Versão:** 2.28.0
+- **Build Code:** 76
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.28.0.apk`
+- **Tamanho:** ~19,5 MB (estimado)
+- **Banco Room:** versão 19 (sem alteração)
+
+### Problemas resolvidos
+
+**B3 — Idempotência completa via clienteUuid (🔴 Crítico)**
+
+Proteção contra duplicatas causadas por timeout de rede: o app envia uma coleta, o servidor persiste mas a resposta HTTP não chega → WorkManager reenvia → sem esta proteção criaria duplicata.
+
+**Servidor (Java):**
+- `Coleta.java` — getter/setter `getClienteUuid()` / `setClienteUuid()`
+- `ColetaDAO.java` — INSERT inclui `CLIENTE_UUID` como 30º parâmetro; novo método `buscarPorClienteUuid(String)` com query indexada
+- `MobileColetaService.java` — verificação de idempotência no início de `registrarColeta()`: se UUID já existe, retorna coleta existente sem novo INSERT; `coleta.setClienteUuid(request.getClienteUuid())` antes do INSERT
+- `sql/adicionar_cliente_uuid_coleta.sql` — `ALTER TABLE TABELA_COLETA ADD COLUMN IF NOT EXISTS CLIENTE_UUID VARCHAR(36)` + índice UNIQUE parcial
+
+**Android (Kotlin):**
+- `MobileColetaRequest.kt` — campo `clienteUuid: String?` com `@SerializedName("clienteUuid")`
+- `ColetaRepositoryImpl.kt` — todos os 6 construtores de `MobileColetaRequest` passam `entity.clienteUuid`; construtor manual de `ColetaEntity` (sem etiqueta) gera UUID via `java.util.UUID.randomUUID()`
+- `EnviarColetasPendentesUseCase.kt` — `clienteUuid = entity.clienteUuid`
+- `InventarioRepository.kt` — gera UUID fresco (caminho legado sem entity)
+- `Coleta.kt` — `toMobileColetaRequest()` gera UUID fresco (caminho legado)
+
+### Arquivos modificados
+- `sihcp-core/src/main/java/com/inventario/sihcp/model/Coleta.java`
+- `sihcp-core/src/main/java/com/inventario/sihcp/dao/ColetaDAO.java`
+- `sihcp-server/src/main/java/com/inventario/sihcp/mobile/server/service/MobileColetaService.java`
+- `InventarioMobile/app/src/main/java/com/inventario/mobile/data/remote/dto/MobileColetaRequest.kt`
+- `InventarioMobile/app/src/main/java/com/inventario/mobile/data/repository/ColetaRepositoryImpl.kt`
+- `InventarioMobile/app/src/main/java/com/inventario/mobile/domain/usecase/EnviarColetasPendentesUseCase.kt`
+- `InventarioMobile/app/src/main/java/com/inventario/mobile/data/repository/InventarioRepository.kt`
+- `InventarioMobile/app/src/main/java/com/inventario/mobile/data/model/Coleta.kt`
+- `sql/adicionar_cliente_uuid_coleta.sql`
+
+### Pré-requisito de deploy
+Executar no banco PostgreSQL antes de subir o servidor:
+```sql
+-- sql/adicionar_cliente_uuid_coleta.sql
+ALTER TABLE TABELA_COLETA ADD COLUMN IF NOT EXISTS CLIENTE_UUID VARCHAR(36);
+CREATE UNIQUE INDEX IF NOT EXISTS UQ_TABELA_COLETA_CLIENTE_UUID
+    ON TABELA_COLETA (CLIENTE_UUID)
+    WHERE CLIENTE_UUID IS NOT NULL;
+```
+
+---
+
+## Build #128 - 12/05/2026 (v2.27.0 — A2/A3: mutex + clienteUuid + migration 18→19)
+
+- **Tipo:** Release (assinado, com ProGuard/R8)
+- **Versão:** 2.27.0
+- **Build Code:** 75
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.27.0.apk`
+- **Tamanho:** ~19,50 MB
+- **Banco Room:** versão 18 → **19**
+
+### Problemas resolvidos
+
+**A2 — Race condition de duplicata (🟡 Média)**
+- `ColetaRepositoryImpl.kt` — seção crítica (verificação + insert)
+- Antes: duas chamadas paralelas a `registrarColeta` para o mesmo patrimônio podiam ambas passar pela verificação `buscarColetaExistente` (que retornava null nas duas) e inserir duas coletas idênticas.
+- Correção: `insertMutex = Mutex()` serializa a verificação de duplicata para coletas normais. Coletas por descrição (sem etiqueta) não são afetadas — múltiplas são permitidas por design.
+
+**A3 — Ausência de proteção de banco contra duplicata (🟡 Média)**
+- `ColetaEntity.kt`, `ColetaMapper.kt`, `AppDatabase.kt`
+- Adicionado campo `clienteUuid: String?` — UUID gerado no momento da coleta, único por registro.
+- Serve como chave de idempotência futura para o servidor (B3): quando o servidor aceitar o campo, poderá rejeitar reenvios do mesmo UUID sem criar duplicata.
+- `MIGRATION_18_19`: `ALTER TABLE coleta ADD COLUMN clienteUuid TEXT DEFAULT NULL` — idempotente, coletas existentes ficam com `null` (aceitável).
+
+### Arquivos modificados
+- `data/local/entity/ColetaEntity.kt` — campo `clienteUuid`
+- `data/mapper/ColetaMapper.kt` — UUID gerado em `toEntity()` e `toEntitySimple()`
+- `data/repository/ColetaRepositoryImpl.kt` — `insertMutex` + import `Mutex`
+- `data/local/database/AppDatabase.kt` — versão 18→19 + `MIGRATION_18_19`
+
+### Pendente (B3 — requer mudança no servidor Java)
+- Idempotência completa: o `clienteUuid` já é gerado e persistido localmente. Para fechar B3, o servidor precisa:
+  1. Aceitar o campo `clienteUuid` no `MobileColetaRequest.java`;
+  2. Verificar se já existe coleta com o mesmo UUID antes de inserir;
+  3. Retornar a coleta existente (em vez de erro) se UUID já foi processado.
+  Isso elimina o risco de duplicata no servidor em caso de timeout de rede.
+
+- **Status:** ✅ BUILD SUCCESSFUL (6 min 33 s, 19,50 MB)
+
+---
+
+## Build #127 - 12/05/2026 (v2.26.0 — C2/F1: consolidação de workers de sincronização)
+
+- **Tipo:** Release (assinado, com ProGuard/R8)
+- **Versão:** 2.26.0
+- **Build Code:** 74
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.26.0.apk`
+- **Tamanho:** ~19,50 MB
+- **Contexto:** Eliminação do risco de envio duplicado de coletas ao servidor.
+
+### Problema resolvido
+
+**C2/F1 — Dois workers distintos fazendo a mesma coisa (🔴 Alta)**
+
+Antes existiam dois pipelines de sincronização independentes:
+
+| Worker | Agendado por | Work name | Fazia |
+|--------|-------------|-----------|-------|
+| `SyncWorker` | `SyncManager` | `"periodic_sync"` | Coletas + Fotos + Sugestões |
+| `ColetaSyncWorker` | `SyncScheduler` | `"coleta_sync_periodic"` | Apenas Coletas |
+
+Ambos chamavam `SincronizarColetasPendentesUseCase` e podiam rodar simultaneamente, criando risco real de envio duplicado de coletas ao servidor. Adicionalmente, `SyncManager.forceSyncNow()` usava `workManager.enqueue()` sem nome único.
+
+### Solução implementada
+
+**Arquitetura após a correção:**
+
+```
+SyncManager (fachada)
+    └── delega para SyncScheduler (Hilt)
+            └── agenda ColetaSyncWorker (único worker)
+                    ├── SincronizarColetasPendentesUseCase
+                    ├── SincronizarFotosReferenciaUseCase
+                    └── SincronizarSugestoesDescricaoUseCase
+```
+
+**Arquivos modificados:**
+- `sync/SyncManager.kt` — reescrito como fachada fina que delega para `SyncScheduler`; API pública preservada (`schedulePeriodicSync`, `cancelPeriodicSync`, `forceSyncNow`)
+- `di/SyncModule.kt` — atualizado para construir `SyncManager(syncScheduler)` e registrar no singleton legado
+- `worker/ColetaSyncWorker.kt` — absorveu as 3 responsabilidades do `SyncWorker` (coletas + fotos de referência + sugestões de descrição)
+- `InventarioMobileApplication.kt` — `syncManager` injetado via Hilt; `initializeNetworkObserver` usa a instância injetada
+
+**Arquivos deletados:**
+- `worker/SyncWorker.kt` (worker duplicado — 210 linhas)
+
+**Garantias de deduplicação:**
+- Periódico: `enqueueUniquePeriodicWork(WORK_NAME, REPLACE)` — apenas um worker periódico ativo
+- Manual/reconexão: `syncNow()` usa `enqueueUniqueWork(WORK_NAME_MANUAL, REPLACE)` — chamadas rápidas não empilham workers
+- Por contador: `enqueueUniqueWork(WORK_NAME_BY_COUNT, REPLACE)` — idem
+
+- **Status:** ✅ BUILD SUCCESSFUL (8 min 57 s, 19,50 MB)
+
+---
+
+## Build #126 - 12/05/2026 (v2.25.0 — auditoria-sync: 7 correções de sincronização e duplicidade)
+
+- **Tipo:** Release (assinado, com ProGuard/R8)
+- **Versão:** 2.25.0
+- **Build Code:** 73
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.25.0.apk`
+- **Tamanho:** ~19,50 MB (+3 MB pela migração SQLCipher)
+- **Contexto:** Correções identificadas em auditoria técnica do fluxo de coleta e sincronização.
+
+### Correções aplicadas
+
+**B1 — `marcarComoSincronizado` descartava `servidorId` (🔴 Alta)**
+- `ColetaRepositoryImpl.kt` linha ~80
+- Antes: `coletaDao.marcarSincronizada(id)` — `servidorId` ignorado.
+- Impacto: `PhotoSyncWorker` verifica `coleta.servidorId != null` antes do upload; fotos de coletas sincronizadas via esse método nunca eram enviadas.
+- Correção: agora chama `marcarSincronizadaComServidor(id, servidorId)` quando `servidorId > 0`.
+
+**C1 — Scopes de coroutine não supervisionados (🔴 Alta)**
+- `ColetaRepositoryImpl.kt` linhas ~220, ~350, ~1090
+- Antes: `CoroutineScope(Dispatchers.IO).launch` criado a cada coleta — vazamento de memória em uso intenso.
+- Correção: `repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)` como campo do singleton; reutilizado em todas as chamadas.
+
+**D1 — `idInventario = 0` salvo silenciosamente (🔴 Alta)**
+- `ColetaRepositoryImpl.kt` início de `registrarColeta`
+- Antes: coleta era salva com `idInventario = 0` quando inventário não configurado; ficava presa no banco após 3 tentativas de sync.
+- Correção: `registrarColeta` retorna `Result.failure(IllegalStateException)` imediatamente se `getInventarioAtivoId() == null`.
+
+**D4 — `divergencia`/`motivoDivergencia` hardcoded como `false`/`null` (🟡 Média)**
+- `ColetaRepositoryImpl.kt` linhas ~565, ~815, ~970 (3 ocorrências no batch e sync individual)
+- Antes: dados de auditoria de divergência eram perdidos ao sincronizar via worker.
+- Correção: `divergencia = entity.divergencia`, `motivoDivergencia = entity.motivoDivergencia`.
+- Nota: a 4ª ocorrência (item sem etiqueta, sem `entity`) mantém `false`/`null` — correto por design.
+
+**F2 — `SyncManager.forceSyncNow()` sem deduplicação (🟡 Média)**
+- `SyncManager.kt` linha ~85
+- Antes: `workManager.enqueue()` sem nome único — múltiplos workers criados ao alternar rede.
+- Correção: `enqueueUniqueWork("force_sync_now", ExistingWorkPolicy.KEEP, ...)`.
+
+**MD-02 — Migração SQLCipher para biblioteca ativa (🟡 Média)**
+- `build.gradle`, `AppDatabase.kt`, `proguard-rules.pro`
+- `net.zetetic:android-database-sqlcipher:4.5.4` (end-of-life 2023) → `net.zetetic:sqlcipher-android:4.6.1`.
+- Mudanças: package `net.sqlcipher.database.SupportFactory` → `net.zetetic.database.sqlcipher.SupportOpenHelperFactory`; adicionado `System.loadLibrary("sqlcipher")` explícito; ProGuard atualizado.
+- Versão 4.6.1 usada (não 4.15.0) por compatibilidade com Kotlin 1.9.x do projeto.
+
+**MD-03 — User CAs removidas do release (🟡 Média)**
+- `src/main/res/xml/network_security_config.xml` (release) e `src/debug/res/xml/network_security_config.xml` (debug)
+- Cleartext mantido para IPs internos IFMT (servidor usa HTTP), mas user CAs removidas do release.
+- Debug mantém user CAs para inspeção de tráfego com Charles/mitmproxy.
+
+**MD-06 — `biometric` downgrade para stable 1.1.0 (🟡 Média)**
+- `build.gradle`: `1.2.0-alpha05` → `1.1.0` stable.
+
+### Limpeza de código morto
+- Removidos 4 arquivos órfãos: `SmartSyncWorker.kt`, `AutoSyncManager.kt`, `ui/MainActivity.kt`, `utils/SyncScheduler.kt` (664 linhas).
+
+### Problemas identificados mas não corrigidos nesta build (deferred)
+- **C2/F1** — `SyncWorker` (SyncManager) e `ColetaSyncWorker` (SyncScheduler) são workers distintos que fazem a mesma coisa e podem rodar simultaneamente. Correção requer consolidação dos dois pipelines — sprint dedicado.
+- **A2/A3** — Race condition de duplicata + ausência de constraint UNIQUE no banco local.
+- **B3** — Timeout sem idempotência → possível duplicata no servidor.
+- **D2** — Verificar `idParticipanteInventario` no request ao servidor.
+
+- **Status:** ✅ BUILD SUCCESSFUL (7 min, 19,50 MB)
+
+---
+
+## Build #125 - 12/05/2026 (v2.24.0 — correcoes-seguranca: 14 correções críticas)
+
+- **Tipo:** Release (assinado, com ProGuard/R8)
+- **Versão:** 2.24.0
+- **Build Code:** 72
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.24.0.apk`
+- **Tamanho:** 16,10 MB
+- **Tempo de build:** 8 min 17 s
+- **Contexto:** Implementação das correções identificadas na auditoria técnica
+  de segurança e recursos (laudo de maio/2026, 5 CRÍTICOS + 13 ALTOS + 9 MÉDIOS
+  + 4 BAIXOS). Esta build aplica 14 correções priorizadas: **todos os 5
+  CRÍTICOS + 7 dos 10 ALTOS + 2 MÉDIOS**.
+
+### 🔴 CRÍTICOS resolvidos
+
+- **CR-01 — `fallbackToDestructiveMigration()` removido.**
+  Substituído por `fallbackToDestructiveMigrationOnDowngrade()` + `try/catch`
+  em `IllegalStateException` com log de severidade ERROR. Antes, qualquer
+  falha em migração silenciosamente destruía o banco com todas as coletas
+  pendentes. Agora a falha é rastreável e o reset é apenas último recurso.
+  Arquivo: `data/local/database/AppDatabase.kt`.
+
+- **CR-02 — Recuperação de Keystore invalidado.**
+  Novo `UncaughtExceptionHandler` global em `InventarioMobileApplication`
+  captura `SqlCipherKeyException` + `KeyStoreException` + `UnrecoverableKeyException`
+  + `InvalidKeyException` + `BadPaddingException` e redireciona para a nova
+  `KeystoreRecoveryActivity`, que apaga o banco criptografado / prefs /
+  chave invalidada e reinicia o processo. Antes, o app crashava no splash
+  sem mensagem em dispositivos com Keystore instável (Samsung após update,
+  troca de lock screen, restore de backup).
+  Arquivos novos: `security/KeystoreRecoveryActivity.kt`,
+  `res/layout/activity_keystore_recovery.xml`, 12 novas strings em
+  `res/values/strings.xml`.
+  Método `resetPassphrase(Context)` adicionado em `SqlCipherKeyManager`.
+
+- **CR-03 — Migração de fotos legacy (v2.20 → v2.21+).**
+  Novo `LegacyPhotoMigrator` (@Singleton Hilt) varre `files/fotos/*.jpg` no
+  layout antigo, correlaciona com `ColetaEntity.fotoPath`, move para a
+  nova estrutura `files/fotos/inventario_{id}/{tipo}/{coletaId}_{id}_{ts}.jpg`
+  e atualiza o banco. Idempotente via flag em SharedPreferences; chamado no
+  `Application.onCreate` em coroutine de IO.
+  Arquivo novo: `utils/LegacyPhotoMigrator.kt`.
+
+- **CR-04 — `RefreshTokenInterceptor` no pipeline Hilt.**
+  Adicionado `@Provides @Singleton` + inclusão como **primeiro** interceptor
+  do `OkHttpClient` provido por `ApiModule`. Antes, o interceptor só era
+  aplicado via `NetworkModule` legado (`ApiService`) — todas as APIs Hilt
+  (ColetaApi, PatrimonioApi, FotoColetaApi, SyncApi, AuthApi, etc.) ficavam
+  sem renovação de JWT, resultando em logout forçado a cada 2 dias.
+  Arquivo: `di/ApiModule.kt`.
+
+- **CR-05 + AL-01 — `RefreshTokenInterceptor` refatorado.**
+  Reescrita completa: (1) biometria movida para fora do interceptor
+  (responsabilidade agora de `SessionManager` / `LoginActivity`), eliminando
+  o `runBlocking` dentro de `Interceptor.intercept` e o risco de *deadlock*
+  da thread de I/O OkHttp com `CountDownLatch.await(30s)`; (2) lock
+  `synchronized(refreshLock)` protege o método `tryRefreshTokenLocked`
+  contra *races* em chamadas paralelas; (3) janela de cooldown de 2 s
+  evita que 10 requisições paralelas paralelas com 401 disparem 10
+  refreshes. Código passou de 400 para 240 linhas, mais rastreável.
+  Arquivo: `network/RefreshTokenInterceptor.kt`.
+
+### 🟠 ALTOS resolvidos
+
+- **AL-03 — `backup_rules.xml` e `data_extraction_rules.xml` corrigidos.**
+  Listas de exclusão agora incluem `inventario_secure_prefs.xml` (onde
+  ficam os JWTs), `user_prefs.xml` e `login_attempts_prefs.xml`. Antes,
+  apenas `secure_prefs.xml` (arquivo de `SecureStorage`, não usado para
+  JWT) e `sqlcipher_key_prefs.xml` estavam excluídos.
+
+- **AL-05 + MD-09 — `OfflineFallbackInterceptor` mais preciso.**
+  (1) Contador de falhas virou `AtomicInteger` (thread-safe em chamadas
+  paralelas); (2) QUALQUER resposta HTTP (2xx/3xx/4xx/5xx) reseta contador
+  e flag "Modo Offline Forçado" — antes só 2xx fazia, travando o app em
+  offline após sequência de 401; (3) `CancellationException` e
+  `InterruptedIOException` (cancelamento de coroutine) deixam de contar
+  como falha — antes, 10 navegações rápidas ativavam modo offline em Wi-Fi
+  saudável.
+  Arquivo: `network/OfflineFallbackInterceptor.kt`.
+
+- **AL-06 — Métricas de tempo robustas contra alterações de relógio.**
+  Migração de `System.currentTimeMillis()` (wall-clock) para
+  `SystemClock.elapsedRealtime()` (monotônico) em todos os marcos de
+  coleta (início, scan, preenchimento). Adicionado `SavedStateHandle` no
+  `ColetaViewModelClean` para preservar marcos através de ProcessDeath.
+  `coerceAtLeast(0)` no `MetricsHelper` blinda cálculos negativos.
+  Método novo `MetricsHelper.calcularTempoElapsedSegundos(Long)`.
+  Arquivos: `utils/ScanMetricsTracker.kt`, `utils/MetricsHelper.kt`,
+  `presentation/coleta/ColetaViewModelClean.kt`.
+
+- **AL-07 — Binding duplicado de `PhotoHelper` removido.**
+  `UtilModule.providePhotoHelper()` deletado (duplicava o `@Singleton class
+  PhotoHelper @Inject constructor`); `PhotoHelper` agora recebe
+  `@ApplicationContext` explícito no constructor. Eliminada a ambiguidade
+  de dois bindings para o mesmo tipo.
+
+- **AL-08 — `TokenAuthenticator.kt` removido.**
+  117 linhas de código morto. A classe nunca foi registrada em nenhum
+  `OkHttpClient.Builder.authenticator(...)` — exame de `grep_search`
+  confirmou zero usos fora da própria classe.
+
+- **AL-10 — Índice composto `(idPatrimonio, dataColeta)`.**
+  Adicionado à `ColetaEntity`. Nova `MIGRATION_17_18` aplica
+  `CREATE INDEX IF NOT EXISTS` de forma idempotente. Necessário para que
+  a subquery "última coleta de um patrimônio" (usada em
+  `MIGRATION_14_15`, `HistoricoColetaDialog` e relatórios de divergência)
+  deixe de ser full scan em bases com 5.000+ registros — causa raiz do
+  ANR reportado após `limparSincronizadas()`.
+  Room `version = 17 → 18`.
+  Arquivos: `data/local/entity/ColetaEntity.kt`,
+  `data/local/database/AppDatabase.kt`.
+
+- **AL-13 — Bloco "schema reset v2.20.5" finalmente removido.**
+  Este bloco apagava o banco Room uma única vez usando uma flag em
+  `EncryptedSharedPreferences`. Quando o Keystore era invalidado, o
+  `PreferencesManager` recriava o arquivo e a flag voltava a `false` — o
+  banco era apagado novamente a cada reinicialização do Keystore. O
+  próprio código prometia remoção na v2.20.6; permaneceu até a v2.23.0
+  por lapso. Com CR-01 tratando falhas de migração de forma explícita,
+  o bloco deixou de ter utilidade.
+  Arquivo: `InventarioMobileApplication.kt`.
+
+### 🟡 MÉDIOS resolvidos
+
+- **MD-01 — ProGuard preserva Google Tink.**
+  Adicionadas regras `-keep class com.google.crypto.tink.**` e `-dontwarn`
+  para dependências transitivas. Tink é usado via reflection pelo
+  `androidx.security.crypto` para inicializar `MasterKey`. Sem essas
+  regras, o R8 removia classes essenciais e `EncryptedSharedPreferences`
+  quebrava em release com `ClassNotFoundException`.
+  Arquivo: `proguard-rules.pro`.
+
+- **MD-05 — `HttpLoggingInterceptor` em NONE no release.**
+  Trocado em `ApiModule` e `NetworkModule` para `if (BuildConfig.DEBUG)
+  Level.BODY else Level.NONE`. O interceptor usa `Platform.get().log(...)`,
+  que NÃO é removido pela regra `-assumenosideeffects android.util.Log`
+  do ProGuard — o header `Authorization: Bearer ...` continuava aparecendo
+  em logcat de produção.
+
+### Arquivos modificados / criados
+
+**Criados (5):**
+- `security/KeystoreRecoveryActivity.kt` (156 linhas)
+- `res/layout/activity_keystore_recovery.xml` (68 linhas)
+- `utils/LegacyPhotoMigrator.kt` (198 linhas)
+
+**Modificados (18):**
+- `di/ApiModule.kt` — providers de `RefreshTokenInterceptor`, logging NONE em release
+- `di/NetworkModule.kt` — mesma mudança de logging, remoção de `.application =`
+- `di/UtilModule.kt` — provider duplicado de `PhotoHelper` removido
+- `data/local/database/AppDatabase.kt` — CR-01 + `MIGRATION_17_18` + bump para v18
+- `data/local/entity/ColetaEntity.kt` — índice composto
+- `network/OfflineFallbackInterceptor.kt` — AL-05/MD-09
+- `network/RefreshTokenInterceptor.kt` — refatoração CR-05/AL-01
+- `presentation/coleta/ColetaViewModelClean.kt` — AL-06
+- `security/SqlCipherKeyManager.kt` — método `resetPassphrase(Context)`
+- `utils/MetricsHelper.kt` — `calcularTempoElapsedSegundos`
+- `utils/PhotoHelper.kt` — `@ApplicationContext` explícito
+- `utils/ScanMetricsTracker.kt` — elapsedRealtime
+- `InventarioMobileApplication.kt` — handler Keystore + migrator fotos + remoção schema reset
+- `AndroidManifest.xml` — registro de `KeystoreRecoveryActivity`
+- `res/values/strings.xml` — 12 strings de recovery
+- `res/xml/backup_rules.xml` — inclusão de `inventario_secure_prefs.xml`
+- `res/xml/data_extraction_rules.xml` — idem
+- `proguard-rules.pro` — regras de Tink
+- `app/build.gradle` — bump v2.23.0 → v2.24.0
+
+**Removidos (1):**
+- `network/TokenAuthenticator.kt` (117 linhas — código morto)
+
+### Banco Room
+
+- Versão: 17 → **18**
+- Nova migration: `MIGRATION_17_18` (idempotente, adiciona índice)
+
+### Itens pendentes (deferred — baixo risco operacional)
+
+- **AL-04** — migrar `EncryptedSharedPreferences` → `DataStore + Tink`
+- **AL-12** — auditar coexistência de 4 workers de sincronização
+- **MD-02** — SQLCipher `4.5.4` → `sqlcipher-android 4.6.1`
+- **MD-03** — desabilitar user CA em release
+- **MD-06** — `biometric-ktx` de alpha05 → stable 1.1.0
+- **BX-03 / BX-04** — TTL em sugestões de descrição; rate limiter prod
+
+### Testes recomendados antes de distribuir
+
+1. **Renovação de token:** deixar o app aberto por mais de 2 dias ou forçar
+   expiração do access token manualmente. Confirmar que nenhuma requisição
+   retorna 401 para o usuário final.
+2. **Modo offline:** desligar servidor durante uma coleta; confirmar que
+   (a) o app não trava em modo offline; (b) o contador zera em qualquer
+   resposta recebida ao religar.
+3. **Métricas de tempo:** cronometrar coleta real e confirmar que o banco
+   registra valores coerentes em `tempo_coleta_segundos`. Simular rotação
+   de tela e confirmar que o cronômetro não reinicia.
+4. **Keystore invalidation:** trocar PIN de lock screen no dispositivo
+   durante sessão ativa do app; confirmar que a tela de recuperação é
+   exibida em vez de crash.
+5. **Migração de fotos legacy:** instalar v2.24.0 sobre v2.20 com fotos
+   pendentes; confirmar nos logs `Migração de fotos legacy concluída` com
+   contador > 0.
+6. **Build release:** confirmar que `EncryptedSharedPreferences` funciona
+   no APK assinado (MD-01 — ProGuard/Tink).
+
+- **Status:** ✅ BUILD SUCCESSFUL (8 min 17 s, 16,10 MB)
+
+---
+
 ## Build #124 - 09/05/2026 (v2.23.0 — relatorio-fotografico-sem-etiqueta)
 
 - **Tipo:** Release (assinado, com ProGuard/R8)

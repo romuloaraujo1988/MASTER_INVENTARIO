@@ -130,16 +130,30 @@ object NetworkModule {
      * Cria interceptor de logging
      */
     private fun createHttpLoggingInterceptor(): HttpLoggingInterceptor {
+        // MD-05 (correcoes-seguranca — maio/2026): em release, nível NONE para
+        // evitar que o header Authorization apareça em logcat. HttpLoggingInterceptor
+        // escreve via Platform.get().log(...), fora do escopo do ProGuard.
         return HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (com.inventario.mobile.BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BODY
+            } else {
+                HttpLoggingInterceptor.Level.NONE
+            }
         }
     }
 
     /**
      * Cria interceptor de autenticação
+     *
+     * CORREÇÃO ANR (maio/2026): removido `runBlocking { localDataManager.getCurrentUser() }`.
+     * O interceptor roda na thread de I/O do OkHttp — `runBlocking` bloqueava essa thread
+     * enquanto o Room/SharedPreferences respondia, causando ANR em uso intenso (batch sync).
+     * Agora lemos o token diretamente do PreferencesManager (SharedPreferences síncrono),
+     * que é a mesma fonte de verdade usada pelo fallback anterior. O LocalDataManager era
+     * redundante aqui: ele próprio persiste o token no PreferencesManager após o login.
      */
     private fun createAuthInterceptor(
-        localDataManager: LocalDataManager,
+        @Suppress("UNUSED_PARAMETER") localDataManager: LocalDataManager,
         preferencesManager: com.inventario.mobile.utils.PreferencesManager
     ): Interceptor {
         return Interceptor { chain ->
@@ -148,35 +162,14 @@ object NetworkModule {
             android.util.Log.d("NetworkModule", "=== AUTH INTERCEPTOR ===")
             android.util.Log.d("NetworkModule", "URL: ${originalRequest.url}")
             
-            // Tentar obter token do LocalDataManager primeiro
-            var currentUser: com.inventario.mobile.data.model.Usuario? = null
-            var token: String? = null
-            var isTokenValid = false
+            // Ler token diretamente do PreferencesManager (síncrono, sem coroutine).
+            // PreferencesManager usa EncryptedSharedPreferences — leitura é O(1) e
+            // nunca bloqueia a thread de I/O do OkHttp.
+            val token = preferencesManager.getAccessToken()
+            val isTokenValid = preferencesManager.isTokenValid()
             
-            try {
-                // Como estamos em um interceptor, não podemos usar suspend functions diretamente
-                // Vamos usar runBlocking para chamar a função suspend
-                currentUser = kotlinx.coroutines.runBlocking {
-                    localDataManager.getCurrentUser()
-                }
-                token = currentUser?.accessToken
-                isTokenValid = currentUser?.isTokenValid() ?: false
-            } catch (e: Exception) {
-                android.util.Log.w("NetworkModule", "Erro ao obter usuário do LocalDataManager: ${e.message}")
-            }
-            
-            android.util.Log.d("NetworkModule", "LocalDataManager - User: ${currentUser?.nome ?: "null"}")
-            android.util.Log.d("NetworkModule", "LocalDataManager - Token: ${token?.take(20) ?: "null"}...")
-            android.util.Log.d("NetworkModule", "LocalDataManager - Token Valid: $isTokenValid")
-            
-            // Se não encontrou no LocalDataManager, tentar PreferencesManager
-            if (token == null || !isTokenValid) {
-                android.util.Log.d("NetworkModule", "Tentando PreferencesManager...")
-                token = preferencesManager.getAccessToken()
-                isTokenValid = preferencesManager.isTokenValid()
-                android.util.Log.d("NetworkModule", "PreferencesManager - Token: ${token?.take(20) ?: "null"}...")
-                android.util.Log.d("NetworkModule", "PreferencesManager - Token Valid: $isTokenValid")
-            }
+            android.util.Log.d("NetworkModule", "Token: ${token?.take(20) ?: "null"}...")
+            android.util.Log.d("NetworkModule", "Token Valid: $isTokenValid")
             
             val newRequest = if (token != null && isTokenValid) {
                 android.util.Log.d("NetworkModule", "✓ Adicionando token ao header")
@@ -236,13 +229,14 @@ object NetworkModule {
         
         // Interceptor para tratar timeouts graciosamente
         val timeoutFallbackInterceptor = com.inventario.mobile.network.TimeoutFallbackInterceptor()
-        
-        // ✅ Interceptor para renovação automática de token
+
+        // Interceptor para renovação automática de token.
+        // CR-05/AL-01 (correcoes-seguranca maio/2026): o interceptor ficou
+        // enxuto — apenas renovação via refresh_token síncrona protegida
+        // por lock. Biometria agora é acionada pelo SessionManager quando
+        // a renovação falha (fora do pipeline HTTP).
         val preferencesManager = com.inventario.mobile.utils.PreferencesManager(context)
         val refreshTokenInterceptor = com.inventario.mobile.network.RefreshTokenInterceptor(preferencesManager)
-        // Configurar Application para obter Activity atual (necessário para biometria)
-        refreshTokenInterceptor.application = context.applicationContext as? android.app.Application
-        android.util.Log.d("NetworkModule", "RefreshTokenInterceptor configurado com Application: ${refreshTokenInterceptor.application != null}")
         
         return OkHttpClient.Builder()
             .cache(cache)  // Cache HTTP

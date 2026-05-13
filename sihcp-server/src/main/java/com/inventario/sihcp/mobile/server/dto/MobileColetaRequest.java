@@ -57,6 +57,20 @@ public class MobileColetaRequest {
     private Integer tempoPreenchimentoSegundos;
     private String metodoColeta;
     private String tipoScan;
+
+    /**
+     * B3 (auditoria-sync — maio/2026): UUID gerado pelo cliente (app Android)
+     * no momento da coleta. Serve como chave de idempotência — o servidor
+     * verifica antes do INSERT e, se já existir coleta com o mesmo UUID,
+     * retorna a existente em vez de criar duplicata. Elimina o risco de
+     * duplicatas causadas por timeout de rede (servidor persiste a coleta,
+     * mas a resposta não chega ao app, que reenvia a mesma coleta).
+     *
+     * Opcional para compatibilidade com clientes antigos que não enviam
+     * o campo. Quando nulo, o servidor cai no fluxo antigo de verificação
+     * por `numeroPatrimonio + idInventario`.
+     */
+    private String clienteUuid;
     
     // Construtores
     public MobileColetaRequest() {
@@ -231,5 +245,13 @@ public class MobileColetaRequest {
     
     public void setTipoScan(String tipoScan) {
         this.tipoScan = tipoScan;
+    }
+
+    public String getClienteUuid() {
+        return clienteUuid;
+    }
+
+    public void setClienteUuid(String clienteUuid) {
+        this.clienteUuid = clienteUuid;
     }
 }

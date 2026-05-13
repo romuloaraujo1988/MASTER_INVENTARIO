@@ -61,6 +61,27 @@ object ApiModule {
             .build()
     }
     
+    /**
+     * Provider do RefreshTokenInterceptor como Singleton Hilt.
+     *
+     * CR-04 (correcoes-seguranca — maio/2026): antes desta versão, o interceptor
+     * era instanciado manualmente em [NetworkModule.createOkHttpClient] e **não
+     * era adicionado ao pipeline do OkHttpClient provido por este módulo**.
+     * Resultado: todas as APIs injetadas via Hilt (PatrimonioApi, ColetaApi,
+     * FotoColetaApi, SyncApi, AuthApi, DescricaoSugestaoApi, RelatorioFotoApi
+     * etc.) não renovavam o JWT automaticamente e o usuário era deslogado ao
+     * primeiro 401 em coleta de campo. Agora o interceptor é um `@Singleton`
+     * único compartilhado entre Hilt e o `tokenExpiredListener` do
+     * `InventarioMobileApplication`.
+     */
+    @Provides
+    @Singleton
+    fun provideRefreshTokenInterceptor(
+        preferencesManager: PreferencesManager
+    ): com.inventario.mobile.network.RefreshTokenInterceptor {
+        return com.inventario.mobile.network.RefreshTokenInterceptor(preferencesManager)
+    }
+
     @Provides
     @Singleton
     fun provideOkHttpClient(
@@ -68,13 +89,25 @@ object ApiModule {
         loggingInterceptor: HttpLoggingInterceptor,
         authInterceptor: Interceptor,
         deviceInfoInterceptor: DeviceInfoInterceptor,
-        offlineFallbackInterceptor: com.inventario.mobile.network.OfflineFallbackInterceptor
+        offlineFallbackInterceptor: com.inventario.mobile.network.OfflineFallbackInterceptor,
+        refreshTokenInterceptor: com.inventario.mobile.network.RefreshTokenInterceptor
     ): OkHttpClient {
         val cacheSize = 10 * 1024 * 1024L
         val cache = okhttp3.Cache(context.cacheDir, cacheSize)
-        
+
+        // Ordem dos interceptors (CRÍTICA):
+        //   1) refreshToken: renova JWT *antes* de authInterceptor anexar o header;
+        //      se um 401 chegar, o refresh acontece aqui e a request é retransmitida
+        //      com o novo token.
+        //   2) offlineFallback: detecta falhas de rede e ativa modo offline.
+        //   3) deviceInfo: anexa metadados do dispositivo.
+        //   4) authInterceptor: lê o token atual das prefs e adiciona o header
+        //      `Authorization: Bearer ...` (se o refresh acabou de rodar, já pega
+        //      o novo token, pois a lógica está em `PreferencesManager`).
+        //   5) logging: por último para capturar todos os headers.
         return OkHttpClient.Builder()
             .cache(cache)
+            .addInterceptor(refreshTokenInterceptor)  // CR-04: renovação automática de JWT
             .addInterceptor(offlineFallbackInterceptor)
             .addInterceptor(deviceInfoInterceptor)
             .addInterceptor(authInterceptor)
@@ -102,11 +135,24 @@ object ApiModule {
         return com.inventario.mobile.network.OfflineFallbackInterceptor(context, preferencesManager, offlineNotificationManager)
     }
     
+    /**
+     * Provider do HttpLoggingInterceptor.
+     *
+     * MD-05 (correcoes-seguranca — maio/2026): em builds release, o nível é
+     * `NONE` para impedir o vazamento do header `Authorization: Bearer ...`
+     * em logcat (o interceptor usa `Platform.get().log(...)`, que NÃO é
+     * removido pelas regras `-assumenosideeffects android.util.Log` do
+     * ProGuard). Em debug, permanece `BODY` para diagnóstico.
+     */
     @Provides
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = if (com.inventario.mobile.BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BODY
+            } else {
+                HttpLoggingInterceptor.Level.NONE
+            }
         }
     }
     

@@ -305,7 +305,9 @@ class InventarioRepository(
                 latitude = latitude,
                 longitude = longitude,
                 deviceId = android.provider.Settings.Secure.getString(context.contentResolver, android.provider.Settings.Secure.ANDROID_ID),
-                appVersion = try { context.packageManager.getPackageInfo(context.packageName, 0).versionName } catch (e: Exception) { "1.0.0" }
+                appVersion = try { context.packageManager.getPackageInfo(context.packageName, 0).versionName } catch (e: Exception) { "1.0.0" },
+                // B3 (idempotência): gerar UUID aqui pois este caminho legado não passa pelo mapper
+                clienteUuid = java.util.UUID.randomUUID().toString()
             )
             
             android.util.Log.d("InventarioRepository", "DTO criado:")

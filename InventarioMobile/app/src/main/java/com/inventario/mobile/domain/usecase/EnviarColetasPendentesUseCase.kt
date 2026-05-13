@@ -97,7 +97,9 @@ class EnviarColetasPendentesUseCase @Inject constructor(
                         tempoScanSegundos = entity.tempoScanSegundos,
                         tempoPreenchimentoSegundos = entity.tempoPreenchimentoSegundos,
                         metodoColeta = entity.metodoColeta,
-                        tipoScan = entity.tipoScan
+                        tipoScan = entity.tipoScan,
+                        // B3 (idempotência): UUID persistido na entity
+                        clienteUuid = entity.clienteUuid
                     )
 
                     // Enviar para o servidor

@@ -9,6 +9,7 @@ import com.inventario.mobile.network.TokenExpiredListener
 import com.inventario.mobile.utils.SessionManager
 import com.jakewharton.threetenabp.AndroidThreeTen
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -34,7 +35,29 @@ class InventarioMobileApplication : Application(), Configuration.Provider, Token
     @Inject
     lateinit var refreshTokenInterceptor: RefreshTokenInterceptor
 
+    // C2/F1 (auditoria-sync — maio/2026): SyncManager agora é fachada que
+    // delega para SyncScheduler. Injetar via Hilt garante que o provider
+    // rode e registre a instância no singleton legado antes que qualquer
+    // chamada a `SyncManager.getInstance(context)` aconteça.
+    @Inject
+    lateinit var syncManager: com.inventario.mobile.sync.SyncManager
+
+    // CR-03 (correcoes-seguranca — maio/2026): migra fotos do layout antigo
+    // (plano, ≤ v2.20) para o layout hierárquico (v2.21+). Roda uma única
+    // vez, de forma idempotente, em coroutine de background.
+    @Inject
+    lateinit var legacyPhotoMigrator: com.inventario.mobile.utils.LegacyPhotoMigrator
+
     override fun onCreate() {
+        // CR-02 (correcoes-seguranca — maio/2026): instalar
+        // UncaughtExceptionHandler ANTES de qualquer outra inicialização.
+        // Se o Keystore estiver invalidado, qualquer acesso a EncryptedSharedPreferences,
+        // ao SqlCipherKeyManager ou ao AppDatabase vai lançar SqlCipherKeyException
+        // (ou suas causas típicas: KeyStoreException, UnrecoverableKeyException,
+        // InvalidKeyException). Sem este handler, o app crasha silenciosamente
+        // no splash e o usuário não tem caminho de recuperação.
+        installKeystoreCrashHandler()
+
         super.onCreate()
         
         Log.d(TAG, "═══════════════════════════════════")
@@ -79,43 +102,26 @@ class InventarioMobileApplication : Application(), Configuration.Provider, Token
             Log.w(TAG, "Erro ao limpar cache HTTP no startup", e)
         }
 
-        // Bug-fix 08/05/2026 (v2.20.5): reset defensivo ÚNICO do banco Room.
-        // Várias telas estão falhando em queries do Room após instalar builds
-        // anteriores (#105-#109) em dispositivos com dados antigos; sintomas
-        // sugerem migration parcial ou schema inconsistente. Esta versão apaga
-        // o banco uma única vez para cada dispositivo, garantindo schema
-        // limpo. A flag `_schema_reset_v2205_done` marca que já foi feito,
-        // evitando apagar de novo em reboots futuros.
+        // AL-13 (correcoes-seguranca — maio/2026): removido o bloco
+        // "v2.20.5 schema reset" que apagava o banco Room uma única vez com
+        // flag `_schema_reset_v2205_done`. O bloco era uma medida temporária
+        // para limpar schemas inconsistentes das builds #105-#109 e tinha
+        // compromisso explícito de remoção na v2.20.6. Permaneceu até a
+        // v2.23.0 por lapso.
         //
-        // Este bloco deve ser REMOVIDO na versão 2.20.6 ou posterior.
-        try {
-            val prefs = com.inventario.mobile.utils.PreferencesManager(this)
-            val alreadyDone = prefs.getBoolean("_schema_reset_v2205_done", false)
-            if (!alreadyDone) {
-                Log.w(TAG, "🗑️ v2.20.5 schema reset: apagando banco Room uma única vez")
-                listOf(
-                    "inventario_offline_secure.db",
-                    "inventario_offline_secure.db-journal",
-                    "inventario_offline_secure.db-shm",
-                    "inventario_offline_secure.db-wal",
-                    "inventario_offline.db"
-                ).forEach { fileName ->
-                    val dbFile = getDatabasePath(fileName)
-                    if (dbFile.exists()) {
-                        val ok = dbFile.delete()
-                        Log.w(TAG, "   removido $fileName: $ok")
-                    }
-                }
-                // Limpa também o CacheServerStats e flags relacionadas para
-                // forçar o app a buscar tudo do servidor novamente.
-                prefs.clearCacheServerStats()
-                prefs.putBoolean("_schema_reset_v2205_done", true)
-                Log.w(TAG, "✓ Banco apagado e CacheServerStats limpo — próxima chamada criará schema limpo")
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Erro ao executar schema reset único no startup", e)
-        }
-        
+        // Motivo da remoção:
+        //   - A flag fica em `EncryptedSharedPreferences`. Quando o Keystore
+        //     é invalidado, o fallback do `PreferencesManager` apaga o arquivo
+        //     de prefs — a flag volta a `false` e o banco é apagado de novo
+        //     a cada reinstância do Keystore, zerando coletas pendentes
+        //     silenciosamente em dispositivos com Keystore instável (Samsung
+        //     após update do sistema, troca de lock screen, factory reset
+        //     parcial, restore de backup).
+        //   - O problema de migração parcial foi resolvido pela nova
+        //     estratégia em `AppDatabase.getInstance()` (CR-01), que trata
+        //     `IllegalStateException` de forma rastreável em vez de apagar
+        //     silenciosamente.
+
         // Criar canais de notificação
         com.inventario.mobile.utils.NotificationUtils.createNotificationChannels(this)
         
@@ -129,9 +135,15 @@ class InventarioMobileApplication : Application(), Configuration.Provider, Token
         
         // Inicializar sincronização automática
         initializeSyncScheduler()
-        
+
         // Inicializar observador de conectividade
         initializeNetworkObserver()
+
+        // CR-03 (correcoes-seguranca — maio/2026): migrar fotos antigas
+        // (layout plano ≤ v2.20) para o layout hierárquico v2.21+.
+        // Rodamos em coroutine de background — o método é idempotente e
+        // termina rapidamente se a migração já foi feita.
+        initializeLegacyPhotoMigration()
         
         // Log de inicialização
         Log.d(TAG, "✓ Application inicializada com sucesso")
@@ -189,18 +201,44 @@ class InventarioMobileApplication : Application(), Configuration.Provider, Token
     private fun initializeNetworkObserver() {
         try {
             android.util.Log.i(TAG, "🌐 Inicializando observador de conectividade...")
-            
-            val syncManager = com.inventario.mobile.sync.SyncManager.getInstance(this)
+
+            // syncManager foi injetado via Hilt; usa a instância já registrada
+            // no singleton pelo SyncModule (C2/F1 maio/2026).
             val networkObserver = com.inventario.mobile.sync.NetworkConnectivityObserver.getInstance(this, syncManager)
-            
+
             networkObserver.startObserving()
-            
+
             android.util.Log.i(TAG, "✅ Observador de conectividade iniciado")
         } catch (e: Exception) {
             android.util.Log.e(TAG, "❌ Erro ao iniciar observador de rede", e)
         }
     }
     
+    /**
+     * CR-03 (correcoes-seguranca — maio/2026): dispara migração idempotente
+     * de fotos legacy em coroutine de IO. Se falhar, a próxima execução do
+     * app tentará de novo — a flag de conclusão só é gravada em caso de
+     * sucesso.
+     *
+     * Uso de [kotlinx.coroutines.GlobalScope] é aceitável neste contexto
+     * porque o Application tem ciclo de vida coincidente com o processo —
+     * não há risco de *leak* e o cancelamento prematuro causaria justamente
+     * o problema que queremos evitar.
+     */
+    @OptIn(kotlinx.coroutines.DelicateCoroutinesApi::class)
+    private fun initializeLegacyPhotoMigration() {
+        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val migradas = legacyPhotoMigrator.migrateIfNeeded()
+                if (migradas > 0) {
+                    Log.i(TAG, "✓ $migradas fotos legacy migradas para novo layout")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao migrar fotos legacy", e)
+            }
+        }
+    }
+
     /**
      * Limpa todos os caches da aplicação
      * Deve ser chamado ao fazer logout
@@ -210,13 +248,86 @@ class InventarioMobileApplication : Application(), Configuration.Provider, Token
         com.inventario.mobile.data.cache.SalaCache.clear()
         // Adicionar outros caches aqui conforme necessário
     }
+
+    /**
+     * CR-02 (correcoes-seguranca — maio/2026): instala UncaughtExceptionHandler
+     * global que intercepta falhas do Android Keystore / SQLCipher e redireciona
+     * para [com.inventario.mobile.security.KeystoreRecoveryActivity] em vez de
+     * deixar o processo crashar.
+     *
+     * O handler delega TODAS as demais exceções para o handler padrão do
+     * Android, preservando os relatórios de crash normais. Só entra em ação
+     * quando o padrão da exceção aponta para falha de chave/criptografia.
+     */
+    private fun installKeystoreCrashHandler() {
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            if (isKeystoreFailure(throwable)) {
+                Log.e(
+                    TAG,
+                    "═══ Falha do Keystore/SQLCipher capturada — redirecionando para recovery ═══",
+                    throwable
+                )
+                try {
+                    val intent = com.inventario.mobile.security.KeystoreRecoveryActivity
+                        .createIntent(applicationContext)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Falha ao iniciar KeystoreRecoveryActivity", e)
+                }
+                // Encerrar processo imediatamente — a nova Activity sobe em
+                // novo processo limpo. Se continuarmos, os @Inject singletons
+                // que falharam ficam em estado corrompido.
+                android.os.Process.killProcess(android.os.Process.myPid())
+                kotlin.system.exitProcess(10)
+            } else {
+                // Qualquer outra exceção: delegar ao handler padrão.
+                defaultHandler?.uncaughtException(thread, throwable)
+            }
+        }
+        Log.d(TAG, "✓ UncaughtExceptionHandler para Keystore instalado")
+    }
+
+    /**
+     * Detecta se uma exceção (ou qualquer uma de suas causas na cadeia) é
+     * sintoma de falha do Android Keystore ou do SQLCipher.
+     *
+     * Inclui: nossa própria [SqlCipherKeyManager.SqlCipherKeyException],
+     * exceções do JCE (`KeyStoreException`, `UnrecoverableKeyException`,
+     * `InvalidKeyException`, `BadPaddingException`) e a mensagem típica
+     * "SQLCipher invalid passphrase" do net.sqlcipher.
+     */
+    private fun isKeystoreFailure(throwable: Throwable): Boolean {
+        var current: Throwable? = throwable
+        var depth = 0
+        while (current != null && depth < 10) {
+            when (current) {
+                is com.inventario.mobile.security.SqlCipherKeyManager.SqlCipherKeyException,
+                is java.security.KeyStoreException,
+                is java.security.UnrecoverableKeyException,
+                is java.security.InvalidKeyException,
+                is javax.crypto.BadPaddingException -> return true
+            }
+            val message = current.message.orEmpty().lowercase(java.util.Locale.ROOT)
+            if (message.contains("androidkeystore") ||
+                message.contains("keystore") && message.contains("invalidated") ||
+                message.contains("sqlcipher") && message.contains("passphrase") ||
+                message.contains("file is not a database")
+            ) {
+                return true
+            }
+            current = current.cause
+            depth++
+        }
+        return false
+    }
     
     /**
      * Configuração do WorkManager para usar HiltWorkerFactory
      * Isso permite que Workers usem injeção de dependência via Hilt
-     * 
+     *
      * CRÍTICO: Sem isso, Workers com @HiltWorker falham com:
-     * "Could not instantiate com.inventario.mobile.worker.SyncWorker"
+     * "Could not instantiate com.inventario.mobile.worker.ColetaSyncWorker"
      */
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()

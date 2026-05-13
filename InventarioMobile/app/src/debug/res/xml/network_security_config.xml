@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Configuração de segurança de rede — variant `debug` APENAS.
+
+    MD-03 (correcoes-seguranca — maio/2026): este arquivo sobrescreve o
+    `src/main/res/xml/network_security_config.xml` durante builds debug,
+    permitindo:
+
+      - Cleartext para localhost, emulador (10.0.2.2) e IPs internos
+        IFMT, necessário em cenários de desenvolvimento onde o servidor
+        ainda não tem certificado TLS válido.
+      - User CAs instalados no dispositivo, para permitir inspeção de
+        tráfego com Charles, mitmproxy e similares.
+
+    Nenhuma dessas permissões vaza para builds release (AGP substitui o
+    arquivo de `main` pelo de `debug` durante a montagem do APK debug).
+-->
+<network-security-config>
+
+    <!-- Base-config: produção. HTTPS obrigatório, apenas CAs do sistema. -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!--
+        Domain-config: apenas desenvolvimento e rede interna IFMT.
+        Cleartext + user CAs confinados a IPs específicos.
+        Req 5.2, 5.4, 10.3 (spec correcoes-seguranca)
+    -->
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Emulador Android / localhost -->
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">10.0.2.2</domain>
+
+        <!-- Rede interna IFMT -->
+        <domain includeSubdomains="false">10.14.150.14</domain>
+        <domain includeSubdomains="false">10.14.250.228</domain>
+        <domain includeSubdomains="false">10.14.250.236</domain>
+        <domain includeSubdomains="false">10.14.250.238</domain>
+        <domain includeSubdomains="false">192.168.10.107</domain>
+        <domain includeSubdomains="false">192.168.11.136</domain>
+
+        <trust-anchors>
+            <certificates src="system" />
+            <!-- user CAs aceitos em debug para facilitar inspeção de tráfego. -->
+            <certificates src="user" />
+        </trust-anchors>
+    </domain-config>
+
+</network-security-config>

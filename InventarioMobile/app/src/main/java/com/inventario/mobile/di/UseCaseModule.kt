@@ -44,11 +44,13 @@ object UseCaseModule {
         @ApplicationContext context: Context
     ): RegistrarColetaUseCase {
         val localDataManager = LocalDataManager.getInstance(context)
-        
+        val preferencesManager = com.inventario.mobile.utils.PreferencesManager(context)
+
         return RegistrarColetaUseCase(
             coletaRepository = coletaRepository,
             patrimonioRepository = patrimonioRepository,
-            localDataManager = localDataManager
+            localDataManager = localDataManager,
+            preferencesManager = preferencesManager
         )
     }
     

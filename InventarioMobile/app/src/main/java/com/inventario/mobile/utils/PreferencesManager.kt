@@ -211,27 +211,30 @@ class PreferencesManager(context: Context) {
         }
     }
     fun saveUserData(usuario: Any) {
-        // Implementação simplificada - pode ser expandida conforme necessário
         putBoolean("user_logged_in", true)
         
-        // Salvar nome e perfil do usuário
-        try {
-            val usuarioClass = usuario::class.java
-            val nomeField = usuarioClass.getDeclaredField("nome")
-            nomeField.isAccessible = true
-            val nome = nomeField.get(usuario) as? String
-            if (nome != null) {
-                putString("user_name", nome)
+        // Tentar cast direto para os tipos conhecidos (evita reflexão que quebra com R8).
+        // CORREÇÃO (maio/2026): getDeclaredField() lança NoSuchFieldException em release
+        // porque R8 renomeia os campos. Cast direto é seguro e não depende de nomes.
+        when (usuario) {
+            is com.inventario.mobile.data.remote.dto.UsuarioDto -> {
+                putString("user_name", usuario.nome)
+                if (usuario.perfil != null) putString("user_profile", usuario.perfil)
             }
-            
-            val perfilField = usuarioClass.getDeclaredField("perfil")
-            perfilField.isAccessible = true
-            val perfil = perfilField.get(usuario) as? String
-            if (perfil != null) {
-                putString("user_profile", perfil)
+            is com.inventario.mobile.data.model.Usuario -> {
+                putString("user_name", usuario.nome)
+                if (usuario.perfil != null) putString("user_profile", usuario.perfil)
             }
-        } catch (e: Exception) {
-            android.util.Log.e("PreferencesManager", "Erro ao salvar dados do usuário", e)
+            is com.inventario.mobile.domain.model.Usuario -> {
+                putString("user_name", usuario.nome)
+                putString("user_profile", usuario.perfil)
+            }
+            else -> {
+                // Tipo desconhecido — logar para diagnóstico, não crashar
+                android.util.Log.w("PreferencesManager",
+                    "saveUserData: tipo não reconhecido ${usuario::class.java.simpleName}, " +
+                    "nome/perfil não serão salvos")
+            }
         }
     }
     fun isLoggedIn(): Boolean = getBoolean("user_logged_in", false)

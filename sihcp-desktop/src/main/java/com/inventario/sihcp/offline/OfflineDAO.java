@@ -1423,25 +1423,40 @@ public class OfflineDAO {
      * @throws SQLException
      */
     public List<Map<String, Object>> buscarColetasPorLocalizacao(String localizacao) throws SQLException {
-        // FILTRO: Apenas patrimônios COM etiqueta (sem_etiqueta = 0 ou NULL)
-        // Para itens sem etiqueta, usar buscarItensSemEtiquetaPorLocalizacao()
-        String sql = """
-            SELECT lc.*, lp.descricao as descricao_patrimonio
-            FROM local_coleta lc
-            LEFT JOIN local_patrimonio lp ON lc.id_patrimonio = lp.id
-            WHERE lc.localizacao_encontrada = ?
-            AND (lc.sem_etiqueta = 0 OR lc.sem_etiqueta IS NULL)
-            ORDER BY lc.data_coleta DESC
-            LIMIT 100
-        """;
-        
+        return buscarColetasPorLocalizacao(localizacao, null);
+    }
+
+    /**
+     * Busca coletas por localização, restritas a um inventário específico.
+     *
+     * @param localizacao  identificação da sala
+     * @param idInventario ID do inventário; se null, retorna de todos os inventários
+     *                     (comportamento legado)
+     */
+    public List<Map<String, Object>> buscarColetasPorLocalizacao(
+            String localizacao, Integer idInventario) throws SQLException {
+        // FILTRO: Apenas patrimônios COM etiqueta (sem_etiqueta = 0 ou NULL).
+        // Para itens sem etiqueta, usar buscarItensSemEtiquetaPorLocalizacao().
+        boolean filtrarInventario = idInventario != null;
+        String sql = "SELECT lc.*, lp.descricao as descricao_patrimonio " +
+                "FROM local_coleta lc " +
+                "LEFT JOIN local_patrimonio lp ON lc.id_patrimonio = lp.id " +
+                "WHERE lc.localizacao_encontrada = ? " +
+                "AND (lc.sem_etiqueta = 0 OR lc.sem_etiqueta IS NULL) " +
+                (filtrarInventario ? "AND lc.id_inventario = ? " : "") +
+                "ORDER BY lc.data_coleta DESC " +
+                "LIMIT 100";
+
         List<Map<String, Object>> coletas = new ArrayList<>();
-        
+
         try (Connection conn = sqliteConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
+
             stmt.setString(1, localizacao);
-            
+            if (filtrarInventario) {
+                stmt.setInt(2, idInventario);
+            }
+
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     Map<String, Object> coleta = new HashMap<>();
@@ -1456,22 +1471,23 @@ public class OfflineDAO {
                     coleta.put("situacao_encontrada", rs.getString("situacao_encontrada"));
                     coleta.put("observacoes", rs.getString("observacoes"));
                     coleta.put("sync_status", rs.getString("sync_status"));
-                    
+
                     // Verificar se é item sem etiqueta
                     Object idPatrimonio = rs.getObject("id_patrimonio");
-                    boolean semEtiqueta = idPatrimonio == null || 
+                    boolean semEtiqueta = idPatrimonio == null ||
                                          (idPatrimonio instanceof Number && ((Number) idPatrimonio).intValue() == 0);
                     coleta.put("sem_etiqueta", semEtiqueta);
-                    
+
                     // Ler timestamp de forma segura
                     coleta.put("data_coleta", lerTimestampSeguro(rs, "data_coleta"));
-                    
+
                     coletas.add(coleta);
                 }
             }
-            
-            LOGGER.info(() -> "Encontradas " + coletas.size() + " coletas para localização: " + localizacao);
-            
+
+            LOGGER.info(() -> "Encontradas " + coletas.size() + " coletas para localização: " + localizacao
+                    + (filtrarInventario ? " (inventário " + idInventario + ")" : ""));
+
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Erro ao buscar coletas por localização offline", e);
             throw e;

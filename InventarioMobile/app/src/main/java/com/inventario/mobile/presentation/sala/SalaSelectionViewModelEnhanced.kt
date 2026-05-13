@@ -211,7 +211,9 @@ class SalaSelectionViewModelEnhanced(
                 throw Exception("Erro na API: ${response.message()}")
             }
             
-            val salasDto = response.body()!!.data ?: emptyList()
+            // CORREÇÃO NPE (maio/2026): body() pode ser null mesmo com isSuccessful=true
+            // (body vazio, timeout parcial). O !! causava NullPointerException em produção.
+            val salasDto = response.body()?.data ?: emptyList()
             
             if (salasDto.isEmpty()) {
                 allSalasLoaded = true

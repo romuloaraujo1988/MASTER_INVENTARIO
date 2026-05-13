@@ -1,17 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Configuração de segurança de rede — variant `main` (release).
+
+    MD-03 (correcoes-seguranca — maio/2026 — versão adequada ao contexto).
+
+    ## Decisão de projeto
+
+    O servidor SIHCP em produção no IFMT opera em **HTTP cleartext** sobre a
+    rede interna institucional (IPs `10.14.250.*` e `192.168.*`). Não há
+    certificado TLS emitido para esses endpoints — o tráfego fica confinado
+    à rede física da instituição.
+
+    Nesta situação específica, HTTPS não é viável a curto prazo, portanto:
+
+    - Mantemos cleartext somente para os IPs internos já conhecidos.
+    - **Removemos a aceitação de user CAs em release**, que era a única
+      brecha acionável por um atacante na rede do IFMT: sem user CAs, um
+      certificado raiz malicioso instalado pelo usuário (via perfil VPN,
+      MDM sob disfarce etc.) não é aceito pelo app, neutralizando MITM
+      via substituição de cadeia TLS. Essa é a camada de defesa que
+      efetivamente muda o modelo de ameaça.
+    - O `debug` continua aceitando user CAs e qualquer domínio cleartext
+      via arquivo em `src/debug/res/xml/network_security_config.xml`,
+      facilitando inspeção com Charles/mitmproxy.
+
+    Quando o servidor migrar para HTTPS com certificado válido (próximo
+    ciclo), o `domain-config` inteiro abaixo deve ser removido e o
+    `base-config` passa a ter `cleartextTrafficPermitted="false"`.
+
+    Req 5.1–5.4, 10.1–10.3 (spec correcoes-seguranca).
+-->
 <network-security-config>
 
-    <!-- Base-config: produção. HTTPS obrigatório, apenas CAs do sistema. -->
-    <!-- Req 5.1, 5.3, 10.1, 10.2 (spec correcoes-seguranca) -->
+    <!-- Fora dos IPs whitelisted, HTTPS obrigatório + apenas system CAs. -->
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>
     </base-config>
 
-    <!-- Domain-config: APENAS desenvolvimento/rede interna IFMT.
-         Cleartext + user CAs confinados a IPs específicos.
-         Req 5.2, 5.4, 10.3 (spec correcoes-seguranca) -->
+    <!-- IPs internos do IFMT e emulador: cleartext permitido, mas ainda
+         sem user CAs. Um atacante na rede só consegue interceptar tráfego
+         se conseguir sequestrar o IP/DNS — o cenário MITM via user CA
+         instalada no dispositivo continua bloqueado. -->
     <domain-config cleartextTrafficPermitted="true">
         <!-- Emulador Android / localhost -->
         <domain includeSubdomains="false">localhost</domain>
@@ -19,6 +50,7 @@
         <domain includeSubdomains="false">10.0.2.2</domain>
 
         <!-- Rede interna IFMT -->
+        <domain includeSubdomains="false">10.14.150.14</domain>
         <domain includeSubdomains="false">10.14.250.228</domain>
         <domain includeSubdomains="false">10.14.250.236</domain>
         <domain includeSubdomains="false">10.14.250.238</domain>
@@ -27,8 +59,7 @@
 
         <trust-anchors>
             <certificates src="system" />
-            <!-- user CAs apenas para debug. Remover em release final. -->
-            <certificates src="user" />
+            <!-- User CAs NÃO são aceitas em release (MD-03). -->
         </trust-anchors>
     </domain-config>
 

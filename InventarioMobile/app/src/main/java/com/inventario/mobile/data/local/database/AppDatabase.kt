@@ -24,7 +24,7 @@ import com.inventario.mobile.data.local.entity.*
         FotoReferenciaEntity::class,  // v2.9: Fotos de referência por descrição
         SugestaoDescricaoEntity::class  // feature: coleta-descricao-livre-com-sugestao — cache de sugestões
     ],
-    version = 17,  // feature: coleta-descricao-livre-com-sugestao — tabela sugestao_descricao
+    version = 19,  // A2/A3 (auditoria-sync maio/2026) — coluna clienteUuid para idempotência
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -412,13 +412,74 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Migração 18 → 19.
+         *
+         * A2/A3 (auditoria-sync — maio/2026): adiciona coluna `clienteUuid`
+         * na tabela `coleta`. UUID gerado no momento da coleta, único por
+         * registro. Serve como chave de idempotência para o servidor (B3):
+         * quando o servidor aceitar o campo, poderá rejeitar reenvios do
+         * mesmo UUID sem criar duplicata.
+         *
+         * A coluna é nullable (TEXT DEFAULT NULL) para compatibilidade com
+         * coletas existentes que não têm UUID — elas continuam funcionando
+         * normalmente; o UUID será gerado apenas em novas coletas.
+         */
+        @androidx.annotation.VisibleForTesting
+        internal val MIGRATION_18_19 = object : androidx.room.migration.Migration(18, 19) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                database.execSQL(
+                    "ALTER TABLE coleta ADD COLUMN clienteUuid TEXT DEFAULT NULL"
+                )
+            }
+        }
+
+        /**
+         * Migração 17 → 18.
+         *
+         * AL-10 (correcoes-seguranca — maio/2026): adiciona índice composto
+         * `(idPatrimonio, dataColeta)` na tabela `coleta`, necessário para
+         * a subquery de "última coleta de um patrimônio" usada em várias
+         * operações (migration 14→15, `HistoricoColetaDialog`, relatórios de
+         * divergência). Sem este índice, a subquery degrada em *full scan*
+         * em bases com milhares de coletas — causa raiz do ANR observado
+         * no boot após `limparSincronizadas()`.
+         *
+         * A migração é idempotente: `CREATE INDEX IF NOT EXISTS` não falha
+         * se o índice já existir (ex.: dispositivo que já rodou com um APK
+         * experimental).
+         */
+        @androidx.annotation.VisibleForTesting
+        internal val MIGRATION_17_18 = object : androidx.room.migration.Migration(17, 18) {
+            override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_coleta_idPatrimonio_dataColeta " +
+                            "ON coleta (idPatrimonio, dataColeta)"
+                )
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 // Passphrase do SQLCipher via Android Keystore — spec correcoes-seguranca Req 3
                 val passphraseBytes = com.inventario.mobile.security.SqlCipherKeyManager
                     .getInstance(context)
                     .getOrCreatePassphrase()
-                val factory = net.sqlcipher.database.SupportFactory(passphraseBytes)
+                // MD-02 (correcoes-seguranca — maio/2026): a nova biblioteca
+                // `net.zetetic:sqlcipher-android:4.15.0` exige carregamento
+                // explícito do native library (a legada fazia isso
+                // internamente em `SQLiteDatabase.loadLibs`).
+                try {
+                    System.loadLibrary("sqlcipher")
+                } catch (e: UnsatisfiedLinkError) {
+                    android.util.Log.e(
+                        "AppDatabase",
+                        "Falha ao carregar libsqlcipher — banco não poderá ser aberto",
+                        e
+                    )
+                    throw e
+                }
+                val factory = net.zetetic.database.sqlcipher.SupportOpenHelperFactory(passphraseBytes)
 
                 val dbName = "inventario_offline_secure.db"
 
@@ -446,15 +507,54 @@ abstract class AppDatabase : RoomDatabase() {
                     migrationPrefs.edit().putBoolean("migrated_to_keystore_v1", true).apply()
                 }
 
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    dbName
-                )
-                    .openHelperFactory(factory)
-                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17)  // feature: coleta-descricao-livre-com-sugestao — sugestao_descricao
-                    .fallbackToDestructiveMigration()
-                    .build()
+                val instance = try {
+                    Room.databaseBuilder(
+                        context.applicationContext,
+                        AppDatabase::class.java,
+                        dbName
+                    )
+                        .openHelperFactory(factory)
+                        .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19)  // A2/A3: clienteUuid
+                        // CR-01 (correcoes-seguranca — maio/2026): removido
+                        // `fallbackToDestructiveMigration()` — que apagava o
+                        // banco inteiro em qualquer falha de migração, causando
+                        // perda silenciosa de coletas pendentes em campo.
+                        // Mantemos apenas o fallback em downgrade (cenário em
+                        // que o usuário instala APK mais antigo sobre base mais
+                        // nova — raro, mas admite perda porque o schema é
+                        // incompatível).
+                        .fallbackToDestructiveMigrationOnDowngrade()
+                        .build()
+                } catch (e: IllegalStateException) {
+                    // Migração falhou ou banco corrompeu. Em vez de destruir
+                    // dados silenciosamente, logamos com severidade máxima,
+                    // apagamos o arquivo (o conteúdo já é inutilizável) e
+                    // recriamos o banco do zero. O próximo sync do servidor
+                    // repopula os catálogos; coletas pendentes locais são
+                    // perdidas, mas o evento agora é rastreável nos logs.
+                    android.util.Log.e(
+                        "AppDatabase",
+                        "❌ Falha ao abrir banco — recriando do zero. " +
+                                "Coletas pendentes locais podem ter sido perdidas.",
+                        e
+                    )
+                    val dbFile = context.getDatabasePath(dbName)
+                    listOf(
+                        dbFile,
+                        java.io.File(dbFile.parentFile, "$dbName-journal"),
+                        java.io.File(dbFile.parentFile, "$dbName-shm"),
+                        java.io.File(dbFile.parentFile, "$dbName-wal")
+                    ).forEach { if (it.exists()) it.delete() }
+                    Room.databaseBuilder(
+                        context.applicationContext,
+                        AppDatabase::class.java,
+                        dbName
+                    )
+                        .openHelperFactory(factory)
+                        .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19)
+                        .fallbackToDestructiveMigrationOnDowngrade()
+                        .build()
+                }
                 INSTANCE = instance
                 instance
             }

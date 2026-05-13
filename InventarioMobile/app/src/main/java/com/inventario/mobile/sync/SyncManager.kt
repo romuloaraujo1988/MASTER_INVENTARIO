@@ -2,88 +2,92 @@ package com.inventario.mobile.sync
 
 import android.content.Context
 import android.util.Log
-import androidx.work.*
-import com.inventario.mobile.worker.SyncWorker
-import java.util.concurrent.TimeUnit
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
- * Gerenciador de sincronização
- * Responsável por agendar e controlar sincronizações
+ * Fachada de sincronização que delega para [SyncScheduler].
+ *
+ * C2/F1 (auditoria-sync — maio/2026): antes, `SyncManager` agendava
+ * `SyncWorker` enquanto `SyncScheduler` agendava `ColetaSyncWorker` — dois
+ * workers distintos que faziam a mesma coisa e podiam rodar simultaneamente,
+ * criando risco de envio duplicado de coletas ao servidor. Além disso,
+ * `forceSyncNow()` usava `workManager.enqueue()` sem nome único, criando
+ * múltiplos workers a cada reconexão.
+ *
+ * Esta classe foi reescrita como fachada estreita que delega **todas** as
+ * operações para [SyncScheduler] (Hilt, único pipeline de sincronização
+ * usando `ColetaSyncWorker`). A API pública (`schedulePeriodicSync`,
+ * `cancelPeriodicSync`, `forceSyncNow`) foi mantida intacta para evitar
+ * mudanças nos call sites (`SyncViewModel`, `NetworkConnectivityObserver`,
+ * etc.).
+ *
+ * ## Como obter uma instância
+ *
+ * - **Preferência:** injetar via Hilt (`@Inject lateinit var syncManager: SyncManager`).
+ * - **Legado:** chamar `SyncManager.getInstance(context)` ainda funciona;
+ *   o método resolve a instância via Hilt internamente.
  */
-class SyncManager private constructor(private val context: Context) {
+@Singleton
+class SyncManager @Inject constructor(
+    private val syncScheduler: SyncScheduler
+) {
 
     companion object {
         private const val TAG = "SyncManager"
-        private const val SYNC_WORK_NAME = "periodic_sync"
-        private const val SYNC_INTERVAL_MINUTES = 30L
 
         @Volatile
         private var instance: SyncManager? = null
 
+        /**
+         * Retorna a instância gerenciada por Hilt.
+         *
+         * O registro é feito em [InventarioMobileApplication.onCreate] (veja
+         * [setInstance]). Se chamado antes do Hilt ser inicializado (caso
+         * impossível em runtime normal), lança IllegalStateException.
+         */
+        @JvmStatic
         fun getInstance(context: Context): SyncManager {
-            return instance ?: synchronized(this) {
-                instance ?: SyncManager(context.applicationContext).also { instance = it }
-            }
+            return instance ?: error(
+                "SyncManager ainda não foi inicializado pelo Hilt. " +
+                        "Verifique se InventarioMobileApplication.onCreate já rodou."
+            )
+        }
+
+        /**
+         * Registra a instância Hilt no singleton legado. Chamado pelo
+         * [InventarioMobileApplication.onCreate] após Hilt estar pronto.
+         */
+        internal fun setInstance(syncManager: SyncManager) {
+            instance = syncManager
         }
     }
 
     /**
-     * Agenda sincronização periódica
+     * Agenda sincronização periódica (delega para [SyncScheduler]).
      */
     fun schedulePeriodicSync() {
-        Log.d(TAG, "Agendando sincronização periódica...")
-
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .setRequiresBatteryNotLow(true)
-            .build()
-
-        val syncRequest = PeriodicWorkRequestBuilder<SyncWorker>(
-            SYNC_INTERVAL_MINUTES,
-            TimeUnit.MINUTES
-        )
-            .setConstraints(constraints)
-            .setBackoffCriteria(
-                BackoffPolicy.EXPONENTIAL,
-                WorkRequest.MIN_BACKOFF_MILLIS,
-                TimeUnit.MILLISECONDS
-            )
-            .build()
-
-        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-            SYNC_WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP,
-            syncRequest
-        )
-
-        Log.d(TAG, "✓ Sincronização periódica agendada")
+        Log.d(TAG, "Delegando schedulePeriodicSync → SyncScheduler")
+        syncScheduler.schedulePeriodicSync()
     }
 
     /**
-     * Cancela sincronização periódica
+     * Cancela sincronização periódica (delega para [SyncScheduler]).
      */
     fun cancelPeriodicSync() {
-        Log.d(TAG, "Cancelando sincronização periódica...")
-        WorkManager.getInstance(context).cancelUniqueWork(SYNC_WORK_NAME)
-        Log.d(TAG, "✓ Sincronização periódica cancelada")
+        Log.d(TAG, "Delegando cancelPeriodicSync → SyncScheduler")
+        syncScheduler.cancelPeriodicSync()
     }
 
     /**
-     * Força sincronização imediata
+     * Força sincronização imediata (delega para [SyncScheduler]).
+     *
+     * F2 (auditoria-sync — maio/2026): antes enfileirava `SyncWorker` sem
+     * nome único; agora delega para [SyncScheduler.syncNow] que usa
+     * `enqueueUniqueWork` com política REPLACE.
      */
     fun forceSyncNow() {
-        Log.d(TAG, "Forçando sincronização imediata...")
-
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
-        val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
-            .setConstraints(constraints)
-            .build()
-
-        WorkManager.getInstance(context).enqueue(syncRequest)
-
-        Log.d(TAG, "✓ Sincronização imediata agendada")
+        Log.d(TAG, "Delegando forceSyncNow → SyncScheduler.syncNow()")
+        syncScheduler.syncNow(byCount = false)
     }
 }

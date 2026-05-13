@@ -58,10 +58,12 @@ class SyncScheduler @Inject constructor(
             .addTag(ColetaSyncWorker.TAG_PERIODIC)
             .build()
         
-        // Enfileirar com política REPLACE (cancela anterior se existir)
+        // Enfileirar com política KEEP — não cancela o worker em execução.
+        // CORREÇÃO (maio/2026): REPLACE cancelava e reiniciava o timer a cada chamada
+        // (ex: a cada login), fazendo o sync periódico nunca executar de fato.
         workManager.enqueueUniquePeriodicWork(
             ColetaSyncWorker.WORK_NAME,
-            ExistingPeriodicWorkPolicy.REPLACE,
+            ExistingPeriodicWorkPolicy.KEEP,
             syncRequest
         )
         
@@ -146,19 +148,41 @@ class SyncScheduler @Inject constructor(
     }
     
     /**
-     * Verifica status da sincronização periódica
+     * Verifica status da sincronização periódica.
+     *
+     * CORREÇÃO ANR (maio/2026): substituído `.get()` sem timeout por `.get(100, MILLISECONDS)`.
+     * Se o WorkManager não responder em 100ms (improvável mas possível sob carga),
+     * retorna false em vez de bloquear indefinidamente a thread chamadora.
+     * Para consultas reativas na UI, prefira observar `getWorkInfosForUniqueWorkLiveData`.
      */
     fun isPeriodicSyncScheduled(): Boolean {
-        val workInfos = workManager.getWorkInfosForUniqueWork(ColetaSyncWorker.WORK_NAME).get()
-        return workInfos.any { !it.state.isFinished }
+        return try {
+            workManager
+                .getWorkInfosForUniqueWork(ColetaSyncWorker.WORK_NAME)
+                .get(100, java.util.concurrent.TimeUnit.MILLISECONDS)
+                ?.any { !it.state.isFinished }
+                ?: false
+        } catch (e: Exception) {
+            android.util.Log.w(TAG, "isPeriodicSyncScheduled: timeout ou erro ao consultar WorkManager", e)
+            false
+        }
     }
-    
+
     /**
-     * Obtém informações sobre o último trabalho de sincronização
+     * Obtém informações sobre o último trabalho de sincronização.
+     *
+     * CORREÇÃO ANR (maio/2026): `.get()` com timeout de 100ms em vez de bloqueio indefinido.
      */
     fun getLastSyncInfo(): WorkInfo? {
-        val workInfos = workManager.getWorkInfosForUniqueWork(ColetaSyncWorker.WORK_NAME).get()
-        return workInfos.firstOrNull()
+        return try {
+            workManager
+                .getWorkInfosForUniqueWork(ColetaSyncWorker.WORK_NAME)
+                .get(100, java.util.concurrent.TimeUnit.MILLISECONDS)
+                ?.firstOrNull()
+        } catch (e: Exception) {
+            android.util.Log.w(TAG, "getLastSyncInfo: timeout ou erro ao consultar WorkManager", e)
+            null
+        }
     }
     
     /**

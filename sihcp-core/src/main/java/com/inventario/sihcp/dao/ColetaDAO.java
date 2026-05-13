@@ -122,7 +122,7 @@ public class ColetaDAO {
 
         } else {
             // PostgreSQL: usar TABELA_COLETA com nomes de colunas MAIÚSCULOS
-            // Inclui campos de métricas de tempo para Analytics
+            // Inclui campos de métricas de tempo para Analytics e CLIENTE_UUID (B3-idempotência)
             sql = "INSERT INTO TABELA_COLETA (ID_INVENTARIO, ID_PATRIMONIO, ID_COLETOR, ID_PARTICIPANTE_INVENTARIO, " +
                   "DATA_COLETA, STATUS_COLETA, OBSERVACAO_COLETA, LOCALIZACAO_ATUAL, " +
                   "LOCALIZACAO_ENCONTRADA, ESTADO_ENCONTRADO, DIVERGENCIA, MOTIVO_DIVERGENCIA, " +
@@ -130,8 +130,8 @@ public class ColetaDAO {
                   "DESCRICAO_ITEM_SEM_ETIQUETA, CATEGORIA_ITEM_SEM_ETIQUETA, " +
                   "TEMPO_COLETA_SEGUNDOS, TEMPO_SCAN_SEGUNDOS, TEMPO_PREENCHIMENTO_SEGUNDOS, " +
                   "METODO_COLETA, HORA_COLETA, DIA_SEMANA, PERIODO_COLETA, " +
-                  "TIPO_SCAN, TENTATIVAS_SCAN, ERROS_SCAN, QUALIDADE_ETIQUETA) " +
-                  "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                  "TIPO_SCAN, TENTATIVAS_SCAN, ERROS_SCAN, QUALIDADE_ETIQUETA, CLIENTE_UUID) " +
+                  "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         }
         
         try (Connection conn = ConnectionManager.getConnection();
@@ -266,6 +266,14 @@ public class ColetaDAO {
                 }
                 
                 stmt.setString(29, coleta.getQualidadeEtiqueta());
+                
+                // B3 (idempotência): CLIENTE_UUID — gerado pelo app Android.
+                // Se null (coletas antigas ou offline sem UUID), persiste NULL.
+                if (coleta.getClienteUuid() != null && !coleta.getClienteUuid().trim().isEmpty()) {
+                    stmt.setString(30, coleta.getClienteUuid());
+                } else {
+                    stmt.setNull(30, Types.VARCHAR);
+                }
             }
             
             stmt.executeUpdate();
@@ -403,6 +411,52 @@ public class ColetaDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setInt(1, id);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return criarColetaFromResultSet(rs);
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * B3 (idempotência — maio/2026): busca coleta pelo UUID gerado pelo cliente.
+     *
+     * Usado por {@code MobileColetaService.registrarColeta} como primeira verificação
+     * antes do INSERT: se o UUID já existe, o servidor retorna a coleta existente em
+     * vez de criar duplicata. Protege contra cenários em que o POST persistiu no
+     * servidor mas a resposta não chegou ao cliente (timeout, queda de rede),
+     * fazendo com que o app reenvie a mesma coleta.
+     *
+     * O UUID é indexado com UNIQUE parcial (apenas WHERE CLIENTE_UUID IS NOT NULL),
+     * então a consulta é O(log n). Coletas legadas (pré-v2.27) têm CLIENTE_UUID NULL
+     * e nunca casam por este método.
+     *
+     * @param clienteUuid UUID no formato {@link java.util.UUID} (36 caracteres).
+     * @return a coleta existente ou {@code null} se o UUID ainda não foi registrado.
+     * @throws SQLException se ocorrer erro na consulta.
+     */
+    public Coleta buscarPorClienteUuid(String clienteUuid) throws SQLException {
+        if (clienteUuid == null || clienteUuid.trim().isEmpty()) {
+            return null;
+        }
+        
+        String sql = "SELECT c.*, p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
+                    "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO " +
+                    "FROM TABELA_COLETA c " +
+                    "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
+                    "LEFT JOIN TABELA_PARTICIPANTE_INVENTARIO pi ON c.ID_PARTICIPANTE_INVENTARIO = pi.id_participante " +
+                    "LEFT JOIN TABELA_USUARIO u ON pi.ID_USUARIO = u.ID " +
+                    "LEFT JOIN TABELA_INVENTARIO i ON c.ID_INVENTARIO = i.ID " +
+                    "WHERE c.CLIENTE_UUID = ?";
+        
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, clienteUuid.trim());
             
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -928,22 +982,38 @@ public class ColetaDAO {
      * @return Total de coletas na sala
      */
     public int contarColetasPorNumeroSala(String numeroSala) throws SQLException {
+        return contarColetasPorNumeroSala(numeroSala, null);
+    }
+
+    /**
+     * Conta coletas de uma sala restritas a um inventário específico.
+     *
+     * @param numeroSala    identificação da sala
+     * @param idInventario  ID do inventário; se null, conta em todos os inventários
+     */
+    public int contarColetasPorNumeroSala(String numeroSala, Integer idInventario) throws SQLException {
         boolean sqlite = isSQLite();
-        
+        boolean filtrarInventario = idInventario != null;
+
         String sql;
         if (sqlite) {
             sql = "SELECT COUNT(*) FROM local_coleta " +
                   "WHERE localizacao_encontrada = ? " +
-                  "AND (sem_etiqueta = 0 OR sem_etiqueta IS NULL)";
+                  "AND (sem_etiqueta = 0 OR sem_etiqueta IS NULL)" +
+                  (filtrarInventario ? " AND id_inventario = ?" : "");
         } else {
             sql = "SELECT COUNT(*) FROM " + getColetaTableName() + " " +
                   "WHERE LOCALIZACAO_ENCONTRADA = ? " +
-                  "AND (SEM_ETIQUETA = false OR SEM_ETIQUETA IS NULL)";
+                  "AND (SEM_ETIQUETA = false OR SEM_ETIQUETA IS NULL)" +
+                  (filtrarInventario ? " AND ID_INVENTARIO = ?" : "");
         }
-        
+
         try (Connection conn = ConnectionManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, numeroSala);
+            if (filtrarInventario) {
+                stmt.setInt(2, idInventario);
+            }
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1);
@@ -962,10 +1032,31 @@ public class ColetaDAO {
      * @return Lista de coletas (pode ser menor que limit se não houver mais)
      */
     public List<Coleta> buscarColetasPorNumeroSalaPaginado(String numeroSala, int offset, int limit) throws SQLException {
-        System.out.println("[DEBUG ColetaDAO] Buscando coletas paginado OTIMIZADO: sala='" + numeroSala + "', offset=" + offset + ", limit=" + limit);
-        
+        // Sobrecarga legada: busca em todos os inventários. Mantida para compatibilidade,
+        // mas não é mais usada pelo ColetaFrame — que agora passa o ID do inventário ativo
+        // para evitar vazamento entre inventários antigos e o atual.
+        return buscarColetasPorNumeroSalaPaginado(numeroSala, offset, limit, null);
+    }
+
+    /**
+     * Busca coletas por número da sala, restritas a um inventário específico.
+     *
+     * @param numeroSala identificação da sala (ex.: "A08", "CAE", "101")
+     * @param offset     paginação — a partir de qual registro
+     * @param limit      paginação — quantidade máxima
+     * @param idInventario ID do inventário para filtrar; se null, retorna de TODOS
+     *                     os inventários (comportamento legado, usar apenas em
+     *                     relatórios consolidados).
+     * @return lista de coletas encontradas (apenas patrimônios COM etiqueta)
+     */
+    public List<Coleta> buscarColetasPorNumeroSalaPaginado(
+            String numeroSala, int offset, int limit, Integer idInventario) throws SQLException {
+        System.out.println("[DEBUG ColetaDAO] Buscando coletas paginado OTIMIZADO: sala='" + numeroSala
+                + "', offset=" + offset + ", limit=" + limit + ", inventario=" + idInventario);
+
         boolean sqlite = isSQLite();
-        
+        boolean filtrarInventario = idInventario != null;
+
         // QUERY OTIMIZADA: Apenas 1 JOIN (patrimônio) para ter número e descrição
         // NOTA: Usar aliases em minúsculas para compatibilidade (PostgreSQL converte para minúsculas)
         String sql;
@@ -978,6 +1069,7 @@ public class ColetaDAO {
                   "LEFT JOIN local_patrimonio p ON c.id_patrimonio = p.id " +
                   "WHERE c.localizacao_encontrada = ? " +
                   "AND (c.sem_etiqueta = 0 OR c.sem_etiqueta IS NULL) " +
+                  (filtrarInventario ? "AND c.id_inventario = ? " : "") +
                   "ORDER BY c.data_coleta DESC " +
                   "LIMIT ? OFFSET ?";
         } else {
@@ -991,21 +1083,26 @@ public class ColetaDAO {
                   "LEFT JOIN " + getPatrimonioTableName() + " p ON c.id_patrimonio = p.id " +
                   "WHERE c.localizacao_encontrada = ? " +
                   "AND (c.sem_etiqueta = false OR c.sem_etiqueta IS NULL) " +
+                  (filtrarInventario ? "AND c.id_inventario = ? " : "") +
                   "ORDER BY c.data_coleta DESC " +
                   "LIMIT ? OFFSET ?";
         }
-        
+
         List<Coleta> coletas = new ArrayList<>();
-        
+
         try (Connection conn = ConnectionManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, numeroSala);
-            stmt.setInt(2, limit);
-            stmt.setInt(3, offset);
-            
+
+            int paramIdx = 1;
+            stmt.setString(paramIdx++, numeroSala);
+            if (filtrarInventario) {
+                stmt.setInt(paramIdx++, idInventario);
+            }
+            stmt.setInt(paramIdx++, limit);
+            stmt.setInt(paramIdx, offset);
+
             System.out.println("[DEBUG ColetaDAO] Executando query...");
-            
+
             try (ResultSet rs = stmt.executeQuery()) {
                 System.out.println("[DEBUG ColetaDAO] Query executada, processando resultados...");
                 while (rs.next()) {
@@ -1019,7 +1116,7 @@ public class ColetaDAO {
             System.err.println("[DEBUG ColetaDAO] ERRO SQL: " + e.getMessage());
             throw e;
         }
-        
+
         System.out.println("[DEBUG ColetaDAO] Lote carregado: " + coletas.size() + " coletas");
         return coletas;
     }
@@ -1216,8 +1313,26 @@ public class ColetaDAO {
      * @return Lista de coletas de itens sem etiqueta
      */
     public List<Coleta> buscarColetasSemEtiquetaPorSala(int idSala, String localizacaoSala) throws SQLException {
+        // Sobrecarga legada: retorna coletas sem etiqueta de TODOS os inventários.
+        // O ColetaFrame deve preferir a sobrecarga com `idInventario` para evitar
+        // vazamento de coletas de inventários antigos.
+        return buscarColetasSemEtiquetaPorSala(idSala, localizacaoSala, null);
+    }
+
+    /**
+     * Busca itens sem etiqueta de uma sala, restritos ao inventário informado.
+     *
+     * @param idSala          id da sala (para compatibilidade — não é usado na query)
+     * @param localizacaoSala identificação da sala na tabela de coleta
+     *                        (campo `localizacao_encontrada`)
+     * @param idInventario    ID do inventário para filtrar; se null, retorna de TODOS
+     *                        os inventários.
+     */
+    public List<Coleta> buscarColetasSemEtiquetaPorSala(
+            int idSala, String localizacaoSala, Integer idInventario) throws SQLException {
         boolean sqlite = isSQLite();
-        
+        boolean filtrarInventario = idInventario != null;
+
         String sql;
         if (sqlite) {
             sql = "SELECT c.*, NULL as NOME_COLETOR, i.nome as DESCRICAO_INVENTARIO " +
@@ -1225,6 +1340,7 @@ public class ColetaDAO {
                   "LEFT JOIN " + getInventarioTableName() + " i ON c.id_inventario = i.id " +
                   "WHERE c.sem_etiqueta = 1 " +
                   "AND c.localizacao_encontrada = ? " +
+                  (filtrarInventario ? "AND c.id_inventario = ? " : "") +
                   "ORDER BY c.data_coleta DESC";
         } else {
             sql = "SELECT c.*, u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO " +
@@ -1234,23 +1350,28 @@ public class ColetaDAO {
                   "LEFT JOIN " + getInventarioTableName() + " i ON c.ID_INVENTARIO = i.ID " +
                   "WHERE c.SEM_ETIQUETA = true " +
                   "AND c.LOCALIZACAO_ENCONTRADA = ? " +
+                  (filtrarInventario ? "AND c.ID_INVENTARIO = ? " : "") +
                   "ORDER BY c.DATA_COLETA DESC";
         }
-        
+
         List<Coleta> coletas = new ArrayList<>();
-        
+
         try (Connection conn = ConnectionManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setString(1, localizacaoSala);
-            
+
+            int paramIdx = 1;
+            stmt.setString(paramIdx++, localizacaoSala);
+            if (filtrarInventario) {
+                stmt.setInt(paramIdx, idInventario);
+            }
+
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     coletas.add(criarColetaFromResultSet(rs));
                 }
             }
         }
-        
+
         return coletas;
     }
     
@@ -2230,6 +2351,17 @@ public class ColetaDAO {
             }
         } catch (SQLException e) {
             // Campo não existe na query, ignorar
+        }
+        
+        // B3 (idempotência): ler CLIENTE_UUID. Coletas legadas retornam null.
+        try {
+            coleta.setClienteUuid(rs.getString("CLIENTE_UUID"));
+        } catch (SQLException e) {
+            try {
+                coleta.setClienteUuid(rs.getString("cliente_uuid"));
+            } catch (SQLException e2) {
+                coleta.setClienteUuid(null);
+            }
         }
         
         return coleta;

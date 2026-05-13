@@ -90,7 +90,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
+
+        <!--
+            Keystore Recovery Activity — CR-02 (correcoes-seguranca maio/2026).
+            Exibida quando o Android Keystore fica inacessível (troca de lock
+            screen, restore em outro dispositivo etc.). Deve ter
+            `excludeFromRecents=true` para não poluir o histórico, e
+            `noHistory=true` para desaparecer assim que o usuário sair.
+        -->
+        <activity
+            android:name=".security.KeystoreRecoveryActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@style/Theme.InventarioMobile.NoActionBar" />
+
         <!-- Main Activity -->
         <activity
             android:name=".presentation.main.MainActivity"

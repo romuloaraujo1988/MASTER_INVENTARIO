@@ -180,7 +180,9 @@ data class Coleta(
             deviceId = deviceId,
             appVersion = appVersion,
             divergencia = this.divergencia,
-            motivoDivergencia = this.motivoDivergencia
+            motivoDivergencia = this.motivoDivergencia,
+            // B3 (idempotência): gerar UUID aqui pois este caminho legado não tem entity
+            clienteUuid = java.util.UUID.randomUUID().toString()
         )
     }
 }

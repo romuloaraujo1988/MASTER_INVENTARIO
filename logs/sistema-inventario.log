@@ -1,393 +1,69 @@
-2026-05-01 15:48:52.318 [AWT-EventQueue-0] WARN  com.inventario.sihcp.config.HikariConnectionPool - Arquivo de configuração não encontrado em C:\Users\Romulo/configuracao_banco.properties, usando valores padrão
-2026-05-01 15:48:52.357 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.HikariDataSource - InventarioHikariPool - Starting...
-2026-05-01 15:48:53.541 [AWT-EventQueue-0] ERROR com.zaxxer.hikari.pool.HikariPool - InventarioHikariPool - Exception during pool initialization.
-org.postgresql.util.PSQLException: Connection to localhost:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
-	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:342) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:263) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.Driver.makeConnection(Driver.java:443) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.Driver.connect(Driver.java:297) ~[postgresql-42.6.0.jar:42.6.0]
-	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:138) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:359) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:201) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:470) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:561) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:100) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.HikariDataSource.<init>(HikariDataSource.java:81) ~[HikariCP-5.0.1.jar:?]
-	at com.inventario.sihcp.config.HikariConnectionPool.initializeDataSource(HikariConnectionPool.java:106) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.config.HikariConnectionPool.<init>(HikariConnectionPool.java:48) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.config.HikariConnectionPool.getInstance(HikariConnectionPool.java:66) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.config.HikariConnectionPool.getConnection(HikariConnectionPool.java:182) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.util.DatabaseConnection.getConnection(DatabaseConnection.java:172) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.util.ConnectionManager.getConnection(ConnectionManager.java:72) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.dao.BaseDAO.executeQuerySingle(BaseDAO.java:213) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.dao.UsuarioDAO.buscarPorLogin(UsuarioDAO.java:276) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.service.AutenticacaoServiceDB.criarUsuarioAdminPadrao(AutenticacaoServiceDB.java:250) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.service.UnifiedAuthService.criarUsuarioAdminPadrao(UnifiedAuthService.java:387) ~[sihcp-desktop-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.view.JLogin.<init>(JLogin.java:70) ~[sihcp-desktop-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.SistemaInventarioApplication.lambda$showMainScreen$1(SistemaInventarioApplication.java:112) ~[sihcp-desktop-2.7.0.jar:2.7.0]
-	at java.desktop/java.awt.event.InvocationEvent.dispatch(InvocationEvent.java:318) ~[?:?]
-	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:771) ~[?:?]
-	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:722) ~[?:?]
-	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:716) ~[?:?]
-	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399) [?:?]
-	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:86) [?:?]
-	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:741) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90) [?:?]
-Caused by: java.net.ConnectException: Connection refused: no further information
-	at java.base/sun.nio.ch.Net.pollConnect(Native Method) ~[?:?]
-	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:672) ~[?:?]
-	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:547) ~[?:?]
-	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:602) ~[?:?]
-	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327) ~[?:?]
-	at java.base/java.net.Socket.connect(Socket.java:633) ~[?:?]
-	at org.postgresql.core.PGStream.createSocket(PGStream.java:243) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.PGStream.<init>(PGStream.java:98) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:132) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:258) ~[postgresql-42.6.0.jar:42.6.0]
-	... 36 more
-2026-05-01 15:48:53.566 [AWT-EventQueue-0] ERROR com.inventario.sihcp.config.HikariConnectionPool - Erro ao inicializar HikariConnectionPool
-com.zaxxer.hikari.pool.HikariPool$PoolInitializationException: Failed to initialize pool: Connection to localhost:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
-	at com.zaxxer.hikari.pool.HikariPool.throwPoolInitializationException(HikariPool.java:596) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:582) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:100) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.HikariDataSource.<init>(HikariDataSource.java:81) ~[HikariCP-5.0.1.jar:?]
-	at com.inventario.sihcp.config.HikariConnectionPool.initializeDataSource(HikariConnectionPool.java:106) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.config.HikariConnectionPool.<init>(HikariConnectionPool.java:48) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.config.HikariConnectionPool.getInstance(HikariConnectionPool.java:66) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.config.HikariConnectionPool.getConnection(HikariConnectionPool.java:182) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.util.DatabaseConnection.getConnection(DatabaseConnection.java:172) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.util.ConnectionManager.getConnection(ConnectionManager.java:72) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.dao.BaseDAO.executeQuerySingle(BaseDAO.java:213) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.dao.UsuarioDAO.buscarPorLogin(UsuarioDAO.java:276) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.service.AutenticacaoServiceDB.criarUsuarioAdminPadrao(AutenticacaoServiceDB.java:250) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.service.UnifiedAuthService.criarUsuarioAdminPadrao(UnifiedAuthService.java:387) ~[sihcp-desktop-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.view.JLogin.<init>(JLogin.java:70) ~[sihcp-desktop-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.SistemaInventarioApplication.lambda$showMainScreen$1(SistemaInventarioApplication.java:112) ~[sihcp-desktop-2.7.0.jar:2.7.0]
-	at java.desktop/java.awt.event.InvocationEvent.dispatch(InvocationEvent.java:318) ~[?:?]
-	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:771) ~[?:?]
-	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:722) ~[?:?]
-	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:716) ~[?:?]
-	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399) [?:?]
-	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:86) [?:?]
-	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:741) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90) [?:?]
-Caused by: org.postgresql.util.PSQLException: Connection to localhost:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
-	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:342) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:263) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.Driver.makeConnection(Driver.java:443) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.Driver.connect(Driver.java:297) ~[postgresql-42.6.0.jar:42.6.0]
-	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:138) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:359) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:201) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:470) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:561) ~[HikariCP-5.0.1.jar:?]
-	... 27 more
-Caused by: java.net.ConnectException: Connection refused: no further information
-	at java.base/sun.nio.ch.Net.pollConnect(Native Method) ~[?:?]
-	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:672) ~[?:?]
-	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:547) ~[?:?]
-	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:602) ~[?:?]
-	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327) ~[?:?]
-	at java.base/java.net.Socket.connect(Socket.java:633) ~[?:?]
-	at org.postgresql.core.PGStream.createSocket(PGStream.java:243) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.PGStream.<init>(PGStream.java:98) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:132) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:258) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:263) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.Driver.makeConnection(Driver.java:443) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.Driver.connect(Driver.java:297) ~[postgresql-42.6.0.jar:42.6.0]
-	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:138) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:359) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:201) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:470) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:561) ~[HikariCP-5.0.1.jar:?]
-	... 27 more
-2026-05-01 15:49:23.432 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
-2026-05-01 15:49:34.446 [AWT-EventQueue-0] ERROR com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Exception during pool initialization.
-org.postgresql.util.PSQLException: A tentativa de conexão falhou.
-	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:354) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:263) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.Driver.makeConnection(Driver.java:443) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.Driver.connect(Driver.java:297) ~[postgresql-42.6.0.jar:42.6.0]
-	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:138) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:359) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:201) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:470) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:561) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:100) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.HikariDataSource.<init>(HikariDataSource.java:81) ~[HikariCP-5.0.1.jar:?]
-	at com.inventario.sihcp.util.ConnectionManager.initialize(ConnectionManager.java:55) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.view.ConfiguracaoBancoDialog.salvarConfiguracao(ConfiguracaoBancoDialog.java:447) ~[sihcp-desktop-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.view.ConfiguracaoBancoDialog.lambda$configurarEventos$4(ConfiguracaoBancoDialog.java:175) ~[sihcp-desktop-2.7.0.jar:2.7.0]
-	at java.desktop/javax.swing.AbstractButton.fireActionPerformed(AbstractButton.java:1972) ~[?:?]
-	at java.desktop/javax.swing.AbstractButton$Handler.actionPerformed(AbstractButton.java:2313) ~[?:?]
-	at java.desktop/javax.swing.DefaultButtonModel.fireActionPerformed(DefaultButtonModel.java:405) ~[?:?]
-	at java.desktop/javax.swing.DefaultButtonModel.setPressed(DefaultButtonModel.java:262) ~[?:?]
-	at java.desktop/javax.swing.plaf.basic.BasicButtonListener.mouseReleased(BasicButtonListener.java:279) ~[?:?]
-	at java.desktop/java.awt.Component.processMouseEvent(Component.java:6626) ~[?:?]
-	at java.desktop/javax.swing.JComponent.processMouseEvent(JComponent.java:3389) ~[?:?]
-	at java.desktop/java.awt.Component.processEvent(Component.java:6391) ~[?:?]
-	at java.desktop/java.awt.Container.processEvent(Container.java:2266) ~[?:?]
-	at java.desktop/java.awt.Component.dispatchEventImpl(Component.java:5001) ~[?:?]
-	at java.desktop/java.awt.Container.dispatchEventImpl(Container.java:2324) ~[?:?]
-	at java.desktop/java.awt.Component.dispatchEvent(Component.java:4833) ~[?:?]
-	at java.desktop/java.awt.LightweightDispatcher.retargetMouseEvent(Container.java:4948) ~[?:?]
-	at java.desktop/java.awt.LightweightDispatcher.processMouseEvent(Container.java:4575) ~[?:?]
-	at java.desktop/java.awt.LightweightDispatcher.dispatchEvent(Container.java:4516) ~[?:?]
-	at java.desktop/java.awt.Container.dispatchEventImpl(Container.java:2310) ~[?:?]
-	at java.desktop/java.awt.Window.dispatchEventImpl(Window.java:2780) ~[?:?]
-	at java.desktop/java.awt.Component.dispatchEvent(Component.java:4833) ~[?:?]
-	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773) ~[?:?]
-	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:722) ~[?:?]
-	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:716) ~[?:?]
-	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399) [?:?]
-	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:86) [?:?]
-	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:97) [?:?]
-	at java.desktop/java.awt.EventQueue$5.run(EventQueue.java:746) [?:?]
-	at java.desktop/java.awt.EventQueue$5.run(EventQueue.java:744) [?:?]
-	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399) ~[?:?]
-	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:86) ~[?:?]
-	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:743) ~[?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203) ~[?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124) ~[?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:117) ~[?:?]
-	at java.desktop/java.awt.WaitDispatchSupport$2.run(WaitDispatchSupport.java:191) ~[?:?]
-	at java.desktop/java.awt.WaitDispatchSupport$4.run(WaitDispatchSupport.java:236) ~[?:?]
-	at java.desktop/java.awt.WaitDispatchSupport$4.run(WaitDispatchSupport.java:234) ~[?:?]
-	at java.base/java.security.AccessController.doPrivileged(AccessController.java:318) ~[?:?]
-	at java.desktop/java.awt.WaitDispatchSupport.enter(WaitDispatchSupport.java:234) ~[?:?]
-	at java.desktop/java.awt.Dialog.show(Dialog.java:1080) ~[?:?]
-	at java.desktop/java.awt.Component.show(Component.java:1728) ~[?:?]
-	at java.desktop/java.awt.Component.setVisible(Component.java:1675) ~[?:?]
-	at java.desktop/java.awt.Window.setVisible(Window.java:1036) ~[?:?]
-	at java.desktop/java.awt.Dialog.setVisible(Dialog.java:1016) ~[?:?]
-	at com.inventario.sihcp.util.ConfiguracaoBancoUtil.abrirDialogConfiguracao(ConfiguracaoBancoUtil.java:26) ~[sihcp-desktop-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.view.JLogin.abrirConfiguracaoBanco(JLogin.java:327) ~[sihcp-desktop-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.view.JLogin.lambda$createFooterPanel$2(JLogin.java:302) ~[sihcp-desktop-2.7.0.jar:2.7.0]
-	at java.desktop/javax.swing.AbstractButton.fireActionPerformed(AbstractButton.java:1972) ~[?:?]
-	at java.desktop/javax.swing.AbstractButton$Handler.actionPerformed(AbstractButton.java:2313) ~[?:?]
-	at java.desktop/javax.swing.DefaultButtonModel.fireActionPerformed(DefaultButtonModel.java:405) ~[?:?]
-	at java.desktop/javax.swing.DefaultButtonModel.setPressed(DefaultButtonModel.java:262) ~[?:?]
-	at java.desktop/javax.swing.plaf.basic.BasicButtonListener.mouseReleased(BasicButtonListener.java:279) ~[?:?]
-	at java.desktop/java.awt.AWTEventMulticaster.mouseReleased(AWTEventMulticaster.java:297) ~[?:?]
-	at java.desktop/java.awt.AWTEventMulticaster.mouseReleased(AWTEventMulticaster.java:297) ~[?:?]
-	at java.desktop/java.awt.Component.processMouseEvent(Component.java:6626) ~[?:?]
-	at java.desktop/javax.swing.JComponent.processMouseEvent(JComponent.java:3389) ~[?:?]
-	at java.desktop/java.awt.Component.processEvent(Component.java:6391) ~[?:?]
-	at java.desktop/java.awt.Container.processEvent(Container.java:2266) ~[?:?]
-	at java.desktop/java.awt.Component.dispatchEventImpl(Component.java:5001) ~[?:?]
-	at java.desktop/java.awt.Container.dispatchEventImpl(Container.java:2324) ~[?:?]
-	at java.desktop/java.awt.Component.dispatchEvent(Component.java:4833) ~[?:?]
-	at java.desktop/java.awt.LightweightDispatcher.retargetMouseEvent(Container.java:4948) ~[?:?]
-	at java.desktop/java.awt.LightweightDispatcher.processMouseEvent(Container.java:4575) ~[?:?]
-	at java.desktop/java.awt.LightweightDispatcher.dispatchEvent(Container.java:4516) ~[?:?]
-	at java.desktop/java.awt.Container.dispatchEventImpl(Container.java:2310) ~[?:?]
-	at java.desktop/java.awt.Window.dispatchEventImpl(Window.java:2780) ~[?:?]
-	at java.desktop/java.awt.Component.dispatchEvent(Component.java:4833) ~[?:?]
-	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773) ~[?:?]
-	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:722) ~[?:?]
-	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:716) ~[?:?]
-	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399) [?:?]
-	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:86) ~[?:?]
-	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:97) ~[?:?]
-	at java.desktop/java.awt.EventQueue$5.run(EventQueue.java:746) ~[?:?]
-	at java.desktop/java.awt.EventQueue$5.run(EventQueue.java:744) ~[?:?]
-	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399) [?:?]
-	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:86) [?:?]
-	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:743) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90) [?:?]
-Caused by: java.net.SocketTimeoutException: Connect timed out
-	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:551) ~[?:?]
-	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:602) ~[?:?]
-	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327) ~[?:?]
-	at java.base/java.net.Socket.connect(Socket.java:633) ~[?:?]
-	at org.postgresql.core.PGStream.createSocket(PGStream.java:243) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.PGStream.<init>(PGStream.java:98) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:132) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:258) ~[postgresql-42.6.0.jar:42.6.0]
-	... 96 more
-2026-05-01 15:49:34.449 [AWT-EventQueue-0] ERROR com.inventario.sihcp.util.ConnectionManager - ? Erro ao inicializar connection pool: Failed to initialize pool: A tentativa de conexão falhou.
-2026-05-01 15:49:35.572 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-2 - Starting...
-2026-05-01 15:49:46.604 [AWT-EventQueue-0] ERROR com.zaxxer.hikari.pool.HikariPool - HikariPool-2 - Exception during pool initialization.
-org.postgresql.util.PSQLException: A tentativa de conexão falhou.
-	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:354) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:263) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.Driver.makeConnection(Driver.java:443) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.Driver.connect(Driver.java:297) ~[postgresql-42.6.0.jar:42.6.0]
-	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:138) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:359) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:201) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:470) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:561) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:100) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.HikariDataSource.<init>(HikariDataSource.java:81) ~[HikariCP-5.0.1.jar:?]
-	at com.inventario.sihcp.util.ConnectionManager.initialize(ConnectionManager.java:55) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.view.ConfiguracaoBancoDialog.salvarConfiguracao(ConfiguracaoBancoDialog.java:447) ~[sihcp-desktop-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.view.ConfiguracaoBancoDialog.lambda$configurarEventos$4(ConfiguracaoBancoDialog.java:175) ~[sihcp-desktop-2.7.0.jar:2.7.0]
-	at java.desktop/javax.swing.AbstractButton.fireActionPerformed(AbstractButton.java:1972) ~[?:?]
-	at java.desktop/javax.swing.AbstractButton$Handler.actionPerformed(AbstractButton.java:2313) ~[?:?]
-	at java.desktop/javax.swing.DefaultButtonModel.fireActionPerformed(DefaultButtonModel.java:405) ~[?:?]
-	at java.desktop/javax.swing.DefaultButtonModel.setPressed(DefaultButtonModel.java:262) ~[?:?]
-	at java.desktop/javax.swing.plaf.basic.BasicButtonListener.mouseReleased(BasicButtonListener.java:279) ~[?:?]
-	at java.desktop/java.awt.Component.processMouseEvent(Component.java:6626) ~[?:?]
-	at java.desktop/javax.swing.JComponent.processMouseEvent(JComponent.java:3389) ~[?:?]
-	at java.desktop/java.awt.Component.processEvent(Component.java:6391) ~[?:?]
-	at java.desktop/java.awt.Container.processEvent(Container.java:2266) ~[?:?]
-	at java.desktop/java.awt.Component.dispatchEventImpl(Component.java:5001) ~[?:?]
-	at java.desktop/java.awt.Container.dispatchEventImpl(Container.java:2324) ~[?:?]
-	at java.desktop/java.awt.Component.dispatchEvent(Component.java:4833) ~[?:?]
-	at java.desktop/java.awt.LightweightDispatcher.retargetMouseEvent(Container.java:4948) ~[?:?]
-	at java.desktop/java.awt.LightweightDispatcher.processMouseEvent(Container.java:4575) ~[?:?]
-	at java.desktop/java.awt.LightweightDispatcher.dispatchEvent(Container.java:4516) ~[?:?]
-	at java.desktop/java.awt.Container.dispatchEventImpl(Container.java:2310) ~[?:?]
-	at java.desktop/java.awt.Window.dispatchEventImpl(Window.java:2780) ~[?:?]
-	at java.desktop/java.awt.Component.dispatchEvent(Component.java:4833) ~[?:?]
-	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773) ~[?:?]
-	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:722) ~[?:?]
-	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:716) ~[?:?]
-	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399) [?:?]
-	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:86) [?:?]
-	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:97) [?:?]
-	at java.desktop/java.awt.EventQueue$5.run(EventQueue.java:746) [?:?]
-	at java.desktop/java.awt.EventQueue$5.run(EventQueue.java:744) [?:?]
-	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399) ~[?:?]
-	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:86) ~[?:?]
-	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:743) ~[?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203) ~[?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124) ~[?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:117) ~[?:?]
-	at java.desktop/java.awt.WaitDispatchSupport$2.run(WaitDispatchSupport.java:191) ~[?:?]
-	at java.desktop/java.awt.WaitDispatchSupport$4.run(WaitDispatchSupport.java:236) ~[?:?]
-	at java.desktop/java.awt.WaitDispatchSupport$4.run(WaitDispatchSupport.java:234) ~[?:?]
-	at java.base/java.security.AccessController.doPrivileged(AccessController.java:318) ~[?:?]
-	at java.desktop/java.awt.WaitDispatchSupport.enter(WaitDispatchSupport.java:234) ~[?:?]
-	at java.desktop/java.awt.Dialog.show(Dialog.java:1080) ~[?:?]
-	at java.desktop/java.awt.Component.show(Component.java:1728) ~[?:?]
-	at java.desktop/java.awt.Component.setVisible(Component.java:1675) ~[?:?]
-	at java.desktop/java.awt.Window.setVisible(Window.java:1036) ~[?:?]
-	at java.desktop/java.awt.Dialog.setVisible(Dialog.java:1016) ~[?:?]
-	at com.inventario.sihcp.util.ConfiguracaoBancoUtil.abrirDialogConfiguracao(ConfiguracaoBancoUtil.java:26) ~[sihcp-desktop-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.view.JLogin.abrirConfiguracaoBanco(JLogin.java:327) ~[sihcp-desktop-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.view.JLogin.lambda$createFooterPanel$2(JLogin.java:302) ~[sihcp-desktop-2.7.0.jar:2.7.0]
-	at java.desktop/javax.swing.AbstractButton.fireActionPerformed(AbstractButton.java:1972) ~[?:?]
-	at java.desktop/javax.swing.AbstractButton$Handler.actionPerformed(AbstractButton.java:2313) ~[?:?]
-	at java.desktop/javax.swing.DefaultButtonModel.fireActionPerformed(DefaultButtonModel.java:405) ~[?:?]
-	at java.desktop/javax.swing.DefaultButtonModel.setPressed(DefaultButtonModel.java:262) ~[?:?]
-	at java.desktop/javax.swing.plaf.basic.BasicButtonListener.mouseReleased(BasicButtonListener.java:279) ~[?:?]
-	at java.desktop/java.awt.AWTEventMulticaster.mouseReleased(AWTEventMulticaster.java:297) ~[?:?]
-	at java.desktop/java.awt.AWTEventMulticaster.mouseReleased(AWTEventMulticaster.java:297) ~[?:?]
-	at java.desktop/java.awt.Component.processMouseEvent(Component.java:6626) ~[?:?]
-	at java.desktop/javax.swing.JComponent.processMouseEvent(JComponent.java:3389) ~[?:?]
-	at java.desktop/java.awt.Component.processEvent(Component.java:6391) ~[?:?]
-	at java.desktop/java.awt.Container.processEvent(Container.java:2266) ~[?:?]
-	at java.desktop/java.awt.Component.dispatchEventImpl(Component.java:5001) ~[?:?]
-	at java.desktop/java.awt.Container.dispatchEventImpl(Container.java:2324) ~[?:?]
-	at java.desktop/java.awt.Component.dispatchEvent(Component.java:4833) ~[?:?]
-	at java.desktop/java.awt.LightweightDispatcher.retargetMouseEvent(Container.java:4948) ~[?:?]
-	at java.desktop/java.awt.LightweightDispatcher.processMouseEvent(Container.java:4575) ~[?:?]
-	at java.desktop/java.awt.LightweightDispatcher.dispatchEvent(Container.java:4516) ~[?:?]
-	at java.desktop/java.awt.Container.dispatchEventImpl(Container.java:2310) ~[?:?]
-	at java.desktop/java.awt.Window.dispatchEventImpl(Window.java:2780) ~[?:?]
-	at java.desktop/java.awt.Component.dispatchEvent(Component.java:4833) ~[?:?]
-	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773) ~[?:?]
-	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:722) ~[?:?]
-	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:716) ~[?:?]
-	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399) [?:?]
-	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:86) ~[?:?]
-	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:97) ~[?:?]
-	at java.desktop/java.awt.EventQueue$5.run(EventQueue.java:746) ~[?:?]
-	at java.desktop/java.awt.EventQueue$5.run(EventQueue.java:744) ~[?:?]
-	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399) [?:?]
-	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:86) [?:?]
-	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:743) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101) [?:?]
-	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90) [?:?]
-Caused by: java.net.SocketTimeoutException: Connect timed out
-	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:551) ~[?:?]
-	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:602) ~[?:?]
-	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327) ~[?:?]
-	at java.base/java.net.Socket.connect(Socket.java:633) ~[?:?]
-	at org.postgresql.core.PGStream.createSocket(PGStream.java:243) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.PGStream.<init>(PGStream.java:98) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:132) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:258) ~[postgresql-42.6.0.jar:42.6.0]
-	... 96 more
-2026-05-01 15:49:46.608 [AWT-EventQueue-0] ERROR com.inventario.sihcp.util.ConnectionManager - ? Erro ao inicializar connection pool: Failed to initialize pool: A tentativa de conexão falhou.
-2026-05-01 18:12:50.518 [main] WARN  com.inventario.sihcp.config.HikariConnectionPool - Arquivo de configuração não encontrado em C:\Users\Romulo/configuracao_banco.properties, usando valores padrão
-2026-05-01 18:12:50.527 [main] INFO  com.zaxxer.hikari.HikariDataSource - InventarioHikariPool - Starting...
-2026-05-01 18:12:51.618 [main] ERROR com.zaxxer.hikari.pool.HikariPool - InventarioHikariPool - Exception during pool initialization.
-org.postgresql.util.PSQLException: The server requested SCRAM-based authentication, but the password is an empty string.
-	at org.postgresql.core.v3.ConnectionFactoryImpl.lambda$doAuthentication$4(ConnectionFactoryImpl.java:844) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.v3.AuthenticationPluginManager.withPassword(AuthenticationPluginManager.java:81) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.v3.ConnectionFactoryImpl.doAuthentication(ConnectionFactoryImpl.java:835) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:203) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:258) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:263) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.Driver.makeConnection(Driver.java:443) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.Driver.connect(Driver.java:297) ~[postgresql-42.6.0.jar:42.6.0]
-	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:138) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:359) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:201) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:470) [HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:561) [HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:100) [HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.HikariDataSource.<init>(HikariDataSource.java:81) [HikariCP-5.0.1.jar:?]
-	at com.inventario.sihcp.config.HikariConnectionPool.initializeDataSource(HikariConnectionPool.java:106) [sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.config.HikariConnectionPool.<init>(HikariConnectionPool.java:48) [sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.config.HikariConnectionPool.getInstance(HikariConnectionPool.java:66) [sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.config.HikariConnectionPool.getConnection(HikariConnectionPool.java:182) [sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.util.DatabaseConnection.getConnection(DatabaseConnection.java:175) [sihcp-core-2.7.0.jar:2.7.0]
-	at TestLogin.main(TestLogin.java:10) [MASTER_INVENTARIO/:?]
-2026-05-01 18:12:51.620 [main] ERROR com.inventario.sihcp.config.HikariConnectionPool - Erro ao inicializar HikariConnectionPool
-com.zaxxer.hikari.pool.HikariPool$PoolInitializationException: Failed to initialize pool: The server requested SCRAM-based authentication, but the password is an empty string.
-	at com.zaxxer.hikari.pool.HikariPool.throwPoolInitializationException(HikariPool.java:596) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:582) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:100) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.HikariDataSource.<init>(HikariDataSource.java:81) ~[HikariCP-5.0.1.jar:?]
-	at com.inventario.sihcp.config.HikariConnectionPool.initializeDataSource(HikariConnectionPool.java:106) ~[sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.config.HikariConnectionPool.<init>(HikariConnectionPool.java:48) [sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.config.HikariConnectionPool.getInstance(HikariConnectionPool.java:66) [sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.config.HikariConnectionPool.getConnection(HikariConnectionPool.java:182) [sihcp-core-2.7.0.jar:2.7.0]
-	at com.inventario.sihcp.util.DatabaseConnection.getConnection(DatabaseConnection.java:175) [sihcp-core-2.7.0.jar:2.7.0]
-	at TestLogin.main(TestLogin.java:10) [MASTER_INVENTARIO/:?]
-Caused by: org.postgresql.util.PSQLException: The server requested SCRAM-based authentication, but the password is an empty string.
-	at org.postgresql.core.v3.ConnectionFactoryImpl.lambda$doAuthentication$4(ConnectionFactoryImpl.java:844) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.v3.AuthenticationPluginManager.withPassword(AuthenticationPluginManager.java:81) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.v3.ConnectionFactoryImpl.doAuthentication(ConnectionFactoryImpl.java:835) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:203) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:258) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:263) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.Driver.makeConnection(Driver.java:443) ~[postgresql-42.6.0.jar:42.6.0]
-	at org.postgresql.Driver.connect(Driver.java:297) ~[postgresql-42.6.0.jar:42.6.0]
-	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:138) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:359) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:201) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:470) ~[HikariCP-5.0.1.jar:?]
-	at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:561) ~[HikariCP-5.0.1.jar:?]
-	... 8 more
+2026-05-12 17:27:00.563 [main] INFO  com.inventario.sihcp.MobileApiApplication - ?????????????????????????????????????????????????????????????????
+2026-05-12 17:27:00.594 [main] INFO  com.inventario.sihcp.MobileApiApplication - ? VERIFICANDO PORTA 8081
+2026-05-12 17:27:00.594 [main] INFO  com.inventario.sihcp.MobileApiApplication - ?????????????????????????????????????????????????????????????????
+2026-05-12 17:27:00.608 [main] INFO  com.inventario.sihcp.util.PortManager - ? Porta 8081 está disponível
+2026-05-12 17:27:00.608 [main] INFO  com.inventario.sihcp.MobileApiApplication - ?????????????????????????????????????????????????????????????????
+2026-05-12 17:27:00.608 [main] INFO  com.inventario.sihcp.MobileApiApplication - ? Porta 8081 disponível - Iniciando servidor...
+2026-05-12 17:27:00.608 [main] INFO  com.inventario.sihcp.MobileApiApplication - ?????????????????????????????????????????????????????????????????
+2026-05-12 17:27:00.609 [main] WARN  com.inventario.sihcp.MobileApiApplication - Não foi possível desabilitar sons: com.inventario.sihcp.util.SoundNotification
+2026-05-12 17:27:01.722 [main] INFO  com.inventario.sihcp.MobileApiApplication - Starting MobileApiApplication v2.9.0 using Java 17.0.12 with PID 6036 (C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO\SERVIDOR_MOBILE_PRODUCAO\sihcp-server.jar started by Romulo in C:\Users\Romulo\Documents\PROJETOS\MASTER_INVENTARIO)
+2026-05-12 17:27:01.729 [main] INFO  com.inventario.sihcp.MobileApiApplication - The following 1 profile is active: "mobile"
+2026-05-12 17:27:05.504 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-0.0.0.0-auto-1"]
+2026-05-12 17:27:07.860 [main] INFO  com.inventario.sihcp.util.ConnectionManager - ? Connection pool inicializado com sucesso
+2026-05-12 17:27:08.450 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ???????????????????????????????????????????????????????????????
+2026-05-12 17:27:08.451 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService -   ?? MONITOR DE MEMÓRIA COM RECUPERAÇÃO AUTOMÁTICA
+2026-05-12 17:27:08.451 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ???????????????????????????????????????????????????????????????
+2026-05-12 17:27:08.452 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService -   Limites configurados:
+2026-05-12 17:27:08.452 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService -     - 60%: Alerta informativo
+2026-05-12 17:27:08.452 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService -     - 75%: Limpeza preventiva de caches
+2026-05-12 17:27:08.452 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService -     - 85%: Recuperação agressiva (GC + limpeza)
+2026-05-12 17:27:08.452 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService -     - 95%: Modo emergência
+2026-05-12 17:27:08.452 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ???????????????????????????????????????????????????????????????
+2026-05-12 17:27:08.452 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ??????????????????????????????????????????????????????????????
+2026-05-12 17:27:08.452 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ?              STATUS DE MEMÓRIA DO SERVIDOR                 ?
+2026-05-12 17:27:08.452 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ??????????????????????????????????????????????????????????????
+2026-05-12 17:27:08.453 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ? HEAP:                                                      ?
+2026-05-12 17:27:08.453 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ?   Usado:        46 MB                                          
+2026-05-12 17:27:08.453 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ?   Alocado:     100 MB                                          
+2026-05-12 17:27:08.454 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ?   Máximo:     1984 MB                                          
+2026-05-12 17:27:08.456 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ?   Uso:        2,3%                                            
+2026-05-12 17:27:08.456 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ??????????????????????????????????????????????????????????????
+2026-05-12 17:27:08.456 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ? NON-HEAP (Metaspace):                                      ?
+2026-05-12 17:27:08.456 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ?   Usado:        86 MB                                          
+2026-05-12 17:27:08.456 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ??????????????????????????????????????????????????????????????
+2026-05-12 17:27:08.456 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ? GARBAGE COLLECTOR:                                         ?
+2026-05-12 17:27:08.457 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ?   G1 Young Generation: 26 coletas, 117ms total                              
+2026-05-12 17:27:08.457 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ?   G1 Old Generation: 0 coletas, 0ms total                              
+2026-05-12 17:27:08.457 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ??????????????????????????????????????????????????????????????
+2026-05-12 17:27:08.457 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ? THREADS:   10                                                
+2026-05-12 17:27:08.457 [main] INFO  com.inventario.sihcp.service.MemoryMonitorService - ??????????????????????????????????????????????????????????????
+2026-05-12 17:27:08.907 [main] INFO  com.inventario.sihcp.util.notification.NotificationManager - Toast notifications enabled
+2026-05-12 17:27:08.908 [main] INFO  com.inventario.sihcp.util.notification.NotificationManager - Error reporting enabled
+2026-05-12 17:27:08.908 [main] INFO  com.inventario.sihcp.config.NotificationConfig - Sistema de Notificação inicializado:
+2026-05-12 17:27:08.908 [main] INFO  com.inventario.sihcp.config.NotificationConfig -   - Toast notifications: ATIVADO
+2026-05-12 17:27:08.908 [main] INFO  com.inventario.sihcp.config.NotificationConfig -   - Error reporting: ATIVADO
+2026-05-12 17:27:12.245 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-0.0.0.0-auto-1"]
+2026-05-12 17:27:12.302 [main] INFO  com.inventario.sihcp.MobileApiApplication - Started MobileApiApplication in 11.539 seconds (process running for 12.944)
+2026-05-12 17:27:12.319 [MessageBroker-2] INFO  com.inventario.sihcp.service.MemoryMonitorService - ??????????????????????????????????????????????????????????????
+2026-05-12 17:27:12.319 [MessageBroker-2] INFO  com.inventario.sihcp.service.MemoryMonitorService - ?              STATUS DE MEMÓRIA DO SERVIDOR                 ?
+2026-05-12 17:27:12.319 [MessageBroker-2] INFO  com.inventario.sihcp.service.MemoryMonitorService - ??????????????????????????????????????????????????????????????
+2026-05-12 17:27:12.319 [MessageBroker-2] INFO  com.inventario.sihcp.service.MemoryMonitorService - ? HEAP:                                                      ?
+2026-05-12 17:27:12.368 [MessageBroker-2] INFO  com.inventario.sihcp.service.MemoryMonitorService - ?   Usado:        67 MB                                          
+2026-05-12 17:27:12.368 [MessageBroker-2] INFO  com.inventario.sihcp.service.MemoryMonitorService - ?   Alocado:     564 MB                                          
+2026-05-12 17:27:12.369 [MessageBroker-2] INFO  com.inventario.sihcp.service.MemoryMonitorService - ?   Máximo:     1984 MB                                          
+2026-05-12 17:27:12.369 [MessageBroker-2] INFO  com.inventario.sihcp.service.MemoryMonitorService - ?   Uso:        3,4%                                            
+2026-05-12 17:27:12.369 [MessageBroker-2] INFO  com.inventario.sihcp.service.MemoryMonitorService - ??????????????????????????????????????????????????????????????
+2026-05-12 17:27:12.369 [MessageBroker-2] INFO  com.inventario.sihcp.service.MemoryMonitorService - ? NON-HEAP (Metaspace):                                      ?
+2026-05-12 17:27:12.369 [MessageBroker-2] INFO  com.inventario.sihcp.service.MemoryMonitorService - ?   Usado:       103 MB                                          
+2026-05-12 17:27:12.369 [MessageBroker-2] INFO  com.inventario.sihcp.service.MemoryMonitorService - ??????????????????????????????????????????????????????????????
+2026-05-12 17:27:12.369 [MessageBroker-2] INFO  com.inventario.sihcp.service.MemoryMonitorService - ? GARBAGE COLLECTOR:                                         ?
+2026-05-12 17:27:12.369 [MessageBroker-2] INFO  com.inventario.sihcp.service.MemoryMonitorService - ?   G1 Young Generation: 44 coletas, 227ms total                              
+2026-05-12 17:27:12.370 [MessageBroker-2] INFO  com.inventario.sihcp.service.MemoryMonitorService - ?   G1 Old Generation: 1 coletas, 47ms total                              
+2026-05-12 17:27:12.370 [MessageBroker-2] INFO  com.inventario.sihcp.service.MemoryMonitorService - ??????????????????????????????????????????????????????????????
+2026-05-12 17:27:12.370 [MessageBroker-2] INFO  com.inventario.sihcp.service.MemoryMonitorService - ? THREADS:   23                                                
+2026-05-12 17:27:12.370 [MessageBroker-2] INFO  com.inventario.sihcp.service.MemoryMonitorService - ??????????????????????????????????????????????????????????????
+2026-05-12 17:30:08.759 [Thread-0] INFO  com.inventario.sihcp.MobileApiApplication - ?????????????????????????????????????????????????????????????????
+2026-05-12 17:30:08.759 [Thread-0] INFO  com.inventario.sihcp.MobileApiApplication - ? Encerrando servidor mobile...
+2026-05-12 17:30:08.759 [Thread-0] INFO  com.inventario.sihcp.MobileApiApplication - ?????????????????????????????????????????????????????????????????
+2026-05-12 17:30:08.788 [SpringApplicationShutdownHook] INFO  com.inventario.sihcp.service.MemoryMonitorService - Monitor de memória encerrado
+2026-05-12 17:30:08.793 [SpringApplicationShutdownHook] INFO  com.inventario.sihcp.util.ConnectionManager - ? Connection pool fechado

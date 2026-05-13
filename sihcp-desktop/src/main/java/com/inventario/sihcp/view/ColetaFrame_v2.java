@@ -2109,11 +2109,15 @@ public class ColetaFrame_v2 extends JFrame {
         modeloTabelaSemPatrimonio.setRowCount(0);
 
         try {
-            // Buscar itens sem etiqueta da sala (usando numeroSala para consistência com dados no banco)
+            // Buscar itens sem etiqueta da sala (usando numeroSala para consistência com dados no banco).
+            // IMPORTANTE: filtrar pelo inventário ativo para não trazer coletas de inventários antigos.
             System.out.println("DEBUG TIMESTAMP: Buscando itens sem etiqueta...");
+            Inventario inventarioAtivoSemEtiq = inventarioDAO.buscarInventarioAtivo();
+            Integer idInventarioSemEtiq = inventarioAtivoSemEtiq != null ? inventarioAtivoSemEtiq.getId() : null;
             List<Coleta> itensSemPatrimonio = coletaDAO.buscarColetasSemEtiquetaPorSala(
                     salaSelecionada.getIdSala(),
-                    salaSelecionada.getNumeroSala());
+                    salaSelecionada.getNumeroSala(),
+                    idInventarioSemEtiq);
 
             System.out.println("DEBUG TIMESTAMP: Encontrados " + itensSemPatrimonio.size() + " itens sem patrimônio");
 
@@ -2344,10 +2348,15 @@ public class ColetaFrame_v2 extends JFrame {
             String descricao = (String) modeloTabelaSemPatrimonio.getValueAt(linhaSelecionada, 1);
             String localizacao = (String) modeloTabelaSemPatrimonio.getValueAt(linhaSelecionada, 3);
 
-            // Buscar e excluir a coleta (usando numeroSala para consistência com dados no banco)
+            // Buscar e excluir a coleta (usando numeroSala para consistência com dados no banco).
+            // Filtrar pelo inventário ativo para garantir que a exclusão incida apenas
+            // no inventário corrente e não apague registros históricos.
+            Inventario inventarioAtivoExcl = inventarioDAO.buscarInventarioAtivo();
+            Integer idInventarioExcl = inventarioAtivoExcl != null ? inventarioAtivoExcl.getId() : null;
             List<Coleta> itensSemPatrimonio = coletaDAO.buscarColetasSemEtiquetaPorSala(
                     salaSelecionada.getIdSala(),
-                    salaSelecionada.getNumeroSala());
+                    salaSelecionada.getNumeroSala(),
+                    idInventarioExcl);
 
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
             boolean encontrado = false;
@@ -3592,17 +3601,29 @@ public class ColetaFrame_v2 extends JFrame {
         SwingWorker<Void, Coleta> worker = new SwingWorker<>() {
             private int totalColetas = 0;
             private String erroFinal = null;
-            
+            // Inventário ativo cacheado no início do worker — garante que o filtro
+            // por inventário seja aplicado de forma consistente em todos os lotes,
+            // evitando que coletas de inventários antigos apareçam no histórico.
+            private Inventario inventarioAtivo = null;
+            private Integer idInventarioAtivo = null;
+
             @Override
             protected Void doInBackground() throws Exception {
                 try {
+                    // 0. Resolver inventário ativo antes de qualquer query
+                    inventarioAtivo = inventarioDAO.buscarInventarioAtivo();
+                    idInventarioAtivo = inventarioAtivo != null ? inventarioAtivo.getId() : null;
+                    if (idInventarioAtivo == null) {
+                        System.out.println("[PROGRESSIVO] AVISO: nenhum inventário ativo — histórico pode vir vazio");
+                    }
+
                     // 1. Contar total (query rápida)
                     SwingUtilities.invokeLater(() -> {
                         lblStatus.setText("Contando coletas...");
                         progressBar.setIndeterminate(true);
                     });
-                    
-                    totalColetas = coletaDAO.contarColetasPorNumeroSala(identificacaoSala);
+
+                    totalColetas = coletaDAO.contarColetasPorNumeroSala(identificacaoSala, idInventarioAtivo);
                     System.out.println("[PROGRESSIVO] Total de coletas a carregar: " + totalColetas);
                     
                     if (totalColetas == 0) {
@@ -3663,7 +3684,7 @@ public class ColetaFrame_v2 extends JFrame {
                         
                         try {
                             List<Coleta> lote = coletaDAO.buscarColetasPorNumeroSalaPaginado(
-                                identificacaoSala, offset, TAMANHO_LOTE
+                                identificacaoSala, offset, TAMANHO_LOTE, idInventarioAtivo
                             );
                             
                             if (lote.isEmpty()) {

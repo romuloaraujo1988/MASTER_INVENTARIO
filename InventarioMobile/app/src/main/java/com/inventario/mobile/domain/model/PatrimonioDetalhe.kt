@@ -130,11 +130,15 @@ data class PatrimonioDetalhe(
         
         if (coletado) {
             if (localizacaoEncontrada != salaNome) {
-                divergencias.add("Localização: Cadastrado em '$salaNome', encontrado em '$localizacaoEncontrada'")
+                val cadastrado = salaNome?.takeIf { it.isNotBlank() } ?: "não informado"
+                val encontrado = localizacaoEncontrada?.takeIf { it.isNotBlank() } ?: "não informado"
+                divergencias.add("Localização: Cadastrado em '$cadastrado', encontrado em '$encontrado'")
             }
             
             if (estadoEncontrado != estado) {
-                divergencias.add("Estado: Cadastrado como '$estado', encontrado como '$estadoEncontrado'")
+                val cadastrado = estado?.takeIf { it.isNotBlank() } ?: "não informado"
+                val encontrado = estadoEncontrado?.takeIf { it.isNotBlank() } ?: "não informado"
+                divergencias.add("Estado: Cadastrado como '$cadastrado', encontrado como '$encontrado'")
             }
         }
         

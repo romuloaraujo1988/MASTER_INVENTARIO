@@ -24,7 +24,12 @@ import androidx.room.Index
         // Índices compostos para otimização de queries
         Index(value = ["idPatrimonio", "idInventario"]),
         Index(value = ["idInventario", "sincronizado"]),
-        Index(value = ["idInventario", "dataColeta"])
+        Index(value = ["idInventario", "dataColeta"]),
+        // AL-10 (correcoes-seguranca — maio/2026): índice composto usado pela
+        // migration 14→15 e por qualquer busca "última coleta de um patrimônio".
+        // Sem ele, a subquery com ORDER BY + LIMIT degrada em full scan da
+        // tabela `coleta` em bases com 5.000+ registros, causando ANR no boot.
+        Index(value = ["idPatrimonio", "dataColeta"])
     ]
 )
 data class ColetaEntity(
@@ -87,5 +92,14 @@ data class ColetaEntity(
     // durante a coleta (pode ser diferente da sala de origem cadastrada no patrimônio).
     // `nomeSala` continua sendo a sala de origem (do patrimônio), enquanto
     // `localizacaoEncontrada` é onde o coletor efetivamente encontrou o item.
-    val localizacaoEncontrada: String? = null
+    val localizacaoEncontrada: String? = null,
+
+    // ========== IDEMPOTÊNCIA (A2/A3 — auditoria-sync maio/2026) ==========
+    // UUID gerado no momento da coleta, único por registro. Serve como chave
+    // de idempotência para o servidor (B3): quando o servidor aceitar o campo
+    // `clienteUuid`, poderá rejeitar reenvios do mesmo UUID sem criar duplicata.
+    // Enquanto o servidor não suporta o campo, ele é ignorado na serialização
+    // JSON (o servidor simplesmente não o lê), mas já é persistido localmente
+    // para uso futuro.
+    val clienteUuid: String? = null
 )

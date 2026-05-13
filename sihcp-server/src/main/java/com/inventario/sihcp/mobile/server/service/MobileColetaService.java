@@ -77,6 +77,43 @@ public class MobileColetaService {
         logger.debug("Registrando coleta para patrimônio: {} por usuário: {}", 
                 request.getNumeroPatrimonio(), username);
 
+        // ========================================================================
+        // B3 - Idempotência via CLIENTE_UUID (maio/2026)
+        // ========================================================================
+        // Antes de qualquer processamento, se o cliente enviou um UUID e já existe
+        // coleta persistida com esse UUID, retornamos a existente. Cenário: POST foi
+        // processado e salvou a coleta, mas a resposta HTTP não chegou ao app (timeout,
+        // queda de rede) → WorkManager reenvia → sem esta verificação criaríamos duplicata.
+        //
+        // Coletas sem UUID (cliente legado ou nulo) seguem o fluxo normal — a proteção
+        // antiga por (inventario, patrimônio) continua ativa mais abaixo.
+        if (request.getClienteUuid() != null && !request.getClienteUuid().trim().isEmpty()) {
+            Coleta jaExistente = coletaDAO.buscarPorClienteUuid(request.getClienteUuid());
+            if (jaExistente != null) {
+                logger.info("✓ Idempotência: coleta com UUID {} já processada (ID={}), retornando existente",
+                        request.getClienteUuid(), jaExistente.getId());
+                
+                // Busca dados auxiliares para montar resposta completa
+                Usuario usuarioExistente = null;
+                if (jaExistente.getIdColetor() > 0) {
+                    try {
+                        usuarioExistente = usuarioDAO.findById(jaExistente.getIdColetor());
+                    } catch (SQLException ignored) {
+                        // Fallback para converterParaResponse tratar null
+                    }
+                }
+                Inventario inventarioExistente = null;
+                if (jaExistente.getIdInventario() > 0) {
+                    try {
+                        inventarioExistente = inventarioDAO.findById(jaExistente.getIdInventario());
+                    } catch (SQLException ignored) {
+                        // Fallback para converterParaResponse tratar null
+                    }
+                }
+                return converterParaResponse(jaExistente, usuarioExistente, inventarioExistente);
+            }
+        }
+
         // Buscar usuário - prioriza username, mas aceita usuarioId se não houver username
         Usuario usuario = null;
         
@@ -174,6 +211,10 @@ public class MobileColetaService {
         coleta.setDivergencia(false);
         Boolean semEtiquetaValue = request.getSemEtiqueta();
         coleta.setSemEtiqueta(semEtiquetaValue != null && semEtiquetaValue);
+        
+        // B3 (idempotência): persiste o UUID do cliente para futura deduplicação.
+        // Se null (coletas antigas/legadas), o DAO grava NULL.
+        coleta.setClienteUuid(request.getClienteUuid());
 
         // Validação customizada: verificar se tem número de patrimônio OU é sem etiqueta
         boolean temNumeroPatrimonio = request.getNumeroPatrimonio() != null && !request.getNumeroPatrimonio().trim().isEmpty();

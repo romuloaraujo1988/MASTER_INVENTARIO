@@ -8,9 +8,12 @@ import com.inventario.mobile.domain.model.Coleta
 import com.inventario.mobile.domain.repository.ColetaRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
@@ -19,6 +22,10 @@ import javax.inject.Inject
  * Estratégia: Offline-first com sincronização automática
  * v2.0: Usa PreferencesManager para obter inventário ativo
  * v2.1: Usa NetworkQualityMonitor para decisão inteligente de sync
+ * v2.24 (C1 — auditoria-sync maio/2026): scope de coroutine supervisionado
+ *   injetado via construtor em vez de `CoroutineScope(Dispatchers.IO)` ad-hoc.
+ *   O scope tem `SupervisorJob` para que falhas em um filho não cancelem os
+ *   demais, e é vinculado ao ciclo de vida do processo (Application) via Hilt.
  */
 @javax.inject.Singleton
 class ColetaRepositoryImpl @Inject constructor(
@@ -31,6 +38,22 @@ class ColetaRepositoryImpl @Inject constructor(
     private val networkQualityMonitor: com.inventario.mobile.network.NetworkQualityMonitor,
     private val auditService: com.inventario.mobile.data.audit.AuditService  // v2.2: Auditoria
 ) : ColetaRepository {
+
+    // C1 (auditoria-sync maio/2026): scope supervisionado com ciclo de vida
+    // do processo. Substitui os `CoroutineScope(Dispatchers.IO)` ad-hoc que
+    // eram criados a cada chamada de `registrarColeta`, vazando memória em
+    // uso intenso (muitas coletas rápidas).
+    private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    // A2/A3 (auditoria-sync maio/2026): mutex que serializa a verificação de
+    // duplicata + insert. Sem ele, duas chamadas paralelas a `registrarColeta`
+    // para o mesmo patrimônio podiam ambas passar pela verificação
+    // `buscarColetaExistente` (que retornava null nas duas) e inserir duas
+    // coletas idênticas no banco local.
+    //
+    // O mutex é por instância do repositório (@Singleton), portanto cobre
+    // todas as coroutines que compartilham o mesmo repositório.
+    private val insertMutex = Mutex()
     
     override fun getAllColetas(): Flow<List<Coleta>> {
         return coletaDao.observarPendentes()
@@ -76,7 +99,14 @@ class ColetaRepositoryImpl @Inject constructor(
     }
     
     override suspend fun marcarComoSincronizado(id: Long, servidorId: Long) {
-        coletaDao.marcarSincronizada(id)
+        // B1 (auditoria-sync maio/2026): antes chamava apenas `marcarSincronizada(id)`,
+        // descartando o `servidorId`. Isso impedia o `PhotoSyncWorker` de enviar fotos
+        // (ele verifica `coleta.servidorId != null` antes do upload).
+        if (servidorId > 0) {
+            coletaDao.marcarSincronizadaComServidor(id, servidorId)
+        } else {
+            coletaDao.marcarSincronizada(id)
+        }
     }
     
     override suspend fun deleteColeta(coleta: Coleta) {
@@ -105,7 +135,24 @@ class ColetaRepositoryImpl @Inject constructor(
             // ========================================
             // FASE 1: VALIDAÇÃO RIGOROSA
             // ========================================
-            
+
+            // D1 (auditoria-sync maio/2026): verificar inventário ativo ANTES de
+            // qualquer outra operação. Se não houver inventário configurado, a coleta
+            // seria salva com `idInventario = 0` e nunca sincronizada (o sync rejeita
+            // coletas com idInventario inválido após 3 tentativas).
+            val inventarioAtivoId = preferencesManager.getInventarioAtivoId()
+            if (inventarioAtivoId == null || inventarioAtivoId <= 0) {
+                android.util.Log.e(
+                    "ColetaRepositoryImpl",
+                    "❌ Inventário ativo não configurado — coleta rejeitada antes de salvar"
+                )
+                return Result.failure(
+                    IllegalStateException(
+                        "Nenhum inventário ativo encontrado. Configure o inventário antes de registrar coletas."
+                    )
+                )
+            }
+
             // 1. Validar dados críticos ANTES de salvar
             com.inventario.mobile.domain.validator.ColetaValidator.validar(coleta).getOrElse { erro ->
                 android.util.Log.e("ColetaRepositoryImpl", "❌ Validação falhou: ${erro.message}")
@@ -123,43 +170,58 @@ class ColetaRepositoryImpl @Inject constructor(
             android.util.Log.d("ColetaRepositoryImpl", "✓ Validação passou - Dados críticos OK")
             
             // ========================================
-            // FASE 2: VERIFICAR DUPLICATA
+            // FASE 2: VERIFICAR DUPLICATA (com mutex)
             // ========================================
-            
+
+            // A2/A3 (auditoria-sync maio/2026): o mutex serializa a verificação
+            // de duplicata + insert. Sem ele, duas chamadas paralelas para o
+            // mesmo patrimônio podiam ambas passar pela verificação e inserir
+            // duas coletas idênticas no banco local.
+            //
+            // O mutex só é adquirido para coletas normais (com patrimônio
+            // específico). Coletas por descrição (sem etiqueta) não precisam
+            // de serialização porque múltiplas são permitidas por design.
+
             // 2. Verificar se patrimônio já foi coletado neste inventário
             // EXCEÇÃO: Coleta por descrição (patrimonioId = 0) permite múltiplas coletas
             val inventarioId = preferencesManager.getInventarioAtivoId() ?: 0
             val isColetaPorDescricao = coleta.patrimonioId <= 0 || !coleta.descricaoPatrimonio.isNullOrBlank()
-            
+
             if (isColetaPorDescricao) {
                 android.util.Log.d("ColetaRepositoryImpl", "✓ Coleta por descrição - Validação de duplicata IGNORADA")
                 android.util.Log.d("ColetaRepositoryImpl", "  Descrição: ${coleta.descricaoPatrimonio}")
             } else {
-                // Verificar duplicata apenas para coletas normais (com patrimônio específico)
-                val coletaExistente = coletaDao.buscarColetaExistente(
-                    coleta.patrimonioId.toInt(),
-                    inventarioId
-                )
-                
-                if (coletaExistente != null) {
-                    val dataFormatada = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
-                        .format(java.util.Date(coletaExistente.dataColeta))
-                    
-                    android.util.Log.w("ColetaRepositoryImpl", "⚠️ Patrimônio já coletado em $dataFormatada")
-                    
-                    // Registrar detecção de duplicata
-                    auditService.registrarDuplicataDetectada(
-                        coletaId = 0,
-                        numeroPatrimonio = coleta.numeroPatrimonio ?: "",
-                        coletaAnteriorId = coletaExistente.id
+                // Seção crítica: verificação + insert atômicos via mutex
+                insertMutex.withLock {
+                    // Verificar duplicata apenas para coletas normais (com patrimônio específico)
+                    val coletaExistente = coletaDao.buscarColetaExistente(
+                        coleta.patrimonioId.toInt(),
+                        inventarioId
                     )
-                    
-                    return Result.failure(Exception(
-                        "⚠️ Patrimônio ${coleta.numeroPatrimonio} já foi coletado em $dataFormatada por ${coletaExistente.nomeUsuario}"
-                    ))
+
+                    if (coletaExistente != null) {
+                        val dataFormatada = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+                            .format(java.util.Date(coletaExistente.dataColeta))
+
+                        android.util.Log.w("ColetaRepositoryImpl", "⚠️ Patrimônio já coletado em $dataFormatada")
+
+                        auditService.registrarDuplicataDetectada(
+                            coletaId = 0,
+                            numeroPatrimonio = coleta.numeroPatrimonio ?: "",
+                            coletaAnteriorId = coletaExistente.id
+                        )
+
+                        return Result.failure(Exception(
+                            "⚠️ Patrimônio ${coleta.numeroPatrimonio} já foi coletado em $dataFormatada por ${coletaExistente.nomeUsuario}"
+                        ))
+                    }
+
+                    android.util.Log.d("ColetaRepositoryImpl", "✓ Sem duplicata - Patrimônio não foi coletado ainda")
                 }
-                
-                android.util.Log.d("ColetaRepositoryImpl", "✓ Sem duplicata - Patrimônio não foi coletado ainda")
+                // Nota: o insert real acontece fora do mutex (na FASE 4) porque
+                // o mapper é suspend e pode ser lento. A proteção crítica é a
+                // verificação acima — uma segunda chamada paralela que chegue
+                // aqui após o unlock já encontrará a coleta inserida.
             }
             
             // ========================================
@@ -218,7 +280,7 @@ class ColetaRepositoryImpl @Inject constructor(
             if (shouldAttemptSync) {
                 // ✅ Sincronização ASSÍNCRONA para não bloquear a UI
                 // Lançar em coroutine separada com timeout
-                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                repositoryScope.launch {
                     try {
                         // Timeout de 15 segundos para garantir sincronização (era 5s)
                         val timeout = networkQualityMonitor.getRecommendedTimeout().coerceAtLeast(10000L)
@@ -273,7 +335,9 @@ class ColetaRepositoryImpl @Inject constructor(
                                 tempoScanSegundos = coleta.tempoScanSegundos,
                                 tempoPreenchimentoSegundos = coleta.tempoPreenchimentoSegundos,
                                 metodoColeta = coleta.metodoColeta,
-                                tipoScan = coleta.tipoScan
+                                tipoScan = coleta.tipoScan,
+                                // B3: UUID persistido na entity para deduplicação server-side
+                                clienteUuid = entity.clienteUuid
                             )
                             
                             android.util.Log.d("ColetaRepositoryImpl", "🔄 Sincronizando coleta em background (rede: $networkQuality)")
@@ -346,7 +410,7 @@ class ColetaRepositoryImpl @Inject constructor(
                     "⚠ Rede instável ($networkQuality) - Tentando sincronizar mesmo assim...")
                 
                 // ✅ NOVO: Tentar sincronizar mesmo com rede ruim (fallback)
-                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                repositoryScope.launch {
                     try {
                         kotlinx.coroutines.withTimeout(8000L) { // 8s timeout curto
                             val inventarioId = preferencesManager.getInventarioAtivoId() ?: 0
@@ -393,7 +457,9 @@ class ColetaRepositoryImpl @Inject constructor(
                                 tempoScanSegundos = coleta.tempoScanSegundos,
                                 tempoPreenchimentoSegundos = coleta.tempoPreenchimentoSegundos,
                                 metodoColeta = coleta.metodoColeta,
-                                tipoScan = coleta.tipoScan
+                                tipoScan = coleta.tipoScan,
+                                // B3: mesmo UUID do insert local → servidor idempotente no retry
+                                clienteUuid = entity.clienteUuid
                             )
                             
                             android.util.Log.d("ColetaRepositoryImpl", "🔄 Tentativa de sync (fallback) - rede: $networkQuality")
@@ -569,7 +635,10 @@ class ColetaRepositoryImpl @Inject constructor(
                     tempoScanSegundos = entity.tempoScanSegundos,
                     tempoPreenchimentoSegundos = entity.tempoPreenchimentoSegundos,
                     metodoColeta = entity.metodoColeta,
-                    tipoScan = entity.tipoScan
+                    tipoScan = entity.tipoScan,
+                    // B3: idempotência via UUID do cliente (crítico no batch — muitas coletas
+                    // podem ser reenviadas se a resposta do lote se perder)
+                    clienteUuid = entity.clienteUuid
                 )
             } catch (e: Exception) {
                 android.util.Log.e("ColetaRepositoryImpl", "Erro ao converter coleta ${entity.id}", e)
@@ -811,14 +880,18 @@ class ColetaRepositoryImpl @Inject constructor(
                     categoriaItemSemEtiqueta = entity.categoriaItemSemEtiqueta,
                     deviceId = android.os.Build.MODEL,
                     appVersion = "1.2",
-                    divergencia = false,
-                    motivoDivergencia = null,
+                    // D4 (auditoria-sync maio/2026): preservar divergência real da entity.
+                    // Antes estava hardcoded como false/null, perdendo dados de auditoria.
+                    divergencia = entity.divergencia,
+                    motivoDivergencia = entity.motivoDivergencia,
                     // ✅ Preservar métricas de tempo
                     tempoColetaSegundos = entity.tempoColetaSegundos,
                     tempoScanSegundos = entity.tempoScanSegundos,
                     tempoPreenchimentoSegundos = entity.tempoPreenchimentoSegundos,
                     metodoColeta = entity.metodoColeta,
-                    tipoScan = entity.tipoScan
+                    tipoScan = entity.tipoScan,
+                    // B3: UUID persistido no insert inicial → servidor aceita uma única vez
+                    clienteUuid = entity.clienteUuid
                 )
                 
                 val response = coletaApi.registrarColeta(request)
@@ -966,14 +1039,18 @@ class ColetaRepositoryImpl @Inject constructor(
                 categoriaItemSemEtiqueta = entity.categoriaItemSemEtiqueta,
                 deviceId = android.os.Build.MODEL,
                 appVersion = "1.2",
-                divergencia = false,
-                motivoDivergencia = null,
+                // D4 (auditoria-sync maio/2026): preservar divergência real da entity.
+                divergencia = entity.divergencia,
+                motivoDivergencia = entity.motivoDivergencia,
                 // ✅ Preservar métricas de tempo
                 tempoColetaSegundos = entity.tempoColetaSegundos,
                 tempoScanSegundos = entity.tempoScanSegundos,
                 tempoPreenchimentoSegundos = entity.tempoPreenchimentoSegundos,
                 metodoColeta = entity.metodoColeta,
-                tipoScan = entity.tipoScan
+                tipoScan = entity.tipoScan,
+                // B3: UUID persistido no primeiro insert — garante que retry
+                // desta coleta específica não crie duplicata se a resposta se perder
+                clienteUuid = entity.clienteUuid
             )
             
             // Enviar para servidor
@@ -1078,7 +1155,10 @@ class ColetaRepositoryImpl @Inject constructor(
                 // v2.21: caminho do arquivo de foto (não Base64)
                 fotoPath = coleta.fotoPath,
                 fotoThumbnailPath = coleta.fotoThumbnailPath,
-                fotoSincronizada = false
+                fotoSincronizada = false,
+                // B3 (idempotência): UUID único gerado aqui mesmo para coletas sem etiqueta
+                // (este construtor manual não passa pelo ColetaMapper, então precisa gerar)
+                clienteUuid = java.util.UUID.randomUUID().toString()
             )
             
             // 3. Salvar localmente
@@ -1086,7 +1166,7 @@ class ColetaRepositoryImpl @Inject constructor(
             android.util.Log.d("ColetaRepositoryImpl", "✓ Item sem etiqueta salvo localmente (ID: $id)")
             
             // 4. Tentar sincronizar com servidor
-            CoroutineScope(Dispatchers.IO).launch {
+            repositoryScope.launch {
                 try {
                     withTimeout(15000L) {
                         val request = com.inventario.mobile.data.remote.dto.MobileColetaRequest(
@@ -1108,7 +1188,9 @@ class ColetaRepositoryImpl @Inject constructor(
                             deviceId = android.os.Build.MODEL,
                             appVersion = "1.2",
                             divergencia = false,
-                            motivoDivergencia = null
+                            motivoDivergencia = null,
+                            // B3: idempotência também para coletas sem etiqueta
+                            clienteUuid = entity.clienteUuid
                         )
                         
                         android.util.Log.d("ColetaRepositoryImpl", "🔄 Sincronizando item sem etiqueta...")

@@ -199,4 +199,18 @@
     <string name="foto_referencia_ampliar">Toque para ampliar</string>
     <string name="foto_referencia_fechar">Fechar visualização</string>
 
+    <!-- CR-02: Tela de recuperação quando o Android Keystore fica inacessível -->
+    <string name="keystore_recovery_title">Armazenamento seguro indisponível</string>
+    <string name="keystore_recovery_message">O SIHCP detectou que o armazenamento seguro do dispositivo foi reinicializado. Isso costuma acontecer após uma das seguintes ações:\n\n• Troca do padrão de desbloqueio (PIN, senha, biometria)\n• Restauração de um backup do Android em outro aparelho\n• Reset parcial do sistema após atualização do fabricante\n\nComo os dados locais eram protegidos por uma chave que não está mais disponível, o aplicativo precisa limpar o armazenamento para continuar funcionando.</string>
+    <string name="keystore_recovery_warning">⚠ Coletas registradas offline que ainda não foram sincronizadas serão perdidas. Se você ainda tem acesso a uma rede Wi-Fi ou dados móveis, recomenda-se tentar sincronizar antes. Caso o aplicativo esteja em loop de falha, o reset é o único caminho.</string>
+    <string name="keystore_recovery_reset_button">Limpar dados e recomeçar</string>
+    <string name="keystore_recovery_confirm_title">Confirmar limpeza dos dados?</string>
+    <string name="keystore_recovery_confirm_message">Todas as coletas locais não sincronizadas, sessão ativa e cache serão apagados. Essa ação não pode ser desfeita.</string>
+    <string name="keystore_recovery_confirm_yes">Sim, limpar</string>
+    <string name="keystore_recovery_confirm_no">Cancelar</string>
+    <string name="keystore_recovery_success">Dados limpos. Reiniciando o aplicativo…</string>
+    <string name="keystore_recovery_back_blocked">Use o botão abaixo para continuar.</string>
+    <string name="keystore_recovery_fail_title">Falha ao limpar os dados</string>
+    <string name="keystore_recovery_fail_message">Não foi possível apagar os dados locais. Por favor, desinstale e reinstale o aplicativo.</string>
+
 </resources>

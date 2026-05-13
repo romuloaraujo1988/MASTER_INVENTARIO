@@ -180,7 +180,7 @@ class BuscarPatrimoniosUseCase @Inject constructor(
                         responsavelNome = dto.responsavelNome,
                         coletado = dto.coletado,
                         coletadoPor = dto.coletadoPor,
-                        dataColeta = null, // TODO: converter dataColetaFormatada para Long
+                        dataColeta = parseDataColeta(dto.dataColeta, dto.dataColetaFormatada),
                         temDivergencia = dto.temDivergencia ?: false
                     )
                 }
@@ -247,7 +247,10 @@ class BuscarPatrimoniosUseCase @Inject constructor(
             responsavelNome = patrimonio.responsavelNome,
             coletado = patrimonio.coletado,
             coletadoPor = patrimonio.coletadoPor,
-            dataColeta = patrimonio.dataColeta?.toLongOrNull(),
+            // Reusa o mesmo parser da busca remota — o `dataColeta` do banco
+            // local pode ser timestamp numérico OU string ISO, dependendo de
+            // como foi sincronizado. O `dataColetaFormatada` é o fallback final.
+            dataColeta = parseDataColeta(patrimonio.dataColeta, patrimonio.dataColetaFormatada),
             temDivergencia = temDivergencia
         )
     }
@@ -268,5 +271,60 @@ class BuscarPatrimoniosUseCase @Inject constructor(
             query.trim().length < 3 -> "Digite ao menos 3 caracteres"
             else -> null
         }
+    }
+
+    /**
+     * Converte a data de coleta recebida do servidor em timestamp (ms).
+     *
+     * O servidor pode enviar a data em 2 formatos:
+     *  - `dataColeta`: string com timestamp numérico (ex: "1714392000000") OU
+     *    data no padrão ISO 8601 "yyyy-MM-dd'T'HH:mm:ss[.SSS]".
+     *  - `dataColetaFormatada`: string já formatada para exibição, ex:
+     *    "29/04/2026 10:30".
+     *
+     * Esta função aceita qualquer um dos dois e retorna `Long` em
+     * milissegundos para o adapter renderizar com o formato brasileiro.
+     * Retorna `null` se nenhum dos valores for parseável — nesse caso o
+     * adapter mostra "N/A", comportamento esperado.
+     */
+    private fun parseDataColeta(dataColeta: String?, dataColetaFormatada: String?): Long? {
+        // 1) Tentar `dataColeta` como número (timestamp ms)
+        dataColeta?.toLongOrNull()?.let { return it }
+
+        // 2) Tentar `dataColeta` como ISO 8601
+        dataColeta?.takeIf { it.isNotBlank() }?.let { iso ->
+            val formatos = listOf(
+                "yyyy-MM-dd'T'HH:mm:ss.SSS",
+                "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy-MM-dd HH:mm:ss"
+            )
+            for (formato in formatos) {
+                try {
+                    val sdf = java.text.SimpleDateFormat(formato, java.util.Locale.getDefault())
+                    return sdf.parse(iso)?.time ?: continue
+                } catch (_: Exception) {
+                    // tenta próximo
+                }
+            }
+        }
+
+        // 3) Fallback: `dataColetaFormatada` ("dd/MM/yyyy HH:mm")
+        dataColetaFormatada?.takeIf { it.isNotBlank() }?.let { formatada ->
+            val formatos = listOf(
+                "dd/MM/yyyy HH:mm:ss",
+                "dd/MM/yyyy HH:mm",
+                "dd/MM/yyyy"
+            )
+            for (formato in formatos) {
+                try {
+                    val sdf = java.text.SimpleDateFormat(formato, java.util.Locale("pt", "BR"))
+                    return sdf.parse(formatada)?.time ?: continue
+                } catch (_: Exception) {
+                    // tenta próximo
+                }
+            }
+        }
+
+        return null
     }
 }

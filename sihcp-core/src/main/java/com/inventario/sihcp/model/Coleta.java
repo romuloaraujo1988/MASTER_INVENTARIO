@@ -46,7 +46,14 @@ public class Coleta {
     private Integer tentativasScan;           // Número de tentativas de scan
     private Integer errosScan;                // Número de erros de scan
     private String qualidadeEtiqueta;         // BOA, REGULAR, RUIM, ILEGIVEL
-    
+
+    // B3 (auditoria-sync — maio/2026): UUID gerado pelo cliente (app Android)
+    // no momento da coleta. Serve como chave de idempotência — o servidor
+    // verifica este campo antes do INSERT e, se já existir coleta com o
+    // mesmo UUID, retorna a existente em vez de criar duplicata.
+    // Null para coletas legadas criadas antes da implementação.
+    private String clienteUuid;
+
     // Campos transientes para exibição
     private String numeroPatrimonio;
     private String descricaoPatrimonio;
@@ -331,6 +338,26 @@ public class Coleta {
     
     public void setQualidadeEtiqueta(String qualidadeEtiqueta) {
         this.qualidadeEtiqueta = qualidadeEtiqueta;
+    }
+    
+    /**
+     * Retorna o UUID de idempotência gerado pelo cliente.
+     * Usado pelo servidor para detectar reenvios (timeout de rede) e
+     * evitar duplicatas de coletas. Null para coletas legadas.
+     *
+     * @return UUID gerado pelo app Android ou null
+     */
+    public String getClienteUuid() {
+        return clienteUuid;
+    }
+    
+    /**
+     * Define o UUID de idempotência gerado pelo cliente.
+     *
+     * @param clienteUuid UUID no formato padrão (ex: {@code java.util.UUID#randomUUID()})
+     */
+    public void setClienteUuid(String clienteUuid) {
+        this.clienteUuid = clienteUuid;
     }
     
     /**
