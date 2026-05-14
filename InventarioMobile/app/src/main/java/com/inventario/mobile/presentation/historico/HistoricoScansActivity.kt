@@ -185,13 +185,62 @@ class HistoricoScansActivity : AppCompatActivity() {
     }
     
     private fun confirmarLimpeza() {
+        // Dialog com 3 opções para dar flexibilidade ao usuário:
+        //  - Apenas histórico (o que a versão anterior fazia)
+        //  - Apenas contador da sessão e último coletado (sem mexer no histórico)
+        //  - Tudo (combina as duas)
+        val opcoes = arrayOf(
+            "Apenas histórico de scans",
+            "Apenas contador e último coletado",
+            "Tudo (histórico + contador)"
+        )
+
         AlertDialog.Builder(this)
-            .setTitle("Limpar Histórico")
-            .setMessage("Deseja limpar todo o histórico de scans?\n\nEsta ação não pode ser desfeita.")
-            .setPositiveButton("Limpar") { _, _ ->
-                viewModel.limparHistorico()
-                Toast.makeText(this, "Histórico limpo", Toast.LENGTH_SHORT).show()
+            .setTitle("Limpar")
+            .setItems(opcoes) { _, which ->
+                when (which) {
+                    0 -> {
+                        confirmarAcao(
+                            titulo = "Limpar Histórico",
+                            mensagem = "Deseja limpar todo o histórico de scans?\n\n" +
+                                "O contador e o último coletado NÃO serão afetados.\n\n" +
+                                "Esta ação não pode ser desfeita."
+                        ) {
+                            viewModel.limparHistorico()
+                            Toast.makeText(this, "Histórico limpo", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    1 -> {
+                        confirmarAcao(
+                            titulo = "Zerar Contador",
+                            mensagem = "Deseja zerar o contador da sessão e o último patrimônio coletado?\n\n" +
+                                "O histórico de scans NÃO será afetado."
+                        ) {
+                            viewModel.resetarContadorSessao()
+                            Toast.makeText(this, "Contador zerado", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    2 -> {
+                        confirmarAcao(
+                            titulo = "Limpar Tudo",
+                            mensagem = "Deseja limpar o histórico de scans, zerar o contador e remover o último coletado?\n\n" +
+                                "Esta ação não pode ser desfeita."
+                        ) {
+                            viewModel.limparTudo()
+                            Toast.makeText(this, "Histórico e contador limpos", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
             }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun confirmarAcao(titulo: String, mensagem: String, acao: () -> Unit) {
+        AlertDialog.Builder(this)
+            .setTitle(titulo)
+            .setMessage(mensagem)
+            .setPositiveButton("Limpar") { _, _ -> acao() }
             .setNegativeButton("Cancelar", null)
             .show()
     }

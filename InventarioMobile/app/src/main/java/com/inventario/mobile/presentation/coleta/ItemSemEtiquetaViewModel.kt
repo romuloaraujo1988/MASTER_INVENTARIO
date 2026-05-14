@@ -271,7 +271,11 @@ class ItemSemEtiquetaViewModel @Inject constructor(
                 val result = registrarColetaUseCase.registrarItemSemEtiqueta(
                     descricao = descricaoTrim,
                     categoria = categoria,
-                    salaId = null,
+                    // Resolve a sala atual a partir do PreferencesManager
+                    // (selecionada na SalaSelectionActivity). Se não houver
+                    // sala configurada, passa null e o coletor cai no fluxo
+                    // de "item sem sala" — coleta ainda é registrada.
+                    salaId = preferencesManager.getCurrentSalaId().takeIf { it > 0 },
                     localizacaoAtual = localizacao,
                     estadoEncontrado = estado,
                     observacoes = observacoes,

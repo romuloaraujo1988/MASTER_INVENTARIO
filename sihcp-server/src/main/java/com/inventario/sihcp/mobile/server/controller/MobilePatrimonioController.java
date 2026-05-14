@@ -206,6 +206,56 @@ public class MobilePatrimonioController {
                     .body(ApiResponse.error("Erro ao buscar patrimônios: " + e.getMessage(), "FETCH_ERROR"));
         }
     }
+
+    /**
+     * Buscar patrimônios para relatório baseado em <b>onde foram encontrados</b>.
+     *
+     * Diferença em relação a {@code GET /sala/{salaId}}: o filtro de coletados
+     * usa {@code TABELA_COLETA.ID_SALA = salaId} (sala onde o patrimônio FOI
+     * encontrado durante a coleta), não a sala de origem do cadastro.
+     * Patrimônios pendentes (nunca coletados) ainda aparecem com base na
+     * origem porque não têm outro vínculo de localização.
+     *
+     * Usado pelos relatórios exportados pelo app, conforme a regra de negócio
+     * de auditoria física: o local relevante é onde o item está, não onde
+     * deveria estar.
+     *
+     * @param salaId       ID da sala
+     * @param page         página (0-based)
+     * @param size         tamanho da página
+     * @param coletado     filtro de status (true=encontrados aqui; false=pendentes da origem; null=ambos)
+     * @param inventarioId ID do inventário (opcional, usa ativo se null)
+     * @return lista de patrimônios para o relatório
+     */
+    @GetMapping("/sala/{salaId}/encontrados")
+    public ResponseEntity<ApiResponse<List<MobilePatrimonioDTO>>> buscarEncontradosNaSala(
+            @PathVariable Integer salaId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1000") int size,
+            @RequestParam(required = false) Boolean coletado,
+            @RequestParam(required = false) Integer inventarioId) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+
+            logger.info("Buscando patrimônios encontrados na sala {} (page={}, size={}, coletado={}, inv={}) por {}",
+                    salaId, page, size, coletado, inventarioId, username);
+
+            List<MobilePatrimonioDTO> patrimonios = patrimonioService.buscarPorSalaEncontrados(
+                    salaId, page, size, coletado, inventarioId);
+
+            logger.info("✓ {} patrimônio(s) listado(s) para relatório da sala {}", patrimonios.size(), salaId);
+
+            return ResponseEntity.ok(
+                    ApiResponse.success(patrimonios,
+                            String.format("%d patrimônio(s) para o relatório", patrimonios.size())));
+
+        } catch (Exception e) {
+            logger.error("Erro ao buscar patrimônios encontrados na sala", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao buscar patrimônios: " + e.getMessage(), "FETCH_ERROR"));
+        }
+    }
     
     /**
      * Buscar patrimônios por setor

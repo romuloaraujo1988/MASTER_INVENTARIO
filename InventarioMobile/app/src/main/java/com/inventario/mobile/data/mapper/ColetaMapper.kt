@@ -28,6 +28,14 @@ class ColetaMapper @Inject constructor(
             id = entity.id,
             patrimonioId = entity.idPatrimonio.toLong(),
             numeroPatrimonio = entity.numeroPatrimonio,
+            // Para coletas com patrimônio identificado, a descrição vem da
+            // tabela patrimonio (não persistimos `descricaoPatrimonio` na
+            // ColetaEntity hoje). Para itens sem etiqueta, o coletor digitou
+            // a descrição livre em `descricaoItemSemEtiqueta` — espelhamos
+            // ela aqui para que telas que renderizam `descricaoPatrimonio`
+            // (ColetasUnificadaActivity, relatórios, etc.) tenham conteúdo
+            // a exibir, em vez de mostrar "Sem descrição".
+            descricaoPatrimonio = entity.descricaoItemSemEtiqueta,
             usuarioId = entity.idUsuario.toLong(),
             salaId = entity.idSala,
             dataColeta = entity.dataColeta,

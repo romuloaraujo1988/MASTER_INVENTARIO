@@ -335,4 +335,215 @@ public class MobileDashboardService {
         
         return resultado;
     }
+
+    // ─── Rankings (Top Coletores / Setores Pendentes) ─────────────────────
+
+    /**
+     * Ranking dos coletores mais produtivos do inventário.
+     *
+     * Para cada coletor retorna: nome, total de coletas no inventário,
+     * data da última coleta e produtividade (coletas/dia desde a primeira
+     * data do inventário ou da primeira coleta do usuário, o que vier antes).
+     *
+     * @param inventarioId ID do inventário (null = inventário ativo)
+     * @param limit        Quantidade máxima de coletores a retornar (default 10)
+     */
+    public Map<String, Object> buscarTopColetores(Integer inventarioId, int limit) throws SQLException {
+        logger.debug("Buscando top {} coletores", limit);
+
+        Inventario inventario = (inventarioId != null)
+                ? inventarioDAO.findById(inventarioId)
+                : inventarioDAO.buscarInventarioAtivo();
+
+        if (inventario == null) {
+            throw new IllegalArgumentException("Inventário não encontrado");
+        }
+
+        List<Map<String, Object>> dados =
+                coletaDAO.buscarTopColetoresPorInventario(inventario.getId(), limit);
+
+        // Calcular produtividade média (coletas/dia) usando dataInicio do
+        // inventário até a data atual. Se o inventário não tiver dataInicio,
+        // a produtividade fica como null para a UI tratar.
+        java.util.Date dataInicio = inventario.getDataInicio();
+        java.util.Date hoje = new java.util.Date();
+        Long diasInventario = null;
+        if (dataInicio != null) {
+            long diff = hoje.getTime() - dataInicio.getTime();
+            diasInventario = Math.max(1L, diff / (1000L * 60 * 60 * 24));
+        }
+
+        java.text.SimpleDateFormat sdf =
+                new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
+
+        for (Map<String, Object> item : dados) {
+            int totalColetas = (int) item.get("totalColetas");
+            // Produtividade = total / dias do inventário ativo
+            Double produtividade = null;
+            if (diasInventario != null && diasInventario > 0) {
+                produtividade = Math.round(
+                        (totalColetas * 100.0) / diasInventario) / 100.0;
+            }
+            item.put("produtividadePorDia", produtividade);
+
+            // Formatar timestamp para o app não precisar parsear
+            Object tsRaw = item.get("ultimaColeta");
+            if (tsRaw instanceof java.sql.Timestamp ts) {
+                item.put("ultimaColetaFormatada", sdf.format(ts));
+                // Também enviar como millis para o cliente computar "há X horas"
+                item.put("ultimaColetaMillis", ts.getTime());
+            } else {
+                item.put("ultimaColetaFormatada", null);
+                item.put("ultimaColetaMillis", null);
+            }
+            // Remover o timestamp Java original para evitar serialização com tz inconsistente
+            item.remove("ultimaColeta");
+        }
+
+        Map<String, Object> resultado = new HashMap<>();
+        resultado.put("inventarioId",   inventario.getId());
+        resultado.put("inventarioNome", inventario.getNome());
+        resultado.put("limit",          limit);
+        resultado.put("diasInventario", diasInventario);
+        resultado.put("topColetores",   dados);
+        resultado.put("total",          dados.size());
+
+        logger.debug("Top coletores carregados: {} usuários", dados.size());
+        return resultado;
+    }
+
+    /**
+     * Ranking dos setores com mais patrimônios pendentes (não coletados)
+     * em um inventário. Útil para prospecção de próximas etapas de coleta.
+     *
+     * @param inventarioId ID do inventário (null = inventário ativo)
+     * @param limit        Quantidade máxima de setores a retornar (default 10)
+     */
+    public Map<String, Object> buscarSetoresMaisPendentes(Integer inventarioId, int limit) throws SQLException {
+        logger.debug("Buscando setores com mais pendentes (top {})", limit);
+
+        Inventario inventario = (inventarioId != null)
+                ? inventarioDAO.findById(inventarioId)
+                : inventarioDAO.buscarInventarioAtivo();
+
+        if (inventario == null) {
+            throw new IllegalArgumentException("Inventário não encontrado");
+        }
+
+        List<Map<String, Object>> dados =
+                coletaDAO.buscarSetoresComMaisPendentesPorInventario(inventario.getId(), limit);
+
+        Map<String, Object> resultado = new HashMap<>();
+        resultado.put("inventarioId",   inventario.getId());
+        resultado.put("inventarioNome", inventario.getNome());
+        resultado.put("limit",          limit);
+        resultado.put("setoresPendentes", dados);
+        resultado.put("total",          dados.size());
+
+        logger.debug("Setores com pendentes carregados: {} setores", dados.size());
+        return resultado;
+    }
+
+    // ─── Projeção de Término ──────────────────────────────────────────────
+
+    /**
+     * Projeção de término do inventário com base no ritmo médio de coleta.
+     *
+     * Algoritmo:
+     *  1. Total de patrimônios e total já coletado (já existem em
+     *     {@link #buscarEstatisticasGerais}).
+     *  2. Ritmo médio = total coletado / dias decorridos desde dataInicio
+     *     do inventário (mínimo 1 dia).
+     *  3. Dias restantes = pendentes / ritmo médio (arredondado para cima).
+     *  4. Data prevista = hoje + dias restantes.
+     *
+     * Casos de borda:
+     *  - Sem dataInicio no inventário → retorna dadosInsuficientes=true.
+     *  - Ritmo zero (nenhuma coleta ainda) → retorna dadosInsuficientes=true.
+     *  - Já 100% concluído → retorna concluido=true.
+     *
+     * @param inventarioId ID do inventário (null = inventário ativo)
+     */
+    public Map<String, Object> calcularProjecaoTermino(Integer inventarioId) throws SQLException {
+        logger.debug("Calculando projeção de término para inventário {}", inventarioId);
+
+        Inventario inventario = (inventarioId != null)
+                ? inventarioDAO.findById(inventarioId)
+                : inventarioDAO.buscarInventarioAtivo();
+
+        if (inventario == null) {
+            throw new IllegalArgumentException("Inventário não encontrado");
+        }
+
+        int totalPatrimonios = patrimonioDAO.contarPatrimoniosAInventariar();
+        int totalColetados   = coletaDAO.contarColetasPorInventario(inventario.getId());
+        int totalPendentes   = Math.max(0, totalPatrimonios - totalColetados);
+        double percentual    = totalPatrimonios > 0
+                ? (totalColetados * 100.0) / totalPatrimonios
+                : 0.0;
+
+        Map<String, Object> resultado = new HashMap<>();
+        resultado.put("inventarioId",         inventario.getId());
+        resultado.put("inventarioNome",       inventario.getNome());
+        resultado.put("totalPatrimonios",     totalPatrimonios);
+        resultado.put("totalColetados",       totalColetados);
+        resultado.put("totalPendentes",       totalPendentes);
+        resultado.put("percentualConclusao",  Math.round(percentual * 100.0) / 100.0);
+
+        // Já concluído
+        if (totalPendentes == 0 && totalPatrimonios > 0) {
+            resultado.put("concluido",            true);
+            resultado.put("dadosInsuficientes",   false);
+            resultado.put("ritmoColetasPorDia",   0.0);
+            resultado.put("diasRestantes",        0);
+            resultado.put("dataPrevistaFormatada", "Concluído");
+            resultado.put("dataPrevistaMillis",   System.currentTimeMillis());
+            return resultado;
+        }
+
+        java.util.Date dataInicio = inventario.getDataInicio();
+        if (dataInicio == null || totalColetados == 0) {
+            // Sem base para projetar
+            resultado.put("concluido",          false);
+            resultado.put("dadosInsuficientes", true);
+            resultado.put("ritmoColetasPorDia", 0.0);
+            resultado.put("diasRestantes",      null);
+            resultado.put("dataPrevistaFormatada", null);
+            resultado.put("dataPrevistaMillis",    null);
+            return resultado;
+        }
+
+        long agora = System.currentTimeMillis();
+        long diasDecorridos = Math.max(1L,
+                (agora - dataInicio.getTime()) / (1000L * 60 * 60 * 24));
+
+        double ritmo = totalColetados / (double) diasDecorridos;
+        // Arredondar para cima — projeção otimista demais sai pela culatra
+        long diasRestantes = (long) Math.ceil(totalPendentes / ritmo);
+        long dataPrevistaMillis = agora + diasRestantes * 1000L * 60 * 60 * 24;
+
+        java.text.SimpleDateFormat sdf =
+                new java.text.SimpleDateFormat("dd/MM/yyyy");
+
+        resultado.put("concluido",            false);
+        resultado.put("dadosInsuficientes",   false);
+        resultado.put("diasDecorridos",       diasDecorridos);
+        resultado.put("ritmoColetasPorDia",   Math.round(ritmo * 100.0) / 100.0);
+        resultado.put("diasRestantes",        diasRestantes);
+        resultado.put("dataPrevistaFormatada",
+                sdf.format(new java.util.Date(dataPrevistaMillis)));
+        resultado.put("dataPrevistaMillis",   dataPrevistaMillis);
+
+        // Se o inventário tem dataFim definida, comparar com a previsão
+        java.util.Date dataFim = inventario.getDataFim();
+        if (dataFim != null) {
+            long diffDias = (dataFim.getTime() - dataPrevistaMillis) / (1000L * 60 * 60 * 24);
+            resultado.put("dataFimInventarioFormatada", sdf.format(dataFim));
+            resultado.put("diasDeFolgaOuAtraso", diffDias); // negativo = atraso
+            resultado.put("dentroDoPrazo",      diffDias >= 0);
+        }
+
+        logger.debug("Projeção: ritmo={} cole/dia, restam {} dias", ritmo, diasRestantes);
+        return resultado;
+    }
 }

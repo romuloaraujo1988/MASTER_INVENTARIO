@@ -38,6 +38,7 @@ class HistoricoScansAdapter(
         private val tvSala: TextView = itemView.findViewById(R.id.tvSala)
         private val tvTempo: TextView = itemView.findViewById(R.id.tvTempo)
         private val ivTipoAcesso: ImageView = itemView.findViewById(R.id.ivTipoAcesso)
+        private val ivTipoPatrimonio: ImageView = itemView.findViewById(R.id.ivTipoPatrimonio)
         private val ivStatus: ImageView = itemView.findViewById(R.id.ivStatus)
         private val viewIndicador: View = itemView.findViewById(R.id.viewIndicador)
         
@@ -46,8 +47,16 @@ class HistoricoScansAdapter(
             tvDescricao.text = item.descricao ?: "Sem descrição"
             tvSala.text = item.nomeSala ?: "Sala não informada"
             tvTempo.text = item.getTempoRelativo()
-            
-            // Ícone do tipo de acesso
+
+            // Ícone principal: tipo do patrimônio (cadeira, monitor, mesa...)
+            // derivado da descrição. Dá identificação visual rápida sem o usuário
+            // precisar ler cada linha.
+            ivTipoPatrimonio.setImageResource(
+                com.inventario.mobile.utils.TipoPatrimonioIconMapper
+                    .iconParaDescricao(item.descricao)
+            )
+
+            // Badge: tipo de acesso (QR, busca manual, consulta)
             val iconeTipo = when (item.tipoAcesso) {
                 TipoAcesso.SCAN_QR -> R.drawable.ic_qr_code
                 TipoAcesso.BUSCA_MANUAL -> R.drawable.ic_search

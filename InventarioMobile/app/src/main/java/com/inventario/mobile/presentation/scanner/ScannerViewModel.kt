@@ -28,7 +28,15 @@ class ScannerViewModel(
     private val vibrationHelper: VibrationHelper
 ) : ViewModel() {
     
-    private val _uiState = MutableStateFlow(ScannerUiState())
+    // Inicializa o StateFlow já com os valores persistidos — garante que o primeiro
+    // render da tela já mostre o contador e o último coletado, sem esperar o
+    // ciclo assíncrono do `loadColetasCount()` no init.
+    private val _uiState = MutableStateFlow(
+        ScannerUiState(
+            totalColetas = preferencesManager.getCollectionCount(),
+            ultimoPatrimonioColetado = preferencesManager.getLastCollectedPatrimonio()
+        )
+    )
     val uiState: StateFlow<ScannerUiState> = _uiState.asStateFlow()
     
     init {
@@ -210,8 +218,10 @@ class ScannerViewModel(
             try {
                 // Utiliza o contador do PreferencesManager que monitora as coletas da sessão
                 val count = preferencesManager.getCollectionCount()
+                val ultimoColetado = preferencesManager.getLastCollectedPatrimonio()
                 _uiState.value = _uiState.value.copy(
-                    totalColetas = count
+                    totalColetas = count,
+                    ultimoPatrimonioColetado = ultimoColetado
                 )
             } catch (e: Exception) {
                 // Silently fail for count
@@ -401,15 +411,21 @@ class ScannerViewModel(
                         vibrationHelper.vibrateSuccess()
                         Log.d("ScannerViewModel", "✅ Vibração executada com PRIORIDADE MÁXIMA")
                         
-                        // Incrementar contador de coletas
+                        // Incrementar contador de coletas e registrar o último lido para
+                        // exibição no chip flutuante da câmera.
                         preferencesManager.incrementCollectionCount()
-                        
+                        preferencesManager.saveLastCollectedPatrimonio(patrimonio.numeroPatrimonio)
+
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             statusMessage = "Coleta realizada com sucesso!",
                             successMessage = "Patrimônio ${patrimonio.numeroPatrimonio} coletado com sucesso! Estado: $estadoEncontrado",
                             scanResult = null, // Limpar resultado para permitir nova coleta
-                            errorMessage = null
+                            errorMessage = null,
+                            // Atualiza o chip "Último coletado" imediatamente — o valor será
+                            // refrescado pelo loadColetasCount() abaixo, mas deixamos aqui para
+                            // que a UI não espere um ciclo extra.
+                            ultimoPatrimonioColetado = patrimonio.numeroPatrimonio
                         )
                         
                         // Atualizar contador de coletas
@@ -481,7 +497,13 @@ data class ScannerUiState(
     val errorMessage: String? = null,
     val successMessage: String? = null,
     val scanResult: ScanResult? = null,
-    val totalColetas: Int = 0
+    val totalColetas: Int = 0,
+    /**
+     * Número do último patrimônio coletado com sucesso na sessão atual.
+     * Exibido como chip flutuante na câmera para o usuário conferir o que
+     * foi lido por último sem precisar abrir o histórico.
+     */
+    val ultimoPatrimonioColetado: String? = null
 )
 
 data class ScanResult(

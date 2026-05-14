@@ -104,6 +104,17 @@ class ScannerActivity : AppCompatActivity() {
             
             // ✅ Tocar som suave de sucesso
             SoundUtils.playSuccessSound()
+
+            // ✅ v2.30: Vibração INSTANTÂNEA na detecção do código.
+            // O VibrationHelper já checa a preferência internamente, então
+            // se o usuário desabilitou a vibração nas configurações isso
+            // vira no-op. Disparamos aqui (e não só após o registrarColeta)
+            // porque o registro tem latência de DB/rede e o usuário precisa
+            // de feedback imediato para entender que o scan foi captado.
+            // Se um segundo `vibrateSuccess` for chamado depois do registro,
+            // o sistema agrega os padrões — não há vibração duplicada
+            // perceptível.
+            vibrationHelper.vibrateSuccess()
             
             // ✅ Processar código na thread principal
             runOnUiThread {
@@ -666,7 +677,13 @@ class ScannerActivity : AppCompatActivity() {
                 ).fold(
                     onSuccess = { coletaSalva ->
                         android.util.Log.d("ScannerActivity", "✅ Coleta similar registrada com sucesso!")
-                        
+
+                        // Registra a descrição como "último coletado" para o chip da câmera.
+                        // Como a coleta similar não tem número de patrimônio, usamos a
+                        // descrição do item (prefixada) para o usuário ter contexto.
+                        val rotuloUltimo = "Sem etiqueta: ${descricao.take(30)}"
+                        preferencesManager.saveLastCollectedPatrimonio(rotuloUltimo)
+
                         runOnUiThread {
                             binding.progressBar.visibility = View.GONE
                             SoundUtils.playSuccessSound()
@@ -674,10 +691,10 @@ class ScannerActivity : AppCompatActivity() {
                                 vibrationHelper.vibrateSuccess()
                             }
                             Toast.makeText(this@ScannerActivity, "✓ Coleta similar registrada!", Toast.LENGTH_SHORT).show()
-                            
-                            // Atualizar contador via ViewModel
+
+                            // Atualizar contador via ViewModel (também atualiza chip "Último")
                             viewModel.loadColetasCount()
-                            
+
                             // Manter botão de coletar similar visível para continuar
                             binding.textStatus.text = "Coleta similar registrada! Pronto para mais."
                         }
@@ -734,15 +751,26 @@ class ScannerActivity : AppCompatActivity() {
             
         binding.textStatus.text = state.statusMessage
         binding.textColetasCount.text = state.totalColetas.toString()
+
+        // Chip "Último coletado" — só aparece depois da primeira coleta da sessão.
+        // Oculto até que o usuário tenha algo para visualizar.
+        val ultimo = state.ultimoPatrimonioColetado
+        if (!ultimo.isNullOrBlank()) {
+            binding.chipUltimoColetado.text = "Último: $ultimo"
+            binding.chipUltimoColetado.visibility = View.VISIBLE
+        } else {
+            binding.chipUltimoColetado.visibility = View.GONE
+        }
         
         // Tratar mensagem de sucesso (coleta realizada)
         state.successMessage?.let { message ->
-            // Tocar som de sucesso
+            // Tocar som de sucesso. A vibração já foi disparada pelo ScannerViewModel
+            // (`vibrateSuccess()` antes de publicar o successMessage) — chamar aqui
+            // novamente causaria interferência no padrão de vibração do sistema em
+            // alguns dispositivos, fazendo parecer que não vibra. Som continua aqui
+            // porque não é gerado no ViewModel.
             SoundUtils.playSuccessSound()
-            if (preferencesManager.isVibrationOnCollectionEnabled()) {
-                vibrationHelper.vibrateSuccess()
-            }
-            
+
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
             viewModel.clearMessages()
             
@@ -1062,14 +1090,24 @@ class ScannerActivity : AppCompatActivity() {
                 setBeepEnabled(false) // Desabilitar beep padrão - usaremos som customizado
                 setBarcodeImageEnabled(false)
                 setOrientationLocked(true)
-                setTimeout(30000) // 30 segundos timeout
+                // ✅ v2.30: timeout DESABILITADO. Antes era 30s e fechava a
+                // câmera durante a coleta de campo, exigindo reabrir a tela.
+                // Em coletas longas (item de difícil leitura, sala mal
+                // iluminada), o coletor passava 1-2 minutos focando — e era
+                // jogado de volta para o dashboard. Setar timeout=0 (ou não
+                // chamar) deixa o ZXing manter o scan ativo indefinidamente.
+                setTimeout(0)
+                // Usa nossa CaptureActivity customizada para sobrepor contador,
+                // último coletado, sala atual e botão de flash sobre a câmera.
+                // Sem isso o ZXing abriria o layout default minimalista.
+                setCaptureActivity(CustomCaptureActivity::class.java)
             }
             
             android.util.Log.d("ScannerActivity", "✓ ScanOptions configurado")
             android.util.Log.d("ScannerActivity", "  - Formatos: QR_CODE, EAN, CODE_128, etc")
             android.util.Log.d("ScannerActivity", "  - Câmera: Traseira (ID: 0)")
             android.util.Log.d("ScannerActivity", "  - Beep: Desabilitado")
-            android.util.Log.d("ScannerActivity", "  - Timeout: 30s")
+            android.util.Log.d("ScannerActivity", "  - Timeout: 0 (desativado — coleta de campo)")
             
             android.util.Log.d("ScannerActivity", "Iniciando scanner com ScanContract...")
             binding.progressBar.visibility = View.GONE
@@ -1302,8 +1340,18 @@ class ScannerActivity : AppCompatActivity() {
      */
     private fun atualizarContadorColetas() {
         val count = preferencesManager.getCollectionCount()
-        android.util.Log.d("ScannerActivity", "atualizarContadorColetas: count=$count")
+        val ultimo = preferencesManager.getLastCollectedPatrimonio()
+        android.util.Log.d("ScannerActivity", "atualizarContadorColetas: count=$count, ultimo=$ultimo")
         binding.textColetasCount.text = count.toString()
+
+        // Atualiza o chip "Último coletado" junto com o contador — usado em onResume()
+        // para refletir mudanças feitas em outras telas (ex.: coleta similar via FAB).
+        if (!ultimo.isNullOrBlank()) {
+            binding.chipUltimoColetado.text = "Último: $ultimo"
+            binding.chipUltimoColetado.visibility = View.VISIBLE
+        } else {
+            binding.chipUltimoColetado.visibility = View.GONE
+        }
     }
 
     override fun onResume() {

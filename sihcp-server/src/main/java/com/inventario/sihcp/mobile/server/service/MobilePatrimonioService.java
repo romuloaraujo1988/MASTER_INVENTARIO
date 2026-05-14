@@ -825,6 +825,125 @@ public class MobilePatrimonioService {
     }
 
     /**
+     * Busca patrimônios para o relatório baseado em **onde foram encontrados**.
+     *
+     * Diferenças importantes em relação a {@link #buscarPorSalaComFiltro}:
+     *  - Para o filtro {@code coletado=true} (ou todos), busca coletas em que
+     *    {@code TABELA_COLETA.ID_SALA = salaId} — ou seja, o patrimônio foi
+     *    encontrado nesta sala, independentemente de onde estava cadastrado.
+     *  - Para o filtro {@code coletado=false} (ou todos), inclui também
+     *    patrimônios cuja sala de origem é {@code salaId} e que NÃO foram
+     *    coletados em nenhum lugar — eles continuam aparecendo como pendentes
+     *    da sala de origem.
+     *
+     * Justificativa: relatórios de auditoria devem refletir a realidade
+     * encontrada em campo, não o cadastro original.
+     *
+     * @param salaId       ID da sala
+     * @param page         página (0-based) — paginação aplicada após união
+     * @param size         tamanho da página
+     * @param coletado     {@code true} = só encontrados aqui; {@code false} = só pendentes da origem; {@code null} = união
+     * @param inventarioId ID do inventário (opcional, usa ativo se null)
+     */
+    public List<MobilePatrimonioDTO> buscarPorSalaEncontrados(
+            Integer salaId, int page, int size, Boolean coletado, Integer inventarioId)
+            throws SQLException {
+        logger.debug("Buscando patrimônios encontrados na sala {} (page={}, size={}, coletado={}, inv={})",
+                salaId, page, size, coletado, inventarioId);
+
+        // 1. Resolver inventário ativo
+        Inventario inventario = (inventarioId != null)
+                ? inventarioDAO.findById(inventarioId)
+                : inventarioDAO.buscarInventarioAtivo();
+        if (inventario == null) {
+            logger.warn("Nenhum inventário encontrado para busca por sala (encontrados)");
+            return new ArrayList<>();
+        }
+
+        // 2. Resolver o numero_sala a partir do id_sala.
+        //    A tabela_coleta NÃO tem coluna id_sala — a sala onde o item foi
+        //    encontrado é armazenada em localizacao_encontrada como o numero_sala
+        //    da tabela_sala (ex.: "LAB. INFORMATICA A10").
+        com.inventario.sihcp.model.Sala sala = null;
+        try {
+            sala = salaDAO.findById(salaId);
+        } catch (Exception e) {
+            logger.warn("Falha ao buscar sala {}: {}", salaId, e.getMessage());
+        }
+        if (sala == null) {
+            logger.warn("Sala {} não encontrada", salaId);
+            return new ArrayList<>();
+        }
+        final String numeroSala = sala.getNumeroSala();
+        logger.debug("Sala {}: numero_sala='{}'", salaId, numeroSala);
+
+        List<MobilePatrimonioDTO> resultado = new ArrayList<>();
+
+        // 3. Coletados encontrados nesta sala: localizacao_encontrada = numero_sala
+        if (coletado == null || coletado) {
+            List<com.inventario.sihcp.model.Coleta> coletas =
+                    coletaDAO.buscarColetasEncontradasNaSala(salaId, inventario.getId());
+
+            java.util.Map<Integer, com.inventario.sihcp.model.Coleta> coletaPorPatrimonio =
+                    new java.util.LinkedHashMap<>();
+            for (com.inventario.sihcp.model.Coleta c : coletas) {
+                coletaPorPatrimonio.putIfAbsent(c.getIdPatrimonio(), c);
+            }
+
+            for (com.inventario.sihcp.model.Coleta coleta : coletaPorPatrimonio.values()) {
+                Patrimonio p = patrimonioDAO.findById(coleta.getIdPatrimonio());
+                if (p == null) continue;
+
+                MobilePatrimonioDTO dto = converterParaDTOSimples(p);
+                dto.setColetado(true);
+                aplicarDadosAuditoriaColeta(dto, coleta);
+                resultado.add(dto);
+            }
+        }
+
+        // 4. Pendentes da sala de ORIGEM (patrimônios cadastrados nesta sala
+        //    que ainda não foram coletados em parte alguma do inventário).
+        if (coletado == null || !coletado) {
+            java.util.Set<Long> idsJaIncluidos = new java.util.HashSet<>();
+            for (MobilePatrimonioDTO d : resultado) {
+                if (d.getId() != null) idsJaIncluidos.add(d.getId());
+            }
+
+            java.util.Set<Integer> coletadosNoInventario = new java.util.HashSet<>();
+            try {
+                List<com.inventario.sihcp.model.Coleta> todasColetas =
+                        coletaDAO.buscarPorInventario(inventario.getId());
+                for (com.inventario.sihcp.model.Coleta c : todasColetas) {
+                    coletadosNoInventario.add(c.getIdPatrimonio());
+                }
+            } catch (Exception e) {
+                logger.warn("Falha ao carregar coletas do inventário para detectar pendentes: {}",
+                        e.getMessage());
+            }
+
+            List<Patrimonio> patrimoniosOrigem = patrimonioDAO.buscarPorSala(salaId);
+            for (Patrimonio p : patrimoniosOrigem) {
+                if (coletadosNoInventario.contains(p.getId())) continue;
+                if (idsJaIncluidos.contains((long) p.getId())) continue;
+
+                MobilePatrimonioDTO dto = converterParaDTOSimples(p);
+                dto.setColetado(false);
+                resultado.add(dto);
+            }
+        }
+
+        // 5. Paginação
+        int from = Math.min(page * size, resultado.size());
+        int to = Math.min(from + size, resultado.size());
+        List<MobilePatrimonioDTO> pagina = resultado.subList(from, to);
+
+        logger.debug("Sala {} encontrados+pendentes: total={}, retornando {} (página {})",
+                salaId, resultado.size(), pagina.size(), page);
+
+        return new ArrayList<>(pagina);
+    }
+
+    /**
      * Preenche os campos de auditoria da coleta no DTO.
      * Extraído para reutilização entre os dois caminhos de buscarPorSalaComFiltro
      * e garantir que o app receba sempre os mesmos dados.

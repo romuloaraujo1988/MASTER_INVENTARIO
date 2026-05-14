@@ -212,12 +212,23 @@ class PreferencesManager(context: Context) {
     }
     fun saveUserData(usuario: Any) {
         putBoolean("user_logged_in", true)
-        
+
         // Tentar cast direto para os tipos conhecidos (evita reflexão que quebra com R8).
         // CORREÇÃO (maio/2026): getDeclaredField() lança NoSuchFieldException em release
         // porque R8 renomeia os campos. Cast direto é seguro e não depende de nomes.
+        //
+        // IMPORTANTE: existem DUAS classes UsuarioDto no projeto:
+        //   - `data.remote.dto.UsuarioDto` (DTO de rede com `username`)
+        //   - `data.model.UsuarioDto`      (modelo intermediário com `login`)
+        // O LoginViewModel salva via `data.model.UsuarioDto`, então ambas
+        // precisam ser tratadas explicitamente — caso contrário o nome cai
+        // no branch `else` e o drawer fica em branco.
         when (usuario) {
             is com.inventario.mobile.data.remote.dto.UsuarioDto -> {
+                putString("user_name", usuario.nome)
+                if (usuario.perfil != null) putString("user_profile", usuario.perfil)
+            }
+            is com.inventario.mobile.data.model.UsuarioDto -> {
                 putString("user_name", usuario.nome)
                 if (usuario.perfil != null) putString("user_profile", usuario.perfil)
             }
@@ -411,7 +422,13 @@ class PreferencesManager(context: Context) {
     
     // Métodos de contagem de coletas
     fun shouldSyncByCollectionCount(): Boolean = getBoolean("sync_by_collection_count", false)
-    fun resetCollectionCount() = putInt("collection_count", 0)
+    fun resetCollectionCount() {
+        putInt("collection_count", 0)
+        // Limpa também o último patrimônio coletado para manter consistência:
+        // quando o contador reseta (ex.: após sync), o histórico de "último lido"
+        // também é recente e não reflete mais a sessão atual.
+        remove("last_collected_patrimonio")
+    }
     fun incrementCollectionCount() {
         val current = getInt("collection_count", 0)
         putInt("collection_count", current + 1)
@@ -643,6 +660,30 @@ class PreferencesManager(context: Context) {
     fun setVibrationOnCollectionEnabled(enabled: Boolean) {
         putBoolean("vibration_on_collection", enabled)
         android.util.Log.d("PreferencesManager", "Vibração ao coletar ${if (enabled) "HABILITADA" else "DESABILITADA"}")
+    }
+
+    // ===== ÚLTIMO PATRIMÔNIO COLETADO (feedback visual no scanner) =====
+
+    /**
+     * Salva o número do último patrimônio coletado com sucesso.
+     * Usado pela tela de scanner para mostrar o último código lido sem o
+     * usuário precisar abrir o histórico. Expira junto com a sessão do
+     * contador (é resetado em `resetCollectionCount`).
+     */
+    fun saveLastCollectedPatrimonio(numero: String?) {
+        if (numero.isNullOrBlank()) {
+            remove("last_collected_patrimonio")
+        } else {
+            putString("last_collected_patrimonio", numero)
+        }
+    }
+
+    /**
+     * Retorna o número do último patrimônio coletado ou null se não houver.
+     */
+    fun getLastCollectedPatrimonio(): String? {
+        val numero = getString("last_collected_patrimonio", "")
+        return numero.takeIf { it.isNotBlank() }
     }
     
     // ===== ESTADO FIXO PARA COLETA RÁPIDA =====

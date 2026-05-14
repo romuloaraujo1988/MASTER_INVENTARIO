@@ -70,9 +70,16 @@ class GerarRelatorioUseCase @Inject constructor(
             // local estivesse vazio. Isso deixava o relatório offline sem os
             // dados de auditoria, porque `limparSincronizadas()` apaga a
             // tabela `coleta` após sync, perdendo o histórico local.
+            //
+            // v2.29: agora usa o endpoint `/sala/{id}/encontrados` que filtra
+            // pelos patrimônios EFETIVAMENTE encontrados na sala (c.id_sala),
+            // não pela sala de origem. Pendentes (não coletados) continuam
+            // listados pela origem, pois não têm outro vínculo. Isso alinha
+            // o relatório com a realidade de auditoria: o local importante é
+            // onde o item está, não onde deveria estar.
             var patrimonios: List<Patrimonio> = if (!isOffline) {
-                Log.d(TAG, "Modo online — buscando do servidor primeiro")
-                val doServidor = buscarPatrimoniosServidor(sala.id.toInt(), coletadoFilter)
+                Log.d(TAG, "Modo online — buscando do servidor (endpoint /encontrados)")
+                val doServidor = buscarPatrimoniosEncontradosServidor(sala.id.toInt(), coletadoFilter)
                 if (doServidor.isNotEmpty()) {
                     Log.d(TAG, "Patrimônios do servidor: ${doServidor.size}")
                     doServidor
@@ -117,62 +124,153 @@ class GerarRelatorioUseCase @Inject constructor(
     }
     
     /**
-     * Busca patrimônios do banco local
+     * Busca patrimônios do banco local com a mesma semântica do endpoint
+     * `/sala/{id}/encontrados`:
+     *  - Coletados na sala (entidade `coleta.idSala = salaId`) → enriquecidos com
+     *    o respectivo registro do patrimônio para preencher descrição, marca, etc.
+     *  - Pendentes da sala de ORIGEM (`patrimonio.idSala = salaId` e ainda não
+     *    coletados em parte alguma do inventário ativo) → continuam aparecendo
+     *    aqui porque não há outro vínculo de localização.
+     *
+     * O filtro [coletado] funciona assim:
+     *  - `null` → união (encontrados aqui + pendentes da origem)
+     *  - `true` → apenas encontrados aqui
+     *  - `false` → apenas pendentes da origem
      */
     private suspend fun buscarPatrimoniosLocal(salaId: Int, coletado: Boolean?): List<Patrimonio> {
         return try {
-            // Buscar em lotes para evitar OutOfMemoryError com Int.MAX_VALUE
-            val pageSize = 500
-            val allPatrimonios = mutableListOf<Patrimonio>()
-            var page = 0
+            val inventarioAtivoId = preferencesManager.getInventarioAtivoId() ?: 0
+            val resultado = mutableListOf<Patrimonio>()
 
-            while (true) {
-                val patrimoniosResult = patrimonioRepository.buscarPorSala(
-                    salaId = salaId,
-                    coletado = coletado,
-                    page = page,
-                    pageSize = pageSize
-                )
-
-                if (patrimoniosResult.isSuccess) {
-                    val batch = patrimoniosResult.getOrNull() ?: emptyList()
-                    allPatrimonios.addAll(batch)
-                    if (batch.size < pageSize) break // última página
-                    page++
+            // 1. Coletados encontrados aqui — usa idSala da coleta.
+            if (coletado == null || coletado) {
+                val coletas = if (inventarioAtivoId > 0) {
+                    coletaDao.buscarPorSala(salaId, inventarioAtivoId)
                 } else {
-                    break
+                    coletaDao.buscarPorSala(salaId)
+                }
+
+                // Indexar por idPatrimonio (mais recente primeiro — DAO já ordena
+                // por dataColeta DESC).
+                val coletasPorPatrimonio = coletas
+                    .groupBy { it.idPatrimonio }
+                    .mapValues { (_, lista) -> lista.maxBy { it.dataColeta } }
+
+                val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR"))
+
+                for ((_, coleta) in coletasPorPatrimonio) {
+                    // Buscar o patrimônio cadastrado para enriquecer com descrição, marca etc.
+                    val entity = patrimonioDao.buscarPorId(coleta.idPatrimonio) ?: continue
+
+                    val dataFormatada = runCatching { sdf.format(Date(coleta.dataColeta)) }.getOrNull()
+
+                    resultado.add(
+                        Patrimonio(
+                            id = entity.id.toInt(),
+                            numeroPatrimonio = entity.numeroPatrimonio ?: entity.numero ?: "",
+                            descricao = entity.descricao,
+                            marca = entity.marca,
+                            modelo = entity.modelo,
+                            numeroSerie = entity.numeroSerie,
+                            estado = entity.estado ?: entity.status ?: "ATIVO",
+                            valor = entity.valor,
+                            dataAquisicao = null,
+                            observacoes = entity.observacoes,
+                            idSetor = entity.setorId,
+                            nomeSetor = entity.setorNome,
+                            idSala = entity.idSala,
+                            nomeSala = entity.nomeSala,
+                            idResponsavel = entity.idResponsavel,
+                            nomeResponsavel = entity.nomeResponsavel,
+                            qrCode = entity.numeroPatrimonio ?: entity.numero ?: "",
+                            sincronizado = true,
+                            coletado = true,
+                            dataColeta = coleta.dataColeta.toString(),
+                            coletorId = null,
+                            coletadoPor = coleta.nomeUsuario.ifBlank { null },
+                            dataColetaFormatada = dataFormatada,
+                            // Localização encontrada = nome da sala da coleta (a "encontrada").
+                            // O nomeSala salvo no ColetaEntity já reflete a sala da coleta.
+                            localizacaoEncontrada = coleta.nomeSala,
+                            estadoEncontrado = coleta.estadoPatrimonio
+                        )
+                    )
                 }
             }
 
-            allPatrimonios
+            // 2. Pendentes da sala de ORIGEM — só inclui patrimônios cuja sala de
+            //    origem é a salaId E que ainda não foram coletados em lugar nenhum.
+            if (coletado == null || !coletado) {
+                // IDs já incluídos para evitar duplicar quando o filtro é null.
+                val idsJaIncluidos = resultado.map { it.id }.toMutableSet()
+
+                // IDs de todos os patrimônios já coletados no inventário (qualquer sala).
+                val coletadosInv = if (inventarioAtivoId > 0) {
+                    coletaDao.buscarTodas(inventarioAtivoId).map { it.idPatrimonio }.toSet()
+                } else {
+                    coletaDao.buscarTodas().map { it.idPatrimonio }.toSet()
+                }
+
+                // Buscar patrimônios da sala de origem em lotes para evitar OOM.
+                val pageSize = 500
+                var page = 0
+                while (true) {
+                    val batch = patrimonioRepository.buscarPorSala(
+                        salaId = salaId,
+                        coletado = false, // apenas não coletados
+                        page = page,
+                        pageSize = pageSize
+                    ).getOrNull() ?: break
+
+                    if (batch.isEmpty()) break
+
+                    for (p in batch) {
+                        if (p.id in coletadosInv) continue
+                        if (p.id in idsJaIncluidos) continue
+                        resultado.add(p.copy(coletado = false))
+                        idsJaIncluidos.add(p.id)
+                    }
+
+                    if (batch.size < pageSize) break
+                    page++
+                }
+            }
+
+            resultado
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao buscar patrimônios locais: ${e.message}", e)
+            Log.e(TAG, "Erro ao buscar patrimônios locais (encontrados): ${e.message}", e)
             emptyList()
         }
     }
     
     /**
-     * Busca patrimônios do servidor e salva no banco local
+     * Busca patrimônios do servidor pelo endpoint de relatório, que retorna:
+     *  - Coletados encontrados na sala informada (c.id_sala)
+     *  - Pendentes da sala de origem (p.id_sala) que ainda não foram coletados
+     *
+     * Espelha o comportamento do antigo [buscarPatrimoniosServidor] (cache,
+     * mapeamento de campos), mas usando o endpoint correto para auditoria.
      */
-    private suspend fun buscarPatrimoniosServidor(salaId: Int, coletado: Boolean?): List<Patrimonio> {
+    private suspend fun buscarPatrimoniosEncontradosServidor(salaId: Int, coletado: Boolean?): List<Patrimonio> {
         return try {
-            Log.d(TAG, "Buscando patrimônios do servidor para sala $salaId...")
-            
-            val response = patrimonioApi.buscarPorSala(
+            Log.d(TAG, "Buscando patrimônios encontrados na sala $salaId no servidor...")
+
+            val response = patrimonioApi.buscarEncontradosNaSala(
                 salaId = salaId,
                 page = 0,
-                size = 1000, // Buscar todos
+                size = 5000, // relatório completo de uma sala
                 coletado = coletado
             )
-            
+
             if (response.isSuccessful && response.body()?.success == true) {
                 val patrimoniosApi = response.body()?.data ?: emptyList()
-                Log.d(TAG, "✓ ${patrimoniosApi.size} patrimônios do servidor")
-                
-                // Salvar no banco local para cache
+                Log.d(TAG, "✓ ${patrimoniosApi.size} patrimônios do endpoint /encontrados")
+
+                // Cache local (segue a mesma estratégia do método antigo, mas usando
+                // a sala da consulta como fallback de id_sala — patrimônios
+                // encontrados aqui podem ter id_sala original diferente).
                 salvarNoBancoLocal(patrimoniosApi, salaId)
-                
-                // Converter para domain model
+
                 patrimoniosApi.map { p ->
                     Patrimonio(
                         id = p.id.toInt(),
@@ -185,10 +283,6 @@ class GerarRelatorioUseCase @Inject constructor(
                         valor = p.valor,
                         dataAquisicao = null,
                         observacoes = p.observacoes,
-                        // v2.20.8 fix: mapear todos os campos de localização/responsável.
-                        // Antes faltavam nomeSala/nomeSetor/idResponsavel/nomeResponsavel,
-                        // o que resultava em colunas "Responsável" e "Sala" vazias no
-                        // relatório exportado quando os dados vinham do servidor.
                         idSetor = p.setorId?.toInt(),
                         nomeSetor = p.setorNome,
                         idSala = p.salaId?.toInt(),
@@ -199,9 +293,6 @@ class GerarRelatorioUseCase @Inject constructor(
                         sincronizado = true,
                         coletado = p.coletado,
                         dataColeta = p.dataColeta,
-                        // coletorId no domain é o ID de quem realizou a coleta —
-                        // não tem relação com responsavelId do patrimônio.
-                        // O DTO do servidor não traz esse ID separado, então fica null.
                         coletorId = null,
                         coletadoPor = p.coletadoPor,
                         dataColetaFormatada = p.dataColetaFormatada,
@@ -210,15 +301,15 @@ class GerarRelatorioUseCase @Inject constructor(
                     )
                 }
             } else {
-                Log.w(TAG, "Falha ao buscar do servidor: ${response.message()}")
+                Log.w(TAG, "Falha ao buscar /encontrados do servidor: ${response.message()}")
                 emptyList()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao buscar patrimônios do servidor: ${e.message}", e)
+            Log.e(TAG, "Erro ao buscar patrimônios encontrados no servidor: ${e.message}", e)
             emptyList()
         }
     }
-    
+
     /**
      * Salva patrimônios no banco local para cache
      */
@@ -300,7 +391,9 @@ class GerarRelatorioUseCase @Inject constructor(
             patrimonios.map { patrimonio ->
                 val coleta = coletasPorPatrimonio[patrimonio.id]
                 if (coleta != null) {
-                    // Coleta encontrada - preencher campos de auditoria
+                    // Coleta encontrada — só preenche os campos que estão vazios
+                    // para não sobrescrever os valores corretos vindos do servidor
+                    // (que agora já reflete a sala onde o patrimônio foi encontrado).
                     val dataFormatada = try {
                         sdf.format(Date(coleta.dataColeta))
                     } catch (e: Exception) {
@@ -308,13 +401,18 @@ class GerarRelatorioUseCase @Inject constructor(
                     }
                     patrimonio.copy(
                         coletado = true,
-                        dataColeta = coleta.dataColeta.toString(),
-                        dataColetaFormatada = dataFormatada,
-                        coletadoPor = coleta.nomeUsuario.ifBlank { patrimonio.coletadoPor },
+                        dataColeta = patrimonio.dataColeta ?: coleta.dataColeta.toString(),
+                        dataColetaFormatada = patrimonio.dataColetaFormatada ?: dataFormatada,
+                        coletadoPor = patrimonio.coletadoPor?.takeIf { it.isNotBlank() }
+                            ?: coleta.nomeUsuario.ifBlank { null },
                         // `nomeSala` na coleta representa a localização onde o item FOI
-                        // encontrado (pode ser diferente da sala original do patrimônio)
-                        localizacaoEncontrada = coleta.nomeSala ?: patrimonio.localizacaoEncontrada,
-                        estadoEncontrado = coleta.estadoPatrimonio ?: patrimonio.estadoEncontrado
+                        // encontrado. Só substitui se vier vazio do servidor.
+                        localizacaoEncontrada = patrimonio.localizacaoEncontrada
+                            ?.takeIf { it.isNotBlank() }
+                            ?: coleta.nomeSala,
+                        estadoEncontrado = patrimonio.estadoEncontrado
+                            ?.takeIf { it.isNotBlank() }
+                            ?: coleta.estadoPatrimonio
                     )
                 } else {
                     patrimonio

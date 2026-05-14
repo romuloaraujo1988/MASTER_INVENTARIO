@@ -1,17 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Mapeamento usado pelo FileProvider para gerar URIs seguras para arquivos
+    do app (fotos de coleta, exports de relatório, etc.).
+
+    IMPORTANTE: o atributo `path="."` cobre a RAIZ do diretório referenciado
+    e todos os subdiretórios. Sempre que `FileProvider.getUriForFile` for
+    chamado, o caminho real do arquivo precisa cair dentro de UM dos blocos
+    abaixo — caso contrário o ZXing/Camera lança
+    `IllegalArgumentException: Failed to find configured root that contains <path>`.
+-->
 <paths>
-    <!-- Armazenamento externo do app (Android 4.4+, sem permissão necessária) -->
+    <!-- ================================================================
+         Diretório externo do app: getExternalFilesDir(...).
+         Usado para:
+           - Fotos capturadas pela câmera (ItemSemEtiquetaActivity, ColetaActivity)
+           - Exports de relatórios (XLSX/CSV/PDF)
+         path="." cobre a raiz E todos os subdiretórios (Pictures, exports, etc.)
+         ================================================================ -->
+    <external-files-path name="external_files_root" path="." />
+
+    <!-- Subpastas explícitas — redundante ao "external_files_root" mas mantemos
+         para não quebrar URIs já emitidas que usam o nome `exports`. -->
     <external-files-path name="exports" path="exports/" />
+    <external-files-path name="external_pictures" path="Pictures/" />
 
-    <!-- Fallback: armazenamento interno do app (quando external não disponível) -->
+    <!-- ================================================================
+         filesDir — armazenamento interno permanente do app.
+         Cobre as fotos novas (PhotoHelper salva em files/fotos/...)
+         e o fallback de exports quando o externo não está disponível.
+         ================================================================ -->
+    <files-path name="internal_files_root" path="." />
     <files-path name="internal_exports" path="exports/" />
+    <files-path name="internal_fotos" path="fotos/" />
 
-    <!-- Cache para arquivos temporários -->
-    <cache-path name="cache" path="exports/" />
-
-    <!-- Raiz do cacheDir — cobre arquivos salvos diretamente em context.cacheDir -->
+    <!-- ================================================================
+         cacheDir — temporários do app.
+         Usado por relatórios fotográficos e PDFs gerados sob demanda.
+         ================================================================ -->
     <cache-path name="cache_root" path="." />
-
-    <!-- Raiz do cacheDir — cobre arquivos salvos diretamente em context.cacheDir -->
-    <cache-path name="cache_root" path="." />
+    <cache-path name="cache_exports" path="exports/" />
 </paths>

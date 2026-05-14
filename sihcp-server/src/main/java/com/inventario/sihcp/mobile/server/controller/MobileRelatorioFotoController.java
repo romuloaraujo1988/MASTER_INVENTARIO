@@ -2,6 +2,7 @@ package com.inventario.sihcp.mobile.server.controller;
 
 import com.inventario.sihcp.dao.RelatorioFotoColetaDAO;
 import com.inventario.sihcp.mobile.server.dto.ApiResponse;
+import com.inventario.sihcp.mobile.server.service.RelatorioFotoExcelGenerator;
 import com.inventario.sihcp.mobile.server.service.RelatorioFotoPDFGenerator;
 import com.inventario.sihcp.security.annotation.RequireConsulta;
 import com.inventario.sihcp.security.annotation.RequireSupervisor;
@@ -56,6 +57,9 @@ public class MobileRelatorioFotoController {
     private RelatorioFotoPDFGenerator pdfGenerator;
 
     @Autowired
+    private RelatorioFotoExcelGenerator excelGenerator;
+
+    @Autowired
     private RelatorioFotoColetaDAO relatorioFotoDAO;
 
     // ─── Geração do PDF ───────────────────────────────────────────────────────
@@ -108,6 +112,64 @@ public class MobileRelatorioFotoController {
                     .body(ApiResponse.error(
                             "Erro ao gerar relatório: " + e.getMessage(),
                             "ERRO_RELATORIO_FOTO"));
+        }
+    }
+
+    // ─── Geração do Excel (.xlsx) ─────────────────────────────────────────────
+
+    /**
+     * Gera o Relatório Fotográfico de Coletas em Excel (.xlsx).
+     *
+     * Mesma fonte de dados e mesmas regras de filtro/segurança do PDF; útil
+     * para análises tabulares e filtros do Excel. As fotos vão embutidas
+     * na primeira coluna da planilha.
+     *
+     * @param inventarioId ID do inventário
+     * @param tipo         Filtro: {@code todos}, {@code patrimonio},
+     *                     {@code sem_etiqueta} ou {@code divergencia}
+     * @param salaId       Filtro opcional por sala
+     * @param nome         Nome do inventário para o cabeçalho
+     * @return XLSX como download
+     */
+    @GetMapping("/{inventarioId}/excel")
+    @RequireSupervisor
+    public ResponseEntity<?> gerarRelatorioFotograficoExcel(
+            @PathVariable int inventarioId,
+            @RequestParam(value = "tipo",   defaultValue = "todos") String tipo,
+            @RequestParam(value = "salaId", required = false)       Integer salaId,
+            @RequestParam(value = "nome",   defaultValue = "")      String nome) {
+
+        logger.info("GET /api/mobile/relatorios/fotos/{}/excel — tipo={}, salaId={}", inventarioId, tipo, salaId);
+
+        try {
+            byte[] xlsxBytes = excelGenerator.gerarExcel(inventarioId, nome, tipo, salaId);
+
+            if (xlsxBytes == null || xlsxBytes.length == 0) {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            }
+
+            String nomeArquivo = String.format("relatorio_fotos_inv%d_%s_%s.xlsx",
+                    inventarioId,
+                    tipo.equals("todos") ? "completo" : tipo,
+                    new SimpleDateFormat("yyyyMMdd_HHmm").format(new Date()));
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType(
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+            headers.setContentDisposition(
+                    ContentDisposition.attachment().filename(nomeArquivo).build());
+            headers.setContentLength(xlsxBytes.length);
+
+            logger.info("XLSX gerado: {} bytes, arquivo={}", xlsxBytes.length, nomeArquivo);
+
+            return new ResponseEntity<>(xlsxBytes, headers, HttpStatus.OK);
+
+        } catch (Exception e) {
+            logger.error("Erro ao gerar relatório fotográfico Excel para inventário {}", inventarioId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error(
+                            "Erro ao gerar relatório Excel: " + e.getMessage(),
+                            "ERRO_RELATORIO_FOTO_EXCEL"));
         }
     }
 

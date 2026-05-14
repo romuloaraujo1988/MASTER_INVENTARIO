@@ -212,4 +212,90 @@ public class MobileDashboardController {
                     .body(ApiResponse.error("Erro ao buscar distribuição por sala", "FETCH_ERROR"));
         }
     }
+
+    // ─── Rankings + Projeção ─────────────────────────────────────────────
+
+    /**
+     * Ranking dos coletores mais produtivos do inventário.
+     * GET /api/mobile/dashboard/top-coletores
+     */
+    @GetMapping("/top-coletores")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> buscarTopColetores(
+            @RequestParam(required = false) Integer inventarioId,
+            @RequestParam(defaultValue = "10") int limit) {
+        try {
+            logger.info("Buscando top {} coletores (inv={})", limit, inventarioId);
+
+            Map<String, Object> data = dashboardService.buscarTopColetores(inventarioId, limit);
+            return ResponseEntity.ok(ApiResponse.success(data, "Top coletores carregados"));
+
+        } catch (IllegalArgumentException e) {
+            logger.warn("Inventário não encontrado para top coletores: {}", e.getMessage());
+            Map<String, Object> vazio = new HashMap<>();
+            vazio.put("inventarioId", inventarioId);
+            vazio.put("limit", limit);
+            vazio.put("topColetores", new java.util.ArrayList<>());
+            vazio.put("total", 0);
+            return ResponseEntity.ok(ApiResponse.success(vazio, "Nenhum inventário ativo"));
+        } catch (Exception e) {
+            logger.error("Erro ao buscar top coletores", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao buscar top coletores", "FETCH_ERROR"));
+        }
+    }
+
+    /**
+     * Ranking dos setores com mais patrimônios pendentes (não coletados).
+     * GET /api/mobile/dashboard/setores-pendentes
+     */
+    @GetMapping("/setores-pendentes")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> buscarSetoresPendentes(
+            @RequestParam(required = false) Integer inventarioId,
+            @RequestParam(defaultValue = "10") int limit) {
+        try {
+            logger.info("Buscando setores com mais pendentes (top {}, inv={})", limit, inventarioId);
+
+            Map<String, Object> data = dashboardService.buscarSetoresMaisPendentes(inventarioId, limit);
+            return ResponseEntity.ok(ApiResponse.success(data, "Setores com pendentes carregados"));
+
+        } catch (IllegalArgumentException e) {
+            logger.warn("Inventário não encontrado para setores pendentes: {}", e.getMessage());
+            Map<String, Object> vazio = new HashMap<>();
+            vazio.put("inventarioId", inventarioId);
+            vazio.put("limit", limit);
+            vazio.put("setoresPendentes", new java.util.ArrayList<>());
+            vazio.put("total", 0);
+            return ResponseEntity.ok(ApiResponse.success(vazio, "Nenhum inventário ativo"));
+        } catch (Exception e) {
+            logger.error("Erro ao buscar setores pendentes", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao buscar setores pendentes", "FETCH_ERROR"));
+        }
+    }
+
+    /**
+     * Projeção de término do inventário com base no ritmo médio de coleta.
+     * GET /api/mobile/dashboard/projecao-termino
+     */
+    @GetMapping("/projecao-termino")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> buscarProjecaoTermino(
+            @RequestParam(required = false) Integer inventarioId) {
+        try {
+            logger.info("Calculando projeção de término (inv={})", inventarioId);
+
+            Map<String, Object> data = dashboardService.calcularProjecaoTermino(inventarioId);
+            return ResponseEntity.ok(ApiResponse.success(data, "Projeção calculada"));
+
+        } catch (IllegalArgumentException e) {
+            logger.warn("Inventário não encontrado para projeção: {}", e.getMessage());
+            Map<String, Object> vazio = new HashMap<>();
+            vazio.put("inventarioId", inventarioId);
+            vazio.put("dadosInsuficientes", true);
+            return ResponseEntity.ok(ApiResponse.success(vazio, "Nenhum inventário ativo"));
+        } catch (Exception e) {
+            logger.error("Erro ao calcular projeção de término", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Erro ao calcular projeção", "FETCH_ERROR"));
+        }
+    }
 }

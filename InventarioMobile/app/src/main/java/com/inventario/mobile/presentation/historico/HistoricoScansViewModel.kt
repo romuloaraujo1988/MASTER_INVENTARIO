@@ -20,7 +20,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class HistoricoScansViewModel @Inject constructor(
-    private val buscarHistoricoUseCase: BuscarHistoricoScansUseCase
+    private val buscarHistoricoUseCase: BuscarHistoricoScansUseCase,
+    private val preferencesManager: com.inventario.mobile.utils.PreferencesManager
 ) : ViewModel() {
     
     companion object {
@@ -122,7 +123,12 @@ class HistoricoScansViewModel @Inject constructor(
     }
     
     /**
-     * Limpa todo o histórico
+     * Limpa todo o histórico (tabela `historico_scan`).
+     *
+     * Não afeta o contador de coletas do scanner nem o último patrimônio
+     * coletado — esses são controlados pelo PreferencesManager e podem ser
+     * resetados separadamente via [resetarContadorSessao] para quem quiser
+     * começar uma nova sessão de coleta limpa.
      */
     fun limparHistorico() {
         viewModelScope.launch {
@@ -140,6 +146,27 @@ class HistoricoScansViewModel @Inject constructor(
                 }
             )
         }
+    }
+
+    /**
+     * Reseta o contador de coletas da sessão e o último patrimônio coletado.
+     * Útil para começar uma nova sessão de coleta sem precisar sair do app.
+     * Isso NÃO apaga coletas salvas no banco — só os indicadores de sessão
+     * exibidos na tela do scanner.
+     */
+    fun resetarContadorSessao() {
+        preferencesManager.resetCollectionCount()
+        // `resetCollectionCount()` já limpa o último patrimônio internamente.
+        android.util.Log.d(TAG, "Contador de sessão resetado")
+    }
+
+    /**
+     * Limpeza completa: histórico + contador + último coletado.
+     * Oferecido como opção "Tudo" no dialog de limpeza.
+     */
+    fun limparTudo() {
+        resetarContadorSessao()
+        limparHistorico()
     }
     
     /**

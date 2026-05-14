@@ -67,7 +67,10 @@ class OfflineFallbackInterceptor @Inject constructor(
             "/dashboard/evolucao",
             "/dashboard/top-itens",
             "/dashboard/distribuicao-por-sala",
-            "/dashboard/estatisticas-por-status"
+            "/dashboard/estatisticas-por-status",
+            "/dashboard/top-coletores",
+            "/dashboard/setores-pendentes",
+            "/dashboard/projecao-termino"
         )
     }
 

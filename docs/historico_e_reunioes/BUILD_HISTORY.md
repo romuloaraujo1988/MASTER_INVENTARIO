@@ -4,6 +4,496 @@ Este arquivo registra todas as compilações do APK Android para rastreabilidade
 
 ---
 
+## Build #137 - 14/05/2026 (v2.28.0 — Correção definitiva: relatório por sala encontrada)
+
+- **Tipo:** Release (assinado com release keystore)
+- **Versão:** 2.28.0
+- **Build Code:** 76 (sem alteração)
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.28.0.apk`
+- **Servidor:** `SERVIDOR_MOBILE_PRODUCAO/sihcp-server.jar` (recompilado)
+
+### Diagnóstico via MCP PostgreSQL (banco de produção — 8.850 coletas)
+
+Verificação direta na `tabela_coleta` do servidor `10.14.150.14` revelou:
+
+- **`localizacao_encontrada`** = `numero_sala` da `tabela_sala` (ex.: `"LAB. INFORMATICA A10"`)
+  → é onde o item **foi encontrado** durante a coleta
+- **`localizacao_atual`** = `descricao` da sala de origem do patrimônio (ex.: `"LAB. INFORMATICA A10(IFMT - PDL)"`)
+  → é a sala de **cadastro/origem**
+- **`id_sala`** = coluna **NÃO EXISTE** na `tabela_coleta`
+
+Exemplo real confirmado:
+- Coleta `id=9077`: patrimônio cadastrado na **Sala de Apoio** (`sala_origem_id=58`),
+  mas **encontrado no LAB. INFORMATICA A10** (`localizacao_encontrada`)
+- O relatório antigo mostrava esse item no relatório da "Sala de Apoio" (errado)
+- O relatório novo mostra no "LAB. INFORMATICA A10" (correto)
+
+### Correção no servidor
+
+- **`ColetaDAO.buscarColetasEncontradasNaSala`**: reescrito para usar
+  `c.LOCALIZACAO_ENCONTRADA = sala.NUMERO_SALA` (em vez de `c.ID_SALA = ?` que não existe)
+  — resolve o `id_sala` para `numero_sala` via lookup na `tabela_sala` antes do JOIN
+- **`MobilePatrimonioService.buscarPorSalaEncontrados`**: usa `salaDAO.findById(salaId)`
+  para obter o `numero_sala` e passa para o DAO
+
+### Arquivos modificados
+
+- `sihcp-core/src/main/java/com/inventario/sihcp/dao/ColetaDAO.java`
+- `sihcp-server/src/main/java/com/inventario/sihcp/mobile/server/service/MobilePatrimonioService.java`
+
+### Status
+
+- ✅ Servidor: `BUILD SUCCESS` em 12s
+- ✅ APK: `BUILD SUCCESSFUL` em 20s (sem mudanças no app — apenas servidor)
+- ✅ JAR de produção atualizado: `SERVIDOR_MOBILE_PRODUCAO/sihcp-server.jar`
+- ⚠️ **Reiniciar o servidor de produção** para o endpoint `/encontrados` funcionar corretamente
+
+---
+
+## Build #136 - 14/05/2026 (v2.28.0 — Relatório Fotográfico movido para o topo da Exportação)
+
+- **Tipo:** Release (assinado com release keystore)
+- **Versão:** 2.28.0
+- **Build Code:** 76 (sem alteração)
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.28.0.apk`
+- **Tamanho:** ~19,57 MB
+
+### Problema reportado
+
+Usuário relatou: *"ainda nao vi onde está a exportação de relatório de coleta
+sem etiquetas (somente com descrição e foto)"*
+
+A funcionalidade já existia desde a Build #131 e os botões PDF/Excel desde a
+Build #132, mas o card ficava **abaixo** do botão "Gerar Relatório", do
+indicador de modo offline e do card de resultado. Com o ScrollView,
+o card só aparecia depois de rolar a tela para baixo — fazendo o usuário
+acreditar que a feature não existia.
+
+### Correção (UX)
+
+Reorganizada a aba Exportação em duas seções claramente separadas e rotuladas:
+
+```
+┌─────────────────────────────────────────────────┐
+│ RELATÓRIOS DISPONÍVEIS              ← cabeçalho │
+├─────────────────────────────────────────────────┤
+│ 📸 Relatório Fotográfico                        │
+│ Itens sem etiqueta coletados neste inventário,  │
+│ com fotos.                                      │
+│ [3 foto(s) disponível(is)]                      │
+│ [ Baixar em PDF ]   [ Baixar em Excel ]         │
+├─────────────────────────────────────────────────┤
+│ RELATÓRIO POR SALA                  ← cabeçalho │
+├─────────────────────────────────────────────────┤
+│ 📍 Selecione a Sala                             │
+│ ...                                             │
+│ 🔍 Filtrar por Status                           │
+│ ...                                             │
+│ 📄 Formato de Exportação                        │
+│ ...                                             │
+│ [ Gerar Relatório ]                             │
+└─────────────────────────────────────────────────┘
+```
+
+- Card de **Relatório Fotográfico** agora é a **primeira coisa** que aparece
+  ao abrir a aba Exportação — não precisa rolar para encontrá-lo.
+- Cabeçalhos em texto small-caps cinza (`text_secondary`) deixam claro que
+  são duas seções independentes, não uma sequência única.
+- Texto do card simplificado para "Itens sem etiqueta coletados neste
+  inventário, com fotos." (era genérico antes).
+
+### Arquivos modificados
+
+- `InventarioMobile/app/src/main/res/layout/fragment_statistics_export.xml`
+
+### Status
+
+- ✅ APK: `BUILD SUCCESSFUL` em 58s (`assembleRelease`)
+- ✅ Sem mudanças no código Kotlin/Java — apenas reordenação no layout XML
+- ✅ Servidor não foi alterado
+
+---
+
+## Build #135 - 14/05/2026 (v2.28.0 — Câmera persistente, vibração instantânea, botões legíveis)
+
+- **Tipo:** Release (assinado com release keystore)
+- **Versão:** 2.28.0
+- **Build Code:** 76 (sem alteração)
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.28.0.apk`
+- **Tamanho:** ~19,57 MB
+
+### Problemas resolvidos
+
+**1. Câmera fechava após 1-2 minutos** 🔴 ALTO
+- Causa raiz #1: `setTimeout(30000)` no `ScanOptions` finalizava a câmera após
+  30s sem detectar nenhum código.
+- Causa raiz #2: faltava `FLAG_KEEP_SCREEN_ON` no `CustomCaptureActivity`. A
+  tela apagava pelo timeout do sistema, disparando `onPause` e liberando a câmera.
+- Solução: `setTimeout(0)` (sem timeout) + `addFlags(FLAG_KEEP_SCREEN_ON)`.
+
+**2. Vibração imperceptível na coleta rápida** 🟡 MÉDIO
+- A vibração era disparada pelo `ScannerViewModel` apenas **após** o
+  `registrarColetaUseCase` retornar — latência de DB/rede de centenas de ms
+  fazia parecer que não vibrou.
+- Solução: chamar `vibrationHelper.vibrateSuccess()` IMEDIATAMENTE no
+  `barcodeLauncher` (junto com `playSuccessSound`), antes do registro.
+  O `VibrationHelper` já checa a preferência internamente, então usuários
+  com vibração desligada não sentem nada.
+
+**3. Botões da Coleta Manual ilegíveis** 🟡 MÉDIO
+- Os 3 botões usavam `style=...OutlinedButton` (cor de texto = primária)
+  com `android:backgroundTint` aplicado em cima. Resultado: texto escuro
+  sobre fundo escuro/colorido = ilegível.
+- Solução: refeitos como `MaterialButton` preenchidos com:
+  - **Limpar**: fundo claro + texto escuro + borda sutil (estilo secundário)
+  - **Buscar**: fundo `colorSecondary` + texto branco + ícone branco
+  - **Coletar**: fundo `colorPrimary` + texto branco + ícone branco
+- Removido `autoSizeTextType` (causava redimensionamento errático) e fixado
+  `textSize="14sp"` para todos os botões.
+
+### Arquivos modificados
+
+- `InventarioMobile/.../scanner/ScannerActivity.kt`
+  - `ScanOptions.setTimeout(0)` + log atualizado
+  - Vibração instantânea no `barcodeLauncher`
+- `InventarioMobile/.../scanner/CustomCaptureActivity.kt`
+  - `addFlags(FLAG_KEEP_SCREEN_ON)` no `onCreate`
+- `InventarioMobile/app/src/main/res/layout/activity_manual_collection.xml`
+  - Botões refeitos como Material Buttons preenchidos com cor de texto explícita
+
+### Status
+
+- ✅ APK: `BUILD SUCCESSFUL` em 4m 55s (`assembleRelease`)
+- ✅ Sem erros de lint
+- ⚠️ A nova versão precisa ser instalada para testar; o servidor não foi
+  alterado, então não precisa reiniciar.
+
+---
+
+## Build #134 - 14/05/2026 (v2.28.0 — Relatório por sala onde o item foi ENCONTRADO)
+
+- **Tipo:** Release (assinado com release keystore)
+- **Versão:** 2.28.0
+- **Build Code:** 76 (sem alteração)
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.28.0.apk`
+- **Tamanho:** ~19,57 MB
+- **Servidor:** `SERVIDOR_MOBILE_PRODUCAO/sihcp-server.jar` (recompilado)
+
+### Mudança de comportamento
+
+**Problema reportado:** Os relatórios exportados pelo app (PDF/Excel/CSV) listavam
+patrimônios filtrando pela **sala de origem** (cadastro). Para auditoria física, o
+correto é o **local onde o item foi encontrado** durante a coleta.
+
+**Cenário antes:** P-200 cadastrado na Sala 101, encontrado na Sala 205. Relatório
+"Sala 101" incluía P-200 (com nota "encontrado em Sala 205"). Relatório "Sala 205"
+NÃO incluía P-200 — mesmo o item estando lá fisicamente.
+
+**Cenário agora:** Relatório "Sala 205" inclui P-200 corretamente. Relatório
+"Sala 101" lista apenas pendentes (não coletados em parte alguma) cuja origem é
+Sala 101, e os encontrados em outros lugares.
+
+### Nova semântica do relatório
+
+| Filtro | Conteúdo |
+|---|---|
+| **Coletados** | Patrimônios cuja `coleta.id_sala = salaId` (encontrados aqui) |
+| **Não coletados** | Patrimônios da origem `salaId` que ainda não foram coletados em **nenhum** lugar |
+| **Todos** | União dos dois acima, sem duplicar |
+
+### Mudanças no servidor (sihcp-server)
+
+- **`ColetaDAO`** (sihcp-core): novo método `buscarColetasEncontradasNaSala(idSala, idInventario)`
+  que filtra por `c.ID_SALA = ?` (sala da coleta), não `p.ID_SALA` (origem).
+- **`MobilePatrimonioService`**: novo método `buscarPorSalaEncontrados(salaId, ...)` que
+  une coletas encontradas + pendentes da origem com dedup e paginação.
+- **`MobilePatrimonioController`**: novo endpoint `GET /api/mobile/patrimonio/sala/{salaId}/encontrados`
+  com mesmas queries do antigo (`coletado`, `inventarioId`).
+- **Endpoint antigo `/sala/{salaId}` mantido intacto** (regra `endpoints-nao-alterar.md`) —
+  outras telas do app que dependem da sala de origem (ex.: visualização de coletas)
+  continuam funcionando.
+
+### Mudanças no app (Android)
+
+- **`PatrimonioApi.kt`**: novo método `buscarEncontradosNaSala(...)`.
+- **`GerarRelatorioUseCase.kt`** reescrito:
+  - Online: usa novo endpoint `/encontrados`.
+  - Offline: replica a mesma semântica via Room — busca em `coleta.idSala` para
+    coletados; em `patrimonio.idSala` para pendentes da origem; deduplica.
+  - `enriquecerComDadosColeta` agora **só preenche campos vazios**, não sobrescreve
+    o que vem do servidor (que já é correto).
+
+### Arquivos modificados
+
+- `sihcp-core/src/main/java/com/inventario/sihcp/dao/ColetaDAO.java`
+- `sihcp-server/.../service/MobilePatrimonioService.java`
+- `sihcp-server/.../controller/MobilePatrimonioController.java`
+- `InventarioMobile/.../api/PatrimonioApi.kt`
+- `InventarioMobile/.../domain/usecase/GerarRelatorioUseCase.kt`
+
+### Status
+
+- ✅ Servidor: `BUILD SUCCESS` (`mvn package -pl sihcp-server -am -DskipTests`)
+- ✅ APK: `BUILD SUCCESSFUL` em 6m 21s (`assembleRelease`)
+- ✅ JAR de produção atualizado: `SERVIDOR_MOBILE_PRODUCAO/sihcp-server.jar`
+- ⚠️ **Reiniciar o servidor de produção** antes de testar
+- ⚠️ Necessário sincronizar dados após o restart para o cache local refletir
+  o novo comportamento
+
+---
+
+## Build #133 - 13/05/2026 (v2.28.0 — Top Coletores, Setores Pendentes e Projeção de Término)
+
+- **Tipo:** Release (assinado com release keystore)
+- **Versão:** 2.28.0
+- **Build Code:** 76 (sem alteração)
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.28.0.apk`
+- **Tamanho:** 19,57 MB
+- **Servidor:** `SERVIDOR_MOBILE_PRODUCAO/sihcp-server.jar` (~97 MB) — recompilado com novos endpoints
+
+### Funcionalidades adicionadas
+
+**1. Aba Rankings** (antes era apenas placeholder)
+   - 🏆 **Top Coletores**: ranking dos 10 coletores mais produtivos com nome, total
+     de coletas, produtividade média (coletas/dia) e tempo desde a última coleta.
+   - 🎯 **Setores com Mais Pendentes**: ranking dos 10 setores com maior número
+     de patrimônios pendentes, com barra de progresso de conclusão.
+   - Pull-to-refresh em ambas as listas.
+
+**2. Card de Projeção de Término** no Overview
+   - Calcula a previsão de conclusão com base no ritmo médio de coleta
+     (coletas/dia desde `dataInicio` do inventário).
+   - Mostra: data prevista, dias restantes, ritmo atual.
+   - Badge "✓ No prazo" / "⚠ Atrasado Xd" quando o inventário tem `dataFim`.
+   - Lida com 3 cenários: concluído, dados insuficientes, projeção válida.
+
+### Mudanças no servidor (sihcp-server)
+
+- **`ColetaDAO`** (sihcp-core):
+  - Novo método `buscarTopColetoresPorInventario(invId, limit)` — JOIN com
+    `tabela_participante_inventario` + `tabela_usuario`.
+  - Novo método `buscarSetoresComMaisPendentesPorInventario(invId, limit)` —
+    agregação `tabela_setor → tabela_sala → tabela_patrimonio` com LEFT JOIN
+    em `tabela_coleta` para contar pendentes vs coletados.
+- **`MobileDashboardService`**:
+  - `buscarTopColetores(invId, limit)` — calcula produtividade/dia usando
+    `dataInicio` do inventário.
+  - `buscarSetoresMaisPendentes(invId, limit)` — passa direto para o DAO.
+  - `calcularProjecaoTermino(invId)` — algoritmo: ritmo = total coletado /
+    dias decorridos; restantes = ceil(pendentes / ritmo).
+- **`MobileDashboardController`**: 3 novos endpoints
+  - `GET /api/mobile/dashboard/top-coletores`
+  - `GET /api/mobile/dashboard/setores-pendentes`
+  - `GET /api/mobile/dashboard/projecao-termino`
+
+### Mudanças no app Android
+
+- **Domain**: `RankingsAnalytics.kt` (TopColetor, SetorPendente, ProjecaoTermino) +
+  interface `RankingsRepository`.
+- **Data**: `RankingsRepositoryImpl.kt` mapeando o `Map<String, Any>` do servidor
+  com cast defensivo (campos ausentes viram null/0).
+- **API**: 3 novos métodos em `ApiService.kt`; `MockApiService` atualizado.
+- **Presentation**:
+  - `RankingsViewModel.kt` com dois `StateFlow<RankingState<*>>` independentes.
+  - `RankingsFragment.kt` reescrito (era placeholder).
+  - `TopColetorAdapter.kt` + `SetorPendenteAdapter.kt` (ListAdapter + DiffUtil).
+  - `OverviewFragment.kt` injeta `RankingsRepository` para carregar a projeção.
+- **Layouts**: `fragment_statistics_rankings.xml`, `item_top_coletor.xml`,
+  `item_setor_pendente.xml`; card de Projeção adicionado ao Overview.
+- **Hilt**: `@Binds` para `RankingsRepository` em `RepositoryModule`.
+- **OfflineFallbackInterceptor**: 3 novos endpoints adicionados à allow-list
+  para não disparar modo offline forçado em caso de falha transitória.
+
+### Arquivos criados (10)
+
+- `sihcp-core/...ColetaDAO.java` (2 métodos novos — não é arquivo novo)
+- `sihcp-server/...MobileDashboardController.java` (3 endpoints — não é arquivo novo)
+- `sihcp-server/...MobileDashboardService.java` (3 métodos — não é arquivo novo)
+- `domain/model/RankingsAnalytics.kt`
+- `domain/repository/RankingsRepository.kt`
+- `data/repository/RankingsRepositoryImpl.kt`
+- `presentation/statistics/RankingsViewModel.kt`
+- `presentation/statistics/RankingsFragment.kt` (reescrito)
+- `presentation/statistics/TopColetorAdapter.kt`
+- `presentation/statistics/SetorPendenteAdapter.kt`
+- `res/layout/fragment_statistics_rankings.xml`
+- `res/layout/item_top_coletor.xml`
+- `res/layout/item_setor_pendente.xml`
+
+### Arquivos modificados
+
+- `sihcp-core/.../ColetaDAO.java`
+- `sihcp-server/.../MobileDashboardController.java`
+- `sihcp-server/.../MobileDashboardService.java`
+- `data/remote/api/ApiService.kt`
+- `data/remote/api/MockApiService.kt`
+- `network/OfflineFallbackInterceptor.kt`
+- `di/RepositoryModule.kt`
+- `presentation/statistics/OverviewFragment.kt`
+- `res/layout/fragment_statistics_overview.xml`
+
+### Status
+
+- ✅ Servidor: `BUILD SUCCESS` (`mvn package -pl sihcp-server -am -DskipTests`)
+- ✅ APK: `BUILD SUCCESSFUL` em 3m 7s (`assembleRelease`)
+- ✅ JAR de produção atualizado: `SERVIDOR_MOBILE_PRODUCAO/sihcp-server.jar`
+- ⚠️ **Necessário reiniciar o servidor de produção** para os novos endpoints
+  ficarem disponíveis
+
+---
+
+## Build #132 - 13/05/2026 (v2.28.0 — Relatório Fotográfico em Excel + PDF)
+
+- **Tipo:** Release (assinado com release keystore)
+- **Versão:** 2.28.0
+- **Build Code:** 76 (sem alteração)
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.28.0.apk`
+- **Tamanho:** 19,55 MB
+- **Servidor:** `SERVIDOR_MOBILE_PRODUCAO/sihcp-server.jar` (96,96 MB) — recompilado com Apache POI
+
+### Funcionalidade adicionada
+
+Relatório Fotográfico de itens sem etiqueta agora pode ser baixado em **Excel
+(.xlsx)** além do PDF. Espelha as mesmas regras de filtro/segurança do PDF
+(SUPERVISOR+, mesmo `tipo=sem_etiqueta`), com fotos embutidas na primeira
+coluna da planilha.
+
+### Mudanças no servidor (sihcp-server)
+
+- **Nova dependência:** Apache POI 5.4.0 (`poi`, `poi-ooxml`) — versão gerenciada pelo parent POM
+- **Novo serviço:** `RelatorioFotoExcelGenerator.java` — gera o XLSX usando
+  `XSSFWorkbook`, com cabeçalho estilizado, filtro automático na linha de
+  cabeçalho, congelamento de painel e fotos embutidas via `Drawing`/`Picture`
+- **Novo endpoint:** `GET /api/mobile/relatorios/fotos/{inventarioId}/excel`
+  com mesmas queries do PDF (`tipo`, `salaId`, `nome`) e `@RequireSupervisor`
+- JAR de produção atualizado em `SERVIDOR_MOBILE_PRODUCAO/`
+
+### Mudanças no app Android
+
+- **`RelatorioFotoApi.kt`:** novo método `baixarExcel(inventarioId, tipo)` com `@Streaming`
+- **`BaixarRelatorioFotoExcelUseCase.kt`** (novo): espelho do `BaixarRelatorioFotoPdfUseCase`,
+  grava o arquivo em `cacheDir/relatorio_sem_etiqueta_{id}_{ts}.xlsx`
+- **`ExportViewModel.kt`:** método unificado `baixarRelatorioFoto(id, formato)` aceita PDF ou EXCEL;
+  CSV é rejeitado com mensagem clara (servidor não gera CSV de relatório fotográfico)
+- **`fragment_statistics_export.xml`:** o card "📸 Relatório Fotográfico" agora tem
+  dois botões: "Baixar em PDF" (preenchido) e "Baixar em Excel" (outlined)
+- **`ExportFragment.kt`:** wireing dos dois botões, abertura do arquivo com MIME
+  apropriado (`application/pdf` ou `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`),
+  limpeza dos XLSX em `onDestroyView`
+
+### Arquivos criados
+
+- `sihcp-server/src/main/java/com/inventario/sihcp/mobile/server/service/RelatorioFotoExcelGenerator.java`
+- `InventarioMobile/app/src/main/java/com/inventario/mobile/domain/usecase/BaixarRelatorioFotoExcelUseCase.kt`
+
+### Arquivos modificados
+
+- `sihcp-server/pom.xml` — Apache POI dependencies
+- `sihcp-server/src/main/java/com/inventario/sihcp/mobile/server/controller/MobileRelatorioFotoController.java`
+- `InventarioMobile/app/src/main/java/com/inventario/mobile/data/remote/api/RelatorioFotoApi.kt`
+- `InventarioMobile/app/src/main/java/com/inventario/mobile/presentation/statistics/ExportViewModel.kt`
+- `InventarioMobile/app/src/main/java/com/inventario/mobile/presentation/statistics/ExportFragment.kt`
+- `InventarioMobile/app/src/main/res/layout/fragment_statistics_export.xml`
+
+### Status
+
+- ✅ Build SUCCESSFUL no servidor (`mvn package -pl sihcp-server -am -DskipTests`)
+- ✅ Build SUCCESSFUL no APK em 3m 30s (`assembleRelease`)
+- ✅ JAR de produção atualizado para `SERVIDOR_MOBILE_PRODUCAO/sihcp-server.jar`
+- ⚠️ Necessário **reiniciar o servidor de produção** para o novo endpoint Excel ficar disponível
+
+---
+
+## Build #131 - 13/05/2026 (v2.28.0 — Relatório Fotográfico movido para a aba Exportação)
+
+- **Tipo:** Release (assinado com release keystore)
+- **Versão:** 2.28.0
+- **Build Code:** 76 (sem alteração)
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.28.0.apk`
+- **Tamanho:** 19,55 MB
+- **Banco Room:** versão 19 (sem alteração)
+
+### Decisão de UX
+
+A funcionalidade do Relatório Fotográfico de itens sem etiqueta foi movida da
+tela "Coletas" para a **aba Exportação** (em Estatísticas), junto com os demais
+relatórios PDF/Excel/CSV. A tela de Coletas é orientada à navegação/edição de
+coletas individuais; relatórios consolidados pertencem à área de exportação.
+
+### Mudanças
+
+- **Adicionado** card "📸 Relatório Fotográfico" no `ExportFragment` com botão
+  dedicado, badge de contagem de fotos e ProgressBar de download. Botão
+  desabilitado para perfis sem permissão (COLETOR/CONSULTA), com aviso visível.
+- **Estendido** `ExportViewModel` com os Use Cases `BuscarInfoRelatorioFotoUseCase`
+  e `BaixarRelatorioFotoPdfUseCase`, novo `StateFlow<RelatorioFotoState>` isolado
+  e métodos `carregarInfoRelatorioFoto`, `baixarRelatorioFoto`, `limparEstadoRelatorioFoto`.
+- **Removido** o FAB e o estado de relatório fotográfico da
+  `ColetasUnificadaActivity` / `ColetasUnificadaViewModel` (eliminada duplicação).
+
+### Arquivos modificados
+
+- `InventarioMobile/app/src/main/java/com/inventario/mobile/presentation/statistics/ExportFragment.kt`
+- `InventarioMobile/app/src/main/java/com/inventario/mobile/presentation/statistics/ExportViewModel.kt`
+- `InventarioMobile/app/src/main/res/layout/fragment_statistics_export.xml`
+- `InventarioMobile/app/src/main/java/com/inventario/mobile/presentation/coletas/ColetasUnificadaActivity.kt` (revertido)
+- `InventarioMobile/app/src/main/java/com/inventario/mobile/presentation/coletas/ColetasUnificadaViewModel.kt` (revertido)
+- `InventarioMobile/app/src/main/res/layout/activity_coletas_unificada.xml` (revertido)
+
+### Status
+
+- ✅ Build SUCCESSFUL em 5m 29s (`assembleRelease`)
+- ✅ Sem erros — apenas warnings pré-existentes (Camera 1 / onBackPressed deprecated)
+- ✅ Use Cases e API já registrados nos módulos Hilt; FileProvider authority `${applicationId}.fileprovider` reaproveitado
+
+---
+
+## Build #130 - 13/05/2026 (v2.28.0 — Migração do Relatório Fotográfico para a tela unificada)
+
+- **Tipo:** Release (assinado com release keystore)
+- **Versão:** 2.28.0
+- **Build Code:** 76 (sem alteração)
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.28.0.apk`
+- **Tamanho:** 19,55 MB
+- **Banco Room:** versão 19 (sem alteração)
+
+### Problemas resolvidos
+
+**Relatório Fotográfico — Itens Sem Etiqueta (Spec `relatorio-fotografico-sem-etiqueta`) 🟠 ALTO**
+
+A funcionalidade existia em código (`CollectionViewActivity`, ViewModel, Use Cases, API) mas
+**ficou inacessível** após a fusão de `ColetasActivityClean` + `CollectionViewActivity` em
+`ColetasUnificadaActivity` (Spec `simplificacao-navegacao`). O menu lateral abre a tela
+unificada, mas o FAB de download de PDF e o badge de contagem de fotos só estavam wired na
+tela antiga, que não é mais navegável.
+
+**Mudanças:**
+
+- `ColetasUnificadaViewModel`: injetados `BuscarInfoRelatorioFotoUseCase` e
+  `BaixarRelatorioFotoPdfUseCase`; novo `StateFlow<RelatorioFotoState>` isolado do estado
+  principal; novos métodos `carregarInfoRelatorioFoto`, `baixarRelatorioFoto`,
+  `limparEstadoRelatorioFoto`.
+- `activity_coletas_unificada.xml`: novos elementos `tvFotosBadge`, `progressBarRelatorio` e
+  `fabRelatorioFoto` ancorados ao bottom-end do `CoordinatorLayout`.
+- `ColetasUnificadaActivity`: chip "Sem Etiqueta" agora dispara `carregarInfoRelatorioFoto`
+  (qualquer perfil) e mostra o FAB para SUPERVISOR/ADMIN; observer de `relatorioFotoState`
+  controla badge, progress bar e abertura do PDF via `FileProvider`; `onDestroy` limpa PDFs
+  temporários do cache.
+
+### Arquivos modificados
+
+- `InventarioMobile/app/src/main/java/com/inventario/mobile/presentation/coletas/ColetasUnificadaViewModel.kt`
+- `InventarioMobile/app/src/main/java/com/inventario/mobile/presentation/coletas/ColetasUnificadaActivity.kt`
+- `InventarioMobile/app/src/main/res/layout/activity_coletas_unificada.xml`
+
+### Status
+
+- ✅ Build SUCCESSFUL em 2m 48s (`assembleRelease`)
+- ✅ Sem erros de Hilt/DI — Use Cases já registrados no `UseCaseModule`
+- ✅ Drawable `ic_pdf` e FileProvider authority `${applicationId}.fileprovider` reaproveitados
+
+---
+
 ## Build #129 - 12/05/2026 (v2.28.0 — Correções de estabilidade: ANR, crash R8, NPE, WorkManager)
 
 - **Tipo:** Debug (assinado com debug keystore)

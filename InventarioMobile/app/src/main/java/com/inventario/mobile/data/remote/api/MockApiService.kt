@@ -344,4 +344,30 @@ class MockApiService : ApiService {
         )
         return Response.success(apiResponse)
     }
+
+    override suspend fun getTopColetores(
+        inventarioId: Int?,
+        limit: Int
+    ): Response<ApiResponse<Map<String, Any>>> {
+        val mockData: Map<String, Any> = mapOf("topColetores" to emptyList<Any>())
+        return Response.success(ApiResponse(success = true, message = "Mock data", data = mockData))
+    }
+
+    override suspend fun getSetoresPendentes(
+        inventarioId: Int?,
+        limit: Int
+    ): Response<ApiResponse<Map<String, Any>>> {
+        val mockData: Map<String, Any> = mapOf("setoresPendentes" to emptyList<Any>())
+        return Response.success(ApiResponse(success = true, message = "Mock data", data = mockData))
+    }
+
+    override suspend fun getProjecaoTermino(
+        inventarioId: Int?
+    ): Response<ApiResponse<Map<String, Any>>> {
+        val mockData: Map<String, Any> = mapOf(
+            "dadosInsuficientes" to true,
+            "concluido" to false
+        )
+        return Response.success(ApiResponse(success = true, message = "Mock data", data = mockData))
+    }
 }

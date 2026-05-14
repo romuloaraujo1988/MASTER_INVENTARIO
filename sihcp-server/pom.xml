@@ -155,6 +155,20 @@
             <groupId>com.itextpdf</groupId>
             <artifactId>io</artifactId>
         </dependency>
+
+        <!-- ========================================= -->
+        <!-- Apache POI — Geração de Excel (.xlsx)     -->
+        <!-- Usado pelo RelatorioFotoExcelGenerator.   -->
+        <!-- Versão é gerenciada pelo parent POM.      -->
+        <!-- ========================================= -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+        </dependency>
         
         <!-- ========================================= -->
         <!-- Swagger/OpenAPI Documentation             -->

@@ -5,11 +5,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inventario.mobile.domain.model.ExportFilter
 import com.inventario.mobile.domain.model.ExportFormat
+import com.inventario.mobile.domain.model.PermissaoNegadaException
 import com.inventario.mobile.domain.model.Sala
+import com.inventario.mobile.domain.model.SemFotosException
 import com.inventario.mobile.domain.repository.ExportRepository
+import com.inventario.mobile.domain.usecase.BaixarRelatorioFotoExcelUseCase
+import com.inventario.mobile.domain.usecase.BaixarRelatorioFotoPdfUseCase
+import com.inventario.mobile.domain.usecase.BuscarInfoRelatorioFotoUseCase
 import com.inventario.mobile.domain.usecase.BuscarSalasParaExportacaoUseCase
 import com.inventario.mobile.domain.usecase.GerarRelatorioUseCase
 import com.inventario.mobile.domain.usecase.NoDataException
+import com.inventario.mobile.presentation.state.RelatorioFotoState
 import com.inventario.mobile.util.NetworkChecker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +32,10 @@ class ExportViewModel @Inject constructor(
     private val buscarSalasUseCase: BuscarSalasParaExportacaoUseCase,
     private val gerarRelatorioUseCase: GerarRelatorioUseCase,
     private val exportRepository: ExportRepository,
-    private val networkChecker: NetworkChecker
+    private val networkChecker: NetworkChecker,
+    private val buscarInfoRelatorioFotoUseCase: BuscarInfoRelatorioFotoUseCase,
+    private val baixarRelatorioFotoPdfUseCase: BaixarRelatorioFotoPdfUseCase,
+    private val baixarRelatorioFotoExcelUseCase: BaixarRelatorioFotoExcelUseCase
 ) : ViewModel() {
     
     private val _state = MutableStateFlow<ExportState>(ExportState.Idle)
@@ -52,6 +61,13 @@ class ExportViewModel @Inject constructor(
     
     private var lastExportFilePath: String? = null
     private var lastExportFormat: ExportFormat? = null
+
+    // ─── Relatório Fotográfico (Spec relatorio-fotografico-sem-etiqueta) ────
+
+    /** Estado isolado do Relatório Fotográfico — não interfere no estado de exportação. */
+    private val _relatorioFotoState =
+        MutableStateFlow<RelatorioFotoState>(RelatorioFotoState.Idle)
+    val relatorioFotoState: StateFlow<RelatorioFotoState> = _relatorioFotoState.asStateFlow()
     
     init {
         loadSalas()
@@ -206,5 +222,80 @@ class ExportViewModel @Inject constructor(
         } else {
             loadSalas()
         }
+    }
+
+    // ─── Relatório Fotográfico — Itens Sem Etiqueta ─────────────────────────
+    // Spec: relatorio-fotografico-sem-etiqueta (Req 6.2 a 6.6)
+
+    /**
+     * Busca contagens de fotos disponíveis no inventário ativo.
+     *
+     * Emite [RelatorioFotoState.Loading] e em seguida [RelatorioFotoState.InfoCarregada]
+     * em caso de sucesso, ou [RelatorioFotoState.Erro] em caso de falha.
+     */
+    fun carregarInfoRelatorioFoto(inventarioId: Int) {
+        viewModelScope.launch {
+            _relatorioFotoState.value = RelatorioFotoState.Loading
+            buscarInfoRelatorioFotoUseCase(inventarioId).fold(
+                onSuccess = { info ->
+                    _relatorioFotoState.value = RelatorioFotoState.InfoCarregada(info)
+                },
+                onFailure = {
+                    _relatorioFotoState.value = RelatorioFotoState.Erro(
+                        "Não foi possível carregar informações de fotos"
+                    )
+                }
+            )
+        }
+    }
+
+    /**
+     * Baixa o relatório fotográfico de itens sem etiqueta no formato escolhido.
+     *
+     * Emite [RelatorioFotoState.Downloading], depois [RelatorioFotoState.PdfPronto]
+     * (com o `File` salvo em cache — o nome do estado é mantido por compatibilidade
+     * mas o arquivo pode ser PDF ou XLSX dependendo de [formato]) ou
+     * [RelatorioFotoState.Erro] com mensagem específica para [SemFotosException]
+     * e [PermissaoNegadaException].
+     *
+     * @param inventarioId ID do inventário ativo.
+     * @param formato      Formato desejado (PDF ou EXCEL). Padrão: PDF.
+     */
+    fun baixarRelatorioFoto(
+        inventarioId: Int,
+        formato: ExportFormat = ExportFormat.PDF
+    ) {
+        viewModelScope.launch {
+            _relatorioFotoState.value = RelatorioFotoState.Downloading
+            val resultado = when (formato) {
+                ExportFormat.PDF   -> baixarRelatorioFotoPdfUseCase(inventarioId)
+                ExportFormat.EXCEL -> baixarRelatorioFotoExcelUseCase(inventarioId)
+                ExportFormat.CSV   -> {
+                    // Sem suporte: o servidor não gera CSV de relatório fotográfico.
+                    _relatorioFotoState.value = RelatorioFotoState.Erro(
+                        "Relatório fotográfico não está disponível em CSV"
+                    )
+                    return@launch
+                }
+            }
+            resultado.fold(
+                onSuccess = { arquivo ->
+                    _relatorioFotoState.value = RelatorioFotoState.PdfPronto(arquivo)
+                },
+                onFailure = { error ->
+                    val mensagem = when (error) {
+                        is SemFotosException        -> error.message ?: "Nenhuma foto disponível"
+                        is PermissaoNegadaException -> error.message ?: "Sem permissão"
+                        else -> "Erro de conexão. Verifique a rede e tente novamente"
+                    }
+                    _relatorioFotoState.value = RelatorioFotoState.Erro(mensagem)
+                }
+            )
+        }
+    }
+
+    /** Reseta o estado do relatório fotográfico para Idle. */
+    fun limparEstadoRelatorioFoto() {
+        _relatorioFotoState.value = RelatorioFotoState.Idle
     }
 }

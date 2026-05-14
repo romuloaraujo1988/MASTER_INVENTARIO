@@ -95,6 +95,7 @@ class ItemSemEtiquetaActivity : AppCompatActivity() {
         setupToolbar()
         setupCategorias()
         setupEstados()
+        setupSalaInfo()
         // Feature: coleta-descricao-livre-com-sugestao
         setupSugestaoRecyclerView()
         setupListeners()
@@ -136,18 +137,36 @@ class ItemSemEtiquetaActivity : AppCompatActivity() {
     }
 
     private fun setupEstados() {
-        val estados = listOf(
-            "Selecione o estado",
-            "NOVO",
-            "BOM",
-            "REGULAR",
-            "RUIM",
-            "PÉSSIMO",
-            "IRRECUPERÁVEL"
-        )
+        // Usa o enum EstadoPatrimonio padrão do app — mesmos estados das
+        // demais coletas (BOM, OCIOSO, RECUPERÁVEL, ANTIECONÔMICO,
+        // IRRECUPERÁVEL). Mantém consistência entre os fluxos e evita
+        // valores customizados que não existem no servidor.
+        val estados = mutableListOf<String>().apply {
+            add("Selecione o estado")
+            addAll(com.inventario.mobile.data.model.EstadoPatrimonio.values().map { it.descricao })
+        }
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, estados)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerEstado.adapter = adapter
+    }
+
+    /**
+     * Mostra no card "Localização" o nome da sala que o coletor já
+     * selecionou antes de chegar nesta tela. A sala vem do
+     * [PreferencesManager] (gravada pela DescricaoSelectionActivity ao
+     * abrir esta activity, ou pela SalaSelectionActivity).
+     *
+     * Não há campo de input de localização — se a sala não estiver
+     * configurada, mostramos um aviso para o usuário voltar e selecionar
+     * uma sala.
+     */
+    private fun setupSalaInfo() {
+        val nome = preferencesManager.getCurrentSalaNome()
+        binding.tvSalaSelecionada.text = if (nome.isNotBlank()) {
+            nome
+        } else {
+            "Nenhuma sala selecionada"
+        }
     }
 
     private fun setupListeners() {
@@ -328,9 +347,43 @@ class ItemSemEtiquetaActivity : AppCompatActivity() {
     /**
      * Comprime a foto capturada via [PhotoHelper] com tipo [FotoTipo.SEM_ETIQUETA]
      * e atualiza a UI com o preview.
+     *
+     * Robustez: alguns dispositivos retornam `success=true` no
+     * [takePictureLauncher] mesmo quando a câmera não conseguiu escrever
+     * o arquivo (race condition durante a primeira inicialização). Aqui
+     * checamos o tamanho real do arquivo antes de tentar comprimir, e
+     * mostramos uma mensagem específica caso ele esteja vazio para o
+     * usuário tirar a foto novamente sem pensar que é erro do app.
      */
     private fun handleFotoCapturada(uri: Uri) {
         try {
+            // Validação prévia — o caminho real do arquivo está em fotoUri.path
+            // (privado do FileProvider). Como criamos via createTempFile com
+            // getExternalFilesDir, podemos checar diretamente.
+            val arquivoOriginal = uri.path?.let { caminho ->
+                // O path do URI do FileProvider tem formato
+                // "/external_files_root/Pictures/JPEG_xxx.jpg" — precisamos
+                // converter de volta para o File real. Simples: usar o
+                // último arquivo criado em getExternalFilesDir(Pictures).
+                val storageDir = getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES)
+                storageDir?.listFiles()?.maxByOrNull { it.lastModified() }
+            }
+
+            if (arquivoOriginal == null || !arquivoOriginal.exists() || arquivoOriginal.length() == 0L) {
+                android.util.Log.w(
+                    "ItemSemEtiqueta",
+                    "Arquivo da câmera vazio ou ausente: " +
+                        "exists=${arquivoOriginal?.exists()}, size=${arquivoOriginal?.length()}"
+                )
+                showError("Foto não foi capturada. Tente novamente.")
+                return
+            }
+
+            android.util.Log.d(
+                "ItemSemEtiqueta",
+                "Arquivo capturado: ${arquivoOriginal.absolutePath} (${arquivoOriginal.length()} bytes)"
+            )
+
             val inventarioId = preferencesManager.getInventarioAtivoId() ?: 0
             val result = photoHelper.compressAndSavePhoto(
                 sourceUri     = uri,
@@ -351,6 +404,9 @@ class ItemSemEtiquetaActivity : AppCompatActivity() {
                 binding.tvFotoStatus.setTextColor(getColor(R.color.success))
 
                 android.util.Log.d("ItemSemEtiqueta", "✓ Foto salva: ${result.fullPath} (${result.sizeKB} KB)")
+
+                // Limpa o temporário original — já temos o comprimido em files/fotos/
+                runCatching { arquivoOriginal.delete() }
             } else {
                 showError("Falha ao processar foto. Tente novamente.")
             }
@@ -377,8 +433,7 @@ class ItemSemEtiquetaActivity : AppCompatActivity() {
     private fun validarERegistrar() {
         val descricao  = binding.edtDescricao.text.toString().trim()
         val categoria  = binding.spinnerCategoria.selectedItem.toString()
-        val estado     = binding.spinnerEstado.selectedItem.toString()
-        val localizacao = binding.edtLocalizacao.text.toString().trim()
+        val estadoDesc = binding.spinnerEstado.selectedItem.toString()
         val observacoes = binding.edtObservacoes.text.toString().trim()
 
         if (descricao.isEmpty()) {
@@ -389,25 +444,38 @@ class ItemSemEtiquetaActivity : AppCompatActivity() {
         if (categoria == "Selecione uma categoria") {
             showError("Selecione uma categoria"); return
         }
-        if (estado == "Selecione o estado") {
+        if (estadoDesc == "Selecione o estado") {
             showError("Selecione o estado do item"); return
         }
-        if (localizacao.isEmpty()) {
-            binding.edtLocalizacao.error = "Localização é obrigatória"
-            binding.edtLocalizacao.requestFocus()
-            return
-        }
+
+        // Converter a descrição amigável (ex.: "Bom") para o nome do enum
+        // (ex.: "BOM"), que é o formato esperado pelo banco e pelo servidor.
+        val estadoEnum = com.inventario.mobile.data.model.EstadoPatrimonio
+            .values()
+            .firstOrNull { it.descricao == estadoDesc }
+            ?: run {
+                showError("Estado inválido: $estadoDesc"); return
+            }
+
         if (fotoPath == null) {
             showError("Foto é obrigatória para itens sem etiqueta"); return
         }
 
+        // Localização vem da sala selecionada (lida do PreferencesManager).
+        // O ViewModel já resolve `salaId` por lá; aqui passamos também o
+        // nome da sala como `localizacao` para preencher
+        // `localizacao_encontrada` na coleta.
+        val nomeSala = preferencesManager.getCurrentSalaNome()
+            .takeIf { it.isNotBlank() }
+            ?: "Sem sala"
+
         viewModel.registrarItemSemEtiqueta(
-            descricao       = descricao,
-            categoria       = categoria,
-            estado          = estado,
-            localizacao     = localizacao,
-            observacoes     = observacoes,
-            fotoPath        = fotoPath!!,
+            descricao         = descricao,
+            categoria         = categoria,
+            estado            = estadoEnum.name,
+            localizacao       = nomeSala,
+            observacoes       = observacoes,
+            fotoPath          = fotoPath!!,
             fotoThumbnailPath = fotoThumbnailPath
         )
     }

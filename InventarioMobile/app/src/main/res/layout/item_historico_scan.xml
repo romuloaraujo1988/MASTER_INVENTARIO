@@ -15,15 +15,37 @@
         android:padding="12dp"
         android:gravity="center_vertical">
 
-        <!-- Indicador de tipo -->
-        <ImageView
-            android:id="@+id/ivTipoAcesso"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/ic_qr_code"
-            android:contentDescription="Tipo de acesso"
-            android:padding="8dp"
-            android:background="@drawable/bg_circle_primary" />
+        <!-- Ícone composto: tipo do patrimônio (grande, principal) + tipo
+             de acesso (pequeno, badge sobreposto canto inferior direito). -->
+        <FrameLayout
+            android:layout_width="44dp"
+            android:layout_height="44dp">
+
+            <!-- Ícone do tipo de patrimônio (mesa, monitor, cadeira...) -->
+            <ImageView
+                android:id="@+id/ivTipoPatrimonio"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_tipo_generico"
+                android:contentDescription="Tipo de patrimônio"
+                android:padding="8dp"
+                android:background="@drawable/bg_circle_primary"
+                app:tint="@android:color/white" />
+
+            <!-- Badge do tipo de acesso (QR, busca, consulta) no canto -->
+            <ImageView
+                android:id="@+id/ivTipoAcesso"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="bottom|end"
+                android:src="@drawable/ic_qr_code"
+                android:contentDescription="Tipo de acesso"
+                android:padding="2dp"
+                android:background="@drawable/bg_circle_success"
+                app:tint="@android:color/white" />
+
+        </FrameLayout>
 
         <!-- Informações -->
         <LinearLayout

@@ -50,4 +50,22 @@ interface RelatorioFotoApi {
         @Path("inventarioId") inventarioId: Int,
         @Query("tipo") tipo: String = "sem_etiqueta"
     ): Response<ResponseBody>
+
+    /**
+     * Gera e retorna o XLSX como stream binário.
+     * Requer role SUPERVISOR ou superior.
+     *
+     * Mesma fonte de dados e regras de filtro do PDF, mas em formato Excel,
+     * com as fotos embutidas na primeira coluna. Útil para análises tabulares.
+     *
+     * @param inventarioId ID do inventário ativo.
+     * @param tipo Tipo de relatório fotográfico. Padrão: `"sem_etiqueta"`.
+     * @return [Response] com o corpo binário do XLSX.
+     */
+    @Streaming
+    @GET("api/mobile/relatorios/fotos/{inventarioId}/excel")
+    suspend fun baixarExcel(
+        @Path("inventarioId") inventarioId: Int,
+        @Query("tipo") tipo: String = "sem_etiqueta"
+    ): Response<ResponseBody>
 }

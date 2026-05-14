@@ -89,10 +89,35 @@ class DescricaoSelectionActivity : AppCompatActivity() {
         setupRecyclerView()
         setupSearch()
         setupChipFilters()
+        setupNovaDescricaoFab()
         setupObservers()
         
         // Carregar descrições
         loadDescricoes()
+    }
+
+    /**
+     * Configura o FAB "Nova descrição" — abre [ItemSemEtiquetaActivity]
+     * onde o coletor pode digitar a descrição livre, escolher categoria
+     * e estado, e tirar foto obrigatória do item.
+     *
+     * Antes de abrir, persiste a sala atual no [PreferencesManager] para
+     * que o ViewModel da activity de destino consiga resolver `salaId`
+     * mesmo sem receber via Intent (mantendo a API existente intacta).
+     */
+    private fun setupNovaDescricaoFab() {
+        binding.fabNovaDescricao.setOnClickListener {
+            // Garante que a sala selecionada nesta tela seja a usada na
+            // ItemSemEtiquetaActivity (que lê via PreferencesManager).
+            preferencesManager.setCurrentSalaId(salaId.toInt())
+            preferencesManager.setCurrentSalaNome(salaNome)
+
+            val intent = Intent(
+                this,
+                com.inventario.mobile.presentation.coleta.ItemSemEtiquetaActivity::class.java
+            )
+            startActivity(intent)
+        }
     }
     
     /**

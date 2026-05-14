@@ -173,22 +173,50 @@ class RegistrarColetaUseCase @Inject constructor(
             if (descricao.isBlank()) {
                 return Result.failure(Exception("Descrição do item é obrigatória"))
             }
-            
-            // 2. Obter usuário atual
-            val usuarioAtual = localDataManager.getCurrentUser()
-            if (usuarioAtual == null) {
-                return Result.failure(Exception("[USUARIO_NAO_IDENTIFICADO] Usuário não está logado. Faça login novamente."))
+
+            // 2. Obter identidade do usuário logado.
+            //
+            // Mesma estratégia em camadas usada na coleta normal (`invoke`):
+            //  a) PreferencesManager.getUserId() — Int direto em
+            //     SharedPreferences, resistente a problemas de R8/Gson.
+            //  b) LocalDataManager.getCurrentUser() — JSON deserializado
+            //     pelo Gson (último recurso).
+            //
+            // Antes esta função consultava apenas o JSON do LocalDataManager.
+            // Quando o JSON estava corrompido (ofuscação do R8), o coletor
+            // recebia "Usuário não está logado" ao tentar registrar, mesmo
+            // com login funcional.
+            val userIdFromPrefs = preferencesManager.getUserId() ?: 0
+            val userNameFromPrefs = preferencesManager.getUserName()
+
+            val usuarioId: Long = when {
+                userIdFromPrefs > 0 -> userIdFromPrefs.toLong()
+                else -> {
+                    val usuarioJson = localDataManager.getCurrentUser()
+                    if (usuarioJson != null && usuarioJson.id > 0) {
+                        usuarioJson.id
+                    } else {
+                        return Result.failure(
+                            Exception(
+                                "[USUARIO_NAO_IDENTIFICADO] Usuário não está logado. Faça login novamente."
+                            )
+                        )
+                    }
+                }
             }
-            
-            android.util.Log.d("RegistrarColetaUseCase", "✓ Registrando item SEM ETIQUETA: $descricao")
-            
+
+            android.util.Log.d(
+                "RegistrarColetaUseCase",
+                "✓ Registrando item SEM ETIQUETA: $descricao (userId=$usuarioId, nome=$userNameFromPrefs)"
+            )
+
             // 3. Criar coleta para item sem etiqueta
             val coleta = Coleta(
                 id = 0,
                 patrimonioId = 0,  // Sem patrimônio associado
                 numeroPatrimonio = null,  // Sem número
                 descricaoPatrimonio = descricao,  // Descrição do item
-                usuarioId = usuarioAtual.id.toLong(),
+                usuarioId = usuarioId,
                 salaId = salaId,
                 dataColeta = System.currentTimeMillis(),
                 localizacaoAtual = localizacaoAtual,

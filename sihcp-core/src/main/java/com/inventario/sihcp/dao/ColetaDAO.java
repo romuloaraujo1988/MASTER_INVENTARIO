@@ -1243,6 +1243,66 @@ public class ColetaDAO {
      * @return Lista de coletas da sala no inventário especificado
      * @throws SQLException Se ocorrer erro na consulta
      */
+    /**
+     * Busca coletas onde o patrimônio FOI ENCONTRADO em uma sala específica.
+     *
+     * A tabela `tabela_coleta` NÃO tem coluna `id_sala`. A sala onde o item
+     * foi encontrado é armazenada em `localizacao_encontrada` como o
+     * `numero_sala` da `tabela_sala` (ex.: "LAB. INFORMATICA A10").
+     *
+     * Portanto o JOIN correto é:
+     *   c.LOCALIZACAO_ENCONTRADA = sala.NUMERO_SALA
+     *
+     * @param idSala       ID da sala (usado para buscar o numero_sala)
+     * @param idInventario ID do inventário em curso
+     */
+    public List<Coleta> buscarColetasEncontradasNaSala(int idSala, int idInventario) throws SQLException {
+        // 1. Resolver o numero_sala a partir do id_sala
+        String numeroSala = null;
+        String sqlSala = "SELECT NUMERO_SALA FROM TABELA_SALA WHERE ID_SALA = ?";
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sqlSala)) {
+            stmt.setInt(1, idSala);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    numeroSala = rs.getString("NUMERO_SALA");
+                }
+            }
+        }
+
+        if (numeroSala == null) {
+            return new ArrayList<>();
+        }
+
+        // 2. Buscar coletas onde localizacao_encontrada = numero_sala
+        String sql = "SELECT c.*, p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
+                    "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO " +
+                    "FROM TABELA_COLETA c " +
+                    "LEFT JOIN TABELA_PATRIMONIO p ON c.ID_PATRIMONIO = p.ID " +
+                    "LEFT JOIN TABELA_PARTICIPANTE_INVENTARIO pi ON c.ID_PARTICIPANTE_INVENTARIO = pi.id_participante " +
+                    "LEFT JOIN TABELA_USUARIO u ON pi.ID_USUARIO = u.ID " +
+                    "LEFT JOIN TABELA_INVENTARIO i ON c.ID_INVENTARIO = i.ID " +
+                    "WHERE c.LOCALIZACAO_ENCONTRADA = ? AND c.ID_INVENTARIO = ? " +
+                    "ORDER BY c.DATA_COLETA DESC";
+
+        List<Coleta> coletas = new ArrayList<>();
+
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, numeroSala);
+            stmt.setInt(2, idInventario);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    coletas.add(criarColetaFromResultSet(rs));
+                }
+            }
+        }
+
+        return coletas;
+    }
+
     public List<Coleta> buscarColetasPorSalaEInventario(int idSala, int idInventario) throws SQLException {
         String sql = "SELECT c.*, p.NUMERO as NUMERO_PATRIMONIO, p.DESCRICAO as DESCRICAO_PATRIMONIO, " +
                     "u.NOME_COMPLETO as NOME_COLETOR, i.NOME as DESCRICAO_INVENTARIO " +
@@ -3039,6 +3099,140 @@ public class ColetaDAO {
             }
         }
         
+        return resultado;
+    }
+
+    /**
+     * Ranking de coletores: usuários que mais coletaram em um inventário,
+     * com a data da última coleta para cálculo de produtividade no app.
+     *
+     * Inclui apenas coletas com `id_participante_inventario` válido (i.e.,
+     * coletas com vínculo a um usuário autenticado). Itens sem etiqueta sem
+     * vínculo ao participante são naturalmente filtrados pelo INNER JOIN.
+     *
+     * @param inventarioId ID do inventário
+     * @param limit        Quantidade máxima de coletores a retornar
+     * @return Lista de mapas com {@code idUsuario}, {@code nome},
+     *         {@code totalColetas} e {@code ultimaColeta}.
+     * @throws SQLException Se ocorrer erro na consulta
+     */
+    public List<Map<String, Object>> buscarTopColetoresPorInventario(
+            Integer inventarioId, int limit) throws SQLException {
+
+        // Estes endpoints rodam apenas no servidor Spring com PostgreSQL
+        // (não há análise de ranking no SQLite offline).
+        String sql = "SELECT " +
+                "    u.ID                          AS idUsuario, " +
+                "    COALESCE(u.NOME, u.LOGIN)     AS nome, " +
+                "    COUNT(*)                      AS totalColetas, " +
+                "    MAX(c.DATA_COLETA)            AS ultimaColeta " +
+                "FROM TABELA_COLETA c " +
+                "INNER JOIN TABELA_PARTICIPANTE_INVENTARIO pi " +
+                "        ON c.ID_PARTICIPANTE_INVENTARIO = pi.ID " +
+                "INNER JOIN TABELA_USUARIO u " +
+                "        ON pi.ID_USUARIO = u.ID " +
+                "WHERE c.ID_INVENTARIO = ? " +
+                "GROUP BY u.ID, u.NOME, u.LOGIN " +
+                "ORDER BY totalColetas DESC " +
+                "LIMIT ?";
+
+        List<Map<String, Object>> resultado = new ArrayList<>();
+
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, inventarioId);
+            stmt.setInt(2, limit);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> item = new java.util.HashMap<>();
+                    item.put("idUsuario",    rs.getInt("idUsuario"));
+                    item.put("nome",         rs.getString("nome"));
+                    item.put("totalColetas", rs.getInt("totalColetas"));
+                    item.put("ultimaColeta", rs.getTimestamp("ultimaColeta"));
+                    resultado.add(item);
+                }
+            }
+        }
+
+        return resultado;
+    }
+
+    /**
+     * Ranking de setores com mais patrimônios pendentes (não coletados) em
+     * um inventário. Útil para prospecção: identifica onde a equipe deve
+     * focar próximos esforços de coleta.
+     *
+     * Para cada setor, retorna:
+     *  - total de patrimônios cadastrados naquele setor (pertencentes ao
+     *    inventário ativo, com status A/P)
+     *  - total já coletado no inventário informado
+     *  - pendentes = total − coletados
+     *  - percentualConcluido = coletados / total
+     *
+     * Ordenação: maior número de pendentes primeiro.
+     *
+     * @param inventarioId ID do inventário
+     * @param limit        Quantidade máxima de setores a retornar
+     * @return Lista de mapas com {@code idSetor}, {@code nome},
+     *         {@code totalPatrimonios}, {@code totalColetados},
+     *         {@code totalPendentes}, {@code percentualConcluido}.
+     * @throws SQLException Se ocorrer erro na consulta
+     */
+    public List<Map<String, Object>> buscarSetoresComMaisPendentesPorInventario(
+            Integer inventarioId, int limit) throws SQLException {
+
+        // Subquery por setor: total de patrimônios na área x total coletados
+        // no inventário. Filtramos apenas patrimônios em status A (Ativo) ou
+        // P (Pendente), que são os que entram no inventário.
+        String sql =
+                "SELECT " +
+                "    setor.ID                                  AS idSetor, " +
+                "    setor.NOME                                AS nome, " +
+                "    COUNT(p.ID)                               AS totalPatrimonios, " +
+                "    COUNT(c.ID)                               AS totalColetados, " +
+                "    COUNT(p.ID) - COUNT(c.ID)                 AS totalPendentes " +
+                "FROM TABELA_SETOR setor " +
+                "INNER JOIN TABELA_SALA sala  ON sala.ID_SETOR = setor.ID " +
+                "INNER JOIN TABELA_PATRIMONIO p ON p.ID_SALA = sala.ID_SALA " +
+                "    AND p.STATUS IN ('A', 'P') " +
+                "LEFT JOIN TABELA_COLETA c ON c.ID_PATRIMONIO = p.ID " +
+                "    AND c.ID_INVENTARIO = ? " +
+                "GROUP BY setor.ID, setor.NOME " +
+                "HAVING COUNT(p.ID) > 0 " +
+                "ORDER BY totalPendentes DESC, setor.NOME ASC " +
+                "LIMIT ?";
+
+        List<Map<String, Object>> resultado = new ArrayList<>();
+
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, inventarioId);
+            stmt.setInt(2, limit);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    int totalPat   = rs.getInt("totalPatrimonios");
+                    int totalCol   = rs.getInt("totalColetados");
+                    int totalPend  = rs.getInt("totalPendentes");
+                    double perc    = totalPat > 0
+                            ? Math.round((totalCol * 10000.0) / totalPat) / 100.0
+                            : 0.0;
+
+                    Map<String, Object> item = new java.util.HashMap<>();
+                    item.put("idSetor",             rs.getInt("idSetor"));
+                    item.put("nome",                rs.getString("nome"));
+                    item.put("totalPatrimonios",    totalPat);
+                    item.put("totalColetados",      totalCol);
+                    item.put("totalPendentes",      totalPend);
+                    item.put("percentualConcluido", perc);
+                    resultado.add(item);
+                }
+            }
+        }
+
         return resultado;
     }
     

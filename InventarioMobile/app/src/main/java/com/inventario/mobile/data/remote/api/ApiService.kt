@@ -180,4 +180,42 @@ interface ApiService {
     suspend fun getEstatisticasPorStatus(
         @Query("inventarioId") inventarioId: Int?
     ): Response<ApiResponse<Map<String, Any>>>
+
+    /**
+     * Ranking dos coletores mais produtivos no inventário ativo (ou no
+     * informado em [inventarioId]).
+     *
+     * Retorna `topColetores: [{ idUsuario, nome, totalColetas,
+     * ultimaColetaFormatada, ultimaColetaMillis, produtividadePorDia }]`.
+     */
+    @GET("api/mobile/dashboard/top-coletores")
+    suspend fun getTopColetores(
+        @Query("inventarioId") inventarioId: Int? = null,
+        @Query("limit") limit: Int = 10
+    ): Response<ApiResponse<Map<String, Any>>>
+
+    /**
+     * Ranking dos setores com mais patrimônios pendentes (não coletados).
+     *
+     * Retorna `setoresPendentes: [{ idSetor, nome, totalPatrimonios,
+     * totalColetados, totalPendentes, percentualConcluido }]`.
+     */
+    @GET("api/mobile/dashboard/setores-pendentes")
+    suspend fun getSetoresPendentes(
+        @Query("inventarioId") inventarioId: Int? = null,
+        @Query("limit") limit: Int = 10
+    ): Response<ApiResponse<Map<String, Any>>>
+
+    /**
+     * Projeção de término do inventário com base no ritmo médio de coleta.
+     *
+     * Retorna `{ totalPatrimonios, totalColetados, totalPendentes,
+     * percentualConclusao, ritmoColetasPorDia, diasRestantes,
+     * dataPrevistaFormatada, dataPrevistaMillis, concluido,
+     * dadosInsuficientes, dentroDoPrazo? }`.
+     */
+    @GET("api/mobile/dashboard/projecao-termino")
+    suspend fun getProjecaoTermino(
+        @Query("inventarioId") inventarioId: Int? = null
+    ): Response<ApiResponse<Map<String, Any>>>
 }

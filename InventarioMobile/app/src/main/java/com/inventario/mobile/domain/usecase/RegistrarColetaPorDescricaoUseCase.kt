@@ -4,6 +4,7 @@ import android.util.Log
 import com.inventario.mobile.domain.model.Coleta
 import com.inventario.mobile.domain.repository.ColetaRepository
 import com.inventario.mobile.data.local.LocalDataManager
+import com.inventario.mobile.utils.PreferencesManager
 import javax.inject.Inject
 
 /**
@@ -14,7 +15,8 @@ import javax.inject.Inject
  */
 class RegistrarColetaPorDescricaoUseCase @Inject constructor(
     private val coletaRepository: ColetaRepository,
-    private val localDataManager: LocalDataManager
+    private val localDataManager: LocalDataManager,
+    private val preferencesManager: PreferencesManager
 ) {
     companion object {
         private const val TAG = "RegistrarColetaDescUC"
@@ -31,14 +33,39 @@ class RegistrarColetaPorDescricaoUseCase @Inject constructor(
             if (descricao.isBlank()) {
                 return Result.failure(Exception("Descrição é obrigatória"))
             }
-            
-            // 2. Obter usuário atual
-            val usuarioAtual = localDataManager.getCurrentUser()
-            if (usuarioAtual == null) {
-                return Result.failure(Exception("[USUARIO_NAO_IDENTIFICADO] Usuário não está logado. Faça login novamente."))
+
+            // 2. Obter identidade do usuário logado.
+            //
+            // Estratégia em camadas (igual ao RegistrarColetaUseCase.invoke):
+            //  a) PreferencesManager.getUserId() — Int direto em
+            //     SharedPreferences, resistente a problemas de R8/Gson.
+            //  b) LocalDataManager.getCurrentUser() — JSON deserializado
+            //     pelo Gson (último recurso).
+            //
+            // Antes esta função consultava apenas o JSON do LocalDataManager.
+            // Quando o JSON estava corrompido (ofuscação do R8), o coletor
+            // recebia "Usuário não está logado" ao tentar registrar, mesmo
+            // com login funcional.
+            val userIdFromPrefs = preferencesManager.getUserId() ?: 0
+            val userNameFromPrefs = preferencesManager.getUserName()
+
+            val usuarioId: Long = when {
+                userIdFromPrefs > 0 -> userIdFromPrefs.toLong()
+                else -> {
+                    val usuarioJson = localDataManager.getCurrentUser()
+                    if (usuarioJson != null && usuarioJson.id > 0) {
+                        usuarioJson.id
+                    } else {
+                        return Result.failure(
+                            Exception(
+                                "[USUARIO_NAO_IDENTIFICADO] Usuário não está logado. Faça login novamente."
+                            )
+                        )
+                    }
+                }
             }
-            
-            Log.d(TAG, "✓ Usuário identificado: ${usuarioAtual.nome} (ID: ${usuarioAtual.id})")
+
+            Log.d(TAG, "✓ Usuário identificado: $userNameFromPrefs (ID: $usuarioId)")
             
             // 3. Criar coleta SEM número de patrimônio, apenas com descrição
             // IMPORTANTE: Marcar como semEtiqueta=true para que o servidor salve corretamente
@@ -47,7 +74,7 @@ class RegistrarColetaPorDescricaoUseCase @Inject constructor(
                 patrimonioId = 0, // Sem patrimônio específico
                 numeroPatrimonio = "", // Vazio - coleta por descrição
                 descricaoPatrimonio = descricao, // Descrição do item
-                usuarioId = usuarioAtual.id.toLong(),
+                usuarioId = usuarioId,
                 salaId = salaId,
                 dataColeta = System.currentTimeMillis(),
                 localizacaoAtual = localizacaoAtual,

@@ -87,4 +87,32 @@ interface PatrimonioApi {
         @Query("coletado") coletado: Boolean? = null,
         @Query("inventarioId") inventarioId: Int? = null
     ): Response<ApiResponse<List<Patrimonio>>>
+
+    /**
+     * Lista patrimônios para o relatório de auditoria física baseado em
+     * **onde foram encontrados** durante a coleta.
+     *
+     * Diferença em relação a [buscarPorSala]:
+     *  - Os coletados retornados são aqueles cuja `coleta.id_sala = salaId`,
+     *    não os patrimônios cuja sala de cadastro original é `salaId`.
+     *  - Pendentes (não coletados) ainda são listados pela sala de origem,
+     *    pois não há outro vínculo de localização para eles.
+     *
+     * Use sempre este endpoint para gerar relatórios — o relatório precisa
+     * refletir a realidade encontrada em campo.
+     *
+     * @param salaId       ID da sala
+     * @param page         página (0-based)
+     * @param size         tamanho da página
+     * @param coletado     `true`=encontrados aqui, `false`=pendentes da origem, `null`=ambos
+     * @param inventarioId ID do inventário (opcional, usa ativo se não informado)
+     */
+    @GET("api/mobile/patrimonio/sala/{salaId}/encontrados")
+    suspend fun buscarEncontradosNaSala(
+        @Path("salaId") salaId: Int,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 1000,
+        @Query("coletado") coletado: Boolean? = null,
+        @Query("inventarioId") inventarioId: Int? = null
+    ): Response<ApiResponse<List<Patrimonio>>>
 }

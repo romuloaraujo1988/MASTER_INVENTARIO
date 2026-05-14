@@ -157,6 +157,35 @@
     </LinearLayout>
 
     <!-- ═══════════════════════════════════════════════════════════
+         CAMADA 4.5 — Chip "Último coletado" (sob a toolbar, canto direito)
+         Fica visível após a primeira coleta para o usuário conferir
+         o número que foi lido por último sem precisar abrir o histórico.
+         ═══════════════════════════════════════════════════════════ -->
+    <com.google.android.material.chip.Chip
+        android:id="@+id/chipUltimoColetado"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="64dp"
+        android:layout_marginEnd="12dp"
+        android:text="Último: —"
+        android:textColor="@android:color/white"
+        android:textSize="12sp"
+        android:visibility="gone"
+        android:maxWidth="220dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:chipBackgroundColor="#CC2E7D32"
+        app:chipIcon="@drawable/ic_check_circle"
+        app:chipIconTint="@android:color/white"
+        app:chipStrokeWidth="1dp"
+        app:chipStrokeColor="#6643A047"
+        app:chipMinHeight="28dp"
+        style="@style/Widget.MaterialComponents.Chip.Action"
+        tools:text="Último: 12345"
+        tools:visibility="visible" />
+
+    <!-- ═══════════════════════════════════════════════════════════
          CAMADA 5 — Status do scanner (centro da tela)
          ═══════════════════════════════════════════════════════════ -->
     <LinearLayout

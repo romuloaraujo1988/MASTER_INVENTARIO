@@ -104,6 +104,11 @@ class MainActivity : AppCompatActivity() {
     
     override fun onResume() {
         super.onResume()
+        // Atualiza o header sempre que volta para a Activity — útil quando
+        // o usuário troca de perfil/dados em outras telas. Sem isso, o
+        // drawer mantinha o nome carregado no setupNavigationDrawer e nunca
+        // refletia mudanças posteriores.
+        updateNavigationHeader()
         // O indicador já está observando mudanças automaticamente
     }
     
@@ -218,9 +223,28 @@ class MainActivity : AppCompatActivity() {
         val headerView = binding.navView.getHeaderView(0)
         val tvUserName = headerView.findViewById<TextView>(R.id.tvUserName)
         val tvUserProfile = headerView.findViewById<TextView>(R.id.tvUserProfile)
-        
-        tvUserName.text = preferencesManager.getUserName() ?: "Usuário"
-        tvUserProfile.text = preferencesManager.getUserProfile() ?: "Coletor"
+
+        // Estratégia em camadas para resolver o nome do usuário:
+        //   1. PreferencesManager.getUserName() — populado no login via saveUserData()
+        //   2. PreferencesManager.getSavedUsername() — login (username) salvo para
+        //      biometria/login offline; usado como fallback caso o nome completo
+        //      não tenha sido persistido (ex.: usuário antigo migrando de versão).
+        //
+        // `getUserName()` retorna String não-nullable (vazio se ausente), então
+        // o `?:` antigo nunca disparava. Aqui usamos `takeIf { it.isNotBlank() }`
+        // para realmente cair no fallback quando o valor é vazio.
+        val nome = preferencesManager.getUserName().takeIf { it.isNotBlank() }
+            ?: preferencesManager.getSavedUsername()?.takeIf { it.isNotBlank() }
+            ?: "Usuário"
+
+        val perfil = preferencesManager.getUserProfile().takeIf { it.isNotBlank() }
+            ?: "Coletor"
+
+        android.util.Log.d("MainActivity",
+            "updateNavigationHeader: nome='$nome', perfil='$perfil'")
+
+        tvUserName.text = nome
+        tvUserProfile.text = perfil
     }
     
     private fun handleNavigationItemSelected(menuItem: MenuItem): Boolean {

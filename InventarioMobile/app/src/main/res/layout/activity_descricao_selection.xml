@@ -307,4 +307,26 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- ═══════════════════════════════════════════════════════════
+         Extended FAB — abrir formulário de descrição livre + foto.
+         Para casos onde o coletor encontra um item que NÃO está na lista
+         de descrições conhecidas (ex.: patrimônio sem etiqueta ainda não
+         catalogado). Abre a ItemSemEtiquetaActivity, que permite digitar
+         a descrição livremente, escolher categoria e estado, e tirar foto
+         obrigatória do item para auditoria.
+         ═══════════════════════════════════════════════════════════ -->
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fabNovaDescricao"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:text="Nova descrição"
+        android:textColor="@android:color/white"
+        android:contentDescription="Registrar item com descrição livre e foto"
+        app:icon="@drawable/ic_camera"
+        app:iconTint="@android:color/white"
+        app:backgroundTint="@color/teal_700"
+        app:elevation="6dp" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -358,16 +358,169 @@ class ColetasUnificadaActivity : AppCompatActivity() {
     // ─── Interações com itens da lista ───────────────────────────────────────
 
     /**
-     * Clique simples em uma coleta — exibe informações básicas.
+     * Clique simples em uma coleta — abre dialog com detalhes completos.
+     *
+     * Mostra todos os dados disponíveis no banco local (patrimônio, descrição,
+     * categoria, estado, sala, coletor, data, observações, status de sincronização)
+     * e a foto se houver. Para itens sem etiqueta, prioriza
+     * [Coleta.descricaoItemSemEtiqueta] que é o texto digitado pelo coletor.
      */
     private fun onColetaClick(coleta: Coleta) {
-        val info = buildString {
-            append("Patrimônio: ${coleta.numeroPatrimonio ?: "Sem etiqueta"}")
-            if (!coleta.descricaoPatrimonio.isNullOrBlank()) {
-                append("\n${coleta.descricaoPatrimonio}")
-            }
+        mostrarDetalhesColeta(coleta)
+    }
+
+    /**
+     * Renderiza um AlertDialog com layout customizado contendo todas as
+     * informações da coleta, incluindo a foto (se disponível em disco) e
+     * indicador de status de sincronização.
+     *
+     * Para coletas com foto:
+     *  - Prioriza o thumbnail (mais rápido de carregar)
+     *  - Fallback para a foto full se thumbnail não existir
+     *  - Mostra mensagem se o arquivo já foi removido (ex.: após sync + cleanup)
+     */
+    private fun mostrarDetalhesColeta(coleta: Coleta) {
+        val df = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale("pt", "BR"))
+
+        // Resolve a descrição priorizando: descricaoItemSemEtiqueta (texto livre
+        // do coletor para itens sem etiqueta) → descricaoPatrimonio (nome do
+        // patrimônio cadastrado).
+        val descricaoFinal = coleta.descricaoItemSemEtiqueta?.takeIf { it.isNotBlank() }
+            ?: coleta.descricaoPatrimonio?.takeIf { it.isNotBlank() }
+            ?: "Sem descrição"
+
+        val titulo = if (coleta.semEtiqueta) {
+            "Item Sem Etiqueta"
+        } else {
+            "Patrimônio ${coleta.numeroPatrimonio ?: "—"}"
         }
-        Toast.makeText(this, info, Toast.LENGTH_SHORT).show()
+
+        // dataColeta neste model é String (timestamp em ms ou ISO). Tentamos
+        // ambos os formatos para exibir.
+        val dataFormatada = formatarDataColeta(coleta.dataColeta, df)
+
+        val infoTexto = buildString {
+            appendLine("📝 Descrição")
+            appendLine(descricaoFinal)
+            appendLine()
+
+            if (coleta.semEtiqueta && !coleta.categoriaItemSemEtiqueta.isNullOrBlank()) {
+                appendLine("🏷️ Categoria")
+                appendLine(coleta.categoriaItemSemEtiqueta)
+                appendLine()
+            }
+
+            if (!coleta.numeroPatrimonio.isNullOrBlank() && !coleta.semEtiqueta) {
+                appendLine("🔢 Nº Patrimônio")
+                appendLine(coleta.numeroPatrimonio)
+                appendLine()
+            }
+
+            if (!coleta.estadoEncontrado.isNullOrBlank()) {
+                appendLine("⚙️ Estado encontrado")
+                appendLine(coleta.estadoEncontrado)
+                appendLine()
+            }
+
+            val localizacao = coleta.localizacaoEncontrada?.takeIf { it.isNotBlank() }
+                ?: coleta.localizacaoAtual?.takeIf { it.isNotBlank() }
+                ?: coleta.nomeSala?.takeIf { it.isNotBlank() }
+            if (!localizacao.isNullOrBlank()) {
+                appendLine("📍 Localização")
+                appendLine(localizacao)
+                appendLine()
+            }
+
+            if (!dataFormatada.isNullOrBlank()) {
+                appendLine("📅 Data")
+                appendLine(dataFormatada)
+                appendLine()
+            }
+
+            if (!coleta.nomeColetor.isNullOrBlank()) {
+                appendLine("👤 Coletado por")
+                appendLine(coleta.nomeColetor)
+                appendLine()
+            }
+
+            if (!coleta.observacoes.isNullOrBlank()) {
+                appendLine("💬 Observações")
+                appendLine(coleta.observacoes)
+                appendLine()
+            }
+
+            appendLine("🔄 Status")
+            append(if (coleta.sincronizado) "✓ Sincronizada" else "⏳ Pendente de sincronização")
+        }
+
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(titulo)
+            .setMessage(infoTexto)
+            .setPositiveButton("Fechar", null)
+
+        // Foto: data.model.Coleta só tem fotoPath (não thumbnail). Carrega
+        // do disco se ainda existir.
+        val fotoPath = coleta.fotoPath
+        val arquivoFoto = fotoPath?.takeIf { it.isNotBlank() }?.let { java.io.File(it) }
+
+        if (arquivoFoto != null && arquivoFoto.exists()) {
+            try {
+                val bitmap = android.graphics.BitmapFactory.decodeFile(arquivoFoto.absolutePath)
+                if (bitmap != null) {
+                    val imageView = android.widget.ImageView(this).apply {
+                        layoutParams = android.widget.LinearLayout.LayoutParams(
+                            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                            (resources.displayMetrics.density * 200).toInt()
+                        )
+                        scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                        setImageBitmap(bitmap)
+                        val pad = (resources.displayMetrics.density * 8).toInt()
+                        setPadding(pad, pad, pad, pad)
+                    }
+                    builder.setView(imageView)
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("ColetasUnificada", "Falha ao carregar foto: ${e.message}")
+            }
+        } else if (!fotoPath.isNullOrBlank()) {
+            builder.setMessage(infoTexto + "\n\n📷 Foto enviada ao servidor (não disponível offline)")
+        }
+
+        builder.show()
+    }
+
+    /**
+     * `Coleta.dataColeta` neste data model é String — pode ser timestamp em
+     * milissegundos ou data ISO. Tentamos ambos os formatos para exibir.
+     * Retorna null se nenhum dos formatos casar.
+     */
+    private fun formatarDataColeta(
+        valor: String,
+        df: java.text.SimpleDateFormat
+    ): String? {
+        if (valor.isBlank()) return null
+
+        // Timestamp em ms?
+        valor.toLongOrNull()?.let { ts ->
+            return runCatching { df.format(java.util.Date(ts)) }.getOrNull()
+        }
+
+        // ISO 8601?
+        val formatosIso = listOf(
+            "yyyy-MM-dd'T'HH:mm:ss.SSS",
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd HH:mm:ss",
+            "dd/MM/yyyy HH:mm:ss",
+            "dd/MM/yyyy HH:mm"
+        )
+        for (formato in formatosIso) {
+            try {
+                val sdf = java.text.SimpleDateFormat(formato, java.util.Locale("pt", "BR"))
+                val date = sdf.parse(valor)
+                if (date != null) return df.format(date)
+            } catch (_: Exception) { /* tenta próximo */ }
+        }
+        return valor // fallback: mostra como veio
     }
 
     /**

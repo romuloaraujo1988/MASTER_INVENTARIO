@@ -84,7 +84,13 @@ abstract class RepositoryModule {
     // NOTE: DashboardRepository já é provido via DashboardModule.provideDashboardRepository.
     // Manter um @Binds aqui gera "Dagger/DuplicateBindings". A injeção da interface no
     // DashboardViewModelClean funciona pelo DashboardModule existente.
-    
+
+    @Binds
+    @Singleton
+    abstract fun bindRankingsRepository(
+        impl: com.inventario.mobile.data.repository.RankingsRepositoryImpl
+    ): com.inventario.mobile.domain.repository.RankingsRepository
+
     companion object {
         /**
          * Provider para InventarioRepository (stub temporário)
