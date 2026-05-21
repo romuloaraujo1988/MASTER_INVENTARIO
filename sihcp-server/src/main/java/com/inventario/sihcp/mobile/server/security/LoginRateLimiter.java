@@ -3,7 +3,6 @@ package com.inventario.sihcp.mobile.server.security;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
-import io.github.bucket4j.Refill;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -128,7 +127,10 @@ public class LoginRateLimiter implements HandlerInterceptor {
      * @return um balde de tokens recém-criado para um IP
      */
     private Bucket newBucket() {
-        Bandwidth limit = Bandwidth.classic(CAPACITY, Refill.intervally(CAPACITY, REFILL_WINDOW));
+        Bandwidth limit = Bandwidth.builder()
+                .capacity(CAPACITY)
+                .refillIntervally(CAPACITY, REFILL_WINDOW)
+                .build();
         return Bucket.builder().addLimit(limit).build();
     }
 

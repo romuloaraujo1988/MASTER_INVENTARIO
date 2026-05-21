@@ -174,10 +174,12 @@ class PdfGenerator @Inject constructor(
         // Larguras proporcionais. Com/sem Status:
         //   COM:  Nº | Descrição | Estado | Status | Data | Coletado por | Local encontrado | Estado encontrado | Responsável
         //   SEM:  Nº | Descrição | Estado |         | Data | Coletado por | Local encontrado | Estado encontrado | Responsável
+        // v2.29.2: coluna Responsável ampliada (1.4→1.8) para acomodar nomes completos
+        // sem truncamento. iText quebra linha automaticamente dentro da célula.
         val columnWidths = if (incluirStatus) {
-            floatArrayOf(1.3f, 2.6f, 0.9f, 0.9f, 1.2f, 1.4f, 1.6f, 1.1f, 1.4f)
+            floatArrayOf(1.3f, 2.6f, 0.9f, 0.9f, 1.2f, 1.4f, 1.6f, 1.1f, 1.8f)
         } else {
-            floatArrayOf(1.3f, 2.8f, 1.0f, 1.3f, 1.5f, 1.7f, 1.2f, 1.5f)
+            floatArrayOf(1.3f, 2.8f, 1.0f, 1.3f, 1.5f, 1.7f, 1.2f, 1.8f)
         }
         val table = Table(UnitValue.createPercentArray(columnWidths))
             .useAllAvailableWidth()
@@ -230,9 +232,8 @@ class PdfGenerator @Inject constructor(
         // Número do Patrimônio
         table.addCell(createCell(patrimonio.numeroPatrimonio, bgColor))
 
-        // Descrição — até 50 chars para caber no PDF (PDF tem limite de largura;
-        // XLSX/CSV não truncam pois podem expandir a coluna).
-        val descricao = patrimonio.descricao?.take(50) ?: "-"
+        // Descrição — iText quebra automaticamente dentro da célula; sem truncamento.
+        val descricao = patrimonio.descricao ?: "-"
         table.addCell(createCell(descricao, bgColor, TextAlignment.LEFT))
 
         // Estado cadastrado
@@ -262,7 +263,7 @@ class PdfGenerator @Inject constructor(
 
         // Localização onde foi encontrado (pode diferir da sala cadastrada → divergência)
         val localizacaoEncontrada = if (patrimonio.coletado) {
-            patrimonio.localizacaoEncontrada?.take(30) ?: "-"
+            patrimonio.localizacaoEncontrada ?: "-"
         } else "-"
         table.addCell(createCell(localizacaoEncontrada, bgColor))
 
@@ -271,8 +272,8 @@ class PdfGenerator @Inject constructor(
             if (patrimonio.coletado) patrimonio.estadoEncontrado ?: "-" else "-"
         table.addCell(createCell(estadoEncontrado, bgColor))
 
-        // Responsável do cadastro
-        val responsavel = patrimonio.nomeResponsavel?.take(25) ?: "-"
+        // Responsável do cadastro — sem truncamento; iText quebra linha automaticamente.
+        val responsavel = patrimonio.nomeResponsavel ?: "-"
         table.addCell(createCell(responsavel, bgColor))
     }
 

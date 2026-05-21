@@ -85,7 +85,7 @@ class EnviarColetasPendentesUseCase @Inject constructor(
                         ).format(java.util.Date(entity.dataColeta)),
                         latitude = entity.latitude,
                         longitude = entity.longitude,
-                        fotoPatrimonio = null,
+                        caminhoFotoLocal = null, // Foto enviada pelo PhotoSyncWorker
                         semEtiqueta = entity.semEtiqueta,
                         descricaoItemSemEtiqueta = entity.descricaoItemSemEtiqueta,
                         categoriaItemSemEtiqueta = entity.categoriaItemSemEtiqueta,

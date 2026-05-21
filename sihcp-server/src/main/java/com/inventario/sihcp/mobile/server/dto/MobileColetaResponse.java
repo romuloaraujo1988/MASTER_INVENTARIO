@@ -66,6 +66,20 @@ public class MobileColetaResponse {
     
     @JsonProperty("sincronizado")
     private Boolean sincronizado;
+
+    /**
+     * URL relativa para download da foto via
+     * {@code GET /api/mobile/fotos/{id}}.
+     * Preenchida apenas quando a coleta possui foto no servidor
+     * ({@code FOTO_PATH} não nulo no banco).
+     * Exemplo: {@code "api/mobile/fotos/9323"}
+     */
+    @JsonProperty("fotoUrl")
+    private String fotoUrl;
+
+    /** Indica se a coleta possui foto armazenada no servidor. */
+    @JsonProperty("temFoto")
+    private Boolean temFoto;
     
     // Campos para tratamento de coleta duplicada
     @JsonProperty("duplicada")
@@ -282,5 +296,21 @@ public class MobileColetaResponse {
     
     public void setColetorOriginal(String coletorOriginal) {
         this.coletorOriginal = coletorOriginal;
+    }
+
+    public String getFotoUrl() {
+        return fotoUrl;
+    }
+
+    public void setFotoUrl(String fotoUrl) {
+        this.fotoUrl = fotoUrl;
+    }
+
+    public Boolean getTemFoto() {
+        return temFoto;
+    }
+
+    public void setTemFoto(Boolean temFoto) {
+        this.temFoto = temFoto;
     }
 }

@@ -337,7 +337,19 @@ class ScannerViewModel(
         }
     }
     
-    fun coletarPatrimonioComEstado(patrimonioId: Long, salaNome: String, estadoEncontrado: String) {
+    /**
+     * Registra coleta via scanner.
+     *
+     * @param tipoScan Formato do código lido: "QR_CODE" ou "CODIGO_BARRAS".
+     *                 Vem de [com.journeyapps.barcodescanner.ScanIntentResult.formatName]
+     *                 mapeado pela ScannerActivity. Padrão "QR_CODE" para compatibilidade.
+     */
+    fun coletarPatrimonioComEstado(
+        patrimonioId: Long,
+        salaNome: String,
+        estadoEncontrado: String,
+        tipoScan: String = "QR_CODE"
+    ) {
         viewModelScope.launch {
             try {
                 Log.d("ScannerViewModel", "═══════════════════════════════════════")
@@ -346,6 +358,7 @@ class ScannerViewModel(
                 Log.d("ScannerViewModel", "Patrimônio ID: $patrimonioId")
                 Log.d("ScannerViewModel", "Sala: $salaNome")
                 Log.d("ScannerViewModel", "Estado: $estadoEncontrado")
+                Log.d("ScannerViewModel", "Tipo Scan: $tipoScan")
                 
                 // ✅ CRÍTICO: Obter ID da sala atual do PreferencesManager
                 val salaIdAtual = preferencesManager.getCurrentSalaId()
@@ -396,7 +409,9 @@ class ScannerViewModel(
                     salaId = salaIdAtual, // ✅ CRÍTICO: Passar ID da sala atual
                     localizacaoAtual = salaNome,
                     estadoEncontrado = estadoEncontrado,
-                    observacoes = null
+                    observacoes = null,
+                    metodoColeta = tipoScan,   // QR_CODE ou CODIGO_BARRAS
+                    tipoScan = tipoScan        // mesmo valor — campo específico de scan
                 )
                 
                 result.fold(

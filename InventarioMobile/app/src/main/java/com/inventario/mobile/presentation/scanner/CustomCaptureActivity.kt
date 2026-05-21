@@ -120,6 +120,10 @@ class CustomCaptureActivity : AppCompatActivity() {
                 // Fazemos com um pequeno atraso porque em alguns aparelhos os
                 // parâmetros ficam disponíveis alguns ms depois do callback.
                 Handler(Looper.getMainLooper()).postDelayed({ inicializarZoom() }, 200)
+                // Verifica disponibilidade do flash logo após o preview iniciar.
+                // O hardware feature pode ser consultado antes, mas só conseguimos
+                // ligar a torch com a câmera já aberta.
+                Handler(Looper.getMainLooper()).postDelayed({ inicializarFlash() }, 200)
             }
             override fun previewStopped() {}
             override fun cameraError(error: Exception?) {
@@ -130,14 +134,7 @@ class CustomCaptureActivity : AppCompatActivity() {
 
         btnFechar.setOnClickListener { finish() }
 
-        btnFlash.setOnClickListener {
-            flashLigado = !flashLigado
-            if (flashLigado) {
-                barcodeScannerView.setTorchOn()
-            } else {
-                barcodeScannerView.setTorchOff()
-            }
-        }
+        btnFlash.setOnClickListener { alternarFlash() }
 
         // Gesture de pinch-to-zoom — experiência familiar a qualquer usuário
         // que usa câmera do celular. Combinado com os botões +/- para usuários
@@ -205,10 +202,33 @@ class CustomCaptureActivity : AppCompatActivity() {
         super.onResume()
         captureManager.onResume()
         atualizarFeedback()
+        // Restaura a torch se o usuário a deixou ligada e voltou para a tela
+        // (ex.: trocou de app rapidamente). O preview ainda não está ativo
+        // aqui, então usamos um pequeno delay para dar tempo da câmera abrir.
+        if (flashLigado && flashDisponivel) {
+            Handler(Looper.getMainLooper()).postDelayed({
+                try {
+                    barcodeScannerView.setTorchOn()
+                } catch (e: Exception) {
+                    android.util.Log.w("CustomCaptureActivity", "Falha ao restaurar torch: ${e.message}")
+                }
+            }, 500)
+        }
     }
 
     override fun onPause() {
         super.onPause()
+        // Desligar a lanterna ao sair da tela — evita deixar o LED aceso
+        // gastando bateria caso o usuário só pressione o botão home/voltar.
+        // Não tocamos no estado `flashLigado` para que o usuário ache a
+        // lanterna no mesmo estado ao retornar (se voltar para a tela).
+        if (flashLigado) {
+            try {
+                barcodeScannerView.setTorchOff()
+            } catch (e: Exception) {
+                // Silencioso — câmera pode já estar liberada.
+            }
+        }
         captureManager.onPause()
     }
 
@@ -254,16 +274,23 @@ class CustomCaptureActivity : AppCompatActivity() {
      * `BarcodeView.changeCameraParameters` que é um helper público da lib.
      */
     private fun inicializarZoom() {
+        // ✅ CORREÇÃO: Envolver toda a inicialização de zoom em try-catch amplo.
+        // O `changeCameraParameters` usa Camera API 1 (legada) e pode lançar
+        // RuntimeException em dispositivos Android 14+ ou quando a câmera está
+        // em estado de transição (ex.: logo após o preview iniciar). Qualquer
+        // exceção aqui NÃO deve propagar para o CaptureManager — apenas
+        // desabilitamos os controles de zoom silenciosamente.
         try {
             val cameraInstance = barcodeScannerView.barcodeView.cameraInstance
             if (cameraInstance == null) {
+                android.util.Log.d("CustomCaptureActivity", "cameraInstance nulo — zoom desabilitado")
                 zoomSuportado = false
-                ocultarControlesZoom()
+                runOnUiThread { ocultarControlesZoom() }
                 return
             }
 
-            // Descobrir zoom máximo executando um bloco síncrono de
-            // parâmetros. Se falhar, assumimos que não há zoom disponível.
+            // Descobrir zoom máximo consultando os parâmetros da câmera.
+            // Retornamos os parâmetros inalterados — apenas lemos os valores.
             barcodeScannerView.barcodeView.changeCameraParameters { parameters: Camera.Parameters ->
                 try {
                     if (parameters.isZoomSupported) {
@@ -283,16 +310,22 @@ class CustomCaptureActivity : AppCompatActivity() {
                         runOnUiThread { ocultarControlesZoom() }
                     }
                 } catch (e: Exception) {
+                    android.util.Log.w("CustomCaptureActivity", "Erro ao ler parâmetros de zoom: ${e.message}")
                     zoomSuportado = false
                     runOnUiThread { ocultarControlesZoom() }
                 }
-                // `changeCameraParameters` espera os mesmos parameters de volta
-                // para aplicar — retornamos inalterado, apenas consultamos.
                 parameters
             }
-        } catch (e: Exception) {
+        } catch (e: RuntimeException) {
+            // RuntimeException é o tipo mais comum lançado pela Camera API 1
+            // quando a câmera está em estado inválido (ex.: sendo liberada).
+            android.util.Log.w("CustomCaptureActivity", "RuntimeException ao inicializar zoom (Camera API 1): ${e.message}")
             zoomSuportado = false
-            ocultarControlesZoom()
+            runOnUiThread { ocultarControlesZoom() }
+        } catch (e: Exception) {
+            android.util.Log.w("CustomCaptureActivity", "Exceção ao inicializar zoom: ${e.message}")
+            zoomSuportado = false
+            runOnUiThread { ocultarControlesZoom() }
         }
     }
 
@@ -326,6 +359,12 @@ class CustomCaptureActivity : AppCompatActivity() {
             if (atualizarSeekBar) {
                 seekZoom.progress = (novo * 100 / zoomMaximo).coerceIn(0, 100)
             }
+        } catch (e: RuntimeException) {
+            // RuntimeException da Camera API 1 — desabilitar zoom para evitar
+            // crashes futuros neste dispositivo.
+            android.util.Log.w("CustomCaptureActivity", "RuntimeException ao aplicar zoom: ${e.message} — desabilitando zoom")
+            zoomSuportado = false
+            runOnUiThread { ocultarControlesZoom() }
         } catch (e: Exception) {
             // Silencioso — falha de zoom não deve interromper o scan.
         }
@@ -351,5 +390,75 @@ class CustomCaptureActivity : AppCompatActivity() {
     private fun ocultarControlesZoom() {
         findViewById<View>(R.id.layoutZoom).visibility = View.GONE
         seekZoom.visibility = View.GONE
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Controle de flash/lanterna
+    // ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Estado de disponibilidade do flash. Atualizado uma única vez quando o
+     * preview da câmera inicia. Se o dispositivo não tiver flash de hardware
+     * (ex.: tablets baratos, alguns emuladores), o botão é ocultado.
+     */
+    private var flashDisponivel = false
+
+    /**
+     * Verifica se o dispositivo tem hardware de flash e habilita/oculta o
+     * botão correspondentemente. Chamado em `previewStarted` porque alguns
+     * dispositivos precisam que a câmera esteja aberta antes de reportar
+     * corretamente as features.
+     *
+     * Importante: usar `FEATURE_CAMERA_FLASH` é o método oficial recomendado
+     * pelo Android. Não tentamos ligar a torch só para testar — isso causa
+     * piscadas indesejadas no preview.
+     */
+    private fun inicializarFlash() {
+        flashDisponivel = packageManager.hasSystemFeature(
+            android.content.pm.PackageManager.FEATURE_CAMERA_FLASH
+        )
+
+        if (flashDisponivel) {
+            btnFlash.visibility = View.VISIBLE
+            // Garante o ícone correto no estado inicial (desligado).
+            btnFlash.setImageResource(R.drawable.ic_flash_off)
+            btnFlash.contentDescription = "Ligar lanterna"
+        } else {
+            android.util.Log.d("CustomCaptureActivity", "Dispositivo sem flash — botão ocultado")
+            btnFlash.visibility = View.GONE
+        }
+    }
+
+    /**
+     * Alterna o estado da lanterna e atualiza o ícone do botão.
+     *
+     * Tratamento de erro: alguns dispositivos lançam `RuntimeException` ao
+     * tentar ligar a torch enquanto a câmera está em transição (ex.: durante
+     * autofocus). Capturamos para manter o scan funcionando — apenas revertemos
+     * o estado interno e mantemos o ícone consistente.
+     */
+    private fun alternarFlash() {
+        if (!flashDisponivel) return
+
+        try {
+            flashLigado = !flashLigado
+            if (flashLigado) {
+                barcodeScannerView.setTorchOn()
+                btnFlash.setImageResource(R.drawable.ic_flash_on)
+                btnFlash.contentDescription = "Desligar lanterna"
+            } else {
+                barcodeScannerView.setTorchOff()
+                btnFlash.setImageResource(R.drawable.ic_flash_off)
+                btnFlash.contentDescription = "Ligar lanterna"
+            }
+        } catch (e: RuntimeException) {
+            android.util.Log.w("CustomCaptureActivity", "Erro ao alternar flash: ${e.message}")
+            // Reverte o estado interno e o ícone para refletir a realidade
+            // (a torch não foi ligada/desligada de fato).
+            flashLigado = !flashLigado
+            btnFlash.setImageResource(
+                if (flashLigado) R.drawable.ic_flash_on else R.drawable.ic_flash_off
+            )
+        }
     }
 }

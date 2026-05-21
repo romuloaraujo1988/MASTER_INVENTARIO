@@ -764,6 +764,13 @@ public class InventarioFormDialog extends JDialog {
             inventario.setTipoInventario((String) comboTipo.getSelectedItem());
             inventario.setObservacao(areaObservacoes.getText().trim());
             
+            // Definir o ANO com base na data de fim (o inventário é identificado
+            // pelo ano em que termina — ex: inventário que vai de 2024 a 31/12/2025
+            // é o "Inventário 2025").
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            cal.setTime(dataFim);
+            inventario.setAno(cal.get(java.util.Calendar.YEAR));
+            
             // Definir responsável selecionado
             String responsavelSelecionado = (String) comboResponsavel.getSelectedItem();
             inventario.setResponsavelInventario(responsavelSelecionado);

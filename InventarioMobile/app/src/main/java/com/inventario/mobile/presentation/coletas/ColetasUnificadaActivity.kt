@@ -15,7 +15,10 @@ import com.inventario.mobile.data.model.Coleta
 import com.inventario.mobile.databinding.ActivityColetasUnificadaBinding
 import com.inventario.mobile.domain.model.StatusFiltro
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 /**
  * Tela unificada de coletas — substitui [ColetasActivityClean] e
@@ -45,6 +48,8 @@ class ColetasUnificadaActivity : AppCompatActivity() {
 
     /** ViewModel unificado injetado via Hilt. */
     private val viewModel: ColetasUnificadaViewModel by viewModels()
+
+    @Inject lateinit var preferencesManager: com.inventario.mobile.utils.PreferencesManager
 
     /**
      * Adapter reutilizado de [ColetasAdapter], com adição do callback [onItemLongClick].
@@ -458,32 +463,66 @@ class ColetasUnificadaActivity : AppCompatActivity() {
             .setMessage(infoTexto)
             .setPositiveButton("Fechar", null)
 
-        // Foto: data.model.Coleta só tem fotoPath (não thumbnail). Carrega
-        // do disco se ainda existir.
+        // Foto: tenta carregar do disco local primeiro.
+        // Se não existir localmente mas a coleta tem foto no servidor (temFoto=true ou fotoUrl preenchida),
+        // baixa via GET /api/mobile/fotos/{id} e exibe.
         val fotoPath = coleta.fotoPath
         val arquivoFoto = fotoPath?.takeIf { it.isNotBlank() }?.let { java.io.File(it) }
+        val fotoUrl = coleta.fotoUrl
+        val temFotoServidor = coleta.temFoto == true || !fotoUrl.isNullOrBlank()
+
+        val imageView = android.widget.ImageView(this).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                (resources.displayMetrics.density * 200).toInt()
+            )
+            scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+            val pad = (resources.displayMetrics.density * 8).toInt()
+            setPadding(pad, pad, pad, pad)
+        }
 
         if (arquivoFoto != null && arquivoFoto.exists()) {
+            // Foto disponível localmente
             try {
                 val bitmap = android.graphics.BitmapFactory.decodeFile(arquivoFoto.absolutePath)
                 if (bitmap != null) {
-                    val imageView = android.widget.ImageView(this).apply {
-                        layoutParams = android.widget.LinearLayout.LayoutParams(
-                            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                            (resources.displayMetrics.density * 200).toInt()
-                        )
-                        scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
-                        setImageBitmap(bitmap)
-                        val pad = (resources.displayMetrics.density * 8).toInt()
-                        setPadding(pad, pad, pad, pad)
-                    }
+                    imageView.setImageBitmap(bitmap)
                     builder.setView(imageView)
                 }
             } catch (e: Exception) {
-                android.util.Log.w("ColetasUnificada", "Falha ao carregar foto: ${e.message}")
+                android.util.Log.w("ColetasUnificada", "Falha ao carregar foto local: ${e.message}")
             }
-        } else if (!fotoPath.isNullOrBlank()) {
-            builder.setMessage(infoTexto + "\n\n📷 Foto enviada ao servidor (não disponível offline)")
+        } else if (temFotoServidor && coleta.id != null) {
+            // Foto não está no disco — baixar do servidor
+            val coletaId = coleta.id
+            builder.setView(imageView)
+            lifecycleScope.launch {
+                try {
+                    val baseUrl = preferencesManager.getServerUrl()?.trimEnd('/') ?: return@launch
+                    val token = preferencesManager.getAccessToken() ?: return@launch
+                    val url = java.net.URL("$baseUrl/api/mobile/fotos/$coletaId")
+                    val connection = (url.openConnection() as java.net.HttpURLConnection).apply {
+                        requestMethod = "GET"
+                        setRequestProperty("Authorization", "Bearer $token")
+                        connectTimeout = 10_000
+                        readTimeout = 15_000
+                    }
+                    if (connection.responseCode == 200) {
+                        val bytes = connection.inputStream.use { it.readBytes() }
+                        val bitmap = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                        if (bitmap != null) {
+                            withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                imageView.setImageBitmap(bitmap)
+                            }
+                        }
+                    } else {
+                        android.util.Log.w("ColetasUnificada", "Servidor retornou ${connection.responseCode} para foto da coleta $coletaId")
+                    }
+                    connection.disconnect()
+                } catch (e: Exception) {
+                    android.util.Log.w("ColetasUnificada", "Falha ao baixar foto do servidor: ${e.message}")
+                }
+            }
         }
 
         builder.show()

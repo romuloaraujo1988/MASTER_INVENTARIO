@@ -4129,3 +4129,63 @@ SyncManager (fachada)
 
 ---
 
+
+---
+
+## Build #138 - 14/05/2026 (v2.28.0 — Correção botões tela de coleta manual)
+
+- **Tipo:** Release (assinado com release keystore)
+- **Versão:** 2.28.0
+- **Build Code:** 76
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.28.0.apk`
+- **Tamanho:** ~19.6 MB
+- **Status:** ✅ Sucesso (1m 43s)
+
+### Mudanças
+- Corrigido texto cortado nos botões "Limpar", "Buscar" e "Coletar" da tela de coleta manual
+  - Fonte reduzida de 14sp → 12sp
+  - Altura fixada em 48dp (era wrap_content)
+  - Padding horizontal adicionado (8dp)
+  - Ícones reduzidos de 18dp → 16dp com iconPadding="4dp"
+  - Botões "Buscar" e "Coletar" com layout_weight="1.2" para acomodar ícone + texto
+
+
+---
+
+## Build #139 - 14/05/2026 (v2.28.0 — Registro de método de coleta: QR_CODE, CODIGO_BARRAS, MANUAL)
+
+- **Tipo:** Release (assinado com release keystore)
+- **Versão:** 2.28.0
+- **Build Code:** 76
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.28.0.apk`
+- **Tamanho:** ~19.6 MB
+- **Status:** ✅ Sucesso (1m 43s)
+
+### Mudanças
+- `ScannerActivity`: captura `result.formatName` do ZXing e mapeia para `QR_CODE` ou `CODIGO_BARRAS`; passa para o ViewModel em todas as chamadas a `coletarPatrimonioComEstado()`
+- `ScannerViewModel`: `coletarPatrimonioComEstado()` recebe novo parâmetro `tipoScan` e repassa `metodoColeta` e `tipoScan` ao `RegistrarColetaUseCase`
+- `ManualCollectionViewModel`: `coletarPatrimonio()` agora passa `metodoColeta = "MANUAL"` e `tipoScan = "MANUAL"` ao use case
+- `RegistrarColetaUseCase.registrarColetaPorDescricao()`: coleta similar passa `metodoColeta = "SEM_ETIQUETA"` e `tipoScan = "MANUAL"`
+- Campos `metodo_coleta` e `tipo_scan` no banco PostgreSQL agora serão preenchidos corretamente para todas as novas coletas
+
+
+---
+
+## Build #140 - 14/05/2026 15:34 (v2.28.0 — Clean build completo)
+
+- **Tipo:** Release (assinado com release keystore)
+- **Versão:** 2.28.0
+- **Build Code:** 76
+- **Arquivo:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.28.0.apk`
+- **Tamanho:** ~19.6 MB
+- **Status:** ✅ Sucesso (7m 19s — clean build)
+- **Timestamp:** 14/05/2026 15:34:50
+
+### Mudanças incluídas (acumuladas desde Build #138)
+- Correção botões tela de coleta manual (texto cortado)
+- Registro de método de coleta: QR_CODE, CODIGO_BARRAS, MANUAL, SEM_ETIQUETA
+
+### Observação
+Build anterior (Build #139) retornou UP-TO-DATE por cache do Gradle.
+Esta build usou `clean assembleRelease` para garantir recompilação completa.
+

@@ -85,3 +85,10 @@ src/main/resources/application-mobile-local.properties
 secrets/
 *.pem
 *.p12
+
+# Fotos de coleta (salvas pelo servidor mobile)
+# Manter a pasta mas ignorar o conteúdo
+data/fotos/**
+!data/fotos/.gitkeep
+SERVIDOR_MOBILE_PRODUCAO/data/fotos/**
+!SERVIDOR_MOBILE_PRODUCAO/data/fotos/.gitkeep

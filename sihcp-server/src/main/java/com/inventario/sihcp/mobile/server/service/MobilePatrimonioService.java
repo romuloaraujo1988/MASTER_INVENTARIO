@@ -890,8 +890,20 @@ public class MobilePatrimonioService {
                 coletaPorPatrimonio.putIfAbsent(c.getIdPatrimonio(), c);
             }
 
+            // Buscar TODOS os patrimônios em uma única query com JOIN (evita N+1).
+            // buscarPorIds usa IN (...) com LEFT JOIN em TABELA_RESPONSAVEL e
+            // TABELA_SALA, garantindo que nome_responsavel seja preenchido.
+            List<Integer> ids = new java.util.ArrayList<>(coletaPorPatrimonio.keySet());
+            java.util.Map<Integer, Patrimonio> patrimoniosPorId = new java.util.HashMap<>();
+            if (!ids.isEmpty()) {
+                List<Patrimonio> lote = patrimonioDAO.buscarPorIds(ids);
+                for (Patrimonio p : lote) {
+                    patrimoniosPorId.put(p.getId(), p);
+                }
+            }
+
             for (com.inventario.sihcp.model.Coleta coleta : coletaPorPatrimonio.values()) {
-                Patrimonio p = patrimonioDAO.findById(coleta.getIdPatrimonio());
+                Patrimonio p = patrimoniosPorId.get(coleta.getIdPatrimonio());
                 if (p == null) continue;
 
                 MobilePatrimonioDTO dto = converterParaDTOSimples(p);

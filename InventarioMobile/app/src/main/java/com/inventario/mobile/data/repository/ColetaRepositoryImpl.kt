@@ -6,6 +6,7 @@ import com.inventario.mobile.data.mapper.ColetaMapper
 import com.inventario.mobile.data.remote.api.ColetaApi
 import com.inventario.mobile.domain.model.Coleta
 import com.inventario.mobile.domain.repository.ColetaRepository
+import com.inventario.mobile.worker.PhotoSyncWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -29,6 +30,7 @@ import javax.inject.Inject
  */
 @javax.inject.Singleton
 class ColetaRepositoryImpl @Inject constructor(
+    @dagger.hilt.android.qualifiers.ApplicationContext private val applicationContext: android.content.Context,
     private val coletaDao: ColetaDao,
     private val patrimonioDao: PatrimonioDao,
     private val coletaApi: ColetaApi,
@@ -323,7 +325,7 @@ class ColetaRepositoryImpl @Inject constructor(
                                     .format(java.util.Date(coleta.dataColeta)),
                                 latitude = coleta.latitude,
                                 longitude = coleta.longitude,
-                                fotoPatrimonio = null,
+                                caminhoFotoLocal = null, // Foto enviada pelo PhotoSyncWorker
                                 semEtiqueta = false,
                                 descricaoItemSemEtiqueta = null,
                                 categoriaItemSemEtiqueta = null,
@@ -347,14 +349,21 @@ class ColetaRepositoryImpl @Inject constructor(
                             android.util.Log.d("ColetaRepositoryImpl", "Resposta do servidor: success=${response.success}, message=${response.message}")
                             
                             if (response.success) {
-                                coletaDao.marcarSincronizada(id)
+                                // Gravar servidorId para desbloquear o PhotoSyncWorker.
+                                val servidorId = response.data?.id
+                                if (servidorId != null && servidorId > 0) {
+                                    coletaDao.marcarSincronizadaComServidor(id, servidorId)
+                                    PhotoSyncWorker.scheduleOneShot(applicationContext)
+                                } else {
+                                    coletaDao.marcarSincronizada(id)
+                                }
                                 networkQualityMonitor.registerSyncSuccess()
-                                android.util.Log.d("ColetaRepositoryImpl", "✓ Coleta sincronizada com sucesso em background")
+                                android.util.Log.d("ColetaRepositoryImpl", "✓ Coleta sincronizada com sucesso em background (servidorId=$servidorId)")
                                 
                                 // Registrar sincronização bem-sucedida
                                 auditService.registrarSincronizacao(
                                     coletaId = id,
-                                    servidorId = null
+                                    servidorId = servidorId
                                 )
                             } else {
                                 networkQualityMonitor.registerSyncFailure()
@@ -445,7 +454,7 @@ class ColetaRepositoryImpl @Inject constructor(
                                     .format(java.util.Date(coleta.dataColeta)),
                                 latitude = coleta.latitude,
                                 longitude = coleta.longitude,
-                                fotoPatrimonio = null,
+                                caminhoFotoLocal = null, // Foto enviada pelo PhotoSyncWorker
                                 semEtiqueta = false,
                                 descricaoItemSemEtiqueta = null,
                                 categoriaItemSemEtiqueta = null,
@@ -467,9 +476,15 @@ class ColetaRepositoryImpl @Inject constructor(
                             val response = coletaApi.registrarColeta(request)
                             
                             if (response.success) {
-                                coletaDao.marcarSincronizada(id)
+                                val servidorId = response.data?.id
+                                if (servidorId != null && servidorId > 0) {
+                                    coletaDao.marcarSincronizadaComServidor(id, servidorId)
+                                    PhotoSyncWorker.scheduleOneShot(applicationContext)
+                                } else {
+                                    coletaDao.marcarSincronizada(id)
+                                }
                                 networkQualityMonitor.registerSyncSuccess()
-                                android.util.Log.d("ColetaRepositoryImpl", "✓ Sync fallback bem-sucedido!")
+                                android.util.Log.d("ColetaRepositoryImpl", "✓ Sync fallback bem-sucedido! (servidorId=$servidorId)")
                             } else {
                                 val erroMsg = response.message ?: "Erro do servidor no fallback"
                                 android.util.Log.w("ColetaRepositoryImpl", "⚠ Sync fallback falhou: $erroMsg")
@@ -621,7 +636,7 @@ class ColetaRepositoryImpl @Inject constructor(
                         .format(java.util.Date(coleta.dataColeta)),
                     latitude = coleta.latitude,
                     longitude = coleta.longitude,
-                    fotoPatrimonio = null,
+                    caminhoFotoLocal = null, // Foto enviada pelo PhotoSyncWorker
                     // ✅ Preservar campos de item sem etiqueta da entity
                     semEtiqueta = entity.semEtiqueta,
                     descricaoItemSemEtiqueta = entity.descricaoItemSemEtiqueta,
@@ -873,7 +888,7 @@ class ColetaRepositoryImpl @Inject constructor(
                         .format(java.util.Date(coleta.dataColeta)),
                     latitude = coleta.latitude,
                     longitude = coleta.longitude,
-                    fotoPatrimonio = null,
+                    caminhoFotoLocal = null, // Foto enviada pelo PhotoSyncWorker
                     // ✅ Preservar campos de item sem etiqueta da entity
                     semEtiqueta = entity.semEtiqueta,
                     descricaoItemSemEtiqueta = entity.descricaoItemSemEtiqueta,
@@ -1032,7 +1047,7 @@ class ColetaRepositoryImpl @Inject constructor(
                     .format(java.util.Date(coleta.dataColeta)),
                 latitude = coleta.latitude,
                 longitude = coleta.longitude,
-                fotoPatrimonio = null,
+                caminhoFotoLocal = null, // Foto enviada pelo PhotoSyncWorker
                 // ✅ Preservar campos de item sem etiqueta da entity
                 semEtiqueta = entity.semEtiqueta,
                 descricaoItemSemEtiqueta = entity.descricaoItemSemEtiqueta,
@@ -1140,7 +1155,7 @@ class ColetaRepositoryImpl @Inject constructor(
                 idResponsavel = null,
                 nomeResponsavel = null,
                 observacao = coleta.observacoes,
-                estadoPatrimonio = coleta.status,
+                estadoPatrimonio = coleta.estadoEncontrado ?: coleta.status,
                 latitude = coleta.latitude,
                 longitude = coleta.longitude,
                 dataColeta = coleta.dataColeta,
@@ -1181,7 +1196,8 @@ class ColetaRepositoryImpl @Inject constructor(
                                 .format(java.util.Date(coleta.dataColeta)),
                             latitude = coleta.latitude,
                             longitude = coleta.longitude,
-                            fotoPatrimonio = coleta.fotoPath,
+                            // Foto enviada separadamente pelo PhotoSyncWorker — não incluir aqui.
+                            caminhoFotoLocal = null,
                             semEtiqueta = true,
                             descricaoItemSemEtiqueta = coleta.descricaoItemSemEtiqueta,
                             categoriaItemSemEtiqueta = coleta.categoriaItemSemEtiqueta,
@@ -1198,8 +1214,18 @@ class ColetaRepositoryImpl @Inject constructor(
                         val response = coletaApi.registrarColeta(request)
                         
                         if (response.success) {
-                            coletaDao.marcarSincronizada(id)
-                            android.util.Log.d("ColetaRepositoryImpl", "✓ Item sem etiqueta sincronizado!")
+                            // Gravar servidorId para desbloquear o PhotoSyncWorker.
+                            // Sem o servidorId, o worker pula a foto indefinidamente.
+                            val servidorId = response.data?.id
+                            if (servidorId != null && servidorId > 0) {
+                                coletaDao.marcarSincronizadaComServidor(id, servidorId)
+                                android.util.Log.d("ColetaRepositoryImpl", "✓ Item sem etiqueta sincronizado! servidorId=$servidorId")
+                                // Disparar upload imediato da foto (one-shot, sem aguardar o worker periódico)
+                                PhotoSyncWorker.scheduleOneShot(applicationContext)
+                            } else {
+                                coletaDao.marcarSincronizada(id)
+                                android.util.Log.d("ColetaRepositoryImpl", "✓ Item sem etiqueta sincronizado! (sem servidorId na resposta)")
+                            }
                         } else {
                             val erro = response.message ?: "Erro desconhecido"
                             android.util.Log.w("ColetaRepositoryImpl", "⚠ Erro ao sincronizar: $erro")

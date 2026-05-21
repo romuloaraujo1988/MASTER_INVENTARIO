@@ -70,10 +70,19 @@ public class InventarioDAO extends BaseDAO<Inventario, Integer> {
     protected void setInsertParameters(PreparedStatement stmt, Inventario inventario) throws SQLException {
         stmt.setString(1, inventario.getNome());
         
-        // Extrair o ano da data de início caso o ano não esteja definido
-        if (inventario.getAno() == null && inventario.getDataInicio() != null) {
+        // Extrair o ano da data de FIM caso o ano não esteja definido.
+        // O inventário é identificado pelo ano em que ele termina/conclui —
+        // um inventário que vai de 01/01/2024 a 31/12/2025 é o "Inventário 2025".
+        // Usar DATA_INICIO causava o bug: inventário 2025 aparecia como (2024).
+        if (inventario.getAno() == null) {
             java.util.Calendar cal = java.util.Calendar.getInstance();
-            cal.setTime(inventario.getDataInicio());
+            if (inventario.getDataFim() != null) {
+                // Preferência: ano da data de fim
+                cal.setTime(inventario.getDataFim());
+            } else if (inventario.getDataInicio() != null) {
+                // Fallback: ano da data de início (quando não há data fim)
+                cal.setTime(inventario.getDataInicio());
+            }
             inventario.setAno(cal.get(java.util.Calendar.YEAR));
         }
         

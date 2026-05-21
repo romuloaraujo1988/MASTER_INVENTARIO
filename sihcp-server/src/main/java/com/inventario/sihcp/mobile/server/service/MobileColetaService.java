@@ -716,6 +716,14 @@ public class MobileColetaService {
         if (coleta.getDataColeta() != null) {
             response.setDataColeta(coleta.getDataColetaFormatada());
         }
+
+        // Foto: se a coleta tem foto_path no servidor, expor URL de download
+        if (coleta.getFotoPath() != null && !coleta.getFotoPath().isBlank()) {
+            response.setFotoUrl("api/mobile/fotos/" + coleta.getId());
+            response.setTemFoto(true);
+        } else {
+            response.setTemFoto(false);
+        }
         
         return response;
     }
@@ -1299,6 +1307,14 @@ public class MobileColetaService {
             // Patrimônio não encontrado no cache
             logger.warn("⚠️ Patrimônio não encontrado no cache para Coleta ID: {} (PatrimonioID: {})", 
                     coleta.getId(), coleta.getIdPatrimonio());
+        }
+
+        // Foto: se a coleta tem foto_path no servidor, expor URL de download
+        if (coleta.getFotoPath() != null && !coleta.getFotoPath().isBlank()) {
+            response.setFotoUrl("api/mobile/fotos/" + coleta.getId());
+            response.setTemFoto(true);
+        } else {
+            response.setTemFoto(false);
         }
 
         return response;

@@ -43,6 +43,7 @@ class ScannerActivity : AppCompatActivity() {
     private lateinit var android14CameraHelper: Android14CameraHelper
     private var currentScanResult: ScanResult? = null
     private var lastCollectedPatrimonio: ScanResult? = null // ✅ NOVO: Guarda último patrimônio coletado para "Coletar Similar"
+    private var currentScanTipoScan: String = "QR_CODE"    // Tipo do último scan: QR_CODE ou CODIGO_BARRAS
     private var isInitializing = false
     private var retryCount = 0
     private val maxRetries = 3
@@ -93,14 +94,20 @@ class ScannerActivity : AppCompatActivity() {
         android.util.Log.d("ScannerActivity", "✓ Flags atualizadas: isInitializing=false, hasScannedOnce=true")
         
         if (result == null || result.contents == null) {
-            // Scan cancelado pelo usuário
+            // Scan cancelado pelo usuário (botão voltar na câmera)
             android.util.Log.w("ScannerActivity", "❌ Scan cancelado ou resultado nulo")
-            showError("Scan cancelado")
             finish()
         } else {
             // Código lido com sucesso
             android.util.Log.d("ScannerActivity", "✅ Código lido com sucesso: ${result.contents}")
             android.util.Log.d("ScannerActivity", "Formato: ${result.formatName}")
+            
+            // ✅ Determinar tipo de scan a partir do formato ZXing
+            currentScanTipoScan = when {
+                result.formatName?.contains("QR", ignoreCase = true) == true -> "QR_CODE"
+                else -> "CODIGO_BARRAS"
+            }
+            android.util.Log.d("ScannerActivity", "Tipo de scan detectado: $currentScanTipoScan")
             
             // ✅ Tocar som suave de sucesso
             SoundUtils.playSuccessSound()
@@ -390,7 +397,7 @@ class ScannerActivity : AppCompatActivity() {
     private fun showEstadoPatrimonioDialog(patrimonioId: Long, salaNome: String) {
         val dialog = EstadoPatrimonioDialog.newInstance { estadoSelecionado ->
             // Callback executado quando o usuário seleciona um estado
-            viewModel.coletarPatrimonioComEstado(patrimonioId, salaNome, estadoSelecionado.name)
+            viewModel.coletarPatrimonioComEstado(patrimonioId, salaNome, estadoSelecionado.name, currentScanTipoScan)
         }
         dialog.show(supportFragmentManager, "EstadoPatrimonioDialog")
     }
@@ -518,7 +525,7 @@ class ScannerActivity : AppCompatActivity() {
                     val estadoFixoVal = preferencesManager.getEstadoFixo()
                     
                     if (estadoFixoHabilitado && !estadoFixoVal.isNullOrEmpty()) {
-                        viewModel.coletarPatrimonioComEstado(result.patrimonioId, salaNome, estadoFixoVal)
+                        viewModel.coletarPatrimonioComEstado(result.patrimonioId, salaNome, estadoFixoVal, currentScanTipoScan)
                     } else {
                         showEstadoPatrimonioDialog(result.patrimonioId, salaNome)
                     }
@@ -1090,13 +1097,14 @@ class ScannerActivity : AppCompatActivity() {
                 setBeepEnabled(false) // Desabilitar beep padrão - usaremos som customizado
                 setBarcodeImageEnabled(false)
                 setOrientationLocked(true)
-                // ✅ v2.30: timeout DESABILITADO. Antes era 30s e fechava a
-                // câmera durante a coleta de campo, exigindo reabrir a tela.
-                // Em coletas longas (item de difícil leitura, sala mal
-                // iluminada), o coletor passava 1-2 minutos focando — e era
-                // jogado de volta para o dashboard. Setar timeout=0 (ou não
-                // chamar) deixa o ZXing manter o scan ativo indefinidamente.
-                setTimeout(0)
+                // ✅ CORREÇÃO v2.29: NÃO chamar setTimeout.
+                // setTimeout(0) passava o extra TIMEOUT=0 para o CaptureManager,
+                // que agendava handler.postDelayed(returnResultTimeout, 0) —
+                // executando imediatamente no próximo ciclo do handler e fechando
+                // a câmera com RESULT_CANCELED antes do preview iniciar.
+                // Sem chamar setTimeout, o extra TIMEOUT não existe no intent e
+                // o CaptureManager não agenda nenhum timer — câmera fica aberta
+                // até o usuário escanear ou pressionar voltar.
                 // Usa nossa CaptureActivity customizada para sobrepor contador,
                 // último coletado, sala atual e botão de flash sobre a câmera.
                 // Sem isso o ZXing abriria o layout default minimalista.

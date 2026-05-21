@@ -55,7 +55,7 @@ public class RelatorioFotoColetaDAO {
         StringBuilder sql = new StringBuilder("""
                 SELECT
                     c.ID                            AS coletaId,
-                    c.FOTO_PATH                     AS fotoPath,
+                    COALESCE(c.FOTO_PATH, '')       AS fotoPath,
                     CASE
                         WHEN c.SEM_ETIQUETA = TRUE  THEN 'sem_etiqueta'
                         WHEN c.DIVERGENCIA  = TRUE  THEN 'divergencia'
@@ -73,8 +73,8 @@ public class RelatorioFotoColetaDAO {
                              sl.NOME, '')           AS localizacaoEncontrada,
                     COALESCE(c.ESTADO_ENCONTRADO, '') AS estadoEncontrado,
                     c.DATA_COLETA                   AS dataColeta,
-                    COALESCE(c.OBSERVACAO_COLETA, '') AS observacao,
-                    COALESCE(u.NOME, 'Desconhecido') AS nomeColetor,
+                    COALESCE(c.OBSERVACAO_COLETA, c.OBSERVACAO, '') AS observacao,
+                    COALESCE(u.NOME_COMPLETO, 'Desconhecido') AS nomeColetor,
                     COALESCE(so.NOME, '')           AS nomeSalaOrigem,
                     c.MOTIVO_DIVERGENCIA            AS motivoDivergencia
                 FROM TABELA_COLETA c
@@ -85,7 +85,7 @@ public class RelatorioFotoColetaDAO {
                 LEFT JOIN TABELA_SALA sl
                        ON c.ID_SALA = sl.ID
                 LEFT JOIN TABELA_PARTICIPANTE_INVENTARIO pi
-                       ON c.ID_PARTICIPANTE_INVENTARIO = pi.ID
+                       ON c.ID_PARTICIPANTE_INVENTARIO = pi.ID_PARTICIPANTE
                 LEFT JOIN TABELA_USUARIO u
                        ON pi.ID_USUARIO = u.ID
                 WHERE c.ID_INVENTARIO = ?

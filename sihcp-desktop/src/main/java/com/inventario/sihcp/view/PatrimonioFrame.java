@@ -52,8 +52,8 @@ public class PatrimonioFrame extends JFrame {
     private static final Color CARD_COLOR = Color.WHITE;
     private static final Color SUCCESS_COLOR = new Color(34, 197, 94);
     private static final Color DANGER_COLOR = new Color(239, 68, 68);
-    private static final Color WARNING_COLOR = new Color(245, 158, 11);
-    private static final Color INFO_COLOR = new Color(6, 182, 212);
+   // private static final Color WARNING_COLOR = new Color(245, 158, 11);
+   // private static final Color INFO_COLOR = new Color(6, 182, 212);
     private static final Color TEXT_PRIMARY = new Color(17, 24, 39);
     private static final Color TEXT_SECONDARY = new Color(107, 114, 128);
     private static final Color BORDER_COLOR = new Color(229, 231, 235);

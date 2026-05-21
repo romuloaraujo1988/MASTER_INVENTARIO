@@ -26,7 +26,6 @@ import com.inventario.sihcp.model.Setor;
 import com.inventario.sihcp.event.DashboardEvent;
 import com.inventario.sihcp.event.DashboardEventBus;
 import com.inventario.sihcp.event.DashboardEventType;
-import com.inventario.sihcp.util.ConnectionManager;
 
 /**
  * Classe responsável pela importação de dados CSV do SUAP

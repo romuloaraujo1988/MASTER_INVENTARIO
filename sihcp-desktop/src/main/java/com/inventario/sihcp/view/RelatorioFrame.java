@@ -1624,8 +1624,6 @@ public class RelatorioFrame extends JFrame {
             return;
         }
 
-        String tipoRelatorio = (String) comboTipoRelatorio.getSelectedItem();
-
         // Preencher com dados reais
         for (Map<String, Object> linha : dados) {
             Object[] row = new Object[7];

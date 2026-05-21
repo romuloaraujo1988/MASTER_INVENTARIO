@@ -39,10 +39,25 @@ data class MobileColetaRequest(
     
     @SerializedName("longitude")
     val longitude: Double? = null,
-    
+
+    /**
+     * Campo legado do servidor — mantido para compatibilidade de contrato JSON.
+     *
+     * ⚠️ NÃO use este campo para enviar o conteúdo binário da foto.
+     *
+     * O upload de fotos é feito de forma assíncrona pelo [PhotoSyncWorker],
+     * que usa o endpoint dedicado de upload após a coleta ser sincronizada.
+     * Este campo deve ser sempre `null` nos requests gerados pelo app a
+     * partir da v2.21 — o servidor ignora o valor quando o upload separado
+     * já foi realizado.
+     *
+     * Histórico: antes da v2.21 era usado para enviar Base64 da foto
+     * diretamente no body da coleta. Abandonado por causar payloads grandes
+     * e timeouts em conexões lentas.
+     */
     @SerializedName("fotoPatrimonio")
-    val fotoPatrimonio: String? = null,
-    
+    val caminhoFotoLocal: String? = null,
+
     @SerializedName("semEtiqueta")
     val semEtiqueta: Boolean? = false,
     

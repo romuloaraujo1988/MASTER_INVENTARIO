@@ -132,19 +132,45 @@ class PhotoHelper @Inject constructor(
         coletaId: Long = 0L
     ): PhotoResult? {
         return try {
-            Log.d(TAG, "Comprimindo foto — inventario=$inventarioId tipo=${tipo.pasta} id=$identificador")
+            Log.d(TAG, "Comprimindo foto — inventario=$inventarioId tipo=${tipo.pasta} id=$identificador, sourceUri=$sourceUri")
 
-            // Carregar com sample size otimizado
+            // ── Decode de bounds ───────────────────────────────────────────
+            // ATENÇÃO: quando inJustDecodeBounds=true, decodeStream retorna SEMPRE null
+            // por design — ele apenas preenche options.outWidth/outHeight. Por isso só
+            // podemos validar o InputStream (URI), nunca o retorno do decodeStream.
             val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            context.contentResolver.openInputStream(sourceUri)?.use { input ->
+            val boundsStream = context.contentResolver.openInputStream(sourceUri)
+                ?: run {
+                    Log.e(TAG, "openInputStream retornou null — URI inválida ou sem permissão: $sourceUri")
+                    return null
+                }
+            boundsStream.use { input ->
                 BitmapFactory.decodeStream(input, null, options)
             }
+            Log.d(TAG, "Bounds detectados: ${options.outWidth}x${options.outHeight}")
+
+            if (options.outWidth <= 0 || options.outHeight <= 0) {
+                Log.e(TAG, "Bounds inválidos (${options.outWidth}x${options.outHeight}) — arquivo vazio ou corrompido: $sourceUri")
+                return null
+            }
+
             options.inSampleSize = calculateInSampleSize(options, MAX_WIDTH, MAX_HEIGHT)
             options.inJustDecodeBounds = false
 
-            val bitmap = context.contentResolver.openInputStream(sourceUri)?.use { input ->
+            // ── Decode real do bitmap ──────────────────────────────────────
+            // Aqui sim: decodeStream retorna o Bitmap ou null em caso de falha.
+            val decodeStream = context.contentResolver.openInputStream(sourceUri)
+                ?: run {
+                    Log.e(TAG, "openInputStream retornou null no segundo decode: $sourceUri")
+                    return null
+                }
+            val bitmap = decodeStream.use { input ->
                 BitmapFactory.decodeStream(input, null, options)
-            } ?: return null
+            } ?: run {
+                Log.e(TAG, "Bitmap decode retornou null — arquivo vazio ou corrompido: $sourceUri")
+                return null
+            }
+            Log.d(TAG, "Bitmap decodificado: ${bitmap.width}x${bitmap.height}")
 
             val resized = resizeBitmap(bitmap, MAX_WIDTH, MAX_HEIGHT)
             val timestamp = timestampAgora()
@@ -291,13 +317,28 @@ class PhotoHelper @Inject constructor(
 
     /**
      * Remove fotos antigas mantendo apenas as [MAX_LOCAL_PHOTOS] mais recentes
-     * por inventário/tipo. Só apaga fotos que já foram sincronizadas
-     * (o chamador deve garantir isso passando apenas arquivos sincronizados).
+     * por inventário/tipo.
+     *
+     * ⚠️ REGRA CRÍTICA: nunca apaga fotos com `fotoSincronizada = false` no banco.
+     * Apenas fotos já sincronizadas com o servidor podem ser removidas do disco.
+     * Fotos não sincronizadas são preservadas independentemente do limite de 200.
+     *
+     * O chamador pode passar o conjunto de caminhos de fotos já sincronizadas
+     * via [sincronizadas]. Se omitido, a limpeza é conservadora e não apaga nada
+     * (comportamento seguro por padrão).
      */
-    fun cleanupOldPhotos() {
+    fun cleanupOldPhotos(sincronizadas: Set<String> = emptySet()) {
         try {
             val fotosRoot = File(context.filesDir, FOTOS_ROOT)
             if (!fotosRoot.exists()) return
+
+            if (sincronizadas.isEmpty()) {
+                // Sem lista de sincronizadas, não é seguro apagar nada.
+                // O PhotoSyncWorker deve passar o conjunto correto.
+                Log.d(TAG, "cleanupOldPhotos: nenhuma foto sincronizada informada — limpeza ignorada")
+                cleanupOrphanThumbnails()
+                return
+            }
 
             // Percorrer inventario_X/tipo/
             fotosRoot.listFiles()?.forEach { invDir ->
@@ -308,9 +349,14 @@ class PhotoHelper @Inject constructor(
                         ?: return@forEach
 
                     if (fotos.size > MAX_LOCAL_PHOTOS) {
+                        // Só apaga fotos que já foram sincronizadas com o servidor
                         fotos.drop(MAX_LOCAL_PHOTOS).forEach { file ->
-                            file.delete()
-                            Log.d(TAG, "Foto antiga removida: ${file.name}")
+                            if (file.absolutePath in sincronizadas) {
+                                file.delete()
+                                Log.d(TAG, "Foto antiga sincronizada removida: ${file.name}")
+                            } else {
+                                Log.d(TAG, "Foto antiga NÃO removida (não sincronizada): ${file.name}")
+                            }
                         }
                     }
                 }

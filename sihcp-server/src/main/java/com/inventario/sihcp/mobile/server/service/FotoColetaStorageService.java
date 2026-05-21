@@ -1,5 +1,6 @@
 package com.inventario.sihcp.mobile.server.service;
 
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ import java.util.Set;
  *
  * <h2>Estrutura de pastas</h2>
  * <pre>
- * data/fotos/
+ * {fotos.storage.dir}/          ← configurável via application-mobile.properties
  *   inventario_{id}/
  *     {YYYY-MM}/
  *       patrimonio/
@@ -36,6 +37,21 @@ import java.util.Set;
  *       divergencia/
  *         coleta_{coletaId}_{numeroPatrimonio}.jpg
  * </pre>
+ *
+ * <h2>Configuração</h2>
+ * O diretório raiz é definido pela propriedade {@code fotos.storage.dir} em
+ * {@code application-mobile.properties}. Padrão: {@code data/fotos} (relativo
+ * ao working directory do processo Java).
+ *
+ * <p>Para usar caminho absoluto em produção, defina no properties:</p>
+ * <pre>
+ * fotos.storage.dir=C:/SIHCP/data/fotos
+ * </pre>
+ *
+ * <h2>Inicialização</h2>
+ * O diretório raiz é criado automaticamente no startup via {@link #init()}.
+ * Se a criação falhar (permissão negada, disco cheio), o servidor loga o erro
+ * mas continua — o upload falhará com mensagem clara.
  *
  * <h2>Regras de nomenclatura</h2>
  * <ul>
@@ -51,15 +67,20 @@ import java.util.Set;
  * redimensionando (máx. 800×600) e ajustando a qualidade JPEG progressivamente.
  *
  * @author Sistema de Inventário IFMT
- * @version 2.22
+ * @version 2.23
  */
 @Service
 public class FotoColetaStorageService {
 
     private static final Logger logger = LoggerFactory.getLogger(FotoColetaStorageService.class);
 
-    /** Diretório raiz para armazenamento de fotos. */
-    private static final String FOTOS_BASE_DIR = "data/fotos";
+    /**
+     * Diretório raiz para armazenamento de fotos.
+     * Injetado via {@code fotos.storage.dir} em application-mobile.properties.
+     * Padrão: {@code data/fotos} (relativo ao working directory do processo Java).
+     */
+    @org.springframework.beans.factory.annotation.Value("${fotos.storage.dir:data/fotos}")
+    private String fotosBaseDir;
 
     /** Tamanho máximo permitido no upload (antes da compressão): 5 MB. */
     private static final long MAX_UPLOAD_SIZE = 5 * 1024 * 1024;
@@ -81,6 +102,32 @@ public class FotoColetaStorageService {
 
     /** Identificador usado para itens sem etiqueta. */
     public static final String ID_SEM_ETIQUETA = "SE";
+
+    // ─── Inicialização ────────────────────────────────────────────────────────
+
+    /**
+     * Verifica e cria o diretório raiz de fotos no startup.
+     * Loga o caminho absoluto resolvido para facilitar diagnóstico.
+     */
+    @PostConstruct
+    public void init() {
+        try {
+            Path raiz = Paths.get(fotosBaseDir).toAbsolutePath().normalize();
+            Files.createDirectories(raiz);
+            logger.info("═══════════════════════════════════════════════════════");
+            logger.info("📁 ARMAZENAMENTO DE FOTOS INICIALIZADO");
+            logger.info("   Diretório raiz: {}", raiz);
+            logger.info("   Existe: {} | Gravável: {}", Files.exists(raiz), Files.isWritable(raiz));
+            logger.info("═══════════════════════════════════════════════════════");
+            if (!Files.isWritable(raiz)) {
+                logger.error("❌ ATENÇÃO: Diretório de fotos NÃO é gravável! Uploads vão falhar.");
+                logger.error("   Verifique as permissões de: {}", raiz);
+            }
+        } catch (IOException e) {
+            logger.error("❌ Falha ao criar diretório de fotos: {} — {}", fotosBaseDir, e.getMessage());
+            logger.error("   Uploads de fotos vão falhar até que o diretório seja criado manualmente.");
+        }
+    }
 
     // ─── API pública ──────────────────────────────────────────────────────────
 
@@ -146,8 +193,8 @@ public class FotoColetaStorageService {
         String nomeArquivo = String.format("coleta_%d_%s.jpg", coletaId, idSanitizado);
         String caminhoRelativo = diretorioRelativo + "/" + nomeArquivo;
 
-        Path diretorioCompleto = Paths.get(FOTOS_BASE_DIR, diretorioRelativo);
-        Path arquivoCompleto   = Paths.get(FOTOS_BASE_DIR, caminhoRelativo);
+        Path diretorioCompleto = Paths.get(fotosBaseDir, diretorioRelativo);
+        Path arquivoCompleto   = Paths.get(fotosBaseDir, caminhoRelativo);
 
         Files.createDirectories(diretorioCompleto);
         Files.write(arquivoCompleto, bytesComprimidos,
@@ -180,7 +227,7 @@ public class FotoColetaStorageService {
      * @throws IOException se o arquivo não existir ou não puder ser lido
      */
     public byte[] lerFoto(String caminhoRelativo) throws IOException {
-        Path arquivo = Paths.get(FOTOS_BASE_DIR, caminhoRelativo);
+        Path arquivo = Paths.get(fotosBaseDir, caminhoRelativo);
         if (!Files.exists(arquivo)) {
             throw new IOException("Foto não encontrada: " + caminhoRelativo);
         }
@@ -192,7 +239,7 @@ public class FotoColetaStorageService {
      */
     public boolean fotoExiste(String caminhoRelativo) {
         if (caminhoRelativo == null || caminhoRelativo.isBlank()) return false;
-        return Files.exists(Paths.get(FOTOS_BASE_DIR, caminhoRelativo));
+        return Files.exists(Paths.get(fotosBaseDir, caminhoRelativo));
     }
 
     /**
@@ -201,7 +248,7 @@ public class FotoColetaStorageService {
     public boolean removerFoto(String caminhoRelativo) {
         if (caminhoRelativo == null || caminhoRelativo.isBlank()) return false;
         try {
-            Path arquivo = Paths.get(FOTOS_BASE_DIR, caminhoRelativo);
+            Path arquivo = Paths.get(fotosBaseDir, caminhoRelativo);
             boolean removido = Files.deleteIfExists(arquivo);
             if (removido) logger.info("Foto removida: {}", caminhoRelativo);
             return removido;

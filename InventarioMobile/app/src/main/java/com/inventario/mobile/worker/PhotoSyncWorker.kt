@@ -58,18 +58,21 @@ class PhotoSyncWorker @AssistedInject constructor(
     companion object {
         private const val TAG = "PhotoSyncWorker"
         private const val WORK_NAME = "photo_sync_work"
+        private const val WORK_NAME_ONE_SHOT = "photo_sync_one_shot"
 
         /**
          * Agenda sincronização periódica de fotos.
+         * Intervalo: 15 minutos, qualquer rede (não só Wi-Fi).
+         * Bateria não baixa.
          */
         fun schedule(context: Context) {
             val constraints = Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.UNMETERED) // Apenas Wi-Fi
+                .setRequiredNetworkType(NetworkType.CONNECTED) // Qualquer rede (Wi-Fi ou dados)
                 .setRequiresBatteryNotLow(true)
                 .build()
 
             val workRequest = PeriodicWorkRequestBuilder<PhotoSyncWorker>(
-                6, TimeUnit.HOURS
+                15, TimeUnit.MINUTES
             )
                 .setConstraints(constraints)
                 .build()
@@ -80,7 +83,32 @@ class PhotoSyncWorker @AssistedInject constructor(
                 workRequest
             )
 
-            Log.d(TAG, "✓ Sincronização de fotos agendada (a cada 6h, apenas Wi-Fi)")
+            Log.d(TAG, "✓ Sincronização de fotos agendada (a cada 15min, qualquer rede)")
+        }
+
+        /**
+         * Dispara uma sincronização imediata (one-shot) de fotos.
+         * Chamado logo após a coleta ser sincronizada com o servidor,
+         * para que a foto chegue ao servidor o mais rápido possível
+         * sem esperar o ciclo periódico de 15 minutos.
+         */
+        fun scheduleOneShot(context: Context) {
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build()
+
+            val workRequest = androidx.work.OneTimeWorkRequestBuilder<PhotoSyncWorker>()
+                .setConstraints(constraints)
+                .setInitialDelay(2, TimeUnit.SECONDS) // pequeno delay para o banco local estabilizar
+                .build()
+
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                WORK_NAME_ONE_SHOT,
+                androidx.work.ExistingWorkPolicy.REPLACE,
+                workRequest
+            )
+
+            Log.d(TAG, "✓ Sincronização imediata de fotos agendada (one-shot)")
         }
 
         /**
@@ -102,7 +130,9 @@ class PhotoSyncWorker @AssistedInject constructor(
 
             if (coletasComFoto.isEmpty()) {
                 Log.d(TAG, "✓ Nenhuma foto pendente para sincronizar")
-                photoHelper.cleanupOldPhotos()
+                // Sem fotos pendentes, limpeza segura com conjunto vazio
+                // (cleanupOldPhotos não apaga nada sem lista de sincronizadas)
+                photoHelper.cleanupOldPhotos(emptySet())
                 return Result.success()
             }
 
@@ -112,6 +142,9 @@ class PhotoSyncWorker @AssistedInject constructor(
             var skipCount = 0
             var errorCount = 0
 
+            // Caminhos das fotos sincronizadas com sucesso nesta execução
+            val caminhosSincronizados = mutableSetOf<String>()
+
             for (coleta in coletasComFoto) {
                 val fotoPath = coleta.fotoPath
                 if (fotoPath.isNullOrBlank()) {
@@ -119,10 +152,8 @@ class PhotoSyncWorker @AssistedInject constructor(
                     continue
                 }
 
-                // BUGFIX F6: só enviar foto se a coleta já foi sincronizada e tem
-                // `servidorId`. O endpoint de upload referencia uma coleta existente
-                // pelo ID do servidor; enviar antes da coleta sincronizar geraria
-                // erro "coleta não encontrada".
+                // Só enviar foto se a coleta já foi sincronizada e tem servidorId.
+                // O endpoint de upload referencia uma coleta existente pelo ID do servidor.
                 val servidorId = coleta.servidorId
                 if (!coleta.sincronizado || servidorId == null || servidorId <= 0) {
                     Log.d(
@@ -145,6 +176,10 @@ class PhotoSyncWorker @AssistedInject constructor(
                     val file = File(fotoPath)
                     if (!file.exists() || !file.canRead()) {
                         Log.w(TAG, "⚠️ Arquivo de foto não encontrado ou ilegível: $fotoPath")
+                        // Arquivo sumiu do disco — marcar como sincronizada para não
+                        // tentar novamente indefinidamente (evita loop de erros)
+                        coletaDao.marcarFotoSincronizada(coleta.id)
+                        Log.w(TAG, "⚠️ Coleta ${coleta.id} marcada como foto-sincronizada (arquivo ausente)")
                         errorCount++
                         continue
                     }
@@ -170,6 +205,7 @@ class PhotoSyncWorker @AssistedInject constructor(
 
                     if (sucessoUpload) {
                         coletaDao.marcarFotoSincronizada(coleta.id)
+                        caminhosSincronizados.add(fotoPath)
                         syncCount++
                         Log.d(TAG, "✓ Foto sincronizada: coleta local=${coleta.id} servidor=$servidorId tipo=${tipo.pasta} id=$identificador")
                     } else {
@@ -189,10 +225,10 @@ class PhotoSyncWorker @AssistedInject constructor(
             Log.d(TAG, "  Erros: $errorCount")
             Log.d(TAG, "═══════════════════════════════════════")
 
-            // BUGFIX F6: limpar fotos antigas APENAS se pelo menos uma foto foi
-            // efetivamente enviada — evita apagar arquivos cujo upload falhou.
-            if (syncCount > 0) {
-                photoHelper.cleanupOldPhotos()
+            // Limpar fotos antigas passando APENAS os caminhos que foram
+            // efetivamente sincronizados — nunca apaga fotos pendentes.
+            if (caminhosSincronizados.isNotEmpty()) {
+                photoHelper.cleanupOldPhotos(caminhosSincronizados)
             }
 
             when {

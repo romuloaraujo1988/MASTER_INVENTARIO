@@ -62,6 +62,9 @@ class ItemSemEtiquetaActivity : AppCompatActivity() {
     /** URI do arquivo temporário criado antes de abrir a câmera. */
     private var fotoUri: Uri? = null
 
+    /** Referência direta ao arquivo temporário criado antes de abrir a câmera. */
+    private var fotoArquivoTemp: File? = null
+
     /** Caminho absoluto do arquivo comprimido após captura. */
     private var fotoPath: String? = null
     private var fotoThumbnailPath: String? = null
@@ -74,8 +77,17 @@ class ItemSemEtiquetaActivity : AppCompatActivity() {
     private val takePictureLauncher = registerForActivityResult(
         ActivityResultContracts.TakePicture()
     ) { success ->
+        android.util.Log.d(
+            "ItemSemEtiqueta",
+            "takePicture callback: success=$success, fotoUri=$fotoUri, fotoArquivoTemp=${fotoArquivoTemp?.absolutePath}"
+        )
         if (success && fotoUri != null) {
             handleFotoCapturada(fotoUri!!)
+        } else if (!success) {
+            android.util.Log.w("ItemSemEtiqueta", "Captura cancelada pelo usuário (success=false)")
+        } else {
+            android.util.Log.w("ItemSemEtiqueta", "fotoUri é null no callback — process death?")
+            showError("Erro ao recuperar foto. Tente novamente.")
         }
     }
 
@@ -91,6 +103,27 @@ class ItemSemEtiquetaActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityItemSemEtiquetaBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Restaurar estado da câmera em caso de process death.
+        // O Android pode matar o processo enquanto a câmera está aberta — quando
+        // o app volta, savedInstanceState contém o caminho do arquivo temporário
+        // criado antes da câmera abrir.
+        if (savedInstanceState != null) {
+            val tempPath = savedInstanceState.getString(STATE_FOTO_ARQUIVO_TEMP)
+            if (tempPath != null) {
+                fotoArquivoTemp = File(tempPath)
+                android.util.Log.d(
+                    "ItemSemEtiqueta",
+                    "Restaurado fotoArquivoTemp após process death: $tempPath"
+                )
+            }
+            val uriStr = savedInstanceState.getString(STATE_FOTO_URI)
+            if (uriStr != null) {
+                fotoUri = Uri.parse(uriStr)
+            }
+            fotoPath = savedInstanceState.getString(STATE_FOTO_PATH)
+            fotoThumbnailPath = savedInstanceState.getString(STATE_FOTO_THUMB_PATH)
+        }
 
         setupToolbar()
         setupCategorias()
@@ -109,6 +142,38 @@ class ItemSemEtiquetaActivity : AppCompatActivity() {
             val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
             imm?.showSoftInput(binding.edtDescricao, InputMethodManager.SHOW_IMPLICIT)
         }
+
+        // Se restauramos uma fotoPath após process death, restaurar o preview também
+        if (fotoPath != null) {
+            val bitmap = BitmapFactory.decodeFile(fotoPath)
+            if (bitmap != null) {
+                binding.imgPreview.setImageBitmap(bitmap)
+                binding.imgPreview.visibility = View.VISIBLE
+                binding.btnRemoverFoto.visibility = View.VISIBLE
+                binding.tvFotoStatus.text = "✓ Foto capturada"
+                binding.tvFotoStatus.setTextColor(getColor(R.color.success))
+            }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        // Persistir estado da câmera para sobreviver process death
+        fotoArquivoTemp?.absolutePath?.let { outState.putString(STATE_FOTO_ARQUIVO_TEMP, it) }
+        fotoUri?.toString()?.let { outState.putString(STATE_FOTO_URI, it) }
+        fotoPath?.let { outState.putString(STATE_FOTO_PATH, it) }
+        fotoThumbnailPath?.let { outState.putString(STATE_FOTO_THUMB_PATH, it) }
+        android.util.Log.d(
+            "ItemSemEtiqueta",
+            "onSaveInstanceState: fotoArquivoTemp=${fotoArquivoTemp?.absolutePath}, fotoPath=$fotoPath"
+        )
+    }
+
+    companion object {
+        private const val STATE_FOTO_ARQUIVO_TEMP = "state_foto_arquivo_temp"
+        private const val STATE_FOTO_URI = "state_foto_uri"
+        private const val STATE_FOTO_PATH = "state_foto_path"
+        private const val STATE_FOTO_THUMB_PATH = "state_foto_thumb_path"
     }
 
     private fun setupToolbar() {
@@ -330,13 +395,33 @@ class ItemSemEtiquetaActivity : AppCompatActivity() {
         try {
             val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val storageDir = getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES)
+            android.util.Log.d(
+                "ItemSemEtiqueta",
+                "abrirCamera: storageDir=${storageDir?.absolutePath}, exists=${storageDir?.exists()}, writable=${storageDir?.canWrite()}"
+            )
+
+            // Garantir que o diretório existe
+            if (storageDir != null && !storageDir.exists()) {
+                storageDir.mkdirs()
+            }
+
             val tempFile = File.createTempFile("JPEG_${timestamp}_", ".jpg", storageDir)
+            android.util.Log.d(
+                "ItemSemEtiqueta",
+                "Arquivo temp criado: ${tempFile.absolutePath}, exists=${tempFile.exists()}"
+            )
+
+            // Guardar referência direta ao arquivo — usada em handleFotoCapturada
+            // para verificar existência e tamanho sem depender do path do URI.
+            fotoArquivoTemp = tempFile
 
             fotoUri = FileProvider.getUriForFile(
                 this,
                 "${packageName}.fileprovider",
                 tempFile
             )
+            android.util.Log.d("ItemSemEtiqueta", "FileProvider URI: $fotoUri")
+
             takePictureLauncher.launch(fotoUri)
         } catch (e: Exception) {
             android.util.Log.e("ItemSemEtiqueta", "Erro ao abrir câmera", e)
@@ -348,40 +433,57 @@ class ItemSemEtiquetaActivity : AppCompatActivity() {
      * Comprime a foto capturada via [PhotoHelper] com tipo [FotoTipo.SEM_ETIQUETA]
      * e atualiza a UI com o preview.
      *
-     * Robustez: alguns dispositivos retornam `success=true` no
-     * [takePictureLauncher] mesmo quando a câmera não conseguiu escrever
-     * o arquivo (race condition durante a primeira inicialização). Aqui
-     * checamos o tamanho real do arquivo antes de tentar comprimir, e
-     * mostramos uma mensagem específica caso ele esteja vazio para o
-     * usuário tirar a foto novamente sem pensar que é erro do app.
+     * Estratégia em camadas:
+     * 1. Usa [fotoArquivoTemp] (referência direta) para verificar existência/tamanho
+     * 2. Se `fotoArquivoTemp` foi perdida (process death), lê o arquivo via
+     *    `ContentResolver` direto do URI — sempre funciona
+     * 3. O `PhotoHelper.compressAndSavePhoto()` aceita o URI e usa `ContentResolver`
+     *    internamente para ler o conteúdo, então o caminho real do arquivo só é
+     *    usado para validar tamanho/existência
      */
     private fun handleFotoCapturada(uri: Uri) {
         try {
-            // Validação prévia — o caminho real do arquivo está em fotoUri.path
-            // (privado do FileProvider). Como criamos via createTempFile com
-            // getExternalFilesDir, podemos checar diretamente.
-            val arquivoOriginal = uri.path?.let { caminho ->
-                // O path do URI do FileProvider tem formato
-                // "/external_files_root/Pictures/JPEG_xxx.jpg" — precisamos
-                // converter de volta para o File real. Simples: usar o
-                // último arquivo criado em getExternalFilesDir(Pictures).
-                val storageDir = getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES)
-                storageDir?.listFiles()?.maxByOrNull { it.lastModified() }
-            }
+            android.util.Log.d("ItemSemEtiqueta", "handleFotoCapturada: uri=$uri")
 
-            if (arquivoOriginal == null || !arquivoOriginal.exists() || arquivoOriginal.length() == 0L) {
+            // Tentar validar via referência direta primeiro
+            val arquivoOriginal = fotoArquivoTemp
+            android.util.Log.d(
+                "ItemSemEtiqueta",
+                "Validação: fotoArquivoTemp=${arquivoOriginal?.absolutePath}, " +
+                    "exists=${arquivoOriginal?.exists()}, size=${arquivoOriginal?.length()}"
+            )
+
+            // Validação de existência — tolerante a process death.
+            // Se a referência foi perdida ou o arquivo não existe no path esperado,
+            // tentamos ler via ContentResolver. Algumas câmeras escrevem em path
+            // diferente do que o FileProvider mapeia.
+            val arquivoValido = arquivoOriginal != null &&
+                                arquivoOriginal.exists() &&
+                                arquivoOriginal.length() > 0L
+
+            if (!arquivoValido) {
                 android.util.Log.w(
                     "ItemSemEtiqueta",
-                    "Arquivo da câmera vazio ou ausente: " +
-                        "exists=${arquivoOriginal?.exists()}, size=${arquivoOriginal?.length()}"
+                    "Arquivo direto inválido — tentando ler via ContentResolver"
                 )
-                showError("Foto não foi capturada. Tente novamente.")
-                return
+                // Verificar se o URI tem conteúdo lendo um pequeno chunk
+                val tamanhoUri = try {
+                    contentResolver.openInputStream(uri)?.use { it.available().toLong() } ?: 0L
+                } catch (e: Exception) {
+                    android.util.Log.e("ItemSemEtiqueta", "Erro ao ler URI: ${e.message}")
+                    0L
+                }
+                android.util.Log.d("ItemSemEtiqueta", "Tamanho via ContentResolver: $tamanhoUri bytes")
+
+                if (tamanhoUri == 0L) {
+                    showError("Foto não foi capturada. Tente novamente.")
+                    return
+                }
             }
 
             android.util.Log.d(
                 "ItemSemEtiqueta",
-                "Arquivo capturado: ${arquivoOriginal.absolutePath} (${arquivoOriginal.length()} bytes)"
+                "Iniciando compressão via PhotoHelper..."
             )
 
             val inventarioId = preferencesManager.getInventarioAtivoId() ?: 0
@@ -406,8 +508,10 @@ class ItemSemEtiquetaActivity : AppCompatActivity() {
                 android.util.Log.d("ItemSemEtiqueta", "✓ Foto salva: ${result.fullPath} (${result.sizeKB} KB)")
 
                 // Limpa o temporário original — já temos o comprimido em files/fotos/
-                runCatching { arquivoOriginal.delete() }
+                runCatching { arquivoOriginal?.delete() }
+                fotoArquivoTemp = null
             } else {
+                android.util.Log.e("ItemSemEtiqueta", "PhotoHelper.compressAndSavePhoto retornou null")
                 showError("Falha ao processar foto. Tente novamente.")
             }
         } catch (e: Exception) {
@@ -421,6 +525,7 @@ class ItemSemEtiquetaActivity : AppCompatActivity() {
         fotoPath = null
         fotoThumbnailPath = null
         fotoUri = null
+        fotoArquivoTemp = null
         binding.imgPreview.setImageBitmap(null)
         binding.imgPreview.visibility = View.GONE
         binding.btnRemoverFoto.visibility = View.GONE

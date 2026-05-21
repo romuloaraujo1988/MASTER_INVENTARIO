@@ -188,7 +188,9 @@ class ManualCollectionViewModel @Inject constructor(
                     numeroPatrimonio = patrimonio.numeroPatrimonio,
                     localizacaoAtual = salaNome,
                     estadoEncontrado = estadoEncontrado,
-                    observacoes = observacoes
+                    observacoes = observacoes,
+                    metodoColeta = "MANUAL",
+                    tipoScan = "MANUAL"
                 )
 
                 result.fold(

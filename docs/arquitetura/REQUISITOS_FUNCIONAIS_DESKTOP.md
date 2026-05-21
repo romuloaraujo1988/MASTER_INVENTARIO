@@ -404,18 +404,22 @@ A reconciliação é o processo de correspondência entre itens cadastrados e n�
 
 ---
 
-### 4.15 Módulo de Gerenciamento do Servidor Mobile
+### 4.15 Módulo de Monitoramento do Servidor Mobile
+
+> **⚠️ Nota de arquitetura (Mai/2026):** O servidor da API Mobile **não é mais integrado à aplicação desktop**. O servidor é iniciado e gerenciado de forma independente (processo separado). A aplicação desktop mantém apenas uma interface de **monitoramento passivo**, cujas funcionalidades de visualização em tempo real ainda **não estão funcionais** nesta versão.
 
 | ID | Requisito | Descrição | Prioridade | Tela / Componente | Status |
 |----|-----------|-----------|------------|-------------------|--------|
-| **RFD-083** | Iniciar servidor da API Mobile | O sistema deve permitir iniciar o servidor Spring Boot a partir de um controle no desktop | Essencial | `MobileServerPanel` | ✅ Implementado |
-| **RFD-084** | Parar servidor da API Mobile | O sistema deve permitir parar o servidor de forma controlada (*graceful shutdown*) | Essencial | `MobileServerPanel` | ✅ Implementado |
-| **RFD-085** | Monitorar *status* do servidor | O sistema deve exibir indicadores de estado (em execução, parado, com falha) | Essencial | `MobileServerPanel` | ✅ Implementado |
-| **RFD-086** | Monitorar dispositivos conectados | O sistema deve apresentar a relação de dispositivos móveis autenticados, com IP e última atividade | Importante | `MobileMonitorFrameV2` | ✅ Implementado |
-| **RFD-087** | Visualizar requisições em tempo real | O sistema deve apresentar as requisições recentes com *endpoint*, método, dispositivo e tempo de resposta | Importante | `MobileMonitorFrameV2` | ✅ Implementado |
-| **RFD-088** | Desconectar dispositivo | O sistema deve permitir a desconexão forçada de um dispositivo específico | Importante | `MobileMonitorFrameV2` | ✅ Implementado |
+| **RFD-083** | ~~Iniciar servidor da API Mobile~~ | ~~O sistema deve permitir iniciar o servidor Spring Boot a partir de um controle no desktop~~ | ~~Essencial~~ | ~~`MobileServerPanel`~~ | ❌ Removido — servidor independente |
+| **RFD-084** | ~~Parar servidor da API Mobile~~ | ~~O sistema deve permitir parar o servidor de forma controlada (*graceful shutdown*)~~ | ~~Essencial~~ | ~~`MobileServerPanel`~~ | ❌ Removido — servidor independente |
+| **RFD-085** | Monitorar *status* do servidor | O sistema deve exibir indicadores de estado do servidor externo (em execução, parado, com falha), consultando o *endpoint* `/health` | Importante | `MobileServerPanel` | ⚠️ Parcial — não funcional |
+| **RFD-086** | Monitorar dispositivos conectados | O sistema deve apresentar a relação de dispositivos móveis autenticados, com IP e última atividade | Importante | `MobileMonitorFrameV2` | ⚠️ Parcial — não funcional |
+| **RFD-087** | Visualizar requisições em tempo real | O sistema deve apresentar as requisições recentes com *endpoint*, método, dispositivo e tempo de resposta | Desejável | `MobileMonitorFrameV2` | ⚠️ Parcial — não funcional |
+| **RFD-088** | Desconectar dispositivo | O sistema deve permitir a desconexão forçada de um dispositivo específico via API | Desejável | `MobileMonitorFrameV2` | ⚠️ Parcial — não funcional |
 
-**Critérios de aceitação:** A inicialização do servidor deve concluir em até 30 segundos; a desconexão forçada deve invalidar o *token* ativo do dispositivo.
+**Situação atual:** RFD-083 e RFD-084 foram descontinuados com a separação arquitetural do servidor. Os requisitos RFD-085 a RFD-088 permanecem no escopo como funcionalidades de monitoramento passivo, porém ainda não estão operacionais nesta versão e serão implementados em iteração futura.
+
+**Critérios de aceitação (quando implementado):** O painel deve consultar o *endpoint* `/health` do servidor externo para exibir o estado; a desconexão forçada deve chamar o *endpoint* REST correspondente e invalidar o *token* ativo do dispositivo.
 
 **Referências:** RF086–RF091 do documento integrado.
 
@@ -555,7 +559,7 @@ Esta seção descreve cenários principais de validação funcional, com fluxos 
 | Fotos de Referência | RFD-073 a RFD-075 | 3 |
 | Reconciliação | RFD-076 a RFD-078 | 3 |
 | Impressão de Etiquetas | RFD-079 a RFD-082 | 4 |
-| Servidor Mobile | RFD-083 a RFD-088 | 6 |
+| Servidor Mobile | RFD-083 a RFD-088 | 4 (2 removidos, 4 parciais) |
 | Modo Offline | RFD-089 a RFD-094 | 6 |
 | Configuração | RFD-095 a RFD-098 | 4 |
 | **Total** | | **98** |
@@ -564,9 +568,9 @@ Esta seção descreve cenários principais de validação funcional, com fluxos 
 
 | Situação | Quantidade | Percentual |
 |----------|-----------|-----------|
-| Implementado | 98 | 100% |
-| Em desenvolvimento | 0 | 0% |
-| Planejado | 0 | 0% |
+| Implementado | 96 | 98% |
+| Parcial / Não funcional | 4 | 4% |
+| Removido (descontinuado) | 2 | 2% |
 
 ### 7.3 Distribuição por Prioridade
 
@@ -603,6 +607,7 @@ Esta seção descreve cenários principais de validação funcional, com fluxos 
 |--------|------|-------|-----------|
 | 1.0.0 | Mai/2026 | Equipe IFMT | Versão inicial com 98 requisitos funcionais organizados em 17 módulos |
 | 2.0.0 | Mai/2026 | Equipe IFMT | Reescrita com formalidade institucional: introdução, propósito e escopo, prioridades explícitas, critérios de aceitação, referências cruzadas com o documento integrado, cenários de validação, riscos e mitigações, glossário formal e acentuação completa em português |
+| 2.1.0 | Mai/2026 | Equipe IFMT | Atualização arquitetural: módulo 4.15 renomeado para "Monitoramento do Servidor Mobile"; RFD-083 e RFD-084 (iniciar/parar servidor) descontinuados — servidor agora é processo independente; RFD-085 a RFD-088 marcados como parciais/não funcionais; matriz de rastreabilidade atualizada |
 
 ---
 

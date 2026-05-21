@@ -36,8 +36,17 @@ android {
         //   AL-13 Bloco "schema reset v2.20.5" removido
         //   MD-01 ProGuard preserva Tink
         //   MD-05 HttpLoggingInterceptor NONE em release
-        versionCode 76
-        versionName "2.28.0"
+        // v2.29.1 — fix: câmera fechava imediatamente (setTimeout(0) = timeout instantâneo)
+        //   - ScannerActivity: removido setTimeout(0) — não chamar é o correto para sem timeout
+        //   - ScannerActivity: revertido loop de reabrir câmera (causava loop infinito)
+        //   - CustomCaptureActivity: RuntimeException no zoom não propaga para CaptureManager
+        //   - MainActivity: nav_scanner agora passa por SalaSelectionActivity
+        // v2.29.3 — nomes de responsável completos no PDF
+        //   - PdfGenerator: removidos take(25) no responsável, take(30) na localização
+        //     e take(50) na descrição — iText quebra linha automaticamente na célula
+        //   - PdfGenerator: coluna Responsável ampliada (1.4→1.8) para nomes longos
+        versionCode 80
+        versionName "2.29.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

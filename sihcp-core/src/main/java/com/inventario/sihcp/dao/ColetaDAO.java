@@ -2330,6 +2330,17 @@ public class ColetaDAO {
                 coleta.setFotoPatrimonio(null);
             }
         }
+
+        // FOTO_PATH: caminho relativo da foto no servidor (coluna adicionada pela migration)
+        try {
+            coleta.setFotoPath(rs.getString("FOTO_PATH"));
+        } catch (SQLException e) {
+            try {
+                coleta.setFotoPath(rs.getString("foto_path"));
+            } catch (SQLException e2) {
+                coleta.setFotoPath(null);
+            }
+        }
         
         // SEM_ETIQUETA: compatível em ambos
         try {
@@ -3122,17 +3133,17 @@ public class ColetaDAO {
         // Estes endpoints rodam apenas no servidor Spring com PostgreSQL
         // (não há análise de ranking no SQLite offline).
         String sql = "SELECT " +
-                "    u.ID                          AS idUsuario, " +
-                "    COALESCE(u.NOME, u.LOGIN)     AS nome, " +
-                "    COUNT(*)                      AS totalColetas, " +
-                "    MAX(c.DATA_COLETA)            AS ultimaColeta " +
+                "    u.ID                                    AS idUsuario, " +
+                "    COALESCE(u.NOME_COMPLETO, u.LOGIN)      AS nome, " +
+                "    COUNT(*)                                AS totalColetas, " +
+                "    MAX(c.DATA_COLETA)                      AS ultimaColeta " +
                 "FROM TABELA_COLETA c " +
                 "INNER JOIN TABELA_PARTICIPANTE_INVENTARIO pi " +
-                "        ON c.ID_PARTICIPANTE_INVENTARIO = pi.ID " +
+                "        ON c.ID_PARTICIPANTE_INVENTARIO = pi.ID_PARTICIPANTE " +
                 "INNER JOIN TABELA_USUARIO u " +
                 "        ON pi.ID_USUARIO = u.ID " +
                 "WHERE c.ID_INVENTARIO = ? " +
-                "GROUP BY u.ID, u.NOME, u.LOGIN " +
+                "GROUP BY u.ID, u.NOME_COMPLETO, u.LOGIN " +
                 "ORDER BY totalColetas DESC " +
                 "LIMIT ?";
 
@@ -3904,6 +3915,8 @@ public class ColetaDAO {
      * @throws SQLException se ocorrer erro no banco
      */
     public void atualizarFotoPath(int coletaId, String fotoPath) throws java.sql.SQLException {
+        // Usa a coluna foto_path (criada pela migration adicionar_foto_path_coleta.sql).
+        // Execute o script sql/adicionar_foto_path_coleta.sql antes de usar este método.
         String sql = "UPDATE TABELA_COLETA SET FOTO_PATH = ? WHERE ID = ?";
 
         try (java.sql.Connection conn = com.inventario.sihcp.util.ConnectionManager.getConnection();
@@ -3930,6 +3943,7 @@ public class ColetaDAO {
      * @throws SQLException se ocorrer erro no banco
      */
     public String buscarFotoPath(int coletaId) throws java.sql.SQLException {
+        // Usa a coluna foto_path (criada pela migration adicionar_foto_path_coleta.sql).
         String sql = "SELECT FOTO_PATH FROM TABELA_COLETA WHERE ID = ?";
 
         try (java.sql.Connection conn = com.inventario.sihcp.util.ConnectionManager.getConnection();

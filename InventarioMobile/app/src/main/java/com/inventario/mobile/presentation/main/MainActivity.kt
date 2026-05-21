@@ -271,7 +271,11 @@ class MainActivity : AppCompatActivity() {
             }
             
             R.id.nav_scanner -> {
-                val intent = Intent(this, com.inventario.mobile.presentation.scanner.ScannerActivity::class.java)
+                // Redirecionar para SalaSelectionActivity para garantir que a sala
+                // seja selecionada antes de abrir o scanner (ScannerActivity requer
+                // EXTRA_SALA_ID para funcionar corretamente).
+                val intent = Intent(this, com.inventario.mobile.presentation.sala.SalaSelectionActivity::class.java)
+                intent.putExtra("COLETA_TIPO", "QRCODE")
                 startActivity(intent)
                 true
             }

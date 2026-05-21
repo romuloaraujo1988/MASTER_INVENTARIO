@@ -290,7 +290,10 @@ class RegistrarColetaUseCase @Inject constructor(
                 sincronizado = false,
                 // Campos para item sem etiqueta
                 semEtiqueta = true,
-                descricaoItemSemEtiqueta = descricao
+                descricaoItemSemEtiqueta = descricao,
+                // Método de coleta: item similar é sempre manual/sem etiqueta
+                metodoColeta = "SEM_ETIQUETA",
+                tipoScan = "MANUAL"
             )
             
             android.util.Log.d("RegistrarColetaUseCase", "✓ Coleta por descrição criada, salvando...")

@@ -28,6 +28,8 @@ public class Coleta {
     private BigDecimal latitude;
     private BigDecimal longitude;
     private String fotoPatrimonio;
+    /** Caminho relativo da foto no servidor (coluna FOTO_PATH). Nulo se não houver foto. */
+    private String fotoPath;
     
     // Campos para itens sem etiqueta
     private boolean semEtiqueta;
@@ -224,6 +226,14 @@ public class Coleta {
     
     public void setFotoPatrimonio(String fotoPatrimonio) {
         this.fotoPatrimonio = fotoPatrimonio;
+    }
+
+    public String getFotoPath() {
+        return fotoPath;
+    }
+
+    public void setFotoPath(String fotoPath) {
+        this.fotoPath = fotoPath;
     }
     
     // Getters e Setters para itens sem etiqueta

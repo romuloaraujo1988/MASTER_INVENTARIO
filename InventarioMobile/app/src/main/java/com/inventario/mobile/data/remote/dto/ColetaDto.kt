@@ -67,6 +67,14 @@ data class ColetaDto(
     
     @SerializedName("sincronizado")
     val sincronizado: Boolean?,
+
+    /** URL relativa para download da foto: {@code "api/mobile/fotos/{id}"}. Nulo se sem foto. */
+    @SerializedName("fotoUrl")
+    val fotoUrl: String? = null,
+
+    /** Indica se a coleta possui foto armazenada no servidor. */
+    @SerializedName("temFoto")
+    val temFoto: Boolean? = null,
     
     // Campos para compatibilidade com criação de coletas
     @SerializedName("patrimonio_id")

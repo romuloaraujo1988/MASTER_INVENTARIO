@@ -64,5 +64,13 @@ data class MobileColetaResponseDto(
     val categoriaItemSemEtiqueta: String? = null,
     
     @SerializedName("sincronizado")
-    val sincronizado: Boolean = true
+    val sincronizado: Boolean = true,
+
+    /** URL relativa para download da foto: {@code "api/mobile/fotos/{id}"}. Nulo se sem foto. */
+    @SerializedName("fotoUrl")
+    val fotoUrl: String? = null,
+
+    /** Indica se a coleta possui foto armazenada no servidor. */
+    @SerializedName("temFoto")
+    val temFoto: Boolean? = null
 )

@@ -39,7 +39,12 @@ data class Coleta(
     // Campos para itens sem etiqueta
     val semEtiqueta: Boolean = false,
     val descricaoItemSemEtiqueta: String? = null,
-    val categoriaItemSemEtiqueta: String? = null
+    val categoriaItemSemEtiqueta: String? = null,
+
+    /** URL relativa para download da foto do servidor: "api/mobile/fotos/{id}". */
+    val fotoUrl: String? = null,
+    /** Indica se a coleta possui foto armazenada no servidor. */
+    val temFoto: Boolean? = null
 ) {
     companion object {
         /**
@@ -84,7 +89,10 @@ data class Coleta(
                 // Campos para itens sem etiqueta
                 semEtiqueta = dto.semEtiqueta ?: false,
                 descricaoItemSemEtiqueta = dto.descricaoItemSemEtiqueta,
-                categoriaItemSemEtiqueta = dto.categoriaItemSemEtiqueta
+                categoriaItemSemEtiqueta = dto.categoriaItemSemEtiqueta,
+                // Foto no servidor
+                fotoUrl = dto.fotoUrl,
+                temFoto = dto.temFoto
             )
         }
         
@@ -173,7 +181,7 @@ data class Coleta(
             dataColeta = dataColeta,
             latitude = latitude,
             longitude = longitude,
-            fotoPatrimonio = fotoPath,
+            caminhoFotoLocal = null, // Foto enviada pelo PhotoSyncWorker — não incluir no body da coleta
             semEtiqueta = false,
             descricaoItemSemEtiqueta = null,
             categoriaItemSemEtiqueta = null,
