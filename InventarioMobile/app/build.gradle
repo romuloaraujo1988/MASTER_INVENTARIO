@@ -45,8 +45,22 @@ android {
         //   - PdfGenerator: removidos take(25) no responsável, take(30) na localização
         //     e take(50) na descrição — iText quebra linha automaticamente na célula
         //   - PdfGenerator: coluna Responsável ampliada (1.4→1.8) para nomes longos
-        versionCode 80
-        versionName "2.29.3"
+        // v2.29.4 — coleta excluída no servidor agora pode ser recoletada (apenas online)
+        //   - ColetaRepositoryImpl: removida verificação local de duplicata
+        //     (problema: cache desatualizado bloqueava recoleta de itens excluídos)
+        //   - PreferencesManager: corrigido fechamento de classe que impedia compilação
+        // v2.29.5 — solução híbrida online/offline + tela de configuração inicial
+        //   - ColetaRepositoryImpl: verificação adaptativa baseada em NetworkMonitor
+        //     - ONLINE: confia no servidor (sem verificação local)
+        //     - OFFLINE: verifica banco local para evitar duplicatas reais
+        //   - SincronizarColetasDoServidorUseCase: remove coletas excluídas no
+        //     servidor que ainda existem no cache local (limpeza automática)
+        //   - InitialSetupActivity: nova tela de configuração de IP do servidor
+        //     na primeira utilização do app (substitui IP fixo no APK)
+        //   - PreferencesManager: flag isServerConfigured() para controlar fluxo
+        //   - SplashActivity: redireciona para setup quando isServerConfigured=false
+        versionCode 81
+        versionName "2.29.5"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

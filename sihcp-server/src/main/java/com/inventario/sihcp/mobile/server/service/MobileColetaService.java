@@ -26,6 +26,8 @@ import com.inventario.sihcp.event.DashboardEventBus;
 import com.inventario.sihcp.event.DashboardEventType;
 import com.inventario.sihcp.mobile.server.dto.MobileColetaRequest;
 import com.inventario.sihcp.mobile.server.dto.MobileColetaResponse;
+import com.inventario.sihcp.mobile.server.realtime.ColetaEventoDTO;
+import com.inventario.sihcp.mobile.server.realtime.ColetaLiveSocketHandler;
 import com.inventario.sihcp.model.Coleta;
 import com.inventario.sihcp.model.Inventario;
 import com.inventario.sihcp.model.Patrimonio;
@@ -57,6 +59,24 @@ public class MobileColetaService {
     private final InventarioDAO inventarioDAO;
     private final UsuarioDAO usuarioDAO;
     private final ParticipanteInventarioDAO participanteInventarioDAO;
+
+    /**
+     * Handler do feed WebSocket de coletas em tempo real.
+     *
+     * <p>Injetado por field como {@code required = false} pelos seguintes
+     * motivos práticos:</p>
+     * <ul>
+     *   <li>O construtor padrão da classe é {@code no-arg} e instancia DAOs
+     *       manualmente (legado anterior à DI completa). Mexer no construtor
+     *       quebra os smoke tests
+     *       ({@code MobileColetaControllerContratoSmokeTest}).</li>
+     *   <li>Em testes unitários que instanciam a service via {@code new},
+     *       o handler simplesmente fica {@code null} — verificamos antes de
+     *       publicar.</li>
+     * </ul>
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private ColetaLiveSocketHandler coletaLiveSocketHandler;
 
     public MobileColetaService() {
         this.coletaDAO = new ColetaDAO();
@@ -190,7 +210,13 @@ public class MobileColetaService {
                 inventario.getId(), usuario.getId());
 
         if (idParticipante == null) {
-            throw new IllegalArgumentException("Usuário não é participante deste inventário");
+            logger.warn("🚫 Usuário '{}' (ID={}) não é participante ativo do inventário '{}' (ID={}). " +
+                    "Adicione o usuário como participante no sistema desktop antes de coletar.",
+                    usuario.getLogin(), usuario.getId(), inventario.getNome(), inventario.getId());
+            throw new IllegalArgumentException(
+                    "Usuário não autorizado: '" + usuario.getNomeCompleto() + "' não é participante ativo " +
+                    "do inventário '" + inventario.getNome() + "'. " +
+                    "Solicite ao administrador que adicione este usuário como participante no sistema desktop.");
         }
 
         // Criar objeto Coleta
@@ -310,7 +336,13 @@ public class MobileColetaService {
         publicarEventoColetaSincronizada(coleta, inventario, usuario);
 
         // Retornar resposta
-        return converterParaResponse(coleta, usuario, inventario);
+        MobileColetaResponse response = converterParaResponse(coleta, usuario, inventario);
+
+        // Broadcast em tempo real para clientes conectados ao /ws/coletas-live.
+        // Encapsulado em try/catch — falha de WS não pode reverter a coleta.
+        publicarEventoWebSocket(response);
+
+        return response;
     }
 
     /**
@@ -434,6 +466,33 @@ public class MobileColetaService {
         } catch (Exception e) {
             // Log do erro mas não propaga - não deve afetar a operação principal
             logger.warn("Falha ao publicar evento de coleta sincronizada: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Publica o evento de coleta no WebSocket de tempo real ({@code /ws/coletas-live}).
+     *
+     * <p>Encapsulado para garantir que falhas de broadcast — buffer cheio em
+     * algum cliente, serialização falhando, handler nulo em testes — não
+     * propaguem para a transação de registro da coleta. A coleta já foi
+     * persistida; o WebSocket é melhor-esforço.</p>
+     *
+     * <p>Não publica em casos de idempotência (UUID repetido): clientes que
+     * estavam online no momento da primeira persistência já receberam o
+     * evento, e re-publicar geraria duplicatas na lista do "monitor ao vivo".</p>
+     */
+    private void publicarEventoWebSocket(MobileColetaResponse response) {
+        if (coletaLiveSocketHandler == null || response == null) {
+            return;
+        }
+        try {
+            ColetaEventoDTO evento = ColetaEventoDTO.fromResponse(response);
+            if (evento != null) {
+                coletaLiveSocketHandler.broadcastColeta(evento);
+            }
+        } catch (Exception e) {
+            logger.warn("Falha ao broadcast WS de coleta {}: {}",
+                    response.getId(), e.getMessage());
         }
     }
     

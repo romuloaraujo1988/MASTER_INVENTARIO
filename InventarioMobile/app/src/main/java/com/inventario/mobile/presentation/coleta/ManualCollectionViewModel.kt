@@ -143,7 +143,7 @@ class ManualCollectionViewModel @Inject constructor(
 
     fun coletarPatrimonio(estadoEncontrado: String, observacoes: String? = null) {
         val patrimonio = _uiState.value.patrimonio
-        
+
         // Validação 1: Verificar se há patrimônio selecionado
         if (patrimonio == null) {
             _uiState.value = _uiState.value.copy(
@@ -152,13 +152,33 @@ class ManualCollectionViewModel @Inject constructor(
             return
         }
 
-        // Validação 2: Verificar se o patrimônio já foi coletado
+        // Validação 2: Verificar se o patrimônio já foi coletado.
+        // Em vez de bloquear silenciosamente, retornamos um erro específico
+        // que a Activity usa para exibir o dialog de decisão ao usuário.
         if (_uiState.value.jaColetado) {
             _uiState.value = _uiState.value.copy(
-                errorMessage = "Este patrimônio já foi coletado anteriormente"
+                errorMessage = "DUPLICATA:${patrimonio.coletadoPor}:${patrimonio.dataColetaFormatada}"
             )
             return
         }
+
+        executarColeta(estadoEncontrado, observacoes)
+    }
+
+    /**
+     * Força uma nova coleta para um patrimônio já marcado como coletado.
+     *
+     * Chamado quando o usuário escolhe "Forçar nova coleta" no dialog de
+     * duplicata. Reseta o flag `jaColetado` no estado e executa a coleta
+     * normalmente. O audit trail é registrado pelo chamador (Activity).
+     */
+    fun forcarColeta(estadoEncontrado: String, observacoes: String? = null) {
+        _uiState.value = _uiState.value.copy(jaColetado = false, errorMessage = null)
+        executarColeta(estadoEncontrado, observacoes)
+    }
+
+    private fun executarColeta(estadoEncontrado: String, observacoes: String?) {
+        val patrimonio = _uiState.value.patrimonio ?: return
 
         // Validação 3: Verificar se o patrimônio é válido (tem ID e número)
         if (patrimonio.id <= 0 || patrimonio.numeroPatrimonio.isBlank()) {
@@ -197,7 +217,7 @@ class ManualCollectionViewModel @Inject constructor(
                     onSuccess = { coleta ->
                         // v2.10: Vibrar ao coletar (se habilitado nas configurações)
                         vibrationHelper.vibrateOnCollection()
-                        
+
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             coletaRealizada = true,

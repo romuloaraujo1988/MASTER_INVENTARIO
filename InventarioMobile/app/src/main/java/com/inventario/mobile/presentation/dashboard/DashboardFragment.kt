@@ -654,7 +654,10 @@ class DashboardFragment : BaseOfflineFragment() {
     private fun listarColetados() {
         Log.d(TAG, "Listar coletados")
         try {
-            val intent = Intent(requireContext(), com.inventario.mobile.presentation.coleta.CollectionViewActivity::class.java)
+            // CollectionViewActivity virou monitor ao vivo — não suporta mais
+            // filtro por status. Para "listar coletados" mandamos o usuário
+            // para a tela unificada com o filtro pré-selecionado.
+            val intent = Intent(requireContext(), com.inventario.mobile.presentation.coletas.ColetasUnificadaActivity::class.java)
             intent.putExtra("FILTER_STATUS", "COLETADO")
             startActivity(intent)
         } catch (e: Exception) {

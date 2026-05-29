@@ -111,6 +111,16 @@ public class MobileSecurityConfig {
                         
                         // Informações do campus (público — app precisa identificar o campus antes do login)
                         .requestMatchers("/api/mobile/campus/info").permitAll()
+
+                        // WebSocket nativo de coletas em tempo real.
+                        // Autenticação é feita via token JWT enviado pelo cliente
+                        // como query string (?token=...) e validado pelo handler —
+                        // a infraestrutura WebSocket do Spring não passa pelo
+                        // mobileJwtAuthenticationFilter (que é HTTP-only).
+                        // TODO (segurança): adicionar HandshakeInterceptor que
+                        // valide o JWT antes de aceitar a conexão.
+                        .requestMatchers("/ws-coletas-live").permitAll()
+                        .requestMatchers("/ws-coletas-live/**").permitAll()
                         
                         // ═══════════════════════════════════════════════════════════════
                         // ENDPOINTS PROTEGIDOS (requerem autenticação)

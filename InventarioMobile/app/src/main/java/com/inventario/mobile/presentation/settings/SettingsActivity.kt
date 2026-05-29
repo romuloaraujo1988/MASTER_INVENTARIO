@@ -10,12 +10,14 @@ import com.inventario.mobile.databinding.ActivitySettingsBinding
 import com.inventario.mobile.utils.PreferencesManager
 import com.inventario.mobile.utils.NavigationHelper
 import com.inventario.mobile.utils.ThemeHelper
+import com.inventario.mobile.utils.VibrationHelper
 
 class SettingsActivity : AppCompatActivity() {
     
     private lateinit var binding: ActivitySettingsBinding
     private lateinit var viewModel: SettingsViewModel
     private lateinit var preferencesManager: PreferencesManager
+    private lateinit var vibrationHelper: VibrationHelper
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,6 +28,10 @@ class SettingsActivity : AppCompatActivity() {
         com.inventario.mobile.ui.components.OfflineIndicator.setup(this)
         
         preferencesManager = PreferencesManager(this)
+        // VibrationHelper é @Singleton — instanciar manualmente aqui apenas
+        // para o "Testar vibração" da tela de configurações funcionar em
+        // SettingsActivity (que ainda não é @AndroidEntryPoint).
+        vibrationHelper = VibrationHelper(applicationContext, preferencesManager)
         
         // Inicializar InventarioRepository
         val apiService = com.inventario.mobile.data.remote.api.ApiClient.getApiService(this)
@@ -80,6 +86,45 @@ class SettingsActivity : AppCompatActivity() {
                     "Vibração ao coletar ativada"
                 } else {
                     "Vibração ao coletar desativada"
+                }
+                Toast.makeText(this@SettingsActivity, message, Toast.LENGTH_SHORT).show()
+                atualizarAvisoPowerSave()
+            }
+
+            // Botão "Testar vibração" — força a vibração ignorando a
+            // preferência atual, para o usuário confirmar que o feedback
+            // tátil funciona neste dispositivo. Útil para diagnosticar
+            // ROMs que silenciam vibração em certos contextos.
+            btnTestarVibracao.setOnClickListener {
+                if (!vibrationHelper.hasVibrator()) {
+                    Toast.makeText(
+                        this@SettingsActivity,
+                        "Este dispositivo não possui hardware de vibração",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return@setOnClickListener
+                }
+                val ok = vibrationHelper.testarVibracao()
+                val msg = if (ok) {
+                    if (vibrationHelper.isPowerSaveMode()) {
+                        "Vibração disparada — se não sentiu, desative o Modo Economia de Bateria"
+                    } else {
+                        "Vibração disparada"
+                    }
+                } else {
+                    "Falha ao disparar vibração"
+                }
+                Toast.makeText(this@SettingsActivity, msg, Toast.LENGTH_SHORT).show()
+                atualizarAvisoPowerSave()
+            }
+            
+            // ===== CÂMERA FRONTAL NA COLETA RÁPIDA (v2.31) =====
+            switchUseFrontCamera.setOnCheckedChangeListener { _, isChecked ->
+                preferencesManager.setUsarCameraFrontal(isChecked)
+                val message = if (isChecked) {
+                    "Câmera frontal será usada na coleta rápida"
+                } else {
+                    "Câmera traseira será usada na coleta rápida"
                 }
                 Toast.makeText(this@SettingsActivity, message, Toast.LENGTH_SHORT).show()
             }
@@ -203,6 +248,10 @@ class SettingsActivity : AppCompatActivity() {
             
             // ===== CARREGAR CONFIGURAÇÃO DE VIBRAÇÃO =====
             switchVibrationOnCollection.isChecked = preferencesManager.isVibrationOnCollectionEnabled()
+            atualizarAvisoPowerSave()
+            
+            // ===== CARREGAR CONFIGURAÇÃO DE CÂMERA FRONTAL (v2.31) =====
+            switchUseFrontCamera.isChecked = preferencesManager.usarCameraFrontal()
             
             // ===== CARREGAR CONFIGURAÇÃO DE FOTO (v2.11) =====
             switchPhotoOnCollection.isChecked = preferencesManager.isPhotoOnCollectionEnabled()
@@ -276,7 +325,27 @@ class SettingsActivity : AppCompatActivity() {
         val interval = viewModel.getSyncCollectionInterval()
         binding.tvCurrentCollectionCount.text = "$currentCount / $interval"
     }
-    
+
+    /**
+     * Mostra ou esconde o aviso de "Modo Economia de Bateria pode silenciar
+     * vibrações". Aviso só aparece quando a vibração está habilitada e o
+     * sistema está em power save.
+     */
+    private fun atualizarAvisoPowerSave() {
+        val precisaAvisar = preferencesManager.isVibrationOnCollectionEnabled()
+            && vibrationHelper.isPowerSaveMode()
+        binding.tvAvisoPowerSave.visibility =
+            if (precisaAvisar) android.view.View.VISIBLE else android.view.View.GONE
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Reavaliamos o aviso de power save porque o usuário pode ter
+        // desabilitado o modo economia direto nas configurações do sistema
+        // após abrir esta tela.
+        atualizarAvisoPowerSave()
+    }
+
     override fun onSupportNavigateUp(): Boolean {
         NavigationHelper.goBack(this)
         return true

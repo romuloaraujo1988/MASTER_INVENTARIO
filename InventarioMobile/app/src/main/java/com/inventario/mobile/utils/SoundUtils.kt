@@ -67,6 +67,33 @@ object SoundUtils {
             Log.e(TAG, "Erro ao tocar som simples", e)
         }
     }
+
+    /**
+     * Som **muito** discreto para notificar que uma coleta apareceu no
+     * monitor ao vivo. Usado quando o app não está em primeiro plano para
+     * a coleta — o supervisor está olhando a tela e só quer um "tic" sutil
+     * para chamar atenção sem ser invasivo.
+     *
+     * Implementado com um ToneGenerator dedicado em volume baixo (25%) e
+     * duração curta (60ms) — distinto do som de coleta confirmada
+     * ([playSuccessSound]) para o supervisor associar instintivamente o
+     * som com "alguém coletou alguma coisa".
+     */
+    fun playLiveColetaSound() {
+        try {
+            // Volume baixo (25%) para não atrapalhar conversas ou outros
+            // apps; volume é ajustável via STREAM_NOTIFICATION do sistema.
+            val tg = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 25)
+            tg.startTone(ToneGenerator.TONE_PROP_BEEP, 60)
+            // Liberar o gerador após 200ms — tempo suficiente do tom acabar
+            // e evitar acúmulo de instâncias na sessão.
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                try { tg.release() } catch (_: Exception) { /* ok */ }
+            }, 200)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao tocar som live coleta", e)
+        }
+    }
     
     /**
      * Toca um som de erro (mais grave e curto)

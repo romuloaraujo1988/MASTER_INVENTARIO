@@ -38,6 +38,7 @@ class ColetaRepositoryImpl @Inject constructor(
     private val mapper: ColetaMapper,
     private val preferencesManager: com.inventario.mobile.utils.PreferencesManager,
     private val networkQualityMonitor: com.inventario.mobile.network.NetworkQualityMonitor,
+    private val networkMonitor: com.inventario.mobile.utils.NetworkMonitor,  // v2.29.5: detecta online/offline
     private val auditService: com.inventario.mobile.data.audit.AuditService  // v2.2: Auditoria
 ) : ColetaRepository {
 
@@ -193,37 +194,64 @@ class ColetaRepositoryImpl @Inject constructor(
                 android.util.Log.d("ColetaRepositoryImpl", "✓ Coleta por descrição - Validação de duplicata IGNORADA")
                 android.util.Log.d("ColetaRepositoryImpl", "  Descrição: ${coleta.descricaoPatrimonio}")
             } else {
-                // Seção crítica: verificação + insert atômicos via mutex
-                insertMutex.withLock {
-                    // Verificar duplicata apenas para coletas normais (com patrimônio específico)
-                    val coletaExistente = coletaDao.buscarColetaExistente(
-                        coleta.patrimonioId.toInt(),
-                        inventarioId
-                    )
-
-                    if (coletaExistente != null) {
-                        val dataFormatada = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
-                            .format(java.util.Date(coletaExistente.dataColeta))
-
-                        android.util.Log.w("ColetaRepositoryImpl", "⚠️ Patrimônio já coletado em $dataFormatada")
-
-                        auditService.registrarDuplicataDetectada(
-                            coletaId = 0,
-                            numeroPatrimonio = coleta.numeroPatrimonio ?: "",
-                            coletaAnteriorId = coletaExistente.id
+                // CORREÇÃO HÍBRIDA (22/05/2026 - v2.29.5):
+                // 
+                // ESTRATÉGIA:
+                // - ONLINE: Confia no servidor (verificação já foi feita via
+                //   VerificarDuplicataColetaUseCase antes de chamar este método).
+                //   Não verifica localmente porque o cache pode estar desatualizado
+                //   (ex: coleta foi excluída no servidor mas ainda existe localmente).
+                //
+                // - OFFLINE: Verifica banco local para evitar duplicatas REAIS criadas
+                //   no próprio dispositivo. Aceita a limitação de que coletas excluídas
+                //   no servidor durante o período offline só serão re-coletáveis após
+                //   sincronizar.
+                //
+                // PROBLEMA RESOLVIDO:
+                // - Online: coleta excluída no servidor agora pode ser recoletada
+                // - Offline: ainda previne duplicatas no banco local
+                
+                val isOnline = try {
+                    networkMonitor.isConnected()
+                } catch (e: Exception) {
+                    android.util.Log.w("ColetaRepositoryImpl", "Erro ao verificar conectividade, assumindo offline", e)
+                    false
+                }
+                
+                if (isOnline) {
+                    // ONLINE: servidor é fonte de verdade
+                    android.util.Log.d("ColetaRepositoryImpl", "✓ ONLINE - Verificação de duplicata delegada ao servidor")
+                    android.util.Log.d("ColetaRepositoryImpl", "  Patrimônio ID: ${coleta.patrimonioId}")
+                } else {
+                    // OFFLINE: verificar banco local para evitar duplicata real
+                    android.util.Log.d("ColetaRepositoryImpl", "📵 OFFLINE - Verificando duplicata no banco local")
+                    
+                    insertMutex.withLock {
+                        val coletaExistente = coletaDao.buscarColetaExistente(
+                            coleta.patrimonioId.toInt(),
+                            inventarioId
                         )
 
-                        return Result.failure(Exception(
-                            "⚠️ Patrimônio ${coleta.numeroPatrimonio} já foi coletado em $dataFormatada por ${coletaExistente.nomeUsuario}"
-                        ))
-                    }
+                        if (coletaExistente != null) {
+                            val dataFormatada = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+                                .format(java.util.Date(coletaExistente.dataColeta))
 
-                    android.util.Log.d("ColetaRepositoryImpl", "✓ Sem duplicata - Patrimônio não foi coletado ainda")
+                            android.util.Log.w("ColetaRepositoryImpl", "⚠️ OFFLINE - Patrimônio já coletado em $dataFormatada")
+
+                            auditService.registrarDuplicataDetectada(
+                                coletaId = 0,
+                                numeroPatrimonio = coleta.numeroPatrimonio ?: "",
+                                coletaAnteriorId = coletaExistente.id
+                            )
+
+                            return Result.failure(Exception(
+                                "⚠️ Patrimônio ${coleta.numeroPatrimonio} já foi coletado em $dataFormatada por ${coletaExistente.nomeUsuario} (modo offline)"
+                            ))
+                        }
+
+                        android.util.Log.d("ColetaRepositoryImpl", "✓ OFFLINE - Sem duplicata local, coleta permitida")
+                    }
                 }
-                // Nota: o insert real acontece fora do mutex (na FASE 4) porque
-                // o mapper é suspend e pode ser lento. A proteção crítica é a
-                // verificação acima — uma segunda chamada paralela que chegue
-                // aqui após o unlock já encontrará a coleta inserida.
             }
             
             // ========================================
@@ -527,10 +555,22 @@ class ColetaRepositoryImpl @Inject constructor(
             android.util.Log.d("ColetaRepositoryImpl", "🔄 INICIANDO SINCRONIZAÇÃO DE COLETAS PENDENTES")
 
             // Reset automático de erros recuperáveis (Bug 5)
-            // Coletas com 5+ tentativas e erros transitórios recebem nova chance
+            // Coletas com 5+ tentativas e erros transitórios recebem nova chance.
+            //
+            // ERROS RECUPERÁVEIS incluem:
+            //   - Erros de rede/timeout: transitórios, resolvem sozinhos
+            //   - "não é participante": o admin pode ter adicionado o usuário ao inventário
+            //     depois que o erro foi registrado. Ao sincronizar novamente, o servidor
+            //     vai encontrar o participante e aceitar a coleta.
+            //   - "inventário": o inventário pode ter sido ativado/configurado depois
             try {
                 val coletasComMuitasTentativas = coletaDao.buscarColetasComMuitasTentativas(5)
-                val errosRecuperaveis = listOf("timeout", "Timeout", "conexão", "connection", "network", "rede", "Rede")
+                val errosRecuperaveis = listOf(
+                    "timeout", "Timeout",
+                    "conexão", "connection", "network", "rede", "Rede",
+                    "participante",          // "Usuário não é participante deste inventário"
+                    "inventário", "inventario" // "Nenhum inventário ativo encontrado"
+                )
                 var resetadas = 0
                 coletasComMuitasTentativas.forEach { entity ->
                     val erro = entity.erroSincronizacao ?: return@forEach
@@ -543,6 +583,25 @@ class ColetaRepositoryImpl @Inject constructor(
                 }
                 if (resetadas > 0) {
                     android.util.Log.i("ColetaRepositoryImpl", "♻️ $resetadas coleta(s) com erro recuperável resetadas para nova tentativa")
+                }
+
+                // Erros de autorização (participante/inventário) são resetados a CADA ciclo,
+                // independente do número de tentativas — o admin pode ter corrigido o problema
+                // a qualquer momento e o app deve tentar novamente imediatamente.
+                val errosAutorizacao = listOf("participante", "autorizado", "inventário", "inventario")
+                val todasComErro = coletaDao.buscarPendentes().filter { !it.erroSincronizacao.isNullOrBlank() }
+                var resetadasAutorizacao = 0
+                todasComErro.forEach { entity ->
+                    val erro = entity.erroSincronizacao ?: return@forEach
+                    val ehAutorizacao = errosAutorizacao.any { erro.contains(it, ignoreCase = true) }
+                    if (ehAutorizacao) {
+                        coletaDao.limparErroSincronizacao(entity.id)
+                        resetadasAutorizacao++
+                        android.util.Log.i("ColetaRepositoryImpl", "♻️ Erro de autorização resetado para nova tentativa — coleta ${entity.id}: $erro")
+                    }
+                }
+                if (resetadasAutorizacao > 0) {
+                    android.util.Log.i("ColetaRepositoryImpl", "♻️ $resetadasAutorizacao coleta(s) com erro de autorização resetadas")
                 }
             } catch (e: Exception) {
                 android.util.Log.w("ColetaRepositoryImpl", "Aviso: falha ao resetar erros recuperáveis", e)

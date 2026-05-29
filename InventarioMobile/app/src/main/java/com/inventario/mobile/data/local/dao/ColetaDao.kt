@@ -181,6 +181,11 @@ interface ColetaDao {
     /**
      * Verifica se patrimônio já foi coletado neste inventário
      * CRÍTICO: Evita duplicatas
+     * 
+     * IMPORTANTE: Esta query verifica apenas o banco local.
+     * Se uma coleta foi excluída no servidor mas ainda existe localmente,
+     * ela será detectada como duplicata. Para evitar isso, o app deve
+     * sincronizar coletas do servidor antes de verificar duplicatas.
      */
     @Query("""
         SELECT * FROM coleta 
@@ -192,6 +197,13 @@ interface ColetaDao {
         idPatrimonio: Int, 
         idInventario: Int
     ): ColetaEntity?
+    
+    /**
+     * Remove coleta do banco local por ID
+     * Usado quando uma coleta é excluída no servidor
+     */
+    @Query("DELETE FROM coleta WHERE id = :id")
+    suspend fun deletarPorId(id: Long)
     
     /**
      * Conta quantas vezes um patrimônio foi coletado

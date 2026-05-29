@@ -127,9 +127,16 @@ public class ParticipanteInventarioDAO {
     }
 
     /**
-     * Insere diretamente um participante sem verificar ativo=TRUE.
-     * Só deve ser chamado após removerTodosParticipantes, garantindo tabela limpa.
-     * Valida apenas: usuário e inventário existem.
+     * Insere ou reativa um participante no inventário.
+     * Chamado após {@link #removerTodosParticipantes} — garante que não acumula
+     * registros inativos duplicados para o mesmo (inventário, usuário).
+     *
+     * <p>Estratégia UPSERT:
+     * <ol>
+     *   <li>Se já existe registro inativo para este (inventário, usuário), reativa o
+     *       mais recente (maior id_participante) e ignora os demais.</li>
+     *   <li>Se não existe nenhum registro, cria um novo com {@code ativo = TRUE}.</li>
+     * </ol>
      */
     public boolean inserirParticipante(ParticipanteInventario participante) {
         if (!usuarioExiste(participante.getIdUsuario())) {
@@ -139,6 +146,36 @@ public class ParticipanteInventarioDAO {
             throw new IllegalArgumentException("Inventário não encontrado. ID: " + participante.getIdInventario());
         }
 
+        // Tentar reativar o registro inativo mais recente (evita acúmulo de duplicatas)
+        String sqlReativar =
+                "UPDATE tabela_participante_inventario SET " +
+                "ativo = TRUE, data_remocao = NULL, papel = ?, " +
+                "data_ultima_atualizacao = CURRENT_TIMESTAMP, observacoes = ? " +
+                "WHERE id_participante = (" +
+                "  SELECT id_participante FROM tabela_participante_inventario " +
+                "  WHERE id_inventario = ? AND id_usuario = ? AND ativo = FALSE " +
+                "  ORDER BY id_participante DESC LIMIT 1" +
+                ")";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmtReativar = conn.prepareStatement(sqlReativar)) {
+
+            stmtReativar.setString(1, participante.getPapel());
+            stmtReativar.setString(2, participante.getObservacoes());
+            stmtReativar.setInt(3, participante.getIdInventario());
+            stmtReativar.setInt(4, participante.getIdUsuario());
+
+            int reativados = stmtReativar.executeUpdate();
+            if (reativados > 0) {
+                LOG.info("Participante reativado (UPSERT): inventario={}, usuario={}",
+                        participante.getIdInventario(), participante.getIdUsuario());
+                return true;
+            }
+        } catch (SQLException e) {
+            LOG.warn("Falha ao tentar reativar participante, tentando INSERT: {}", e.getMessage());
+        }
+
+        // Nenhum registro inativo encontrado — criar novo
         String sql = "INSERT INTO TABELA_PARTICIPANTE_INVENTARIO " +
                     "(ID_INVENTARIO, ID_USUARIO, PAPEL, DATA_INCLUSAO, ATIVO, OBSERVACOES) " +
                     "VALUES (?, ?, ?, ?, ?, ?)";

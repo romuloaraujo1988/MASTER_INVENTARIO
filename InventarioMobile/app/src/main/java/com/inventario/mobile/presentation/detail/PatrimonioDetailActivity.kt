@@ -212,13 +212,17 @@ class PatrimonioDetailActivity : AppCompatActivity() {
     }
     
     private fun navegarParaColeta() {
+        val patrimonio = patrimonioAtual
         val patrimonioId = viewModel.getPatrimonioId()
         val numeroPatrimonio = viewModel.getNumeroPatrimonio()
-        
+
         if (patrimonioId != null && numeroPatrimonio != null) {
             val intent = Intent(this, ColetaActivity::class.java).apply {
-                putExtra("PATRIMONIO_ID", patrimonioId)
-                putExtra("NUMERO_PATRIMONIO", numeroPatrimonio)
+                // Extras que ColetaActivity realmente lê
+                putExtra(ColetaActivity.EXTRA_SALA_ID, patrimonio?.salaId?.toLong() ?: -1L)
+                putExtra(ColetaActivity.EXTRA_SALA_NOME, patrimonio?.salaNome ?: "")
+                // Extra adicional para pré-preencher o patrimônio sem precisar escanear
+                putExtra(ColetaActivity.EXTRA_PATRIMONIO_CODIGO, numeroPatrimonio)
             }
             startActivity(intent)
         } else {

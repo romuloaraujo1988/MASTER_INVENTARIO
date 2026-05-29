@@ -143,6 +143,24 @@ class ItemSemEtiquetaActivity : AppCompatActivity() {
             imm?.showSoftInput(binding.edtDescricao, InputMethodManager.SHOW_IMPLICIT)
         }
 
+        // Pré-preencher descrição quando vindo do dialog de duplicata.
+        // O usuário escolheu "Registrar sem etiqueta" — a descrição do
+        // patrimônio original é sugerida para facilitar a identificação.
+        val descricaoSugerida = intent.getStringExtra("DESCRICAO_SUGERIDA")
+        val numeroOrigem = intent.getStringExtra("NUMERO_PATRIMONIO_ORIGEM")
+        if (!descricaoSugerida.isNullOrBlank()) {
+            binding.edtDescricao.setText(descricaoSugerida)
+            binding.edtDescricao.setSelection(descricaoSugerida.length)
+            if (!numeroOrigem.isNullOrBlank()) {
+                // Mostrar aviso contextual de onde veio
+                android.widget.Toast.makeText(
+                    this,
+                    "Registrando como item sem etiqueta (origem: $numeroOrigem)",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+
         // Se restauramos uma fotoPath após process death, restaurar o preview também
         if (fotoPath != null) {
             val bitmap = BitmapFactory.decodeFile(fotoPath)

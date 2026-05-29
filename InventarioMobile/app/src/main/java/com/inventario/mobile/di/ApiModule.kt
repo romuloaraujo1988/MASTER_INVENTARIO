@@ -22,7 +22,13 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import javax.inject.Qualifier
 import javax.inject.Singleton
+
+/** Qualifier para o OkHttpClient/Retrofit dedicado a downloads de relatório (timeouts longos). */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class DownloadClient
 
 /**
  * Módulo Hilt para APIs Retrofit
@@ -286,12 +292,63 @@ object ApiModule {
      *   - `GET api/mobile/relatorios/fotos/{inventarioId}/info` (Req 4.1)
      *   - `GET api/mobile/relatorios/fotos/{inventarioId}?tipo=sem_etiqueta` (Req 4.2)
      *
-     * Usa o mesmo `Retrofit` já configurado, herdando os interceptors de
-     * autenticação JWT, device info e fallback offline (Req 4.3).
+     * Usa um Retrofit dedicado com timeouts estendidos para suportar downloads
+     * de PDFs grandes (1–5 MB) em redes móveis lentas sem timeout prematuro.
      */
     @Provides
     @Singleton
-    fun provideRelatorioFotoApi(retrofit: Retrofit): RelatorioFotoApi {
-        return retrofit.create(RelatorioFotoApi::class.java)
+    fun provideRelatorioFotoApi(@DownloadClient downloadRetrofit: Retrofit): RelatorioFotoApi {
+        return downloadRetrofit.create(RelatorioFotoApi::class.java)
+    }
+
+    /**
+     * OkHttpClient dedicado para downloads de relatório (PDF/XLSX).
+     * Timeouts estendidos: readTimeout=300s, callTimeout=360s.
+     * Sem cache (arquivos binários grandes não devem ser cacheados).
+     */
+    @Provides
+    @Singleton
+    @DownloadClient
+    fun provideDownloadOkHttpClient(
+        loggingInterceptor: HttpLoggingInterceptor,
+        authInterceptor: Interceptor,
+        deviceInfoInterceptor: DeviceInfoInterceptor,
+        refreshTokenInterceptor: com.inventario.mobile.network.RefreshTokenInterceptor
+    ): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(refreshTokenInterceptor)
+            .addInterceptor(deviceInfoInterceptor)
+            .addInterceptor(authInterceptor)
+            .addInterceptor(loggingInterceptor)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(300, TimeUnit.SECONDS)   // 5 min — PDF pode ser grande
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .callTimeout(360, TimeUnit.SECONDS)   // 6 min timeout total
+            .retryOnConnectionFailure(true)
+            .followRedirects(true)
+            .followSslRedirects(true)
+            .build()
+    }
+
+    /**
+     * Retrofit dedicado para downloads de relatório.
+     * Usa a mesma baseUrl do Retrofit principal mas com o cliente de download.
+     */
+    @Provides
+    @Singleton
+    @DownloadClient
+    fun provideDownloadRetrofit(
+        @DownloadClient downloadClient: OkHttpClient,
+        @ApplicationContext context: Context
+    ): Retrofit {
+        val serverConfigManager = ServerConfigManager.getInstance(context)
+        val baseUrl = serverConfigManager.getBaseUrl()
+        val finalBaseUrl = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
+
+        return Retrofit.Builder()
+            .baseUrl(finalBaseUrl)
+            .client(downloadClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
     }
 }

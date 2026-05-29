@@ -166,26 +166,164 @@
         android:layout_marginTop="16dp"
         android:visibility="gone" />
 
-    <!-- Informações do Patrimônio -->
+    <!-- Informações do Patrimônio — card estruturado (mesmo padrão visual do scanner) -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardPatrimonioInfo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:visibility="gone"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="2dp"
-        app:cardBackgroundColor="@color/background_light">
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp">
 
-        <TextView
-            android:id="@+id/tvPatrimonioInfo"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:textSize="14sp"
-            android:textColor="@color/text_primary"
-            android:lineSpacingExtra="4dp"
-            tools:text="Patrimônio: 123456\nDescrição: Computador Dell\nStatus: Disponível para coleta" />
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Linha 1: número + badge de status -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/tvPatrimonioNumero"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnSurface"
+                    tools:text="Nº 123456" />
+
+                <TextView
+                    android:id="@+id/tvPatrimonioStatusBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="4dp"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white"
+                    android:background="@drawable/bg_badge_success"
+                    tools:text="✓ Disponível" />
+
+            </LinearLayout>
+
+            <!-- Linha 2: descrição -->
+            <TextView
+                android:id="@+id/tvPatrimonioDescricaoCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textSize="14sp"
+                android:textColor="?attr/colorOnSurface"
+                android:maxLines="2"
+                android:ellipsize="end"
+                tools:text="Computador Desktop Dell Optiplex 7080" />
+
+            <!-- Linha 3: sala + responsável com ícones -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_location"
+                    app:tint="?attr/colorOnSurfaceVariant"
+                    android:layout_marginEnd="4dp" />
+
+                <TextView
+                    android:id="@+id/tvPatrimonioSalaCard"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="12sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    tools:text="Lab. Informática" />
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_person"
+                    app:tint="?attr/colorOnSurfaceVariant"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="4dp" />
+
+                <TextView
+                    android:id="@+id/tvPatrimonioResponsavelCard"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="12sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    tools:text="João Silva" />
+
+            </LinearLayout>
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="12dp"
+                android:background="?attr/colorOutlineVariant" />
+
+            <!-- Informações de coleta anterior (visível quando já coletado) -->
+            <LinearLayout
+                android:id="@+id/layoutInfoColetaAnterior"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="10dp"
+                android:padding="10dp"
+                android:background="@drawable/bg_info_coleta"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    android:id="@+id/tvColetadoPorCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:drawableStart="@drawable/ic_person"
+                    android:drawablePadding="6dp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    tools:text="Coletado por: João Silva" />
+
+                <TextView
+                    android:id="@+id/tvDataColetaCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textSize="12sp"
+                    android:drawableStart="@drawable/ic_calendar"
+                    android:drawablePadding="6dp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    tools:text="Em: 27/05/2026 10:30" />
+
+            </LinearLayout>
+
+            <!-- TextView legado — mantido para compatibilidade com código que ainda o usa -->
+            <TextView
+                android:id="@+id/tvPatrimonioInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:textSize="14sp"
+                android:textColor="@color/text_primary" />
+
+        </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>
 

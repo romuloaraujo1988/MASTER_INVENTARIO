@@ -443,6 +443,31 @@ class PreferencesManager(context: Context) {
     fun setServerUrl(url: String) = putString("server_url", url)
     fun getServerUrl(): String? = getString("server_url", "").takeIf { it.isNotEmpty() }
     
+    // ===== CONFIGURAÇÃO INICIAL DO SERVIDOR (v2.29.5) =====
+    
+    /**
+     * Verifica se o usuário já configurou o IP do servidor pelo menos uma vez.
+     * 
+     * Este flag é usado pelo SplashActivity para decidir se mostra a tela
+     * de configuração inicial (InitialSetupActivity) ou vai direto para o login.
+     * 
+     * @return true se o IP já foi configurado, false caso contrário
+     */
+    fun isServerConfigured(): Boolean {
+        return getBoolean("server_configured_by_user", false)
+    }
+    
+    /**
+     * Marca que o usuário já configurou o IP do servidor.
+     * 
+     * Deve ser chamado após o usuário confirmar a configuração inicial
+     * na InitialSetupActivity ou após uma alteração bem-sucedida no LoginActivity.
+     */
+    fun setServerConfigured(configured: Boolean = true) {
+        putBoolean("server_configured_by_user", configured)
+        android.util.Log.d("PreferencesManager", "Servidor marcado como ${if (configured) "configurado" else "não configurado"} pelo usuário")
+    }
+    
     // ===== NOVAS CONFIGURAÇÕES DE SINCRONIZAÇÃO =====
     
     /**
@@ -1016,5 +1041,24 @@ class PreferencesManager(context: Context) {
             .remove(KEY_CACHE_SERVER_INVENTARIO_ID)
             .remove(KEY_CACHE_SERVER_TIMESTAMP)
             .apply()
+    }
+
+    // ===== CÂMERA FRONTAL NA COLETA RÁPIDA (v2.31) =====
+    
+    /**
+     * Verifica se deve usar câmera frontal na coleta rápida
+     * @return true se deve usar câmera frontal (padrão: false - usa traseira)
+     */
+    fun usarCameraFrontal(): Boolean {
+        return getBoolean("usar_camera_frontal", false)
+    }
+    
+    /**
+     * Define se deve usar câmera frontal na coleta rápida
+     * @param usar true para usar câmera frontal, false para usar traseira
+     */
+    fun setUsarCameraFrontal(usar: Boolean) {
+        putBoolean("usar_camera_frontal", usar)
+        android.util.Log.d("PreferencesManager", "Câmera ${if (usar) "FRONTAL" else "TRASEIRA"} selecionada para coleta rápida")
     }
 }

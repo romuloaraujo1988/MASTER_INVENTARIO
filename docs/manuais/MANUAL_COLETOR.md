@@ -2,7 +2,7 @@
 
 **Aplicativo Android para coleta patrimonial em campo**
 
-Versão do app: 2.21.0-security (maio/2026)
+Versão do app: 2.29.5 (maio/2026)
 Sistema: SIHCP — Sistema de Histórico e Coleta Patrimonial
 Instituição: Instituto Federal de Mato Grosso
 
@@ -21,9 +21,10 @@ Instituição: Instituto Federal de Mato Grosso
 9. [Sala fixada e modo rápido](#9-sala-fixada-e-modo-rápido)
 10. [Coleta sem etiqueta](#10-coleta-sem-etiqueta)
 11. [Exportação de relatórios](#11-exportação-de-relatórios)
-12. [Troca de senha e biometria](#12-troca-de-senha-e-biometria)
-13. [Problemas comuns](#13-problemas-comuns)
-14. [Glossário](#14-glossário)
+12. [Relatório fotográfico](#12-relatório-fotográfico)
+13. [Troca de senha e biometria](#13-troca-de-senha-e-biometria)
+14. [Problemas comuns](#14-problemas-comuns)
+15. [Glossário](#15-glossário)
 
 ---
 
@@ -57,7 +58,7 @@ O SIHCP Mobile é o aplicativo que você usa em campo para registrar quais patri
 
 ### Passos
 
-1. Solicite o arquivo `SiHCP-release-v2.21.0-security.apk` à equipe de TI do IFMT.
+1. Solicite o arquivo `SiHCP-release-v2.29.5.apk` à equipe de TI do IFMT.
 2. No celular, abra o arquivo e toque em **Instalar**.
 3. Se o Android bloquear a instalação, vá em **Configurações → Segurança → Fontes desconhecidas** e libere o aplicativo de origem.
 4. Abra o app após a instalação.
@@ -78,12 +79,42 @@ Como conferir se todas as coletas foram sincronizadas:
 
 ## 3. Primeiro acesso
 
-Na primeira vez que o app abrir:
+### 3.1 Tela de Configuração Inicial (a partir da v2.29.5)
+
+Na primeira vez que o app abrir após a instalação, você verá a tela **Configuração Inicial**. Ela aparece **apenas uma vez** — depois o app já lembra do servidor.
+
+![Tela de Configuração Inicial](imagens/01_configuracao_inicial.png)
+
+Essa tela substitui o IP fixo que vinha embutido em versões anteriores. Agora você configura o servidor da sua instituição diretamente, sem precisar editar nada na tela de login.
+
+O diagrama abaixo resume o fluxo de primeira utilização:
+
+![Fluxo de Primeira Utilização](imagens/10_diagrama_primeiro_uso.png)
+
+**Passo a passo:**
+
+1. **Pergunte à TI** o IP e a porta do servidor SIHCP (exemplo: `10.14.250.214:8081`).
+2. Digite o **IP do Servidor** no campo correspondente. Aceita formato IPv4 (`192.168.1.100`) ou `localhost`.
+3. Confira a **Porta** — o padrão é `8081`. Só altere se a TI orientar.
+4. Toque em **Testar Conexão**.
+   - **Se aparecer um check verde** com o tempo de resposta: tudo certo, pode prosseguir.
+   - **Se aparecer um alerta vermelho** com mensagem de erro: confira IP/porta com a TI ou verifique sua rede.
+5. Quando o teste tiver sucesso, o botão **Continuar** fica ativo. Toque nele.
+6. O app vai direto para a tela de login.
+
+> **O botão "voltar" está bloqueado nesta tela.** Você precisa configurar o servidor para usar o app. Se precisar interromper, feche o app pelo gerenciador de tarefas.
+
+### 3.2 Tela de Login
+
+Na tela de Login:
+
+![Tela de Login](imagens/02_login.png)
 
 1. **Permissões** — o Android vai pedir câmera, localização e notificações. Aceite todas. A câmera é obrigatória para escanear QR Code.
-2. **Configuração do servidor** — pode ser necessário informar o endereço do servidor (ex.: `http://10.14.250.228:8081`). Pergunte à TI se não souber.
-3. **Login** — informe seu usuário e senha do IFMT. Toque em **Entrar**.
-4. **Biometria** (opcional) — se o celular tiver digital ou reconhecimento facial, o app perguntará se quer cadastrar para logins futuros. Recomendado — agiliza o acesso em campo.
+2. **Login** — informe seu usuário e senha do IFMT. Toque em **Entrar**.
+3. **Biometria** (opcional) — se o celular tiver digital ou reconhecimento facial, o app perguntará se quer cadastrar para logins futuros. Recomendado — agiliza o acesso em campo.
+
+> **Mudou o servidor?** O campo **IP do Servidor** continua disponível na tela de login. Edite o IP, faça login normalmente, e o app salva a nova configuração automaticamente. Não precisa reinstalar.
 
 Depois do login, o app baixa automaticamente os dados de patrimônios, salas e o inventário ativo. Isso pode demorar alguns segundos e precisa de internet.
 
@@ -92,6 +123,8 @@ Depois do login, o app baixa automaticamente os dados de patrimônios, salas e o
 ## 4. Tela inicial (Dashboard)
 
 Após o login você vê o Dashboard, com:
+
+![Tela Dashboard](imagens/03_dashboard.png)
 
 - **Inventário ativo** — nome e período do inventário que está em andamento
 - **Suas coletas hoje** — quantos patrimônios você registrou no dia
@@ -121,14 +154,21 @@ Toda coleta começa escolhendo uma **sala**. Vá em qualquer uma das três forma
 
 Você será levado à lista de salas para selecionar onde está trabalhando. Toque na sala certa.
 
+![Seleção de Sala](imagens/05_selecao_sala.png)
+
 Depois de escolher a sala, o app apresenta três tipos de coleta. Escolha o que fizer sentido para o item à sua frente.
 
 ### 5.1 Coleta por QR Code (mais rápida)
 
 Quando o patrimônio tem a plaqueta com QR Code visível.
 
+![Tela do Scanner QR Code](imagens/04_scanner.png)
+
 1. Aponte a câmera para o QR Code.
 2. O app reconhece o código automaticamente e mostra os dados do patrimônio.
+
+![Formulário de Coleta](imagens/06_formulario_coleta.png)
+
 3. Confira a descrição — é o item que você está vendo?
 4. Informe o **estado de conservação** (Ótimo, Bom, Regular, Ruim, Inservível).
 5. Opcional: adicione uma **observação** (ex.: "tela trincada").
@@ -136,7 +176,10 @@ Quando o patrimônio tem a plaqueta com QR Code visível.
 
 O app faz uma vibração curta para confirmar. A coleta vai para a lista de pendências e é sincronizada em segundo plano.
 
-**Duplicatas:** se o patrimônio já foi coletado nesse inventário, o app avisa antes de registrar. Você pode cancelar ou confirmar (vai sobrescrever a anterior).
+**Duplicatas:** se o patrimônio já foi coletado nesse inventário, o app avisa antes de registrar. O comportamento depende do estado da conexão:
+
+- **Com internet** (online): o app consulta o servidor antes de bloquear. Se a coleta foi excluída no servidor (por outro coletor ou pelo desktop), o app **permite recoletar** sem avisar de duplicata.
+- **Sem internet** (offline): o app verifica o cache local. Se já existe uma coleta para o mesmo patrimônio no banco local, ele **bloqueia** para evitar duplicatas reais. Se a coleta foi excluída no servidor durante o período offline, esse bloqueio é falso e some assim que o app sincronizar.
 
 ### 5.2 Coleta manual (digitando o número)
 
@@ -176,6 +219,8 @@ Use quando você encontra um item patrimoniável mas não consegue identificar q
 
 Na barra inferior, toque em **Coletas**. A tela mostra todas as coletas que você já fez (online e offline).
 
+![Lista de Coletas](imagens/07_lista_coletas.png)
+
 **Filtros disponíveis:**
 
 - **Busca por texto** — digite número de patrimônio ou descrição
@@ -204,6 +249,8 @@ Arraste a tela para baixo para recarregar dados do servidor.
 ## 7. Sincronização com o servidor
 
 O app sincroniza suas coletas com o servidor de três formas:
+
+![Tela de Sincronização](imagens/08_sincronizacao.png)
 
 ### 7.1 Automática (recomendado)
 
@@ -238,6 +285,8 @@ Se uma coleta específica não foi aceita pelo servidor (erro de rede, dados inv
 ## 8. Modo offline
 
 O app funciona **sem internet** para todas as operações de coleta. Os dados necessários (patrimônios, salas, descrições) são baixados do servidor no login e ficam armazenados no celular de forma criptografada.
+
+![Verificação de Duplicatas: Online vs Offline](imagens/11_diagrama_online_offline.png)
 
 **Quando você está offline, você pode:**
 - Fazer coletas por QR Code, manual ou descrição
@@ -292,6 +341,8 @@ Para voltar ao normal, desligue o switch.
 
 Se você encontrar um item patrimoniável que claramente não tem plaqueta (nem legível nem caída por perto), registre-o como **Sem Etiqueta**.
 
+![Coleta Sem Etiqueta](imagens/09_item_sem_etiqueta.png)
+
 1. No Dashboard ou no scanner, toque em **Item Sem Etiqueta**.
 2. Preencha:
    - **Descrição** (obrigatório): o que é o item (ex.: "Cadeira giratória preta")
@@ -327,7 +378,59 @@ O relatório contém: número de patrimônio, descrição, sala, estado, coletor
 
 ---
 
-## 12. Troca de senha e biometria
+## 12. Relatório fotográfico
+
+A partir da v2.29.0, supervisores podem gerar um **Relatório Fotográfico** em PDF com todas as fotos das coletas registradas no inventário. Útil para auditar visualmente os itens encontrados, especialmente os sem etiqueta.
+
+> **Quem pode usar:** apenas perfis SUPERVISOR ou ADMIN. Coletores não veem este botão.
+
+### Como gerar
+
+1. Menu lateral → **Coletas**.
+2. Toque no ícone de relatório fotográfico (geralmente um ícone de câmera no menu superior).
+3. O app primeiro verifica quantas fotos estão disponíveis no servidor (endpoint `/info`).
+4. Se houver fotos, toque em **Baixar PDF**.
+5. Aguarde o download — uma barra de progresso aparece. PDFs grandes (1–5 MB com muitas fotos) podem levar até 6 minutos em redes móveis lentas.
+6. Quando concluir, o app oferece abrir ou compartilhar o arquivo.
+
+### Filtros disponíveis
+
+O relatório pode ser filtrado por tipo:
+
+- **Todos** — todas as coletas que têm foto
+- **Patrimônio** — apenas coletas de itens com plaqueta
+- **Sem Etiqueta** — apenas itens encontrados sem identificação
+- **Divergência** — apenas coletas marcadas com divergência
+
+E também por **sala** específica, se você quiser focar em uma área do inventário.
+
+### O que aparece no PDF
+
+Cada coleta vira um "card" com:
+- Foto do item (se tirada)
+- Número do patrimônio (ou "Sem etiqueta")
+- Descrição
+- Sala de origem e local onde foi encontrado
+- Estado de conservação
+- Coletor responsável
+- Data e hora da coleta
+- Observações
+- Motivo da divergência (se houver)
+
+### Falhas comuns
+
+| Mensagem | Causa | Solução |
+|---|---|---|
+| "Tempo limite excedido" | Rede móvel lenta para PDF grande | Tente em Wi-Fi |
+| "Sem permissão" | Seu perfil não é SUPERVISOR/ADMIN | Não usar este recurso |
+| "Nenhuma foto disponível" | Inventário sem fotos | Coletas precisam ter fotos anexadas |
+| "Erro de rede" | Servidor indisponível ou IP errado | Confira sincronização e configuração |
+
+> **Excel:** também é possível gerar o relatório em formato XLSX com fotos embutidas na primeira coluna. O fluxo é o mesmo, escolhendo o ícone de Excel em vez de PDF.
+
+---
+
+## 13. Troca de senha e biometria
 
 ### Trocar senha
 
@@ -348,7 +451,7 @@ No mesmo menu, toque em **Desabilitar biometria**. O app volta a pedir senha no 
 
 ---
 
-## 13. Problemas comuns
+## 14. Problemas comuns
 
 ### O scanner não lê o QR Code
 
@@ -388,17 +491,33 @@ Isso **não deveria** acontecer. Se acontecer:
 - Não desinstale o app ainda.
 - Entre em contato imediatamente com a TI do IFMT informando seu usuário e aproximadamente quantas coletas estavam pendentes.
 
+### Configurei o IP errado na primeira tela. Como mudar?
+
+A configuração inicial fica salva. Você tem duas formas de corrigir:
+
+- **Mais simples:** abra a tela de Login e edite o IP no campo "IP do Servidor". Faça login normalmente — o app salva o novo IP automaticamente.
+- **Reiniciar a configuração inicial:** vá em **Configurações do Android → Apps → SIHCP → Armazenamento → Limpar dados**. O app volta ao estado de primeira instalação e mostra a tela de configuração inicial novamente. **Atenção:** isso apaga coletas pendentes ainda não sincronizadas.
+
+### Item já coletado, mas a coleta foi excluída — não consigo recoletar
+
+Pode acontecer em duas situações:
+
+- **Online:** a partir da v2.29.5 o app consulta o servidor antes de bloquear. Se ainda apresenta o erro, force uma sincronização (puxar para baixo na tela de Coletas) e tente de novo.
+- **Offline:** o app verifica o cache local e bloqueia até sincronizar. Conecte-se à internet e abra a tela de Sincronização para forçar a atualização. Após sincronizar, a recoleta passa a ser permitida.
+
 ---
 
-## 14. Glossário
+## 15. Glossário
 
 - **Coleta** — registro de que um patrimônio foi encontrado em determinada sala, em determinado estado, por determinado coletor.
 - **Coleta pendente** — coleta feita no app mas ainda não enviada ao servidor (sem internet, por exemplo).
 - **Coleta sincronizada** — coleta que chegou ao servidor e foi aceita.
+- **Configuração inicial** — tela exibida na primeira utilização do app (v2.29.5+) para configurar o IP/porta do servidor SIHCP.
 - **Inventário ativo** — o inventário (campanha anual, por exemplo) que está aberto para receber coletas no momento.
 - **JWT** — token de autenticação que o app usa para provar ao servidor que você está logado. Tem validade de 1 hora em produção.
 - **Patrimônio** — bem duradouro do IFMT (computador, cadeira, quadro, etc.) com número único de identificação.
 - **QR Code** — código bidimensional impresso na plaqueta de cada patrimônio.
+- **Relatório fotográfico** — PDF/XLSX gerado a partir das coletas com foto, restrito a perfis SUPERVISOR/ADMIN.
 - **Sincronização** — processo de enviar coletas do app para o servidor.
 - **Sala fixada** — sala marcada como "minha sala de trabalho atual" para agilizar a navegação.
 - **Modo rápido** — recurso que fixa um estado de conservação para todas as próximas coletas.

@@ -11,6 +11,7 @@ import com.inventario.mobile.BuildConfig
 import com.inventario.mobile.databinding.ActivitySplashBinding
 import com.inventario.mobile.presentation.login.LoginActivity
 import com.inventario.mobile.presentation.main.MainActivity
+import com.inventario.mobile.presentation.setup.InitialSetupActivity
 import com.inventario.mobile.utils.PreferencesManager
 // import com.inventario.mobile.data.local.database.InventarioDatabase
 // import com.inventario.mobile.utils.DatabaseInitializer
@@ -131,6 +132,25 @@ class SplashActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 Log.d(TAG, "navigateToNextScreen: Iniciando navegação")
+                
+                // ========================================================
+                // v2.29.5: VERIFICAR CONFIGURAÇÃO INICIAL DO SERVIDOR
+                // ========================================================
+                // Se o usuário ainda não configurou o IP do servidor manualmente,
+                // mostrar a tela de configuração inicial em vez de ir direto
+                // para o login com um IP fixo embutido no APK.
+                val isServerConfigured = preferencesManager.isServerConfigured()
+                Log.d(TAG, "navigateToNextScreen: isServerConfigured = $isServerConfigured")
+                
+                if (!isServerConfigured) {
+                    Log.d(TAG, "→ Servidor ainda não foi configurado, redirecionando para InitialSetupActivity")
+                    val setupIntent = Intent(this@SplashActivity, InitialSetupActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                    startActivity(setupIntent)
+                    finish()
+                    return@launch
+                }
                 
                 val isLoggedIn = preferencesManager.isLoggedIn()
                 Log.d(TAG, "navigateToNextScreen: isLoggedIn = $isLoggedIn")

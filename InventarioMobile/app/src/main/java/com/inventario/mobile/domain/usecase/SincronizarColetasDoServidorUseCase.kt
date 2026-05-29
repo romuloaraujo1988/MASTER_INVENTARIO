@@ -59,6 +59,35 @@ class SincronizarColetasDoServidorUseCase @Inject constructor(
             val idsLocais = coletasLocais.map { it.servidorId }.toSet()
             Log.d(TAG, "Coletas locais existentes: ${coletasLocais.size}")
             
+            // 2.1 NOVO (v2.29.5): Remover coletas locais que foram excluídas no servidor
+            // 
+            // PROBLEMA: Se uma coleta foi excluída no servidor, ela permanecia no
+            // banco local e bloqueava nova coleta do mesmo patrimônio.
+            // 
+            // SOLUÇÃO: Ao sincronizar, identificar coletas locais SINCRONIZADAS que
+            // não estão mais no servidor (foram excluídas) e removê-las do banco
+            // local. Coletas NÃO sincronizadas são preservadas (são pendentes locais).
+            val idsServidor = coletasServidor.mapNotNull { it.id }.toSet()
+            val coletasParaRemover = coletasLocais.filter { local ->
+                local.sincronizado &&                                  // Apenas sincronizadas
+                local.servidorId != null &&                            // Tem ID do servidor
+                local.servidorId !in idsServidor                       // Não existe mais no servidor
+            }
+            
+            var removidas = 0
+            if (coletasParaRemover.isNotEmpty()) {
+                Log.d(TAG, "🗑️ Removendo ${coletasParaRemover.size} coletas excluídas no servidor")
+                for (coletaRemover in coletasParaRemover) {
+                    try {
+                        coletaDao.deletarPorId(coletaRemover.id)
+                        removidas++
+                        Log.d(TAG, "  ✓ Coleta local ${coletaRemover.id} (servidor=${coletaRemover.servidorId}) removida")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "  ✗ Erro ao remover coleta local ${coletaRemover.id}", e)
+                    }
+                }
+            }
+            
             // 3. Converter e salvar coletas
             var novas = 0
             var atualizadas = 0
@@ -94,6 +123,7 @@ class SincronizarColetasDoServidorUseCase @Inject constructor(
             Log.d(TAG, "SINCRONIZAÇÃO CONCLUÍDA")
             Log.d(TAG, "Novas: $novas")
             Log.d(TAG, "Atualizadas: $atualizadas")
+            Log.d(TAG, "Removidas (excluídas no servidor): $removidas")
             Log.d(TAG, "Erros: $erros")
             Log.d(TAG, "═══════════════════════════════════════════")
             
@@ -101,7 +131,8 @@ class SincronizarColetasDoServidorUseCase @Inject constructor(
                 total = coletasServidor.size,
                 novas = novas,
                 atualizadas = atualizadas,
-                erros = erros
+                erros = erros,
+                removidas = removidas
             )
             
             Result.success(result)
@@ -181,7 +212,8 @@ data class SyncResult(
     val total: Int,
     val novas: Int,
     val atualizadas: Int,
-    val erros: Int
+    val erros: Int,
+    val removidas: Int = 0  // v2.29.5: coletas excluídas no servidor que foram removidas localmente
 ) {
     val sucesso: Int get() = novas + atualizadas
     val percentualSucesso: Float get() = if (total > 0) (sucesso.toFloat() / total.toFloat()) * 100 else 0f

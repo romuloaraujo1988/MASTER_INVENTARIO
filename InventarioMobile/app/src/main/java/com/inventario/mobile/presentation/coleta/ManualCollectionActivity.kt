@@ -47,6 +47,10 @@ class ManualCollectionActivity : BaseOfflineActivity() {
     // ✅ Injetar RegistrarColetaUseCase para coleta similar
     @Inject
     lateinit var registrarColetaUseCase: com.inventario.mobile.domain.usecase.RegistrarColetaUseCase
+
+    // AuditService para registrar tentativas de duplicata
+    @Inject
+    lateinit var auditService: com.inventario.mobile.data.audit.AuditService
     
     // ✅ v2.11: Injetar PhotoHelper para captura de fotos
     @javax.inject.Inject
@@ -244,28 +248,51 @@ class ManualCollectionActivity : BaseOfflineActivity() {
         if (state.patrimonio != null) {
             // Tornar o card pai visível
             binding.cardPatrimonioInfo?.visibility = android.view.View.VISIBLE
-            binding.tvPatrimonioInfo?.apply {
-                visibility = android.view.View.VISIBLE
-                text = buildString {
-                    append("Patrimônio: ${state.patrimonio.numeroPatrimonio}\n")
-                    append("Descrição: ${state.patrimonio.descricao}\n")
-                    if (state.jaColetado) {
-                        append("Status: JÁ COLETADO\n")
-                        // Exibir informações detalhadas da coleta
-                        if (!state.patrimonio.coletadoPor.isNullOrBlank()) {
-                            append("Coletado por: ${state.patrimonio.coletadoPor}\n")
-                        }
-                        if (!state.patrimonio.dataColetaFormatada.isNullOrBlank()) {
-                            append("Data: ${state.patrimonio.dataColetaFormatada}\n")
-                        }
-                        if (!state.patrimonio.localizacaoEncontrada.isNullOrBlank()) {
-                            append("Local encontrado: ${state.patrimonio.localizacaoEncontrada}")
-                        }
-                    } else {
-                        append("Status: Disponível para coleta")
-                    }
+
+            // ── Número + badge de status ──────────────────────────────────
+            binding.tvPatrimonioNumero?.text = "Nº ${state.patrimonio.numeroPatrimonio}"
+
+            if (state.jaColetado) {
+                binding.tvPatrimonioStatusBadge?.apply {
+                    text = "⚠ Já coletado"
+                    backgroundTintList = android.content.res.ColorStateList.valueOf(
+                        androidx.core.content.ContextCompat.getColor(
+                            this@ManualCollectionActivity,
+                            R.color.warning
+                        )
+                    )
+                    visibility = android.view.View.VISIBLE
+                }
+            } else {
+                binding.tvPatrimonioStatusBadge?.apply {
+                    text = "✓ Disponível"
+                    backgroundTintList = null // usa o bg_badge_success padrão
+                    visibility = android.view.View.VISIBLE
                 }
             }
+
+            // ── Descrição ─────────────────────────────────────────────────
+            binding.tvPatrimonioDescricaoCard?.text = state.patrimonio.descricao
+
+            // ── Sala + Responsável ────────────────────────────────────────
+            binding.tvPatrimonioSalaCard?.text =
+                state.patrimonio.salaNome?.takeIf { it.isNotBlank() } ?: "Sala não informada"
+            binding.tvPatrimonioResponsavelCard?.text =
+                state.patrimonio.responsavelNome?.takeIf { it.isNotBlank() } ?: "Responsável não informado"
+
+            // ── Info de coleta anterior (quando já coletado) ──────────────
+            if (state.jaColetado) {
+                binding.layoutInfoColetaAnterior?.visibility = android.view.View.VISIBLE
+                binding.tvColetadoPorCard?.text =
+                    "Coletado por: ${state.patrimonio.coletadoPor ?: "desconhecido"}"
+                binding.tvDataColetaCard?.text =
+                    "Em: ${state.patrimonio.dataColetaFormatada ?: "data não disponível"}"
+            } else {
+                binding.layoutInfoColetaAnterior?.visibility = android.view.View.GONE
+            }
+
+            // tvPatrimonioInfo legado — mantido oculto (compatibilidade)
+            binding.tvPatrimonioInfo?.visibility = android.view.View.GONE
             // Só habilita o botão se o patrimônio não foi coletado, não está carregando e é válido
             binding.btnCollect.isEnabled = !state.jaColetado && 
                                           !state.isLoading && 
@@ -286,8 +313,21 @@ class ManualCollectionActivity : BaseOfflineActivity() {
 
         // Exibir mensagens
         state.errorMessage?.let { message ->
-            Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-            viewModel.clearMessages()
+            // Detectar sinal de duplicata emitido pelo ViewModel
+            if (message.startsWith("DUPLICATA:")) {
+                val partes = message.removePrefix("DUPLICATA:").split(":")
+                val coletadoPor = partes.getOrNull(0)?.takeIf { it.isNotBlank() }
+                val dataAnterior = partes.getOrNull(1)?.takeIf { it.isNotBlank() }
+                mostrarDialogDuplicata(
+                    numeroPatrimonio = state.patrimonio?.numeroPatrimonio ?: "",
+                    coletadoPor = coletadoPor,
+                    dataAnterior = dataAnterior
+                )
+                viewModel.clearMessages()
+            } else {
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+                viewModel.clearMessages()
+            }
         }
 
         state.successMessage?.let { message ->
@@ -312,6 +352,79 @@ class ManualCollectionActivity : BaseOfflineActivity() {
     private fun searchPatrimonio() {
         val numeroPatrimonio = binding.etPatrimonioNumber.text.toString().trim()
         viewModel.searchPatrimonio(numeroPatrimonio)
+    }
+
+    /**
+     * Exibe o dialog de decisão quando o usuário tenta coletar um patrimônio
+     * já coletado. Oferece 3 opções:
+     *  1. Forçar nova coleta (sobrescreve o status local)
+     *  2. Registrar como item sem etiqueta (preserva o dado)
+     *  3. Cancelar (registra a tentativa no audit trail)
+     *
+     * Toda tentativa é registrada no AuditService independente da decisão.
+     */
+    private fun mostrarDialogDuplicata(
+        numeroPatrimonio: String,
+        coletadoPor: String?,
+        dataAnterior: String?
+    ) {
+        val mensagem = buildString {
+            appendLine("O patrimônio $numeroPatrimonio já foi coletado neste inventário.")
+            appendLine()
+            if (!coletadoPor.isNullOrBlank()) appendLine("Por: $coletadoPor")
+            if (!dataAnterior.isNullOrBlank()) appendLine("Em: $dataAnterior")
+            appendLine()
+            appendLine("O que deseja fazer?")
+        }
+
+        // Registrar tentativa no audit trail antes de qualquer decisão
+        lifecycleScope.launch {
+            try {
+                auditService.registrarDuplicataDetectada(0, numeroPatrimonio, 0)
+            } catch (e: Exception) {
+                Log.w("ManualCollection", "Falha ao registrar audit de duplicata: ${e.message}")
+            }
+        }
+
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("⚠ Patrimônio já coletado")
+            .setMessage(mensagem)
+            .setPositiveButton("Forçar nova coleta") { _, _ ->
+                lifecycleScope.launch {
+                    try { auditService.registrarColetaForcada(numeroPatrimonio, coletadoPor, dataAnterior) }
+                    catch (e: Exception) { /* silencioso */ }
+                }
+                val dialog = EstadoPatrimonioDialog.newInstance { estadoSelecionado ->
+                    viewModel.forcarColeta(estadoSelecionado.name)
+                }
+                dialog.show(supportFragmentManager, "EstadoPatrimonioDialogForcado")
+            }
+            .setNeutralButton("Registrar sem etiqueta") { _, _ ->
+                lifecycleScope.launch {
+                    try {
+                        auditService.registrarConversaoSemEtiqueta(
+                            numeroPatrimonio,
+                            "Duplicata convertida — patrimônio $numeroPatrimonio"
+                        )
+                    } catch (e: Exception) { /* silencioso */ }
+                }
+                val intent = Intent(
+                    this,
+                    com.inventario.mobile.presentation.coleta.ItemSemEtiquetaActivity::class.java
+                ).apply {
+                    putExtra("DESCRICAO_SUGERIDA", "Patrimônio $numeroPatrimonio")
+                    putExtra("NUMERO_PATRIMONIO_ORIGEM", numeroPatrimonio)
+                }
+                startActivity(intent)
+            }
+            .setNegativeButton("Cancelar") { _, _ ->
+                lifecycleScope.launch {
+                    try { auditService.registrarTentativaCancelada(numeroPatrimonio, coletadoPor, dataAnterior) }
+                    catch (e: Exception) { /* silencioso */ }
+                }
+            }
+            .setCancelable(false)
+            .show()
     }
 
     private fun collectPatrimonio() {

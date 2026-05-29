@@ -43,6 +43,8 @@ class ColetaActivity : BaseOfflineActivity() {
         private const val TAG = "ColetaActivity"
         const val EXTRA_SALA_ID = "extra_sala_id"
         const val EXTRA_SALA_NOME = "extra_sala_nome"
+        /** Código do patrimônio pré-selecionado (vindo da pesquisa rápida / detalhe). */
+        const val EXTRA_PATRIMONIO_CODIGO = "extra_patrimonio_codigo"
     }
 
     private val scannerLauncher = registerForActivityResult(
@@ -89,6 +91,18 @@ class ColetaActivity : BaseOfflineActivity() {
             configurarSala()
         } else {
             android.util.Log.e(TAG, "ERRO: Sala não foi recebida corretamente!")
+        }
+
+        // Pré-preencher patrimônio quando vindo da pesquisa rápida / detalhe.
+        // Nesse fluxo o usuário já selecionou o patrimônio — não precisa escanear.
+        val patrimonioCodigo = intent.getStringExtra(EXTRA_PATRIMONIO_CODIGO)
+        if (!patrimonioCodigo.isNullOrBlank()) {
+            android.util.Log.d(TAG, "Patrimônio pré-preenchido: $patrimonioCodigo")
+            binding.etCodigo.setText(patrimonioCodigo)
+            binding.etCodigo.isEnabled = false          // evita edição acidental
+            binding.btnScanQr.visibility = android.view.View.GONE  // scan desnecessário
+            binding.btnSalvar.isEnabled = true          // libera o botão salvar
+            viewModel.iniciarPreenchimento()
         }
         
         // Iniciar timer da coleta

@@ -57,6 +57,10 @@ public class SecurityConfig {
                 // Endpoints públicos da API Mobile
                 .requestMatchers("/api/mobile/auth/login").permitAll()
                 .requestMatchers("/api/mobile/auth/refresh").permitAll()
+
+                // WebSocket nativo (handshake HTTP) — autenticação tratada
+                // pelo handler dedicado, não pelo Spring Security HTTP.
+                .requestMatchers("/ws/**").permitAll()
                 
                 // Documentação Swagger
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()

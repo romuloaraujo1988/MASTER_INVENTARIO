@@ -175,6 +175,8 @@ class LoginActivity : AppCompatActivity() {
                 }
                 
                 serverConfigManager.setServerIp(ipText)
+                // v2.29.5: Marcar servidor como configurado pelo usuário
+                preferencesManager.setServerConfigured(true)
                 // Forçar recriação do ApiService com nova URL
                 com.inventario.mobile.data.remote.api.ApiClient.recreateApiService(this)
             }

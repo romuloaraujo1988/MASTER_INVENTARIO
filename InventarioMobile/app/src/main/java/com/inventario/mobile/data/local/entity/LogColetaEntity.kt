@@ -59,4 +59,23 @@ object AcaoLog {
     const val BACKUP_CRIADO = "BACKUP_CRIADO"
     const val DUPLICATA_DETECTADA = "DUPLICATA_DETECTADA"
     const val VALIDACAO_FALHOU = "VALIDACAO_FALHOU"
+
+    /**
+     * Usuário tentou coletar um patrimônio já coletado e foi apresentado
+     * ao dialog de decisão — mas optou por CANCELAR.
+     * Registrado para auditoria: prova que a tentativa ocorreu.
+     */
+    const val TENTATIVA_CANCELADA = "TENTATIVA_CANCELADA"
+
+    /**
+     * Usuário tentou coletar um patrimônio já coletado e escolheu
+     * FORÇAR a nova coleta (sobrescreve o status local).
+     */
+    const val COLETA_FORCADA = "COLETA_FORCADA"
+
+    /**
+     * Usuário tentou coletar um patrimônio já coletado e escolheu
+     * registrar como ITEM SEM ETIQUETA (preserva o dado sem sobrescrever).
+     */
+    const val CONVERTIDA_SEM_ETIQUETA = "CONVERTIDA_SEM_ETIQUETA"
 }

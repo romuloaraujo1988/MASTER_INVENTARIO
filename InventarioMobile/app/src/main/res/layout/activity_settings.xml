@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -139,6 +140,49 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="Quando ativado, o dispositivo emitirá uma leve vibração ao registrar uma coleta de patrimônio, fornecendo feedback tátil de confirmação."
+                        android:textSize="12sp"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:lineSpacingExtra="2dp" />
+
+                    <!-- Botão para testar a vibração na hora — útil pra
+                         confirmar que o feedback funciona de fato neste
+                         aparelho (alguns ROMs silenciam vibração em DND
+                         ou economia de bateria). -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnTestarVibracao"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Testar vibração"
+                        app:icon="@android:drawable/ic_lock_idle_alarm"
+                        app:iconGravity="textStart" />
+
+                    <TextView
+                        android:id="@+id/tvAvisoPowerSave"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:visibility="gone"
+                        android:text="⚠ Modo Economia de Bateria ativo. Algumas vibrações podem ser silenciadas pelo sistema. Desative o modo economia para garantir o feedback tátil."
+                        android:textSize="12sp"
+                        android:textColor="@android:color/holo_orange_dark"
+                        android:lineSpacingExtra="2dp"
+                        tools:visibility="visible" />
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchUseFrontCamera"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="Usar câmera frontal na coleta rápida"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Quando ativado, a câmera frontal será usada ao escanear QR codes na coleta rápida. Útil para dispositivos com câmera traseira danificada ou em situações específicas de coleta."
                         android:textSize="12sp"
                         android:textColor="?attr/colorOnSurfaceVariant"
                         android:lineSpacingExtra="2dp" />

@@ -472,6 +472,30 @@ class ScannerViewModel(
     }
     
     /**
+     * Força uma nova coleta para um patrimônio já marcado como coletado.
+     *
+     * Chamado quando o usuário escolhe "Forçar nova coleta" no dialog de
+     * duplicata. Reseta o flag `jaColetado` no `scanResult` para que o
+     * `ColetaRepositoryImpl` não bloqueie a inserção offline, e então
+     * delega para [coletarPatrimonioComEstado] normalmente.
+     *
+     * O audit trail é registrado pelo chamador (Activity) antes de invocar
+     * este método.
+     */
+    fun forcarColeta(
+        patrimonioId: Long,
+        salaNome: String,
+        estadoEncontrado: String,
+        tipoScan: String = "QR_CODE"
+    ) {
+        // Reseta o flag no scanResult para que a UI não bloqueie
+        _uiState.value = _uiState.value.copy(
+            scanResult = _uiState.value.scanResult?.copy(jaColetado = false)
+        )
+        coletarPatrimonioComEstado(patrimonioId, salaNome, estadoEncontrado, tipoScan)
+    }
+
+    /**
      * Converte domain model para data model
      * Necessário para compatibilidade com código existente
      */

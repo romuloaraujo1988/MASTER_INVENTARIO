@@ -83,7 +83,19 @@ class PendingCollectionsAdapter(
                 // v2.6: Mostrar erro de sincronização se existir
                 if (temErro) {
                     layoutErro.visibility = android.view.View.VISIBLE
-                    tvErroSincronizacao.text = coleta.erroSincronizacao
+
+                    // Mensagem amigável para erro de participante (erro de autorização)
+                    val erroOriginal = coleta.erroSincronizacao ?: ""
+                    val mensagemExibida = when {
+                        erroOriginal.contains("participante", ignoreCase = true) ||
+                        erroOriginal.contains("autorizado", ignoreCase = true) ->
+                            "⚠️ Usuário não autorizado neste inventário. Solicite ao administrador que adicione você como participante no sistema desktop e tente sincronizar novamente."
+                        erroOriginal.contains("inventário", ignoreCase = true) ||
+                        erroOriginal.contains("inventario", ignoreCase = true) ->
+                            "⚠️ Nenhum inventário ativo encontrado. Verifique se há um inventário em andamento no sistema."
+                        else -> erroOriginal
+                    }
+                    tvErroSincronizacao.text = mensagemExibida
                     
                     // Botão retry
                     btnRetry.setOnClickListener {

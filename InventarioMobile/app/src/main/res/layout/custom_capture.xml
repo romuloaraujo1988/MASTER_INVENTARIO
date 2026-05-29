@@ -124,6 +124,21 @@
                 android:contentDescription="Ligar lanterna"
                 app:tint="@android:color/white" />
 
+            <!-- Troca rápida de câmera (frontal ↔ traseira)
+                 Sutilmente posicionado ao lado do flash. Visível apenas quando
+                 o dispositivo possui mais de uma câmera (ver inicializarTrocaCamera). -->
+            <ImageButton
+                android:id="@+id/btnTrocarCamera"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/ic_camera_switch"
+                android:background="@drawable/bg_status_pill"
+                android:contentDescription="Trocar câmera"
+                android:visibility="gone"
+                app:tint="@android:color/white"
+                tools:visibility="visible" />
+
         </LinearLayout>
 
         <!-- Linha 2: sala selecionada -->

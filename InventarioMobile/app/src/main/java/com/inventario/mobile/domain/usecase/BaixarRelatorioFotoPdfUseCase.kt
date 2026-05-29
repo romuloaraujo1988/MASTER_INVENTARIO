@@ -1,10 +1,13 @@
 package com.inventario.mobile.domain.usecase
 
 import android.content.Context
+import android.util.Log
 import com.inventario.mobile.data.remote.api.RelatorioFotoApi
 import com.inventario.mobile.domain.model.PermissaoNegadaException
 import com.inventario.mobile.domain.model.SemFotosException
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Inject
 
@@ -47,33 +50,49 @@ class BaixarRelatorioFotoPdfUseCase @Inject constructor(
      *         ou genérica em caso de falha.
      */
     suspend operator fun invoke(inventarioId: Int): Result<File> {
-        return try {
-            val response = api.baixarPdf(inventarioId)
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = api.baixarPdf(inventarioId)
 
-            when (response.code()) {
-                204 -> return Result.failure(SemFotosException())
-                403 -> return Result.failure(PermissaoNegadaException())
-            }
-
-            val body = response.body()
-                ?: return Result.failure(Exception("Resposta vazia do servidor"))
-
-            val timestamp = System.currentTimeMillis()
-            val arquivo = File(
-                context.cacheDir,
-                "relatorio_sem_etiqueta_${inventarioId}_${timestamp}.pdf"
-            )
-
-            // Gravar com buffer de 8 KB para evitar OOM em PDFs grandes (Req 5.5)
-            arquivo.outputStream().buffered(8 * 1024).use { out ->
-                body.byteStream().use { input ->
-                    input.copyTo(out)
+                when (response.code()) {
+                    204 -> return@withContext Result.failure(SemFotosException())
+                    403 -> return@withContext Result.failure(PermissaoNegadaException())
                 }
-            }
 
-            Result.success(arquivo)
-        } catch (e: Exception) {
-            Result.failure(e)
+                if (!response.isSuccessful) {
+                    return@withContext Result.failure(
+                        Exception("Servidor retornou erro ${response.code()}: ${response.message()}")
+                    )
+                }
+
+                val body = response.body()
+                    ?: return@withContext Result.failure(Exception("Resposta vazia do servidor"))
+
+                val timestamp = System.currentTimeMillis()
+                val arquivo = File(
+                    context.cacheDir,
+                    "relatorio_sem_etiqueta_${inventarioId}_${timestamp}.pdf"
+                )
+
+                // Gravar com buffer de 8 KB para evitar OOM em PDFs grandes
+                arquivo.outputStream().buffered(8 * 1024).use { out ->
+                    body.byteStream().use { input ->
+                        input.copyTo(out)
+                    }
+                }
+
+                Log.d("BaixarRelatorioPdf", "PDF salvo: ${arquivo.absolutePath} (${arquivo.length()} bytes)")
+                Result.success(arquivo)
+            } catch (e: java.net.SocketTimeoutException) {
+                Log.e("BaixarRelatorioPdf", "Timeout ao baixar PDF", e)
+                Result.failure(Exception("Tempo limite excedido ao baixar o relatório. Tente novamente em uma rede mais rápida."))
+            } catch (e: java.io.IOException) {
+                Log.e("BaixarRelatorioPdf", "Erro de I/O ao baixar PDF: ${e.message}", e)
+                Result.failure(Exception("Erro de rede: ${e.message}"))
+            } catch (e: Exception) {
+                Log.e("BaixarRelatorioPdf", "Erro inesperado: ${e.javaClass.simpleName}: ${e.message}", e)
+                Result.failure(Exception("${e.javaClass.simpleName}: ${e.message}"))
+            }
         }
     }
 }

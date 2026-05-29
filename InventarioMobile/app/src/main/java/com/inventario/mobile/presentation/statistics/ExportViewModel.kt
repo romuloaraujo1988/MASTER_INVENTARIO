@@ -286,7 +286,7 @@ class ExportViewModel @Inject constructor(
                     val mensagem = when (error) {
                         is SemFotosException        -> error.message ?: "Nenhuma foto disponível"
                         is PermissaoNegadaException -> error.message ?: "Sem permissão"
-                        else -> "Erro de conexão. Verifique a rede e tente novamente"
+                        else -> error.message ?: "Erro ao baixar relatório"
                     }
                     _relatorioFotoState.value = RelatorioFotoState.Erro(mensagem)
                 }

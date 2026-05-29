@@ -54,6 +54,7 @@ class CustomCaptureActivity : AppCompatActivity() {
     private lateinit var tvStatus: TextView
     private lateinit var btnFechar: ImageButton
     private lateinit var btnFlash: ImageButton
+    private lateinit var btnTrocarCamera: ImageButton
     private lateinit var btnZoomIn: ImageButton
     private lateinit var btnZoomOut: ImageButton
     private lateinit var tvZoomLevel: TextView
@@ -96,6 +97,7 @@ class CustomCaptureActivity : AppCompatActivity() {
         tvStatus = findViewById(R.id.tvStatus)
         btnFechar = findViewById(R.id.btnFechar)
         btnFlash = findViewById(R.id.btnFlash)
+        btnTrocarCamera = findViewById(R.id.btnTrocarCamera)
         btnZoomIn = findViewById(R.id.btnZoomIn)
         btnZoomOut = findViewById(R.id.btnZoomOut)
         tvZoomLevel = findViewById(R.id.tvZoomLevel)
@@ -124,6 +126,11 @@ class CustomCaptureActivity : AppCompatActivity() {
                 // O hardware feature pode ser consultado antes, mas só conseguimos
                 // ligar a torch com a câmera já aberta.
                 Handler(Looper.getMainLooper()).postDelayed({ inicializarFlash() }, 200)
+                // ✅ Botão de troca rápida de câmera — só faz sentido se o
+                // dispositivo tiver mais de uma lente. A inicialização precisa
+                // do contexto (PackageManager) e idealmente já com a câmera
+                // aberta para que o `requestedCameraId` reflita o estado real.
+                Handler(Looper.getMainLooper()).postDelayed({ inicializarTrocaCamera() }, 200)
             }
             override fun previewStopped() {}
             override fun cameraError(error: Exception?) {
@@ -135,6 +142,8 @@ class CustomCaptureActivity : AppCompatActivity() {
         btnFechar.setOnClickListener { finish() }
 
         btnFlash.setOnClickListener { alternarFlash() }
+
+        btnTrocarCamera.setOnClickListener { alternarCamera() }
 
         // Gesture de pinch-to-zoom — experiência familiar a qualquer usuário
         // que usa câmera do celular. Combinado com os botões +/- para usuários
@@ -459,6 +468,137 @@ class CustomCaptureActivity : AppCompatActivity() {
             btnFlash.setImageResource(
                 if (flashLigado) R.drawable.ic_flash_on else R.drawable.ic_flash_off
             )
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Troca rápida de câmera (frontal ↔ traseira)
+    // ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Indica se o dispositivo possui mais de uma câmera. Só faz sentido
+     * mostrar o botão de troca quando há ao menos uma frontal e uma traseira
+     * — em tablets baratos ou dispositivos com câmera única o botão é
+     * ocultado para não poluir a UI.
+     */
+    private var trocaCameraDisponivel = false
+
+    /**
+     * Verifica disponibilidade de câmera frontal + traseira no aparelho e
+     * exibe o botão de troca rápida quando ambas existem. Caso contrário
+     * mantém o botão escondido (já é o padrão definido no XML).
+     *
+     * Chamado em `previewStarted` apenas para alinhar com a inicialização
+     * de flash/zoom — a feature em si não precisa da câmera aberta, basta
+     * o PackageManager reportar os recursos.
+     */
+    private fun inicializarTrocaCamera() {
+        val pm = packageManager
+        val temTraseira = pm.hasSystemFeature(android.content.pm.PackageManager.FEATURE_CAMERA)
+            || pm.hasSystemFeature(android.content.pm.PackageManager.FEATURE_CAMERA_ANY)
+        val temFrontal = pm.hasSystemFeature(android.content.pm.PackageManager.FEATURE_CAMERA_FRONT)
+
+        trocaCameraDisponivel = temTraseira && temFrontal
+
+        if (trocaCameraDisponivel) {
+            btnTrocarCamera.visibility = View.VISIBLE
+            atualizarDescricaoTrocaCamera()
+        } else {
+            android.util.Log.d("CustomCaptureActivity", "Apenas uma câmera disponível — botão de troca ocultado")
+            btnTrocarCamera.visibility = View.GONE
+        }
+    }
+
+    /**
+     * Atualiza o `contentDescription` do botão para refletir qual câmera
+     * será usada se o usuário tocar nele agora — apoia leitores de tela e
+     * dá pista para usuários por long-press.
+     */
+    private fun atualizarDescricaoTrocaCamera() {
+        val usandoFrontal = preferencesManager.usarCameraFrontal()
+        btnTrocarCamera.contentDescription = if (usandoFrontal) {
+            "Trocar para câmera traseira"
+        } else {
+            "Trocar para câmera frontal"
+        }
+    }
+
+    /**
+     * Alterna entre câmera frontal e traseira sem fechar o scanner.
+     *
+     * Como o ZXing usa a Camera API 1, a única forma confiável de trocar a
+     * lente é parar o preview, ajustar o `requestedCameraId` em
+     * `cameraSettings` e reabrir. Tentar mexer na Camera diretamente via
+     * reflection é frágil e quebra entre versões do Android.
+     *
+     * O fluxo:
+     *   1. Salva a nova preferência no PreferencesManager — assim a próxima
+     *      abertura do scanner já respeita a escolha (consistente com a
+     *      configuração existente em `ScannerActivity.criarScanOptions`).
+     *   2. Desliga a torch se estava ligada (a frontal raramente tem flash
+     *      e tentar manter ligada pode lançar exceção).
+     *   3. Pausa a barcode view, atualiza o id da câmera nos cameraSettings
+     *      e dá `resume` — o ZXing reabre a câmera com o novo id.
+     *   4. Reinicializa controles dependentes da câmera (zoom/flash) com um
+     *      pequeno delay para o novo preview estabilizar.
+     */
+    private fun alternarCamera() {
+        if (!trocaCameraDisponivel) return
+
+        // 1. Inverte a preferência
+        val usandoFrontal = preferencesManager.usarCameraFrontal()
+        val novoEstado = !usandoFrontal
+        preferencesManager.setUsarCameraFrontal(novoEstado)
+
+        android.util.Log.d(
+            "CustomCaptureActivity",
+            "Trocando câmera: ${if (novoEstado) "FRONTAL" else "TRASEIRA"}"
+        )
+
+        // 2. Desligar torch antes do flip — a frontal pode não suportar e
+        //    torch ligada durante reinicialização causa exceções em alguns
+        //    dispositivos.
+        if (flashLigado) {
+            try {
+                barcodeScannerView.setTorchOff()
+            } catch (e: Exception) {
+                // Silencioso — câmera pode estar em transição.
+            }
+            flashLigado = false
+            btnFlash.setImageResource(R.drawable.ic_flash_off)
+            btnFlash.contentDescription = "Ligar lanterna"
+        }
+
+        // 3. Reinicializa o preview com o novo id de câmera.
+        //    requestedCameraId: -1 = padrão (traseira), 1 = frontal.
+        try {
+            val barcodeView = barcodeScannerView.barcodeView
+            val cameraSettings = barcodeView.cameraSettings
+            cameraSettings.requestedCameraId = if (novoEstado) 1 else -1
+
+            // pause() libera a câmera atual; resume() reabre com o novo id.
+            barcodeView.pause()
+            barcodeView.resume()
+
+            // Feedback visual sutil — a UX é o próprio preview girando.
+            atualizarDescricaoTrocaCamera()
+
+            // 4. Reinicializa zoom/flash após o novo preview estabilizar.
+            //    Cada câmera tem alcance de zoom diferente — precisamos
+            //    reler os parâmetros ou os controles ficam dessincronizados.
+            zoomSuportado = false
+            zoomAtual = 0
+            zoomMaximo = 0
+            Handler(Looper.getMainLooper()).postDelayed({ inicializarZoom() }, 400)
+            Handler(Looper.getMainLooper()).postDelayed({ inicializarFlash() }, 400)
+
+            tvStatus.text = if (novoEstado) "Usando câmera frontal" else "Usando câmera traseira"
+        } catch (e: Exception) {
+            android.util.Log.e("CustomCaptureActivity", "Erro ao trocar câmera: ${e.message}", e)
+            // Reverte a preferência se a troca falhou — assim o estado fica
+            // consistente com o que o usuário está vendo na tela.
+            preferencesManager.setUsarCameraFrontal(usandoFrontal)
+            tvStatus.text = "Não foi possível trocar a câmera"
         }
     }
 }

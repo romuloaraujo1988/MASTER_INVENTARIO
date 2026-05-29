@@ -1367,7 +1367,9 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
      * {@link #buscarDescricoesNaoColetadasAgrupadas(Integer)}, que permanece em
      * uso pelo endpoint legado {@code GET /api/mobile/descricoes/nao-coletadas}.</p>
      *
-     * <p>SQL utilizado (PostgreSQL, requer extensão {@code unaccent}):</p>
+     * <p>SQL utilizado (PostgreSQL — <b>sem</b> dependência da extensão
+     * {@code unaccent}; usa {@code translate()} built-in, ver
+     * {@link #normalizarSemAcento(String)}):</p>
      * <pre>
      * SELECT p.ID, p.NUMERO, p.DESCRICAO
      * FROM TABELA_PATRIMONIO p
@@ -1379,12 +1381,12 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
      *       WHERE c.ID_PATRIMONIO = p.ID
      *         AND c.ID_INVENTARIO = ?
      *   )
-     *   AND (? = '' OR unaccent(lower(p.DESCRICAO)) LIKE '%' || unaccent(lower(?)) || '%')
-     * ORDER BY unaccent(lower(p.DESCRICAO)) ASC, p.NUMERO ASC
+     *   AND (? = '' OR translate(lower(p.DESCRICAO),...) LIKE '%' || translate(lower(?),...) || '%')
+     * ORDER BY translate(lower(p.DESCRICAO),...) ASC, p.NUMERO ASC
      * LIMIT ? OFFSET ?;
      * </pre>
      *
-     * <p>A ordenação por {@code unaccent(lower(p.DESCRICAO))} com desempate
+     * <p>A ordenação por {@code translate(lower(p.DESCRICAO),...)} com desempate
      * determinístico por {@code p.NUMERO} garante estabilidade entre páginas
      * (Property 12). Um segundo {@code SELECT COUNT(*)} com os mesmos filtros
      * calcula {@code totalElements}.</p>
@@ -1424,6 +1426,13 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
         final String termo = (termoBusca == null) ? "" : termoBusca;
         final int offset = page * size;
 
+        // Normalização acento/caso-insensível SEM a extensão unaccent (que não
+        // está garantida em produção e causava
+        // "ERROR: function unaccent(text) does not exist"). Usa translate(),
+        // built-in do PostgreSQL. Ver normalizarSemAcento().
+        final String normDescricao = normalizarSemAcento("p.DESCRICAO");
+        final String normTermo = normalizarSemAcento("?");
+
         final String sqlData =
                 "SELECT p.ID, p.NUMERO, p.DESCRICAO " +
                 "FROM TABELA_PATRIMONIO p " +
@@ -1435,8 +1444,8 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
                 "      WHERE c.ID_PATRIMONIO = p.ID " +
                 "        AND c.ID_INVENTARIO = ? " +
                 "  ) " +
-                "  AND (? = '' OR unaccent(lower(p.DESCRICAO)) LIKE '%' || unaccent(lower(?)) || '%') " +
-                "ORDER BY unaccent(lower(p.DESCRICAO)) ASC, p.NUMERO ASC " +
+                "  AND (? = '' OR " + normDescricao + " LIKE '%' || " + normTermo + " || '%') " +
+                "ORDER BY " + normDescricao + " ASC, p.NUMERO ASC " +
                 "LIMIT ? OFFSET ?";
 
         final String sqlCount =
@@ -1449,7 +1458,7 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
                 "      WHERE c.ID_PATRIMONIO = p.ID " +
                 "        AND c.ID_INVENTARIO = ? " +
                 "  ) " +
-                "  AND (? = '' OR unaccent(lower(p.DESCRICAO)) LIKE '%' || unaccent(lower(?)) || '%')";
+                "  AND (? = '' OR " + normDescricao + " LIKE '%' || " + normTermo + " || '%')";
 
         final List<SugestaoDescricaoRow> items = new ArrayList<>();
         long totalElements = 0L;
@@ -1490,5 +1499,40 @@ public class PatrimonioDAO extends BaseDAO<Patrimonio, Integer> {
         }
 
         return new PagedResult<>(items, totalElements, page, size);
+    }
+
+    /**
+     * Gera uma expressão SQL que normaliza um texto para comparação
+     * acento/caso-insensível <b>sem depender da extensão {@code unaccent}</b>.
+     *
+     * <p><b>Por que não usar {@code unaccent()}:</b> a extensão {@code unaccent}
+     * não está instalada no PostgreSQL de produção e causava o erro
+     * {@code ERROR: function unaccent(text) does not exist}, derrubando o
+     * endpoint de sugestões de descrição. Instalar a extensão exigiria
+     * {@code CREATE EXTENSION} (superuser + pacote {@code postgresql-contrib}),
+     * o que nem sempre está disponível. Esta abordagem é auto-contida: usa
+     * apenas {@code lower()} e {@code translate()}, ambos built-in.</p>
+     *
+     * <p>O {@code translate()} mapeia cada vogal acentuada do português (e o
+     * cedilha) para sua forma sem acento. A normalização é aplicada após
+     * {@code lower()}, então só precisamos cobrir minúsculas. Cobre os
+     * diacríticos usados em pt-BR: á à â ã ä, é è ê ë, í ì î ï, ó ò ô õ ö,
+     * ú ù û ü, ç.</p>
+     *
+     * <p><b>Segurança:</b> {@code coluna} é sempre um literal de código
+     * controlado por nós ({@code "p.DESCRICAO"} ou {@code "?"}), nunca entrada
+     * do usuário — não há risco de SQL injection. Os valores de busca continuam
+     * passando por {@link PreparedStatement}.</p>
+     *
+     * @param coluna expressão SQL a normalizar (nome de coluna qualificado ou
+     *               o placeholder {@code "?"})
+     * @return expressão SQL {@code translate(lower(<coluna>), <acentos>, <sem-acento>)}
+     */
+    private static String normalizarSemAcento(String coluna) {
+        // Pares posicionais: cada caractere em FROM_CHARS mapeia para o
+        // caractere de mesma posição em TO_CHARS.
+        final String fromChars = "áàâãäéèêëíìîïóòôõöúùûüç";
+        final String toChars   = "aaaaaeeeeiiiiooooouuuuc";
+        return "translate(lower(" + coluna + "), '" + fromChars + "', '" + toChars + "')";
     }
 }

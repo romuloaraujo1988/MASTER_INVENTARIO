@@ -68,6 +68,10 @@ class ScannerActivity : AppCompatActivity() {
     // ✅ v2.11: Injetar RegistrarAcessoPatrimonioUseCase para histórico de scans
     @Inject
     lateinit var registrarAcessoUseCase: com.inventario.mobile.domain.usecase.RegistrarAcessoPatrimonioUseCase
+
+    // Injetar AuditService para registrar tentativas de duplicata
+    @Inject
+    lateinit var auditService: com.inventario.mobile.data.audit.AuditService
     
 
     // Launcher para solicitar permissão de câmera
@@ -394,6 +398,87 @@ class ScannerActivity : AppCompatActivity() {
     }
     
 
+    private fun mostrarDialogDuplicata(result: ScanResult, salaNome: String) {
+        val numero = result.patrimonioCodigo
+        val coletadoPor = result.coletadoPor
+        val dataAnterior = result.dataColetaFormatada
+
+        val mensagem = buildString {
+            appendLine("O patrimônio $numero já foi coletado neste inventário.")
+            appendLine()
+            if (!coletadoPor.isNullOrBlank()) appendLine("Por: $coletadoPor")
+            if (!dataAnterior.isNullOrBlank()) appendLine("Em: $dataAnterior")
+            appendLine()
+            appendLine("O que deseja fazer?")
+        }
+
+        // Registrar a tentativa no audit trail ANTES de qualquer decisão do usuário
+        lifecycleScope.launch {
+            try {
+                auditService.registrarDuplicataDetectada(
+                    coletaId = 0,
+                    numeroPatrimonio = numero,
+                    coletaAnteriorId = 0
+                )
+            } catch (e: Exception) {
+                android.util.Log.w("ScannerActivity", "Falha ao registrar audit de duplicata: ${e.message}")
+            }
+        }
+
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("⚠ Patrimônio já coletado")
+            .setMessage(mensagem)
+            .setPositiveButton("Forçar nova coleta") { _, _ ->
+                lifecycleScope.launch {
+                    try {
+                        auditService.registrarColetaForcada(numero, coletadoPor, dataAnterior)
+                    } catch (e: Exception) { /* silencioso */ }
+                }
+                val estadoFixoHabilitado = preferencesManager.isEstadoFixoEnabled()
+                val estadoFixoVal = preferencesManager.getEstadoFixo()
+                if (estadoFixoHabilitado && !estadoFixoVal.isNullOrEmpty()) {
+                    viewModel.forcarColeta(result.patrimonioId, salaNome, estadoFixoVal, currentScanTipoScan)
+                } else {
+                    // Abre o dialog de estado, mas desta vez o ViewModel vai forçar
+                    val dialog = com.inventario.mobile.presentation.dialog.EstadoPatrimonioDialog.newInstance { estadoSelecionado ->
+                        viewModel.forcarColeta(result.patrimonioId, salaNome, estadoSelecionado.name, currentScanTipoScan)
+                    }
+                    dialog.show(supportFragmentManager, "EstadoPatrimonioDialogForcado")
+                }
+            }
+            .setNeutralButton("Registrar sem etiqueta") { _, _ ->
+                lifecycleScope.launch {
+                    try {
+                        auditService.registrarConversaoSemEtiqueta(
+                            numero,
+                            "Duplicata convertida — patrimônio $numero"
+                        )
+                    } catch (e: Exception) { /* silencioso */ }
+                }
+                // Abre a tela de item sem etiqueta pré-preenchida com a descrição do patrimônio
+                val intent = android.content.Intent(
+                    this,
+                    com.inventario.mobile.presentation.coleta.ItemSemEtiquetaActivity::class.java
+                ).apply {
+                    putExtra("DESCRICAO_SUGERIDA", result.patrimonio?.descricao ?: "Patrimônio $numero")
+                    putExtra("NUMERO_PATRIMONIO_ORIGEM", numero)
+                }
+                startActivity(intent)
+                hideBottomSheet()
+            }
+            .setNegativeButton("Cancelar") { _, _ ->
+                lifecycleScope.launch {
+                    try {
+                        auditService.registrarTentativaCancelada(numero, coletadoPor, dataAnterior)
+                    } catch (e: Exception) { /* silencioso */ }
+                }
+                // Restaura o texto original do botão
+                binding.buttonColetar.text = "✓  COLETAR"
+            }
+            .setCancelable(false) // Força o usuário a tomar uma decisão explícita
+            .show()
+    }
+
     private fun showEstadoPatrimonioDialog(patrimonioId: Long, salaNome: String) {
         val dialog = EstadoPatrimonioDialog.newInstance { estadoSelecionado ->
             // Callback executado quando o usuário seleciona um estado
@@ -519,18 +604,25 @@ class ScannerActivity : AppCompatActivity() {
             currentScanResult?.let { result ->
                 val salaId = preferencesManager.getCurrentSalaId()
                 val salaNome = preferencesManager.getCurrentSalaNome()
-                
-                if (salaId > 0 && !salaNome.isNullOrBlank()) {
-                    val estadoFixoHabilitado = preferencesManager.isEstadoFixoEnabled()
-                    val estadoFixoVal = preferencesManager.getEstadoFixo()
-                    
-                    if (estadoFixoHabilitado && !estadoFixoVal.isNullOrEmpty()) {
-                        viewModel.coletarPatrimonioComEstado(result.patrimonioId, salaNome, estadoFixoVal, currentScanTipoScan)
-                    } else {
-                        showEstadoPatrimonioDialog(result.patrimonioId, salaNome)
-                    }
-                } else {
+
+                if (salaId <= 0 || salaNome.isNullOrBlank()) {
                     Toast.makeText(this, "Sala não selecionada", Toast.LENGTH_SHORT).show()
+                    return@let
+                }
+
+                // Se já foi coletado, mostrar dialog de decisão em vez de bloquear
+                if (result.jaColetado) {
+                    mostrarDialogDuplicata(result, salaNome)
+                    return@let
+                }
+
+                val estadoFixoHabilitado = preferencesManager.isEstadoFixoEnabled()
+                val estadoFixoVal = preferencesManager.getEstadoFixo()
+
+                if (estadoFixoHabilitado && !estadoFixoVal.isNullOrEmpty()) {
+                    viewModel.coletarPatrimonioComEstado(result.patrimonioId, salaNome, estadoFixoVal, currentScanTipoScan)
+                } else {
+                    showEstadoPatrimonioDialog(result.patrimonioId, salaNome)
                 }
             }
         }
@@ -996,12 +1088,16 @@ class ScannerActivity : AppCompatActivity() {
             .start()
 
         if (result.jaColetado) {
-            binding.buttonColetar.visibility = View.GONE
+            // Em vez de esconder o botão silenciosamente, mostramos o botão
+            // com texto diferente que abre o dialog de decisão.
+            binding.buttonColetar.visibility = View.VISIBLE
+            binding.buttonColetar.text = "⚠ Já coletado — ver opções"
             binding.buttonRetry.visibility = View.VISIBLE
             binding.buttonRetry.text = "Escanear outro"
             binding.buttonColetarSimilar.visibility = View.GONE
         } else {
             binding.buttonColetar.visibility = View.VISIBLE
+            binding.buttonColetar.text = "✓  COLETAR"
             binding.buttonRetry.visibility = View.VISIBLE
             binding.buttonRetry.text = "Escanear outro"
             // Mostrar "Coletar similar" se houver referência
@@ -1093,7 +1189,10 @@ class ScannerActivity : AppCompatActivity() {
                     com.google.zxing.BarcodeFormat.ITF.name
                 )
                 setPrompt("Posicione o QR Code ou código de barras dentro do quadro")
-                setCameraId(0) // Câmera traseira
+                // ✅ v2.31: Permitir uso de câmera frontal na coleta rápida
+                // 0 = câmera traseira (padrão), 1 = câmera frontal
+                val usarCameraFrontal = preferencesManager.usarCameraFrontal()
+                setCameraId(if (usarCameraFrontal) 1 else 0)
                 setBeepEnabled(false) // Desabilitar beep padrão - usaremos som customizado
                 setBarcodeImageEnabled(false)
                 setOrientationLocked(true)
@@ -1113,7 +1212,7 @@ class ScannerActivity : AppCompatActivity() {
             
             android.util.Log.d("ScannerActivity", "✓ ScanOptions configurado")
             android.util.Log.d("ScannerActivity", "  - Formatos: QR_CODE, EAN, CODE_128, etc")
-            android.util.Log.d("ScannerActivity", "  - Câmera: Traseira (ID: 0)")
+            android.util.Log.d("ScannerActivity", "  - Câmera: ${if (preferencesManager.usarCameraFrontal()) "Frontal (ID: 1)" else "Traseira (ID: 0)"}")
             android.util.Log.d("ScannerActivity", "  - Beep: Desabilitado")
             android.util.Log.d("ScannerActivity", "  - Timeout: 0 (desativado — coleta de campo)")
             

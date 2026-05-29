@@ -131,6 +131,62 @@ class AuditService @Inject constructor(
             sucesso = false
         )
     }
+
+    /**
+     * Registra que o usuário foi apresentado ao dialog de duplicata e
+     * optou por CANCELAR — sem registrar nova coleta.
+     *
+     * Crítico para auditoria: prova que a tentativa ocorreu mesmo que
+     * nenhuma coleta tenha sido salva.
+     */
+    suspend fun registrarTentativaCancelada(
+        numeroPatrimonio: String,
+        coletadoPor: String?,
+        dataColetaAnterior: String?
+    ) {
+        registrarLog(
+            coletaId = 0,
+            acao = AcaoLog.TENTATIVA_CANCELADA,
+            detalhes = "Tentativa de coletar '$numeroPatrimonio' cancelada pelo usuário. " +
+                "Coleta anterior: por=${coletadoPor ?: "desconhecido"}, data=$dataColetaAnterior",
+            sucesso = false
+        )
+    }
+
+    /**
+     * Registra que o usuário forçou uma nova coleta sobre um patrimônio
+     * já coletado (sobrescreve o status local).
+     */
+    suspend fun registrarColetaForcada(
+        numeroPatrimonio: String,
+        coletadoPor: String?,
+        dataColetaAnterior: String?
+    ) {
+        registrarLog(
+            coletaId = 0,
+            acao = AcaoLog.COLETA_FORCADA,
+            detalhes = "Coleta forçada para '$numeroPatrimonio'. " +
+                "Coleta anterior: por=${coletadoPor ?: "desconhecido"}, data=$dataColetaAnterior",
+            sucesso = true
+        )
+    }
+
+    /**
+     * Registra que o usuário converteu a tentativa de duplicata em
+     * coleta sem etiqueta (preserva o dado sem sobrescrever).
+     */
+    suspend fun registrarConversaoSemEtiqueta(
+        numeroPatrimonio: String,
+        descricaoUsada: String
+    ) {
+        registrarLog(
+            coletaId = 0,
+            acao = AcaoLog.CONVERTIDA_SEM_ETIQUETA,
+            detalhes = "Patrimônio '$numeroPatrimonio' convertido para coleta sem etiqueta. " +
+                "Descrição: $descricaoUsada",
+            sucesso = true
+        )
+    }
     
     /**
      * Registra criação de backup

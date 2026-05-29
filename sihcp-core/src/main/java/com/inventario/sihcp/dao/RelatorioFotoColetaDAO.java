@@ -69,21 +69,18 @@ public class RelatorioFotoColetaDAO {
                     )                               AS descricao,
                     COALESCE(c.CATEGORIA_ITEM_SEM_ETIQUETA, '') AS categoria,
                     COALESCE(c.LOCALIZACAO_ENCONTRADA,
-                             c.LOCALIZACAO_ATUAL,
-                             sl.NOME, '')           AS localizacaoEncontrada,
+                             c.LOCALIZACAO_ATUAL, '') AS localizacaoEncontrada,
                     COALESCE(c.ESTADO_ENCONTRADO, '') AS estadoEncontrado,
                     c.DATA_COLETA                   AS dataColeta,
                     COALESCE(c.OBSERVACAO_COLETA, c.OBSERVACAO, '') AS observacao,
                     COALESCE(u.NOME_COMPLETO, 'Desconhecido') AS nomeColetor,
-                    COALESCE(so.NOME, '')           AS nomeSalaOrigem,
+                    COALESCE(so.DESCRICAO, so.NUMERO_SALA, '') AS nomeSalaOrigem,
                     c.MOTIVO_DIVERGENCIA            AS motivoDivergencia
                 FROM TABELA_COLETA c
                 LEFT JOIN TABELA_PATRIMONIO p
                        ON c.ID_PATRIMONIO = p.ID
                 LEFT JOIN TABELA_SALA so
-                       ON p.ID_SALA = so.ID
-                LEFT JOIN TABELA_SALA sl
-                       ON c.ID_SALA = sl.ID
+                       ON p.ID_SALA = so.ID_SALA
                 LEFT JOIN TABELA_PARTICIPANTE_INVENTARIO pi
                        ON c.ID_PARTICIPANTE_INVENTARIO = pi.ID_PARTICIPANTE
                 LEFT JOIN TABELA_USUARIO u
@@ -102,9 +99,9 @@ public class RelatorioFotoColetaDAO {
             }
         }
 
-        // Filtro por sala
+        // Filtro por sala (tabela_coleta não tem id_sala; filtrar pela sala do patrimônio)
         if (idSala != null) {
-            sql.append("  AND (c.ID_SALA = ? OR p.ID_SALA = ?)\n");
+            sql.append("  AND p.ID_SALA = ?\n");
         }
 
         sql.append("ORDER BY c.DATA_COLETA DESC");
@@ -117,7 +114,6 @@ public class RelatorioFotoColetaDAO {
             int paramIdx = 1;
             stmt.setInt(paramIdx++, idInventario);
             if (idSala != null) {
-                stmt.setInt(paramIdx++, idSala);
                 stmt.setInt(paramIdx, idSala);
             }
 
