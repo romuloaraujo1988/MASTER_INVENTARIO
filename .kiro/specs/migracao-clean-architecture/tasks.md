@@ -1,5 +1,30 @@
 # Implementation Plan - Migração Clean Architecture
 
+> ⚠️ **OBJETIVO ALCANÇADO — ABORDAGEM SUPERADA — 31/05/2026**
+>
+> A migração do app Android para Clean Architecture + MVVM + Hilt **já é
+> realidade e é o padrão único do projeto**: `@HiltAndroidApp`, 13 módulos DI,
+> ~50 use cases, ~25 `@HiltViewModel`, mappers e repositories offline-first.
+> As Activities-alvo (DescricaoSelection, Coleta, Dashboard) já usam ViewModels
+> Clean.
+>
+> Por isso, a **estratégia incremental com feature-flags + rollback +
+> coexistência de ViewModels antigos/novos** que este plano descreve ficou
+> **obsoleta**: `FeatureFlags.kt` é hoje um stub ("Clean sempre ativo"),
+> `MigrationCoordinator`/`AdaptiveViewModelFactory` não existem.
+>
+> **Pendências abaixo (`- [ ]`):**
+> - Tarefas 2, 3, 5, 7, 9, 11, 12, 15, 17, 19, 26, 32, 42, 43 (flags, smoke-test
+>   harness, adapters, rollback, coexistência) → **OBSOLETAS** (a migração não é
+>   mais incremental).
+> - Tarefas de cleanup (44 código morto, renomear `*ViewModelClean` →
+>   `*ViewModel`), testes (47, 49) e docs (45, 46) → trabalho futuro de **baixa
+>   prioridade**, fora do escopo de "migrar" (já migrado).
+>
+> Spec considerada **encerrada quanto ao objetivo**. Itens remanescentes não são
+> retrabalho de migração.
+
+
 ## Fase 0: Setup e Preparação (1 dia)
 
 - [x] 1. Configurar ambiente de build

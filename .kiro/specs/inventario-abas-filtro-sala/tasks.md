@@ -1,5 +1,12 @@
 # Implementation Plan
 
+> **FECHAMENTO FORMAL - 31/05/2026**
+> Implementacao de producao concluida. Os **testes opcionais** (marcados com `*`)
+> ainda nao escritos foram **dispensados** e seus checkboxes removidos deste plano.
+> Itens **nao-teste** que porventura permanecam com `- [ ]` abaixo continuam sendo
+> pendencia real (nao foram removidos no fechamento).
+
+
 ## 1. Criar Domain Models
 
 - [x] 1.1 Criar model SalaComProgresso
@@ -38,7 +45,7 @@
   - Adicionar método `buscarPorNomeOuNumero(query)` para busca combinada
   - _Requirements: 4.1, 4.4_
 
-- [ ]* 2.4 Write property test for statistics calculation
+- (opcional, dispensado) 2.4 Write property test for statistics calculation
   - **Property 2: Statistics Calculation Consistency**
   - **Validates: Requirements 1.4, 2.1**
 
@@ -50,7 +57,7 @@
   - Calcular pendentes e percentual no mapper
   - _Requirements: 4.1_
 
-- [ ]* 3.2 Write property test for progress display consistency
+- (opcional, dispensado) 3.2 Write property test for progress display consistency
   - **Property 5: Room Progress Display Consistency**
   - **Validates: Requirements 4.1**
 
@@ -97,7 +104,7 @@
   - Retornar lista de SalaComProgresso ordenada por nome
   - _Requirements: 4.1_
 
-- [ ]* 5.4 Write property test for filter correctness
+- (opcional, dispensado) 5.4 Write property test for filter correctness
   - **Property 1: Filter Correctness**
   - **Validates: Requirements 3.2, 3.3, 3.4**
 
@@ -117,7 +124,7 @@
   - Implementar métodos: carregarSalas, selecionarSala, aplicarFiltro, buscarSala, carregarMaisPatrimonios
   - _Requirements: 1.2, 1.3, 3.1, 4.4_
 
-- [ ]* 7.3 Write property test for room search filtering
+- (opcional, dispensado) 7.3 Write property test for room search filtering
   - **Property 4: Room Search Filtering**
   - **Validates: Requirements 4.4**
 
@@ -146,7 +153,7 @@
   - Adicionar ícones de status (checkmark para 100%, warning para 0%)
   - _Requirements: 4.1, 4.2, 4.3_
 
-- [ ]* 8.4 Write property test for color mapping
+- (opcional, dispensado) 8.4 Write property test for color mapping
   - **Property 3: Color Mapping Correctness**
   - **Validates: Requirements 2.3, 6.2**
 
@@ -174,7 +181,7 @@
   - Preservar estado das abas durante navegação
   - _Requirements: 1.1, 1.5_
 
-- [ ]* 9.5 Write property test for tab state preservation
+- (opcional, dispensado) 9.5 Write property test for tab state preservation
   - **Property 6: Tab State Preservation**
   - **Validates: Requirements 1.5**
 
@@ -211,11 +218,11 @@
   - Exibir warning se dados > 24 horas
   - _Requirements: 5.4_
 
-- [ ]* 11.3 Write property test for offline data loading
+- (opcional, dispensado) 11.3 Write property test for offline data loading
   - **Property 7: Offline Data Loading**
   - **Validates: Requirements 5.1**
 
-- [ ]* 11.4 Write property test for data staleness detection
+- (opcional, dispensado) 11.4 Write property test for data staleness detection
   - **Property 8: Data Staleness Detection**
   - **Validates: Requirements 5.4**
 

@@ -120,8 +120,8 @@ public class HikariConnectionPool {
         
         // Configurações de conexão
         config.setJdbcUrl(props.getProperty("db.url", "jdbc:postgresql://localhost:5432/sispatrimonio"));
-        config.setUsername(props.getProperty("db.username", "postgres")); // Alterado padrão para postgres
-        config.setPassword(props.getProperty("db.password", "Romulo@1919")); // Alterado padrão para o atual
+        config.setUsername(props.getProperty("db.username", "postgres"));
+        config.setPassword(props.getProperty("db.password", resolveDefaultPassword()));
         config.setDriverClassName("org.postgresql.Driver");
         
         // Configurações do pool
@@ -182,7 +182,7 @@ public class HikariConnectionPool {
             props.setProperty("db.username", "postgres");
         }
         if (props.getProperty("db.password") == null) {
-            props.setProperty("db.password", "Romulo@1919");
+            props.setProperty("db.password", resolveDefaultPassword());
         }
         
         return props;
@@ -259,6 +259,28 @@ public class HikariConnectionPool {
         } catch (Exception e) { return null; }
     }
     
+    /**
+     * Resolve a senha padrão do banco a partir do ambiente, sem literal no código.
+     * Procura, em ordem: variável de ambiente DATASOURCE_PASSWORD, system property
+     * db.password. Retorna string vazia se nenhuma estiver definida (o HikariCP
+     * falhará de forma explícita, evidenciando configuração ausente — preferível a
+     * embutir credencial no binário).
+     */
+    private String resolveDefaultPassword() {
+        String env = System.getenv("DATASOURCE_PASSWORD");
+        if (env != null && !env.isEmpty()) {
+            return env;
+        }
+        String sys = System.getProperty("db.password");
+        if (sys != null && !sys.isEmpty()) {
+            return sys;
+        }
+        logger.warn("Senha do banco não configurada (DATASOURCE_PASSWORD ausente). "
+                + "Defina a variável de ambiente, system property db.password ou o arquivo "
+                + "config/configuracao_banco.json.");
+        return "";
+    }
+
     /**
      * Obtém propriedade inteira com valor padrão.
      */

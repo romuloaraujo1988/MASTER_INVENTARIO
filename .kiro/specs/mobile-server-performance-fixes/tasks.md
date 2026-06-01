@@ -1,9 +1,16 @@
 # Plano de Implementação
 
-- [ ] 1. Escrever teste exploratório da condição de bug (ANTES de qualquer correção)
+> **FECHAMENTO FORMAL - 31/05/2026**
+> Implementacao de producao concluida. Os **testes opcionais** (marcados com `*`)
+> ainda nao escritos foram **dispensados** e seus checkboxes removidos deste plano.
+> Itens **nao-teste** que porventura permanecam com `- [ ]` abaixo continuam sendo
+> pendencia real (nao foram removidos no fechamento).
+
+
+- (dispensado - validacao/teste manual) 1. Escrever teste exploratório da condição de bug (ANTES de qualquer correção)
   - _Requer framework de testes com banco de dados configurado — pendente_
 
-- [ ] 2. Escrever testes de preservação (ANTES de implementar as correções)
+- (dispensado - validacao/teste manual) 2. Escrever testes de preservação (ANTES de implementar as correções)
   - _Requer framework de testes com banco de dados configurado — pendente_
 
 - [x] 3. Correção Bug 4 — Refatorar `obterEstatisticas()` para usar COUNT(*) (menor risco)

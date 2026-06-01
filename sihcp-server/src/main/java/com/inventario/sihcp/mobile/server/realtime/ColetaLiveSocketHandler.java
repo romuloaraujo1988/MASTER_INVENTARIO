@@ -150,11 +150,16 @@ public class ColetaLiveSocketHandler extends TextWebSocketHandler {
         // Sessões filtradas pelo inventário do evento.
         if (evento.getInventarioId() != null) {
             Set<WebSocketSession> alvos = sessoesPorInventario.get(evento.getInventarioId());
+            int n = alvos != null ? alvos.size() : 0;
+            logger.info("WS broadcast: bucket inv-{} tem {} sessão(ões)", evento.getInventarioId(), n);
             enviarParaTodas(alvos, message, "inv-" + evento.getInventarioId());
         }
 
         // Sessões globais (sem filtro).
         Set<WebSocketSession> globais = sessoesPorInventario.get(GLOBAL_BUCKET);
+        int ng = globais != null ? globais.size() : 0;
+        logger.info("WS broadcast: bucket global tem {} sessão(ões). Buckets ativos: {}",
+                ng, sessoesPorInventario.keySet());
         enviarParaTodas(globais, message, "global");
     }
 

@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: sispatrimonio
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Romulo@1919
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
       POSTGRES_INITDB_ARGS: "-E UTF8"
     ports:
       - "5432:5432"
@@ -49,10 +49,10 @@ services:
       SPRING_PROFILES_ACTIVE: mobile,production
       DATABASE_URL: jdbc:postgresql://postgres:5432/sispatrimonio
       DATABASE_USER: postgres
-      DATABASE_PASSWORD: Romulo@1919
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      JWT_SECRET: ${JWT_SECRET:-inventario-mobile-secret-key-2024-very-long-secret-for-security-must-be-at-least-256-bits}
+      JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET no .env}
       SERVER_PORT: 8081
       JAVA_OPTS: -Xms1g -Xmx2g -XX:+UseG1GC
     depends_on:

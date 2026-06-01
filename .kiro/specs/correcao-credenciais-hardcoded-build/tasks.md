@@ -1,5 +1,23 @@
 # Implementation Tasks - Correção Credenciais Hardcoded Build
 
+> ⚠️ **NÚCLEO IMPLEMENTADO — RESÍDUO OPERACIONAL — 31/05/2026**
+>
+> A correção de código já foi feita: o `build.gradle` do Android lê
+> `keystore.properties` externo (não versionado) e falha graciosamente quando
+> ausente; as credenciais saíram dos arquivos de build versionados.
+>
+> **Pendências remanescentes são OPERACIONAIS/PROCESSO** (não são código de app):
+> limpeza do histórico Git (`git-filter-repo`), rotação de keystore, variáveis no
+> CI/CD, auditoria, docs e treinamento. Mantidas abaixo como checklist de
+> segurança, mas não bloqueiam o fechamento da parte de código.
+>
+> ⚠️ **ACHADO CRÍTICO FORA DO ESCOPO DESTA SPEC:** ainda há senha PostgreSQL
+> hardcoded em `config/configuracao_banco.json` e
+> `APP_DESKTOP_PRODUCAO/config/configuracao_banco.json` (`"password":"Romulo@1919"`).
+> Nenhuma spec cobre esses arquivos — tratar como item de segurança prioritário
+> à parte.
+
+
 ## 1. Preparação e Backup
 
 - [x] 1.1 Fazer backup da keystore atual

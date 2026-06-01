@@ -326,11 +326,20 @@ public class MobileServerManager {
                     command.add("-Dspring.datasource.password=" + dbConfig.getPassword());
                     System.out.println("[MobileServer] Usando configuração unificada: " + hostPort(dbConfig));
                 } else {
-                    // Fallback para localhost se não houver config
+                    // Fallback para localhost se não houver config.
+                    // A senha NÃO é embutida no código: vem de DATASOURCE_PASSWORD
+                    // (variável de ambiente) ou da system property db.password.
+                    String fallbackPassword = System.getenv("DATASOURCE_PASSWORD");
+                    if (fallbackPassword == null || fallbackPassword.isEmpty()) {
+                        fallbackPassword = System.getProperty("db.password", "");
+                    }
                     command.add("-Dspring.datasource.url=jdbc:postgresql://localhost:5432/sispatrimonio");
                     command.add("-Dspring.datasource.username=postgres");
-                    command.add("-Dspring.datasource.password=Romulo@1919");
-                    System.out.println("[MobileServer] Usando configuração de fallback (localhost)");
+                    command.add("-Dspring.datasource.password=" + fallbackPassword);
+                    System.out.println("[MobileServer] Usando configuração de fallback (localhost). "
+                            + (fallbackPassword.isEmpty()
+                                ? "ATENÇÃO: senha de banco não definida (DATASOURCE_PASSWORD)."
+                                : "Senha obtida do ambiente."));
                 }
 
                 // Iniciar processo

@@ -1,5 +1,21 @@
 # Implementation Tasks - Correção Logs Tokens Debug
 
+> ⚠️ **NÚCLEO IMPLEMENTADO — RESÍDUO PEQUENO — 31/05/2026**
+>
+> A proteção principal já está no código: `LogSanitizer` mascara JWT/senha/
+> token/CPF/e-mail; `SplashActivity` só loga em `if (BuildConfig.DEBUG)`; o
+> ProGuard remove `Log.d`/`Log.v` em release. Logo, em produção (release) os
+> tokens não vazam.
+>
+> **Pendências reais remanescentes (pequenas, valem a pena):**
+> - **2.2 / 2.3** — em build *debug*, `LoginViewModel` e `NetworkModule` ainda
+>   fazem `Log.d` com `token.take(20)`; enxugar `getTokenDebugInfo()` e trocar os
+>   `take(20)` por `LogSanitizer`. Esse é o único trabalho de código que sobra.
+>
+> Os demais itens `- [ ]` abaixo são testes manuais, auditoria, documentação e
+> processo — mantidos como checklist, sem bloquear o fechamento do núcleo.
+
+
 ## 1. Análise e Identificação
 
 - [x] 1.1 Buscar todos os logs que podem conter tokens

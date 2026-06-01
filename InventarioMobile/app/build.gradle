@@ -59,8 +59,21 @@ android {
         //     na primeira utilização do app (substitui IP fixo no APK)
         //   - PreferencesManager: flag isServerConfigured() para controlar fluxo
         //   - SplashActivity: redireciona para setup quando isServerConfigured=false
-        versionCode 81
-        versionName "2.29.5"
+        // v2.29.6 — monitor ao vivo de coletas (WebSocket) + ajustes desta sessão
+        //   - Inclui o cliente RealtimeColetasManager (feed WebSocket /ws-coletas-live)
+        //     e a tela CollectionViewActivity em modo "monitor ao vivo".
+        //   - Botão de troca de câmera no scanner, som sutil no monitor live,
+        //     correção de vibração (DND/silencioso), responsável na coleta manual,
+        //     botão de coleta nos detalhes e proteção contra coleta duplicada.
+        //   - REQUER servidor 2.9.0+ (correção do ServerContainer JSR-356 que
+        //     habilita o handshake do WebSocket nativo).
+        // v2.29.7 — FIX: monitor ao vivo não recebia coletas no APK release
+        //   - proguard-rules.pro: adicionado keep do pacote data.realtime.**
+        //     (ColetaEvento). Sem ele, o R8 ofuscava a data class e o Gson
+        //     desserializava com tipo=null → ViewModel descartava o evento.
+        //     Servidor transmitia OK (confirmado em log), o app é que não exibia.
+        versionCode 83
+        versionName "2.29.7"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -252,6 +265,12 @@ dependencies {
     testImplementation 'io.kotest:kotest-runner-junit5:5.8.0'
     testImplementation 'io.kotest:kotest-assertions-core:5.8.0'
     testImplementation 'io.kotest:kotest-property:5.8.0'
+
+    // jqwik - Property-Based Testing on the JUnit 5 Platform
+    // Usado pelos testes de propriedade do spec dashboard-redesign (DashboardUiMapper).
+    // Versão 1.8.x alinha com JUnit Platform 1.10.x (mesma usada pelo Kotest 5.8.0)
+    // e mantém compatibilidade com Java 8 (jvmTarget do projeto).
+    testImplementation 'net.jqwik:jqwik:1.8.4'
     
     // MockK for mocking (versão 1.12.x suporta JVM 1.8)
     testImplementation 'io.mockk:mockk:1.12.8'

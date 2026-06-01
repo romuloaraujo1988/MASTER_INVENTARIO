@@ -131,7 +131,6 @@ public class VersionInfo {
     /**
      * Executa um comando Git e retorna o resultado
      */
-    @SuppressWarnings("deprecation")
     private static String executeGitCommand(String command) {
         try {
             Process process = Runtime.getRuntime().exec(command);

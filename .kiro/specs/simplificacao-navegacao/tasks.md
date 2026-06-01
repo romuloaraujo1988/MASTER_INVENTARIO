@@ -1,5 +1,12 @@
 # Plano de Implementação: Simplificação de Navegação (simplificacao-navegacao)
 
+> **FECHAMENTO FORMAL - 31/05/2026**
+> Implementacao de producao concluida. Os **testes opcionais** (marcados com `*`)
+> ainda nao escritos foram **dispensados** e seus checkboxes removidos deste plano.
+> Itens **nao-teste** que porventura permanecam com `- [ ]` abaixo continuam sendo
+> pendencia real (nao foram removidos no fechamento).
+
+
 ## Visão Geral
 
 Reorganização de navegação no app Android SIHCP com duas mudanças cirúrgicas:
@@ -18,23 +25,23 @@ Nenhuma lógica de negócio nova é introduzida. Toda a camada Domain e Data per
     - Manter os branches `QRCODE` e `MANUAL` sem alteração
     - _Requisitos: 1.1, 1.2, 4.1, 4.2_
 
-  - [ ]* 1.2 Escrever teste de propriedade para roteamento de navegação (Propriedade 1)
+  - (opcional, dispensado) 1.2 Escrever teste de propriedade para roteamento de navegação (Propriedade 1)
     - **Propriedade 1: Roteamento de navegação por tipo de coleta**
     - Para qualquer `Sala` e qualquer `coletaTipo`, verificar que `navegarParaColeta()` produz `Intent` apontando para a Activity correta; em especial, `DESCRICAO` nunca deve apontar para `EscolhaMetodoColetaActivity`
     - Usar `Arb.sala()` e `Arb.coletaTipo()` com Kotest Property Testing (mínimo 100 iterações)
     - **Valida: Requisitos 1.1, 1.2, 4.1, 4.2**
 
-  - [ ]* 1.3 Escrever teste de propriedade para extras do Intent DESCRICAO (Propriedade 2)
+  - (opcional, dispensado) 1.3 Escrever teste de propriedade para extras do Intent DESCRICAO (Propriedade 2)
     - **Propriedade 2: Extras corretos no Intent para tipo DESCRICAO**
     - Para qualquer `Sala`, verificar que o `Intent` gerado contém `EXTRA_SALA_ID == sala.id` e `EXTRA_SALA_NOME == sala.nome`
     - **Valida: Requisito 1.1**
 
-  - [ ]* 1.4 Escrever teste de propriedade para subtítulo da toolbar (Propriedade 3)
+  - (opcional, dispensado) 1.4 Escrever teste de propriedade para subtítulo da toolbar (Propriedade 3)
     - **Propriedade 3: Subtítulo da toolbar reflete o nome da sala**
     - Para qualquer string não vazia `salaNome`, verificar que `setupToolbar(salaNome)` em `DescricaoSelectionActivity` produz subtítulo igual a `salaNome`
     - **Valida: Requisito 1.3**
 
-  - [ ]* 1.5 Escrever testes unitários para `SalaSelectionActivity` e `DescricaoSelectionActivity`
+  - (opcional, dispensado) 1.5 Escrever testes unitários para `SalaSelectionActivity` e `DescricaoSelectionActivity`
     - Verificar que `DESCRICAO` não lança `EscolhaMetodoColetaActivity`
     - Verificar que `salaId <= 0` chama `finish()` e exibe Toast de erro
     - Verificar que `salaNome` vazio chama `finish()` e exibe Toast de erro
@@ -55,38 +62,38 @@ Nenhuma lógica de negócio nova é introduzida. Toda a camada Domain e Data per
     - Emitir `ColetasUnificadaState` via `StateFlow`
     - _Requisitos: 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.11, 2.12, 4.6, 4.7, 4.8_
 
-  - [ ]* 4.2 Escrever teste de propriedade para filtro por texto (Propriedade 4)
+  - (opcional, dispensado) 4.2 Escrever teste de propriedade para filtro por texto (Propriedade 4)
     - **Propriedade 4: Filtro por texto retorna apenas coletas correspondentes**
     - Para qualquer lista de `Coleta` e qualquer `query`, verificar que o resultado contém apenas coletas onde `numeroPatrimonio` ou `descricaoPatrimonio` contém `query` (case-insensitive)
     - **Valida: Requisito 2.2**
 
-  - [ ]* 4.3 Escrever teste de propriedade para filtro por status (Propriedade 5)
+  - (opcional, dispensado) 4.3 Escrever teste de propriedade para filtro por status (Propriedade 5)
     - **Propriedade 5: Filtro por status retorna apenas coletas do status correto**
     - Para qualquer `StatusFiltro` e qualquer lista de `Coleta`, verificar que o resultado satisfaz o critério do status (`TODOS`, `COLETADOS`, `PENDENTES`, `SEM_ETIQUETA`)
     - **Valida: Requisitos 2.3, 4.7**
 
-  - [ ]* 4.4 Escrever teste de propriedade para filtro por usuário (Propriedade 6)
+  - (opcional, dispensado) 4.4 Escrever teste de propriedade para filtro por usuário (Propriedade 6)
     - **Propriedade 6: Filtro por usuário retorna apenas coletas do usuário**
     - Para qualquer `userId` e qualquer lista de `Coleta`, verificar que o resultado contém apenas coletas onde `usuarioId == userId`
     - **Valida: Requisito 2.4**
 
-  - [ ]* 4.5 Escrever teste de propriedade para filtro por sala (Propriedade 7)
+  - (opcional, dispensado) 4.5 Escrever teste de propriedade para filtro por sala (Propriedade 7)
     - **Propriedade 7: Filtro por sala retorna apenas coletas da sala**
     - Para qualquer `salaNome` e qualquer lista de `Coleta`, verificar que o resultado contém apenas coletas onde `localizacaoEncontrada` ou `nomeSala` é igual a `salaNome` (case-insensitive após trim)
     - **Valida: Requisito 2.5**
 
-  - [ ]* 4.6 Escrever teste de propriedade para agrupamento por sala (Propriedade 8)
+  - (opcional, dispensado) 4.6 Escrever teste de propriedade para agrupamento por sala (Propriedade 8)
     - **Propriedade 8: Agrupamento por sala é uma partição válida**
     - Para qualquer lista de `Coleta`, verificar que `AgruparColetasPorSalaUseCase` produz uma partição válida: toda coleta aparece em exatamente um grupo e todas as coletas de um grupo compartilham o mesmo nome de sala
     - **Valida: Requisitos 2.6, 4.8**
 
-  - [ ]* 4.7 Escrever teste de propriedade para exclusão de coleta pendente (Propriedade 9)
+  - (opcional, dispensado) 4.7 Escrever teste de propriedade para exclusão de coleta pendente (Propriedade 9)
     - **Propriedade 9: Exclusão de coleta pendente remove-a da lista**
     - Para qualquer coleta pendente (`sincronizado = false`), verificar que após `ExcluirColetaPendenteUseCase(coletaId)` a coleta não aparece na lista retornada por `BuscarColetasUseCase`
     - Usar `InMemoryColetaRepository` para isolar o teste
     - **Valida: Requisito 2.9**
 
-  - [ ]* 4.8 Escrever teste de propriedade para contadores (Propriedade 10)
+  - (opcional, dispensado) 4.8 Escrever teste de propriedade para contadores (Propriedade 10)
     - **Propriedade 10: Contadores refletem os dados reais da lista**
     - Para qualquer lista de `Coleta`, verificar que `totalColetas == coletas.size` e `totalPendentes == coletas.count { !it.sincronizado }`
     - **Valida: Requisito 2.11**
@@ -108,7 +115,7 @@ Nenhuma lógica de negócio nova é introduzida. Toda a camada Domain e Data per
   - [x] 5.3 Registrar `ColetasUnificadaActivity` no `AndroidManifest.xml`
     - _Requisitos: 2.1, 3.1, 3.2_
 
-  - [ ]* 5.4 Escrever testes unitários para `ColetasUnificadaActivity`
+  - (opcional, dispensado) 5.4 Escrever testes unitários para `ColetasUnificadaActivity`
     - Verificar que long-click em coleta sincronizada exibe mensagem "já sincronizada"
     - Verificar que long-click em coleta pendente exibe menu com "Reenviar" e "Excluir"
     - Verificar que pull-to-refresh chama `carregarColetas()`
@@ -125,7 +132,7 @@ Nenhuma lógica de negócio nova é introduzida. Toda a camada Domain e Data per
     - Garantir que não haja entradas duplicadas no Navigation Drawer apontando para as telas antigas
     - _Requisitos: 3.2, 3.3, 3.5_
 
-  - [ ]* 6.3 Escrever testes unitários para `MainActivity`
+  - (opcional, dispensado) 6.3 Escrever testes unitários para `MainActivity`
     - Verificar que `nav_collections` (Bottom Navigation) lança `ColetasUnificadaActivity`
     - Verificar que `nav_coletas` (Navigation Drawer) lança `ColetasUnificadaActivity`
     - _Requisitos: 3.1, 3.2, 3.3_

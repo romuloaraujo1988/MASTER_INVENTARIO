@@ -1,3 +1,0 @@
-# Este arquivo garante que a pasta data/fotos seja versionada pelo Git.
-# As fotos de coleta são salvas aqui pelo servidor mobile (FotoColetaStorageService).
-# Estrutura: data/fotos/inventario_{id}/{YYYY-MM}/{tipo}/coleta_{coletaId}_{id}.jpg

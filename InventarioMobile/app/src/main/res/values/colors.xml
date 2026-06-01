@@ -159,6 +159,23 @@
     <color name="error_red">#BA1A1A</color>
 
     <!-- ══════════════════════════════════════════════════════════════
+         DASHBOARD REDESIGN — Tokens de realce dos KPIs
+         (spec dashboard-redesign — Req 1.1, 1.2)
+         Reuso das cores semânticas existentes. Aplicados APENAS ao
+         ícone e/ou ao valor numérico de cada cartão (um realce por
+         cartão). O fundo do cartão usa ?attr/colorSurface (neutro),
+         sem gradiente nem preenchimento saturado.
+    ══════════════════════════════════════════════════════════════ -->
+    <color name="dashboard_kpi_coletados_accent">@color/success</color>
+    <color name="dashboard_kpi_pendentes_accent">@color/warning</color>
+    <color name="dashboard_kpi_divergencias_accent">@color/error</color>
+    <color name="dashboard_kpi_coletores_accent">@color/info</color>
+
+    <!-- Rótulo neutro dos KPIs e cor da linha do gráfico de evolução -->
+    <color name="dashboard_kpi_label">@color/md3_on_surface_variant</color>
+    <color name="dashboard_chart_line">@color/md3_primary</color>
+
+    <!-- ══════════════════════════════════════════════════════════════
          Fallbacks para cores md3_dark_* (definidas em values-night/colors.xml)
          Lint exige que todo nome usado em values-night tenha declaração
          base; aqui apontamos cada md3_dark_* para seu equivalente light.

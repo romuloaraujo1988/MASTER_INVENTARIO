@@ -702,8 +702,8 @@ class ColetaRepositoryImpl @Inject constructor(
                     categoriaItemSemEtiqueta = entity.categoriaItemSemEtiqueta,
                     deviceId = android.os.Build.MODEL,
                     appVersion = "1.2",
-                    divergencia = false,
-                    motivoDivergencia = null,
+                    divergencia = coleta.divergencia,
+                    motivoDivergencia = coleta.motivoDivergencia,
                     // ✅ Preservar métricas de tempo
                     tempoColetaSegundos = entity.tempoColetaSegundos,
                     tempoScanSegundos = entity.tempoScanSegundos,

@@ -1,5 +1,12 @@
 # Implementation Plan
 
+> **FECHAMENTO FORMAL - 31/05/2026**
+> Implementacao de producao concluida. Os **testes opcionais** (marcados com `*`)
+> ainda nao escritos foram **dispensados** e seus checkboxes removidos deste plano.
+> Itens **nao-teste** que porventura permanecam com `- [ ]` abaixo continuam sendo
+> pendencia real (nao foram removidos no fechamento).
+
+
 - [x] 1. Criar modelos de domínio para busca rápida
   - [x] 1.1 Criar `PatrimonioComColeta.kt` no pacote domain/model
     - Campos: id, numero, descricao, salaNome, responsavelNome, coletado, coletadoPor, dataColeta, temDivergencia
@@ -67,13 +74,13 @@
     - Mapear resultados para PatrimonioComColeta
     - **NOTA:** Pode adaptar `BuscarPatrimonioAvancadaUseCase.kt` existente
     - _Requirements: 1.1, 3.1, 3.2, 3.3_
-  - [ ]* 4.2 Escrever property test para BuscarPatrimoniosUseCase
+  - (opcional, dispensado) 4.2 Escrever property test para BuscarPatrimoniosUseCase
     - **Property 1: Busca retorna resultados correspondentes**
     - **Validates: Requirements 1.1**
-  - [ ]* 4.3 Escrever property test para filtro de coletados
+  - (opcional, dispensado) 4.3 Escrever property test para filtro de coletados
     - **Property 2: Filtro de coletados retorna apenas coletados**
     - **Validates: Requirements 3.1**
-  - [ ]* 4.4 Escrever property test para filtro de pendentes
+  - (opcional, dispensado) 4.4 Escrever property test para filtro de pendentes
     - **Property 3: Filtro de pendentes retorna apenas pendentes**
     - **Validates: Requirements 3.2**
 
@@ -84,7 +91,7 @@
     - Montar PatrimonioDetalhado com todas as informações
     - **NOTA:** `ObterDetalhePatrimonioUseCase.kt` já existe com essa funcionalidade
     - _Requirements: 2.2, 2.3, 2.4, 2.5_
-  - [ ]* 5.2 Escrever property test para detalhes de patrimônio coletado
+  - (opcional, dispensado) 5.2 Escrever property test para detalhes de patrimônio coletado
     - **Property 5: Detalhes de patrimônio coletado incluem informações da coleta**
     - **Validates: Requirements 2.4**
 
@@ -130,7 +137,7 @@
     - Implementar buscar(query, filtro) com debounce
     - Calcular estatísticas dos resultados
     - _Requirements: 1.1, 1.2, 4.1, 4.2, 4.3_
-  - [ ]* 8.2 Escrever property test para estatísticas
+  - (opcional, dispensado) 8.2 Escrever property test para estatísticas
     - **Property 4: Estatísticas correspondem aos resultados**
     - **Validates: Requirements 4.1, 4.3**
 
@@ -191,7 +198,7 @@
     - Observar estado e atualizar UI
     - Implementar botões de ação
     - _Requirements: 2.2, 5.1, 5.2, 5.3_
-  - [ ]* 10.3 Escrever property test para ações condicionais
+  - (opcional, dispensado) 10.3 Escrever property test para ações condicionais
     - **Property 6: Ações condicionais baseadas no status de coleta**
     - **Validates: Requirements 5.1, 5.2**
 
@@ -225,7 +232,7 @@
 
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ]* 14. Escrever property test para funcionamento offline
+- (opcional, dispensado) 14. Escrever property test para funcionamento offline
   - **Property 7: Busca funciona offline**
   - **Validates: Requirements 6.1, 6.2**
 

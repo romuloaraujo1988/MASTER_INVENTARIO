@@ -753,31 +753,6 @@ public class DashboardColetaFrame extends JFrame implements DashboardObserver {
         return painel;
     }
 
-    private JLabel criarCardModerno(String titulo, String valor, Color cor) {
-        JLabel card = new JLabel();
-        card.setText(String.format(
-                "<html><div style='text-align: center; padding: 20px; font-family: Segoe UI Emoji, Segoe UI, sans-serif;'>" +
-                        "<div style='color: rgb(%d,%d,%d); font-size: 14px; font-weight: bold; margin-bottom: 10px;'>%s</div>"
-                        +
-                        "<div style='font-size: 28px; font-weight: bold; color: rgb(52,73,94);'>%s</div>" +
-                        "</div></html>",
-                cor.getRed(), cor.getGreen(), cor.getBlue(), titulo, valor));
-
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(LIGHT_BORDER, 1),
-                BorderFactory.createEmptyBorder(15, 15, 15, 15)));
-        card.setOpaque(true);
-        card.setBackground(Color.WHITE);
-        card.setHorizontalAlignment(SwingConstants.CENTER);
-
-        // Adicionar sombra sutil
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 2, 2, SHADOW_COLOR),
-                card.getBorder()));
-
-        return card;
-    }
-
     private JPanel criarPainelProgressoModerno() {
         JPanel painel = new JPanel(new BorderLayout());
         painel.setBackground(Color.WHITE);
@@ -1520,16 +1495,6 @@ public class DashboardColetaFrame extends JFrame implements DashboardObserver {
         // Atualizar barra de progresso
         barraProgresso.setValue(percentual);
         barraProgresso.setString(percentual + "% Concluído");
-    }
-
-    private void atualizarCardModerno(JLabel card, String titulo, String valor, Color cor) {
-        card.setText(String.format(
-                "<html><div style='text-align: center; padding: 20px; font-family: Segoe UI Emoji, Segoe UI, sans-serif;'>" +
-                        "<div style='color: rgb(%d,%d,%d); font-size: 14px; font-weight: bold; margin-bottom: 10px;'>%s</div>"
-                        +
-                        "<div style='font-size: 28px; font-weight: bold; color: rgb(52,73,94);'>%s</div>" +
-                        "</div></html>",
-                cor.getRed(), cor.getGreen(), cor.getBlue(), titulo, valor));
     }
 
     private void atualizarGraficos(Map<String, Integer> estatisticas) {

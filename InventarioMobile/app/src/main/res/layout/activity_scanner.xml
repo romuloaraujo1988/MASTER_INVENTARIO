@@ -157,6 +157,85 @@
     </LinearLayout>
 
     <!-- ═══════════════════════════════════════════════════════════
+         CAMADA 4.2 — Menu_Atalhos (atalhos de coleta rápida)
+         Faixa de chips na região inferior de controles, logo abaixo dos
+         chips de Sala/Estado e acima do FAB/switch, fora da área central
+         de mira do scanner. Envolto em HorizontalScrollView para caber em
+         telas estreitas. Reutiliza o estilo Material dos chips existentes.
+         ═══════════════════════════════════════════════════════════ -->
+    <HorizontalScrollView
+        android:id="@+id/scrollMenuAtalhos"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="148dp"
+        android:paddingHorizontal="16dp"
+        android:scrollbars="none"
+        android:fillViewport="true">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupAtalhos"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:singleLine="true"
+            app:chipSpacingHorizontal="8dp">
+
+            <!-- Atalho_Sem_Etiqueta -->
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipAtalhoSemEtiqueta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="48dp"
+                android:minHeight="48dp"
+                android:text="Sem etiqueta"
+                android:textColor="@android:color/white"
+                android:contentDescription="Abrir coleta sem etiqueta"
+                app:chipBackgroundColor="#CC37474F"
+                app:chipIcon="@drawable/ic_content_copy"
+                app:chipIconTint="@android:color/white"
+                app:chipStrokeWidth="1dp"
+                app:chipStrokeColor="#66607D8B"
+                style="@style/Widget.MaterialComponents.Chip.Action" />
+
+            <!-- Atalho_Manual -->
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipAtalhoManual"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="48dp"
+                android:minHeight="48dp"
+                android:text="Manual"
+                android:textColor="@android:color/white"
+                android:contentDescription="Abrir coleta manual por número"
+                app:chipBackgroundColor="#CC37474F"
+                app:chipIcon="@drawable/ic_edit"
+                app:chipIconTint="@android:color/white"
+                app:chipStrokeWidth="1dp"
+                app:chipStrokeColor="#66607D8B"
+                style="@style/Widget.MaterialComponents.Chip.Action" />
+
+            <!-- Atalho_Descricao -->
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipAtalhoDescricao"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="48dp"
+                android:minHeight="48dp"
+                android:text="Descrição"
+                android:textColor="@android:color/white"
+                android:contentDescription="Abrir coleta por descrição"
+                app:chipBackgroundColor="#CC37474F"
+                app:chipIcon="@drawable/ic_search"
+                app:chipIconTint="@android:color/white"
+                app:chipStrokeWidth="1dp"
+                app:chipStrokeColor="#66607D8B"
+                style="@style/Widget.MaterialComponents.Chip.Action" />
+
+        </com.google.android.material.chip.ChipGroup>
+
+    </HorizontalScrollView>
+
+    <!-- ═══════════════════════════════════════════════════════════
          CAMADA 4.5 — Chip "Último coletado" (sob a toolbar, canto direito)
          Fica visível após a primeira coleta para o usuário conferir
          o número que foi lido por último sem precisar abrir o histórico.

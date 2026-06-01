@@ -1,5 +1,12 @@
 # Implementation Plan
 
+> **FECHAMENTO FORMAL - 31/05/2026**
+> Implementacao de producao concluida. Os **testes opcionais** (marcados com `*`)
+> ainda nao escritos foram **dispensados** e seus checkboxes removidos deste plano.
+> Itens **nao-teste** que porventura permanecam com `- [ ]` abaixo continuam sendo
+> pendencia real (nao foram removidos no fechamento).
+
+
 - [x] 1. Criar infraestrutura base do módulo Analytics
 
 
@@ -86,7 +93,7 @@
     - Calcular taxa de divergência, tempo médio, coletas/hora, coletores ativos
     - Incluir comparação com período anterior
     - _Requirements: 7.1, 7.2_
-  - [ ]* 5.2 Write property test for cálculo de KPIs
+  - (opcional, dispensado) 5.2 Write property test for cálculo de KPIs
     - **Property 18: Comparação de KPIs indica direção correta**
     - **Validates: Requirements 7.2**
   - [x] 5.3 Implementar analisarDivergencias()
@@ -95,28 +102,28 @@
   - [x] 5.4 Implementar agruparDivergenciasPorTipo() e agruparDivergenciasPorGravidade()
     - Agrupar e contar divergências por tipo e gravidade
     - _Requirements: 1.1_
-  - [ ]* 5.5 Write property test for agrupamento de divergências
+  - (opcional, dispensado) 5.5 Write property test for agrupamento de divergências
     - **Property 1: Agrupamento de divergências preserva total**
     - **Validates: Requirements 1.1**
   - [x] 5.6 Implementar calcularMetricasPorColetor()
     - Calcular tempo médio, mín, máx, desvio padrão por coletor
     - _Requirements: 4.1_
-  - [ ]* 5.7 Write property test for métricas estatísticas
+  - (opcional, dispensado) 5.7 Write property test for métricas estatísticas
     - **Property 11: Métricas estatísticas calculadas corretamente**
     - **Validates: Requirements 4.1**
-  - [ ]* 5.8 Write property test for filtro de outliers
+  - (opcional, dispensado) 5.8 Write property test for filtro de outliers
     - **Property 12: Filtro de outliers exclui valores fora do range**
     - **Validates: Requirements 4.2**
   - [x] 5.9 Implementar calcularMetricasPorPeriodo()
     - Classificar coletas por período (Manhã/Tarde/Noite) e calcular métricas
     - _Requirements: 5.1_
-  - [ ]* 5.10 Write property test for classificação de período
+  - (opcional, dispensado) 5.10 Write property test for classificação de período
     - **Property 14: Classificação de período baseada na hora**
     - **Validates: Requirements 5.1**
   - [x] 5.11 Implementar gerarRankingSetores()
     - Gerar ranking ordenado por taxa de divergência decrescente
     - _Requirements: 3.1, 3.2_
-  - [ ]* 5.12 Write property test for ranking de setores
+  - (opcional, dispensado) 5.12 Write property test for ranking de setores
     - **Property 8: Ranking de setores está ordenado por taxa decrescente**
     - **Property 9: Taxa de divergência calculada corretamente**
     - **Validates: Requirements 3.1, 3.2**
@@ -129,7 +136,7 @@
   - [x] 7.1 Implementar exportarParaCSV()
     - Gerar CSV com todas as métricas, datas em ISO 8601
     - _Requirements: 6.1, 6.2_
-  - [ ]* 7.2 Write property test for exportação CSV
+  - (opcional, dispensado) 7.2 Write property test for exportação CSV
     - **Property 16: CSV contém todos os registros**
     - **Property 17: Datas no CSV seguem ISO 8601**
     - **Validates: Requirements 6.1, 6.2**
@@ -161,26 +168,26 @@
   - [x] 9.2 Criar tabela de divergências com filtros
     - Filtros por tipo, gravidade, setor, responsável
     - _Requirements: 1.4_
-  - [ ]* 9.3 Write property test for filtro de gravidade
+  - (opcional, dispensado) 9.3 Write property test for filtro de gravidade
     - **Property 4: Filtro de gravidade retorna apenas itens da gravidade selecionada**
     - **Validates: Requirements 1.4**
   - [x] 9.4 Criar gráfico temporal de divergências usando JFreeChart
     - Gráfico de linha com séries por tipo de divergência
     - _Requirements: 2.1, 2.2_
-  - [ ]* 9.5 Write property test for gráfico temporal
+  - (opcional, dispensado) 9.5 Write property test for gráfico temporal
     - **Property 6: Soma de divergências por dia igual ao total**
     - **Property 7: Séries do gráfico contêm apenas divergências do tipo correspondente**
     - **Validates: Requirements 2.1, 2.2**
   - [x] 9.6 Criar painel de ranking de setores e responsáveis
     - Tabelas clicáveis que filtram a tabela principal
     - _Requirements: 3.1, 3.3_
-  - [ ]* 9.7 Write property test for filtro por setor
+  - (opcional, dispensado) 9.7 Write property test for filtro por setor
     - **Property 10: Filtro por setor retorna apenas divergências do setor**
     - **Validates: Requirements 3.4**
   - [x] 9.8 Implementar botões de exportação (CSV e Excel)
     - Botões que chamam métodos de exportação do AnalyticsService
     - _Requirements: 1.5, 6.1, 6.3_
-  - [ ]* 9.9 Write property test for exportação Excel
+  - (opcional, dispensado) 9.9 Write property test for exportação Excel
     - **Property 5: Exportação Excel contém todos os campos obrigatórios**
     - **Validates: Requirements 1.5**
 
@@ -189,14 +196,14 @@
     - Colunas: Nome, Total Coletas, Tempo Médio, Mín, Máx, Desvio Padrão
     - Destaque verde para 3 mais rápidos, vermelho para 3 mais lentos
     - _Requirements: 4.1, 4.3_
-  - [ ]* 10.2 Write property test for ranking de coletores
+  - (opcional, dispensado) 10.2 Write property test for ranking de coletores
     - **Property 13: Ranking de coletores ordenado por tempo crescente**
     - **Validates: Requirements 4.3**
   - [x] 10.3 Criar gráfico de barras por período usando JFreeChart
     - Barras para Manhã, Tarde, Noite com quantidade e tempo médio
     - Destaque visual para períodos de baixa produtividade
     - _Requirements: 5.1, 5.4_
-  - [ ]* 10.4 Write property test for identificação de baixa produtividade
+  - (opcional, dispensado) 10.4 Write property test for identificação de baixa produtividade
     - **Property 15: Identificação de baixa produtividade**
     - **Validates: Requirements 5.4**
   - [x] 10.5 Criar gráfico de barras por dia da semana

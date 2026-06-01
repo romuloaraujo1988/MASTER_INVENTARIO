@@ -9,9 +9,9 @@ spring:
   
   # Configuração do Banco de Dados PostgreSQL
   datasource:
-    url: jdbc:postgresql://localhost:5432/sispatrimonio
-    username: postgres
-    password: Romulo@1919
+    url: ${DATASOURCE_URL:jdbc:postgresql://localhost:5432/sispatrimonio}
+    username: ${DATASOURCE_USERNAME:postgres}
+    password: ${DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
     hikari:
       connection-timeout: 20000
@@ -55,8 +55,8 @@ spring:
   # Configuração de Segurança
   security:
     user:
-      name: admin
-      password: admin123
+      name: ${SPRING_SECURITY_USER:admin}
+      password: ${SPRING_SECURITY_PASSWORD:}
       roles: ADMIN
   
   # Configuração de Upload de Arquivos (Multipart)
@@ -126,7 +126,7 @@ app:
 
 # Configurações JWT para API Mobile
 jwt:
-  secret: inventario-mobile-secret-key-2024-very-long-secret-for-security-must-be-at-least-256-bits
+  secret: ${JWT_SECRET:}
   expiration: 86400 # 24 horas em segundos
   refresh-expiration: 604800 # 7 dias em segundos
   

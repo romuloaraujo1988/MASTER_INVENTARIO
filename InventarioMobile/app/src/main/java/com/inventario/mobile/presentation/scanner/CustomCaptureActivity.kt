@@ -1,5 +1,6 @@
 package com.inventario.mobile.presentation.scanner
 
+import android.content.Intent
 import android.hardware.Camera
 import android.os.Bundle
 import android.os.Handler
@@ -11,11 +12,21 @@ import android.view.View
 import android.widget.ImageButton
 import android.widget.SeekBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.snackbar.Snackbar
 import com.journeyapps.barcodescanner.CameraPreview
 import com.journeyapps.barcodescanner.CaptureManager
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
 import com.inventario.mobile.R
+import com.inventario.mobile.presentation.coleta.ItemSemEtiquetaActivity
+import com.inventario.mobile.presentation.coleta.ManualCollectionActivity
+import com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity
+import com.inventario.mobile.presentation.sala.SalaSelectionActivity
+import com.inventario.mobile.presentation.scanner.navigation.ColetaShortcut
+import com.inventario.mobile.presentation.scanner.navigation.ColetaShortcutNavigator
+import com.inventario.mobile.presentation.scanner.navigation.SalaContext
+import com.inventario.mobile.presentation.scanner.navigation.ShortcutNavigationPlan
 import com.inventario.mobile.utils.PreferencesManager
 
 /**
@@ -47,6 +58,15 @@ class CustomCaptureActivity : AppCompatActivity() {
     private lateinit var captureManager: CaptureManager
     private lateinit var barcodeScannerView: DecoratedBarcodeView
     private lateinit var preferencesManager: PreferencesManager
+
+    /**
+     * Decisão pura de navegação dos atalhos do Menu_Atalhos (feature
+     * atalhos-coleta-rapida). Reaproveitado da [ScannerActivity] — a mesma
+     * regra de negócio (sala ausente, conversão Int→Long, escolha de extras)
+     * é compartilhada para que os atalhos fiquem acessíveis também na câmera
+     * ao vivo, sem duplicar lógica de decisão.
+     */
+    private val navigator = ColetaShortcutNavigator()
 
     private lateinit var tvContadorColetas: TextView
     private lateinit var tvUltimoColetado: TextView
@@ -177,6 +197,20 @@ class CustomCaptureActivity : AppCompatActivity() {
         })
 
         atualizarFeedback()
+
+        // ✅ Feature atalhos-coleta-rapida — Menu_Atalhos na câmera ao vivo.
+        // Os mesmos três atalhos da ScannerActivity são expostos aqui para que
+        // o coletor troque de método de coleta sem sair do scan. Os listeners
+        // delegam ao resolver puro via acionarAtalho(...).
+        findViewById<View>(R.id.atalhoSemEtiqueta).setOnClickListener {
+            acionarAtalho(ColetaShortcut.SEM_ETIQUETA)
+        }
+        findViewById<View>(R.id.atalhoManual).setOnClickListener {
+            acionarAtalho(ColetaShortcut.MANUAL)
+        }
+        findViewById<View>(R.id.atalhoDescricao).setOnClickListener {
+            acionarAtalho(ColetaShortcut.DESCRICAO)
+        }
     }
 
     /**
@@ -600,5 +634,135 @@ class CustomCaptureActivity : AppCompatActivity() {
             preferencesManager.setUsarCameraFrontal(usandoFrontal)
             tvStatus.text = "Não foi possível trocar a câmera"
         }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Menu_Atalhos — atalhos de coleta na câmera ao vivo
+    // (feature atalhos-coleta-rapida)
+    //
+    // O coletor passa quase todo o tempo de scan NESTA tela (a câmera em tela
+    // cheia do ZXing). Expor os atalhos aqui evita que ele precise sair do
+    // scan para trocar de método de coleta (Req 1.3). A decisão é delegada ao
+    // [navigator] puro (reaproveitado da ScannerActivity) e esta Activity só
+    // executa o plano retornado.
+    // ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Ponto de entrada dos atalhos. Monta o [SalaContext] a partir do
+     * [PreferencesManager] (local, funciona offline — Req 8.2) e delega a
+     * decisão ao resolver puro.
+     *
+     * IMPORTANTE: na câmera ao vivo NÃO há um resultado de scan corrente
+     * disponível (o `CaptureManager` encerra a Activity ao decodificar), então
+     * `itemEscaneado = null`. Para SEM_ETIQUETA isso significa navegar sem os
+     * extras `DESCRICAO_SUGERIDA`/`NUMERO_PATRIMONIO_ORIGEM` (Req 2.5).
+     */
+    private fun acionarAtalho(shortcut: ColetaShortcut) {
+        val sala = SalaContext(
+            salaId = preferencesManager.getCurrentSalaId(),
+            salaNome = preferencesManager.getCurrentSalaNome()
+        )
+
+        when (val plano = navigator.resolve(shortcut, sala, itemEscaneado = null)) {
+            is ShortcutNavigationPlan.RequireSalaSelection -> mostrarAvisoSalaAusente()
+            is ShortcutNavigationPlan.NavigateToSemEtiqueta -> executarSemEtiqueta(plano)
+            is ShortcutNavigationPlan.NavigateToManual -> executarComExtrasSala(
+                ManualCollectionActivity::class.java, plano.salaId, plano.salaNome,
+                "Abrindo coleta manual…"
+            )
+            is ShortcutNavigationPlan.NavigateToDescricao -> executarComExtrasSala(
+                DescricaoSelectionActivity::class.java, plano.salaId, plano.salaNome,
+                "Abrindo coleta por descrição…"
+            )
+        }
+    }
+
+    /**
+     * Executa o plano de navegação para a coleta sem etiqueta.
+     *
+     * Persiste a Sala_Atual no PreferencesManager (Req 2.2) dentro de
+     * [runCatching] para que uma falha não bloqueie a navegação (Req 2.3).
+     * Como não há scan corrente nesta tela, os extras opcionais
+     * (`DESCRICAO_SUGERIDA`/`NUMERO_PATRIMONIO_ORIGEM`) só são adicionados se o
+     * plano os trouxer — aqui serão nulos (Req 2.5).
+     */
+    private fun executarSemEtiqueta(plano: ShortcutNavigationPlan.NavigateToSemEtiqueta) {
+        runCatching {
+            preferencesManager.setCurrentSalaId(plano.salaParaPersistir.salaId)
+            preferencesManager.setCurrentSalaNome(plano.salaParaPersistir.salaNome)
+        }.onFailure {
+            android.util.Log.w("CustomCaptureActivity", "Falha ao persistir sala: ${it.message}")
+        }
+
+        val intent = Intent(this, ItemSemEtiquetaActivity::class.java).apply {
+            plano.descricaoSugerida?.let { putExtra("DESCRICAO_SUGERIDA", it) }
+            plano.numeroPatrimonioOrigem?.let { putExtra("NUMERO_PATRIMONIO_ORIGEM", it) }
+        }
+        // Req 7.2: feedback visual confirmando o atalho acionado.
+        mostrarConfirmacaoAtalho("Abrindo coleta sem etiqueta…")
+        // NÃO chamamos finish(): manter esta Activity de câmera na back stack
+        // faz o botão Voltar do método de coleta retornar direto à câmera ao
+        // vivo (o preview é retomado por captureManager.onResume()), mantendo a
+        // sessão de scan contínua — o coletor continua de onde parou.
+        startActivity(intent)
+    }
+
+    /**
+     * Executa um plano que repassa a sala via extras (Atalho_Manual /
+     * Atalho_Descricao). O preenchimento dos extras fica em [runCatching] para
+     * que uma falha não bloqueie a navegação (Req 4.4). Usa as chaves exatas já
+     * consumidas pelas telas de destino: `extra_sala_id` (Long) e
+     * `extra_sala_nome` (Req 3.2/3.3/4.2/4.3/9.1).
+     */
+    private fun executarComExtrasSala(
+        target: Class<*>,
+        salaId: Long,
+        salaNome: String,
+        mensagemConfirmacao: String
+    ) {
+        val intent = Intent(this, target).apply {
+            runCatching {
+                putExtra("extra_sala_id", salaId)
+                putExtra("extra_sala_nome", salaNome)
+            }.onFailure {
+                android.util.Log.w("CustomCaptureActivity", "Falha ao preencher extras de sala: ${it.message}")
+            }
+        }
+        // Req 7.2: feedback visual confirmando o atalho acionado.
+        mostrarConfirmacaoAtalho(mensagemConfirmacao)
+        // NÃO chamamos finish() — ver justificativa em executarSemEtiqueta():
+        // o Voltar retorna o coletor à câmera ao vivo, preservando o scan.
+        startActivity(intent)
+    }
+
+    /**
+     * Feedback visual curto e não bloqueante confirmando o atalho acionado
+     * (Req 7.2). Usa [Toast] por sobreviver à transição de Activity. Uma falha
+     * ao exibir nunca impede a navegação.
+     */
+    private fun mostrarConfirmacaoAtalho(mensagem: String) {
+        runCatching {
+            Toast.makeText(this, mensagem, Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            android.util.Log.w("CustomCaptureActivity", "Falha ao exibir confirmação do atalho: ${it.message}")
+        }
+    }
+
+    /**
+     * Exibe o aviso de ausência de Sala_Atual com ação imediata para
+     * selecioná-la, permanecendo na câmera (Req 5.1/5.2). O Snackbar é ancorado
+     * na raiz do layout customizado.
+     */
+    private fun mostrarAvisoSalaAusente() {
+        Snackbar.make(
+            findViewById(R.id.customCaptureRoot),
+            "Selecione uma sala antes de continuar",
+            Snackbar.LENGTH_LONG
+        ).setAction("Selecionar") {
+            val intent = Intent(this, SalaSelectionActivity::class.java).apply {
+                putExtra(SalaSelectionActivity.EXTRA_COLETA_TIPO, "QRCODE")
+            }
+            startActivity(intent)
+        }.show()
     }
 }

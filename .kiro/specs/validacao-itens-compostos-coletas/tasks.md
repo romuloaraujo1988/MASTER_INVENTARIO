@@ -1,5 +1,26 @@
 # Validação de Itens Compostos vs. Coletas Normais - Tasks
 
+> 🔗 **SPEC CANÔNICO (CONSOLIDADO) — 31/05/2026**
+>
+> Único plano oficial para prevenção/correção de itens compostos coletados como
+> normais. Absorveu o spec duplicado `prevenir-coleta-composta-como-normal`.
+>
+> **Estado real verificado no código (31/05/2026):**
+> - ✅ **Parcial — Detecção/Relatório:** `RelatorioColetaDAO` já considera itens
+>   compostos nos relatórios de não-coletados (`gerarRelatorioItensNaoEncontrados`,
+>   etc., com correções de 11/02/2026). Os endpoints/DTO específicos da Fase 1
+>   ainda não existem como descritos.
+> - ❌ **Pendente — Prevenção (Fase 2):** não há bloqueio de coleta normal de
+>   item composto em `ColetaService`, `MobileColetaController` nem `ColetaFrame`.
+> - ❌ **Pendente — Correção (Fase 3):** `Correcao`, `CorrecaoDAO`,
+>   `CorrecaoColetaService` e `converterParaColetaComposta()` não existem.
+> - ❌ **Pendente — Alertas (Fase 4).**
+>
+> Este é o **único trabalho de prevenção/correção genuinamente em aberto** do
+> tema itens compostos. As demais specs do tema (`relatorio-itens-compostos`,
+> `correcao-integridade-coleta-componente`, núcleo de `itens-compostos`) já estão
+> concluídas/fechadas.
+
 ## 1. Detecção e Relatório
 
 - [ ] 1.1 Criar query SQL para identificar itens compostos coletados normalmente

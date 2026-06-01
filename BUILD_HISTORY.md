@@ -2,6 +2,239 @@
 
 ---
 
+## Build #028 - 31/05/2026 21:28 - Correção de registro de divergências — Release
+
+- **Tipo:** Release (assinado, R8 + shrinkResources)
+- **Versão:** 2.29.7
+- **Build Code:** 83
+- **Arquivo APK:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.29.7.apk` (19.62 MB, 31/05 21:28)
+- **Status:** ✅ Sucesso (`assembleRelease`, BUILD SUCCESSFUL em 5m 13s)
+
+### Mudanças
+
+- Correção do fluxo de **divergências de coleta** (item coletado diferente do
+  cadastro — localização e/ou estado). As divergências eram calculadas e
+  enviadas pelo app, mas o backend as descartava (DTO sem os campos +
+  `setDivergencia(false)` hardcoded), gravando sempre `DIVERGENCIA=false` no
+  PostgreSQL.
+- **App:** `EnviarColetasPendentesUseCase` e `ColetaRepositoryImpl` (fluxo com
+  etiqueta) passam a enviar `divergencia`/`motivoDivergencia` reais da coleta
+  em vez de `false`/`null` hardcoded. Ramo de item sem etiqueta mantém `false`.
+- **Servidor (sihcp-server, empacotado à parte):** `MobileColetaRequest`
+  recebeu os campos de divergência; `MobileColetaService` agora **recalcula a
+  divergência no servidor** (fonte de verdade) comparando sala/estado coletados
+  vs cadastrados, com fallback para o valor do cliente.
+- Backend empacotado: `sihcp-server/target/sihcp-server-2.9.0.jar` (fat JAR,
+  profile `mobile`). **Deploy do servidor é necessário** para a correção ter
+  efeito — o APK sozinho não resolve, pois a gravação é responsabilidade do
+  servidor.
+
+---
+
+## Build #027 - 31/05/2026 14:59 - Dashboard Redesign (Android) — Release
+
+- **Tipo:** Release (assinado, R8 + shrinkResources)
+- **Versão:** 2.29.7
+- **Build Code:** 83
+- **Arquivo APK:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.29.7.apk` (19.62 MB, 31/05 14:59)
+- **Status:** ✅ Sucesso (`assembleRelease`, BUILD SUCCESSFUL em 7m 13s)
+
+### Mudanças
+
+- Redesign completo da camada de apresentação do Dashboard (spec `dashboard-redesign`):
+  toda a lógica de apresentação foi extraída para um helper puro e testável
+  (`DashboardUiMapper`), e o `DashboardFragment` passou a apenas renderizar
+  (Req 9.1 — sem regra de negócio na View).
+- Novo `DashboardPresentationModels.kt` (`KpiValues`, `ChartPoint`,
+  `DashboardScreenState`, `ChartAreaState`).
+- Layout `fragment_dashboard.xml` reescrito: cabeçalho (saudação, nome do
+  inventário, última sincronização), `LinearProgressIndicator` de conclusão,
+  grade 2x2 de KPIs em cards neutros (sem gradiente), área de gráfico
+  (`chartEvolucao` + estados loading/empty/error) e 4 botões de ação
+  (Scan Rápido filled, demais outlined).
+- Interações preservadas: pull-to-refresh, indicador offline (offline-first),
+  FAB de voz com overlay e navegação dos 4 botões — sem alterar destinos nem as
+  URLs `api/mobile/*`.
+- Cobertura de testes: 13 arquivos (10 property tests jqwik ≥100 iterações,
+  contraste, interações preservadas, re-render). 106 testes passando.
+
+---
+
+## Build #026 - 30/05/2026 03:16 - Atalhos de coleta na câmera ao vivo — Release
+
+
+- **Tipo:** Release (assinado, R8 + shrinkResources)
+- **Versão:** 2.29.7
+- **Build Code:** 83
+- **Arquivo APK:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.29.7.apk` (19.6 MB, 30/05 03:16)
+- **Status:** ✅ Sucesso (`assembleRelease`)
+
+### Mudanças
+
+- Melhoria de fluidez da feature `atalhos-coleta-rapida`: os três atalhos
+  (Sem etiqueta / Manual / Descrição) agora também aparecem na **tela de câmera
+  ao vivo** (`CustomCaptureActivity` / `custom_capture.xml`), onde o coletor
+  passa a maior parte do tempo de scan. Antes só existiam na `ScannerActivity`,
+  ficando escondidos atrás da câmera durante o scan ativo (Req 1.3).
+- Faixa de atalhos em estilo "pill" no rodapé, fora da mira central, reutilizando
+  a mesma decisão pura `ColetaShortcutNavigator` (sem duplicar lógica).
+- Navegação a partir da câmera NÃO chama `finish()`: ao voltar do método de
+  coleta, o coletor retorna direto à câmera ao vivo, mantendo a sessão de scan
+  contínua (ciclo de coleta sem interrupção).
+
+---
+
+## Build #025 - 29/05/2026 23:27 - Feature: atalhos de coleta rápida (Menu_Atalhos) — Release
+
+- **Tipo:** Release (assinado, R8 + shrinkResources)
+- **Versão:** 2.29.7
+- **Build Code:** 83
+- **Arquivo APK:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.29.7.apk` (19.6 MB, 29/05 23:27)
+- **Status:** ✅ Sucesso (`assembleRelease`)
+
+### Mudanças
+
+- APK release da feature `atalhos-coleta-rapida` (Menu_Atalhos na `ScannerActivity`),
+  já validada por property tests (P1–P4), testes unitários de borda e testes
+  instrumentados de contrato de Intent/UI.
+- Build minificada com R8 + `shrinkResources` (19.6 MB vs. 30.0 MB do debug).
+  `lintVitalRelease` passou sem erros bloqueantes.
+
+---
+
+## Build #024 - 29/05/2026 16:54 - Feature: atalhos de coleta rápida (Menu_Atalhos)
+
+- **Tipo:** Debug
+- **Versão:** 2.29.7
+- **Build Code:** 83
+- **Arquivo APK:** `InventarioMobile/app/build/outputs/apk/debug/SiHCP-debug-v2.29.7.apk` (30.0 MB, 29/05 16:54)
+- **Status:** ✅ Sucesso (`assembleDebug`)
+
+### Mudanças
+
+- Feature `atalhos-coleta-rapida`: adicionado o **Menu_Atalhos** à `ScannerActivity`
+  com três chips de navegação (`chipAtalhoSemEtiqueta`, `chipAtalhoManual`,
+  `chipAtalhoDescricao`) para abrir os métodos de coleta já existentes
+  (`ItemSemEtiquetaActivity`, `ManualCollectionActivity`, `DescricaoSelectionActivity`)
+  sem encerrar a sessão de scan, preservando a Sala_Atual.
+- Novo pacote `presentation/scanner/navigation/` com a lógica pura de decisão
+  (`ColetaShortcutNavigator` + modelos `ColetaShortcut`, `SalaContext`,
+  `ScannedItemRef`, `ShortcutNavigationPlan`), seguindo Clean Architecture.
+
+### Revisão de compatibilidade (steering `endpoints-nao-alterar.md`)
+
+- Chaves de extra confirmadas idênticas às lidas pelas telas de destino:
+  `extra_sala_id` (Long, `getLongExtra`) e `extra_sala_nome`
+  (`ManualCollectionActivity`/`DescricaoSelectionActivity`); `DESCRICAO_SUGERIDA`
+  e `NUMERO_PATRIMONIO_ORIGEM` (`ItemSemEtiquetaActivity`).
+- Nenhuma URL de endpoint funcional foi alterada — feature é apenas de navegação;
+  o pacote `data/remote/api` permanece intacto.
+
+### Observação
+
+- `testDebugUnitTest` falhou na compilação de um teste **pré-existente e não
+  relacionado** a esta feature (`data/util/TextNormalizerPropertyTest.kt`,
+  feature `coleta-descricao-livre-com-sugestao`: `Unresolved reference: next`,
+  import Kotest ausente). Não alterado nesta tarefa. O source set principal
+  compila e o `assembleDebug` conclui com sucesso.
+
+---
+
+## Build #023 - 29/05/2026 - FIX: monitor ao vivo não recebia coletas (R8/ProGuard)
+
+- **Tipo:** Release (apenas app — servidor não precisa trocar)
+- **Versão:** 2.29.7
+- **Build Code:** 83
+- **Arquivo APK:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.29.7.apk` (19.6 MB, 29/05 15:35)
+- **Status:** ✅ Sucesso
+
+### Causa raiz (confirmada via log do servidor)
+
+O servidor estava transmitindo corretamente (log confirmou):
+```
+→ WS monitor: transmitindo coleta id=10796 inventarioId=7 sessõesAtivas=1
+WS broadcast: bucket inv-7 tem 1 sessão(ões)
+Broadcast WS coletas-live: 1 sessões alcançadas (contexto=inv-7)
+```
+
+Ou seja: handshake OK, app conectado (1 sessão no bucket inv-7), mensagem
+enviada sem erro. O problema era **100% no app, no build release**.
+
+O `ColetaEvento` (data class do feed WebSocket) está no pacote
+`com.inventario.mobile.data.realtime`, criado nesta sessão. Esse pacote **não
+estava** na lista de `-keep` do `proguard-rules.pro`. No release, o R8 ofuscava
+a data class e o Gson desserializava com os campos nulos — incluindo
+`tipo=null`. O `LiveColetaMonitorViewModel` descarta eventos cujo
+`tipo != "COLETA_REGISTRADA"`, então a coleta era silenciosamente ignorada.
+
+Em debug (sem R8) funcionaria; em release, não. Por isso o sintoma só apareceu
+agora, na primeira release com o feed.
+
+### Correção
+
+- `proguard-rules.pro`: adicionado
+  `-keep class com.inventario.mobile.data.realtime.** { *; }` e o
+  `-keepclassmembers` correspondente.
+
+### Deploy
+
+- **Servidor:** NÃO precisa trocar. O JAR 2.9.0 em produção já transmite certo.
+  (Os logs de diagnóstico `→ WS monitor:` / `WS broadcast:` ficam no servidor
+  atual e ajudam em futuras validações — nível INFO, sem impacto.)
+- **App:** instalar `SiHCP-release-v2.29.7.apk`.
+
+---
+
+## Build #022 - 29/05/2026 - Monitor ao vivo: causa raiz real (ServerContainer JSR-356)
+
+- **Tipo:** Release + Servidor
+- **Versão:** 2.29.6
+- **Build Code:** 82
+- **Arquivo APK:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.29.6.apk` (19.6 MB, 29/05 14:40)
+- **Arquivo Servidor:** `SISTEMA_INVENTARIO_PRODUCAO/sihcp-server.jar` (2.9.0, 29/05 13:44)
+- **Status:** ✅ Sucesso
+
+### Causa raiz definitiva do monitor ao vivo
+
+As correções anteriores (path `/ws-coletas-live`, `@EnableWebSocket`) eram
+necessárias, mas o bloqueio real era outro: o `application-mobile.properties`
+**excluía a `WebSocketServletAutoConfiguration`**:
+
+```properties
+spring.autoconfigure.exclude=\
+  ...,\
+  org.springframework.boot.autoconfigure.websocket.servlet.WebSocketServletAutoConfiguration
+```
+
+Essa auto-config registra o `WsSci` do Tomcat, que cria o
+`jakarta.websocket.server.ServerContainer` (JSR-356). Sem ela:
+- STOMP (dashboard web) funcionava → usa SockJS sobre HTTP, não precisa do ServerContainer
+- WebSocket nativo (`/ws-coletas-live`, monitor ao vivo) falhava no handshake
+  com "No ServerContainer ServletContext attribute" → status "Erro" no app
+
+### Mudanças (servidor)
+
+- `application-mobile.properties` (sihcp-server + raiz): removida a exclusão da
+  `WebSocketServletAutoConfiguration`. Mantidas só as exclusões de JMX.
+- Removido `TomcatWebSocketCustomizerConfig.java` — era um workaround manual de
+  registro do `WsSci`; com a auto-config reativada, registraria o ServerContainer
+  duas vezes.
+- Também inclui a correção do `unaccent` (busca de sugestões) via `translate()`.
+
+### Mudanças (app — incluídas pela primeira vez em release)
+
+O APK 2.29.5 (08:30) foi compilado ANTES do commit que trouxe o cliente
+WebSocket. Esta build inclui:
+- `RealtimeColetasManager` + `CollectionViewActivity` em modo monitor ao vivo
+- Botão de troca de câmera no scanner, som sutil no monitor, correção de
+  vibração (DND/silencioso), responsável na coleta manual, botão de coleta nos
+  detalhes e proteção contra coleta duplicada.
+
+**IMPORTANTE:** requer servidor 2.9.0+ (correção do ServerContainer) E o APK
+2.29.6. Ambos juntos para o monitor funcionar de ponta a ponta.
+
+---
+
 ## Build #021 - 29/05/2026 - Correção do monitor ao vivo (colisão SockJS)
 
 - **Tipo:** Release + Servidor

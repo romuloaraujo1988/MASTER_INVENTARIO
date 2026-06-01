@@ -1,0 +1,6 @@
+#Database Configuration (template - copie para database-config.properties e preencha a senha)
+database=sispatrimonio
+password=COLOQUE_A_SENHA_AQUI
+port=5432
+host=localhost
+username=postgres

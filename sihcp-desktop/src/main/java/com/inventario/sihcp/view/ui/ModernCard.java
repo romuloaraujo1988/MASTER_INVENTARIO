@@ -18,20 +18,14 @@ import javax.swing.JPanel;
  */
 public class ModernCard extends JPanel {
 
-    private final String title;
-    private String value;
     private final Color accentColor;
-    private final String icon;
 
     private final JLabel lblTitle;
     private final JLabel lblValue;
     private final JLabel lblIcon;
 
     public ModernCard(String title, String value, Color accentColor, String icon) {
-        this.title = title;
-        this.value = value;
         this.accentColor = accentColor;
-        this.icon = icon;
 
         setLayout(null);
         setOpaque(false);
@@ -59,7 +53,6 @@ public class ModernCard extends JPanel {
     }
 
     public void setValue(String newValue) {
-        this.value = newValue;
         lblValue.setText(newValue);
         repaint();
     }

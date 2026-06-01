@@ -19,15 +19,24 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.Lifecycle
+import android.graphics.Color
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.google.android.material.snackbar.Snackbar
 import com.inventario.mobile.R
 import com.inventario.mobile.databinding.FragmentDashboardBinding
+import com.inventario.mobile.domain.model.DashboardStats
 import com.inventario.mobile.ui.base.BaseOfflineFragment
 import com.inventario.mobile.utils.VoiceSearchManager
 import com.inventario.mobile.utils.VoiceCommandParser
 import com.inventario.mobile.utils.CommandAction
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 /**
@@ -194,100 +203,196 @@ class DashboardFragment : BaseOfflineFragment() {
 
     private fun observeViewModel() {
         // ========================================
-        // 🔄 FONTE ÚNICA DE VERDADE (task 7.1 / Req 2.1, 2.3, 2.4)
+        // 🔄 RENDER ÚNICO (task 8.1 / Req 9.1)
         // ========================================
         //
-        // Consome APENAS `viewModel.fonteEstatisticas` como origem dos KPIs.
-        // A coleta do Flow antigo `observarEstatisticasHibridas(...)` foi
-        // removida — Req 2.4 (nenhum Flow distinto alimentando os mesmos
-        // TextViews).
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.fonteEstatisticas.collect { stats ->
-                    Log.d(TAG, "🔄 FonteEstatisticas emitiu novo valor")
-                    Log.d(TAG, "   Total: ${stats.totalPatrimonios}")
-                    Log.d(TAG, "   Coletados: ${stats.totalColetados}")
-                    Log.d(TAG, "   Pendentes: ${stats.totalPendentes}")
-                    Log.d(TAG, "   Percentual: ${stats.percentualConclusao}%")
-                    Log.d(TAG, "   isOfflineData: ${stats.isOfflineData}")
-
-                    renderizarKpis(stats)
-                    atualizarIndicadorOffline(stats.isOfflineData)
-                    atualizarTimestampUltimaSync(stats.timestampUltimaSincronizacao)
-                }
-            }
-        }
-
-        // ========================================
-        // 🎯 UI Secundária: loading / erro / evolução (Req 2.4 permite)
-        // ========================================
+        // Combina a FONTE ÚNICA de verdade dos KPIs (`fonteEstatisticas`) com o
+        // `uiState` (loading/erro/gráfico) num único ponto de render. O Fragment
+        // não contém lógica de negócio: apenas delega ao `DashboardUiMapper`
+        // (puro) e aplica os resultados às views.
         //
-        // `uiState` alimenta APENAS loading/erro/gráfico — NÃO os TextViews de
-        // KPI (esses vêm exclusivamente de `fonteEstatisticas`).
+        // - KPIs vêm EXCLUSIVAMENTE de `fonteEstatisticas` (Req 8.5, 2.4).
+        // - `uiState` alimenta APENAS estados de tela/gráfico, nunca os KPIs.
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect { state ->
-                    try {
-                        binding.progressBar.visibility = if (state.isLoading) View.VISIBLE else View.GONE
-                        if (!state.isLoading) {
-                            binding.swipeRefresh.isRefreshing = false
+                combine(
+                    viewModel.fonteEstatisticas,
+                    viewModel.uiState
+                ) { stats, uiState -> stats to uiState }
+                    .collect { (stats, uiState) ->
+                        Log.d(TAG, "🔄 Render: stats(total=${stats.totalPatrimonios}, coletados=${stats.totalColetados}, offline=${stats.isOfflineData}) uiState(loading=${uiState.isLoading}, error=${uiState.error != null})")
+                        try {
+                            render(stats, uiState)
+                        } catch (e: Exception) {
+                            // Robustez de render: uma exceção de UI não pode
+                            // derrubar a tela. O mapper é total (não lança).
+                            Log.e(TAG, "Erro ao renderizar dashboard", e)
                         }
-
-                        if (state.error != null) {
-                            binding.tvError.text = state.error
-                            binding.tvError.visibility = View.VISIBLE
-                        } else {
-                            binding.tvError.visibility = View.GONE
-                        }
-
-                        // Salvar inventário ativo caso venha do uiState (lógica
-                        // preservada do updateUI antigo — inventarioId pode vir
-                        // tanto pelo uiState quanto pela fonteEstatisticas).
-                        state.dashboardStats?.inventarioId?.let { invId ->
-                            if (!preferencesManager.hasInventarioAtivo() && invId > 0) {
-                                preferencesManager.saveInventarioAtivo(
-                                    id = invId,
-                                    nome = state.dashboardStats.inventarioNome
-                                        ?: "Inventário $invId"
-                                )
-                                Log.d(TAG, "observeViewModel: Inventário ativo salvo - ID: $invId")
-                            }
-                        }
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Erro ao atualizar UI secundária (loading/erro)", e)
                     }
-                }
             }
         }
     }
 
     /**
-     * Renderiza os KPIs do dashboard a partir de `DashboardStats` emitido pela
-     * FonteEstatisticas. Única função responsável por atualizar os TextViews
-     * de KPI (Req 2.3).
+     * Render fino do Dashboard (task 8.1, Req 9.1): aplica os resultados do
+     * `DashboardUiMapper` (puro) às views. Nenhuma regra de negócio vive aqui —
+     * apenas binding de texto/visibilidade/progresso.
+     *
+     * @param stats fonte única de verdade dos KPIs (Req 1.5, 1.6, 8.5).
+     * @param uiState estados de loading/erro/gráfico (Req 4.x, 6.x).
      */
-    private fun renderizarKpis(stats: com.inventario.mobile.domain.model.DashboardStats) {
-        try {
-            binding.tvKpiColetados.text = stats.totalColetados.toString()
-            binding.tvKpiPendentes.text = stats.totalPendentes.toString()
-            binding.tvKpiDivergencias.text = stats.divergencias.toString()
-            binding.tvKpiColetores.text = stats.coletoresAtivos.toString()
-            binding.swipeRefresh.isRefreshing = false
+    private fun render(stats: DashboardStats, uiState: DashboardUiStateClean) {
+        // KPIs (Req 1.5, 1.6) — obtidos exclusivamente de `fonteEstatisticas`.
+        val kpis = DashboardUiMapper.kpiValues(stats)
+        binding.tvKpiColetados.text = kpis.coletados
+        binding.tvKpiPendentes.text = kpis.pendentes
+        binding.tvKpiDivergencias.text = kpis.divergencias
+        binding.tvKpiColetores.text = kpis.coletores
 
-            // Salvar inventário ativo caso ainda não salvo (lógica preservada
-            // do updateUI antigo).
-            stats.inventarioId?.let { invId ->
-                if (!preferencesManager.hasInventarioAtivo() && invId > 0) {
-                    preferencesManager.saveInventarioAtivo(
-                        id = invId,
-                        nome = stats.inventarioNome ?: "Inventário $invId"
-                    )
-                }
+        // Indicador de conclusão (Req 2.2, 2.3, 2.5).
+        val percent = DashboardUiMapper.clampPercent(stats.percentualConclusao)
+        binding.progressCompletion.setProgressCompat(percent, true)
+        binding.tvCompletionLabel.text =
+            DashboardUiMapper.completionLabel(stats.percentualConclusao)
+
+        // Cabeçalho (Req 3.1, 3.2, 3.3, 3.4, 3.5, 3.6).
+        binding.tvGreeting.text = DashboardUiMapper.greeting(currentHourOfDay())
+        binding.tvInventoryName.text =
+            DashboardUiMapper.resolveInventoryName(stats.inventarioNome, stats.inventarioId)
+        val sync = DashboardUiMapper.formatLastSync(stats.timestampUltimaSincronizacao)
+        if (sync == null) {
+            binding.tvLastSync.visibility = View.GONE
+        } else {
+            binding.tvLastSync.text = getString(R.string.last_sync_format, sync)
+            binding.tvLastSync.visibility = View.VISIBLE
+        }
+
+        // Indicador offline (Req 8.2) — comportamento preservado (task 9.1
+        // refina a fiação completa do indicador).
+        atualizarIndicadorOffline(DashboardUiMapper.shouldShowOfflineFromData(stats))
+
+        // Salvar inventário ativo caso ainda não salvo (lógica preservada do
+        // updateUI antigo — não é regra de negócio de apresentação).
+        stats.inventarioId?.let { invId ->
+            if (!preferencesManager.hasInventarioAtivo() && invId > 0) {
+                preferencesManager.saveInventarioAtivo(
+                    id = invId,
+                    nome = stats.inventarioNome ?: "Inventário $invId"
+                )
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Erro ao renderizar KPIs", e)
+        }
+
+        // Estado global da tela (Req 6.3–6.6) e da área do gráfico (Req 4.2,
+        // 4.4–4.6): no máximo um estado especial via `when(state)`.
+        applyDashboardState(DashboardUiMapper.resolveDashboardState(uiState, stats))
+        applyChartState(DashboardUiMapper.resolveChartState(uiState))
+    }
+
+    /**
+     * Aplica o estado global da tela (Req 6.3–6.6). Exibe no máximo um estado
+     * especial (Loading/Empty/Error) por vez; em [DashboardScreenState.Content]
+     * nenhum overlay é exibido e o conteúdo populado fica visível.
+     *
+     * O layout atual expõe `progressBar` (loading global) e `tvError` (mensagem
+     * global). Na ausência de uma view dedicada de estado vazio, o estado
+     * [DashboardScreenState.Empty] reusa `tvError` para exibir a mensagem
+     * `dashboard_empty`.
+     */
+    private fun applyDashboardState(state: DashboardScreenState) {
+        binding.progressBar.visibility = View.GONE
+        binding.tvError.visibility = View.GONE
+        when (state) {
+            is DashboardScreenState.Loading -> {
+                binding.progressBar.visibility = View.VISIBLE
+            }
+            is DashboardScreenState.Empty -> {
+                binding.tvError.text = getString(R.string.dashboard_empty)
+                binding.tvError.visibility = View.VISIBLE
+            }
+            is DashboardScreenState.Error -> {
+                binding.tvError.text = state.message
+                binding.tvError.visibility = View.VISIBLE
+            }
+            is DashboardScreenState.Content -> {
+                // Conteúdo populado: nenhum overlay especial.
+            }
+        }
+        // Encerra o spinner do pull-to-refresh fora do estado de loading.
+        if (state !is DashboardScreenState.Loading) {
+            binding.swipeRefresh.isRefreshing = false
         }
     }
+
+    /**
+     * Aplica o estado da área do gráfico de evolução (Req 4.2, 4.4–4.6). Exibe
+     * no máximo um dentre `chartLoading`/`chartEmpty`/`chartError`/`chartEvolucao`
+     * via `when(state)`; em [ChartAreaState.Data] converte os pontos e renderiza
+     * o `LineChart`.
+     */
+    private fun applyChartState(state: ChartAreaState) {
+        binding.chartLoading.visibility = View.GONE
+        binding.chartEmpty.visibility = View.GONE
+        binding.chartError.visibility = View.GONE
+        binding.chartEvolucao.visibility = View.GONE
+        when (state) {
+            is ChartAreaState.Loading -> binding.chartLoading.visibility = View.VISIBLE
+            is ChartAreaState.Empty -> binding.chartEmpty.visibility = View.VISIBLE
+            is ChartAreaState.Error -> {
+                binding.chartError.text = state.message
+                binding.chartError.visibility = View.VISIBLE
+            }
+            is ChartAreaState.Data -> {
+                renderChart(state.points)
+                binding.chartEvolucao.visibility = View.VISIBLE
+            }
+        }
+    }
+
+    /**
+     * Converte a lista de [ChartPoint] (pura) em `Entry`/`LineDataSet` do
+     * MPAndroidChart e aplica um `ValueFormatter` que usa o `label` de cada
+     * ponto (campo `data` de `EvolucaoColeta`) no eixo X (Req 4.2).
+     */
+    private fun renderChart(points: List<ChartPoint>) {
+        val entries = points.map { Entry(it.index.toFloat(), it.value) }
+        val labels = points.map { it.label }
+
+        val dataSet = LineDataSet(entries, getString(R.string.chart_title)).apply {
+            color = Color.parseColor("#2196F3")
+            setCircleColor(Color.parseColor("#2196F3"))
+            lineWidth = 2.5f
+            circleRadius = 4f
+            setDrawCircleHole(false)
+            valueTextSize = 10f
+            valueTextColor = Color.DKGRAY
+            setDrawFilled(true)
+            fillColor = Color.parseColor("#E3F2FD")
+            mode = LineDataSet.Mode.CUBIC_BEZIER
+        }
+
+        binding.chartEvolucao.apply {
+            data = LineData(dataSet)
+            description.isEnabled = false
+            axisRight.isEnabled = false
+            xAxis.apply {
+                position = XAxis.XAxisPosition.BOTTOM
+                setDrawGridLines(false)
+                granularity = 1f
+                // ValueFormatter com o `label` (data) de cada ChartPoint no eixo X.
+                valueFormatter = IndexAxisValueFormatter(labels)
+            }
+            invalidate()
+            animateX(800)
+        }
+    }
+
+    /**
+     * Hora atual do dia (0..23) calculada no Fragment e repassada ao mapper
+     * puro [DashboardUiMapper.greeting]. Toda a formatação da saudação vive no
+     * mapper (Req 9.1); aqui apenas obtemos o instante atual.
+     */
+    private fun currentHourOfDay(): Int =
+        Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
 
     /**
      * Atualiza o indicador de modo offline baseado no flag `isOfflineData` da
@@ -312,25 +417,6 @@ class DashboardFragment : BaseOfflineFragment() {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Erro ao atualizar indicador offline", e)
-        }
-    }
-
-    /**
-     * Atualiza a área de timestamp da última sincronização (Req 4.3, 4.4, 4.5).
-     *
-     * Se o layout não expõe um TextView dedicado, a função registra em log e
-     * mantém no-op — Req 4.4/4.5 permitem "área de timestamp oculta quando
-     * null".
-     */
-    private fun atualizarTimestampUltimaSync(timestamp: Long?) {
-        if (timestamp == null) {
-            Log.d(TAG, "Timestamp última sync: null (ainda não houve sincronização)")
-        } else {
-            val formatado = java.text.SimpleDateFormat(
-                "dd/MM HH:mm",
-                java.util.Locale.getDefault()
-            ).format(java.util.Date(timestamp))
-            Log.d(TAG, "Última sync do servidor: $formatado")
         }
     }
 

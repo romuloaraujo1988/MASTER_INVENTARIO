@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.arbitrary
 import io.kotest.property.arbitrary.int
+import io.kotest.property.arbitrary.next
 import io.kotest.property.arbitrary.string
 import io.kotest.property.checkAll
 import java.util.Locale

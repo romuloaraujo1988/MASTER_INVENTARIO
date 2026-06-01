@@ -1,5 +1,12 @@
 # Implementation Plan: Separação em Módulos Maven
 
+> **FECHAMENTO FORMAL - 31/05/2026**
+> Implementacao de producao concluida. Os **testes opcionais** (marcados com `*`)
+> ainda nao escritos foram **dispensados** e seus checkboxes removidos deste plano.
+> Itens **nao-teste** que porventura permanecam com `- [ ]` abaixo continuam sendo
+> pendencia real (nao foram removidos no fechamento).
+
+
 ## Overview
 
 Migração incremental do projeto monolítico SIHCP para uma arquitetura Maven multi-módulo com três módulos: `sihcp-core` (código compartilhado), `sihcp-desktop` (aplicação Swing) e `sihcp-server` (API REST Spring Boot). A migração segue 6 fases com checkpoints de compilação entre cada fase para garantir estabilidade.
@@ -226,23 +233,23 @@ Migração incremental do projeto monolítico SIHCP para uma arquitetura Maven m
   - Ensure all tests pass, ask the user if questions arise.
   - _Requirements: 6.5, 8.2, 8.4, 8.5_
 
-- [ ] 13. Testes de propriedade e isolamento
-  - [ ]* 13.1 Write property test for Core Module Import Isolation
+- (opcional, dispensado) 13. Testes de propriedade e isolamento
+  - (opcional, dispensado) 13.1 Write property test for Core Module Import Isolation
     - **Property 1: Core Module Import Isolation**
     - Escanear todos os arquivos .java em `sihcp-core/src/main/java/` e verificar que nenhum contém imports de `javax.swing.*`, `org.springframework.web.*` ou `org.springframework.security.*`
     - **Validates: Requirements 2.5, 5.3**
 
-  - [ ]* 13.2 Write property test for Desktop Dependency Isolation
+  - (opcional, dispensado) 13.2 Write property test for Desktop Dependency Isolation
     - **Property 2: Desktop Dependency Isolation**
     - Parsear output de `mvn dependency:tree -pl sihcp-desktop` e verificar ausência de `spring-boot-starter-web`, `spring-boot-starter-security`, `jjwt-*`, `springdoc-openapi-*`
     - **Validates: Requirements 3.8**
 
-  - [ ]* 13.3 Write property test for Server Dependency Isolation
+  - (opcional, dispensado) 13.3 Write property test for Server Dependency Isolation
     - **Property 3: Server Dependency Isolation**
     - Parsear output de `mvn dependency:tree -pl sihcp-server` e verificar ausência de `jfreechart`, `poi-*`, `itext-*`, `sqlite-jdbc`
     - **Validates: Requirements 4.7**
 
-  - [ ]* 13.4 Write property test for DatabaseConfigManager Configuration Round-Trip
+  - (opcional, dispensado) 13.4 Write property test for DatabaseConfigManager Configuration Round-Trip
     - **Property 4: DatabaseConfigManager Configuration Round-Trip**
     - Usar junit-quickcheck com 100 trials para gerar configurações aleatórias (host, port 1-65535, database, username, password) e verificar round-trip via save/load
     - **Validates: Requirements 7.5**

@@ -1,504 +1,579 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Dashboard redesenhado (spec dashboard-redesign — Task 7.1).
+
+    Princípios aplicados:
+    - KPIs em grade 2x2 com largura/altura idênticas (layout_weight=1 + altura
+      fixa), fundo neutro ?attr/colorSurface, sem gradientes nem atributos
+      shadow* (Req 1.1, 1.2, 1.3, 1.4).
+    - Indicador de conclusão LinearProgressIndicator determinado, max=100
+      (Req 2.1).
+    - Cabeçalho com saudação, nome do inventário e última sincronização
+      (Req 3.1, 3.2, 3.3).
+    - Área de gráfico LineChart (MPAndroidChart) com estados loading/vazio/erro
+      (Req 4.1).
+    - Botões: btnQuickScan filled (ação primária) e demais outlined idênticos,
+      mesmo corner radius/tipografia, espaçamento múltiplo de 8dp
+      (Req 5.1, 5.2, 5.3, 5.4).
+    - Espaçamentos múltiplos de 8dp, tipografia TextAppearance do tema
+      (Req 6.1, 6.2).
+    - contentDescription em ícones/FAB; alvos de toque >=48dp (Req 7.1, 7.2).
+    - IDs preservados para não quebrar o DashboardFragment.kt.
+-->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-    android:id="@+id/swipeRefresh"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-<ScrollView
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fillViewport="true">
-
-    <LinearLayout
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- ══════════════════════════════════════════════════
+                     Indicador de Modo Offline (preservado — Req 8.2)
+                ══════════════════════════════════════════════════ -->
+                <LinearLayout
+                    android:id="@+id/layoutOfflineIndicator"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/offline_indicator_background"
+                    android:gravity="center_vertical"
+                    android:minHeight="48dp"
+                    android:orientation="horizontal"
+                    android:padding="8dp"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_marginEnd="8dp"
+                        android:contentDescription="@string/offline_mode"
+                        android:src="@drawable/ic_offline"
+                        app:tint="@color/warning_dark" />
+
+                    <TextView
+                        android:id="@+id/tvOfflineStatus"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textAppearance="@style/TextAppearance.App.LabelLarge"
+                        android:textColor="@color/warning_dark"
+                        tools:text="Modo Offline Ativo" />
+
+                    <TextView
+                        android:id="@+id/tvOfflineInfo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.App.BodySmall"
+                        android:textColor="@color/warning_dark"
+                        tools:text="Dados locais" />
+
+                </LinearLayout>
+
+                <!-- ══════════════════════════════════════════════════
+                     Cabeçalho com contexto (Req 3.1, 3.2, 3.3)
+                ══════════════════════════════════════════════════ -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvGreeting"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.App.TitleMedium"
+                        android:textColor="@color/text_secondary"
+                        tools:text="Bom dia" />
+
+                    <TextView
+                        android:id="@+id/tvInventoryName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textAppearance="@style/TextAppearance.App.HeadlineSmall"
+                        android:textColor="@color/text_primary"
+                        tools:text="Inventário 2025" />
+
+                    <TextView
+                        android:id="@+id/tvLastSync"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textAppearance="@style/TextAppearance.App.BodySmall"
+                        android:textColor="@color/text_secondary"
+                        android:visibility="gone"
+                        tools:text="Última sincronização: 15/11/2025 10:30"
+                        tools:visibility="visible" />
+
+                </LinearLayout>
+
+                <!-- ══════════════════════════════════════════════════
+                     Indicador de Conclusão (Req 2.1, 2.3)
+                ══════════════════════════════════════════════════ -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvCompletionLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.App.LabelLarge"
+                        android:textColor="@color/text_primary"
+                        tools:text="42% concluído" />
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/progressCompletion"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:max="100"
+                        android:indeterminate="false"
+                        app:indicatorColor="?attr/colorPrimary"
+                        app:trackColor="@color/progress_background"
+                        app:trackCornerRadius="8dp"
+                        app:trackThickness="8dp"
+                        tools:progress="42" />
+
+                </LinearLayout>
+
+                <!-- ══════════════════════════════════════════════════
+                     KPIs — Grade 2x2 (Req 1.1, 1.2, 1.3, 1.4)
+                     Fundo neutro ?attr/colorSurface (via estilo
+                     Widget.App.Dashboard.KpiCard), sem gradiente nem
+                     shadow*. Larguras idênticas (weight=1 + margens
+                     simétricas) e alturas idênticas (120dp fixos).
+                ══════════════════════════════════════════════════ -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:orientation="horizontal">
+
+                    <!-- Card Coletados -->
+                    <com.google.android.material.card.MaterialCardView
+                        style="@style/Widget.App.Dashboard.KpiCard"
+                        android:layout_width="0dp"
+                        android:layout_height="120dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_weight="1">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:layout_marginBottom="8dp"
+                                android:contentDescription="@string/kpi_coletados_icon_desc"
+                                android:src="@drawable/ic_check_circle"
+                                app:tint="@color/dashboard_kpi_coletados_accent" />
+
+                            <TextView
+                                android:id="@+id/tvKpiColetados"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.App.HeadlineSmall"
+                                android:textColor="@color/dashboard_kpi_coletados_accent"
+                                tools:text="8156" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Coletados"
+                                android:textAppearance="@style/TextAppearance.App.LabelMedium"
+                                android:textColor="@color/dashboard_kpi_label"
+                                tools:ignore="HardcodedText" />
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Card Pendentes -->
+                    <com.google.android.material.card.MaterialCardView
+                        style="@style/Widget.App.Dashboard.KpiCard"
+                        android:layout_width="0dp"
+                        android:layout_height="120dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:layout_marginBottom="8dp"
+                                android:contentDescription="@string/kpi_pendentes_icon_desc"
+                                android:src="@drawable/ic_pending"
+                                app:tint="@color/dashboard_kpi_pendentes_accent" />
+
+                            <TextView
+                                android:id="@+id/tvKpiPendentes"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.App.HeadlineSmall"
+                                android:textColor="@color/dashboard_kpi_pendentes_accent"
+                                tools:text="2089" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Pendentes"
+                                android:textAppearance="@style/TextAppearance.App.LabelMedium"
+                                android:textColor="@color/dashboard_kpi_label"
+                                tools:ignore="HardcodedText" />
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:orientation="horizontal">
+
+                    <!-- Card Divergências -->
+                    <com.google.android.material.card.MaterialCardView
+                        style="@style/Widget.App.Dashboard.KpiCard"
+                        android:layout_width="0dp"
+                        android:layout_height="120dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_weight="1">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:layout_marginBottom="8dp"
+                                android:contentDescription="@string/kpi_divergencias_icon_desc"
+                                android:src="@drawable/ic_warning_circle"
+                                app:tint="@color/dashboard_kpi_divergencias_accent" />
+
+                            <TextView
+                                android:id="@+id/tvKpiDivergencias"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.App.HeadlineSmall"
+                                android:textColor="@color/dashboard_kpi_divergencias_accent"
+                                tools:text="127" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Divergências"
+                                android:textAppearance="@style/TextAppearance.App.LabelMedium"
+                                android:textColor="@color/dashboard_kpi_label"
+                                tools:ignore="HardcodedText" />
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Card Coletores -->
+                    <com.google.android.material.card.MaterialCardView
+                        style="@style/Widget.App.Dashboard.KpiCard"
+                        android:layout_width="0dp"
+                        android:layout_height="120dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:layout_marginBottom="8dp"
+                                android:contentDescription="@string/kpi_coletores_icon_desc"
+                                android:src="@drawable/ic_people"
+                                app:tint="@color/dashboard_kpi_coletores_accent" />
+
+                            <TextView
+                                android:id="@+id/tvKpiColetores"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.App.HeadlineSmall"
+                                android:textColor="@color/dashboard_kpi_coletores_accent"
+                                tools:text="12" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Coletores"
+                                android:textAppearance="@style/TextAppearance.App.LabelMedium"
+                                android:textColor="@color/dashboard_kpi_label"
+                                tools:ignore="HardcodedText" />
+
+                        </LinearLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+
+                <!-- ══════════════════════════════════════════════════
+                     Gráfico de Evolução (Req 4.1)
+                     LineChart do MPAndroidChart + estados
+                     loading / vazio / erro sobrepostos.
+                ══════════════════════════════════════════════════ -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="@string/chart_title"
+                    android:textAppearance="@style/TextAppearance.App.TitleMedium"
+                    android:textColor="@color/text_primary" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:layout_marginBottom="16dp">
+
+                    <com.github.mikephil.charting.charts.LineChart
+                        android:id="@+id/chartEvolucao"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+
+                    <ProgressBar
+                        android:id="@+id/chartLoading"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
+
+                    <TextView
+                        android:id="@+id/chartEmpty"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:padding="16dp"
+                        android:text="@string/chart_empty"
+                        android:textAppearance="@style/TextAppearance.App.BodyMedium"
+                        android:textColor="@color/text_secondary"
+                        android:visibility="gone"
+                        tools:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/chartError"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:padding="16dp"
+                        android:text="@string/chart_error"
+                        android:textAppearance="@style/TextAppearance.App.BodyMedium"
+                        android:textColor="@color/error"
+                        android:visibility="gone"
+                        tools:visibility="gone" />
+
+                </FrameLayout>
+
+                <!-- ══════════════════════════════════════════════════
+                     Ações de Coleta (Req 5.1, 5.2, 5.3, 5.4)
+                     btnQuickScan filled (primária); demais outlined
+                     idênticos. Mesmo corner radius/tipografia (via
+                     estilos). Espaçamento de 8dp entre adjacentes.
+                ══════════════════════════════════════════════════ -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnQuickScan"
+                    style="@style/Widget.App.Dashboard.ActionButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="@string/quick_scan"
+                    app:icon="@drawable/ic_qr_code" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnManualCollection"
+                    style="@style/Widget.App.Dashboard.ActionButton.Outlined"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="@string/manual_collection_button"
+                    app:icon="@drawable/ic_edit" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDescriptionCollection"
+                    style="@style/Widget.App.Dashboard.ActionButton.Outlined"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="@string/description_collection_button"
+                    app:icon="@drawable/ic_inventory" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnViewCollections"
+                    style="@style/Widget.App.Dashboard.ActionButton.Outlined"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="@string/view_collections_button"
+                    app:icon="@drawable/ic_collections" />
+
+                <!-- Progress Bar global (preservado) -->
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="16dp"
+                    android:visibility="gone" />
+
+                <!-- Mensagem de Erro global (preservado — Req 6.5) -->
+                <TextView
+                    android:id="@+id/tvError"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/error_background"
+                    android:padding="16dp"
+                    android:textAppearance="@style/TextAppearance.App.BodyMedium"
+                    android:textColor="@color/error"
+                    android:visibility="gone"
+                    tools:text="Erro ao carregar dados"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
+
+        </ScrollView>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         FAB de Busca por Voz (preservado — Req 7.1, 8.3)
+    ══════════════════════════════════════════════════════════════ -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabVoiceSearch"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_gravity="bottom|end"
+        android:layout_margin="24dp"
+        android:contentDescription="@string/search_patrimonio"
+        android:src="@drawable/ic_mic"
+        app:backgroundTint="@color/primary"
+        app:elevation="6dp"
+        app:pressedTranslationZ="12dp"
+        app:tint="@android:color/white" />
 
-        <!-- Indicador de Modo Offline (v2.7) -->
-        <LinearLayout
-            android:id="@+id/layoutOfflineIndicator"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/offline_indicator_background"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="12dp"
-            android:visibility="gone"
-            tools:visibility="visible">
+    <!-- ══════════════════════════════════════════════════════════════
+         Overlay de Escuta de Voz (preservado — Req 8.3, 8.4)
+    ══════════════════════════════════════════════════════════════ -->
+    <FrameLayout
+        android:id="@+id/voiceListeningOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#DD000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
 
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_marginEnd="8dp"
-                android:src="@drawable/ic_offline"
-                app:tint="@color/warning_dark" />
-
-            <TextView
-                android:id="@+id/tvOfflineStatus"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Modo Offline Ativo"
-                android:textColor="@color/warning_dark"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvOfflineInfo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Dados locais"
-                android:textColor="@color/warning_dark"
-                android:textSize="11sp"
-                android:alpha="0.8" />
-
-        </LinearLayout>
-
-        <!-- Resumo do Inventário -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <View
-                android:layout_width="4dp"
-                android:layout_height="24dp"
-                android:layout_marginEnd="12dp"
-                android:background="@drawable/gradient_primary" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Resumo do Inventário"
-                android:textColor="@color/text_primary"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
-
-        <!-- Cards de Estatísticas -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:orientation="horizontal">
-
-            <!-- Botão Iniciar Coleta -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="6dp"
-                android:layout_weight="1"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="6dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/gradient_success"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginBottom="8dp"
-                        android:src="@drawable/ic_check_circle"
-                        app:tint="@android:color/white" />
-
-                    <TextView
-                        android:id="@+id/tvKpiColetados"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@android:color/white"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
-                        android:shadowColor="#40000000"
-                        android:shadowDx="0"
-                        android:shadowDy="2"
-                        android:shadowRadius="4"
-                        tools:text="8,156" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Coletados"
-                        android:textColor="@android:color/white"
-                        android:textSize="12sp"
-                        android:alpha="0.9" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Card Pendentes -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="6dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/gradient_warning"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginBottom="8dp"
-                        android:src="@drawable/ic_pending"
-                        app:tint="@android:color/white" />
-
-                    <TextView
-                        android:id="@+id/tvKpiPendentes"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@android:color/white"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
-                        android:shadowColor="#40000000"
-                        android:shadowDx="0"
-                        android:shadowDy="2"
-                        android:shadowRadius="4"
-                        tools:text="2,089" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Pendentes"
-                        android:textColor="@android:color/white"
-                        android:textSize="12sp"
-                        android:alpha="0.9" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-        </LinearLayout>
-
-        <!-- Cards de KPIs - Linha 2 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:orientation="horizontal">
-
-            <!-- Card Divergências -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="6dp"
-                android:layout_weight="1"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="6dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/gradient_error"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginBottom="8dp"
-                        android:src="@drawable/ic_warning_circle"
-                        app:tint="@android:color/white" />
-
-                    <TextView
-                        android:id="@+id/tvKpiDivergencias"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@android:color/white"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
-                        android:shadowColor="#40000000"
-                        android:shadowDx="0"
-                        android:shadowDy="2"
-                        android:shadowRadius="4"
-                        tools:text="127" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Divergências"
-                        android:textColor="@android:color/white"
-                        android:textSize="12sp"
-                        android:alpha="0.9" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Card Coletores -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="6dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/gradient_info"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_marginBottom="8dp"
-                        android:src="@drawable/ic_people"
-                        app:tint="@android:color/white" />
-
-                    <TextView
-                        android:id="@+id/tvKpiColetores"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@android:color/white"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
-                        android:shadowColor="#40000000"
-                        android:shadowDx="0"
-                        android:shadowDy="2"
-                        android:shadowRadius="4"
-                        tools:text="12" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Coletores"
-                        android:textColor="@android:color/white"
-                        android:textSize="12sp"
-                        android:alpha="0.9" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-        </LinearLayout>
-
-        <!-- Ações de Coleta -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <View
-                android:layout_width="4dp"
-                android:layout_height="24dp"
-                android:layout_marginEnd="12dp"
-                android:background="@drawable/gradient_primary" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Ações de Coleta"
-                android:textColor="@color/text_primary"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
-        
-        <!-- Botão de Scan Rápido -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnQuickScan"
-            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginBottom="12dp"
-            android:text="@string/quick_scan"
-            android:textSize="16sp"
-            app:cornerRadius="12dp"
-            app:icon="@drawable/ic_qr_code"
-            app:iconGravity="textStart" />
-
-        <!-- Botão de Coleta Manual -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnManualCollection"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginBottom="12dp"
-            android:text="@string/manual_collection_button"
-            android:textSize="16sp"
-            app:cornerRadius="12dp"
-            app:icon="@drawable/ic_edit"
-            app:iconGravity="textStart" />
-
-        <!-- Botão de Coleta por Descrição (Sem Patrimônio) -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnDescriptionCollection"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginBottom="12dp"
-            android:text="@string/description_collection_button"
-            android:textSize="16sp"
-            app:cornerRadius="12dp"
-            app:icon="@drawable/ic_inventory"
-            app:iconGravity="textStart" />
-
-        <!-- Botão de Visualizar Coletas -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnViewCollections"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginBottom="16dp"
-            android:text="@string/view_collections_button"
-            android:textSize="16sp"
-            app:cornerRadius="12dp"
-            app:icon="@drawable/ic_collections"
-            app:iconGravity="textStart" />
-
-        <!-- Progress Bar -->
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginTop="16dp"
-            android:visibility="gone" />
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="32dp">
 
-        <!-- Mensagem de Erro -->
-        <TextView
-            android:id="@+id/tvError"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/error_background"
-            android:padding="12dp"
-            android:textColor="@color/error"
-            android:textSize="14sp"
-            android:visibility="gone"
-            tools:text="Erro ao carregar dados"
-            tools:visibility="visible" />
+            <!-- Ícone de Microfone Animado -->
+            <ImageView
+                android:id="@+id/ivMicAnimation"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:contentDescription="@string/search_patrimonio"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_mic"
+                app:tint="@color/primary" />
 
-    </LinearLayout>
+            <!-- Status da Escuta -->
+            <TextView
+                android:id="@+id/tvVoiceStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:textAppearance="@style/TextAppearance.App.HeadlineSmall"
+                android:textColor="@android:color/white"
+                tools:text="Escutando..." />
 
-</ScrollView>
+            <!-- Texto Reconhecido (Parcial) -->
+            <TextView
+                android:id="@+id/tvVoiceText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:alpha="0.8"
+                android:minHeight="48dp"
+                android:textAlignment="center"
+                android:textAppearance="@style/TextAppearance.App.BodyLarge"
+                android:textColor="@android:color/white" />
 
-</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+            <!-- Sugestões de Comandos -->
+            <TextView
+                android:id="@+id/tvVoiceSuggestions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:alpha="0.6"
+                android:lineSpacingExtra="4dp"
+                android:text="Experimente:\n• Buscar patrimônio 12345\n• Mostrar sala 203\n• Listar divergências"
+                android:textAlignment="center"
+                android:textAppearance="@style/TextAppearance.App.BodyMedium"
+                android:textColor="@android:color/white"
+                tools:ignore="HardcodedText" />
 
-<!-- Floating Action Button para Busca por Voz -->
-<com.google.android.material.floatingactionbutton.FloatingActionButton
-    android:id="@+id/fabVoiceSearch"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_gravity="bottom|end"
-    android:layout_margin="24dp"
-    android:src="@drawable/ic_mic"
-    android:contentDescription="Busca por voz"
-    app:tint="@android:color/white"
-    app:backgroundTint="@color/primary"
-    app:elevation="6dp"
-    app:pressedTranslationZ="12dp" />
+            <!-- Botão Cancelar -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCancelVoice"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:minHeight="48dp"
+                android:text="@string/cancel"
+                android:textColor="@android:color/white"
+                app:strokeColor="@android:color/white"
+                app:strokeWidth="1dp" />
 
-<!-- Overlay de Escuta de Voz -->
-<FrameLayout
-    android:id="@+id/voiceListeningOverlay"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#DD000000"
-    android:clickable="true"
-    android:focusable="true"
-    android:visibility="gone">
-    
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="32dp">
-        
-        <!-- Ícone de Microfone Animado -->
-        <ImageView
-            android:id="@+id/ivMicAnimation"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:src="@drawable/ic_mic"
-            app:tint="@color/primary"
-            android:scaleType="centerInside" />
-        
-        <!-- Status da Escuta -->
-        <TextView
-            android:id="@+id/tvVoiceStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="Escutando..."
-            android:textColor="@android:color/white"
-            android:textSize="24sp"
-            android:textStyle="bold" />
-        
-        <!-- Texto Reconhecido (Parcial) -->
-        <TextView
-            android:id="@+id/tvVoiceText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text=""
-            android:textColor="@android:color/white"
-            android:textSize="16sp"
-            android:textAlignment="center"
-            android:alpha="0.8"
-            android:minHeight="48dp" />
-        
-        <!-- Sugestões de Comandos -->
-        <TextView
-            android:id="@+id/tvVoiceSuggestions"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Experimente:\n• Buscar patrimônio 12345\n• Mostrar sala 203\n• Listar divergências"
-            android:textColor="@android:color/white"
-            android:textSize="14sp"
-            android:textAlignment="center"
-            android:alpha="0.6"
-            android:lineSpacingExtra="4dp" />
-        
-        <!-- Botão Cancelar -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnCancelVoice"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="Cancelar"
-            android:textColor="@android:color/white"
-            style="@style/Widget.Material3.Button.TextButton"
-            app:strokeColor="@android:color/white"
-            app:strokeWidth="1dp" />
-        
-    </LinearLayout>
-    
-</FrameLayout>
+        </LinearLayout>
+
+    </FrameLayout>
 
 </FrameLayout>

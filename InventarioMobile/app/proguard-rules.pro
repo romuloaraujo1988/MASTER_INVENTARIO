@@ -96,11 +96,13 @@
 -keep class com.inventario.mobile.data.remote.api.** { *; }
 -keep class com.inventario.mobile.data.model.** { *; }
 -keep class com.inventario.mobile.data.local.entity.** { *; }
+-keep class com.inventario.mobile.data.realtime.** { *; }
 -keep class com.inventario.mobile.domain.model.** { *; }
 -keep class com.inventario.mobile.api.** { *; }
 -keepclassmembers class com.inventario.mobile.data.remote.dto.** { <fields>; }
 -keepclassmembers class com.inventario.mobile.data.remote.api.** { <fields>; }
 -keepclassmembers class com.inventario.mobile.data.model.** { <fields>; }
+-keepclassmembers class com.inventario.mobile.data.realtime.** { <fields>; }
 -keepclassmembers class com.inventario.mobile.api.** { <fields>; }
 
 # -------- WorkManager --------

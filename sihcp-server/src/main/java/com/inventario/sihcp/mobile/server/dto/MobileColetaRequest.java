@@ -72,6 +72,25 @@ public class MobileColetaRequest {
      */
     private String clienteUuid;
     
+    /**
+     * Divergência detectada pelo cliente (app Android) ao comparar o item
+     * coletado com o cadastro: localização e/ou estado diferentes.
+     *
+     * Opcional para compatibilidade com clientes antigos. O servidor
+     * RECALCULA a divergência a partir dos dados cadastrados do patrimônio
+     * (ver {@code MobileColetaService}), usando este valor apenas como
+     * fallback quando o recálculo não for possível (ex.: patrimônio sem
+     * sala/estado cadastrado). Assim a fonte de verdade é o servidor.
+     */
+    private Boolean divergencia;
+
+    /**
+     * Motivo da divergência, quando houver:
+     * {@code LOCALIZACAO_DIFERENTE}, {@code ESTADO_DIFERENTE} ou
+     * {@code LOCALIZACAO_E_ESTADO}. Também recalculado no servidor.
+     */
+    private String motivoDivergencia;
+    
     // Construtores
     public MobileColetaRequest() {
         this.dataColeta = String.valueOf(System.currentTimeMillis());
@@ -253,5 +272,21 @@ public class MobileColetaRequest {
 
     public void setClienteUuid(String clienteUuid) {
         this.clienteUuid = clienteUuid;
+    }
+
+    public Boolean getDivergencia() {
+        return divergencia;
+    }
+
+    public void setDivergencia(Boolean divergencia) {
+        this.divergencia = divergencia;
+    }
+
+    public String getMotivoDivergencia() {
+        return motivoDivergencia;
+    }
+
+    public void setMotivoDivergencia(String motivoDivergencia) {
+        this.motivoDivergencia = motivoDivergencia;
     }
 }

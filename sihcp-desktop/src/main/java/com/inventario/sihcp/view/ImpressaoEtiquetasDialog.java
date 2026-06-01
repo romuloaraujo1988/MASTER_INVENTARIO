@@ -22,7 +22,7 @@ public class ImpressaoEtiquetasDialog extends JDialog {
     
     // Elementos de UI - Inspetor
     private JTextField txtCabecalho;
-    private JSpinner spnX, spnY, spnWidth, spnHeight, spnFontSize;
+    private JSpinner spnX, spnY, spnWidth, spnFontSize;
     private JSpinner spnPaperW, spnPaperH, spnCols;
     private JLabel lblSelectedName;
     private JToggleButton btnSnapGrid;
@@ -61,7 +61,6 @@ public class ImpressaoEtiquetasDialog extends JDialog {
         spnX = createSpinner(0, -500, 500);
         spnY = createSpinner(0, -500, 500);
         spnWidth = createSpinner(1, 1, 500);
-        spnHeight = createSpinner(1, 1, 500);
         spnFontSize = createSpinner(10, 5, 72);
         
         int w = Math.max(1, Math.min(500, config.getLargura()));
@@ -339,6 +338,18 @@ public class ImpressaoEtiquetasDialog extends JDialog {
         }
     }
 
+    /**
+     * Indica se a impressão do lote foi efetivamente confirmada/enviada à
+     * impressora antes do diálogo ser fechado. Permite ao chamador (ex.:
+     * {@code PatrimonioFrame}) reagir ao resultado após {@code setVisible(false)}.
+     *
+     * @return {@code true} se o lote foi impresso; {@code false} se o usuário
+     *         apenas fechou o editor sem imprimir
+     */
+    public boolean isImpressaoConfirmada() {
+        return impressaoConfirmada;
+    }
+
     // --- HELPERS ---
     private JSpinner createSpinner(int val, int min, int max) {
         return new JSpinner(new SpinnerNumberModel(val, min, max, 1));
@@ -374,13 +385,11 @@ public class ImpressaoEtiquetasDialog extends JDialog {
             
             MouseAdapter dragHandler = new MouseAdapter() {
                 private Point lastPoint;
-                private int startX, startY;
                 
                 @Override
                 public void mousePressed(MouseEvent e) { 
                     requestFocusInWindow();
                     lastPoint = e.getPoint();
-                    startX = config.getxQRCode(); // Guardar posições iniciais se precisar
                     
                     int target = detectElementAt(e.getPoint());
                     if (target >= 100) { // Clicou no resize handle (100 + elemento)

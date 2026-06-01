@@ -234,7 +234,8 @@ public class MobileColetaService {
         coleta.setObservacaoColeta(request.getObservacaoColeta());
         coleta.setLocalizacaoEncontrada(request.getLocalizacaoEncontrada());
         coleta.setEstadoEncontrado(request.getEstadoEncontrado());
-        coleta.setDivergencia(false);
+        // A divergência é definida mais abaixo, após buscar o patrimônio cadastrado
+        // (recálculo no servidor — ver bloco "RECÁLCULO DE DIVERGÊNCIA").
         Boolean semEtiquetaValue = request.getSemEtiqueta();
         coleta.setSemEtiqueta(semEtiquetaValue != null && semEtiquetaValue);
         
@@ -267,7 +268,14 @@ public class MobileColetaService {
             }
             coleta.setIdPatrimonio(patrimonio.getId());
             coleta.setLocalizacaoAtual(patrimonio.getNomeSala());
-            
+
+            // ===== RECÁLCULO DE DIVERGÊNCIA (servidor como fonte de verdade) =====
+            // Compara o item coletado com o cadastro do patrimônio. O servidor
+            // recalcula em vez de confiar apenas no cliente, garantindo
+            // consistência mesmo para clientes antigos ou fluxos do app que não
+            // calculam (item sem etiqueta / por descrição não entram aqui).
+            aplicarDivergencia(coleta, patrimonio, request);
+
             // VERIFICAÇÃO DE DUPLICATA: Verificar se já existe coleta para este patrimônio neste inventário
             Coleta coletaExistente = verificarColetaDuplicada(inventario.getId(), patrimonio.getId());
             if (coletaExistente != null) {
@@ -287,6 +295,9 @@ public class MobileColetaService {
             }
             coleta.setDescricaoItemSemEtiqueta(request.getDescricaoItemSemEtiqueta());
             coleta.setCategoriaItemSemEtiqueta(request.getCategoriaItemSemEtiqueta());
+            // Item sem etiqueta não tem cadastro para comparar → sem divergência.
+            coleta.setDivergencia(false);
+            coleta.setMotivoDivergencia(null);
         }
 
         // Geolocalização
@@ -482,13 +493,24 @@ public class MobileColetaService {
      * evento, e re-publicar geraria duplicatas na lista do "monitor ao vivo".</p>
      */
     private void publicarEventoWebSocket(MobileColetaResponse response) {
-        if (coletaLiveSocketHandler == null || response == null) {
+        if (coletaLiveSocketHandler == null) {
+            logger.warn("⚠ WS monitor: coletaLiveSocketHandler é NULL — evento NÃO será transmitido. "
+                    + "(Bean não injetado no MobileColetaService)");
+            return;
+        }
+        if (response == null) {
+            logger.warn("⚠ WS monitor: response nulo — evento não transmitido.");
             return;
         }
         try {
             ColetaEventoDTO evento = ColetaEventoDTO.fromResponse(response);
             if (evento != null) {
+                logger.info("→ WS monitor: transmitindo coleta id={} inventarioId={} sessõesAtivas={}",
+                        evento.getId(), evento.getInventarioId(),
+                        coletaLiveSocketHandler.totalSessoesAtivas());
                 coletaLiveSocketHandler.broadcastColeta(evento);
+            } else {
+                logger.warn("⚠ WS monitor: ColetaEventoDTO nulo após fromResponse — não transmitido.");
             }
         } catch (Exception e) {
             logger.warn("Falha ao broadcast WS de coleta {}: {}",
@@ -1451,6 +1473,87 @@ public class MobileColetaService {
         return resultado;
     }
     
+    /**
+     * Recalcula e aplica a divergência da coleta comparando o item coletado
+     * com o cadastro do patrimônio. O servidor é a fonte de verdade.
+     *
+     * <p>Critérios (alinhados ao cálculo do app Android e ao
+     * {@code MobilePatrimonioService}):</p>
+     * <ul>
+     *   <li><b>Localização</b>: diverge quando a sala onde o item foi encontrado
+     *       difere da sala cadastrada. Compara por ID quando o request traz
+     *       {@code idSala} (&gt; 0); caso contrário, compara por nome
+     *       ({@code localizacaoEncontrada} vs {@code patrimonio.getNomeSala()},
+     *       case-insensitive).</li>
+     *   <li><b>Estado</b>: diverge quando {@code estadoEncontrado} difere do
+     *       {@code estadoConservacao} cadastrado (case-insensitive).</li>
+     * </ul>
+     *
+     * <p>Quando não há dado cadastrado suficiente para comparar (sala/estado
+     * nulos), o critério correspondente é ignorado. Se nenhum critério pôde ser
+     * avaliado, usa o valor enviado pelo cliente como fallback.</p>
+     *
+     * @param coleta     coleta sendo montada (será mutada)
+     * @param patrimonio patrimônio cadastrado correspondente
+     * @param request    request original do cliente (fallback)
+     */
+    private void aplicarDivergencia(Coleta coleta, Patrimonio patrimonio, MobileColetaRequest request) {
+        Boolean divergenciaLocalizacao = null; // null = não avaliável
+        Boolean divergenciaEstado = null;
+
+        // --- Localização ---
+        String salaCadastrada = patrimonio.getNomeSala();
+        String localizacaoEncontrada = request.getLocalizacaoEncontrada();
+        if (request.getIdSala() != null && request.getIdSala() > 0 && patrimonio.getIdSala() > 0) {
+            // Comparação preferencial por ID (mais confiável que texto)
+            divergenciaLocalizacao = request.getIdSala() != patrimonio.getIdSala();
+        } else if (localizacaoEncontrada != null && !localizacaoEncontrada.trim().isEmpty()
+                && salaCadastrada != null && !salaCadastrada.trim().isEmpty()) {
+            divergenciaLocalizacao = !localizacaoEncontrada.trim().equalsIgnoreCase(salaCadastrada.trim());
+        }
+
+        // --- Estado ---
+        String estadoCadastrado = patrimonio.getEstadoConservacao();
+        String estadoEncontrado = request.getEstadoEncontrado();
+        if (estadoCadastrado != null && !estadoCadastrado.trim().isEmpty()
+                && estadoEncontrado != null && !estadoEncontrado.trim().isEmpty()) {
+            divergenciaEstado = !estadoEncontrado.trim().equalsIgnoreCase(estadoCadastrado.trim());
+        }
+
+        boolean temLoc = Boolean.TRUE.equals(divergenciaLocalizacao);
+        boolean temEst = Boolean.TRUE.equals(divergenciaEstado);
+
+        boolean temDivergencia;
+        String motivo;
+        if (divergenciaLocalizacao == null && divergenciaEstado == null) {
+            // Nada pôde ser avaliado no servidor → usar o que o cliente reportou.
+            temDivergencia = Boolean.TRUE.equals(request.getDivergencia());
+            motivo = temDivergencia ? request.getMotivoDivergencia() : null;
+        } else {
+            temDivergencia = temLoc || temEst;
+            if (temLoc && temEst) {
+                motivo = "LOCALIZACAO_E_ESTADO";
+            } else if (temLoc) {
+                motivo = "LOCALIZACAO_DIFERENTE";
+            } else if (temEst) {
+                motivo = "ESTADO_DIFERENTE";
+            } else {
+                motivo = null;
+            }
+        }
+
+        coleta.setDivergencia(temDivergencia);
+        coleta.setMotivoDivergencia(motivo);
+
+        if (temDivergencia) {
+            logger.info("⚠️ DIVERGÊNCIA registrada (servidor) para patrimônio {}: motivo={} | "
+                    + "sala cadastrada='{}'(id={}) vs coletada id={} loc='{}' | estado cadastrado='{}' vs encontrado='{}'",
+                    request.getNumeroPatrimonio(), motivo,
+                    salaCadastrada, patrimonio.getIdSala(), request.getIdSala(), localizacaoEncontrada,
+                    estadoCadastrado, estadoEncontrado);
+        }
+    }
+
     // ==================== MÉTODOS PARA TRATAMENTO DE COLETA DUPLICADA ====================
     
     /**

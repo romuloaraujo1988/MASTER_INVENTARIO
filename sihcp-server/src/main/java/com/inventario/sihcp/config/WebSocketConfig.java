@@ -3,6 +3,8 @@ package com.inventario.sihcp.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.ServletContextInitializer;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
@@ -13,6 +15,9 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 import com.inventario.sihcp.mobile.server.realtime.ColetaLiveSocketHandler;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
 
 /**
  * Configuração do WebSocket para monitoramento em tempo real.
@@ -33,10 +38,10 @@ import com.inventario.sihcp.mobile.server.realtime.ColetaLiveSocketHandler;
  *       {@code /ws-coletas-live} sem handler (nenhum log de WS no servidor).</li>
  * </ul>
  *
- * <p>O {@code jakarta.websocket.server.ServerContainer} JSR-356 é criado pela
- * auto-configuração do Spring Boot (válido porque o STOMP já funciona) e
- * resolvido no momento do handshake — não no startup —, então as duas
- * anotações coexistem sem o erro de inicialização em fat JAR.</p>
+ * <p>O {@code jakarta.websocket.server.ServerContainer} JSR-356 é necessário
+ * para o handshake do WebSocket nativo. Garantimos sua inicialização de forma
+ * <b>à prova de configuração</b> via {@link #wsServerContainerInitializer()} —
+ * ver Javadoc daquele bean.</p>
  */
 @Configuration
 @EnableWebSocketMessageBroker
@@ -52,6 +57,60 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer, WebSoc
      */
     @Autowired(required = false)
     private ColetaLiveSocketHandler coletaLiveSocketHandler;
+
+    /**
+     * Garante a inicialização do {@code jakarta.websocket.server.ServerContainer}
+     * (JSR-356) <b>independentemente da configuração</b> de
+     * {@code spring.autoconfigure.exclude}.
+     *
+     * <p><b>Por que este bean existe:</b> o handshake do WebSocket nativo
+     * ({@code /ws-coletas-live}) usa o {@code AbstractStandardUpgradeStrategy}
+     * do Spring, que exige o atributo {@code ServerContainer} no
+     * {@code ServletContext}. Esse atributo normalmente é criado pela
+     * {@code WebSocketServletAutoConfiguration} do Spring Boot — mas se ela for
+     * excluída (como já aconteceu neste projeto "para economizar memória"), o
+     * handshake falha com:</p>
+     * <pre>
+     *   No 'jakarta.websocket.server.ServerContainer' ServletContext attribute.
+     *   Are you running in a Servlet container that supports JSR-356?
+     * </pre>
+     *
+     * <p>Registrar o {@code WsSci} (o {@code ServletContainerInitializer} do
+     * Tomcat que popula esse atributo) diretamente no {@code ServletContext}
+     * via {@link ServletContextInitializer} torna a inicialização robusta:
+     * funciona mesmo com a auto-config excluída, e é idempotente — se o
+     * {@code ServerContainer} já existe (auto-config ativa), o {@code WsSci}
+     * apenas reusa, sem duplicar.</p>
+     *
+     * <p>Usamos reflection para carregar {@code org.apache.tomcat.websocket.server.WsSci}
+     * a fim de não criar dependência rígida de compilação — em qualquer outro
+     * container (Jetty/Undertow) o bean simplesmente loga e segue, sem quebrar
+     * o boot.</p>
+     */
+    @Bean
+    public ServletContextInitializer wsServerContainerInitializer() {
+        return (ServletContext servletContext) -> {
+            final String attr = "jakarta.websocket.server.ServerContainer";
+            if (servletContext.getAttribute(attr) != null) {
+                logger.info("✓ ServerContainer JSR-356 já presente — WebSocket nativo OK");
+                return;
+            }
+            try {
+                Class<?> wsSciClass = Class.forName("org.apache.tomcat.websocket.server.WsSci");
+                jakarta.servlet.ServletContainerInitializer wsSci =
+                        (jakarta.servlet.ServletContainerInitializer) wsSciClass
+                                .getDeclaredConstructor().newInstance();
+                wsSci.onStartup(null, servletContext);
+                logger.info("✓ WsSci registrado manualmente — ServerContainer JSR-356 inicializado "
+                        + "(handshake do /ws-coletas-live habilitado)");
+            } catch (ClassNotFoundException e) {
+                logger.warn("WsSci do Tomcat não encontrado no classpath — "
+                        + "container não-Tomcat? WebSocket nativo pode não funcionar.");
+            } catch (ServletException | ReflectiveOperationException e) {
+                logger.error("Falha ao registrar WsSci manualmente: {}", e.getMessage(), e);
+            }
+        };
+    }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {

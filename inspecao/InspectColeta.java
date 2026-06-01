@@ -4,7 +4,13 @@ public class InspectColeta {
     public static void main(String[] args) throws Exception {
         Class.forName("org.postgresql.Driver");
         String url = "jdbc:postgresql://localhost:5432/sispatrimonio";
-        try (Connection conn = DriverManager.getConnection(url, "postgres", "Romulo@1919")) {
+        String dbUser = System.getenv().getOrDefault("DATASOURCE_USERNAME", "postgres");
+        String dbPassword = System.getenv("DATASOURCE_PASSWORD");
+        if (dbPassword == null || dbPassword.isEmpty()) {
+            System.err.println("Defina a variável de ambiente DATASOURCE_PASSWORD antes de executar.");
+            return;
+        }
+        try (Connection conn = DriverManager.getConnection(url, dbUser, dbPassword)) {
 
             System.out.println("=== Colunas da tabela_coleta ===");
             try (PreparedStatement ps = conn.prepareStatement(

@@ -31,6 +31,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import kotlinx.coroutines.launch
 import com.inventario.mobile.presentation.dialog.EstadoPatrimonioDialog
 import com.inventario.mobile.presentation.descricao.DescricaoSelectionActivity
+import com.inventario.mobile.presentation.coleta.ItemSemEtiquetaActivity
+import com.inventario.mobile.presentation.coleta.ManualCollectionActivity
+import com.inventario.mobile.presentation.sala.SalaSelectionActivity
+import com.inventario.mobile.presentation.scanner.navigation.ColetaShortcut
+import com.inventario.mobile.presentation.scanner.navigation.ColetaShortcutNavigator
+import com.inventario.mobile.presentation.scanner.navigation.SalaContext
+import com.inventario.mobile.presentation.scanner.navigation.ScannedItemRef
+import com.inventario.mobile.presentation.scanner.navigation.ShortcutNavigationPlan
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -48,6 +57,10 @@ class ScannerActivity : AppCompatActivity() {
     private var retryCount = 0
     private val maxRetries = 3
     private var hasScannedOnce = false // ✅ Flag para evitar reiniciar scanner após primeira leitura
+
+    // ✅ Feature atalhos-coleta-rapida: decisão pura de navegação dos atalhos do Menu_Atalhos.
+    // Kotlin puro, sem Android — toda execução (Intent/PreferencesManager/UI) fica nesta Activity.
+    private val navigator = ColetaShortcutNavigator()
     
     // ✅ Injetar Use Cases via Hilt
     @Inject
@@ -599,6 +612,18 @@ class ScannerActivity : AppCompatActivity() {
             dialog.show(supportFragmentManager, "EstadoChipDialog")
         }
 
+        // ✅ Feature atalhos-coleta-rapida (Menu_Atalhos): chips de navegação para os demais
+        // métodos de coleta. Acionam acionarAtalho(...) SEM encerrar a sessão de scan ativa.
+        binding.chipAtalhoSemEtiqueta.setOnClickListener {
+            acionarAtalho(ColetaShortcut.SEM_ETIQUETA)
+        }
+        binding.chipAtalhoManual.setOnClickListener {
+            acionarAtalho(ColetaShortcut.MANUAL)
+        }
+        binding.chipAtalhoDescricao.setOnClickListener {
+            acionarAtalho(ColetaShortcut.DESCRICAO)
+        }
+
         binding.buttonColetar.setOnClickListener {
             android.util.Log.d("ScannerActivity", "=== BOTÃO COLETAR CLICADO ===")
             currentScanResult?.let { result ->
@@ -710,6 +735,126 @@ class ScannerActivity : AppCompatActivity() {
             putExtra(DescricaoSelectionActivity.EXTRA_SALA_NOME, salaNome)
         }
         startActivity(intent)
+    }
+
+    /**
+     * ✅ Feature atalhos-coleta-rapida — ponto de entrada dos atalhos do Menu_Atalhos.
+     *
+     * Coleta o contexto local (Sala_Atual via PreferencesManager + último Item_Escaneado),
+     * delega a decisão ao [navigator] (lógica pura) e executa o plano retornado. Não encerra
+     * a sessão de scan e não toca em rede (Modo_Offline suportado, pois o PreferencesManager
+     * é local).
+     *
+     * Validates: Requirements 1.1, 1.3, 2.1, 3.1, 4.1, 5.1, 8.1, 8.2
+     */
+    private fun acionarAtalho(shortcut: ColetaShortcut) {
+        val sala = SalaContext(
+            salaId = preferencesManager.getCurrentSalaId(),
+            salaNome = preferencesManager.getCurrentSalaNome()
+        )
+        val itemRef = currentScanResult?.let {
+            ScannedItemRef(
+                numeroPatrimonio = it.patrimonioCodigo,
+                descricao = it.patrimonio?.descricao
+            )
+        }
+
+        when (val plano = navigator.resolve(shortcut, sala, itemRef)) {
+            is ShortcutNavigationPlan.RequireSalaSelection -> mostrarAvisoSalaAusente()
+            is ShortcutNavigationPlan.NavigateToSemEtiqueta -> executarSemEtiqueta(plano)
+            is ShortcutNavigationPlan.NavigateToManual -> executarComExtrasSala(
+                ManualCollectionActivity::class.java, plano.salaId, plano.salaNome,
+                "Abrindo coleta manual…"
+            )
+            is ShortcutNavigationPlan.NavigateToDescricao -> executarComExtrasSala(
+                DescricaoSelectionActivity::class.java, plano.salaId, plano.salaNome,
+                "Abrindo coleta por descrição…"
+            )
+        }
+    }
+
+    /**
+     * Executa o plano de navegação para a coleta sem etiqueta.
+     *
+     * Persiste a Sala_Atual no PreferencesManager (Req 2.2). A persistência é envolvida em
+     * [runCatching] para que uma falha não bloqueie a navegação (Req 2.3) — apenas registra
+     * um aviso. Os extras `DESCRICAO_SUGERIDA`/`NUMERO_PATRIMONIO_ORIGEM` só são adicionados
+     * quando houver Item_Escaneado (Req 2.4/2.5).
+     */
+    private fun executarSemEtiqueta(plano: ShortcutNavigationPlan.NavigateToSemEtiqueta) {
+        runCatching {
+            preferencesManager.setCurrentSalaId(plano.salaParaPersistir.salaId)
+            preferencesManager.setCurrentSalaNome(plano.salaParaPersistir.salaNome)
+        }.onFailure {
+            android.util.Log.w("ScannerActivity", "Falha ao persistir sala: ${it.message}")
+        }
+
+        val intent = Intent(this, ItemSemEtiquetaActivity::class.java).apply {
+            plano.descricaoSugerida?.let { putExtra("DESCRICAO_SUGERIDA", it) }
+            plano.numeroPatrimonioOrigem?.let { putExtra("NUMERO_PATRIMONIO_ORIGEM", it) }
+        }
+        // Req 7.2: feedback visual confirmando o atalho acionado antes da transição.
+        mostrarConfirmacaoAtalho("Abrindo coleta sem etiqueta…")
+        startActivity(intent)
+    }
+
+    /**
+     * Executa um plano de navegação que repassa a sala via extras (Atalho_Manual / Atalho_Descricao).
+     *
+     * O preenchimento dos extras é envolvido em [runCatching] para que uma falha não bloqueie
+     * a navegação (Req 4.4). Usa as chaves de extra já consumidas pelas telas de destino:
+     * `extra_sala_id` (Long) e `extra_sala_nome` (String) — Req 3.2/3.3/4.2/4.3/9.1.
+     *
+     * [mensagemConfirmacao] é exibida como feedback visual confirmando o atalho acionado
+     * imediatamente antes da transição (Req 7.2).
+     */
+    private fun executarComExtrasSala(
+        target: Class<*>,
+        salaId: Long,
+        salaNome: String,
+        mensagemConfirmacao: String
+    ) {
+        val intent = Intent(this, target).apply {
+            runCatching {
+                putExtra("extra_sala_id", salaId)
+                putExtra("extra_sala_nome", salaNome)
+            }.onFailure {
+                android.util.Log.w("ScannerActivity", "Falha ao preencher extras de sala: ${it.message}")
+            }
+        }
+        // Req 7.2: feedback visual confirmando o atalho acionado antes da transição.
+        mostrarConfirmacaoAtalho(mensagemConfirmacao)
+        startActivity(intent)
+    }
+
+    /**
+     * Exibe um feedback visual curto e não bloqueante confirmando o atalho acionado,
+     * imediatamente antes de iniciar a navegação (Req 7.2). Usa [Toast] por ser leve
+     * o suficiente para sobreviver à transição de Activity (diferente de um Snackbar
+     * ancorado à View desta tela). Uma falha ao exibir o feedback nunca impede a
+     * navegação, que é a ação primária.
+     */
+    private fun mostrarConfirmacaoAtalho(mensagem: String) {
+        runCatching {
+            Toast.makeText(this, mensagem, Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            android.util.Log.w("ScannerActivity", "Falha ao exibir confirmação do atalho: ${it.message}")
+        }
+    }
+
+    /**
+     * Exibe o aviso de ausência de Sala_Atual e oferece a ação imediata de selecioná-la,
+     * permanecendo na Tela_Coleta_Rapida (Req 5.1/5.2).
+     */
+    private fun mostrarAvisoSalaAusente() {
+        Snackbar.make(binding.root, "Selecione uma sala antes de continuar", Snackbar.LENGTH_LONG)
+            .setAction("Selecionar") {
+                val intent = Intent(this, SalaSelectionActivity::class.java).apply {
+                    putExtra(SalaSelectionActivity.EXTRA_COLETA_TIPO, "QRCODE")
+                }
+                startActivity(intent)
+            }
+            .show()
     }
 
     /**

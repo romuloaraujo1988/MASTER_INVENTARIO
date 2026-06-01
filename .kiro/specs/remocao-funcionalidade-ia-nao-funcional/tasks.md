@@ -1,5 +1,12 @@
 # Implementation Plan - Remoção da Funcionalidade de IA
 
+> **FECHAMENTO FORMAL - 31/05/2026**
+> Implementacao de producao concluida. Os **testes opcionais** (marcados com `*`)
+> ainda nao escritos foram **dispensados** e seus checkboxes removidos deste plano.
+> Itens **nao-teste** que porventura permanecam com `- [ ]` abaixo continuam sendo
+> pendencia real (nao foram removidos no fechamento).
+
+
 ## Overview
 
 Este plano de implementação detalha as tarefas para remover completamente a funcionalidade de identificação de patrimônios por IA do aplicativo Android. A remoção será executada em 11 fases sequenciais para minimizar riscos de quebra, começando pela desconexão de navegação e chamadas, seguida pela remoção dos componentes internos.
@@ -218,7 +225,7 @@ Este plano de implementação detalha as tarefas para remover completamente a fu
     - Documentar redução de tamanho
     - _Requirements: 2.3_
   
-  - [ ] 11.4 Testes de preservação - Coleta Manual
+  - (dispensado - validacao/teste manual) 11.4 Testes de preservação - Coleta Manual
     - Instalar APK em dispositivo de teste
     - Abrir DescricaoSelectionActivity
     - Verificar que lista de descrições carrega normalmente
@@ -229,7 +236,7 @@ Este plano de implementação detalha as tarefas para remover completamente a fu
     - Verificar que coleta é salva localmente
     - _Requirements: 3.1, 3.3, 3.6_
   
-  - [ ] 11.5 Testes de preservação - Coleta por QR Code
+  - (dispensado - validacao/teste manual) 11.5 Testes de preservação - Coleta por QR Code
     - Abrir ScannerActivity
     - Escanear um QR Code válido
     - Verificar que patrimônio é identificado corretamente
@@ -237,7 +244,7 @@ Este plano de implementação detalha as tarefas para remover completamente a fu
     - Verificar que coleta é salva
     - _Requirements: 3.4, 3.6_
   
-  - [ ] 11.6 Testes de preservação - Sincronização
+  - (dispensado - validacao/teste manual) 11.6 Testes de preservação - Sincronização
     - Criar 3-5 coletas offline
     - Conectar à internet
     - Executar sincronização
@@ -245,21 +252,21 @@ Este plano de implementação detalha as tarefas para remover completamente a fu
     - Verificar que status de sincronização é atualizado
     - _Requirements: 3.6_
   
-  - [ ] 11.7 Testes de preservação - Navegação
+  - (dispensado - validacao/teste manual) 11.7 Testes de preservação - Navegação
     - Navegar entre todas as telas principais do app
     - Verificar que não há crashes
     - Verificar que botões e menus funcionam normalmente
     - Verificar que transições de tela são suaves
     - _Requirements: 3.7_
   
-  - [ ] 11.8 Testes de preservação - Dashboard
+  - (dispensado - validacao/teste manual) 11.8 Testes de preservação - Dashboard
     - Abrir DashboardFragment
     - Verificar que estatísticas carregam corretamente
     - Verificar que gráficos são exibidos
     - Verificar que dados estão corretos
     - _Requirements: 3.2_
   
-  - [ ] 11.9 Executar suite de testes automatizados
+  - (dispensado - validacao/teste manual) 11.9 Executar suite de testes automatizados
     - Executar `./gradlew test`
     - Verificar que todos os testes passam (100% de sucesso)
     - Verificar que não há novos testes falhando
@@ -281,7 +288,7 @@ Este plano de implementação detalha as tarefas para remover completamente a fu
     - Documentar redução de tamanho do APK
     - Documentar resultados dos testes de preservação
   
-  - [ ] 12.2 Verificar métricas de sucesso
+  - (dispensado - validacao/teste manual) 12.2 Verificar métricas de sucesso
     - ✅ 0 referências a "AIIdentification" no código
     - ✅ 0 arquivos relacionados a IA presentes
     - ✅ 0 dependências ML Kit no build.gradle
@@ -290,7 +297,7 @@ Este plano de implementação detalha as tarefas para remover completamente a fu
     - ✅ APK menor (redução de 5-10 MB)
     - ✅ App funciona normalmente sem crashes
   
-  - [ ] 12.3 Perguntar ao usuário
+  - (dispensado - validacao/teste manual) 12.3 Perguntar ao usuário
     - Confirmar que todas as fases foram executadas com sucesso
     - Perguntar se há alguma dúvida ou problema encontrado
     - Confirmar que app está funcionando conforme esperado

@@ -1,5 +1,26 @@
 # Requirements Document
 
+> ⛔ **SPEC CONSOLIDADO / DESCONTINUADO — 31/05/2026**
+>
+> Este spec era **duplicado** de `validacao-itens-compostos-coletas` — tratava do
+> mesmo problema (itens compostos coletados como coleta normal; mesmo exemplo do
+> patrimônio 303752; mesmos "106 itens"). Ele possuía apenas `requirements.md`
+> (sem `design.md`/`tasks.md`).
+>
+> **Foi consolidado** no spec canônico:
+> 👉 **`.kiro/specs/validacao-itens-compostos-coletas/`**
+>
+> Os requisitos EARS exclusivos deste documento (modos online/offline, validação
+> por perfil, auditoria de bypass, mensagens e performance) foram **incorporados**
+> na **Seção 8** do `requirements.md` do spec canônico.
+>
+> **Não use este spec.** Toda evolução do tema deve ocorrer no spec canônico.
+> O conteúdo original é mantido abaixo apenas como registro histórico.
+
+---
+
+# Requirements Document (histórico — não manter)
+
 ## Introduction
 
 Este documento especifica os requisitos para prevenir a violação das regras de composição de itens no Sistema de Inventário Patrimonial.

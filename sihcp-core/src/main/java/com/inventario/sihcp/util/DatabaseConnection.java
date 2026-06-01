@@ -245,32 +245,6 @@ public class DatabaseConnection {
     }
     
     /**
-     * Obtém uma conexão com o banco SQLite offline
-     * 
-     * @return Connection ativa com SQLite
-     * @throws SQLException se houver erro na conexão
-     */
-    private static Connection getOfflineConnection() throws SQLException {
-        try {
-            Class.forName("org.sqlite.JDBC");
-            
-            String dbPath = "data/inventario.db";
-            String url = "jdbc:sqlite:" + dbPath;
-            
-            Connection conn = DriverManager.getConnection(url);
-            
-            try (java.sql.Statement stmt = conn.createStatement()) {
-                stmt.execute("PRAGMA foreign_keys = ON");
-            }
-            
-            return conn;
-            
-        } catch (ClassNotFoundException e) {
-            throw new SQLException("Driver SQLite não disponível", e);
-        }
-    }
-    
-    /**
      * Obtém uma conexão direta com PostgreSQL (ignora modo offline)
      * Usado para sincronização de dados quando o servidor está disponível
      * 

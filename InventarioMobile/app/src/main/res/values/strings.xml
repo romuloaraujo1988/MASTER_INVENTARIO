@@ -234,4 +234,32 @@
     <string name="keystore_recovery_fail_title">Falha ao limpar os dados</string>
     <string name="keystore_recovery_fail_message">Não foi possível apagar os dados locais. Por favor, desinstale e reinstale o aplicativo.</string>
 
+    <!-- Dashboard Redesign (spec: dashboard-redesign) -->
+    <!-- Saudações do cabeçalho (variam conforme a hora do dia) -->
+    <string name="dashboard_greeting_morning">Bom dia</string>
+    <string name="dashboard_greeting_afternoon">Boa tarde</string>
+    <string name="dashboard_greeting_evening">Boa noite</string>
+
+    <!-- Indicador de conclusão do inventário -->
+    <string name="completion_label_format">%d%% concluído</string>
+
+    <!-- Última sincronização (com timestamp formatado) -->
+    <string name="last_sync_format">Última sincronização: %s</string>
+
+    <!-- Gráfico de evolução de coletas -->
+    <string name="chart_title">Evolução de Coletas</string>
+    <string name="chart_empty">Sem dados de evolução para exibir</string>
+    <string name="chart_error">Não foi possível carregar o gráfico de evolução</string>
+
+    <!-- Cabeçalho / estados vazios do Dashboard -->
+    <string name="dashboard_empty">Nenhum dado para exibir no momento</string>
+    <string name="no_active_inventory">Nenhum inventário ativo</string>
+    <string name="inventory_name_fallback">Inventário %d</string>
+
+    <!-- contentDescription dos ícones de KPI -->
+    <string name="kpi_coletados_icon_desc">Ícone de itens coletados</string>
+    <string name="kpi_pendentes_icon_desc">Ícone de itens pendentes</string>
+    <string name="kpi_divergencias_icon_desc">Ícone de divergências</string>
+    <string name="kpi_coletores_icon_desc">Ícone de coletores ativos</string>
+
 </resources>

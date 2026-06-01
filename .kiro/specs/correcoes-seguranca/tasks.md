@@ -1,5 +1,12 @@
 # Plano de Implementação: Correções de Segurança
 
+> **FECHAMENTO FORMAL - 31/05/2026**
+> Implementacao de producao concluida. Os **testes opcionais** (marcados com `*`)
+> ainda nao escritos foram **dispensados** e seus checkboxes removidos deste plano.
+> Itens **nao-teste** que porventura permanecam com `- [ ]` abaixo continuam sendo
+> pendencia real (nao foram removidos no fechamento).
+
+
 ## Visão Geral
 
 Esta feature aplica 12 correções de segurança ao SIHCP, divididas em **três ondas de deploy** para minimizar risco e permitir revisão humana entre etapas:
@@ -56,7 +63,7 @@ Tarefas prefixadas com `[OPERACIONAL]` exigem ação humana (rotação de senhas
     - Em caso de sucesso: logar `"SecretsBootstrap OK — DATASOURCE_PASSWORD e JWT_SECRET carregados do ambiente"`
     - _Requisitos: 1.3, 1.4, 1.6_
 
-  - [ ]* 3.2 Teste de propriedade para `SecretsBootstrap`
+  - (opcional, dispensado) 3.2 Teste de propriedade para `SecretsBootstrap`
     - **Propriedade 2: `SecretsBootstrap` valida a presença e o comprimento dos segredos**
     - **Valida: Requisitos 1.3, 1.4, 1.6**
     - Arquivo `sihcp-server/src/test/java/.../SecretsBootstrapPropertyTest.java` usando jqwik
@@ -64,14 +71,14 @@ Tarefas prefixadas com `[OPERACIONAL]` exigem ação humana (rotação de senhas
     - Verificar que aborta se e somente se `password.isBlank() || secret.isBlank() || secret.length() < 32`
     - Mínimo 100 iterações
 
-  - [ ]* 3.3 Teste de propriedade para ausência de segredos literais
+  - (opcional, dispensado) 3.3 Teste de propriedade para ausência de segredos literais
     - **Propriedade 1: Ausência de segredos literais no arquivo versionado**
     - **Valida: Requisitos 1.1, 1.2**
     - Arquivo `sihcp-server/src/test/java/.../ApplicationPropertiesPropertyTest.java`
     - Carregar `application-mobile.properties` via `java.util.Properties`
     - Para cada chave em `{spring.datasource.password, jwt.secret}`, asserta que o valor é vazio OU começa com `${` e termina com `}`
 
-  - [ ]* 3.4 Teste de propriedade para cobertura do `.gitignore`
+  - (opcional, dispensado) 3.4 Teste de propriedade para cobertura do `.gitignore`
     - **Propriedade 3: `.gitignore` cobre todos os padrões sensíveis**
     - **Valida: Requisitos 1.5, 2.1, 2.4**
     - Arquivo `sihcp-server/src/test/java/.../GitignorePropertyTest.java`
@@ -164,7 +171,7 @@ Tarefas prefixadas com `[OPERACIONAL]` exigem ação humana (rotação de senhas
     - Em `addInterceptors`, registrar o `LoginRateLimiter` no path pattern `/api/mobile/auth/login`
     - _Requisitos: 7.5_
 
-  - [ ]* 11.3 Teste de propriedade para `LoginRateLimiter`
+  - (opcional, dispensado) 11.3 Teste de propriedade para `LoginRateLimiter`
     - **Propriedade 7: Rate limit aplica exclusivamente ao login, com janela de 10/min**
     - **Valida: Requisitos 7.2, 7.3, 7.5**
     - Arquivo `sihcp-server/src/test/java/.../LoginRateLimiterPropertyTest.java`
@@ -185,7 +192,7 @@ Tarefas prefixadas com `[OPERACIONAL]` exigem ação humana (rotação de senhas
     - Remover logs verbosos `"=== MOBILE JWT FILTER ..."` (substituir por `log.debug`)
     - _Requisitos: 8.4_
 
-  - [ ]* 12.3 Teste de propriedade para sanitização de logs
+  - (opcional, dispensado) 12.3 Teste de propriedade para sanitização de logs
     - **Propriedade 9: Logs não vazam tokens JWT**
     - **Valida: Requisito 8.4**
     - Arquivo `sihcp-server/src/test/java/.../JwtLogSanitizationPropertyTest.java`
@@ -213,24 +220,24 @@ Tarefas prefixadas com `[OPERACIONAL]` exigem ação humana (rotação de senhas
   - Status 401, `Content-Type: application/json`
   - _Requisitos: 9.3_
 
-- [ ]* 16. Testes de integração do servidor (Onda 2)
-  - [ ]* 16.1 `LoginRateLimitIntegrationTest`
+- (opcional, dispensado) 16. Testes de integração do servidor (Onda 2)
+  - (opcional, dispensado) 16.1 `LoginRateLimitIntegrationTest`
     - `@SpringBootTest` com perfil `mobile,prod`
     - Bombardear `/api/mobile/auth/login` 15× em < 1 min via `MockMvc`
     - Asserta: requests 1–10 retornam 401 (credenciais inválidas), 11–15 retornam 429 com `Retry-After`
     - _Requisitos: 7.2, 7.3_
 
-  - [ ]* 16.2 `CorsIntegrationTest`
+  - (opcional, dispensado) 16.2 `CorsIntegrationTest`
     - Enviar preflight `OPTIONS` de origem não listada
     - Asserta: ausência do header `Access-Control-Allow-Origin`
     - _Requisitos: 6.3_
 
-  - [ ]* 16.3 `TokenExpiryIntegrationTest`
+  - (opcional, dispensado) 16.3 `TokenExpiryIntegrationTest`
     - Gerar token com `exp` no passado via `JwtUtil`
     - Chamar endpoint autenticado; asserta 401 + body `{"error":"token_expired"}`
     - _Requisitos: 9.3_
 
-  - [ ]* 16.4 `StartupFailureIntegrationTest`
+  - (opcional, dispensado) 16.4 `StartupFailureIntegrationTest`
     - `@SpringBootTest` sem `JWT_SECRET` definido
     - Asserta: `ApplicationContextException` ou falha explícita no boot
     - _Requisitos: 1.4_
@@ -278,7 +285,7 @@ Tarefas prefixadas com `[OPERACIONAL]` exigem ação humana (rotação de senhas
     - Garantir que a UI capture `SqlCipherKeyException` e exiba mensagem bloqueante
     - _Requisitos: 3.1, 3.2, 3.3, 3.4_
 
-  - [ ]* 20.3 Teste de propriedade para `SqlCipherKeyManager`
+  - (opcional, dispensado) 20.3 Teste de propriedade para `SqlCipherKeyManager`
     - **Propriedade 4: Passphrase do SQLCipher é gerada, persistida e única por dispositivo**
     - **Valida: Requisitos 3.1, 3.2, 3.3**
     - Arquivo `InventarioMobile/app/src/test/java/.../SqlCipherKeyManagerPropertyTest.kt` (Kotest Property)
@@ -303,7 +310,7 @@ Tarefas prefixadas com `[OPERACIONAL]` exigem ação humana (rotação de senhas
   - Remover `<uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />` APÓS confirmar via grep que nenhum `NotificationCompat.Builder.setFullScreenIntent(...)` existe em `InventarioMobile/app/src/main/java`
   - _Requisitos: 5.5, 11.1, 12.1, 12.3_
 
-- [ ] 23. Configurar ProGuard/R8 para builds release
+- [x] 23. Configurar ProGuard/R8 para builds release
   - [x] 23.1 Criar `proguard-rules.pro` com regras completas
     - Arquivo `InventarioMobile/app/proguard-rules.pro`
     - Conteúdo completo conforme design seção R4: regras para Kotlin, Coroutines, Hilt/Dagger, Room, Retrofit/OkHttp, Gson, SQLCipher, Security Crypto, DTOs/Entities/Domain Models, WorkManager, Paging 3, Parcelize, ZXing, iText 7, Glide
@@ -318,7 +325,7 @@ Tarefas prefixadas com `[OPERACIONAL]` exigem ação humana (rotação de senhas
     - Executar `./gradlew assembleRelease` e corrigir quaisquer `-keep` faltantes
     - _Requisitos: 4.1, 4.2, 4.4_
 
-  - [ ]* 23.3 Teste de propriedade para regras ProGuard
+  - (opcional, dispensado) 23.3 Teste de propriedade para regras ProGuard
     - **Propriedade 6: ProGuard preserva bibliotecas reflexivas**
     - **Valida: Requisito 4.3**
     - Arquivo `InventarioMobile/app/src/test/java/.../ProguardRulesPropertyTest.kt`
@@ -343,21 +350,21 @@ Tarefas prefixadas com `[OPERACIONAL]` exigem ação humana (rotação de senhas
   - Registrar a build em `BUILD_HISTORY.md` com tipo `Release`, mudanças: "Correções de segurança — Onda 3 (SQLCipher keystore, network config, ProGuard, manifesto)"
   - _Requisitos: 4.1, 4.2, 4.4_
 
-- [ ]* 26. Testes de propriedade para configuração do app
-  - [ ]* 26.1 `NetworkSecurityConfigPropertyTest`
+- (opcional, dispensado) 26. Testes de propriedade para configuração do app
+  - (opcional, dispensado) 26.1 `NetworkSecurityConfigPropertyTest`
     - **Propriedade 5: Configuração de rede não permite cleartext nem user CAs em produção**
     - **Valida: Requisitos 5.1, 5.3, 5.5, 10.1, 10.2, 10.3**
     - Parsear `network_security_config.xml` e `AndroidManifest.xml` via `DocumentBuilder`
     - Assertar (a) base-config sem cleartext e sem `src="user"`; (b) `<application>` sem `android:usesCleartextTraffic`; (c) para cada `<domain-config cleartextTrafficPermitted="true">`, cada `<domain>` pertence à allowlist IFMT
     - Gerar IPs com `Arb.string()` e confirmar que apenas os conhecidos casam
 
-  - [ ]* 26.2 `AndroidManifestPropertyTest`
+  - (opcional, dispensado) 26.2 `AndroidManifestPropertyTest`
     - **Propriedade 8: Manifesto do app mantém permissões mínimas e desabilita backup**
     - **Valida: Requisitos 11.1, 12.1, 12.3**
     - Parsear `AndroidManifest.xml`
     - Assertar (a) `<application android:allowBackup="false">`; (b) ausência de `SYSTEM_ALERT_WINDOW`; (c) ausência de `USE_FULL_SCREEN_INTENT` quando o grep em `src/main/java` não encontra `setFullScreenIntent`
 
-- [ ]* 27. Teste de integração end-to-end do app
+- (opcional, dispensado) 27. Teste de integração end-to-end do app
   - Arquivo `InventarioMobile/app/src/androidTest/.../SqlCipherE2ETest.kt`
   - Criar `AppDatabase`, inserir dados, fechar, reabrir com o mesmo `SqlCipherKeyManager`, ler — round-trip de ponta-a-ponta no emulador
   - Executar `./gradlew assembleRelease` em pipeline CI — valida R4.4 (APK assinado compila com minifyEnabled)

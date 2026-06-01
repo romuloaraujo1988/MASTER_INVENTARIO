@@ -86,6 +86,17 @@ secrets/
 *.pem
 *.p12
 
+# Configurações de banco com credenciais reais (NUNCA versionar).
+# Versionar apenas os templates *.example. Copie e preencha localmente.
+config/configuracao_banco.json
+config/database-config.properties
+APP_DESKTOP_PRODUCAO/config/configuracao_banco.json
+APP_DESKTOP_PRODUCAO/config/database-config.properties
+**/configuracao_banco.json
+**/database-config.properties
+!**/configuracao_banco.json.example
+!**/database-config.properties.example
+
 # Fotos de coleta (salvas pelo servidor mobile)
 # Manter a pasta mas ignorar o conteúdo
 data/fotos/**

@@ -1,5 +1,17 @@
 # Validação de Itens Compostos vs. Coletas Normais - Requirements
 
+> 🔗 **SPEC CANÔNICO (CONSOLIDADO) — 31/05/2026**
+>
+> Este é o **spec único e oficial** para o problema de itens compostos coletados
+> como coleta normal. O spec duplicado `prevenir-coleta-composta-como-normal`
+> (que só possuía `requirements.md`) foi **consolidado aqui** e convertido em
+> redirecionamento. Os requisitos EARS adicionais que aquele spec trazia e que
+> não estavam aqui foram incorporados na **Seção 8 — Requisitos Adicionais
+> (EARS)** ao final deste documento.
+>
+> Toda evolução do tema deve acontecer neste spec
+> (`validacao-itens-compostos-coletas`).
+
 ## 1. Visão Geral
 
 ### 1.1 Problema Identificado
@@ -242,6 +254,62 @@ ORDER BY p.numero;
 
 ---
 
-**Versão:** 1.0.0  
-**Data:** 11/02/2026  
-**Status:** ✅ Requirements Completos
+**Versão:** 1.1.0  
+**Data:** 31/05/2026 (consolidação)  
+**Status:** ✅ Requirements Completos (canônico)
+
+---
+
+## 8. Requisitos Adicionais (EARS) — incorporados de `prevenir-coleta-composta-como-normal`
+
+Os requisitos abaixo foram trazidos do spec consolidado para completar a
+cobertura. Mantêm a numeração original daquele documento como referência.
+
+### Req A1 — Bloqueio antes da persistência (online e offline)
+- WHEN uma coleta é iniciada para qualquer item, THE Sistema SHALL verificar se
+  o item existe em `tabela_item_composto` **antes** de qualquer inserção no banco.
+- WHEN a validação falha, THE Sistema SHALL **não** persistir a coleta.
+- WHEN em modo offline, THE Sistema SHALL checar `tabela_item_composto` no
+  SQLite local; em modo online, no PostgreSQL — mantendo comportamento
+  consistente entre os modos.
+- WHEN dados offline são sincronizados, THE Sistema SHALL revalidar que nenhum
+  item composto foi coletado como normal durante o período offline e sinalizar
+  violações para revisão do administrador.
+
+### Req A2 — Configuração de validação por perfil
+- WHEN um perfil de usuário é configurado, THE Sistema SHALL permitir definir se
+  a validação de composição se aplica àquele perfil.
+- WHEN a validação está habilitada para o perfil, THE Sistema SHALL aplicar a
+  regra a todas as coletas daquele perfil.
+- WHEN a validação está desabilitada para o perfil, THE Sistema SHALL permitir a
+  coleta com **aviso** e registrar o evento (ver Req A3).
+- WHEN configurações de perfil mudam, THE Sistema SHALL aplicar as novas regras
+  apenas a coletas futuras.
+
+### Req A3 — Auditoria de bypass
+- WHEN um usuário (com permissão) ignora a validação, THE Sistema SHALL registrar
+  timestamp, usuário, detalhes do item e motivo.
+- WHEN a validação é pulada, THE Sistema SHALL armazenar um flag indicando o bypass.
+- WHEN logs de auditoria são consultados/exportados, THE Sistema SHALL permitir
+  filtro por data, usuário, item ou status de bypass e incluir todos os eventos.
+
+### Req A4 — Mensagens de erro claras
+- WHEN uma coleta de item composto é bloqueada, THE Sistema SHALL exibir mensagem
+  em português contendo número, descrição e número de componentes do item.
+- WHEN exibida, THE mensagem SHALL explicar que itens compostos exigem o
+  procedimento de coleta composta; em lote, indicar qual item causou o bloqueio.
+
+### Req A5 — Performance da validação
+- WHEN a validação é feita para um item, THE Sistema SHALL concluir em < 200ms
+  (meta interna; o teto absoluto é 500ms antes da inserção).
+- WHEN a validação é feita para 100 itens em lote, THE Sistema SHALL concluir em
+  < 2s.
+- WHEN a conexão ao banco está lenta, THE Sistema SHALL usar cache de resultados
+  recentes; cache invalidado deve ser atualizado em até 5s.
+
+> Observação de implementação (estado atual verificado em 31/05/2026): o
+> `RelatorioColetaDAO` **já** integra itens compostos nos relatórios de
+> não-coletados; porém a **prevenção** (bloqueio em `ColetaService`/
+> `MobileColetaController`/`ColetaFrame`) e a **correção** (`Correcao`,
+> `CorrecaoDAO`, `CorrecaoColetaService`) **ainda não existem** no código — são o
+> trabalho pendente real deste spec.

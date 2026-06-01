@@ -74,9 +74,6 @@ public class BuscaItemInventarioDialog extends JDialog {
     private static final Color BG = new Color(240, 242, 245);
     private static final Color CARD_BG = Color.WHITE;
     private static final Color PRIMARY = new Color(59, 130, 246);
-    private static final Color SUCCESS = new Color(34, 197, 94);
-    private static final Color DANGER = new Color(239, 68, 68);
-    private static final Color WARNING = new Color(245, 158, 11);
     private static final Color INDIGO = new Color(99, 102, 241);
     private static final Color TEXT_PRI = new Color(17, 24, 39);
     private static final Color TEXT_SEC = new Color(107, 114, 128);
@@ -98,7 +95,6 @@ public class BuscaItemInventarioDialog extends JDialog {
 
     // ── Painel superior ───────────────────────────────────────────────────────
     private JTextField campoBusca;
-    private JRadioButton rbTodos, rbPendentes, rbColetados, rbNaoEnc;
     private JLabel lblColetados, lblPendentes, lblNaoEnc, lblTotal;
     private DefaultTableModel modeloSuperior;
     private JTable tabelaSuperior;
@@ -257,10 +253,10 @@ public class BuscaItemInventarioDialog extends JDialog {
         filtros.setOpaque(false);
 
         ButtonGroup grupo = new ButtonGroup();
-        rbTodos = criarRadio("Todos", grupo, filtros, true);
-        rbColetados = criarRadio("✅ Coletados", grupo, filtros, false);
-        rbPendentes = criarRadio("⏳ Pendentes", grupo, filtros, false);
-        rbNaoEnc = criarRadio("❌ Não Encontrados", grupo, filtros, false);
+        criarRadio("Todos", grupo, filtros, true);
+        criarRadio("✅ Coletados", grupo, filtros, false);
+        criarRadio("⏳ Pendentes", grupo, filtros, false);
+        criarRadio("❌ Não Encontrados", grupo, filtros, false);
 
         JPanel topo = new JPanel(new BorderLayout(0, 4));
         topo.setOpaque(false);

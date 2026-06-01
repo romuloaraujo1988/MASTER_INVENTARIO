@@ -1,5 +1,12 @@
 # Plano de Implementação: Renomeação de Pacotes SIHCP
 
+> **FECHAMENTO FORMAL - 31/05/2026**
+> Implementacao de producao concluida. Os **testes opcionais** (marcados com `*`)
+> ainda nao escritos foram **dispensados** e seus checkboxes removidos deste plano.
+> Itens **nao-teste** que porventura permanecam com `- [ ]` abaixo continuam sendo
+> pendencia real (nao foram removidos no fechamento).
+
+
 ## Visão Geral
 
 Renomear o pacote raiz Java do SIHCP de `com.inventario` para `com.inventario.sihcp` nos três módulos Maven (`sihcp-core`, `sihcp-desktop`, `sihcp-server`), seguindo a sequência: atualização dos `pom.xml` → renomeação dos arquivos Java → atualização das configurações → verificação e documentação.
@@ -21,7 +28,7 @@ Renomear o pacote raiz Java do SIHCP de `com.inventario` para `com.inventario.si
     - Em `sihcp-server/pom.xml`, atualizar `<mainClass>` para `com.inventario.sihcp.MobileApiApplication`
     - _Requirements: 4.1, 4.2, 4.3, 5.1, 5.2_
 
-  - [ ]* 1.3 Escrever teste de propriedade para ausência de referências ao pacote antigo nos `pom.xml`
+  - (opcional, dispensado) 1.3 Escrever teste de propriedade para ausência de referências ao pacote antigo nos `pom.xml`
     - **Propriedade 5: Ausência de referências ao pacote antigo nos pom.xml**
     - Para qualquer `pom.xml` nos módulos Maven, não deve existir ocorrência de `com.inventario` sem o sufixo `.sihcp` nos elementos `<groupId>`, `<mainClass>`, `<parent>` e `<dependency>`
     - Implementar como teste JUnit que varre os 4 arquivos `pom.xml` e verifica a invariante
@@ -41,19 +48,19 @@ Renomear o pacote raiz Java do SIHCP de `com.inventario` para `com.inventario.si
     - Remover o diretório `sihcp-core/src/main/java/com/inventario/` após a migração completa
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-  - [ ]* 3.2 Escrever teste de propriedade para ausência de declarações de pacote antigas em `sihcp-core`
+  - (opcional, dispensado) 3.2 Escrever teste de propriedade para ausência de declarações de pacote antigas em `sihcp-core`
     - **Propriedade 1: Ausência de declarações de pacote com prefixo antigo**
     - Para qualquer arquivo `.java` em `sihcp-core/src/main/java/`, a declaração `package` não deve começar com `package com.inventario` sem o sufixo `.sihcp`
     - Usar `JavaSourceFileGenerator` para enumerar os arquivos e verificar com regex `(?m)^package com\.inventario(?!\.sihcp).*$`
     - **Validates: Requirements 1.1**
 
-  - [ ]* 3.3 Escrever teste de propriedade para ausência de importações antigas em `sihcp-core`
+  - (opcional, dispensado) 3.3 Escrever teste de propriedade para ausência de importações antigas em `sihcp-core`
     - **Propriedade 2: Ausência de importações com prefixo antigo**
     - Para qualquer arquivo `.java` em `sihcp-core/src/main/java/`, nenhuma linha de importação deve começar com `import com.inventario.` sem o sufixo `sihcp`
     - Verificar com regex `(?m)^import com\.inventario\.(?!sihcp).*$`
     - **Validates: Requirements 1.2**
 
-  - [ ]* 3.4 Escrever teste de propriedade para consistência pacote/diretório em `sihcp-core`
+  - (opcional, dispensado) 3.4 Escrever teste de propriedade para consistência pacote/diretório em `sihcp-core`
     - **Propriedade 3: Consistência entre declaração de pacote e localização no sistema de arquivos**
     - Para qualquer arquivo `.java` com declaração `com.inventario.sihcp.X`, o caminho relativo deve conter o segmento `com/inventario/sihcp/X/`
     - **Validates: Requirements 1.3**
@@ -68,14 +75,14 @@ Renomear o pacote raiz Java do SIHCP de `com.inventario` para `com.inventario.si
     - Garantir que a classe `MobileApiApplication` seja movida para `com.inventario.sihcp`
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 6.2_
 
-  - [ ]* 3.7 Escrever testes de propriedade para `sihcp-desktop` e `sihcp-server`
+  - (opcional, dispensado) 3.7 Escrever testes de propriedade para `sihcp-desktop` e `sihcp-server`
     - **Propriedade 1 (módulos desktop e server): Ausência de declarações de pacote antigas**
     - **Propriedade 2 (módulos desktop e server): Ausência de importações antigas**
     - **Propriedade 3 (módulos desktop e server): Consistência pacote/diretório**
     - Reutilizar o `JavaSourceFileGenerator` parametrizando o diretório raiz de cada módulo
     - **Validates: Requirements 1.1, 1.2, 1.3**
 
-  - [ ]* 3.8 Escrever teste de propriedade para preservação dos subpacotes
+  - (opcional, dispensado) 3.8 Escrever teste de propriedade para preservação dos subpacotes
     - **Propriedade 4: Preservação dos subpacotes**
     - Para cada subpacote `com.inventario.X` que existia antes (representado por diretório no sistema de arquivos), deve existir o diretório correspondente `com.inventario.sihcp.X` após a renomeação
     - Verificar nos três módulos Maven
@@ -87,7 +94,7 @@ Renomear o pacote raiz Java do SIHCP de `com.inventario` para `com.inventario.si
     - Atualizar referências a FQNs com o pacote antigo em strings de teste
     - _Requirements: 2.1, 2.4_
 
-  - [ ]* 4.2 Escrever testes de propriedade para ausência de referências antigas nos arquivos de teste
+  - (opcional, dispensado) 4.2 Escrever testes de propriedade para ausência de referências antigas nos arquivos de teste
     - **Propriedade 1 (test): Ausência de declarações de pacote antigas nos arquivos de teste**
     - **Propriedade 2 (test): Ausência de importações antigas nos arquivos de teste**
     - Parametrizar o `JavaSourceFileGenerator` para varrer `src/test/java/` de cada módulo
@@ -115,12 +122,12 @@ Renomear o pacote raiz Java do SIHCP de `com.inventario` para `com.inventario.si
     - Inspecionar e atualizar `sihcp-core/src/main/resources/log4j2.xml` (se contiver referências ao pacote)
     - _Requirements: 3.1, 3.2_
 
-  - [ ]* 6.4 Escrever teste de propriedade para ausência de referências ao pacote antigo nos arquivos de configuração
+  - (opcional, dispensado) 6.4 Escrever teste de propriedade para ausência de referências ao pacote antigo nos arquivos de configuração
     - **Propriedade 6: Ausência de referências ao pacote antigo nos arquivos de configuração**
     - Para qualquer arquivo `.properties` ou `.yml` nos módulos Maven, nenhuma chave deve conter `com.inventario` sem o sufixo `.sihcp`
     - **Validates: Requirements 3.1, 3.2**
 
-  - [ ]* 6.5 Escrever teste de propriedade para scan de componentes Spring
+  - (opcional, dispensado) 6.5 Escrever teste de propriedade para scan de componentes Spring
     - **Propriedade 7: Scan de componentes Spring abrange o novo pacote raiz**
     - Para qualquer classe anotada com `@SpringBootApplication` nos módulos Maven, o pacote base de scan (implícito ou explícito via `scanBasePackages`) deve ser `com.inventario.sihcp` ou um de seus subpacotes
     - Verificar que nenhuma anotação `@SpringBootApplication` referencia `com.inventario` sem `.sihcp`

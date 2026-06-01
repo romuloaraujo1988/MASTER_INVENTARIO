@@ -194,4 +194,45 @@
         <item name="chipMinHeight">28dp</item>
     </style>
 
+    <!-- ══════════════════════════════════════════════════════════════
+         DASHBOARD REDESIGN — Estilos de Cartão e Botão
+         Centralizam corner radius / elevação e a tipografia para
+         garantir consistência visual entre os 4 KPIs e os 4 botões.
+         (spec dashboard-redesign — Req 1.1, 1.2, 5.1, 5.3, 5.4)
+    ══════════════════════════════════════════════════════════════ -->
+
+    <!-- Cartão de KPI: superfície neutra do tema, sem gradiente nem
+         preenchimento saturado. Corner radius e elevação centralizados. -->
+    <style name="Widget.App.Dashboard.KpiCard" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardElevation">1dp</item>
+        <item name="cardBackgroundColor">?attr/colorSurface</item>
+        <item name="strokeColor">?attr/colorOutlineVariant</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="contentPadding">16dp</item>
+    </style>
+
+    <!-- Botão de ação primária (Scan Rápido): estilo preenchido (filled).
+         Define corner radius, tipografia e alvo de toque (>=48dp). -->
+    <style name="Widget.App.Dashboard.ActionButton" parent="Widget.Material3.Button">
+        <item name="cornerRadius">12dp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:textAppearance">@style/TextAppearance.App.LabelLarge</item>
+        <item name="iconGravity">textStart</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+
+    <!-- Botões de ação secundária (Manual, Descrição, Visualizar):
+         mesmo corner radius e tipografia da ação primária, mas com
+         estilo não preenchido (outlined) e distinto do filled. -->
+    <style name="Widget.App.Dashboard.ActionButton.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="cornerRadius">12dp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:textAppearance">@style/TextAppearance.App.LabelLarge</item>
+        <item name="iconGravity">textStart</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+
 </resources>

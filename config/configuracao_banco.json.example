@@ -1,0 +1,23 @@
+{
+    "postgresql": {
+        "host": "localhost",
+        "database": "sispatrimonio",
+        "user": "postgres",
+        "password": "COLOQUE_A_SENHA_AQUI",
+        "port": 5432,
+        "schema": "public"
+    },
+    "sqlite": {
+        "database": "inventario.db",
+        "backup_dir": "backups/2026-05-01"
+    },
+    "mysql": {
+        "host": "localhost",
+        "database": "sispatrimonio",
+        "user": "root",
+        "password": "",
+        "port": 3306
+    },
+    "debug": true,
+    "log_queries": false
+}

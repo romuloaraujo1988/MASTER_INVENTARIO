@@ -723,13 +723,6 @@ public class ImportacaoCSV {
     }
     
     /**
-     * Converte string para Date
-     */
-    private Date parseData(String data) {
-        return DateFormatUtils.parseDate(data);
-    }
-    
-    /**
      * Normaliza o estado de conservação para os valores corretos do sistema
      * Converte variações do SUAP/Excel para os estados padronizados
      * 

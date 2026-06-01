@@ -18,6 +18,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/customCaptureRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/black">
@@ -263,15 +264,137 @@
         android:id="@+id/tvStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
+        android:layout_marginBottom="12dp"
         android:background="@drawable/bg_status_pill"
         android:paddingHorizontal="16dp"
         android:paddingVertical="8dp"
         android:text="Aponte para o QR Code ou código de barras"
         android:textColor="@android:color/white"
         android:textSize="13sp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/layoutAtalhosColeta"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- ═══════════════════════════════════════════════════════════
+         MENU_ATALHOS — faixa de atalhos de coleta no rodapé
+         (feature atalhos-coleta-rapida — exposição também na câmera ao vivo)
+
+         Posicionado no rodapé, FORA da mira central (240dp) para não obstruir
+         a leitura (Req 6.2/6.3). Reaproveita a linguagem visual de "pill"
+         (@drawable/bg_status_pill + texto/ícone brancos) já adotada pelos
+         demais controles desta câmera, em vez de Material Chips — mantendo a
+         consistência visual desta tela (Req 6.1).
+
+         Cada controle tem altura mínima de 48dp (Req 7.3), contentDescription
+         (Req 7.1) e é clicável/focável.
+         ═══════════════════════════════════════════════════════════ -->
+    <LinearLayout
+        android:id="@+id/layoutAtalhosColeta"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Atalho_Sem_Etiqueta -->
+        <LinearLayout
+            android:id="@+id/atalhoSemEtiqueta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:layout_marginHorizontal="5dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:background="@drawable/bg_status_pill"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="6dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Abrir coleta sem etiqueta">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_content_copy"
+                android:layout_marginEnd="6dp"
+                app:tint="@android:color/white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sem etiqueta"
+                android:textColor="@android:color/white"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <!-- Atalho_Manual -->
+        <LinearLayout
+            android:id="@+id/atalhoManual"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:layout_marginHorizontal="5dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:background="@drawable/bg_status_pill"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="6dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Abrir coleta manual por número">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_edit"
+                android:layout_marginEnd="6dp"
+                app:tint="@android:color/white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Manual"
+                android:textColor="@android:color/white"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <!-- Atalho_Descricao -->
+        <LinearLayout
+            android:id="@+id/atalhoDescricao"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:layout_marginHorizontal="5dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:background="@drawable/bg_status_pill"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="6dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Abrir coleta por descrição">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_search"
+                android:layout_marginEnd="6dp"
+                app:tint="@android:color/white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Descrição"
+                android:textColor="@android:color/white"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

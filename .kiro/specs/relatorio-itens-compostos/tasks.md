@@ -1,5 +1,12 @@
 # Implementation Plan - Relatório de Integridade de Itens Compostos
 
+> **FECHAMENTO FORMAL - 31/05/2026**
+> Implementacao de producao concluida. Os **testes opcionais** (marcados com `*`)
+> ainda nao escritos foram **dispensados** e seus checkboxes removidos deste plano.
+> Itens **nao-teste** que porventura permanecam com `- [ ]` abaixo continuam sendo
+> pendencia real (nao foram removidos no fechamento).
+
+
 ## Fase 1: Camada de Modelo (Domain)
 
 - [x] 1. Criar classes de modelo
@@ -74,7 +81,7 @@
   - Otimizar com índices existentes (idx_item_composto_patrimonio, idx_coleta_componente_item)
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 3.1, 4.1_
 
-- [ ]* 2.2 Escrever testes para DAO
+- (opcional, dispensado) 2.2 Escrever testes para DAO
   - Testar busca com filtro único
   - Testar busca com múltiplos filtros
   - Testar cálculo de estatísticas
@@ -178,7 +185,7 @@
   - Gerenciamento de estado com RelatorioItemCompostoState
   - _Requirements: 1.3, 2.1, 3.5, 5.1_
 
-- [ ]* 4.3 Escrever testes para ViewModel
+- (opcional, dispensado) 4.3 Escrever testes para ViewModel
   - Testar transições de estado
   - Testar carregamento de dados
   - Testar notificação de observers
@@ -230,7 +237,7 @@
   - Tooltip com taxa de integridade e componentes faltantes
   - _Requirements: 3.2, 3.3_
 
-- [ ]* 5.6 Escrever testes de UI
+- (opcional, dispensado) 5.6 Escrever testes de UI
   - Testar que cores correspondem ao status
   - Testar ordenação por clique
   - **Property 4: Destaque visual corresponde ao status de integridade**
@@ -258,7 +265,7 @@
   - Manter seleção na tabela principal ao fechar
   - _Requirements: 7.1, 7.5_
 
-- [ ]* 6.3 Escrever testes para diálogo de detalhes
+- (opcional, dispensado) 6.3 Escrever testes para diálogo de detalhes
   - Testar que todos os componentes são exibidos
   - Testar destaque de componentes faltantes
   - **Property 12: Detalhamento exibe todos os componentes**
@@ -310,14 +317,14 @@
   - Corrigir erros de compilação se houver
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ]* 8.2 Executar testes de integração manual
+- (opcional, dispensado) 8.2 Executar testes de integração manual
   - Fluxo completo: abrir → filtrar → ordenar → exportar
   - Testar com dados reais (1.588 itens compostos)
   - Testar detalhamento de item específico
   - Testar exportação Excel, PDF e CSV
   - _Requirements: Todos_
 
-- [ ]* 8.3 Validar performance
+- (opcional, dispensado) 8.3 Validar performance
   - Carregar relatório com todos os itens (< 3 segundos)
   - Aplicar filtros (< 1 segundo)
   - Exportar Excel com todos os dados (< 5 segundos)
