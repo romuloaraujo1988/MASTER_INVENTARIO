@@ -183,11 +183,9 @@ public class MobileFotoReferenciaServiceDeltaSyncPropertyTest {
         List<MobileFotoReferenciaDTO> todasFotos = gerarListaFotosComDatasVariadas(totalFotos, agora);
         
         // Desativar algumas fotos com dataAtualizacao recente
-        int fotosDesativadas = 0;
         for (int i = 0; i < totalFotos; i++) {
             if (random.nextBoolean() && todasFotos.get(i).getDataAtualizacao() > agora - UM_DIA_MS) {
                 todasFotos.get(i).setAtivo(false);
-                fotosDesativadas++;
             }
         }
         

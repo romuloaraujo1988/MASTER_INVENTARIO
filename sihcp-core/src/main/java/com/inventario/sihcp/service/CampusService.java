@@ -238,21 +238,6 @@ public class CampusService {
     }
     
     /**
-     * Valida os dados de um campus (retorna boolean - mantido para compatibilidade)
-     * @param campus Campus a ser validado
-     * @return true se válido
-     */
-    private boolean validarCampus(Campus campus) {
-        try {
-            validarCampusComExcecao(campus);
-            return true;
-        } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
-            return false;
-        }
-    }
-    
-    /**
      * Valida formato do CNPJ
      * @param cnpj CNPJ a ser validado
      * @return true se válido

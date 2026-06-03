@@ -321,7 +321,8 @@ class ManualCollectionActivity : BaseOfflineActivity() {
                 mostrarDialogDuplicata(
                     numeroPatrimonio = state.patrimonio?.numeroPatrimonio ?: "",
                     coletadoPor = coletadoPor,
-                    dataAnterior = dataAnterior
+                    dataAnterior = dataAnterior,
+                    descricao = state.patrimonio?.descricao
                 )
                 viewModel.clearMessages()
             } else {
@@ -358,21 +359,30 @@ class ManualCollectionActivity : BaseOfflineActivity() {
      * Exibe o dialog de decisão quando o usuário tenta coletar um patrimônio
      * já coletado. Oferece 3 opções:
      *  1. Forçar nova coleta (sobrescreve o status local)
-     *  2. Registrar como item sem etiqueta (preserva o dado)
+     *  2. Coletar por descrição (preserva o dado — caminho para ETIQUETA DUPLICADA,
+     *     quando dois patrimônios físicos diferentes têm o mesmo número no cadastro)
      *  3. Cancelar (registra a tentativa no audit trail)
      *
      * Toda tentativa é registrada no AuditService independente da decisão.
+     *
+     * @param descricao Descrição real do patrimônio (quando disponível). Usada para
+     *        pré-preencher a coleta por descrição, em vez do texto genérico
+     *        "Patrimônio X" — essencial no caso de etiqueta duplicada, onde o
+     *        coletor precisa identificar o item correto pela descrição.
      */
     private fun mostrarDialogDuplicata(
         numeroPatrimonio: String,
         coletadoPor: String?,
-        dataAnterior: String?
+        dataAnterior: String?,
+        descricao: String? = null
     ) {
         val mensagem = buildString {
             appendLine("O patrimônio $numeroPatrimonio já foi coletado neste inventário.")
             appendLine()
             if (!coletadoPor.isNullOrBlank()) appendLine("Por: $coletadoPor")
             if (!dataAnterior.isNullOrBlank()) appendLine("Em: $dataAnterior")
+            appendLine()
+            appendLine("Se este for um item DIFERENTE com a mesma etiqueta, use \"Coletar por descrição\".")
             appendLine()
             appendLine("O que deseja fazer?")
         }
@@ -399,7 +409,7 @@ class ManualCollectionActivity : BaseOfflineActivity() {
                 }
                 dialog.show(supportFragmentManager, "EstadoPatrimonioDialogForcado")
             }
-            .setNeutralButton("Registrar sem etiqueta") { _, _ ->
+            .setNeutralButton("Coletar por descrição") { _, _ ->
                 lifecycleScope.launch {
                     try {
                         auditService.registrarConversaoSemEtiqueta(
@@ -408,11 +418,16 @@ class ManualCollectionActivity : BaseOfflineActivity() {
                         )
                     } catch (e: Exception) { /* silencioso */ }
                 }
+                // Usa a descrição REAL do patrimônio quando disponível (caso de
+                // etiqueta duplicada — o coletor identifica o item pela descrição).
+                // Fallback para o texto genérico apenas se a descrição estiver vazia.
+                val descricaoSugerida = descricao?.takeIf { it.isNotBlank() }
+                    ?: "Patrimônio $numeroPatrimonio"
                 val intent = Intent(
                     this,
                     com.inventario.mobile.presentation.coleta.ItemSemEtiquetaActivity::class.java
                 ).apply {
-                    putExtra("DESCRICAO_SUGERIDA", "Patrimônio $numeroPatrimonio")
+                    putExtra("DESCRICAO_SUGERIDA", descricaoSugerida)
                     putExtra("NUMERO_PATRIMONIO_ORIGEM", numeroPatrimonio)
                 }
                 startActivity(intent)

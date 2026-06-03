@@ -316,7 +316,6 @@ public abstract class BaseDAO<T, ID> {
      * CORREÇÃO: rs.getObject(1, Class) falha no PostgreSQL para conversões
      * de int8 → Integer. Usamos rs.getObject(1) e convertemos manualmente.
      */
-    @SuppressWarnings("unchecked")
     protected <R> R executeScalar(String sql, Class<R> resultType, Object... params) throws SQLException {
         Connection conn = null;
         try {

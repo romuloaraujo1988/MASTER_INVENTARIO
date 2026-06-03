@@ -224,32 +224,45 @@ class ColetaRepositoryImpl @Inject constructor(
                     android.util.Log.d("ColetaRepositoryImpl", "  Patrimônio ID: ${coleta.patrimonioId}")
                 } else {
                     // OFFLINE: verificar banco local para evitar duplicata real
-                    android.util.Log.d("ColetaRepositoryImpl", "📵 OFFLINE - Verificando duplicata no banco local")
-                    
-                    insertMutex.withLock {
-                        val coletaExistente = coletaDao.buscarColetaExistente(
-                            coleta.patrimonioId.toInt(),
-                            inventarioId
+                    // EXCEÇÃO: se o usuário escolheu "Forçar nova coleta" no dialog
+                    // de duplicata (coleta.forcarColeta == true), pulamos a verificação.
+                    // Sem isso, "Forçar" só funcionava online — offline a query
+                    // buscarColetaExistente bloqueava a inserção mesmo após a decisão
+                    // explícita do usuário (caso clássico: ETIQUETA DUPLICADA no cadastro).
+                    if (coleta.forcarColeta) {
+                        android.util.Log.w(
+                            "ColetaRepositoryImpl",
+                            "⚠️ OFFLINE - Coleta FORÇADA pelo usuário: verificação de duplicata local IGNORADA " +
+                                    "(patrimônio ${coleta.numeroPatrimonio})"
                         )
+                    } else {
+                        android.util.Log.d("ColetaRepositoryImpl", "📵 OFFLINE - Verificando duplicata no banco local")
 
-                        if (coletaExistente != null) {
-                            val dataFormatada = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
-                                .format(java.util.Date(coletaExistente.dataColeta))
-
-                            android.util.Log.w("ColetaRepositoryImpl", "⚠️ OFFLINE - Patrimônio já coletado em $dataFormatada")
-
-                            auditService.registrarDuplicataDetectada(
-                                coletaId = 0,
-                                numeroPatrimonio = coleta.numeroPatrimonio ?: "",
-                                coletaAnteriorId = coletaExistente.id
+                        insertMutex.withLock {
+                            val coletaExistente = coletaDao.buscarColetaExistente(
+                                coleta.patrimonioId.toInt(),
+                                inventarioId
                             )
 
-                            return Result.failure(Exception(
-                                "⚠️ Patrimônio ${coleta.numeroPatrimonio} já foi coletado em $dataFormatada por ${coletaExistente.nomeUsuario} (modo offline)"
-                            ))
-                        }
+                            if (coletaExistente != null) {
+                                val dataFormatada = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+                                    .format(java.util.Date(coletaExistente.dataColeta))
 
-                        android.util.Log.d("ColetaRepositoryImpl", "✓ OFFLINE - Sem duplicata local, coleta permitida")
+                                android.util.Log.w("ColetaRepositoryImpl", "⚠️ OFFLINE - Patrimônio já coletado em $dataFormatada")
+
+                                auditService.registrarDuplicataDetectada(
+                                    coletaId = 0,
+                                    numeroPatrimonio = coleta.numeroPatrimonio ?: "",
+                                    coletaAnteriorId = coletaExistente.id
+                                )
+
+                                return Result.failure(Exception(
+                                    "⚠️ Patrimônio ${coleta.numeroPatrimonio} já foi coletado em $dataFormatada por ${coletaExistente.nomeUsuario} (modo offline)"
+                                ))
+                            }
+
+                            android.util.Log.d("ColetaRepositoryImpl", "✓ OFFLINE - Sem duplicata local, coleta permitida")
+                        }
                     }
                 }
             }

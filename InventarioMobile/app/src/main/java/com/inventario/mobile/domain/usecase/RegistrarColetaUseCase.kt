@@ -35,7 +35,8 @@ class RegistrarColetaUseCase @Inject constructor(
         tempoScanSegundos: Int? = null,
         tempoPreenchimentoSegundos: Int? = null,
         metodoColeta: String? = null,
-        tipoScan: String? = null
+        tipoScan: String? = null,
+        forcar: Boolean = false
     ): Result<Coleta> {
         return try {
             // 1. Validar entrada
@@ -135,7 +136,8 @@ class RegistrarColetaUseCase @Inject constructor(
                 metodoColeta = metodoColeta,
                 tipoScan = tipoScan,
                 divergencia = temDivergencia,
-                motivoDivergencia = motivoDivergencia
+                motivoDivergencia = motivoDivergencia,
+                forcarColeta = forcar
             )
             
             android.util.Log.d("RegistrarColetaUseCase", "✓ Coleta criada: Patrimônio ${coleta.numeroPatrimonio}, Usuário ${coleta.usuarioId}, Sala ${coleta.salaId}")

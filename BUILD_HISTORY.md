@@ -1057,3 +1057,26 @@ O app exibia "Erro de conexão. Verifique a rede e tente novamente" ao tentar ba
 
 - ✅ Download do PDF/XLSX do relatório fotográfico não dá mais timeout em redes lentas
 - ✅ Demais APIs (coleta, patrimônio, sync) não são afetadas — continuam com `callTimeout=90s`
+
+
+---
+
+## Build #029 - 31/05/2026 21:37 - Rebuild com mesmas funcionalidades (Build #028)
+
+- **Tipo:** Release (assinado, R8 + shrinkResources)
+- **Versão:** 2.29.7
+- **Build Code:** 83
+- **Arquivo APK:** `InventarioMobile/app/build/outputs/apk/release/SiHCP-release-v2.29.7.apk` (19.62 MB, 31/05 21:28)
+- **Status:** ✅ Sucesso (`assembleRelease`, BUILD SUCCESSFUL em 20s, 53 tasks: 1 executada, 52 up-to-date)
+
+### Mudanças
+
+- **Rebuild do APK release** com as mesmas funcionalidades do Build #028 (correção de divergências + dashboard redesign).
+- Nenhuma alteração de código foi feita — apenas recompilação solicitada pelo usuário.
+- Build muito rápida (20s) devido ao cache do Gradle — apenas 1 tarefa foi executada novamente, 52 estavam up-to-date.
+
+### Nota Técnica
+
+O APK gerado é **idêntico funcionalmente** ao Build #028. Como não houve mudanças no código-fonte, os bytecodes compilados são os mesmos (exceto timestamps/assinaturas). O arquivo físico tem o mesmo timestamp (21:28) porque o Gradle detectou que não havia nada para recompilar e manteve o artefato existente.
+
+**Resultado:** O APK de distribuição continua sendo `SiHCP-release-v2.29.7.apk` do Build #028, pronto para deploy.

@@ -422,6 +422,8 @@ class ScannerActivity : AppCompatActivity() {
             if (!coletadoPor.isNullOrBlank()) appendLine("Por: $coletadoPor")
             if (!dataAnterior.isNullOrBlank()) appendLine("Em: $dataAnterior")
             appendLine()
+            appendLine("Se este for um item DIFERENTE com a mesma etiqueta, use \"Coletar por descrição\".")
+            appendLine()
             appendLine("O que deseja fazer?")
         }
 
@@ -459,7 +461,7 @@ class ScannerActivity : AppCompatActivity() {
                     dialog.show(supportFragmentManager, "EstadoPatrimonioDialogForcado")
                 }
             }
-            .setNeutralButton("Registrar sem etiqueta") { _, _ ->
+            .setNeutralButton("Coletar por descrição") { _, _ ->
                 lifecycleScope.launch {
                     try {
                         auditService.registrarConversaoSemEtiqueta(

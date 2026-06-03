@@ -32,7 +32,7 @@ public class SalaInventarioDAO {
      * NOTA: Para operações do desktop/servidor, sempre usar PostgreSQL
      * @return sempre false para forçar uso do PostgreSQL
      */
-    private boolean isSQLite(@SuppressWarnings("unused") Connection conn) throws SQLException {
+    private boolean isSQLite(Connection conn) throws SQLException {
         // CORREÇÃO: Sempre retornar false para forçar uso do PostgreSQL
         // Parâmetro conn mantido para compatibilidade com chamadas existentes
         return false;

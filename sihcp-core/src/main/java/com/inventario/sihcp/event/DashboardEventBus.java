@@ -312,7 +312,6 @@ public class DashboardEventBus {
      * Reseta a instância singleton (apenas para testes).
      * Mantido package-private para uso em testes unitários.
      */
-    @SuppressWarnings("unused")
     static void resetInstance() {
         synchronized (DashboardEventBus.class) {
             if (instance != null) {

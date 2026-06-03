@@ -174,10 +174,10 @@ class ManualCollectionViewModel @Inject constructor(
      */
     fun forcarColeta(estadoEncontrado: String, observacoes: String? = null) {
         _uiState.value = _uiState.value.copy(jaColetado = false, errorMessage = null)
-        executarColeta(estadoEncontrado, observacoes)
+        executarColeta(estadoEncontrado, observacoes, forcar = true)
     }
 
-    private fun executarColeta(estadoEncontrado: String, observacoes: String?) {
+    private fun executarColeta(estadoEncontrado: String, observacoes: String?, forcar: Boolean = false) {
         val patrimonio = _uiState.value.patrimonio ?: return
 
         // Validação 3: Verificar se o patrimônio é válido (tem ID e número)
@@ -210,7 +210,8 @@ class ManualCollectionViewModel @Inject constructor(
                     estadoEncontrado = estadoEncontrado,
                     observacoes = observacoes,
                     metodoColeta = "MANUAL",
-                    tipoScan = "MANUAL"
+                    tipoScan = "MANUAL",
+                    forcar = forcar   // destrava a verificação de duplicata offline
                 )
 
                 result.fold(

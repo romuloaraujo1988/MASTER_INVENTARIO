@@ -86,6 +86,13 @@ data class Coleta(
     val divergencia: Boolean = false,
     val motivoDivergencia: String? = null,  // LOCALIZACAO_DIFERENTE, ESTADO_DIFERENTE, LOCALIZACAO_E_ESTADO
 
+    // Sinal TRANSIENTE (não persistido) usado quando o usuário escolhe
+    // "Forçar nova coleta" no dialog de duplicata. Quando true, o repositório
+    // PULA a verificação de duplicata local no modo OFFLINE — sem isso, o
+    // "Forçar" funcionava apenas online (offline ainda era bloqueado pela
+    // query buscarColetaExistente). Não é mapeado para a ColetaEntity.
+    val forcarColeta: Boolean = false,
+
     // v2.20.12: Local onde o item foi REALMENTE encontrado durante a coleta.
     // Distinto de `localizacaoAtual` (que é a sala de origem do patrimônio).
     val localizacaoEncontrada: String? = null

@@ -348,7 +348,8 @@ class ScannerViewModel(
         patrimonioId: Long,
         salaNome: String,
         estadoEncontrado: String,
-        tipoScan: String = "QR_CODE"
+        tipoScan: String = "QR_CODE",
+        forcar: Boolean = false
     ) {
         viewModelScope.launch {
             try {
@@ -411,7 +412,8 @@ class ScannerViewModel(
                     estadoEncontrado = estadoEncontrado,
                     observacoes = null,
                     metodoColeta = tipoScan,   // QR_CODE ou CODIGO_BARRAS
-                    tipoScan = tipoScan        // mesmo valor — campo específico de scan
+                    tipoScan = tipoScan,       // mesmo valor — campo específico de scan
+                    forcar = forcar            // destrava a verificação de duplicata offline
                 )
                 
                 result.fold(
@@ -492,7 +494,8 @@ class ScannerViewModel(
         _uiState.value = _uiState.value.copy(
             scanResult = _uiState.value.scanResult?.copy(jaColetado = false)
         )
-        coletarPatrimonioComEstado(patrimonioId, salaNome, estadoEncontrado, tipoScan)
+        // forcar = true destrava a verificação de duplicata local no modo OFFLINE
+        coletarPatrimonioComEstado(patrimonioId, salaNome, estadoEncontrado, tipoScan, forcar = true)
     }
 
     /**
