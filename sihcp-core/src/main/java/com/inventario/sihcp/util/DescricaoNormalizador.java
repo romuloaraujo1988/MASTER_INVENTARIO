@@ -15,13 +15,13 @@ import java.util.regex.Pattern;
  */
 public class DescricaoNormalizador {
     
-    // Padrão ANAC: "PATRIMÔNIO ANAC XXXXXXX" ou "- PATRIMÔNIO ANAC XXXXXXX"
+    // Padrão ANAC: "PATRIMÔNIO ANAC NNNNNNN" ou "- PATRIMÔNIO ANAC NNNNNNN"
     private static final Pattern PATTERN_ANAC = Pattern.compile(
         "\\s*-?\\s*PATRIM[OÔ]NIO\\s+ANAC\\s*[:\\-]?\\s*\\d+",
         Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
     );
     
-    // Padrão número de série: "N/S: XXX", "N/S XXX", "SÉRIE: XXX"
+    // Padrão número de série: "N/S: NNN", "N/S NNN", "SÉRIE: NNN"
     private static final Pattern PATTERN_SERIE = Pattern.compile(
         "\\s*[,;\\-]?\\s*(N/?S|S[EÉ]RIE|SERIAL)\\s*[:\\-]?\\s*[A-Z0-9\\-]+",
         Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE

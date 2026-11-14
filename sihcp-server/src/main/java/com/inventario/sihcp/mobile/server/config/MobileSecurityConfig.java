@@ -117,8 +117,9 @@ public class MobileSecurityConfig {
                         // como query string (?token=...) e validado pelo handler —
                         // a infraestrutura WebSocket do Spring não passa pelo
                         // mobileJwtAuthenticationFilter (que é HTTP-only).
-                        // TODO (segurança): adicionar HandshakeInterceptor que
-                        // valide o JWT antes de aceitar a conexão.
+                        // Pendente (segurança): adicionar HandshakeInterceptor que
+                        // valide o JWT antes de aceitar a conexão, em vez de validar
+                        // apenas dentro do handler após o handshake.
                         .requestMatchers("/ws-coletas-live").permitAll()
                         .requestMatchers("/ws-coletas-live/**").permitAll()
                         

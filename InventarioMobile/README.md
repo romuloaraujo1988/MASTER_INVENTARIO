@@ -1,260 +1,99 @@
-# SIHCP Mobile - Sistema de Inventário Mobile
+# SIHCP Mobile — Sistema de Histórico e Coleta Patrimonial
 
-Aplicativo Android para coleta de dados de inventário patrimonial do IFMT.
+Aplicativo Android nativo para coleta e auditoria de inventário patrimonial do **Instituto Federal de Mato Grosso (IFMT)**.
+
+**Versão Atual:** `2.29.8` (`versionCode 84`) — **Última atualização do código:** `13/11/2026`  
+**Application ID:** `com.inventario.mobile`
+
+---
 
 ## 📱 Sobre o Aplicativo
 
-O SIHCP Mobile é um aplicativo Android nativo desenvolvido em Kotlin que permite:
+O **SIHCP Mobile** integra-se à API REST (`Spring Boot` + `PostgreSQL`) e ao sistema desktop do SIHCP para digitalizar o processo de inventário físico em campo com abordagem **offline-first**:
 
-- **Coleta de Patrimônio**: Escaneamento de QR Codes e coleta manual
-- **Sincronização**: Sincronização automática com o servidor
-- **Modo Offline**: Funcionamento sem conexão com sincronização posterior
-- **Relatórios**: Visualização de coletas realizadas
-
-## 🏗️ Arquitetura
-
-- **Linguagem**: Kotlin
-- **Arquitetura**: MVVM (Model-View-ViewModel)
-- **Banco Local**: Room Database
-- **Rede**: Retrofit + OkHttp
-- **UI**: View Binding + Material Design
-- **Async**: Coroutines + Flow
-
-## 📦 Estrutura do Projeto
-
-```
-app/src/main/java/com/inventario/mobile/
-├── data/                    # Camada de dados
-│   ├── local/              # Room Database
-│   ├── remote/             # API REST
-│   └── repository/         # Repositórios
-├── domain/                 # Regras de negócio
-│   ├── model/              # Modelos de domínio
-│   └── repository/         # Interfaces
-├── presentation/           # Camada de apresentação
-│   ├── login/              # Tela de login
-│   ├── main/               # Tela principal
-│   ├── scanner/            # Scanner QR Code
-│   └── coleta/             # Coletas
-├── utils/                  # Utilitários
-└── InventarioMobileApplication.kt
-```
-
-## 🚀 Como Executar
-
-### Pré-requisitos
-
-- Android Studio Arctic Fox ou superior
-- JDK 11 ou superior
-- Android SDK 21+ (Android 5.0+)
-- Servidor backend rodando
-
-### Configuração
-
-1. **Clone o repositório**
-2. **Abra no Android Studio**
-3. **Configure o IP do servidor**:
-   - Edite `app/src/main/res/values/server_config.xml`
-   - Altere `default_server_ip` para o IP do seu servidor
-4. **Compile e execute**
-
-### Build APK
-
-```bash
-# APK Debug
-./gradlew assembleDebug
-
-# APK Release
-./gradlew assembleRelease
-```
-
-## ⚙️ Configuração do Servidor
-
-O app se conecta ao servidor Java via REST API:
-
-- **Porta padrão**: 8081
-- **Context path**: `/inventario`
-- **API path**: `/api/mobile`
-- **URL completa**: `http://[IP]:8081/inventario/api/mobile`
-
-### IPs Sugeridos
-
-- `192.168.11.136` (padrão atual)
-- `10.14.250.238` (servidor IFMT)
-- `localhost` (desenvolvimento)
-
-## 📋 Funcionalidades
-
-### ✅ Implementadas
-
-- [x] Login com autenticação JWT
-- [x] Scanner QR Code
-- [x] Coleta manual de patrimônio
-- [x] Seleção de salas
-- [x] Banco de dados local (Room)
-- [x] Sincronização básica
-- [x] Configuração dinâmica de servidor
-- [x] **[NOVO v1.3]** Busca em tempo real de patrimônios
-- [x] **[NOVO v1.3]** Sistema de ordenação (6 opções)
-- [x] **[NOVO v1.3]** Visualização detalhada de patrimônios
-- [x] **[NOVO v1.3]** Menu de ações rápidas
-- [x] **[NOVO v1.3]** Layout aprimorado com marca e modelo
-
-### 🔄 Em Desenvolvimento
-
-- [ ] Exportação de dados (Excel/PDF)
-- [ ] Filtros avançados
-- [ ] Sincronização completa
-- [ ] Relatórios detalhados
-- [ ] Modo offline avançado
-- [ ] Notificações push
-
-## 🛠️ Tecnologias Utilizadas
-
-### Core
-- **Kotlin 1.9.10**
-- **Android SDK 34**
-- **Material Design 3**
-
-### Arquitetura
-- **Room 2.6.1** - Banco local
-- **Retrofit 2.9.0** - Cliente HTTP
-- **Coroutines 1.7.3** - Programação assíncrona
-
-### UI/UX
-- **View Binding** - Binding de views
-- **Navigation Component** - Navegação
-- **SwipeRefreshLayout** - Pull to refresh
-
-### Utilitários
-- **ZXing 4.3.0** - Scanner QR Code
-- **Glide 4.16.0** - Carregamento de imagens
-- **ThreeTenABP** - Manipulação de datas
-
-## 📱 Compatibilidade
-
-- **Mínimo**: Android 5.0 (API 21)
-- **Target**: Android 14 (API 34)
-- **Arquiteturas**: ARM64, ARM32, x86, x86_64
-
-## 🔧 Desenvolvimento
-
-### Comandos Úteis
-
-```bash
-# Limpar projeto
-./gradlew clean
-
-# Compilar
-./gradlew build
-
-# Executar testes
-./gradlew test
-
-# Instalar no dispositivo
-./gradlew installDebug
-```
-
-### Estrutura de Branches
-
-- `main` - Versão estável
-- `develop` - Desenvolvimento ativo
-- `feature/*` - Novas funcionalidades
-
-## 📄 Documentação
-
-### Geral
-- `README.md` - Este arquivo
-- `DOCUMENTACAO_PROJETO.md` - Documentação técnica detalhada
-- `TECNOLOGIAS_DEPENDENCIAS.md` - Lista de dependências
-
-### Build e Deploy
-- `COMANDOS_UTEIS.md` - Comandos de build e desenvolvimento
-- `GUIA_GERACAO_APK.md` - Guia para gerar APKs
-- `INSTRUCOES_BUILD_V1.3.md` - **[NOVO]** Instruções completas de build
-
-### Configuração
-- `CONFIGURACAO_IP_SERVIDOR.md` - Configuração de rede
-- `CORRECAO_IPS_ESTATICOS.md` - Correção de IPs
-
-### Versão 1.3.0 (Tela de Inventário)
-- `MELHORIAS_TELA_INVENTARIO.md` - **[NOVO]** Documentação técnica das melhorias
-- `GUIA_VISUAL_INVENTARIO.md` - **[NOVO]** Guia visual para usuários
-- `CHANGELOG_INVENTARIO.md` - **[NOVO]** Histórico de mudanças
-- `GUIA_TESTE_RAPIDO_V1.3.md` - **[NOVO]** Roteiro de testes
-- `INDICE_DOCUMENTACAO_V1.3.md` - **[NOVO]** Índice completo da documentação
-
-### Outros
-- `SOLUCAO_CONECTIVIDADE.md` - Solução de problemas de rede
-- `GUIA_TESTE_RAPIDO.md` - Testes gerais
-
-## 🐛 Troubleshooting
-
-### Problemas Comuns
-
-1. **Erro de conexão**: Verifique se o servidor está rodando e o IP está correto
-2. **Erro de build**: Execute `./gradlew clean` e tente novamente
-3. **Scanner não funciona**: Verifique permissões de câmera
-
-### Logs
-
-Os logs do app ficam em:
-- Android Studio: Logcat
-- Dispositivo: `/Android/data/com.inventario.mobile/files/logs/`
-
-## 📞 Suporte
-
-Para dúvidas ou problemas:
-
-1. Verifique a documentação
-2. Consulte os logs de erro
-3. Abra uma issue no repositório
-
-## 📝 Licença
-
-Este projeto é propriedade do IFMT (Instituto Federal de Mato Grosso).
+- **Coleta Multi-Modal:** Leitura contínua de **QR Code** e **Código de Barras** (ZXing + CameraX com troca de câmera e lanterna), **Coleta Manual** por número de tombamento, **Busca por Descrição** com sugestões e foto de referência, e **Item Sem Etiqueta** com captura fotográfica obrigatória.
+- **Atalhos Rápidos na Câmera:** Barra inferior na tela de câmera ao vivo (`CustomCaptureActivity`) e na `ScannerActivity` para alternar instantaneamente para *Sem Etiqueta*, *Manual* ou *Descrição* via `ColetaShortcutNavigator`.
+- **Modo Offline Seguro:** Persistência local em **Room 2.6.1 (v19)** criptografado com **SQLCipher 4.6.1 (AES-256)** e passphrase protegida no **Android Keystore** (`SqlCipherKeyManager`).
+- **Sincronização Inteligente:** Worker único `ColetaSyncWorker` orquestrado por `SyncScheduler` / `SyncManager` (batch sync com fallback individual, backoff exponencial e idempotência via `clienteUuid`), além de `PhotoSyncWorker` e limpeza automática de coletas excluídas no servidor.
+- **Monitor ao Vivo (WebSocket):** Feed em tempo real via `/ws-coletas-live` (`RealtimeColetasManager` + `LiveColetaMonitorViewModel`).
+- **Detecção Automática de Divergências:** Compara localização encontrada e estado de conservação com o cadastro oficial (recalculado no servidor).
+- **Dashboard & Exportação:** Painel redesenhado com `DashboardUiMapper`, KPIs, gráfico de evolução (`MPAndroidChart`), busca por voz e exportação em **PDF** (`iText 7`), **Excel (TSV/XLSX)** e **CSV**, além de relatório fotográfico.
 
 ---
 
-## 🎉 Novidades da Versão 1.3.0
+## 🏗️ Arquitetura e Stack Real
 
-### Tela de Inventário Aprimorada
-
-A versão 1.3.0 traz melhorias significativas na tela de inventário:
-
-#### 🔍 Busca em Tempo Real
-- Busca instantânea enquanto digita
-- Pesquisa em múltiplos campos (número, descrição, marca, modelo, setor, sala)
-- Contador contextual mostrando resultados
-
-#### 📊 Sistema de Ordenação
-- 6 opções de ordenação disponíveis
-- Ordenação por número, descrição ou setor
-- Ordem crescente ou decrescente
-
-#### 📋 Visualização Detalhada
-- Diálogo completo com todas as informações do patrimônio
-- Acesso rápido ao scanner QR
-- Layout profissional e organizado
-
-#### ⚡ Menu de Ações Rápidas
-- FAB com ações frequentes
-- Escanear QR Code
-- Atualizar lista
-- Exportar dados (em breve)
-
-#### 🎨 Melhorias Visuais
-- Exibição de marca e modelo nos cards
-- Ícones melhorados
-- Status de coleta com cores distintas
-- Layout otimizado
-
-**Para mais detalhes**, consulte:
-- `MELHORIAS_TELA_INVENTARIO.md` - Documentação técnica
-- `GUIA_VISUAL_INVENTARIO.md` - Guia do usuário
-- `CHANGELOG_INVENTARIO.md` - Histórico completo
+- **Linguagem:** Kotlin `1.9.10` (Coroutines `1.7.3` + StateFlow)
+- **Arquitetura:** Clean Architecture (`presentation`, `domain`, `data`) + MVVM
+- **Injeção de Dependência:** Dagger Hilt `2.48` + `hilt-work:1.1.0`
+- **Banco Local:** Room `2.6.1` (`inventario_offline_secure.db`, versão `19`, `15` migrações) + `net.zetetic:sqlcipher-android:4.6.1`
+- **Rede & Tempo Real:** Retrofit `2.9.0` + Gson + OkHttp `4.12.0` (REST + WebSocket)
+- **Segurança:** `EncryptedSharedPreferences` (`security-crypto:1.1.0-alpha06` + Tink), `androidx.biometric:biometric:1.1.0`, PIN 6 dígitos, JWT + `RefreshTokenInterceptor`, R8 + `shrinkResources`
+- **Compatibilidade:** `minSdk 23` (Android 6.0) · `targetSdk 34` (Android 14) · `compileSdk 34`
+- **Build:** Android Gradle Plugin `8.1.4` · Gradle `8.4` · KSP `1.9.10-1.0.13`
+- **Testes:** JUnit 4, Mockito, MockK `1.12.8`, Kotest `5.8.0`, jqwik `1.8.4` (Property-Based Testing), Espresso
 
 ---
 
-**Versão**: 1.3.0  
-**Última atualização**: 03 de Novembro de 2025
+## 📦 Estrutura Real do Código (`app/src/main/java/com/inventario/mobile`)
+
+```text
+com.inventario.mobile/
+├── InventarioMobileApplication.kt  # @HiltAndroidApp, Configuration.Provider, CrashHandler Keystore
+├── data/                           # Room v19 (dao, entity, database), Retrofit (api, dto),
+│                                   # mappers, repositories, paging, cache, export, pdf, realtime (WS)
+├── di/                             # 13 módulos Hilt (ApiModule, DatabaseModule, RepositoryModule, ...)
+├── domain/                         # 27 modelos puros, 12 interfaces Repository, 38 UseCases, ColetaValidator
+├── network/                        # 7 classes (RefreshTokenInterceptor, OfflineFallbackInterceptor, Monitors...)
+├── presentation/                   # 26 Activities, 8 Fragments, 22 ViewModels (@HiltViewModel), Mappers UI
+├── security/                       # 6 classes (SqlCipherKeyManager, KeystoreRecoveryActivity, Biometric, PIN...)
+├── sync/                           # SyncManager, SyncScheduler, SyncLogger, NetworkConnectivityObserver
+├── utils/                          # PreferencesManager, SessionManager, PhotoHelper, LegacyPhotoMigrator...
+└── worker/                         # 2 Workers (ColetaSyncWorker e PhotoSyncWorker)
+```
+
+---
+
+## 🚀 Configuração e Build
+
+### Configuração Inicial do Servidor (Sem IP Fixo)
+Desde a `v2.29.5`, nenhum IP fica fixo no APK. Na primeira execução após a instalação:
+1. `SplashActivity` detecta `isServerConfigured() == false` e direciona para `InitialSetupActivity`.
+2. O usuário informa o IP/host e porta do servidor SIHCP (padrão `8081`, context path `/inventario`, API `/api/mobile`).
+3. O botão **Testar Conexão** valida `/api/mobile/health` antes de liberar o acesso ao `LoginActivity`.
+
+### Comandos de Build
+
+```powershell
+cd InventarioMobile
+
+# Build Debug
+.\gradlew.bat assembleDebug
+
+# Build Release (requer keystore.properties na raiz de InventarioMobile/)
+.\gradlew.bat assembleRelease
+
+# Testes Unitários (JUnit + Kotest + jqwik)
+.\gradlew.bat test
+
+# Limpar e compilar
+.\gradlew.bat clean assembleRelease
+```
+
+O APK de distribuição gerado pelo build de release é nomeado automaticamente como `SiHCP-release-v2.29.8.apk` (`app/build/outputs/apk/release/`). Consulte [CONFIGURACAO_KEYSTORE.md](CONFIGURACAO_KEYSTORE.md) para detalhes da assinatura.
+
+---
+
+## 📚 Documentação Relacionada
+
+- **Consolidado Geral do App:** [../DOCUMENTAÇÃO/DOCUMENTACAO_COMPLETA_APP_v2.29.5.md](../DOCUMENTAÇÃO/DOCUMENTACAO_COMPLETA_APP_v2.29.5.md)
+- **Documentação Técnica do Módulo Mobile:** [DOCUMENTACAO_PROJETO.md](DOCUMENTACAO_PROJETO.md)
+- **Requisitos Funcionais e Não Funcionais:** [ANALISE_REQUISITOS_ANDROID.md](ANALISE_REQUISITOS_ANDROID.md)
+- **Segurança em Produção:** [SECURITY_SUMMARY.md](SECURITY_SUMMARY.md) · [SECURITY_REQUIREMENTS.md](SECURITY_REQUIREMENTS.md) · [SECURITY_ACTION_PLAN.md](SECURITY_ACTION_PLAN.md)
+- **Índices e Histórico de Builds:** [INDICE_DOCUMENTACAO.md](INDICE_DOCUMENTACAO.md) · [../BUILD_HISTORY.md](../BUILD_HISTORY.md)
+- **Registro de Software (INPI / NIT-IFMT):** [../REGISTRO_SOFTWARE_SIHCP_MOBILE/00_LEIA_ME_GUIA_REGISTRO_INPI.md](../REGISTRO_SOFTWARE_SIHCP_MOBILE/00_LEIA_ME_GUIA_REGISTRO_INPI.md)
+
+---
+
+**Propriedade:** Instituto Federal de Mato Grosso (IFMT)  
+**Versão:** `2.29.8` (Build `84`) · **Última atualização da documentação:** `13/11/2026` (baseada no código-fonte limpo em `13/11/2026`)

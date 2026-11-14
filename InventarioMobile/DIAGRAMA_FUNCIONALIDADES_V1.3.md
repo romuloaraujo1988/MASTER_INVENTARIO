@@ -1,10 +1,12 @@
-# Diagrama de Funcionalidades - Versão 2.23.0
+# Diagrama de Funcionalidades — SIHCP Mobile (v2.29.8)
+
+> **Última verificação:** `13/11/2026` — Documento de referência conceitual da arquitetura Paging 3 na `v2.29.8` (`versionCode 84`). **Observação:** na limpeza de código morto antes da geração do hash INPI (`v2.29.8`), os protótipos não referenciados `PatrimonioListPagingFragment`, `PatrimonioListFragment`, `PatrimonioListViewModelPaging`, `PatrimonioListViewModel`, `PatrimonioPagingAdapter`, `PatrimonioLoadStateAdapter`, `PatrimonioPagingSource`, `PatrimonioPorSalaPagingSource`, `BuscarPatrimoniosPaginadoUseCase` e `presentation/adapter/PatrimonioAdapter` foram removidos; permanecem ativos `InventarioActivity`, `InventarioTabsActivity`, `presentation/inventario/PatrimonioAdapter`, `SalaPagingSource`, `ExportFragment`, `ExportViewModel`, `GerarRelatorioUseCase` e `BuscarSalasParaExportacaoUseCase`.
 
 ## 🗺️ Mapa de Funcionalidades
 
 ```mermaid
 graph TD
-    TELA["🖥️ TELA DE INVENTÁRIO v2.23.0<br/>(Paging 3)"]
+    TELA["🖥️ TELA DE INVENTÁRIO v2.29.8<br/>(Paging 3)"]
     
     TELA --> FILTROS["🏷️ FILTROS<br/>(ChipGroup)"]
     TELA --> STATS["📊 ESTATÍSTICAS<br/>(Servidor)"]
@@ -559,7 +561,7 @@ Chips:
 
 ---
 
-## ⚡ Melhorias v2.23.0 vs v1.3.0
+## ⚡ Melhorias v2.29.8 vs v1.3.0
 
 ```mermaid
 graph LR
@@ -574,7 +576,7 @@ graph LR
         A8["Sem Offline"]
     end
     
-    subgraph v2["v2.23.0 (Atual)"]
+    subgraph v2["v2.29.8 (Atual)"]
         B1["Paging 3<br/>Automático"]
         B2["Chips Reativos<br/>flatMapLatest"]
         B3["Endpoint Servidor"]
@@ -582,7 +584,7 @@ graph LR
         B5["Coletado por, Data,<br/>Local, Estado"]
         B6["LoadStateAdapter<br/>Automático"]
         B7["Clean Architecture<br/>+ Hilt"]
-        B8["Room + Offline-first"]
+        B8["Room v19 + SQLCipher"]
     end
     
     A1 -.->|"migrado"| B1
@@ -598,7 +600,7 @@ graph LR
     style v2 fill:#C8E6C9
 ```
 
-| Aspecto | v1.3.0 | v2.23.0 |
+| Aspecto | v1.3.0 | v2.29.8 |
 |---------|--------|---------|
 | **Paginação** | Manual (InfiniteScrollListener) | Paging 3 (automático) |
 | **Filtros** | Diálogo de ordenação | Chips reativos (flatMapLatest) |
@@ -666,7 +668,7 @@ graph LR
 
 ---
 
-**Versão**: 2.23.0  
-**Data**: 09/05/2026  
+**Versão**: `2.29.8` (`versionCode 84`)  
+**Data**: `13/11/2026` (código `v2.29.8`)
 **Tipo**: Diagrama Visual + Arquitetura + Mermaid  
 **Status**: ✅ Atualizado com implementação real

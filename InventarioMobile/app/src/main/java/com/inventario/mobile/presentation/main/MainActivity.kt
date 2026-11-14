@@ -93,9 +93,6 @@ class MainActivity : AppCompatActivity() {
             // Verificar se o inventário ativo está configurado corretamente
             verificarInventarioAtivo()
             
-            // Inicializar banco de dados em background (não bloqueia a UI)
-            // initializeDatabaseInBackground()
-            
         } catch (e: Exception) {
             Log.e(TAG, "onCreate: Erro durante inicialização da MainActivity", e)
             e.printStackTrace()
@@ -138,25 +135,6 @@ class MainActivity : AppCompatActivity() {
             }
         )
     }
-    
-    /*
-    private fun initializeDatabaseInBackground() {
-        lifecycleScope.launch {
-            try {
-                val database = com.inventario.mobile.data.local.database.InventarioDatabase.getDatabase(this@MainActivity)
-                val status = com.inventario.mobile.util.DatabaseInitializer.checkDatabaseStatus(database)
-                
-                if (status.salas == 0) {
-                    Log.d(TAG, "Inicializando banco de dados com dados de exemplo...")
-                    com.inventario.mobile.util.DatabaseInitializer.initializeDatabase(database, forceReset = false)
-                    Log.d(TAG, "Banco de dados inicializado com sucesso")
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Erro ao inicializar banco de dados", e)
-            }
-        }
-    }
-    */
 
     private fun setupUI() {
         // Configurar toolbar como ActionBar

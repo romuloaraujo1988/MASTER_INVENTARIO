@@ -1,8 +1,10 @@
 # 📱 Documentação Completa - SIHCP Mobile App
 
-**Versão:** 2.29.5 (Build 81)
-**Última atualização:** 22/05/2026
+**Versão:** `2.29.8` (Build `84`)  
+**Última atualização do app:** `13/11/2026` · **Revisão documental:** `13/11/2026`  
 **Sistema:** Sistema de Histórico e Coleta Patrimonial — IFMT
+
+> **Nota:** Este arquivo mantém o nome original para preservar links existentes, mas seu conteúdo já contempla integralmente as entregas até a versão **`2.29.8` (Build `84`)**.
 
 ---
 
@@ -29,12 +31,12 @@ App Android nativo para coleta patrimonial em campo, integrado ao sistema SIHCP 
 
 | Camada | Tecnologia |
 |--------|------------|
-| Linguagem | Kotlin |
+| Linguagem | Kotlin `1.9.10` |
 | UI | Android Views + Material Design 3 |
 | Arquitetura | Clean Architecture + MVVM |
-| Injeção de Dependência | Hilt (Dagger) |
-| Banco Local | Room (SQLite) |
-| Networking | Retrofit + OkHttp |
+| Injeção de Dependência | Hilt (Dagger `2.48`) |
+| Banco Local | Room `2.6.1` (SQLite v19) + SQLCipher `4.6.1` |
+| Networking | Retrofit `2.9.0` + OkHttp `4.12.0` (REST + WebSocket) |
 | Imagens | Glide |
 | QR Code | ZXing |
 | Reactive | Kotlin Flow + Coroutines |
@@ -208,15 +210,15 @@ com.inventario.mobile/
 ### 4.3 Sincronização Automática
 
 ```
-[A cada 30 min]
+[Periódico via SyncScheduler (política KEEP)]
      ↓
-[WorkManager dispara SyncWorker]
+[WorkManager dispara ColetaSyncWorker]
      ↓
-[Verifica: tem internet? bateria OK?]
+[Verifica: tem internet / Wi-Fi? bateria OK?]
      ↓
 [SincronizarColetasPendentesUseCase]
      │
-     ├── BATCH (várias coletas em uma requisição)
+     ├── BATCH (várias coletas com clienteUuid idempotente)
      │     ↓
      │     [se falhar: fallback individual]
      │
@@ -225,7 +227,7 @@ com.inventario.mobile/
      │
      ├── Baixa coletas do servidor
      ├── Atualiza/insere localmente
-     └── Remove coletas excluídas no servidor (v2.29.5)
+     └── Remove coletas excluídas no servidor (v2.29.5+)
 ```
 
 ---
@@ -349,15 +351,15 @@ SincronizarColetasDoServidorUseCase()
 
 ```kotlin
 Constraints.Builder()
-    .setRequiredNetworkType(NetworkType.CONNECTED)  // Internet OK
-    .setRequiresBatteryNotLow(true)                 // Bateria > 15%
+    .setRequiredNetworkType(if (wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED)
+    .setRequiresBatteryNotLow(true)                 // Quando economia de bateria ativa
     .build()
 
-PeriodicWorkRequestBuilder<SyncWorker>(30, MINUTES)
+PeriodicWorkRequestBuilder<ColetaSyncWorker>(interval, MINUTES, 15, MINUTES)
     .setConstraints(constraints)
     .setBackoffCriteria(
-        BackoffPolicy.EXPONENTIAL,                  // Retry exponencial
-        15, MINUTES
+        BackoffPolicy.EXPONENTIAL,                  // Retry exponencial (30s iniciais)
+        30, SECONDS
     )
 ```
 
@@ -397,6 +399,21 @@ Para forçar a tela de configuração novamente:
 ---
 
 ## 9. Histórico de Versões Recentes
+
+### v2.29.8 (03/06/2026 – 13/11/2026 — Build 84) — Coleta Forçada Offline & Limpeza Completa de Código Inutilizado
+- **Coleta forçada em modo offline (`forcarColeta`):** `ColetaRepositoryImpl`, `RegistrarColetaUseCase`, `ManualCollectionActivity`/`ViewModel` e `ScannerActivity`/`ViewModel` passaram a honrar a decisão explícita do usuário de forçar coleta de etiqueta duplicada mesmo quando offline.
+- **Saneamento completo da base de código Android:** remoção segura de **143 arquivos inutilizados** (em duas varreduras: 43 arquivos `.old`/`.disabled`/placeholders/`Validation*`/legados e 15 layouts órfãos na 1ª etapa + 89 classes Kotlin não referenciadas e 11 XMLs de layout/menu na 2ª etapa), além de 18 diretórios vazios e entradas mortas no `AndroidManifest.xml`, mantendo o código 100% enxuto para geração do hash INPI e com compilação Gradle verificada.
+
+### v2.29.7 (29–31/05/2026 — Build 83) — Monitor Live em Release, Atalhos na Câmera, Dashboard Redesign e Divergências
+- **Correção de registro de divergências (Build #028/#029):** `ColetaSyncWorker` (`SincronizarColetasPendentesUseCase`) e `ColetaRepositoryImpl` enviam os valores reais de `divergencia` e `motivoDivergencia` (servidor recalcula em `MobileColetaService`).
+- **Dashboard Redesign (Build #027):** lógica extraída para `DashboardUiMapper` (puro e testável, coberto por 106 testes com jqwik), `DashboardPresentationModels.kt` e `fragment_dashboard.xml` redesenhado.
+- **Atalhos de Coleta Rápida na Câmera ao Vivo (Build #025/#026):** faixa em estilo *pill* (*Sem etiqueta / Manual / Descrição*) na `CustomCaptureActivity` e `ScannerActivity` via `ColetaShortcutNavigator`.
+- **Fix Monitor ao Vivo em Release:** `proguard-rules.pro` preserva `com.inventario.mobile.data.realtime.**` (`ColetaEvento`), evitando ofuscação pelo R8 na desserialização Gson do WebSocket.
+
+### v2.29.6 — Monitor ao Vivo de Coletas (WebSocket)
+- Cliente `RealtimeColetasManager` conectado a `/ws-coletas-live` + `LiveColetaMonitorViewModel` e `CollectionViewActivity` em modo monitor ao vivo.
+- Troca de câmera no scanner, feedback sonoro sutil no monitor live, correção de vibração (DND/silencioso), campo responsável na coleta manual, coleta direta nos detalhes e proteção contra duplicata.
+- Requer servidor `sihcp-server` `2.9.0+`.
 
 ### v2.29.5 (22/05/2026) — Configuração inicial + híbrido online/offline
 
@@ -485,7 +502,7 @@ Para forçar a tela de configuração novamente:
 
 ## 📌 Notas Finais
 
-Esta documentação consolida o estado do app em 22/05/2026. Para informações sobre features anteriores, consulte os manuais específicos. Para mudanças futuras, este documento deve ser atualizado em paralelo com o BUILD_HISTORY.md.
+Esta documentação consolida o estado do app na versão `2.29.8` (Build `84`, `13/11/2026`), revisada documentalmente em `13/11/2026`. Para detalhes de builds individuais, consulte o [`BUILD_HISTORY.md`](../BUILD_HISTORY.md).
 
-**Mantido por:** Equipe de Desenvolvimento SIHCP
-**Próxima revisão sugerida:** quando v2.30.0 for lançada
+**Mantido por:** Equipe de Desenvolvimento SIHCP  
+**Documentação de Registro INPI:** [`REGISTRO_SOFTWARE_SIHCP_MOBILE/`](../REGISTRO_SOFTWARE_SIHCP_MOBILE/00_LEIA_ME_GUIA_REGISTRO_INPI.md)

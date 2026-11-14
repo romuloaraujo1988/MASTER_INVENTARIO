@@ -2823,8 +2823,9 @@ public class RelatorioFrame extends JFrame {
      * Fallback para CSV quando Apache POI falha
      * Aceita qualquer tipo de erro (Throwable) incluindo
      * ExceptionInInitializerError
+     *
+     * NOTA: o parâmetro {@code titulo} é mantido para compatibilidade de assinatura.
      */
-    @SuppressWarnings("unused") // titulo mantido para compatibilidade de assinatura
     private boolean exportarComCSVFallback(List<Map<String, Object>> dados, String[] colunas, String[] chaves,
             String titulo, String caminhoOriginal, Throwable erroOriginal) {
         try {

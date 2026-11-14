@@ -38,5 +38,9 @@
     "java.import.maven.offline": false,
     "java.maven.downloadSources": true,
     "java.debug.settings.onBuildFailureProceed": true,
-    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx32G -Xms100m -Xlog:disable"
+    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx32G -Xms100m -Xlog:disable",
+    "python.defaultInterpreterPath": "C:\\Users\\Romulo\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "python.analysis.extraPaths": [
+        "C:\\Users\\Romulo\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages"
+    ]
 }

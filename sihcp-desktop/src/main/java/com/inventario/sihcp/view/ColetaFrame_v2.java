@@ -25,23 +25,13 @@ import javax.swing.table.DefaultTableModel;
 
 import java.awt.*;
 import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.Cursor;
-import java.awt.FontMetrics;
-import java.awt.GradientPaint;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.text.SimpleDateFormat;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
-import javax.swing.AbstractAction;
-import javax.swing.KeyStroke;
 import javax.swing.Timer;
 
 import org.slf4j.Logger;
@@ -54,104 +44,17 @@ import org.slf4j.LoggerFactory;
 public class ColetaFrame_v2 extends JFrame {
     private static final Logger LOG = LoggerFactory.getLogger(ColetaFrame_v2.class);
     private JComboBox<Sala> comboSalas;
-    private JTextField campoBusca;
-    private JTextArea campoObservacao;
-    private JComboBox<String> comboEstado;
-    private JButton btnColetar;
-    private JButton btnBuscar;
-
-    private JButton btnFinalizarColeta; // Botão para finalizar coleta na sala
-    private JButton btnReabrirColeta; // Botão para reabrir coleta da sala (apenas admin/supervisor)
-    private JButton btnRemoverItem; // Botão para remover item (não disponível para coletor)
-    private JButton btnVerTodasColetas; // Botão para ver todas as coletas do inventário
-    private JLabel lblResumoSala;
     private JLabel lblInventarioAtual;
 
-    // Painel de informações do item pesquisado
-    private JPanel panelInfoItem;
-    private JLabel lblNumeroItem;
-    private JLabel lblDescricaoItem;
-    private JLabel lblLocalizacaoOriginal;
-    private JLabel lblEstadoOriginal;
-    private JLabel lblStatusItem;
-
-    // Componentes para itens sem etiqueta (removidos - agora há aba dedicada)
-    private JTextArea txtDescricaoSemEtiqueta;
-    private JComboBox<String> comboCategoriaSemEtiqueta;
-    private JPanel panelSemEtiqueta;
-
-    // Componentes para busca por descrição
-    private JTextField campoBuscaDescricao;
-    private JButton btnBuscarDescricao;
-    private JComboBox<String> comboCategoriasBusca;
-    private JTable tabelaResultadosDescricao;
-    private DefaultTableModel modeloTabelaResultados;
-    private JScrollPane scrollResultados;
-    private JPanel panelBuscaDescricao;
-    private Patrimonio patrimonioSelecionadoDescricao;
-
-    // Componentes para indicador de loading
-    private JLabel lblLoadingDescricao;
-    private JProgressBar progressBarDescricao;
-
-    // Componentes para agrupamento de itens sem etiqueta
-    private JButton btnVerItensAgrupados;
-    private JTable tabelaItensAgrupados;
-    private DefaultTableModel modeloTabelaItensAgrupados;
-    private JScrollPane scrollItensAgrupados;
-    private JPanel panelItensAgrupados;
-    private JDialog dialogItensAgrupados;
-
-    // Painéis principais do layout
-    private JPanel panelFormulario;
-    private JPanel panelBotoes;
-
-    // Tabela de histórico de coleta - sempre visível
-    private JTable tabelaHistorico;
-    private DefaultTableModel modeloTabelaHistorico;
-    private JLabel lblContagemColetas; // Label para exibir contagem de coletas na sala
-    private JScrollPane scrollHistorico;
+    // Aba "Itens Sem Patrimônio" - extraída para painel próprio
+    private com.inventario.sihcp.view.coleta.ItensSemPatrimonioPanel itensSemPatrimonioPanel;
 
     // Componentes para estrutura de abas
     private JTabbedPane tabbedPane;
     private JPanel abaColetaNormal;
-    private JPanel abaItensSemPatrimonio;
-    private JPanel abaItensPendentes; // Nova aba para itens não coletados
 
-    // Componentes da aba "Itens Pendentes"
-    private JTable tabelaPendentes;
-    private DefaultTableModel modeloTabelaPendentes;
-    private JLabel lblTotalPendentes;
-    private JLabel lblProgressoColeta;
-    private JTextField campoBuscaPendentes;
-    private JButton btnExportarPendentes;
-    private JProgressBar progressBarColeta;
-
-    // Campo de localização na aba de itens sem patrimônio
-    private JTextField campoLocalizacaoSemPatrimonio;
-
-    // Componentes removidos: busca simplificada para melhor usabilidade
-
-    // Campo de descrição para coleta de itens sem patrimônio
-    private JTextField campoDescricaoSemPatrimonio;
-
-    // Novos componentes para a interface moderna de itens sem patrimônio
-    private JTextArea areaObservacoesSemPatrimonio;
-    private JButton btnRegistrarSemPatrimonio;
-    private JButton btnRemoverSemPatrimonio;
-    private JButton btnExportarSemPatrimonio;
-    private JTable tabelaSemPatrimonio;
-    private DefaultTableModel modeloTabelaSemPatrimonio;
-    private JLabel lblTotalItensSemPatrimonio;
-
-    // Componentes para pesquisa de descrições únicas (não utilizados na nova
-    // interface)
-    // Mantidos para compatibilidade, mas não são mais necessários
-    // private JButton btnPesquisarDescricoes;
-    // private JList<String> listaDescricoesSugestoes;
-    // private DefaultListModel<String> modeloListaDescricoes;
-    // private JPanel painelSugestoes;
-    // private JLabel lblSugestoes;
+    // Aba "Itens Pendentes" - extraída para painel próprio
+    private com.inventario.sihcp.view.coleta.ItensPendentesPanel itensPendentesPanel;
 
     private PatrimonioDAO patrimonioDAO;
     private ColetaDAO coletaDAO;
@@ -163,30 +66,65 @@ public class ColetaFrame_v2 extends JFrame {
     private ColetaOfflineService coletaOfflineService;
     private OfflineManager offlineManager;
 
-    private Patrimonio patrimonioSelecionado;
-    private long ultimaDigitacao = 0;
-    private StringBuilder bufferCodigoBarras = new StringBuilder();
     private List<Sala> todasSalas = new ArrayList<>();
     private Usuario usuarioLogado; // Usuário logado para verificar permissões
-    
-    // Variáveis para métricas de tempo (Analytics)
-    private long inicioColetaAtual = 0;      // Timestamp do início da coleta atual
-    private long inicioScanAtual = 0;        // Timestamp do início do scan/busca
-    private long fimScanAtual = 0;           // Timestamp do fim do scan/busca
-    private String metodoColetaAtual = null; // MANUAL, SCANNER, BUSCA_DESCRICAO
-    // Lista de componentes que devem ser desabilitados até a seleção da sala
-    private java.util.List<Component> componentesParaDesabilitar = new ArrayList<>();
-
-    // Modo de coleta automática com leitor de código de barras
-    private JCheckBox chkColetaAutomatica;
-    private boolean modoColetaAutomatica = false;
-
-    // Timers para controle de animações visuais (evitar conflitos)
-    private Timer timerAnimacaoAtual;
-    private Timer timerTextoAtual;
 
     // OTIMIZAÇÃO: Tracking de SwingWorkers ativos para cancelamento ao trocar de sala
     private final List<SwingWorker<?, ?>> workersAtivos = new ArrayList<>();
+    
+    // === COMPONENTES DA ABA "COLETA NORMAL" ===
+    
+    // Componentes de busca
+    private JTextField campoBusca;
+    private JButton btnBuscar;
+    
+    // Botões de ação
+    private JButton btnColetar;
+    private JButton btnRemoverItem;
+    private JButton btnFinalizarColeta;
+    private JButton btnReabrirColeta;
+    private JButton btnVerTodasColetas;
+    
+    // Tabela de histórico
+    private JTable tabelaHistorico;
+    private DefaultTableModel modeloTabelaHistorico;
+    private JScrollPane scrollHistorico;
+    
+    // Panel de informações do item
+    private JPanel panelInfoItem;
+    private JLabel lblResumoSala;
+    private JLabel lblNumeroItem;
+    private JLabel lblDescricaoItem;
+    private JLabel lblLocalizacaoOriginal;
+    private JLabel lblEstadoOriginal;
+    private JLabel lblStatusItem;
+    
+    // Formulário de coleta
+    private JComboBox<String> comboEstado;
+    private JTextArea campoObservacao;
+    private JPanel panelFormulario;
+    private JPanel panelBotoes;
+    
+    // Controles adicionais
+    private JCheckBox chkColetaAutomatica;
+    private boolean modoColetaAutomatica = false;
+    private Patrimonio patrimonioSelecionado;
+    private List<Component> componentesParaDesabilitar;
+    private JLabel lblContagemColetas;
+    
+    // Variáveis de controle de tempo (para métricas)
+    private Long inicioColetaAtual;
+    private Long inicioScanAtual;
+    private Long fimScanAtual;
+    private String metodoColetaAtual; // "MANUAL" ou "LEITOR"
+    
+    // Buffer para leitura de código de barras
+    private StringBuilder bufferCodigoBarras = new StringBuilder();
+    private Long ultimaDigitacao;
+    
+    // Timers para animações visuais
+    private Timer timerAnimacaoAtual;
+    private Timer timerTextoAtual;
 
     public ColetaFrame_v2() {
         this(null, null); // Chama o construtor com usuário e mainFrame null para compatibilidade
@@ -258,15 +196,6 @@ public class ColetaFrame_v2 extends JFrame {
                 throw e;
             }
 
-            System.out.println("DEBUG: Iniciando adicionarDicaLeitores()...");
-            try {
-                adicionarDicaLeitores();
-                System.out.println("DEBUG: adicionarDicaLeitores() concluído com sucesso");
-            } catch (Exception e) {
-                LOG.error("ERRO FATAL em adicionarDicaLeitores(): {}", e.getMessage(), e);
-                throw e;
-            }
-
             // Inicializar tabela vazia
             // A tabela será carregada quando uma sala for selecionada
 
@@ -321,14 +250,6 @@ public class ColetaFrame_v2 extends JFrame {
     }
 
     private void initializeComponents() {
-        // Definir cores do tema moderno
-        Color corPrimaria = new Color(52, 73, 94); // Azul escuro elegante
-        // Color corSecundaria = new Color(236, 240, 241); // Cinza claro
-        Color corAcento = new Color(46, 204, 113); // Verde moderno
-        // Color corPerigo = new Color(231, 76, 60); // Vermelho moderno
-        // Color corAviso = new Color(241, 196, 15); // Amarelo moderno
-        Color corTexto = new Color(44, 62, 80); // Texto escuro
-
         // Combo de salas simples com barra de rolagem
         comboSalas = ModernComboBox.standard(new Sala[0]);
         comboSalas.setEditable(false); // Não editável - apenas seleção
@@ -350,518 +271,132 @@ public class ColetaFrame_v2 extends JFrame {
             }
         });
 
-        // Campo de busca de patrimônio com design moderno
-        campoBusca = new JTextField(20);
-        campoBusca.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        campoBusca.setPreferredSize(new Dimension(250, 35));
-        campoBusca.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
-                BorderFactory.createEmptyBorder(8, 12, 8, 12)));
-        campoBusca.setBackground(Color.WHITE);
-        campoBusca.setForeground(corTexto);
-        campoBusca.addKeyListener(new KeyListener() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    buscarPatrimonio();
-                }
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-                detectarLeituraCodigoBarras();
-            }
-        });
-
-        // Botão de busca com design moderno
-        btnBuscar = createStyledButton("🔍 Buscar", new Color(52, 152, 219));
-
-        // Painel de informações do item pesquisado com design moderno
-        panelInfoItem = new JPanel(new GridBagLayout());
-        panelInfoItem.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder(
-                        BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
-                        "Informações do Item Pesquisado",
-                        TitledBorder.LEFT,
-                        TitledBorder.TOP,
-                        new Font("Segoe UI", Font.BOLD, 14),
-                        corTexto),
-                BorderFactory.createEmptyBorder(5, 15, 10, 15))); // Reduzido padding superior
-        panelInfoItem.setBackground(Color.WHITE);
-        panelInfoItem.setPreferredSize(new Dimension(400, 160)); // Tamanho compacto
-        panelInfoItem.setMinimumSize(new Dimension(350, 140));
-        panelInfoItem.setMaximumSize(new Dimension(500, 180));
-
-        // Labels com design moderno
-        lblNumeroItem = new JLabel("-");
-        lblNumeroItem.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        lblNumeroItem.setForeground(corPrimaria);
-
-        lblDescricaoItem = new JLabel("-");
-        lblDescricaoItem.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        lblDescricaoItem.setForeground(corTexto);
-
-        lblLocalizacaoOriginal = new JLabel("-");
-        lblLocalizacaoOriginal.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        lblLocalizacaoOriginal.setForeground(corTexto);
-
-        lblEstadoOriginal = new JLabel("-");
-        lblEstadoOriginal.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        lblEstadoOriginal.setForeground(corTexto);
-
-        lblStatusItem = new JLabel("-");
-        lblStatusItem.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        lblStatusItem.setForeground(corAcento);
-
-        // Campo de observação com design moderno (reduzido para 1 linha)
-        campoObservacao = new JTextArea(1, 30);
-        campoObservacao.setLineWrap(true);
-        campoObservacao.setWrapStyleWord(true);
-        campoObservacao.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        campoObservacao.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
-                BorderFactory.createEmptyBorder(8, 12, 8, 12)));
-        campoObservacao.setBackground(Color.WHITE);
-        campoObservacao.setForeground(corTexto);
-
-        // Combo de estado com design moderno
-        String[] estados = { "BOM", "OCIOSO", "ANTIECONÔMICO", "RECUPERÁVEL", "IRRECUPERÁVEL" };
-        comboEstado = new JComboBox<>(estados);
-        comboEstado.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        comboEstado.setPreferredSize(new Dimension(200, 35));
-        comboEstado.setBorder(BorderFactory.createLineBorder(new Color(189, 195, 199), 1));
-        comboEstado.setBackground(Color.WHITE);
-        comboEstado.setForeground(corTexto);
-        comboEstado.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                    boolean isSelected, boolean cellHasFocus) {
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                setFont(new Font("Segoe UI", Font.PLAIN, 13));
-                setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
-                if (isSelected) {
-                    setBackground(corAcento);
-                    setForeground(Color.WHITE);
-                } else {
-                    setBackground(Color.WHITE);
-                    setForeground(corTexto);
-                }
-                return this;
-            }
-        });
-
-        // Componentes para itens sem etiqueta com design moderno (checkbox removido -
-        // há aba dedicada)
-
-        txtDescricaoSemEtiqueta = new JTextArea(3, 25);
-        txtDescricaoSemEtiqueta.setLineWrap(true);
-        txtDescricaoSemEtiqueta.setWrapStyleWord(true);
-        txtDescricaoSemEtiqueta.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        txtDescricaoSemEtiqueta.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
-                BorderFactory.createEmptyBorder(8, 12, 8, 12)));
-        txtDescricaoSemEtiqueta.setBackground(new Color(248, 249, 250));
-        txtDescricaoSemEtiqueta.setForeground(new Color(108, 117, 125));
-        txtDescricaoSemEtiqueta.setEnabled(false);
-
-        String[] categorias = { "MÓVEIS", "EQUIPAMENTOS", "ELETRÔNICOS", "UTENSÍLIOS", "OUTROS" };
-        comboCategoriaSemEtiqueta = new JComboBox<>(categorias);
-        comboCategoriaSemEtiqueta.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        comboCategoriaSemEtiqueta.setPreferredSize(new Dimension(200, 35));
-        comboCategoriaSemEtiqueta.setBorder(BorderFactory.createLineBorder(new Color(189, 195, 199), 1));
-        comboCategoriaSemEtiqueta.setBackground(new Color(248, 249, 250));
-        comboCategoriaSemEtiqueta.setForeground(new Color(108, 117, 125));
-        comboCategoriaSemEtiqueta.setEnabled(false);
-
-        // Componentes para busca por descrição com design moderno
-        campoBuscaDescricao = new JTextField(20);
-        campoBuscaDescricao.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        campoBuscaDescricao.setPreferredSize(new Dimension(200, 32));
-        campoBuscaDescricao.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
-                BorderFactory.createEmptyBorder(6, 10, 6, 10)));
-        campoBuscaDescricao.setBackground(new Color(248, 249, 250));
-        campoBuscaDescricao.setForeground(new Color(108, 117, 125));
-        campoBuscaDescricao.setEnabled(false);
-
-        // Combobox de categorias para filtrar busca
-        String[] categoriasBusca = { "TODAS", "MÓVEIS", "EQUIPAMENTOS", "ELETRÔNICOS", "UTENSÍLIOS", "OUTROS" };
-        comboCategoriasBusca = new JComboBox<>(categoriasBusca);
-        comboCategoriasBusca.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        comboCategoriasBusca.setPreferredSize(new Dimension(140, 32));
-        comboCategoriasBusca.setBorder(BorderFactory.createLineBorder(new Color(189, 195, 199), 1));
-        comboCategoriasBusca.setBackground(new Color(248, 249, 250));
-        comboCategoriasBusca.setForeground(new Color(108, 117, 125));
-        comboCategoriasBusca.setEnabled(false);
-
-        btnBuscarDescricao = createStyledButton("🔍 Buscar", new Color(108, 117, 125));
-        btnBuscarDescricao.setEnabled(false);
-
-        // Tabela de resultados da busca por descrição
-        String[] colunasResultados = { "Número", "Descrição", "Marca/Modelo", "Localização" };
-        modeloTabelaResultados = new DefaultTableModel(colunasResultados, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-
-        // Tabela para agrupamento de itens sem etiqueta
-        String[] colunasItensAgrupados = { "Descrição", "Quantidade", "Categorias", "Primeira Coleta",
-                "Última Coleta" };
-        modeloTabelaItensAgrupados = new DefaultTableModel(colunasItensAgrupados, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-
-        tabelaItensAgrupados = new JTable(modeloTabelaItensAgrupados);
-        tabelaItensAgrupados.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-        // Configurações da tabela de itens agrupados
-        tabelaItensAgrupados.getColumnModel().getColumn(0).setPreferredWidth(250); // Descrição
-        tabelaItensAgrupados.getColumnModel().getColumn(1).setPreferredWidth(80); // Quantidade
-        tabelaItensAgrupados.getColumnModel().getColumn(2).setPreferredWidth(150); // Categorias
-        tabelaItensAgrupados.getColumnModel().getColumn(3).setPreferredWidth(120); // Primeira Coleta
-        tabelaItensAgrupados.getColumnModel().getColumn(4).setPreferredWidth(120); // Última Coleta
-
-        tabelaItensAgrupados.setRowHeight(24);
-        tabelaItensAgrupados.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
-        tabelaItensAgrupados.getTableHeader().setFont(new Font(Font.SANS_SERIF, Font.BOLD, 11));
-
-        scrollItensAgrupados = new JScrollPane(tabelaItensAgrupados);
-        scrollItensAgrupados.setPreferredSize(new Dimension(750, 400));
-        scrollItensAgrupados.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollItensAgrupados.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-
-        // Botão para ver itens agrupados com design moderno
-        btnVerItensAgrupados = createStyledButton("📊 Ver Itens Sem Etiqueta Agrupados", new Color(52, 152, 219));
-        btnVerItensAgrupados.setEnabled(false);
-
-        // Painel para itens agrupados (inicialmente oculto)
-        panelItensAgrupados = new JPanel(new BorderLayout());
-        panelItensAgrupados.setBorder(BorderFactory.createTitledBorder("Itens Sem Etiqueta Agrupados"));
-        panelItensAgrupados.setVisible(false);
-
-        tabelaResultadosDescricao = new JTable(modeloTabelaResultados);
-        tabelaResultadosDescricao.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tabelaResultadosDescricao.setEnabled(false);
-
-        // Configurações da tabela de resultados
-        tabelaResultadosDescricao.getColumnModel().getColumn(0).setPreferredWidth(100); // Número
-        tabelaResultadosDescricao.getColumnModel().getColumn(1).setPreferredWidth(250); // Descrição
-        tabelaResultadosDescricao.getColumnModel().getColumn(2).setPreferredWidth(150); // Marca/Modelo
-        tabelaResultadosDescricao.getColumnModel().getColumn(3).setPreferredWidth(120); // Localização
-
-        tabelaResultadosDescricao.setRowHeight(28);
-        tabelaResultadosDescricao.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        tabelaResultadosDescricao.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        tabelaResultadosDescricao.getTableHeader().setBackground(new Color(52, 73, 94));
-        tabelaResultadosDescricao.getTableHeader().setForeground(Color.WHITE);
-        tabelaResultadosDescricao.setGridColor(new Color(189, 195, 199));
-        tabelaResultadosDescricao.setSelectionBackground(new Color(52, 152, 219));
-        tabelaResultadosDescricao.setSelectionForeground(Color.WHITE);
-        tabelaResultadosDescricao.setBackground(Color.WHITE);
-        tabelaResultadosDescricao.setForeground(new Color(44, 62, 80));
-
-        scrollResultados = new JScrollPane(tabelaResultadosDescricao);
-        scrollResultados.setPreferredSize(new Dimension(400, 100)); // Diminuído de 150 para 100
-        scrollResultados.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollResultados.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-
-        // Painel de busca por descrição (inicialmente oculto) com design moderno
-        panelBuscaDescricao = new JPanel(new BorderLayout());
-        panelBuscaDescricao.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(52, 152, 219), 2),
-                BorderFactory.createTitledBorder(
-                        BorderFactory.createEmptyBorder(5, 10, 5, 10),
-                        "Buscar Item Similar por Descrição",
-                        javax.swing.border.TitledBorder.LEFT,
-                        javax.swing.border.TitledBorder.TOP,
-                        new Font("Segoe UI", Font.BOLD, 13),
-                        new Color(52, 152, 219))));
-        panelBuscaDescricao.setBackground(Color.WHITE);
-        panelBuscaDescricao.setVisible(false);
-
-        // Painel superior com campo de busca organizado
-        JPanel panelCampoBusca = new JPanel(new BorderLayout());
-
-        // Painel esquerdo com campo de busca
-        JPanel panelCampoEsquerdo = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panelCampoEsquerdo.add(new JLabel("Categoria:"));
-        panelCampoEsquerdo.add(comboCategoriasBusca);
-        panelCampoEsquerdo.add(new JLabel("Descrição:"));
-        panelCampoEsquerdo.add(campoBuscaDescricao);
-        panelCampoEsquerdo.add(btnBuscarDescricao);
-
-        // Painel direito com botão de itens agrupados
-        JPanel panelCampoDireito = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        panelCampoDireito.add(btnVerItensAgrupados);
-
-        panelCampoBusca.add(panelCampoEsquerdo, BorderLayout.WEST);
-        panelCampoBusca.add(panelCampoDireito, BorderLayout.EAST);
-
-        panelBuscaDescricao.add(panelCampoBusca, BorderLayout.NORTH);
-        panelBuscaDescricao.add(scrollResultados, BorderLayout.CENTER);
-
-        JLabel lblInstrucao = new JLabel(
-                "<html><i>Busque por palavras-chave da descrição para encontrar itens similares no banco de dados</i></html>");
-        lblInstrucao.setFont(new Font(Font.SANS_SERIF, Font.ITALIC, 10));
-        panelBuscaDescricao.add(lblInstrucao, BorderLayout.SOUTH);
-
-        // Botão coletar com design moderno - DESTAQUE MAIOR
-        btnColetar = createStyledButton("✅ Registrar", new Color(46, 204, 113));
-        btnColetar.setPreferredSize(new Dimension(200, 45)); // Aumentado para 200x45
-        btnColetar.setMinimumSize(new Dimension(200, 45));
-        btnColetar.setEnabled(false);
-        btnColetar.setToolTipText("Clique para registrar o item encontrado ou pressione F4");
-
-        // Adicionar animação de clique ao botão Registrar
-        adicionarAnimacaoClique(btnColetar, new Color(46, 204, 113));
-
-        // Adicionar atalho F4 para o botão registrar
-        btnColetar.setMnemonic(KeyEvent.VK_F4);
-        btnColetar.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
-                KeyStroke.getKeyStroke(KeyEvent.VK_F4, 0), "registrar");
-        btnColetar.getActionMap().put("registrar", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (btnColetar.isEnabled()) {
-                    animarBotaoRegistrar();
-                    registrarItemEncontrado();
-                }
-            }
-        });
-
-        // Botão remover item com design moderno
-        btnRemoverItem = createStyledButton("🗑️ Remover", new Color(231, 76, 60));
-        btnRemoverItem.setEnabled(false);
-        btnRemoverItem.setToolTipText("Clique para remover o item selecionado (apenas Admin/Supervisor)");
-
-        // Controle de visibilidade baseado no perfil do usuário
-        // Apenas administradores e supervisores podem remover itens
-        // Perfil CONSULTA não pode realizar nenhuma ação de modificação
-        boolean podeRemover = usuarioLogado != null &&
-                ("ADMIN".equals(usuarioLogado.getPerfil().name()) ||
-                        "SUPERVISOR".equals(usuarioLogado.getPerfil().name()));
-        System.out.println("DEBUG: btnRemoverItem.setVisible(" + podeRemover + ") - Usuario: " +
-                (usuarioLogado != null ? usuarioLogado.getNomeCompleto() + " (" + usuarioLogado.getPerfil() + ")"
-                        : "null"));
-        btnRemoverItem.setVisible(podeRemover);
-        
-        // Verificar se é perfil CONSULTA para desabilitar botões de ação
-        boolean isPerfilConsulta = usuarioLogado != null && 
-                "CONSULTA".equals(usuarioLogado.getPerfil().name());
-        if (isPerfilConsulta) {
-            btnColetar.setEnabled(false);
-            btnFinalizarColeta.setEnabled(false);
-            btnRemoverItem.setEnabled(false);
-            System.out.println("DEBUG: Perfil CONSULTA detectado - botões de ação desabilitados");
-        }
-
-        // Botão para finalizar coleta na sala com design moderno
-        btnFinalizarColeta = createStyledButton("🏁 Finalizar", new Color(40, 167, 69));
-        btnFinalizarColeta.setEnabled(false);
-        btnFinalizarColeta.setToolTipText("Marcar a coleta desta sala como finalizada");
-
-        // Botão para reabrir coleta da sala (apenas admin/supervisor)
-        btnReabrirColeta = createStyledButton("⚠️ Reabrir", new Color(255, 193, 7));
-        btnReabrirColeta.setPreferredSize(new Dimension(140, 35));
-        btnReabrirColeta.setEnabled(false);
-        btnReabrirColeta.setToolTipText("Reabrir uma sala finalizada para permitir novas coletas (Admin/Supervisor)");
-        // Controlar visibilidade baseado no perfil do usuário
-        // Apenas ADMIN e SUPERVISOR podem reabrir salas
-        boolean podeReabrir = usuarioLogado != null &&
-                ("ADMIN".equals(usuarioLogado.getPerfil().name()) ||
-                        "SUPERVISOR".equals(usuarioLogado.getPerfil().name()));
-        btnReabrirColeta.setVisible(podeReabrir);
-        System.out.println("DEBUG: btnReabrirColeta.setVisible(" + podeReabrir + ") - Usuario: " +
-                (usuarioLogado != null ? usuarioLogado.getNomeCompleto() + " (" + usuarioLogado.getPerfil() + ")"
-                        : "null"));
-
-        // Botão para ver todas as coletas do inventário
-        btnVerTodasColetas = createStyledButton("📋 Ver Todas", new Color(52, 152, 219));
-        btnVerTodasColetas.setPreferredSize(new Dimension(140, 35));
-        btnVerTodasColetas.setEnabled(true);
-        btnVerTodasColetas.setToolTipText("Ver todas as coletas do inventário atual (todas as salas)");
-
         // Labels de resumo
-        lblResumoSala = new JLabel("Selecione uma sala para iniciar a coleta");
         lblInventarioAtual = new JLabel("Inventário: Carregando...");
         lblInventarioAtual.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
         lblInventarioAtual.setForeground(new Color(0, 100, 0));
-
-        // Tabela de histórico de coleta - CONFIGURAÇÃO MELHORADA
-        // NOTA: Coluna ID (índice 4) é oculta - usada internamente para exclusão
-        String[] colunasHistorico = { "Data/Hora", "Patrimônio", "Descrição", "Estado", "ID" };
-        modeloTabelaHistorico = new DefaultTableModel(colunasHistorico, 0) {
+        
+        // === CRIAR COMPONENTES DA ABA "COLETA NORMAL" ===
+        
+        // Componente de busca
+        campoBusca = new JTextField(20);
+        campoBusca.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        campoBusca.setPreferredSize(new Dimension(300, 35));
+        campoBusca.setToolTipText("Digite o número ou código do patrimônio");
+        
+        btnBuscar = createStyledButton("🔍 Buscar", new Color(52, 152, 219));
+        btnBuscar.setPreferredSize(new Dimension(120, 35));
+        
+        // Botões de ação
+        btnColetar = createStyledButton("✅ Registrar", new Color(40, 167, 69));
+        btnColetar.setPreferredSize(new Dimension(200, 40));
+        btnColetar.setEnabled(false);
+        
+        // Verificar permissões do usuário para remover itens
+        boolean podeRemover = (usuarioLogado != null && 
+            ("ADMIN".equals(usuarioLogado.getPerfil()) || "SUPERVISOR".equals(usuarioLogado.getPerfil())));
+        
+        btnRemoverItem = createStyledButton("🗑️ Remover", new Color(220, 53, 69));
+        btnRemoverItem.setPreferredSize(new Dimension(150, 35));
+        btnRemoverItem.setEnabled(false);
+        btnRemoverItem.setVisible(podeRemover);
+        btnRemoverItem.setToolTipText(podeRemover ? 
+            "Remover item selecionado da coleta" : 
+            "Apenas Admin/Supervisor podem remover itens");
+        
+        btnFinalizarColeta = createStyledButton("🏁 Finalizar Coleta", new Color(25, 135, 84));
+        btnFinalizarColeta.setPreferredSize(new Dimension(180, 35));
+        btnFinalizarColeta.setEnabled(false);
+        
+        // Verificar permissões do usuário para reabrir coletas
+        boolean podeReabrir = (usuarioLogado != null && 
+            ("ADMIN".equals(usuarioLogado.getPerfil()) || "SUPERVISOR".equals(usuarioLogado.getPerfil())));
+        
+        btnReabrirColeta = createStyledButton("🔄 Reabrir", new Color(255, 193, 7));
+        btnReabrirColeta.setPreferredSize(new Dimension(150, 35));
+        btnReabrirColeta.setEnabled(false);
+        btnReabrirColeta.setVisible(podeReabrir);
+        btnReabrirColeta.setToolTipText(podeReabrir ?
+            "Reabrir coleta finalizada" :
+            "Apenas Admin/Supervisor podem reabrir coletas");
+        
+        btnVerTodasColetas = createStyledButton("📋 Ver Todas", new Color(108, 117, 125));
+        btnVerTodasColetas.setPreferredSize(new Dimension(150, 35));
+        btnVerTodasColetas.setToolTipText("Ver todas as coletas registradas no sistema");
+        
+        // Tabela de histórico
+        String[] colunas = {"Número", "Descrição", "Estado", "Data/Hora"};
+        modeloTabelaHistorico = new DefaultTableModel(colunas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
-
-        tabelaHistorico = new JTable(modeloTabelaHistorico);
-        tabelaHistorico.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-        // Configurações detalhadas da tabela
-        tabelaHistorico.getColumnModel().getColumn(0).setPreferredWidth(140); // Data/Hora
-        tabelaHistorico.getColumnModel().getColumn(1).setPreferredWidth(120); // Patrimônio
-        tabelaHistorico.getColumnModel().getColumn(2).setPreferredWidth(400); // Descrição (aumentada)
-        tabelaHistorico.getColumnModel().getColumn(3).setPreferredWidth(120); // Estado
         
-        // Ocultar coluna ID (índice 4) - usada internamente para exclusão
-        tabelaHistorico.getColumnModel().getColumn(4).setMinWidth(0);
-        tabelaHistorico.getColumnModel().getColumn(4).setMaxWidth(0);
-        tabelaHistorico.getColumnModel().getColumn(4).setPreferredWidth(0);
-
-        tabelaHistorico.setRowHeight(30);
-        tabelaHistorico.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tabelaHistorico = new JTable(modeloTabelaHistorico);
+        tabelaHistorico.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        tabelaHistorico.setRowHeight(25);
         tabelaHistorico.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
-        tabelaHistorico.getTableHeader().setBackground(new Color(52, 73, 94));
-        tabelaHistorico.getTableHeader().setForeground(Color.WHITE);
-        tabelaHistorico.getTableHeader().setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-
-        tabelaHistorico.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
-        tabelaHistorico.setGridColor(new Color(189, 195, 199));
-        tabelaHistorico.setShowGrid(true);
-        tabelaHistorico.setIntercellSpacing(new Dimension(1, 1));
-        tabelaHistorico.setSelectionBackground(new Color(52, 152, 219));
-        tabelaHistorico.setSelectionForeground(Color.WHITE);
-        tabelaHistorico.setBackground(Color.WHITE);
-        tabelaHistorico.setForeground(new Color(44, 62, 80));
-
-        // Cores alternadas nas linhas com texto PRETO visível
-        tabelaHistorico.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
-                    boolean hasFocus, int row, int column) {
-                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if (isSelected) {
-                    // Linha selecionada: fundo azul, texto branco
-                    c.setBackground(new Color(52, 152, 219));
-                    c.setForeground(Color.WHITE);
-                } else {
-                    // Linha não selecionada: fundo alternado, texto PRETO
-                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 248, 248));
-                    c.setForeground(new Color(44, 62, 80)); // Texto escuro (quase preto)
-                }
-                return c;
-            }
-        });
-
-        // Menu de contexto para excluir coleta (apenas admin)
-        JPopupMenu popupMenuHistorico = new JPopupMenu();
-        JMenuItem menuExcluirColeta = new JMenuItem("🗑️ Excluir Coleta");
-        menuExcluirColeta.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 12));
-        menuExcluirColeta.addActionListener(e -> excluirColetaSelecionada());
-        popupMenuHistorico.add(menuExcluirColeta);
-
-        // Adicionar listener de mouse para mostrar popup menu
-        tabelaHistorico.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mousePressed(java.awt.event.MouseEvent e) {
-                mostrarPopupSeNecessario(e);
-            }
-
-            @Override
-            public void mouseReleased(java.awt.event.MouseEvent e) {
-                mostrarPopupSeNecessario(e);
-            }
-
-            private void mostrarPopupSeNecessario(java.awt.event.MouseEvent e) {
-                if (e.isPopupTrigger()) {
-                    // Selecionar a linha clicada
-                    int row = tabelaHistorico.rowAtPoint(e.getPoint());
-                    if (row >= 0 && row < tabelaHistorico.getRowCount()) {
-                        tabelaHistorico.setRowSelectionInterval(row, row);
-                    }
-                    // Mostrar menu apenas para admin
-                    if (usuarioLogado != null && "ADMIN".equals(usuarioLogado.getPerfil().name())) {
-                        popupMenuHistorico.show(e.getComponent(), e.getX(), e.getY());
-                    }
-                }
-            }
-        });
-
-        // Criar JScrollPane para a tabela
+        tabelaHistorico.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
         scrollHistorico = new JScrollPane(tabelaHistorico);
-        // Altura para exibir 3 linhas: altura da linha (25) * 3 + cabeçalho (25) +
-        // bordas (10)
-        scrollHistorico.setPreferredSize(new Dimension(800, 180)); // Aumentado de 110 para 180
-        scrollHistorico.setMinimumSize(new Dimension(600, 110));
-        scrollHistorico.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollHistorico.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollHistorico.setBorder(BorderFactory.createLoweredBevelBorder());
-
-        // Label de contagem de coletas na sala
-        lblContagemColetas = new JLabel("📊 Total de itens coletados: 0");
-        lblContagemColetas.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
+        scrollHistorico.setBorder(BorderFactory.createLineBorder(new Color(189, 195, 199), 1));
+        
+        // Panel de informações do item
+        panelInfoItem = new JPanel(new GridBagLayout());
+        panelInfoItem.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+                "Informações do Item",
+                TitledBorder.LEFT,
+                TitledBorder.TOP,
+                new Font("Segoe UI", Font.BOLD, 14),
+                new Color(44, 62, 80)),
+            BorderFactory.createEmptyBorder(8, 12, 12, 12)));
+        panelInfoItem.setBackground(Color.WHITE);
+        panelInfoItem.setPreferredSize(new Dimension(0, 200));
+        
+        lblResumoSala = new JLabel("Selecione uma sala para iniciar a coleta");
+        lblNumeroItem = new JLabel("-");
+        lblDescricaoItem = new JLabel("-");
+        lblLocalizacaoOriginal = new JLabel("-");
+        lblEstadoOriginal = new JLabel("-");
+        lblStatusItem = new JLabel("-");
+        
+        // Estilizar labels de informação
+        lblNumeroItem.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblDescricaoItem.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblLocalizacaoOriginal.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblEstadoOriginal.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblStatusItem.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        
+        // Formulário de coleta
+        comboEstado = new JComboBox<>(new String[]{
+            "BOM", "REGULAR", "RUIM", "PÉSSIMO", "NOVO"
+        });
+        comboEstado.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        comboEstado.setPreferredSize(new Dimension(150, 30));
+        comboEstado.setEnabled(false);
+        
+        campoObservacao = new JTextArea(2, 20);
+        campoObservacao.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        campoObservacao.setLineWrap(true);
+        campoObservacao.setWrapStyleWord(true);
+        campoObservacao.setEnabled(false);
+        
+        // Label de contagem
+        lblContagemColetas = new JLabel("Coletas nesta sala: 0");
+        lblContagemColetas.setFont(new Font("Segoe UI", Font.BOLD, 12));
         lblContagemColetas.setForeground(new Color(52, 152, 219));
-        lblContagemColetas.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-
-        // Adicionar componentes à lista de desabilitação (EXCETO a tabela de histórico)
+        
+        // Criar lista de componentes para habilitar/desabilitar
+        componentesParaDesabilitar = new ArrayList<>();
         componentesParaDesabilitar.add(campoBusca);
         componentesParaDesabilitar.add(btnBuscar);
-        componentesParaDesabilitar.add(campoObservacao);
-        componentesParaDesabilitar.add(comboEstado);
         componentesParaDesabilitar.add(btnColetar);
-        componentesParaDesabilitar.add(btnRemoverItem);
-
-        componentesParaDesabilitar.add(btnFinalizarColeta);
-
-        // Adicionar botão reabrir à lista (será controlado separadamente)
-        if (btnReabrirColeta.isVisible()) {
-            componentesParaDesabilitar.add(btnReabrirColeta);
-        }
-
-        // Componentes da nova interface de itens sem patrimônio serão controlados por
-        // habilitarComponentesPorAba
-        // Não adicionamos à lista geral pois são específicos de cada aba
-
-        // Configurar estilo dos botões para manter aparência quando desabilitados
-        configurarBotaoComEstiloDesabilitado(btnColetar, new Color(46, 204, 113), new Color(120, 220, 150));
-        configurarBotaoComEstiloDesabilitado(btnRemoverItem, new Color(231, 76, 60), new Color(240, 140, 130));
-
-        configurarBotaoComEstiloDesabilitado(btnFinalizarColeta, new Color(40, 167, 69), new Color(120, 200, 140));
-
-        // Configurar estilo do botão reabrir (amarelo/laranja para ação de aviso)
-        if (btnReabrirColeta.isVisible()) {
-            configurarBotaoComEstiloDesabilitado(btnReabrirColeta, new Color(255, 193, 7), new Color(255, 220, 100));
-        }
-
-        // Configurar estilo dos novos botões da aba de itens sem patrimônio (serão
-        // criados depois)
-        SwingUtilities.invokeLater(() -> {
-            if (btnRegistrarSemPatrimonio != null) {
-                configurarBotaoComEstiloDesabilitado(btnRegistrarSemPatrimonio, new Color(46, 204, 113),
-                        new Color(120, 220, 150));
-            }
-            if (btnBuscarDescricao != null) {
-                configurarBotaoComEstiloDesabilitado(btnBuscarDescricao, new Color(108, 117, 125),
-                        new Color(160, 160, 160));
-            }
-            if (btnVerItensAgrupados != null) {
-                configurarBotaoComEstiloDesabilitado(btnVerItensAgrupados, new Color(52, 152, 219),
-                        new Color(120, 180, 230));
-            }
-            if (btnRemoverSemPatrimonio != null) {
-                configurarBotaoComEstiloDesabilitado(btnRemoverSemPatrimonio, new Color(231, 76, 60),
-                        new Color(240, 140, 130));
-            }
-            if (btnExportarSemPatrimonio != null) {
-                configurarBotaoComEstiloDesabilitado(btnExportarSemPatrimonio, new Color(52, 152, 219),
-                        new Color(120, 180, 230));
-            }
-        });
-
-        // Desabilitar componentes inicialmente
-        desabilitarComponentes();
+        componentesParaDesabilitar.add(comboEstado);
+        componentesParaDesabilitar.add(campoObservacao);
+        // Nota: btnRemoverItem e btnReabrirColeta são controlados separadamente
     }
 
     private void setupLayout() {
@@ -869,7 +404,6 @@ public class ColetaFrame_v2 extends JFrame {
 
         // Definir cores do tema moderno
         Color corFundo = new Color(248, 249, 250); // Fundo suave
-        Color corPrimaria = new Color(52, 73, 94); // Azul escuro elegante
         Color corTexto = new Color(44, 62, 80); // Texto escuro
 
         // Configurar fundo principal da janela
@@ -1106,60 +640,8 @@ public class ColetaFrame_v2 extends JFrame {
         gbc.anchor = GridBagConstraints.WEST;
 
         // Checkbox para item sem etiqueta removido - há aba dedicada para isso
-
-        // Painel para itens sem etiqueta (inicialmente oculto) com design moderno
-        panelSemEtiqueta = new JPanel(new GridBagLayout());
-        panelSemEtiqueta.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder(
-                        BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
-                        "Informações do Item Sem Etiqueta",
-                        TitledBorder.LEFT,
-                        TitledBorder.TOP,
-                        new Font("Segoe UI", Font.BOLD, 12),
-                        corTexto),
-                BorderFactory.createEmptyBorder(8, 12, 12, 12)));
-        panelSemEtiqueta.setBackground(Color.WHITE);
-        panelSemEtiqueta.setVisible(false);
-
-        GridBagConstraints gbcSem = new GridBagConstraints();
-        gbcSem.insets = new Insets(3, 3, 3, 3);
-        gbcSem.anchor = GridBagConstraints.WEST;
-
-        gbcSem.gridx = 0;
-        gbcSem.gridy = 0;
-        panelSemEtiqueta.add(new JLabel("Categoria:"), gbcSem);
-        gbcSem.gridx = 1;
-        gbcSem.fill = GridBagConstraints.HORIZONTAL;
-        gbcSem.weightx = 1.0;
-        panelSemEtiqueta.add(comboCategoriaSemEtiqueta, gbcSem);
-
-        gbcSem.gridx = 0;
-        gbcSem.gridy = 1;
-        gbcSem.fill = GridBagConstraints.NONE;
-        gbcSem.weightx = 0;
-        panelSemEtiqueta.add(new JLabel("Descrição:"), gbcSem);
-        gbcSem.gridx = 1;
-        gbcSem.fill = GridBagConstraints.BOTH;
-        gbcSem.weightx = 1.0;
-        gbcSem.weighty = 0.3;
-        panelSemEtiqueta.add(new JScrollPane(txtDescricaoSemEtiqueta), gbcSem);
-
-        // Adicionar painel de busca por descrição
-        gbcSem.gridx = 0;
-        gbcSem.gridy = 2;
-        gbcSem.gridwidth = 2;
-        gbcSem.fill = GridBagConstraints.BOTH;
-        gbcSem.weightx = 1.0;
-        gbcSem.weighty = 0.7;
-        panelSemEtiqueta.add(panelBuscaDescricao, gbcSem);
-
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.gridwidth = 2;
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.weightx = 1.0;
-        gbc.weighty = 0.3;
-        panelFormulario.add(panelSemEtiqueta, gbc);
+        // NOTA: O painel legado "panelSemEtiqueta" (invisível) foi removido junto com
+        // a extração da aba "Itens Sem Patrimônio" para ItensSemPatrimonioPanel.
 
         gbc.gridx = 0;
         gbc.gridy = 2;
@@ -1238,16 +720,28 @@ public class ColetaFrame_v2 extends JFrame {
         abaColetaNormal.add(panelSuperior, BorderLayout.NORTH);
         abaColetaNormal.add(panelCentralPrincipal, BorderLayout.CENTER);
 
-        // Criar aba para Itens Sem Patrimônio
-        abaItensSemPatrimonio = criarAbaItensSemPatrimonio(corFundo, corPrimaria, corTexto);
+        // Criar aba para Itens Sem Patrimônio - painel próprio
+        itensSemPatrimonioPanel = new com.inventario.sihcp.view.coleta.ItensSemPatrimonioPanel(
+                patrimonioDAO,
+                coletaDAO,
+                inventarioDAO,
+                coletaOfflineService,
+                offlineManager,
+                usuarioLogado,
+                () -> (Sala) comboSalas.getSelectedItem(),
+                this::registrarWorker);
 
-        // Criar aba para Itens Pendentes (não coletados)
-        abaItensPendentes = criarAbaItensPendentes(corFundo, corPrimaria, corTexto);
+        // Criar aba para Itens Pendentes (não coletados) - painel próprio
+        itensPendentesPanel = new com.inventario.sihcp.view.coleta.ItensPendentesPanel(
+                patrimonioDAO,
+                inventarioDAO,
+                this::irParaColeta,
+                this::registrarWorker);
 
         // Adicionar abas ao TabbedPane
         tabbedPane.addTab("📋 Coleta Normal", abaColetaNormal);
-        tabbedPane.addTab("⏳ Itens Pendentes", abaItensPendentes);
-        tabbedPane.addTab("🏷️ Itens Sem Patrimônio", abaItensSemPatrimonio);
+        tabbedPane.addTab("⏳ Itens Pendentes", itensPendentesPanel);
+        tabbedPane.addTab("🏷️ Itens Sem Patrimônio", itensSemPatrimonioPanel);
 
         // Adicionar listener para controlar habilitação de componentes por aba
         tabbedPane.addChangeListener(e -> {
@@ -1259,1139 +753,24 @@ public class ColetaFrame_v2 extends JFrame {
         add(tabbedPane, BorderLayout.CENTER);
     }
 
-    private JPanel criarAbaItensSemPatrimonio(Color corFundo, Color corPrimaria, Color corTexto) {
-        JPanel aba = new JPanel(new BorderLayout(8, 8));
-        aba.setBackground(corFundo);
-        aba.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        // ========== PAINEL SUPERIOR: PESQUISA DE DESCRIÇÕES ==========
-        JPanel painelPesquisa = criarPainelPesquisaDescricoes(corPrimaria);
-
-        // ========== PAINEL CENTRAL: SPLIT ENTRE RESULTADOS E FORMULÁRIO ==========
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setDividerLocation(550);
-        splitPane.setResizeWeight(0.55);
-
-        // Painel esquerdo: Resultados da pesquisa
-        JPanel painelResultados = criarPainelResultadosPesquisa(corTexto);
-
-        // Painel direito: Formulário de registro
-        JPanel painelFormulario = criarPainelFormularioRegistro(corTexto);
-
-        splitPane.setLeftComponent(painelResultados);
-        splitPane.setRightComponent(painelFormulario);
-
-        // ========== PAINEL INFERIOR: TABELA DE ITENS REGISTRADOS ==========
-        JPanel painelTabela = criarPainelTabelaItensRegistrados(corTexto);
-
-        // ========== MONTAGEM FINAL ==========
-        aba.add(painelPesquisa, BorderLayout.NORTH);
-        aba.add(splitPane, BorderLayout.CENTER);
-        aba.add(painelTabela, BorderLayout.SOUTH);
-
-        return aba;
-    }
-
     /**
-     * Cria a aba de Itens Pendentes (não coletados) na sala selecionada
-     * Mostra todos os patrimônios da sala que ainda não foram coletados no inventário atual
+     * Navega para a aba de Coleta Normal e dispara a busca pelo número informado.
+     * Usado como callback do {@link com.inventario.sihcp.view.coleta.ItensPendentesPanel}
+     * quando o usuário dá duplo-clique em um item pendente.
      */
-    private JPanel criarAbaItensPendentes(Color corFundo, Color corPrimaria, Color corTexto) {
-        JPanel aba = new JPanel(new BorderLayout(10, 10));
-        aba.setBackground(corFundo);
-        aba.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-
-        // ========== PAINEL SUPERIOR: INFORMAÇÕES E PROGRESSO ==========
-        JPanel painelSuperior = new JPanel(new BorderLayout(10, 10));
-        painelSuperior.setBackground(Color.WHITE);
-        painelSuperior.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
-                BorderFactory.createEmptyBorder(15, 20, 15, 20)));
-
-        // Painel esquerdo: Título e informações
-        JPanel painelInfo = new JPanel(new GridLayout(3, 1, 5, 5));
-        painelInfo.setBackground(Color.WHITE);
-
-        JLabel lblTitulo = new JLabel("📋 Itens Pendentes de Coleta");
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        lblTitulo.setForeground(corPrimaria);
-
-        lblTotalPendentes = new JLabel("Selecione uma sala para ver os itens pendentes");
-        lblTotalPendentes.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        lblTotalPendentes.setForeground(new Color(108, 117, 125));
-
-        lblProgressoColeta = new JLabel("Progresso: -");
-        lblProgressoColeta.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        lblProgressoColeta.setForeground(new Color(46, 204, 113));
-
-        painelInfo.add(lblTitulo);
-        painelInfo.add(lblTotalPendentes);
-        painelInfo.add(lblProgressoColeta);
-
-        // Painel direito: Barra de progresso
-        JPanel painelProgresso = new JPanel(new BorderLayout(5, 5));
-        painelProgresso.setBackground(Color.WHITE);
-        painelProgresso.setPreferredSize(new Dimension(300, 60));
-
-        progressBarColeta = new JProgressBar(0, 100);
-        progressBarColeta.setStringPainted(true);
-        progressBarColeta.setString("0%");
-        progressBarColeta.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        progressBarColeta.setForeground(new Color(46, 204, 113));
-        progressBarColeta.setBackground(new Color(236, 240, 241));
-        progressBarColeta.setPreferredSize(new Dimension(280, 25));
-
-        JLabel lblBarraProgresso = new JLabel("Progresso da Coleta na Sala:");
-        lblBarraProgresso.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        lblBarraProgresso.setForeground(new Color(108, 117, 125));
-
-        painelProgresso.add(lblBarraProgresso, BorderLayout.NORTH);
-        painelProgresso.add(progressBarColeta, BorderLayout.CENTER);
-
-        painelSuperior.add(painelInfo, BorderLayout.WEST);
-        painelSuperior.add(painelProgresso, BorderLayout.EAST);
-
-        // ========== PAINEL DE BUSCA ==========
-        JPanel painelBusca = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-        painelBusca.setBackground(Color.WHITE);
-        painelBusca.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
-                BorderFactory.createEmptyBorder(10, 15, 10, 15)));
-
-        JLabel lblBusca = new JLabel("🔍 Filtrar:");
-        lblBusca.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 12));
-
-        campoBuscaPendentes = new JTextField(25);
-        campoBuscaPendentes.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        campoBuscaPendentes.setPreferredSize(new Dimension(250, 30));
-        campoBuscaPendentes.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
-                BorderFactory.createEmptyBorder(5, 10, 5, 10)));
-        campoBuscaPendentes.setToolTipText("Digite número ou descrição para filtrar");
-
-        // Listener para filtrar em tempo real
-        campoBuscaPendentes.addKeyListener(new KeyListener() {
-            @Override
-            public void keyTyped(KeyEvent e) {}
-            @Override
-            public void keyPressed(KeyEvent e) {}
-            @Override
-            public void keyReleased(KeyEvent e) {
-                filtrarTabelaPendentes(campoBuscaPendentes.getText());
-            }
-        });
-
-        btnExportarPendentes = createStyledButton("📥 Exportar Lista", new Color(52, 152, 219));
-        btnExportarPendentes.setEnabled(false);
-        btnExportarPendentes.addActionListener(e -> exportarListaPendentes());
-
-        JButton btnAtualizarPendentes = createStyledButton("🔄 Atualizar", new Color(46, 204, 113));
-        btnAtualizarPendentes.addActionListener(e -> carregarItensPendentes());
-
-        painelBusca.add(lblBusca);
-        painelBusca.add(campoBuscaPendentes);
-        painelBusca.add(Box.createHorizontalStrut(20));
-        painelBusca.add(btnAtualizarPendentes);
-        painelBusca.add(btnExportarPendentes);
-
-        // Combinar painéis superiores
-        JPanel painelTopoCompleto = new JPanel(new BorderLayout(0, 10));
-        painelTopoCompleto.setBackground(corFundo);
-        painelTopoCompleto.add(painelSuperior, BorderLayout.NORTH);
-        painelTopoCompleto.add(painelBusca, BorderLayout.SOUTH);
-
-        // ========== TABELA DE ITENS PENDENTES ==========
-        String[] colunasPendentes = {"Número", "Descrição", "Localização Original", "Responsável", "Estado"};
-        modeloTabelaPendentes = new DefaultTableModel(colunasPendentes, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-
-        tabelaPendentes = new JTable(modeloTabelaPendentes);
-        tabelaPendentes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tabelaPendentes.setRowHeight(28);
-        tabelaPendentes.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        tabelaPendentes.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        tabelaPendentes.getTableHeader().setBackground(corPrimaria);
-        tabelaPendentes.getTableHeader().setForeground(Color.WHITE);
-        tabelaPendentes.setGridColor(new Color(220, 220, 220));
-        tabelaPendentes.setSelectionBackground(new Color(52, 152, 219));
-        tabelaPendentes.setSelectionForeground(Color.WHITE);
-        tabelaPendentes.setBackground(Color.WHITE);
-
-        // Configurar larguras das colunas
-        tabelaPendentes.getColumnModel().getColumn(0).setPreferredWidth(100);  // Número
-        tabelaPendentes.getColumnModel().getColumn(1).setPreferredWidth(300);  // Descrição
-        tabelaPendentes.getColumnModel().getColumn(2).setPreferredWidth(150);  // Localização
-        tabelaPendentes.getColumnModel().getColumn(3).setPreferredWidth(150);  // Responsável
-        tabelaPendentes.getColumnModel().getColumn(4).setPreferredWidth(100);  // Estado
-
-        // Duplo-clique para ir ao campo de busca com o número preenchido
-        tabelaPendentes.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    int row = tabelaPendentes.getSelectedRow();
-                    if (row >= 0) {
-                        String numero = (String) modeloTabelaPendentes.getValueAt(row, 0);
-                        // Ir para aba de coleta normal e preencher o campo de busca
-                        tabbedPane.setSelectedIndex(0);
-                        campoBusca.setText(numero);
-                        campoBusca.requestFocus();
-                        // Executar busca automaticamente
-                        buscarPatrimonio();
-                    }
-                }
-            }
-        });
-
-        JScrollPane scrollPendentes = new JScrollPane(tabelaPendentes);
-        scrollPendentes.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
-        scrollPendentes.setBackground(Color.WHITE);
-
-        // ========== PAINEL INFERIOR: DICA ==========
-        JPanel painelDica = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        painelDica.setBackground(new Color(255, 248, 220));
-        painelDica.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(255, 193, 7), 1),
-                BorderFactory.createEmptyBorder(8, 15, 8, 15)));
-
-        JLabel lblDica = new JLabel("💡 Dica: Dê duplo-clique em um item para ir diretamente à tela de coleta com o número preenchido");
-        lblDica.setFont(new Font("Segoe UI", Font.ITALIC, 11));
-        lblDica.setForeground(new Color(133, 100, 4));
-        painelDica.add(lblDica);
-
-        // ========== MONTAGEM FINAL ==========
-        aba.add(painelTopoCompleto, BorderLayout.NORTH);
-        aba.add(scrollPendentes, BorderLayout.CENTER);
-        aba.add(painelDica, BorderLayout.SOUTH);
-
-        return aba;
+    private void irParaColeta(String numero) {
+        tabbedPane.setSelectedIndex(0);
+        campoBusca.setText(numero);
+        campoBusca.requestFocus();
+        buscarPatrimonio();
     }
 
     /**
-     * Carrega os itens pendentes (não coletados) da sala selecionada
+     * Recarrega os itens pendentes da aba (delegado ao painel próprio).
      */
     private void carregarItensPendentes() {
-        Sala salaSelecionada = (Sala) comboSalas.getSelectedItem();
-        if (salaSelecionada == null) {
-            lblTotalPendentes.setText("⚠️ Selecione uma sala para ver os itens pendentes");
-            lblProgressoColeta.setText("Progresso: -");
-            progressBarColeta.setValue(0);
-            progressBarColeta.setString("0%");
-            modeloTabelaPendentes.setRowCount(0);
-            btnExportarPendentes.setEnabled(false);
-            return;
-        }
-
-        // Mostrar loading
-        lblTotalPendentes.setText("⏳ Carregando itens pendentes...");
-        tabelaPendentes.setEnabled(false);
-
-        // Executar em background
-        SwingWorker<PendentesResult, Void> worker = new SwingWorker<>() {
-            @Override
-            protected PendentesResult doInBackground() throws Exception {
-                int idSala = salaSelecionada.getId();
-                
-                // Buscar todos os patrimônios da sala
-                List<Patrimonio> todosPatrimonios = patrimonioDAO.buscarPorSala(idSala);
-                
-                // Buscar IDs dos patrimônios já coletados no inventário atual
-                Inventario inventarioAtivo = inventarioDAO.buscarInventarioAtivo();
-                List<Integer> idsColetados = new ArrayList<>();
-                if (inventarioAtivo != null) {
-                    idsColetados = patrimonioDAO.buscarPatrimoniosColetados(inventarioAtivo.getId());
-                }
-                
-                // Filtrar apenas os não coletados
-                List<Integer> finalIdsColetados = idsColetados;
-                List<Patrimonio> pendentes = todosPatrimonios.stream()
-                        .filter(p -> !finalIdsColetados.contains(p.getId()))
-                        .toList();
-                
-                int totalSala = todosPatrimonios.size();
-                int totalColetados = totalSala - pendentes.size();
-                int totalPendentes = pendentes.size();
-                double percentual = totalSala > 0 ? (totalColetados * 100.0 / totalSala) : 0;
-                
-                return new PendentesResult(pendentes, totalSala, totalColetados, totalPendentes, percentual);
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    PendentesResult resultado = get();
-                    
-                    // Atualizar labels
-                    lblTotalPendentes.setText(String.format("📊 %d itens pendentes de %d na sala %s",
-                            resultado.totalPendentes, resultado.totalSala, salaSelecionada.getNumeroSala()));
-                    
-                    lblProgressoColeta.setText(String.format("✅ Coletados: %d de %d (%.1f%%)",
-                            resultado.totalColetados, resultado.totalSala, resultado.percentual));
-                    
-                    // Atualizar barra de progresso
-                    progressBarColeta.setValue((int) resultado.percentual);
-                    progressBarColeta.setString(String.format("%.1f%%", resultado.percentual));
-                    
-                    // Mudar cor da barra baseado no progresso
-                    if (resultado.percentual >= 100) {
-                        progressBarColeta.setForeground(new Color(46, 204, 113)); // Verde
-                    } else if (resultado.percentual >= 50) {
-                        progressBarColeta.setForeground(new Color(52, 152, 219)); // Azul
-                    } else if (resultado.percentual >= 25) {
-                        progressBarColeta.setForeground(new Color(241, 196, 15)); // Amarelo
-                    } else {
-                        progressBarColeta.setForeground(new Color(231, 76, 60)); // Vermelho
-                    }
-                    
-                    // Preencher tabela
-                    modeloTabelaPendentes.setRowCount(0);
-                    for (Patrimonio p : resultado.pendentes) {
-                        Object[] linha = {
-                            p.getNumero(),
-                            p.getDescricao() != null ? p.getDescricao() : "-",
-                            p.getNomeSala() != null ? p.getNomeSala() : "-",
-                            p.getNomeResponsavel() != null ? p.getNomeResponsavel() : "-",
-                            p.getEstadoConservacao() != null ? p.getEstadoConservacao() : "-"
-                        };
-                        modeloTabelaPendentes.addRow(linha);
-                    }
-                    
-                    tabelaPendentes.setEnabled(true);
-                    btnExportarPendentes.setEnabled(resultado.totalPendentes > 0);
-                    
-                    System.out.println("[PENDENTES] Carregados " + resultado.totalPendentes + 
-                                     " itens pendentes para sala " + salaSelecionada.getNumeroSala());
-                    
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    tratarErroPendentes("Operação interrompida");
-                } catch (ExecutionException e) {
-                    Throwable causa = e.getCause();
-                    String mensagemErro = causa != null ? causa.getMessage() : e.getMessage();
-                    tratarErroPendentes(mensagemErro);
-                }
-            }
-        };
-        
-        registrarWorker(worker);
-        worker.execute();
-    }
-    
-    /**
-     * Trata erros ao carregar itens pendentes com opção de retry.
-     */
-    private void tratarErroPendentes(String mensagemErro) {
-        lblTotalPendentes.setText("❌ Erro ao carregar itens pendentes");
-        lblProgressoColeta.setText("Progresso: -");
-        progressBarColeta.setValue(0);
-        tabelaPendentes.setEnabled(true);
-        LOG.error("Erro ao carregar itens pendentes: {}", mensagemErro);
-        
-        int opcao = JOptionPane.showOptionDialog(this,
-                "Erro ao carregar itens pendentes: " + mensagemErro + "\n\n" +
-                "Isso pode ocorrer devido a conexão lenta via VPN.\n" +
-                "Deseja tentar novamente?",
-                "Erro de Conexão",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.ERROR_MESSAGE,
-                null,
-                new String[]{"Tentar Novamente", "Cancelar"},
-                "Tentar Novamente");
-        
-        if (opcao == JOptionPane.YES_OPTION) {
-            carregarItensPendentes(); // Retry
-        }
-    }
-
-    /**
-     * Classe auxiliar para resultado da busca de pendentes
-     */
-    private static class PendentesResult {
-        final List<Patrimonio> pendentes;
-        final int totalSala;
-        final int totalColetados;
-        final int totalPendentes;
-        final double percentual;
-
-        PendentesResult(List<Patrimonio> pendentes, int totalSala, int totalColetados, 
-                       int totalPendentes, double percentual) {
-            this.pendentes = pendentes;
-            this.totalSala = totalSala;
-            this.totalColetados = totalColetados;
-            this.totalPendentes = totalPendentes;
-            this.percentual = percentual;
-        }
-    }
-
-    /**
-     * Filtra a tabela de pendentes baseado no texto digitado
-     */
-    private void filtrarTabelaPendentes(String filtro) {
-        if (filtro == null || filtro.trim().isEmpty()) {
-            // Recarregar todos os itens
-            carregarItensPendentes();
-            return;
-        }
-        
-        String filtroLower = filtro.toLowerCase().trim();
-        
-        // Filtrar linhas visíveis (não recarrega do banco)
-        // Para isso, precisamos manter uma lista original
-        // Por simplicidade, vamos apenas destacar as linhas que correspondem
-        for (int i = 0; i < tabelaPendentes.getRowCount(); i++) {
-            String numero = String.valueOf(modeloTabelaPendentes.getValueAt(i, 0)).toLowerCase();
-            String descricao = String.valueOf(modeloTabelaPendentes.getValueAt(i, 1)).toLowerCase();
-            
-            if (numero.contains(filtroLower) || descricao.contains(filtroLower)) {
-                tabelaPendentes.setRowSelectionInterval(i, i);
-                tabelaPendentes.scrollRectToVisible(tabelaPendentes.getCellRect(i, 0, true));
-                return;
-            }
-        }
-    }
-
-    /**
-     * Exporta a lista de itens pendentes para arquivo
-     */
-    private void exportarListaPendentes() {
-        if (modeloTabelaPendentes.getRowCount() == 0) {
-            JOptionPane.showMessageDialog(this, 
-                "Não há itens pendentes para exportar.", 
-                "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        Sala salaSelecionada = (Sala) comboSalas.getSelectedItem();
-        String nomeSala = salaSelecionada != null ? salaSelecionada.getNumeroSala() : "sala";
-        
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Salvar Lista de Pendentes");
-        fileChooser.setSelectedFile(new java.io.File("pendentes_" + nomeSala + ".csv"));
-        
-        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            try (java.io.PrintWriter writer = new java.io.PrintWriter(fileChooser.getSelectedFile())) {
-                // Cabeçalho
-                writer.println("Número;Descrição;Localização;Responsável;Estado");
-                
-                // Dados
-                for (int i = 0; i < modeloTabelaPendentes.getRowCount(); i++) {
-                    StringBuilder linha = new StringBuilder();
-                    for (int j = 0; j < modeloTabelaPendentes.getColumnCount(); j++) {
-                        if (j > 0) linha.append(";");
-                        Object valor = modeloTabelaPendentes.getValueAt(i, j);
-                        linha.append(valor != null ? valor.toString() : "");
-                    }
-                    writer.println(linha);
-                }
-                
-                JOptionPane.showMessageDialog(this,
-                    "Lista exportada com sucesso!\n" + fileChooser.getSelectedFile().getAbsolutePath(),
-                    "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                    
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this,
-                    "Erro ao exportar: " + e.getMessage(),
-                    "Erro", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
-
-    /**
-     * Cria o painel de pesquisa de descrições
-     */
-    private JPanel criarPainelPesquisaDescricoes(Color corPrimaria) {
-        JPanel painel = new JPanel(new BorderLayout(5, 5));
-        painel.setBackground(Color.WHITE);
-        painel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
-                BorderFactory.createEmptyBorder(10, 12, 10, 12)));
-        painel.setPreferredSize(new Dimension(0, 110)); // Aumentado para 110
-
-        // Título
-        JLabel lblTitulo = new JLabel("Pesquisar Descrições Existentes");
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        lblTitulo.setForeground(corPrimaria);
-        lblTitulo.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
-
-        // Painel de busca com GridBagLayout para melhor controle
-        JPanel painelBusca = new JPanel(new GridBagLayout());
-        painelBusca.setBackground(Color.WHITE);
-        painelBusca.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(3, 5, 3, 5);
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        JLabel lblPesquisa = new JLabel("Digite palavras-chave:");
-        lblPesquisa.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-
-        campoBuscaDescricao = new JTextField();
-        campoBuscaDescricao.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        campoBuscaDescricao.setPreferredSize(new Dimension(350, 30));
-        campoBuscaDescricao.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
-                BorderFactory.createEmptyBorder(5, 10, 5, 10)));
-
-        btnBuscarDescricao = createStyledButton("🔍 Pesquisar", new Color(108, 117, 125));
-        btnBuscarDescricao.addActionListener(e -> buscarPorDescricao());
-
-        // Listener para Enter no campo de busca
-        campoBuscaDescricao.addActionListener(e -> buscarPorDescricao());
-
-        // Adicionar componentes ao painel de busca
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 0.0;
-        gbc.fill = GridBagConstraints.NONE;
-        painelBusca.add(lblPesquisa, gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        painelBusca.add(campoBuscaDescricao, gbc);
-
-        gbc.gridx = 2;
-        gbc.weightx = 0.0;
-        gbc.fill = GridBagConstraints.NONE;
-        painelBusca.add(btnBuscarDescricao, gbc);
-
-        // Instruções - mais compactas
-        JLabel lblInstrucao = new JLabel(
-                "<html><i>💡 Digite parte da descrição e pressione Enter | 📍 Localização definida pela sala selecionada</i></html>");
-        lblInstrucao.setFont(new Font("Segoe UI", Font.ITALIC, 9));
-        lblInstrucao.setForeground(new Color(120, 120, 120));
-        lblInstrucao.setBorder(BorderFactory.createEmptyBorder(3, 0, 0, 0));
-
-        painel.add(lblTitulo, BorderLayout.NORTH);
-        painel.add(painelBusca, BorderLayout.CENTER);
-        painel.add(lblInstrucao, BorderLayout.SOUTH);
-
-        return painel;
-    }
-
-    /**
-     * Cria o painel de resultados da pesquisa
-     */
-    private JPanel criarPainelResultadosPesquisa(Color corTexto) {
-        JPanel painel = new JPanel(new BorderLayout(0, 5));
-        painel.setBackground(Color.WHITE);
-        painel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-
-        // Definir tamanho fixo para o painel
-        painel.setPreferredSize(new Dimension(500, 400));
-        painel.setMinimumSize(new Dimension(400, 300));
-
-        // Título
-        JLabel lblTitulo = new JLabel("📋 Descrições Encontradas");
-        lblTitulo.setFont(new Font("Segoe UI Emoji", Font.BOLD, 13));
-        lblTitulo.setForeground(corTexto);
-
-        // Painel de loading (inicialmente oculto)
-        JPanel painelLoading = new JPanel(new GridBagLayout());
-        painelLoading.setBackground(Color.WHITE);
-        painelLoading.setVisible(false);
-
-        GridBagConstraints gbcLoading = new GridBagConstraints();
-        gbcLoading.gridx = 0;
-        gbcLoading.gridy = 0;
-        gbcLoading.insets = new Insets(10, 10, 10, 10);
-
-        // Label de loading com ícone animado
-        lblLoadingDescricao = new JLabel("🔍 Pesquisando descrições...");
-        lblLoadingDescricao.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
-        lblLoadingDescricao.setForeground(new Color(52, 152, 219));
-        painelLoading.add(lblLoadingDescricao, gbcLoading);
-
-        gbcLoading.gridy = 1;
-        progressBarDescricao = new JProgressBar();
-        progressBarDescricao.setIndeterminate(true);
-        progressBarDescricao.setPreferredSize(new Dimension(300, 25));
-        progressBarDescricao.setStringPainted(true);
-        progressBarDescricao.setString("Aguarde...");
-        progressBarDescricao.setForeground(new Color(52, 152, 219));
-        painelLoading.add(progressBarDescricao, gbcLoading);
-
-        // Tabela de resultados - apenas Descrição
-        String[] colunas = { "Descrição" };
-        modeloTabelaResultados = new DefaultTableModel(colunas, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-
-        tabelaResultadosDescricao = new JTable(modeloTabelaResultados);
-        tabelaResultadosDescricao.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        tabelaResultadosDescricao.setRowHeight(28);
-        tabelaResultadosDescricao.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tabelaResultadosDescricao.setBackground(Color.WHITE);
-        tabelaResultadosDescricao.setGridColor(new Color(230, 230, 230));
-        tabelaResultadosDescricao.setShowGrid(true);
-
-        // Configurar largura - coluna única ocupa todo o espaço
-        tabelaResultadosDescricao.getColumnModel().getColumn(0).setPreferredWidth(450);
-
-        // Cabeçalho
-        tabelaResultadosDescricao.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 11));
-        tabelaResultadosDescricao.getTableHeader().setBackground(new Color(52, 73, 94));
-        tabelaResultadosDescricao.getTableHeader().setForeground(Color.WHITE);
-        tabelaResultadosDescricao.getTableHeader().setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-
-        // Listener para seleção na tabela
-        tabelaResultadosDescricao.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                selecionarPatrimonioDescricao();
-            }
-        });
-
-        JScrollPane scrollPane = new JScrollPane(tabelaResultadosDescricao);
-        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
-
-        // Painel central que alterna entre loading e tabela
-        JPanel painelCentral = new JPanel(new CardLayout());
-        painelCentral.add(scrollPane, "tabela");
-        painelCentral.add(painelLoading, "loading");
-
-        // Instrução
-        JLabel lblInstrucao = new JLabel("<html><i>Clique em uma descrição para usá-la no formulário →</i></html>");
-        lblInstrucao.setFont(new Font("Segoe UI", Font.ITALIC, 10));
-        lblInstrucao.setForeground(new Color(120, 120, 120));
-
-        painel.add(lblTitulo, BorderLayout.NORTH);
-        painel.add(painelCentral, BorderLayout.CENTER);
-        painel.add(lblInstrucao, BorderLayout.SOUTH);
-
-        return painel;
-    }
-
-    /**
-     * Cria o painel do formulário de registro
-     */
-    private JPanel criarPainelFormularioRegistro(Color corTexto) {
-        JPanel painel = new JPanel(new BorderLayout(0, 5));
-        painel.setBackground(Color.WHITE);
-        painel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-
-        // Título
-        JLabel lblTitulo = new JLabel("✏️ Registrar Item Sem Patrimônio");
-        lblTitulo.setFont(new Font("Segoe UI Emoji", Font.BOLD, 13));
-        lblTitulo.setForeground(corTexto);
-
-        // Formulário
-        JPanel formulario = new JPanel(new GridBagLayout());
-        formulario.setBackground(Color.WHITE);
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 0, 5, 0);
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-
-        // Campo Localização (movido para o topo)
-        // NOTA: Este campo é preenchido automaticamente com a sala selecionada na aba
-        // "Coleta Normal"
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        JLabel lblLocalizacao = new JLabel("Localização * (definida pela sala)");
-        lblLocalizacao.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        lblLocalizacao.setForeground(new Color(52, 73, 94));
-        formulario.add(lblLocalizacao, gbc);
-
-        gbc.gridy = 1;
-        campoLocalizacaoSemPatrimonio = new JTextField();
-        campoLocalizacaoSemPatrimonio.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        campoLocalizacaoSemPatrimonio.setPreferredSize(new Dimension(0, 30));
-        campoLocalizacaoSemPatrimonio.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
-                BorderFactory.createEmptyBorder(6, 10, 6, 10)));
-        campoLocalizacaoSemPatrimonio.setEditable(false);
-        campoLocalizacaoSemPatrimonio.setBackground(new Color(245, 245, 245));
-        campoLocalizacaoSemPatrimonio
-                .setToolTipText("A localização é definida pela sala selecionada na aba 'Coleta Normal'");
-        formulario.add(campoLocalizacaoSemPatrimonio, gbc);
-
-        // Campo Descrição
-        gbc.gridy = 2;
-        JLabel lblDescricao = new JLabel("Descrição do Item *");
-        lblDescricao.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        formulario.add(lblDescricao, gbc);
-
-        gbc.gridy = 3;
-        campoDescricaoSemPatrimonio = new JTextField();
-        campoDescricaoSemPatrimonio.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        campoDescricaoSemPatrimonio.setPreferredSize(new Dimension(0, 30));
-        campoDescricaoSemPatrimonio.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
-                BorderFactory.createEmptyBorder(6, 10, 6, 10)));
-        formulario.add(campoDescricaoSemPatrimonio, gbc);
-
-        // Campo Observações
-        gbc.gridy = 4;
-        JLabel lblObservacoes = new JLabel("Observações");
-        lblObservacoes.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        formulario.add(lblObservacoes, gbc);
-
-        gbc.gridy = 5;
-        gbc.weighty = 1.0;
-        gbc.fill = GridBagConstraints.BOTH;
-        areaObservacoesSemPatrimonio = new JTextArea(2, 20);
-        areaObservacoesSemPatrimonio.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        areaObservacoesSemPatrimonio.setLineWrap(true);
-        areaObservacoesSemPatrimonio.setWrapStyleWord(true);
-        areaObservacoesSemPatrimonio.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
-                BorderFactory.createEmptyBorder(6, 10, 6, 10)));
-        JScrollPane scrollObs = new JScrollPane(areaObservacoesSemPatrimonio);
-        scrollObs.setBorder(null);
-        formulario.add(scrollObs, gbc);
-
-        painel.add(lblTitulo, BorderLayout.NORTH);
-        painel.add(formulario, BorderLayout.CENTER);
-
-        return painel;
-    }
-
-    /**
-     * Cria o painel da tabela de itens registrados
-     */
-    private JPanel criarPainelTabelaItensRegistrados(Color corTexto) {
-        JPanel painel = new JPanel(new BorderLayout(0, 5));
-        painel.setBackground(Color.WHITE);
-        painel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)));
-        painel.setPreferredSize(new Dimension(0, 220));
-
-        // Cabeçalho com título, contador e botões
-        JPanel painelCabecalho = new JPanel(new BorderLayout());
-        painelCabecalho.setBackground(Color.WHITE);
-
-        // Painel esquerdo com título e contador
-        JPanel painelTituloContador = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-        painelTituloContador.setBackground(Color.WHITE);
-
-        JLabel lblTitulo = new JLabel("📊 Itens Sem Patrimônio Registrados");
-        lblTitulo.setFont(new Font("Segoe UI Emoji", Font.BOLD, 13));
-        lblTitulo.setForeground(corTexto);
-
-        // Instanciar e configurar o label do contador
-        lblTotalItensSemPatrimonio = new JLabel("Total: 0 item(ns)");
-        lblTotalItensSemPatrimonio.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        lblTotalItensSemPatrimonio.setForeground(new Color(52, 152, 219));
-        lblTotalItensSemPatrimonio.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(52, 152, 219), 1),
-                BorderFactory.createEmptyBorder(2, 8, 2, 8)));
-
-        painelTituloContador.add(lblTitulo);
-        painelTituloContador.add(lblTotalItensSemPatrimonio);
-
-        JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
-        painelBotoes.setBackground(Color.WHITE);
-
-        // Criar botões Registrar e Limpar
-        btnRegistrarSemPatrimonio = createStyledButton("✅ Registrar", new Color(46, 204, 113));
-        btnRegistrarSemPatrimonio.setPreferredSize(new Dimension(120, 32));
-        btnRegistrarSemPatrimonio.addActionListener(e -> registrarColetaComDescricaoSelecionada());
-
-        JButton btnLimpar = createStyledButton("🗑️ Limpar", new Color(108, 117, 125));
-        btnLimpar.setPreferredSize(new Dimension(120, 32));
-        btnLimpar.addActionListener(e -> limparFormularioSemPatrimonio());
-
-        btnRemoverSemPatrimonio = createStyledButton("❌ Remover", new Color(231, 76, 60));
-        btnRemoverSemPatrimonio.setPreferredSize(new Dimension(120, 32));
-        btnRemoverSemPatrimonio.setEnabled(false);
-        btnRemoverSemPatrimonio.addActionListener(e -> removerItemSemPatrimonioSelecionado());
-
-        // Ocultar botão remover para coletores (apenas admin e supervisor podem
-        // remover)
-        if (usuarioLogado != null) {
-            String perfil = usuarioLogado.getPerfil().name();
-            btnRemoverSemPatrimonio.setVisible("ADMIN".equals(perfil) || "SUPERVISOR".equals(perfil));
-        } else {
-            btnRemoverSemPatrimonio.setVisible(false);
-        }
-
-        JButton btnAtualizar = createStyledButton("🔄 Atualizar", new Color(52, 152, 219));
-        btnAtualizar.setPreferredSize(new Dimension(120, 32));
-        btnAtualizar.addActionListener(e -> carregarTodosItensSemPatrimonio());
-
-        // Adicionar botões na ordem: Registrar, Limpar, Remover (se visível), Atualizar
-        painelBotoes.add(btnRegistrarSemPatrimonio);
-        painelBotoes.add(btnLimpar);
-        if (btnRemoverSemPatrimonio.isVisible()) {
-            painelBotoes.add(btnRemoverSemPatrimonio);
-        }
-        painelBotoes.add(btnAtualizar);
-
-        painelCabecalho.add(painelTituloContador, BorderLayout.WEST);
-        painelCabecalho.add(painelBotoes, BorderLayout.EAST);
-
-        // Tabela
-        String[] colunas = { "Data/Hora", "Descrição", "Categoria", "Localização" };
-        modeloTabelaSemPatrimonio = new DefaultTableModel(colunas, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-
-        tabelaSemPatrimonio = new JTable(modeloTabelaSemPatrimonio);
-        tabelaSemPatrimonio.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        tabelaSemPatrimonio.setRowHeight(30);
-        tabelaSemPatrimonio.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tabelaSemPatrimonio.setBackground(Color.WHITE);
-        tabelaSemPatrimonio.setGridColor(new Color(230, 230, 230));
-        tabelaSemPatrimonio.setShowGrid(true);
-
-        // Configurar larguras
-        tabelaSemPatrimonio.getColumnModel().getColumn(0).setPreferredWidth(120);
-        tabelaSemPatrimonio.getColumnModel().getColumn(1).setPreferredWidth(350);
-        tabelaSemPatrimonio.getColumnModel().getColumn(2).setPreferredWidth(110);
-        tabelaSemPatrimonio.getColumnModel().getColumn(3).setPreferredWidth(200);
-
-        // Cabeçalho
-        tabelaSemPatrimonio.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 11));
-        tabelaSemPatrimonio.getTableHeader().setBackground(new Color(52, 73, 94));
-        tabelaSemPatrimonio.getTableHeader().setForeground(Color.WHITE);
-        tabelaSemPatrimonio.getTableHeader().setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-
-        // Listener para habilitar botão remover apenas quando uma linha for selecionada
-        tabelaSemPatrimonio.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                boolean temSelecao = tabelaSemPatrimonio.getSelectedRow() != -1;
-                // Só habilitar se houver seleção E o botão estiver visível (admin/supervisor)
-                btnRemoverSemPatrimonio.setEnabled(temSelecao && btnRemoverSemPatrimonio.isVisible());
-            }
-        });
-
-        JScrollPane scrollPane = new JScrollPane(tabelaSemPatrimonio);
-        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220), 1));
-
-        painel.add(painelCabecalho, BorderLayout.NORTH);
-        painel.add(scrollPane, BorderLayout.CENTER);
-
-        return painel;
-    }
-
-    // Métodos configurarEventListenersSemPatrimonio, pesquisarDescricoesUnicas,
-    // mostrarSugestoes e ocultarSugestoes foram removidos pois não são mais
-    // necessários
-    // na nova interface simplificada
-
-    /**
-     * Carrega todos os itens sem patrimônio registrados na sala atual
-     */
-    private void carregarTodosItensSemPatrimonio() {
-        System.out.println("=== DEBUG TIMESTAMP: Iniciando carregarTodosItensSemPatrimonio ===");
-        
-        Sala salaSelecionada = (Sala) comboSalas.getSelectedItem();
-        if (salaSelecionada == null) {
-            System.out.println("DEBUG TIMESTAMP: Nenhuma sala selecionada");
-            JOptionPane.showMessageDialog(this,
-                    "Selecione uma sala primeiro.",
-                    "Aviso",
-                    JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        System.out.println("DEBUG TIMESTAMP: Sala selecionada: " + salaSelecionada.getIdentificacaoCompleta());
-
-        // Limpar tabela
-        modeloTabelaSemPatrimonio.setRowCount(0);
-
-        try {
-            // Buscar itens sem etiqueta da sala (usando numeroSala para consistência com dados no banco).
-            // IMPORTANTE: filtrar pelo inventário ativo para não trazer coletas de inventários antigos.
-            System.out.println("DEBUG TIMESTAMP: Buscando itens sem etiqueta...");
-            Inventario inventarioAtivoSemEtiq = inventarioDAO.buscarInventarioAtivo();
-            Integer idInventarioSemEtiq = inventarioAtivoSemEtiq != null ? inventarioAtivoSemEtiq.getId() : null;
-            List<Coleta> itensSemPatrimonio = coletaDAO.buscarColetasSemEtiquetaPorSala(
-                    salaSelecionada.getIdSala(),
-                    salaSelecionada.getNumeroSala(),
-                    idInventarioSemEtiq);
-
-            System.out.println("DEBUG TIMESTAMP: Encontrados " + itensSemPatrimonio.size() + " itens sem patrimônio");
-
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-
-            int contador = 0;
-            for (Coleta coleta : itensSemPatrimonio) {
-                contador++;
-                System.out.println("\n--- DEBUG TIMESTAMP: Item sem patrimônio " + contador + " ---");
-                
-                // Log detalhado do timestamp
-                java.sql.Timestamp dataColeta = coleta.getDataColeta();
-                System.out.println("DEBUG TIMESTAMP: Data Coleta (raw): " + dataColeta);
-                System.out.println("DEBUG TIMESTAMP: Data Coleta (class): " + (dataColeta != null ? dataColeta.getClass().getName() : "null"));
-                
-                String dataFormatada;
-                try {
-                    if (dataColeta != null) {
-                        dataFormatada = sdf.format(dataColeta);
-                        System.out.println("DEBUG TIMESTAMP: Data formatada: " + dataFormatada);
-                    } else {
-                        System.err.println("DEBUG TIMESTAMP: ERRO - dataColeta é null!");
-                        dataFormatada = "DATA INVÁLIDA";
-                    }
-                } catch (Exception formatEx) {
-                    System.err.println("DEBUG TIMESTAMP: ERRO ao formatar data: " + formatEx.getMessage());
-                    dataFormatada = "ERRO FORMATO";
-                }
-                
-                Object[] linha = {
-                        dataFormatada,
-                        coleta.getDescricaoItemSemEtiqueta(),
-                        coleta.getCategoriaItemSemEtiqueta() != null ? coleta.getCategoriaItemSemEtiqueta() : "-",
-                        coleta.getLocalizacaoEncontrada()
-                };
-                modeloTabelaSemPatrimonio.addRow(linha);
-            }
-
-            // Atualizar label de total
-            if (lblTotalItensSemPatrimonio != null) {
-                lblTotalItensSemPatrimonio.setText(
-                        String.format("Total: %d item(ns) sem patrimônio registrado(s)", itensSemPatrimonio.size()));
-            }
-            
-            System.out.println("=== DEBUG TIMESTAMP: carregarTodosItensSemPatrimonio concluído ===");
-
-        } catch (SQLException | RuntimeException e) {
-            LOG.error("ERRO em carregarTodosItensSemPatrimonio: {}", e.getMessage(), e);
-            
-            JOptionPane.showMessageDialog(this,
-                    "Erro ao carregar itens sem patrimônio: " + e.getMessage(),
-                    "Erro",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    /**
-     * Registra um item sem patrimônio usando a descrição selecionada ou digitada
-     */
-    private void registrarColetaComDescricaoSelecionada() {
-        Sala salaSelecionada = (Sala) comboSalas.getSelectedItem();
-        if (salaSelecionada == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Selecione uma sala primeiro.",
-                    "Aviso",
-                    JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        String descricao = campoDescricaoSemPatrimonio.getText().trim();
-        if (descricao.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Informe a descrição do item.",
-                    "Campo Obrigatório",
-                    JOptionPane.WARNING_MESSAGE);
-            campoDescricaoSemPatrimonio.requestFocus();
-            return;
-        }
-
-        // Limpar descrição removendo contadores "(X pendente(s))" se existirem
-        String descricaoLimpa = descricao;
-        int indexParenteses = descricao.lastIndexOf(" (");
-        if (indexParenteses > 0 && descricao.endsWith(")")) {
-            String possivelContador = descricao.substring(indexParenteses);
-            // Verificar se é realmente um contador (contém "pendente")
-            if (possivelContador.toLowerCase().contains("pendente")) {
-                descricaoLimpa = descricao.substring(0, indexParenteses).trim();
-            }
-        }
-
-        String observacoes = areaObservacoesSemPatrimonio.getText().trim();
-
-        try {
-            // Buscar inventário ativo
-            Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
-            if (inventarioAtivo == null) {
-                JOptionPane.showMessageDialog(this,
-                        "Nenhum inventário ativo encontrado.",
-                        "Erro",
-                        JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            // Verificar permissão do usuário
-            if (usuarioLogado == null) {
-                JOptionPane.showMessageDialog(this,
-                        "Usuário não autenticado.",
-                        "Erro",
-                        JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            // Modo offline: autorização simplificada
-            // ✅ CORRIGIDO: Buscar ID do participante do inventário
-            ParticipanteInventarioDAO participanteDAO = new ParticipanteInventarioDAO();
-            Integer idParticipante = participanteDAO.buscarIdParticipantePorUsuario(
-                inventarioAtivo.getId(), 
-                usuarioLogado.getId()
-            );
-            
-            if (idParticipante == null || idParticipante == 0) {
-                // Fallback: usar ID do usuário
-                idParticipante = usuarioLogado.getId();
-                System.out.println("DEBUG: AVISO - Participante não encontrado, usando ID do usuário como fallback: " + idParticipante);
-            } else {
-                System.out.println("DEBUG: ID participante encontrado: " + idParticipante);
-            }
-
-            // Criar objeto Coleta para item sem patrimônio
-            Coleta coleta = new Coleta();
-            coleta.setIdInventario(inventarioAtivo.getId());
-            coleta.setIdPatrimonio(0); // Sem patrimônio
-            coleta.setIdColetor(usuarioLogado.getId());
-            coleta.setIdParticipanteInventario(idParticipante);
-            
-            // DEBUG: Log detalhado da criação do timestamp (Item sem patrimônio)
-            long currentTimeMillis1 = System.currentTimeMillis();
-            Timestamp novoTimestamp1 = new Timestamp(currentTimeMillis1);
-            System.out.println("=== DEBUG TIMESTAMP: Criando timestamp para item SEM PATRIMÔNIO ===");
-            System.out.println("DEBUG TIMESTAMP: currentTimeMillis: " + currentTimeMillis1);
-            System.out.println("DEBUG TIMESTAMP: Timestamp criado: " + novoTimestamp1);
-            System.out.println("DEBUG TIMESTAMP: Timestamp.toString(): " + novoTimestamp1.toString());
-            
-            coleta.setDataColeta(novoTimestamp1);
-            System.out.println("DEBUG TIMESTAMP: Timestamp setado na coleta");
-            
-            coleta.setStatusColeta("COLETADO");
-            coleta.setObservacaoColeta(observacoes);
-            // ✅ CORRIGIDO: Usar numeroSala para consistência com dados existentes no banco
-            coleta.setLocalizacaoAtual(salaSelecionada.getNumeroSala());
-            coleta.setLocalizacaoEncontrada(salaSelecionada.getNumeroSala());
-            coleta.setEstadoEncontrado("N/A");
-            coleta.setDivergencia(false);
-            coleta.setSemEtiqueta(true);
-            coleta.setDescricaoItemSemEtiqueta(descricaoLimpa); // Usar descrição limpa sem contadores
-            coleta.setCategoriaItemSemEtiqueta("OUTROS"); // Categoria padrão
-
-            // Inserir no banco (usando serviço offline)
-            coletaOfflineService.salvarColeta(coleta);
-
-            System.out.println("DEBUG: Coleta sem etiqueta salva - Modo: " +
-                    offlineManager.getCurrentState());
-
-            // Reproduzir som de sucesso
-            SoundNotification.playColetaSalvaSound();
-
-            JOptionPane.showMessageDialog(this,
-                    "Item sem patrimônio registrado com sucesso!",
-                    "Sucesso",
-                    JOptionPane.INFORMATION_MESSAGE);
-
-            // Limpar formulário
-            limparFormularioSemPatrimonio();
-
-            // Recarregar tabela
-            carregarTodosItensSemPatrimonio();
-
-        } catch (SQLException | RuntimeException e) {
-            LOG.error("Erro ao registrar item: {}", e.getMessage(), e);
-            JOptionPane.showMessageDialog(this,
-                    "Erro ao registrar item: " + e.getMessage(),
-                    "Erro",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    /**
-     * Limpa o formulário de itens sem patrimônio
-     */
-    private void limparFormularioSemPatrimonio() {
-        campoDescricaoSemPatrimonio.setText("");
-        areaObservacoesSemPatrimonio.setText("");
-        campoDescricaoSemPatrimonio.requestFocus();
-    }
-
-    /**
-     * Remove o item sem patrimônio selecionado na tabela
-     */
-    private void removerItemSemPatrimonioSelecionado() {
-        int linhaSelecionada = tabelaSemPatrimonio.getSelectedRow();
-        if (linhaSelecionada == -1) {
-            JOptionPane.showMessageDialog(this,
-                    "Selecione um item para remover.",
-                    "Aviso",
-                    JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        // Confirmar remoção
-        int confirmacao = JOptionPane.showConfirmDialog(this,
-                "Tem certeza que deseja remover este item sem patrimônio?",
-                "Confirmar Remoção",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
-
-        if (confirmacao != JOptionPane.YES_OPTION) {
-            return;
-        }
-
-        try {
-            Sala salaSelecionada = (Sala) comboSalas.getSelectedItem();
-            if (salaSelecionada == null) {
-                return;
-            }
-
-            // Obter dados da linha selecionada
-            String dataHora = (String) modeloTabelaSemPatrimonio.getValueAt(linhaSelecionada, 0);
-            String descricao = (String) modeloTabelaSemPatrimonio.getValueAt(linhaSelecionada, 1);
-            String localizacao = (String) modeloTabelaSemPatrimonio.getValueAt(linhaSelecionada, 3);
-
-            // Buscar e excluir a coleta (usando numeroSala para consistência com dados no banco).
-            // Filtrar pelo inventário ativo para garantir que a exclusão incida apenas
-            // no inventário corrente e não apague registros históricos.
-            Inventario inventarioAtivoExcl = inventarioDAO.buscarInventarioAtivo();
-            Integer idInventarioExcl = inventarioAtivoExcl != null ? inventarioAtivoExcl.getId() : null;
-            List<Coleta> itensSemPatrimonio = coletaDAO.buscarColetasSemEtiquetaPorSala(
-                    salaSelecionada.getIdSala(),
-                    salaSelecionada.getNumeroSala(),
-                    idInventarioExcl);
-
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-            boolean encontrado = false;
-
-            for (Coleta coleta : itensSemPatrimonio) {
-                if (sdf.format(coleta.getDataColeta()).equals(dataHora)
-                        && coleta.getDescricaoItemSemEtiqueta().equals(descricao)
-                        && coleta.getLocalizacaoEncontrada().equals(localizacao)) {
-                    coletaDAO.excluirColeta(coleta.getId());
-                    encontrado = true;
-                    break;
-                }
-            }
-
-            if (encontrado) {
-                JOptionPane.showMessageDialog(this,
-                        "Item removido com sucesso!",
-                        "Sucesso",
-                        JOptionPane.INFORMATION_MESSAGE);
-
-                // Recarregar tabela
-                carregarTodosItensSemPatrimonio();
-            } else {
-                JOptionPane.showMessageDialog(this,
-                        "Item não encontrado no banco de dados.",
-                        "Erro",
-                        JOptionPane.ERROR_MESSAGE);
-            }
-
-        } catch (SQLException | RuntimeException e) {
-            LOG.error("Erro ao remover item: {}", e.getMessage(), e);
-            JOptionPane.showMessageDialog(this,
-                    "Erro ao remover item: " + e.getMessage(),
-                    "Erro",
-                    JOptionPane.ERROR_MESSAGE);
+        if (itensPendentesPanel != null) {
+            itensPendentesPanel.carregarParaSala((Sala) comboSalas.getSelectedItem());
         }
     }
 
@@ -2412,21 +791,8 @@ public class ColetaFrame_v2 extends JFrame {
         btnRemoverItem.addActionListener(e -> removerItemSelecionado());
         // chkSemEtiqueta.addActionListener removido - checkbox não existe mais
 
-        // Event listeners para busca por descrição
-        btnBuscarDescricao.addActionListener(e -> buscarPorDescricao());
-        campoBuscaDescricao.addActionListener(e -> buscarPorDescricao());
-
-        // Event listeners de busca removidos para simplificar interface
-
-        // Listener para ver itens agrupados
-        btnVerItensAgrupados.addActionListener(e -> mostrarItensAgrupados());
-
-        // Listener para seleção na tabela de itens agrupados
-        tabelaItensAgrupados.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                selecionarDescricaoAgrupada();
-            }
-        });
+        // NOTA: Listeners de busca por descrição, itens agrupados e resultados foram
+        // movidos para ItensSemPatrimonioPanel.
 
         // Listener para o botão de finalização da coleta
         btnFinalizarColeta.addActionListener(e -> finalizarColetaSala());
@@ -2466,12 +832,8 @@ public class ColetaFrame_v2 extends JFrame {
             }
         });
 
-        // Event listener para seleção na tabela de resultados
-        tabelaResultadosDescricao.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                selecionarPatrimonioDescricao();
-            }
-        });
+        // Event listener para seleção na tabela de resultados movido para
+        // ItensSemPatrimonioPanel.
 
         // NOTA: Listeners de tabelaItensAgrupados já registrados acima — NÃO duplicar
     }
@@ -2491,298 +853,112 @@ public class ColetaFrame_v2 extends JFrame {
 
     // Métodos auxiliares (copiados da classe original)
     private void carregarSalas() {
-        // Usar SwingWorker para carregamento assíncrono (evita travamento com VPN)
         carregarSalasAsync();
     }
-    
+
     /**
-     * Carrega salas de forma assíncrona e PROGRESSIVA usando SwingWorker.
-     * Carrega em lotes pequenos para funcionar bem com VPN lenta.
-     * Atualiza o combo conforme os dados chegam.
+     * Carrega as salas de forma assíncrona em uma única consulta.
+     * Mantém a UI responsiva (SwingWorker) sem carregamento em lotes.
      */
     private void carregarSalasAsync() {
-        carregarSalasProgressivo();
-    }
-    
-    /**
-     * Carrega salas de forma PROGRESSIVA (em lotes).
-     * Ideal para conexões VPN com ping alto.
-     * AJUSTADO: Lotes de 5 salas para VPN muito lenta.
-     */
-    private void carregarSalasProgressivo() {
-        final int TAMANHO_LOTE = 5; // Carregar apenas 5 salas por vez (VPN lenta)
-        final int DELAY_ENTRE_LOTES = 200; // 200ms entre lotes
-        
         // Desabilitar combo e limpar
         comboSalas.setEnabled(false);
         comboSalas.removeAllItems();
         comboSalas.addItem(null); // Item placeholder
         todasSalas = new ArrayList<>();
-        
+
         // Mudar cursor para indicar carregamento
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        
-        // Criar dialog de loading com progresso real
-        JDialog loadingDialog = new JDialog(this, "Carregando salas...", false);
-        loadingDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        loadingDialog.setLayout(new BorderLayout(10, 10));
-        loadingDialog.setSize(420, 160);
-        loadingDialog.setLocationRelativeTo(this);
-        loadingDialog.setResizable(false);
-        
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
-        
-        JLabel lblMensagem = new JLabel("<html><center>Carregando salas progressivamente...<br>" +
-            "<small>Conexão VPN lenta - carregando em lotes de " + TAMANHO_LOTE + "</small></center></html>");
-        lblMensagem.setHorizontalAlignment(SwingConstants.CENTER);
-        lblMensagem.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        
-        JLabel lblProgresso = new JLabel("Conectando...");
-        lblProgresso.setHorizontalAlignment(SwingConstants.CENTER);
-        lblProgresso.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        lblProgresso.setForeground(new Color(0, 100, 0));
-        
-        JProgressBar progressBar = new JProgressBar(0, 100);
-        progressBar.setStringPainted(true);
-        progressBar.setString("Iniciando...");
-        
-        JPanel centerPanel = new JPanel(new BorderLayout(5, 5));
-        centerPanel.add(lblMensagem, BorderLayout.NORTH);
-        centerPanel.add(lblProgresso, BorderLayout.CENTER);
-        
-        panel.add(centerPanel, BorderLayout.CENTER);
-        panel.add(progressBar, BorderLayout.SOUTH);
-        loadingDialog.add(panel);
-        
-        loadingDialog.setVisible(true);
-        
-        // Worker que carrega em lotes e publica progresso
-        SwingWorker<Void, Sala> worker = new SwingWorker<>() {
+
+        SwingWorker<List<Sala>, Void> worker = new SwingWorker<>() {
             private Inventario inventarioAtivo = null;
-            private int totalSalas = 0;
-            private int salasCarregadas = 0;
             private boolean usouFallback = false;
-            private String erroFinal = null;
-            
+
             @Override
-            protected Void doInBackground() throws Exception {
-                try {
-                    LOG.info("Iniciando carregamento progressivo de salas [Thread: {}]", Thread.currentThread().getName());
-                    
-                    // 1. Buscar inventário ativo (query rápida)
-                    SwingUtilities.invokeLater(() -> {
-                        lblProgresso.setText("Buscando inventário ativo...");
-                        progressBar.setIndeterminate(true);
-                    });
-                    
-                    inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
-                    
-                    if (inventarioAtivo == null) {
-                        LOG.warn("Nenhum inventário ativo encontrado");
-                        return null;
-                    }
-                    
-                    LOG.info("Inventário ativo: {} (ID: {})", inventarioAtivo.getNome(), inventarioAtivo.getId());
-                    
-                    // 2. Contar total de salas (query rápida)
-                    SwingUtilities.invokeLater(() -> lblProgresso.setText("Contando salas..."));
-                    
-                    totalSalas = salaInventarioDAO.contarSalasAtivas(inventarioAtivo.getId());
-                    LOG.info("Total de salas a carregar: {}", totalSalas);
-                    
-                    if (totalSalas == 0) {
-                        LOG.warn("Nenhuma sala encontrada");
-                        return null;
-                    }
-                    
-                    // Configurar barra de progresso
-                    SwingUtilities.invokeLater(() -> {
-                        progressBar.setIndeterminate(false);
-                        progressBar.setMaximum(totalSalas);
-                        progressBar.setValue(0);
-                        progressBar.setString("0 / " + totalSalas + " salas");
-                    });
-                    
-                    // 3. Carregar salas em lotes
-                    int offset = 0;
-                    int tentativasErro = 0;
-                    final int MAX_TENTATIVAS_LOTE = 3;
-                    
-                    while (offset < totalSalas && tentativasErro < MAX_TENTATIVAS_LOTE) {
-                        final int loteAtual = (offset / TAMANHO_LOTE) + 1;
-                        final int totalLotes = (int) Math.ceil((double) totalSalas / TAMANHO_LOTE);
-                        
-                        SwingUtilities.invokeLater(() -> 
-                            lblProgresso.setText("Carregando lote " + loteAtual + " de " + totalLotes + "...")
-                        );
-                        
-                        try {
-                            List<Sala> lote = salaInventarioDAO.buscarSalasAtivasPaginado(
-                                inventarioAtivo.getId(), offset, TAMANHO_LOTE
-                            );
-                            
-                            if (lote.isEmpty()) {
-                                LOG.debug("Lote vazio retornado, finalizando");
-                                break;
-                            }
-                            
-                            // Publicar cada sala para atualizar UI progressivamente
-                            for (Sala sala : lote) {
-                                publish(sala);
-                                salasCarregadas++;
-                            }
-                            
-                            offset += lote.size();
-                            tentativasErro = 0; // Reset contador de erros
-                            
-                            LOG.debug("Lote {} carregado: {} salas (total: {}/{})", 
-                                loteAtual, lote.size(), salasCarregadas, totalSalas);
-                            
-                            // Pausa entre lotes para não sobrecarregar conexão VPN lenta
-                            if (offset < totalSalas) {
-                                Thread.sleep(DELAY_ENTRE_LOTES);
-                            }
-                            
-                        } catch (InterruptedException e) {
-                            tentativasErro++;
-                            LOG.warn("Erro no lote {} (tentativa {}/{}): {}", 
-                                loteAtual, tentativasErro, MAX_TENTATIVAS_LOTE, e.getMessage());
-                            
-                            if (tentativasErro < MAX_TENTATIVAS_LOTE) {
-                                // Aguardar antes de retry
-                                SwingUtilities.invokeLater(() -> 
-                                    lblProgresso.setText("Erro de conexão. Tentando novamente em 3s...")
-                                );
-                                Thread.sleep(3000);
-                            } else {
-                                erroFinal = "Falha após " + MAX_TENTATIVAS_LOTE + " tentativas: " + e.getMessage();
-                                LOG.error("Falha definitiva no carregamento: {}", erroFinal);
-                            }
-                        }
-                    }
-                    
-                    // Se não carregou nenhuma sala, tentar fallback
-                    if (salasCarregadas == 0 && erroFinal == null) {
-                        LOG.info("Tentando fallback: buscar todas as salas ativas");
-                        usouFallback = true;
-                        
-                        SwingUtilities.invokeLater(() -> {
-                            lblProgresso.setText("Carregando todas as salas ativas...");
-                            progressBar.setIndeterminate(true);
-                        });
-                        
-                        List<Sala> todasAtivas = salaInventarioDAO.buscarTodasSalasAtivas();
-                        for (Sala sala : todasAtivas) {
-                            publish(sala);
-                            salasCarregadas++;
-                        }
-                    }
-                    
-                } catch (InterruptedException | SQLException e) {
-                    LOG.error("Erro crítico no carregamento progressivo: {}", e.getMessage(), e);
-                    erroFinal = e.getMessage();
+            protected List<Sala> doInBackground() throws Exception {
+                inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
+                if (inventarioAtivo == null) {
+                    LOG.warn("Nenhum inventário ativo encontrado");
+                    return new ArrayList<>();
                 }
-                
-                return null;
+
+                LOG.info("Inventário ativo: {} (ID: {})", inventarioAtivo.getNome(), inventarioAtivo.getId());
+
+                // Carregar todas as salas do inventário em uma única consulta
+                List<Sala> salas = salaInventarioDAO.buscarSalasAbertasParaColeta(inventarioAtivo.getId());
+
+                // Fallback: se não houver salas vinculadas, carregar todas as ativas
+                if (salas.isEmpty()) {
+                    LOG.info("Nenhuma sala vinculada ao inventário; usando fallback (todas as salas ativas)");
+                    usouFallback = true;
+                    salas = salaInventarioDAO.buscarTodasSalasAtivas();
+                }
+
+                return salas;
             }
-            
-            @Override
-            protected void process(List<Sala> chunks) {
-                // Atualizar combo com as salas que chegaram
-                for (Sala sala : chunks) {
-                    todasSalas.add(sala);
-                    comboSalas.addItem(sala);
-                }
-                
-                // Atualizar progresso
-                int carregadas = todasSalas.size();
-                int total = totalSalas > 0 ? totalSalas : carregadas;
-                int percentual = total > 0 ? (carregadas * 100 / total) : 0;
-                
-                progressBar.setValue(carregadas);
-                progressBar.setString(carregadas + " / " + total + " salas (" + percentual + "%)");
-                
-                // Habilitar combo assim que tiver pelo menos uma sala
-                if (carregadas == 1) {
-                    comboSalas.setEnabled(true);
-                    lblProgresso.setText("✓ Salas disponíveis! Carregando mais...");
-                }
-            }
-            
+
             @Override
             protected void done() {
-                loadingDialog.dispose();
                 setCursor(Cursor.getDefaultCursor());
                 comboSalas.setEnabled(true);
-                
-                LOG.info("Carregamento finalizado: {} salas carregadas", todasSalas.size());
-                
-                // Mostrar mensagens apropriadas
-                if (inventarioAtivo == null) {
-                    JOptionPane.showMessageDialog(ColetaFrame_v2.this,
-                            "Nenhum inventário ativo encontrado.\nNão é possível realizar coletas.",
-                            "Aviso", JOptionPane.WARNING_MESSAGE);
-                } else if (erroFinal != null && todasSalas.isEmpty()) {
-                    tratarErroCarregamentoComRetry(erroFinal, 2, 3);
-                } else if (todasSalas.isEmpty()) {
-                    JOptionPane.showMessageDialog(ColetaFrame_v2.this, 
-                            "Nenhuma sala ativa encontrada no sistema.\nCadastre salas antes de realizar coletas.",
-                            "Aviso", JOptionPane.WARNING_MESSAGE);
-                } else if (usouFallback) {
-                    JOptionPane.showMessageDialog(ColetaFrame_v2.this, 
-                            "Carregadas " + todasSalas.size() + " salas ativas.\n" +
-                            "Nota: Estas salas não estão vinculadas ao inventário atual,\n" +
-                            "mas você pode realizar coletas normalmente.",
-                            "Informação", JOptionPane.INFORMATION_MESSAGE);
-                } else if (erroFinal != null) {
-                    // Carregou parcialmente
-                    JOptionPane.showMessageDialog(ColetaFrame_v2.this, 
-                            "Carregamento parcial: " + todasSalas.size() + " salas.\n" +
-                            "Algumas salas podem não ter sido carregadas devido a problemas de conexão.",
-                            "Aviso", JOptionPane.WARNING_MESSAGE);
+
+                try {
+                    List<Sala> salas = get();
+                    for (Sala sala : salas) {
+                        todasSalas.add(sala);
+                        comboSalas.addItem(sala);
+                    }
+
+                    LOG.info("Carregamento finalizado: {} salas carregadas", todasSalas.size());
+
+                    if (inventarioAtivo == null) {
+                        JOptionPane.showMessageDialog(ColetaFrame_v2.this,
+                                "Nenhum inventário ativo encontrado.\nNão é possível realizar coletas.",
+                                "Aviso", JOptionPane.WARNING_MESSAGE);
+                    } else if (todasSalas.isEmpty()) {
+                        JOptionPane.showMessageDialog(ColetaFrame_v2.this,
+                                "Nenhuma sala ativa encontrada no sistema.\nCadastre salas antes de realizar coletas.",
+                                "Aviso", JOptionPane.WARNING_MESSAGE);
+                    } else if (usouFallback) {
+                        JOptionPane.showMessageDialog(ColetaFrame_v2.this,
+                                "Carregadas " + todasSalas.size() + " salas ativas.\n" +
+                                "Nota: Estas salas não estão vinculadas ao inventário atual,\n" +
+                                "mas você pode realizar coletas normalmente.",
+                                "Informação", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    tratarErroCarregamentoSalas("Operação interrompida");
+                } catch (ExecutionException e) {
+                    Throwable causa = e.getCause();
+                    tratarErroCarregamentoSalas(causa != null ? causa.getMessage() : e.getMessage());
                 }
             }
         };
-        
+
         registrarWorker(worker);
         worker.execute();
     }
-    
+
     /**
-     * Trata erros de carregamento com opção de retry manual.
-     * @param mensagemErro Mensagem de erro
-     * @param tentativaAtual Número da tentativa atual
-     * @param maxTentativas Número máximo de tentativas
+     * Trata erros de carregamento de salas com opção de retry manual.
      */
-    private void tratarErroCarregamentoComRetry(String mensagemErro, int tentativaAtual, int maxTentativas) {
+    private void tratarErroCarregamentoSalas(String mensagemErro) {
         todasSalas = new ArrayList<>();
         comboSalas.setEnabled(true);
-        LOG.error("Erro ao carregar salas (tentativa {}/{}): {}", tentativaAtual + 1, maxTentativas, mensagemErro);
-        
-        String infoTentativas = tentativaAtual > 0 
-            ? "\n\nForam realizadas " + (tentativaAtual + 1) + " tentativas automáticas."
-            : "";
-        
-        String dicasVPN = """
-                          
-                          
-                          Dicas para conex\u00e3o VPN:
-                          \u2022 Verifique se a VPN est\u00e1 conectada
-                          \u2022 Tente reconectar a VPN
-                          \u2022 Aguarde alguns segundos e tente novamente""";
-        
+        LOG.error("Erro ao carregar salas: {}", mensagemErro);
+
         int opcao = JOptionPane.showOptionDialog(this,
-                "Erro ao carregar salas:\n" + mensagemErro + infoTentativas + dicasVPN,
-                "Erro de Conexão",
+                "Erro ao carregar salas:\n" + mensagemErro,
+                "Erro ao Carregar Salas",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.ERROR_MESSAGE,
                 null,
                 new String[]{"Tentar Novamente", "Cancelar"},
                 "Tentar Novamente");
-        
+
         if (opcao == JOptionPane.YES_OPTION) {
-            carregarSalasAsync(); // Retry manual (reinicia contagem)
+            carregarSalasAsync(); // Retry manual
         }
     }
     
@@ -2877,13 +1053,10 @@ public class ColetaFrame_v2 extends JFrame {
                 btnColetar.setEnabled(false);
                 btnRemoverItem.setEnabled(false);
                 System.out.println("DEBUG: Aba 1 - Itens Pendentes selecionada");
-                // Habilitar componentes específicos da aba "Itens Pendentes"
-                if (campoBuscaPendentes != null)
-                    campoBuscaPendentes.setEnabled(true);
-                if (tabelaPendentes != null)
-                    tabelaPendentes.setEnabled(true);
-                if (btnExportarPendentes != null)
-                    btnExportarPendentes.setEnabled(modeloTabelaPendentes != null && modeloTabelaPendentes.getRowCount() > 0);
+                // Habilitar componentes do painel de pendentes
+                if (itensPendentesPanel != null) {
+                    itensPendentesPanel.setComponentesAtivos(true);
+                }
                 // Carregar itens pendentes automaticamente
                 carregarItensPendentes();
             }
@@ -2896,42 +1069,15 @@ public class ColetaFrame_v2 extends JFrame {
                 btnRemoverItem.setEnabled(false);
                 System.out.println("DEBUG: Aba 2 - Itens Sem Patrimônio selecionada");
                 // Habilitar componentes específicos da aba "Itens Sem Patrimônio"
-                if (campoDescricaoSemPatrimonio != null)
-                    campoDescricaoSemPatrimonio.setEnabled(true);
-                if (campoLocalizacaoSemPatrimonio != null)
-                    campoLocalizacaoSemPatrimonio.setEnabled(true);
-                if (areaObservacoesSemPatrimonio != null)
-                    areaObservacoesSemPatrimonio.setEnabled(true);
-                if (btnRegistrarSemPatrimonio != null)
-                    btnRegistrarSemPatrimonio.setEnabled(true);
-                if (campoBuscaDescricao != null)
-                    campoBuscaDescricao.setEnabled(true);
-                if (comboCategoriasBusca != null)
-                    comboCategoriasBusca.setEnabled(true);
-                if (btnBuscarDescricao != null)
-                    btnBuscarDescricao.setEnabled(true);
-                System.out.println(
-                        "DEBUG: Aba 2 - campoBuscaDescricao, comboCategoriasBusca e btnBuscarDescricao habilitados");
-                if (tabelaResultadosDescricao != null)
-                    tabelaResultadosDescricao.setEnabled(true);
-                if (btnVerItensAgrupados != null)
-                    btnVerItensAgrupados.setEnabled(true);
-                if (tabelaSemPatrimonio != null)
-                    tabelaSemPatrimonio.setEnabled(true);
-                if (btnRemoverSemPatrimonio != null)
-                    btnRemoverSemPatrimonio.setEnabled(true);
-                if (btnExportarSemPatrimonio != null)
-                    btnExportarSemPatrimonio.setEnabled(true);
-                // Carregar itens agrupados automaticamente
-                carregarItensAgrupados();
-                // Carregar itens sem patrimônio da sala atual
-                carregarTodosItensSemPatrimonio();
-                // Focar na descrição
-                SwingUtilities.invokeLater(() -> {
-                    if (campoDescricaoSemPatrimonio != null) {
-                        campoDescricaoSemPatrimonio.requestFocus();
-                    }
-                });
+                if (itensSemPatrimonioPanel != null) {
+                    itensSemPatrimonioPanel.setComponentesAtivos(true);
+                    // Carregar itens agrupados automaticamente
+                    itensSemPatrimonioPanel.carregarAgrupados();
+                    // Carregar itens sem patrimônio da sala atual
+                    itensSemPatrimonioPanel.carregarItens();
+                    // Focar na descrição
+                    itensSemPatrimonioPanel.focarDescricao();
+                }
             }
             default -> {
             }
@@ -2946,42 +1092,18 @@ public class ColetaFrame_v2 extends JFrame {
      * Desabilita todos os componentes da aba "Itens Sem Patrimônio"
      */
     private void desabilitarComponentesAbaItensSemPatrimonio() {
-        if (campoDescricaoSemPatrimonio != null)
-            campoDescricaoSemPatrimonio.setEnabled(false);
-        if (campoLocalizacaoSemPatrimonio != null)
-            campoLocalizacaoSemPatrimonio.setEnabled(false);
-        if (areaObservacoesSemPatrimonio != null)
-            areaObservacoesSemPatrimonio.setEnabled(false);
-        if (btnRegistrarSemPatrimonio != null)
-            btnRegistrarSemPatrimonio.setEnabled(false);
-        if (campoBuscaDescricao != null)
-            campoBuscaDescricao.setEnabled(false);
-        if (comboCategoriasBusca != null)
-            comboCategoriasBusca.setEnabled(false);
-        if (btnBuscarDescricao != null)
-            btnBuscarDescricao.setEnabled(false);
-        if (tabelaResultadosDescricao != null)
-            tabelaResultadosDescricao.setEnabled(false);
-        if (btnVerItensAgrupados != null)
-            btnVerItensAgrupados.setEnabled(false);
-        if (tabelaSemPatrimonio != null)
-            tabelaSemPatrimonio.setEnabled(false);
-        if (btnRemoverSemPatrimonio != null)
-            btnRemoverSemPatrimonio.setEnabled(false);
-        if (btnExportarSemPatrimonio != null)
-            btnExportarSemPatrimonio.setEnabled(false);
+        if (itensSemPatrimonioPanel != null) {
+            itensSemPatrimonioPanel.setComponentesAtivos(false);
+        }
     }
 
     /**
      * Desabilita todos os componentes da aba "Itens Pendentes"
      */
     private void desabilitarComponentesAbaItensPendentes() {
-        if (campoBuscaPendentes != null)
-            campoBuscaPendentes.setEnabled(false);
-        if (tabelaPendentes != null)
-            tabelaPendentes.setEnabled(false);
-        if (btnExportarPendentes != null)
-            btnExportarPendentes.setEnabled(false);
+        if (itensPendentesPanel != null) {
+            itensPendentesPanel.setComponentesAtivos(false);
+        }
     }
 
     /**
@@ -3033,8 +1155,8 @@ public class ColetaFrame_v2 extends JFrame {
             }
 
             // Limpar campo de localização na aba de itens sem patrimônio
-            if (campoLocalizacaoSemPatrimonio != null) {
-                campoLocalizacaoSemPatrimonio.setText("");
+            if (itensSemPatrimonioPanel != null) {
+                itensSemPatrimonioPanel.setLocalizacao("");
             }
             
             // Resetar contagem de coletas e limpar tabela de histórico
@@ -3045,8 +1167,8 @@ public class ColetaFrame_v2 extends JFrame {
         }
 
         // Atualizar campo de localização na aba de itens sem patrimônio IMEDIATAMENTE
-        if (campoLocalizacaoSemPatrimonio != null) {
-            campoLocalizacaoSemPatrimonio.setText(salaSelecionada.getIdentificacaoCompleta());
+        if (itensSemPatrimonioPanel != null) {
+            itensSemPatrimonioPanel.setLocalizacao(salaSelecionada.getIdentificacaoCompleta());
             System.out.println(
                     "DEBUG: Campo de localização atualizado para: " + salaSelecionada.getIdentificacaoCompleta());
         }
@@ -3078,7 +1200,9 @@ public class ColetaFrame_v2 extends JFrame {
 
             // Carregar itens sem patrimônio se estiver na aba correspondente (índice 2)
             if (tabbedPane.getSelectedIndex() == 2) {
-                carregarTodosItensSemPatrimonio();
+                if (itensSemPatrimonioPanel != null) {
+                    itensSemPatrimonioPanel.carregarItens();
+                }
             }
             // Carregar itens pendentes se estiver na aba correspondente (índice 1)
             if (tabbedPane.getSelectedIndex() == 1) {
@@ -3203,297 +1327,23 @@ public class ColetaFrame_v2 extends JFrame {
     private static final int LIMITE_TODAS_COLETAS = 500; // Limite para visualização de todas as coletas
     
     /**
-     * Mostra todas as coletas do inventário atual em um dialog separado.
-     * Permite visualizar coletas de todas as salas.
+     * Mostra todas as coletas do inventário atual em um diálogo separado.
+     * Delegado para {@link com.inventario.sihcp.view.coleta.TodasColetasDialog}.
      */
     private void mostrarTodasColetas() {
-        // Criar dialog para exibir todas as coletas
-        JDialog dialogTodasColetas = new JDialog(this, "📋 Todas as Coletas do Inventário", true);
-        dialogTodasColetas.setLayout(new BorderLayout(10, 10));
-        dialogTodasColetas.setSize(1000, 600);
-        dialogTodasColetas.setLocationRelativeTo(this);
-        
-        // Painel principal
-        JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
-        panelPrincipal.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        panelPrincipal.setBackground(Color.WHITE);
-        
-        // Painel superior com informações e filtros
-        JPanel panelSuperior = new JPanel(new BorderLayout(10, 5));
-        panelSuperior.setBackground(Color.WHITE);
-        
-        JLabel lblTitulo = new JLabel("📋 Todas as Coletas do Inventário Atual");
-        lblTitulo.setFont(new Font("Segoe UI Emoji", Font.BOLD, 16));
-        lblTitulo.setForeground(new Color(52, 73, 94));
-        
-        JLabel lblStatus = new JLabel("Carregando...");
-        lblStatus.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lblStatus.setForeground(new Color(100, 100, 100));
-        
-        // Painel de filtro por sala
-        JPanel panelFiltro = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-        panelFiltro.setBackground(Color.WHITE);
-        
-        JLabel lblFiltro = new JLabel("Filtrar por sala:");
-        lblFiltro.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        
-        JComboBox<String> comboFiltroSala = new JComboBox<>();
-        comboFiltroSala.addItem("Todas as salas");
-        comboFiltroSala.setPreferredSize(new Dimension(250, 28));
-        
-        JTextField campoFiltroTexto = new JTextField(20);
-        campoFiltroTexto.setToolTipText("Filtrar por número ou descrição");
-        
-        JButton btnFiltrar = createStyledButton("🔍 Filtrar", new Color(52, 152, 219));
-        btnFiltrar.setPreferredSize(new Dimension(100, 28));
-        
-        panelFiltro.add(lblFiltro);
-        panelFiltro.add(comboFiltroSala);
-        panelFiltro.add(new JLabel("  Buscar:"));
-        panelFiltro.add(campoFiltroTexto);
-        panelFiltro.add(btnFiltrar);
-        
-        JPanel panelTituloStatus = new JPanel(new BorderLayout());
-        panelTituloStatus.setBackground(Color.WHITE);
-        panelTituloStatus.add(lblTitulo, BorderLayout.NORTH);
-        panelTituloStatus.add(lblStatus, BorderLayout.SOUTH);
-        
-        panelSuperior.add(panelTituloStatus, BorderLayout.NORTH);
-        panelSuperior.add(panelFiltro, BorderLayout.SOUTH);
-        
-        // Tabela de todas as coletas (com coluna Sala adicional)
-        String[] colunas = {"Data/Hora", "Sala", "Patrimônio", "Descrição", "Estado", "Coletor"};
-        DefaultTableModel modeloTodasColetas = new DefaultTableModel(colunas, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        
-        JTable tabelaTodasColetas = new JTable(modeloTodasColetas);
-        tabelaTodasColetas.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tabelaTodasColetas.setRowHeight(28);
-        tabelaTodasColetas.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        tabelaTodasColetas.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        tabelaTodasColetas.getTableHeader().setBackground(new Color(52, 73, 94));
-        tabelaTodasColetas.getTableHeader().setForeground(Color.WHITE);
-        tabelaTodasColetas.setGridColor(new Color(220, 220, 220));
-        tabelaTodasColetas.setBackground(Color.WHITE);
-        
-        // Configurar larguras das colunas
-        tabelaTodasColetas.getColumnModel().getColumn(0).setPreferredWidth(130); // Data/Hora
-        tabelaTodasColetas.getColumnModel().getColumn(1).setPreferredWidth(120); // Sala
-        tabelaTodasColetas.getColumnModel().getColumn(2).setPreferredWidth(100); // Patrimônio
-        tabelaTodasColetas.getColumnModel().getColumn(3).setPreferredWidth(300); // Descrição
-        tabelaTodasColetas.getColumnModel().getColumn(4).setPreferredWidth(100); // Estado
-        tabelaTodasColetas.getColumnModel().getColumn(5).setPreferredWidth(120); // Coletor
-        
-        // Renderer para cores alternadas com texto preto
-        tabelaTodasColetas.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
-                    boolean hasFocus, int row, int column) {
-                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if (isSelected) {
-                    c.setBackground(new Color(52, 152, 219));
-                    c.setForeground(Color.WHITE);
-                } else {
-                    c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 248, 248));
-                    c.setForeground(new Color(44, 62, 80));
-                }
-                return c;
-            }
-        });
-        
-        JScrollPane scrollTodasColetas = new JScrollPane(tabelaTodasColetas);
-        scrollTodasColetas.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
-        
-        // Painel inferior com botões
-        JPanel panelInferior = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        panelInferior.setBackground(Color.WHITE);
-        
-        JButton btnExportar = createStyledButton("📥 Exportar CSV", new Color(46, 204, 113));
-        btnExportar.addActionListener(e -> exportarTodasColetas(modeloTodasColetas));
-        
-        JButton btnFechar = createStyledButton("❌ Fechar", new Color(108, 117, 125));
-        btnFechar.addActionListener(e -> dialogTodasColetas.dispose());
-        
-        panelInferior.add(btnExportar);
-        panelInferior.add(btnFechar);
-        
-        panelPrincipal.add(panelSuperior, BorderLayout.NORTH);
-        panelPrincipal.add(scrollTodasColetas, BorderLayout.CENTER);
-        panelPrincipal.add(panelInferior, BorderLayout.SOUTH);
-        
-        dialogTodasColetas.add(panelPrincipal);
-        
-        // Lista para armazenar todas as coletas (para filtro)
-        final List<Object[]> todasAsColetas = new ArrayList<>();
-        
-        // Carregar dados em background
-        SwingWorker<Void, Object[]> worker = new SwingWorker<>() {
-            private int totalColetas = 0;
-            private java.util.Set<String> salasEncontradas = new java.util.HashSet<>();
-            
-            @Override
-            protected Void doInBackground() throws Exception {
-                try {
-                    // Buscar inventário ativo
-                    Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
-                    if (inventarioAtivo == null) {
-                        SwingUtilities.invokeLater(() -> 
-                            lblStatus.setText("❌ Nenhum inventário ativo encontrado"));
-                        return null;
-                    }
-                    
-                    SwingUtilities.invokeLater(() -> 
-                        lblStatus.setText("⏳ Carregando coletas do inventário: " + inventarioAtivo.getNome()));
-                    
-                    // Buscar todas as coletas do inventário
-                    List<Coleta> coletas = coletaDAO.buscarColetasPorInventario(inventarioAtivo.getId(), LIMITE_TODAS_COLETAS);
-                    totalColetas = coletas.size();
-                    
-                    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-                    
-                    for (Coleta coleta : coletas) {
-                        String data = coleta.getDataColeta() != null ? sdf.format(coleta.getDataColeta()) : "-";
-                        String sala = coleta.getLocalizacaoEncontrada() != null ? coleta.getLocalizacaoEncontrada() : "-";
-                        String numero = coleta.getNumeroPatrimonio() != null ? coleta.getNumeroPatrimonio() : 
-                                        (coleta.isSemEtiqueta() ? "SEM ETIQUETA" : "-");
-                        String descricao = coleta.getDescricaoPatrimonio() != null ? coleta.getDescricaoPatrimonio() :
-                                          (coleta.getDescricaoItemSemEtiqueta() != null ? coleta.getDescricaoItemSemEtiqueta() : "-");
-                        String estado = coleta.getEstadoEncontrado() != null ? coleta.getEstadoEncontrado() : "-";
-                        String coletor = coleta.getNomeColetor() != null ? coleta.getNomeColetor() : "-";
-                        
-                        salasEncontradas.add(sala);
-                        
-                        Object[] linha = {data, sala, numero, descricao, estado, coletor};
-                        publish(linha);
-                    }
-                    
-                } catch (SQLException e) {
-                    LOG.error("Erro ao carregar todas as coletas: {}", e.getMessage(), e);
-                    SwingUtilities.invokeLater(() -> 
-                        lblStatus.setText("❌ Erro ao carregar: " + e.getMessage()));
-                }
-                return null;
-            }
-            
-            @Override
-            protected void process(List<Object[]> chunks) {
-                for (Object[] linha : chunks) {
-                    modeloTodasColetas.addRow(linha);
-                    todasAsColetas.add(linha);
-                }
-                lblStatus.setText("⏳ Carregando... " + modeloTodasColetas.getRowCount() + " coletas");
-            }
-            
-            @Override
-            protected void done() {
-                lblStatus.setText(String.format("✅ %d coletas carregadas (limite: %d)", 
-                    totalColetas, LIMITE_TODAS_COLETAS));
-                
-                // Preencher combo de salas
-                for (String sala : salasEncontradas) {
-                    comboFiltroSala.addItem(sala);
-                }
-            }
-        };
-        
-        // Ação do filtro
-        ActionListener filtrarAction = e -> {
-            String salaFiltro = (String) comboFiltroSala.getSelectedItem();
-            String textoFiltro = campoFiltroTexto.getText().toLowerCase().trim();
-            
-            modeloTodasColetas.setRowCount(0);
-            
-            for (Object[] linha : todasAsColetas) {
-                String sala = (String) linha[1];
-                String numero = (String) linha[2];
-                String descricao = (String) linha[3];
-                
-                boolean passaSala = "Todas as salas".equals(salaFiltro) || sala.equals(salaFiltro);
-                boolean passaTexto = textoFiltro.isEmpty() || 
-                                    numero.toLowerCase().contains(textoFiltro) ||
-                                    descricao.toLowerCase().contains(textoFiltro);
-                
-                if (passaSala && passaTexto) {
-                    modeloTodasColetas.addRow(linha);
-                }
-            }
-            
-            lblStatus.setText(String.format("🔍 Exibindo %d de %d coletas", 
-                modeloTodasColetas.getRowCount(), todasAsColetas.size()));
-        };
-        
-        btnFiltrar.addActionListener(filtrarAction);
-        comboFiltroSala.addActionListener(filtrarAction);
-        campoFiltroTexto.addActionListener(filtrarAction);
-        
-        registrarWorker(worker);
-        worker.execute();
-        dialogTodasColetas.setVisible(true);
+        new com.inventario.sihcp.view.coleta.TodasColetasDialog(
+                this, inventarioDAO, coletaDAO, LIMITE_TODAS_COLETAS, this::registrarWorker)
+                .setVisible(true);
     }
     
     /**
-     * Exporta todas as coletas exibidas para um arquivo CSV.
-     */
-    private void exportarTodasColetas(DefaultTableModel modelo) {
-        if (modelo.getRowCount() == 0) {
-            JOptionPane.showMessageDialog(this, 
-                "Não há coletas para exportar.", 
-                "Aviso", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Salvar Todas as Coletas");
-        String nomeArquivo = "todas_coletas_" + new SimpleDateFormat("yyyyMMdd_HHmm").format(new java.util.Date()) + ".csv";
-        fileChooser.setSelectedFile(new java.io.File(nomeArquivo));
-        
-        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            try (java.io.PrintWriter writer = new java.io.PrintWriter(fileChooser.getSelectedFile(), "UTF-8")) {
-                // Cabecalho
-                writer.println("Data/Hora;Sala;Patrimonio;Descricao;Estado;Coletor");
-                
-                // Dados
-                for (int i = 0; i < modelo.getRowCount(); i++) {
-                    StringBuilder sb = new StringBuilder();
-                    for (int j = 0; j < modelo.getColumnCount(); j++) {
-                        if (j > 0) sb.append(";");
-                        Object valor = modelo.getValueAt(i, j);
-                        sb.append(valor != null ? valor.toString().replace(";", ",") : "");
-                    }
-                    writer.println(sb);
-                }
-                
-                JOptionPane.showMessageDialog(this,
-                    "✅ Exportado com sucesso!\n" + fileChooser.getSelectedFile().getAbsolutePath(),
-                    "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-                    
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this,
-                    "❌ Erro ao exportar: " + e.getMessage(),
-                    "Erro", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
-    
-    /**
-     * Carrega histórico de coletas de forma PROGRESSIVA e ASSÍNCRONA.
-     * - Carrega em lotes pequenos para funcionar bem com VPN lenta
-     * - Atualiza tabela conforme os dados chegam
-     * - Mostra progresso real ao usuário
+     * Carrega histórico de coletas de forma ASSÍNCRONA.
+     * - Modo offline: carrega do SQLite local
+     * - Modo online: carrega do PostgreSQL em uma única consulta
      */
     private void carregarHistoricoColeta(String identificacaoSala) {
-        System.out.println("[PROGRESSIVO] ========================================");
-        System.out.println("[PROGRESSIVO] Carregando histórico para sala: '" + identificacaoSala + "'");
-        System.out.println("[PROGRESSIVO] Modo offline: " + offlineManager.isOperatingOffline());
-        System.out.println("[PROGRESSIVO] ========================================");
-        
         Sala salaAtual = (Sala) comboSalas.getSelectedItem();
         if (salaAtual == null) {
-            System.out.println("[PROGRESSIVO] ERRO: Nenhuma sala selecionada!");
             return;
         }
         
@@ -3503,8 +1353,8 @@ public class ColetaFrame_v2 extends JFrame {
             return;
         }
         
-        // Modo online usa carregamento progressivo
-        carregarHistoricoProgressivo(identificacaoSala, salaAtual);
+        // Modo online: carregamento único
+        carregarHistoricoOnline(identificacaoSala, salaAtual);
     }
     
     /**
@@ -3539,305 +1389,74 @@ public class ColetaFrame_v2 extends JFrame {
     }
     
     /**
-     * Carrega histórico do PostgreSQL de forma PROGRESSIVA (em lotes).
-     * Ideal para conexões VPN com ping alto.
-     * AJUSTADO: Lotes de 5 coletas + query simplificada para VPN lenta.
-     * Exibe dialog de progresso com barra visual.
+     * Carrega o histórico do PostgreSQL em uma única consulta (até LIMITE_HISTORICO).
+     * Mescla as coletas locais pendentes do serviço offline, preservando o filtro
+     * por inventário ativo.
      */
-    private void carregarHistoricoProgressivo(String identificacaoSala, Sala salaAtual) {
-        final int TAMANHO_LOTE = 5; // Carregar 5 coletas por vez (melhor performance)
-        final int DELAY_ENTRE_LOTES = 200; // 200ms entre lotes (reduzido para 5 itens)
-        final int DELAY_APOS_ERRO = 5000; // 5s após erro antes de retry
-        
-        // Limpar tabela
+    private void carregarHistoricoOnline(String identificacaoSala, Sala salaAtual) {
         modeloTabelaHistorico.setRowCount(0);
         tabelaHistorico.setEnabled(false);
-        
-        // Criar dialog de progresso (NÃO MODAL para não bloquear)
-        JDialog progressDialog = new JDialog(this, "Carregando coletas...", false);
-        progressDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        progressDialog.setLayout(new BorderLayout(10, 10));
-        progressDialog.setSize(450, 180);
-        progressDialog.setLocationRelativeTo(this);
-        progressDialog.setResizable(false);
-        
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
-        
-        JLabel lblTitulo = new JLabel("<html><center><b>Carregando histórico de coletas</b><br>" +
-            "<small>Sala: " + salaAtual.getIdentificacaoCompleta() + "</small></center></html>");
-        lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
-        lblTitulo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        
-        JLabel lblStatus = new JLabel("Conectando ao banco de dados...");
-        lblStatus.setHorizontalAlignment(SwingConstants.CENTER);
-        lblStatus.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        lblStatus.setForeground(new Color(0, 100, 0));
-        
-        JProgressBar progressBar = new JProgressBar(0, 100);
-        progressBar.setStringPainted(true);
-        progressBar.setString("Iniciando...");
-        progressBar.setPreferredSize(new Dimension(400, 25));
-        
-        JLabel lblDetalhes = new JLabel("<html><small>Conexão VPN lenta - carregando em lotes de " + TAMANHO_LOTE + "</small></html>");
-        lblDetalhes.setHorizontalAlignment(SwingConstants.CENTER);
-        lblDetalhes.setForeground(Color.GRAY);
-        
-        JPanel centerPanel = new JPanel(new BorderLayout(5, 8));
-        centerPanel.add(lblTitulo, BorderLayout.NORTH);
-        centerPanel.add(lblStatus, BorderLayout.CENTER);
-        centerPanel.add(lblDetalhes, BorderLayout.SOUTH);
-        
-        panel.add(centerPanel, BorderLayout.CENTER);
-        panel.add(progressBar, BorderLayout.SOUTH);
-        progressDialog.add(panel);
-        
-        // Mostrar dialog
-        progressDialog.setVisible(true);
-        
-        // Lista para acumular coletas
-        final List<Coleta> todasColetas = new ArrayList<>();
-        
-        SwingWorker<Void, Coleta> worker = new SwingWorker<>() {
+        lblResumoSala.setText("⏳ Carregando histórico...");
+
+        SwingWorker<List<Coleta>, Void> worker = new SwingWorker<>() {
             private int totalColetas = 0;
-            private String erroFinal = null;
-            // Inventário ativo cacheado no início do worker — garante que o filtro
-            // por inventário seja aplicado de forma consistente em todos os lotes,
-            // evitando que coletas de inventários antigos apareçam no histórico.
-            private Inventario inventarioAtivo = null;
-            private Integer idInventarioAtivo = null;
 
             @Override
-            protected Void doInBackground() throws Exception {
+            protected List<Coleta> doInBackground() throws Exception {
+                // Resolver inventário ativo para filtrar as coletas do inventário corrente
+                Inventario inventarioAtivo = inventarioDAO.buscarInventarioAtivo();
+                Integer idInventarioAtivo = inventarioAtivo != null ? inventarioAtivo.getId() : null;
+
+                totalColetas = coletaDAO.contarColetasPorNumeroSala(identificacaoSala, idInventarioAtivo);
+
+                // Buscar do servidor em uma única consulta (já ordenado por data DESC)
+                List<Coleta> coletas = new ArrayList<>(
+                        coletaDAO.buscarColetasPorNumeroSalaPaginado(
+                                identificacaoSala, 0, LIMITE_HISTORICO, idInventarioAtivo));
+
+                // Mesclar coletas locais pendentes (modo híbrido: online com pendências)
                 try {
-                    // 0. Resolver inventário ativo antes de qualquer query
-                    inventarioAtivo = inventarioDAO.buscarInventarioAtivo();
-                    idInventarioAtivo = inventarioAtivo != null ? inventarioAtivo.getId() : null;
-                    if (idInventarioAtivo == null) {
-                        System.out.println("[PROGRESSIVO] AVISO: nenhum inventário ativo — histórico pode vir vazio");
-                    }
-
-                    // 1. Contar total (query rápida)
-                    SwingUtilities.invokeLater(() -> {
-                        lblStatus.setText("Contando coletas...");
-                        progressBar.setIndeterminate(true);
-                    });
-
-                    totalColetas = coletaDAO.contarColetasPorNumeroSala(identificacaoSala, idInventarioAtivo);
-                    System.out.println("[PROGRESSIVO] Total de coletas a carregar: " + totalColetas);
-                    
-                    if (totalColetas == 0) {
-                        // Verificar coletas locais pendentes
-                        try {
-                            List<Coleta> coletasLocais = coletaOfflineService.buscarColetasPorLocalizacao(identificacaoSala);
-                            if (!coletasLocais.isEmpty()) {
-                                System.out.println("[PROGRESSIVO] Encontradas " + coletasLocais.size() + " coletas locais pendentes");
-                                SwingUtilities.invokeLater(() -> {
-                                    lblStatus.setText("Carregando coletas locais...");
-                                    progressBar.setIndeterminate(false);
-                                    progressBar.setMaximum(coletasLocais.size());
-                                });
-                                int i = 0;
-                                for (Coleta c : coletasLocais) {
-                                    publish(c);
-                                    final int progresso = ++i;
-                                    SwingUtilities.invokeLater(() -> {
-                                        progressBar.setValue(progresso);
-                                        progressBar.setString(progresso + " / " + coletasLocais.size());
-                                    });
-                                }
-                                totalColetas = coletasLocais.size();
-                            }
-                        } catch (Exception e) {
-                            System.err.println("[PROGRESSIVO] Erro ao buscar coletas locais: " + e.getMessage());
-                        }
-                        return null;
-                    }
-                    
-                    // Configurar barra de progresso
-                    final int limiteFinal = Math.min(totalColetas, LIMITE_HISTORICO);
-                    SwingUtilities.invokeLater(() -> {
-                        progressBar.setIndeterminate(false);
-                        progressBar.setMaximum(limiteFinal);
-                        progressBar.setValue(0);
-                        progressBar.setString("0 / " + limiteFinal + " coletas");
-                        lblStatus.setText("Carregando coletas do servidor...");
-                    });
-                    
-                    // 2. Carregar em lotes PEQUENOS (5 por vez para VPN lenta)
-                    int offset = 0;
-                    int tentativasErro = 0;
-                    final int MAX_TENTATIVAS = 5;
-                    
-                    System.out.println("[PROGRESSIVO] Carregando em lotes de " + TAMANHO_LOTE + " (limite: " + limiteFinal + ")");
-                    
-                    while (offset < limiteFinal && tentativasErro < MAX_TENTATIVAS) {
-                        final int loteAtual = (offset / TAMANHO_LOTE) + 1;
-                        final int totalLotes = (int) Math.ceil((double) limiteFinal / TAMANHO_LOTE);
-                        final int offsetAtual = offset;
-                        
-                        SwingUtilities.invokeLater(() -> {
-                            lblStatus.setText("Carregando lote " + loteAtual + " de " + totalLotes + "...");
-                            int percentual = limiteFinal > 0 ? (offsetAtual * 100 / limiteFinal) : 0;
-                            lblDetalhes.setText("<html><small>" + percentual + "% concluído</small></html>");
-                        });
-                        
-                        try {
-                            List<Coleta> lote = coletaDAO.buscarColetasPorNumeroSalaPaginado(
-                                identificacaoSala, offset, TAMANHO_LOTE, idInventarioAtivo
-                            );
-                            
-                            if (lote.isEmpty()) {
-                                System.out.println("[PROGRESSIVO] Lote vazio, finalizando");
-                                break;
-                            }
-                            
-                            // Publicar cada coleta para atualizar tabela progressivamente
-                            for (Coleta coleta : lote) {
-                                publish(coleta);
-                            }
-                            
-                            offset += lote.size();
-                            tentativasErro = 0;
-                            
-                            // Atualizar barra de progresso
-                            final int progressoAtual = offset;
-                            SwingUtilities.invokeLater(() -> {
-                                progressBar.setValue(progressoAtual);
-                                progressBar.setString(progressoAtual + " / " + limiteFinal + " coletas");
-                            });
-                            
-                            System.out.println("[PROGRESSIVO] Lote " + loteAtual + " OK: " + lote.size() + " coletas (total: " + offset + ")");
-                            
-                            // Pausa entre lotes para não sobrecarregar VPN
-                            if (offset < limiteFinal) {
-                                Thread.sleep(DELAY_ENTRE_LOTES);
-                            }
-                            
-                        } catch (InterruptedException | SQLException e) {
-                            tentativasErro++;
-                            System.err.println("[PROGRESSIVO] ERRO lote " + loteAtual + " (tentativa " + tentativasErro + "/" + MAX_TENTATIVAS + "): " + e.getMessage());
-                            
-                            if (tentativasErro < MAX_TENTATIVAS) {
-                                final int tentativa = tentativasErro;
-                                SwingUtilities.invokeLater(() -> {
-                                    lblStatus.setText("⚠️ Erro de conexão. Aguardando...");
-                                    lblStatus.setForeground(new Color(200, 100, 0));
-                                    lblDetalhes.setText("<html><small>Tentativa " + tentativa + " de " + MAX_TENTATIVAS + " - Reconectando em 3s...</small></html>");
-                                });
-                                Thread.sleep(DELAY_APOS_ERRO);
-                                SwingUtilities.invokeLater(() -> {
-                                    lblStatus.setForeground(new Color(0, 100, 0));
-                                });
-                            } else {
-                                erroFinal = "Falha após " + MAX_TENTATIVAS + " tentativas";
-                                LOG.error("Falha definitiva ao carregar coletas: {}", e.getMessage());
-                            }
+                    List<Coleta> coletasLocais = coletaOfflineService.buscarColetasPorLocalizacao(identificacaoSala);
+                    for (Coleta coletaLocal : coletasLocais) {
+                        boolean jaExiste = coletas.stream()
+                                .anyMatch(c -> c.getNumeroPatrimonio() != null &&
+                                        c.getNumeroPatrimonio().equals(coletaLocal.getNumeroPatrimonio()));
+                        if (!jaExiste) {
+                            coletas.add(0, coletaLocal); // pendentes no topo
                         }
                     }
-                    
-                    // 3. Adicionar coletas locais pendentes (se houver)
-                    try {
-                        SwingUtilities.invokeLater(() -> lblStatus.setText("Verificando coletas locais..."));
-                        
-                        List<Coleta> coletasLocais = coletaOfflineService.buscarColetasPorLocalizacao(identificacaoSala);
-                        if (!coletasLocais.isEmpty()) {
-                            System.out.println("[PROGRESSIVO] Adicionando " + coletasLocais.size() + " coletas locais pendentes");
-                            for (Coleta coletaLocal : coletasLocais) {
-                                boolean jaExiste = todasColetas.stream()
-                                    .anyMatch(c -> c.getNumeroPatrimonio() != null && 
-                                                  c.getNumeroPatrimonio().equals(coletaLocal.getNumeroPatrimonio()));
-                                if (!jaExiste) {
-                                    publish(coletaLocal);
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        System.err.println("[PROGRESSIVO] Erro ao buscar coletas locais: " + e.getMessage());
-                    }
-                    
-                } catch (InterruptedException | SQLException e) {
-                    erroFinal = e.getMessage();
-                    LOG.error("Erro ao carregar histórico progressivo: {}", e.getMessage(), e);
+                } catch (Exception e) {
+                    LOG.warn("Erro ao mesclar coletas locais pendentes: {}", e.getMessage());
                 }
-                
-                return null;
+
+                return coletas;
             }
-            
-            @Override
-            protected void process(List<Coleta> chunks) {
-                // Adicionar coletas à tabela conforme chegam
-                for (Coleta coleta : chunks) {
-                    todasColetas.add(coleta);
-                    adicionarColetaNaTabela(coleta);
-                }
-                
-                // Atualizar contagem
-                atualizarContagemColetas(todasColetas.size());
-            }
-            
+
             @Override
             protected void done() {
-                // Fechar dialog de progresso
-                progressDialog.dispose();
-                
-                tabelaHistorico.setEnabled(true);
-                
-                if (erroFinal != null && todasColetas.isEmpty()) {
-                    tratarErroHistorico(erroFinal, identificacaoSala);
-                } else {
-                    String sufixo = totalColetas > LIMITE_HISTORICO 
-                        ? " (mostrando " + LIMITE_HISTORICO + " de " + totalColetas + ")" 
-                        : "";
-                    lblResumoSala.setText(String.format("✓ Coletando em: %s (%d itens)%s", 
-                        salaAtual.getIdentificacaoCompleta(), todasColetas.size(), sufixo));
-                    
-                    if (erroFinal != null) {
-                        // Carregou parcialmente
-                        JOptionPane.showMessageDialog(ColetaFrame_v2.this,
-                            "Carregamento parcial: " + todasColetas.size() + " coletas.\n" +
-                            "Algumas coletas podem não ter sido carregadas devido a problemas de conexão.",
-                            "Aviso", JOptionPane.WARNING_MESSAGE);
-                    }
+                try {
+                    List<Coleta> coletas = get();
+                    atualizarTabelaHistorico(coletas);
+                    atualizarContagemColetas(coletas.size());
+
+                    String sufixo = totalColetas > LIMITE_HISTORICO
+                            ? " (mostrando " + LIMITE_HISTORICO + " de " + totalColetas + ")"
+                            : "";
+                    lblResumoSala.setText(String.format("Coletando em: %s (%d itens)%s",
+                            salaAtual.getIdentificacaoCompleta(), coletas.size(), sufixo));
+                    tabelaHistorico.setEnabled(true);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    tratarErroHistorico("Operação interrompida", identificacaoSala);
+                } catch (ExecutionException e) {
+                    Throwable causa = e.getCause();
+                    tratarErroHistorico(causa != null ? causa.getMessage() : e.getMessage(), identificacaoSala);
                 }
             }
         };
-        
+
         registrarWorker(worker);
         worker.execute();
-    }
-    
-    /**
-     * Adiciona uma coleta na tabela de histórico.
-     */
-    /**
-     * Adiciona uma coleta no FINAL da tabela (usado no carregamento progressivo).
-     * As coletas já vêm ordenadas por data DESC do banco, então adicionar no final mantém a ordem.
-     */
-    private void adicionarColetaNaTabela(Coleta coleta) {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-        
-        // Colunas: { "Data/Hora", "Patrimônio", "Descrição", "Estado", "ID" }
-        String data = coleta.getDataColeta() != null ? sdf.format(coleta.getDataColeta()) : "-";
-        String numero = coleta.getNumeroPatrimonio() != null ? coleta.getNumeroPatrimonio() : "-";
-        
-        // ✅ OTIMIZADO: Usar descrição que já veio do JOIN no DAO (sem query adicional)
-        // A descrição já vem preenchida pelo método criarColetaOtimizadaFromResultSet
-        String descricao = coleta.getDescricaoPatrimonio();
-        if (descricao == null || descricao.isEmpty()) {
-            // Fallback: usar descrição de item sem etiqueta
-            descricao = coleta.getDescricaoItemSemEtiqueta();
-        }
-        if (descricao == null || descricao.isEmpty()) {
-            // Último fallback: usar hífen (NÃO fazer query adicional!)
-            descricao = "-";
-        }
-        
-        String estado = coleta.getEstadoEncontrado() != null ? coleta.getEstadoEncontrado() : "-";
-        int id = coleta.getId();
-        
-        // Adicionar no final (carregamento progressivo - dados já vêm ordenados)
-        modeloTabelaHistorico.addRow(new Object[]{data, numero, descricao, estado, id});
     }
     
     /**
@@ -4220,240 +1839,6 @@ public class ColetaFrame_v2 extends JFrame {
         btnRemoverItem.setEnabled(false);
     }
 
-    /**
-     * Busca descrições únicas de patrimônios para uso em itens sem patrimônio
-     */
-    /**
-     * Busca descrições de patrimônios, mostrando apenas os pendentes (não
-     * coletados)
-     * Facilita o trabalho do coletor ao exibir somente itens que ainda precisam ser
-     * coletados
-     */
-    private void buscarPorDescricao() {
-        String termoBusca = campoBuscaDescricao.getText().trim();
-
-        if (termoBusca.isEmpty()) {
-            lblLoadingDescricao.setText("⚠️ Digite uma descrição para buscar");
-            lblLoadingDescricao.setForeground(new Color(241, 196, 15));
-            mostrarLoading(true);
-
-            Timer timer = new Timer(2000, e -> mostrarLoading(false));
-            timer.setRepeats(false);
-            timer.start();
-            return;
-        }
-
-        // Mostrar loading
-        mostrarLoading(true);
-        lblLoadingDescricao.setText("🔍 Pesquisando descrições...");
-        lblLoadingDescricao.setForeground(new Color(52, 152, 219));
-        progressBarDescricao.setString("Buscando no banco de dados...");
-
-        // Desabilitar botão durante busca
-        btnBuscarDescricao.setEnabled(false);
-        campoBuscaDescricao.setEnabled(false);
-
-        // Executar busca em background
-        SwingWorker<ResultadoBusca, Void> worker = new SwingWorker<ResultadoBusca, Void>() {
-            @Override
-            protected ResultadoBusca doInBackground() throws Exception {
-                // Limpar resultados anteriores
-                SwingUtilities.invokeLater(() -> modeloTabelaResultados.setRowCount(0));
-
-                // Buscar patrimônios por descrição
-                List<Patrimonio> patrimonios = patrimonioDAO.buscarPorDescricao(termoBusca);
-
-                if (patrimonios == null || patrimonios.isEmpty()) {
-                    return new ResultadoBusca(false, "Nenhuma descrição encontrada com o termo: \"" + termoBusca + "\"",
-                            0, 0, 0);
-                }
-
-                // Buscar inventário ativo para filtrar pendentes
-                Inventario inventarioAtivo = inventarioDAO.buscarPorStatus("EM_ANDAMENTO");
-                Integer idInventario = inventarioAtivo != null ? inventarioAtivo.getId() : null;
-
-                // Filtrar apenas patrimônios pendentes (não coletados)
-                List<Patrimonio> patrimoniosPendentes = new ArrayList<>();
-                for (Patrimonio p : patrimonios) {
-                    try {
-                        boolean jaColetado = coletaDAO.coletaExiste(idInventario, p.getId());
-                        if (!jaColetado) {
-                            patrimoniosPendentes.add(p);
-                        }
-                    } catch (SQLException | RuntimeException e) {
-                        // Em caso de erro, incluir o patrimônio
-                        patrimoniosPendentes.add(p);
-                    }
-                }
-
-                if (patrimoniosPendentes.isEmpty()) {
-                    return new ResultadoBusca(false, "Todos os patrimônios com essa descrição já foram coletados!",
-                            patrimonios.size(), 0, patrimonios.size());
-                }
-
-                // Agrupar por descrição única (apenas pendentes)
-                java.util.Set<String> descricoesUnicas = new java.util.LinkedHashSet<>();
-                java.util.Map<String, Integer> contagemPorDescricao = new java.util.HashMap<>();
-
-                for (Patrimonio p : patrimoniosPendentes) {
-                    String desc = p.getDescricao();
-                    if (desc != null && !desc.trim().isEmpty()) {
-                        descricoesUnicas.add(desc);
-                        contagemPorDescricao.put(desc, contagemPorDescricao.getOrDefault(desc, 0) + 1);
-                    }
-                }
-
-                // Adicionar à tabela com contagem de pendentes
-                for (String descricao : descricoesUnicas) {
-                    int qtdPendente = contagemPorDescricao.get(descricao);
-                    String descricaoComContagem = String.format("%s (%d pendente%s)",
-                            descricao, qtdPendente, qtdPendente > 1 ? "s" : "");
-                    Object[] linha = { descricaoComContagem };
-                    SwingUtilities.invokeLater(() -> modeloTabelaResultados.addRow(linha));
-                }
-
-                return new ResultadoBusca(true, "Busca concluída com sucesso!",
-                        patrimonios.size(), patrimoniosPendentes.size(),
-                        patrimonios.size() - patrimoniosPendentes.size());
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    ResultadoBusca resultado = get();
-
-                    // Ocultar loading
-                    mostrarLoading(false);
-
-                    // Reabilitar componentes
-                    btnBuscarDescricao.setEnabled(true);
-                    campoBuscaDescricao.setEnabled(true);
-
-                    // Mostrar resultado na label de loading temporariamente
-                    if (resultado.sucesso) {
-                        lblLoadingDescricao.setText(
-                                String.format("✅ %d descrição(ões) encontrada(s) | %d pendente(s) | %d coletado(s)",
-                                        modeloTabelaResultados.getRowCount(), resultado.totalPendentes,
-                                        resultado.totalColetados));
-                        lblLoadingDescricao.setForeground(new Color(46, 204, 113));
-                    } else {
-                        lblLoadingDescricao.setText("ℹ️ " + resultado.mensagem);
-                        lblLoadingDescricao.setForeground(new Color(241, 196, 15));
-                    }
-
-                    // Mostrar mensagem temporariamente
-                    mostrarLoading(true);
-                    progressBarDescricao.setVisible(false);
-
-                    Timer timer = new Timer(3000, e -> {
-                        mostrarLoading(false);
-                        progressBarDescricao.setVisible(true);
-                    });
-                    timer.setRepeats(false);
-                    timer.start();
-
-                } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
-                    mostrarLoading(false);
-                    btnBuscarDescricao.setEnabled(true);
-                    campoBuscaDescricao.setEnabled(true);
-
-                    lblLoadingDescricao.setText("❌ Erro ao buscar: " + e.getMessage());
-                    lblLoadingDescricao.setForeground(new Color(231, 76, 60));
-                    mostrarLoading(true);
-                    progressBarDescricao.setVisible(false);
-
-                    Timer timer = new Timer(3000, ev -> {
-                        mostrarLoading(false);
-                        progressBarDescricao.setVisible(true);
-                    });
-                    timer.setRepeats(false);
-                    timer.start();
-
-                    LOG.error("Erro ao buscar por descrição", e);
-                    Thread.currentThread().interrupt();
-                }
-            }
-        };
-
-        registrarWorker(worker);
-        worker.execute();
-    }
-
-    /**
-     * Mostra ou oculta o indicador de loading
-     */
-    private void mostrarLoading(boolean mostrar) {
-        // Encontrar o painel central que contém o CardLayout
-        Component[] components = tabelaResultadosDescricao.getParent().getParent().getComponents();
-        for (Component comp : components) {
-            if (comp instanceof JPanel painelCentral) {
-                if (painelCentral.getLayout() instanceof CardLayout layout) {
-                    if (mostrar) {
-                        layout.show(painelCentral, "loading");
-                    } else {
-                        layout.show(painelCentral, "tabela");
-                    }
-                    break;
-                }
-            }
-        }
-    }
-
-    /**
-     * Classe auxiliar para armazenar resultado da busca
-     */
-    private static class ResultadoBusca {
-        boolean sucesso;
-        String mensagem;
-        int totalPendentes;
-        int totalColetados;
-
-        ResultadoBusca(boolean sucesso, String mensagem, int totalEncontrados, int totalPendentes, int totalColetados) {
-            this.sucesso = sucesso;
-            this.mensagem = mensagem;
-            // totalEncontrados não é usado, apenas totalPendentes e totalColetados
-            this.totalPendentes = totalPendentes;
-            this.totalColetados = totalColetados;
-        }
-    }
-
-    // Método buscarItensSemPatrimonio removido para simplificar interface
-
-    /**
-     * Seleciona uma descrição da tabela de resultados e preenche o formulário
-     */
-    private void selecionarPatrimonioDescricao() {
-        int linhaSelecionada = tabelaResultadosDescricao.getSelectedRow();
-
-        if (linhaSelecionada == -1) {
-            return;
-        }
-
-        try {
-            String descricaoComContagem = (String) modeloTabelaResultados.getValueAt(linhaSelecionada, 0);
-
-            // Extrair apenas a descrição, removendo a parte "(X pendente(s))"
-            String descricaoLimpa = descricaoComContagem;
-            int indexParenteses = descricaoComContagem.lastIndexOf(" (");
-            if (indexParenteses > 0) {
-                descricaoLimpa = descricaoComContagem.substring(0, indexParenteses).trim();
-            }
-
-            // Preencher campo de descrição do formulário com a descrição limpa
-            campoDescricaoSemPatrimonio.setText(descricaoLimpa);
-
-            // Focar no campo de observações
-            areaObservacoesSemPatrimonio.requestFocus();
-
-        } catch (Exception e) {
-            LOG.error("Erro ao selecionar descrição: {}", e.getMessage(), e);
-            JOptionPane.showMessageDialog(this,
-                    "Erro ao selecionar descrição: " + e.getMessage(),
-                    "Erro",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
     private void registrarItemEncontrado() {
         System.out.println("DEBUG: registrarItemEncontrado() iniciado");
 
@@ -4516,26 +1901,15 @@ public class ColetaFrame_v2 extends JFrame {
 
         System.out.println("DEBUG: Sala selecionada: " + salaAtual.getIdentificacaoCompleta());
 
-        boolean itemSemEtiqueta = false; // Sempre false - itens sem etiqueta são tratados na aba dedicada
-
-        // Validações específicas para cada tipo de item
-        if (itemSemEtiqueta) {
-            if (txtDescricaoSemEtiqueta.getText().trim().isEmpty()) {
-                System.out.println("DEBUG: Descrição vazia para item sem etiqueta");
-                JOptionPane.showMessageDialog(this, "Informe a descrição do item sem etiqueta.",
-                        "Aviso", JOptionPane.WARNING_MESSAGE);
-                txtDescricaoSemEtiqueta.requestFocus();
-                return;
-            }
-        } else {
-            if (patrimonioSelecionado == null) {
-                System.out.println("DEBUG: Nenhum patrimônio selecionado");
-                JOptionPane.showMessageDialog(this, "Busque um patrimônio primeiro ou marque 'Item sem etiqueta'.",
-                        "Aviso", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            System.out.println("DEBUG: Patrimônio selecionado: " + patrimonioSelecionado.getNumero());
+        // Validação: é necessário um patrimônio selecionado.
+        // Itens sem etiqueta são tratados na aba dedicada "Itens Sem Patrimônio".
+        if (patrimonioSelecionado == null) {
+            System.out.println("DEBUG: Nenhum patrimônio selecionado");
+            JOptionPane.showMessageDialog(this, "Busque um patrimônio primeiro.",
+                    "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
         }
+        System.out.println("DEBUG: Patrimônio selecionado: " + patrimonioSelecionado.getNumero());
 
         try {
             String estadoAtual = (String) comboEstado.getSelectedItem();
@@ -4606,52 +1980,28 @@ public class ColetaFrame_v2 extends JFrame {
             System.out.println("DEBUG: Localização encontrada: " + coleta.getLocalizacaoEncontrada());
             System.out.println("DEBUG: Sala atual (numeroSala): " + salaAtual.getNumeroSala());
 
-            if (itemSemEtiqueta) {
-                // Configurar para item sem etiqueta
-                if (patrimonioSelecionadoDescricao != null) {
-                    // Item sem etiqueta vinculado a patrimônio existente
-                    coleta.setIdPatrimonio(patrimonioSelecionadoDescricao.getId());
-                    coleta.setSemEtiqueta(true);
-                    coleta.setDescricaoItemSemEtiqueta(txtDescricaoSemEtiqueta.getText().trim());
-                    coleta.setCategoriaItemSemEtiqueta((String) comboCategoriaSemEtiqueta.getSelectedItem());
-                    coleta.setLocalizacaoAtual(patrimonioSelecionadoDescricao.getNomeSala());
+            // Configurar para patrimônio normal
+            coleta.setIdPatrimonio(patrimonioSelecionado.getId());
+            coleta.setNumeroPatrimonio(patrimonioSelecionado.getNumero()); // ✅ ADICIONAR número do patrimônio
+            coleta.setDescricaoPatrimonio(patrimonioSelecionado.getDescricao()); // ✅ ADICIONAR descrição do patrimônio
+            coleta.setSemEtiqueta(false);
+            coleta.setLocalizacaoAtual(patrimonioSelecionado.getNomeSala());
 
-                    // Verificar divergência de localização
-                    if (!salaAtual.getNumeroSala().equals(patrimonioSelecionadoDescricao.getNomeSala())) {
-                        coleta.setDivergencia(true);
-                        coleta.setMotivoDivergencia("Item sem etiqueta encontrado em sala diferente da registrada");
-                    }
-                } else {
-                    // Item sem etiqueta não vinculado
-                    coleta.setIdPatrimonio(0); // ID especial para itens sem etiqueta
-                    coleta.setSemEtiqueta(true);
-                    coleta.setDescricaoItemSemEtiqueta(txtDescricaoSemEtiqueta.getText().trim());
-                    coleta.setCategoriaItemSemEtiqueta((String) comboCategoriaSemEtiqueta.getSelectedItem());
-                }
-            } else {
-                // Configurar para patrimônio normal
-                coleta.setIdPatrimonio(patrimonioSelecionado.getId());
-                coleta.setNumeroPatrimonio(patrimonioSelecionado.getNumero()); // ✅ ADICIONAR número do patrimônio
-                coleta.setDescricaoPatrimonio(patrimonioSelecionado.getDescricao()); // ✅ ADICIONAR descrição do patrimônio
-                coleta.setSemEtiqueta(false);
-                coleta.setLocalizacaoAtual(patrimonioSelecionado.getNomeSala());
+            // Verificar se o patrimônio já foi coletado neste inventário
+            if (coletaDAO.coletaExiste(inventarioAtivo.getId(), patrimonioSelecionado.getId())) {
+                JOptionPane.showMessageDialog(this,
+                        """
+                        Este patrim\u00f4nio j\u00e1 foi coletado neste invent\u00e1rio.
+                        N\u00famero: """ + patrimonioSelecionado.getNumero() + "\n" +
+                                "Descrição: " + patrimonioSelecionado.getDescricao(),
+                        "Patrimônio já coletado", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
 
-                // Verificar se o patrimônio já foi coletado neste inventário
-                if (coletaDAO.coletaExiste(inventarioAtivo.getId(), patrimonioSelecionado.getId())) {
-                    JOptionPane.showMessageDialog(this,
-                            """
-                            Este patrim\u00f4nio j\u00e1 foi coletado neste invent\u00e1rio.
-                            N\u00famero: """ + patrimonioSelecionado.getNumero() + "\n" +
-                                    "Descrição: " + patrimonioSelecionado.getDescricao(),
-                            "Patrimônio já coletado", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-
-                // Verificar divergência de localização
-                if (!salaAtual.getIdentificacaoCompleta().equals(patrimonioSelecionado.getNomeSala())) {
-                    coleta.setDivergencia(true);
-                    coleta.setMotivoDivergencia("Item encontrado em sala diferente da registrada");
-                }
+            // Verificar divergência de localização
+            if (!salaAtual.getIdentificacaoCompleta().equals(patrimonioSelecionado.getNomeSala())) {
+                coleta.setDivergencia(true);
+                coleta.setMotivoDivergencia("Item encontrado em sala diferente da registrada");
             }
 
             // ✅ MÉTRICAS: Calcular e definir métricas de tempo antes de salvar
@@ -4678,9 +2028,9 @@ public class ColetaFrame_v2 extends JFrame {
                     offlineManager.getCurrentState());
             
             // ✅ MÉTRICAS: Resetar variáveis de tempo para próxima coleta
-            inicioColetaAtual = 0;
-            inicioScanAtual = 0;
-            fimScanAtual = 0;
+            inicioColetaAtual = null;
+            inicioScanAtual = null;
+            fimScanAtual = null;
             metodoColetaAtual = null;
 
             // Reproduzir som de sucesso da COLETA (diferente do som de encontrar)
@@ -4834,116 +2184,12 @@ public class ColetaFrame_v2 extends JFrame {
     private void limparFormulario() {
         campoBusca.setText("");
         campoObservacao.setText("");
-        txtDescricaoSemEtiqueta.setText("");
-        comboCategoriaSemEtiqueta.setSelectedIndex(0);
-        campoBuscaDescricao.setText("");
-        modeloTabelaResultados.setRowCount(0);
-        patrimonioSelecionadoDescricao = null;
         // chkSemEtiqueta removido - checkbox não existe mais
         // alternarModoSemEtiqueta() não é mais necessário // Resetar modo
         limparInformacoesItem();
 
         // Garantir que o foco volte ao campo de pesquisa
         SwingUtilities.invokeLater(() -> campoBusca.requestFocusInWindow());
-    }
-
-    /**
-     * Carrega itens sem etiqueta agrupados por descrição
-     */
-    private void carregarItensAgrupados() {
-        try {
-            // Limpar dados anteriores
-            modeloTabelaItensAgrupados.setRowCount(0);
-
-            // Buscar itens agrupados
-            List<Object[]> itensAgrupados = coletaDAO.agruparItensSemEtiquetaPorDescricao();
-
-            for (Object[] item : itensAgrupados) {
-                // Estrutura retornada pelo DAO (4 colunas):
-                // item[0] = descricao
-                // item[1] = categoria
-                // item[2] = quantidade
-                // item[3] = ultima_coleta
-                
-                // Tabela espera 5 colunas: Descrição, Quantidade, Categorias, Primeira Coleta, Última Coleta
-                Object[] linha = {
-                        item[0] != null ? item[0] : "N/A",              // Descrição
-                        item[2] != null ? item[2] : 0,                  // Quantidade
-                        item[1] != null ? item[1] : "N/A",              // Categorias
-                        "N/A",                                          // Primeira Coleta (não disponível no DAO)
-                        item[3] != null ? item[3].toString() : "N/A"    // Última Coleta
-                };
-                modeloTabelaItensAgrupados.addRow(linha);
-            }
-
-            // Forçar atualização da tabela
-            tabelaItensAgrupados.revalidate();
-            tabelaItensAgrupados.repaint();
-
-        } catch (SQLException | RuntimeException e) {
-            LOG.error("Erro ao carregar itens agrupados: {}", e.getMessage(), e);
-            JOptionPane.showMessageDialog(this, "Erro ao carregar itens agrupados: " + e.getMessage(),
-                    "Erro", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    /**
-     * Mostra dialog com itens agrupados
-     */
-    private void mostrarItensAgrupados() {
-        if (dialogItensAgrupados == null) {
-            dialogItensAgrupados = new JDialog(this, "Itens Sem Etiqueta Agrupados", true);
-            dialogItensAgrupados.setLayout(new BorderLayout());
-
-            JPanel panelDialog = new JPanel(new BorderLayout());
-            panelDialog.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-            JLabel lblTitulo = new JLabel("<html><b>Itens sem etiqueta agrupados por descrição similar</b><br>" +
-                    "<i>Clique em uma linha para usar a descrição no formulário</i></html>");
-            lblTitulo.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
-
-            panelDialog.add(lblTitulo, BorderLayout.NORTH);
-            panelDialog.add(scrollItensAgrupados, BorderLayout.CENTER);
-
-            JButton btnFechar = new JButton("Fechar");
-            btnFechar.addActionListener(e -> dialogItensAgrupados.setVisible(false));
-
-            JPanel panelBotoesDialog = new JPanel(new FlowLayout());
-            panelBotoesDialog.add(btnFechar);
-            panelDialog.add(panelBotoesDialog, BorderLayout.SOUTH);
-
-            dialogItensAgrupados.add(panelDialog);
-            dialogItensAgrupados.setSize(800, 500);
-            dialogItensAgrupados.setLocationRelativeTo(this);
-        }
-
-        // Recarregar dados antes de mostrar
-        carregarItensAgrupados();
-        dialogItensAgrupados.setVisible(true);
-    }
-
-    /**
-     * Seleciona uma descrição agrupada e preenche o campo
-     */
-    private void selecionarDescricaoAgrupada() {
-        int linhaSelecionada = tabelaItensAgrupados.getSelectedRow();
-
-        if (linhaSelecionada == -1) {
-            return;
-        }
-
-        String descricaoSelecionada = (String) modeloTabelaItensAgrupados.getValueAt(linhaSelecionada, 0);
-
-        // Preencher campo de descrição
-        txtDescricaoSemEtiqueta.setText(descricaoSelecionada);
-
-        // Fechar dialog se estiver aberto
-        if (dialogItensAgrupados != null && dialogItensAgrupados.isVisible()) {
-            dialogItensAgrupados.setVisible(false);
-        }
-
-        JOptionPane.showMessageDialog(this, "Descrição selecionada: " + descricaoSelecionada,
-                "Seleção", JOptionPane.INFORMATION_MESSAGE);
     }
 
     /**
@@ -5737,168 +2983,14 @@ public class ColetaFrame_v2 extends JFrame {
     }
 
     /**
-     * Cria um botão estilizado no padrão do MainFrame
-     * 
+     * Cria um botão estilizado no padrão do MainFrame.
+     * Delega para {@link com.inventario.sihcp.view.ui.StyledButtonFactory}.
+     *
      * @param text      Texto do botão (pode conter emojis)
      * @param baseColor Cor base do botão
      * @return JButton estilizado
      */
     private JButton createStyledButton(String text, Color baseColor) {
-        final boolean[] isHovered = {false}; // Mutable wrapper for hover state
-        
-        JButton button = new JButton(text) {
-            @Override
-            protected void paintComponent(java.awt.Graphics g) {
-                Graphics2D g2d = (Graphics2D) g.create();
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-
-                Color hoverColor = baseColor.brighter();
-                Color topColor = isHovered[0] ? hoverColor : baseColor;
-                Color bottomColor = isHovered[0] ? hoverColor.darker() : baseColor.darker();
-
-                if (!isEnabled()) {
-                    topColor = new Color(180, 180, 180);
-                    bottomColor = new Color(150, 150, 150);
-                }
-
-                GradientPaint gradient = new GradientPaint(
-                        0, 0, topColor,
-                        0, getHeight(), bottomColor);
-                g2d.setPaint(gradient);
-                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-
-                // Borda sutil
-                g2d.setColor(new Color(255, 255, 255, 50));
-                g2d.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
-
-                g2d.dispose();
-
-                // Desenhar texto com suporte a emojis
-                g2d = (Graphics2D) g.create();
-                g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-
-                // Separar emoji do texto
-                String emoji = "";
-                String textOnly = text;
-
-                // Detectar emoji no início do texto
-                if (text.length() > 0) {
-                    int codePoint = text.codePointAt(0);
-                    // Verificar se é um emoji (vários ranges Unicode)
-                    boolean isEmoji = (codePoint >= 0x1F300 && codePoint <= 0x1F9FF) || // Emojis diversos
-                            (codePoint >= 0x2600 && codePoint <= 0x26FF) || // Símbolos diversos
-                            (codePoint >= 0x2700 && codePoint <= 0x27BF) || // Dingbats
-                            (codePoint >= 0x231A && codePoint <= 0x23FF) || // Símbolos técnicos
-                            (codePoint >= 0x2B50 && codePoint <= 0x2BFF); // Estrelas e outros
-
-                    if (isEmoji) {
-                        int emojiEnd = Character.charCount(codePoint);
-                        emoji = text.substring(0, emojiEnd).trim();
-                        if (emojiEnd < text.length()) {
-                            textOnly = text.substring(emojiEnd).trim();
-                        } else {
-                            textOnly = "";
-                        }
-                    }
-                }
-
-                int centerX = getWidth() / 2;
-                int centerY = getHeight() / 2;
-
-                if (!emoji.isEmpty()) {
-                    // Renderizar emoji com fonte especial que suporta emoticons nativamente
-                    g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
-                    FontMetrics fmEmoji = g2d.getFontMetrics();
-                    int emojiWidth = fmEmoji.stringWidth(emoji);
-
-                    // Renderizar texto ao lado do emoji
-                    g2d.setFont(new Font("Segoe UI", Font.BOLD, 12));
-                    FontMetrics fmText = g2d.getFontMetrics();
-                    int textWidth = fmText.stringWidth(textOnly);
-
-                    int totalWidth = emojiWidth + (textOnly.isEmpty() ? 0 : 4 + textWidth);
-                    int startX = centerX - (totalWidth / 2);
-
-                    // Desenhar emoji
-                    g2d.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
-                    g2d.setColor(isEnabled() ? Color.WHITE : new Color(200, 200, 200));
-                    g2d.drawString(emoji, startX, centerY + fmEmoji.getAscent() / 2);
-
-                    // Desenhar texto se existir
-                    if (!textOnly.isEmpty()) {
-                        g2d.setFont(new Font("Segoe UI", Font.BOLD, 12));
-                        int textX = startX + emojiWidth + 4;
-                        int textY = centerY + fmText.getAscent() / 2;
-
-                        // Sombra do texto
-                        if (isEnabled()) {
-                            g2d.setColor(new Color(0, 0, 0, 80));
-                            g2d.drawString(textOnly, textX + 1, textY + 1);
-                        }
-
-                        // Texto principal
-                        g2d.setColor(isEnabled() ? Color.WHITE : new Color(200, 200, 200));
-                        g2d.drawString(textOnly, textX, textY);
-                    }
-                } else {
-                    // Sem emoji, renderizar apenas texto centralizado
-                    g2d.setFont(new Font("Segoe UI", Font.BOLD, 12));
-                    FontMetrics fm = g2d.getFontMetrics();
-                    int textWidth = fm.stringWidth(text);
-                    int textX = centerX - (textWidth / 2);
-                    int textY = centerY + fm.getAscent() / 2;
-
-                    // Sombra do texto
-                    if (isEnabled()) {
-                        g2d.setColor(new Color(0, 0, 0, 80));
-                        g2d.drawString(text, textX + 1, textY + 1);
-                    }
-
-                    // Texto principal
-                    g2d.setColor(isEnabled() ? Color.WHITE : new Color(200, 200, 200));
-                    g2d.drawString(text, textX, textY);
-                }
-
-                g2d.dispose();
-            }
-
-            @Override
-            public void setEnabled(boolean enabled) {
-                super.setEnabled(enabled);
-                repaint();
-            }
-        };
-
-        button.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        button.setForeground(Color.WHITE);
-        button.setPreferredSize(new Dimension(120, 38)); // Altura aumentada de 35 para 38
-        button.setMinimumSize(new Dimension(100, 38));
-        button.setBorderPainted(false);
-        button.setContentAreaFilled(false);
-        button.setFocusPainted(false);
-        button.setOpaque(false); // Garantir transparência
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        // Efeito hover
-        button.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                if (button.isEnabled()) {
-                    isHovered[0] = true;
-                    button.repaint();
-                }
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                isHovered[0] = false;
-                button.repaint();
-            }
-        });
-
-        return button;
+        return com.inventario.sihcp.view.ui.StyledButtonFactory.create(text, baseColor);
     }
 }   

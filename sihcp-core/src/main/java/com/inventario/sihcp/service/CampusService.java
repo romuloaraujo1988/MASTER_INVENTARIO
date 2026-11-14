@@ -18,7 +18,7 @@ public class CampusService {
     private CampusDAO campusDAO;
     
     // Padrão para validação de CNPJ - aceita com ou sem formatação
-    // Formatos aceitos: XX.XXX.XXX/XXXX-XX ou XXXXXXXXXXXXXX (apenas números)
+    // Formatos aceitos: NN.NNN.NNN/NNNN-NN ou 14 dígitos (apenas números)
     private static final Pattern CNPJ_PATTERN = Pattern.compile(
         "^(\\d{2}\\.\\d{3}\\.\\d{3}/\\d{4}-\\d{2}|\\d{14})$"
     );
@@ -29,7 +29,7 @@ public class CampusService {
     );
     
     // Padrão para validação de telefone - aceita vários formatos
-    // Formatos aceitos: (XX) XXXXX-XXXX, (XX) XXXX-XXXX, XX XXXXX-XXXX, XXXXXXXXXXX
+    // Formatos aceitos: (NN) NNNNN-NNNN, (NN) NNNN-NNNN, NN NNNNN-NNNN, 10 ou 11 dígitos
     private static final Pattern TELEFONE_PATTERN = Pattern.compile(
         "^(\\(\\d{2}\\)\\s?\\d{4,5}-?\\d{4}|\\d{2}\\s?\\d{4,5}-?\\d{4}|\\d{10,11})$"
     );

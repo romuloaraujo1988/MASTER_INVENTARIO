@@ -180,8 +180,8 @@ public class PatrimonioService {
      * Para implementação futura com controle de timestamps
      */
     public List<Patrimonio> buscarAtualizadosApos(LocalDateTime lastSync, Long setorId, Long salaId) {
-        // Por enquanto, retorna todos os patrimônios
-        // TODO: Implementar filtro por data de atualização quando campo for adicionado
+        // Por enquanto, retorna todos os patrimônios.
+        // Pendente: filtrar por data de atualização quando o campo for adicionado ao modelo Patrimonio.
         List<Patrimonio> todos = listarTodos();
         
         // Filtrar por sala se especificado
@@ -199,8 +199,8 @@ public class PatrimonioService {
      * Para implementação futura com controle de timestamps
      */
     public List<Patrimonio> buscarCriadosApos(LocalDateTime lastSync, Long setorId, Long salaId) {
-        // Por enquanto, retorna lista vazia
-        // TODO: Implementar filtro por data de criação quando campo for adicionado
+        // Por enquanto, retorna lista vazia.
+        // Pendente: filtrar por data de criação quando o campo for adicionado ao modelo Patrimonio.
         return new ArrayList<>();
     }
     

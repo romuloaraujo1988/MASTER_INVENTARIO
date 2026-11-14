@@ -30,6 +30,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.event.DocumentEvent;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -70,7 +71,7 @@ public class CampusFrame extends JFrame {
     }
     
     private void initComponents() {
-        setTitle("Gerenciamento de Campus - SIHCP");
+        setTitle("Gerenciamento de Campus - SiHCP");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
         getContentPane().setBackground(BACKGROUND_COLOR);
@@ -444,11 +445,11 @@ public class CampusFrame extends JFrame {
         // Busca em tempo real ao digitar
         campoBusca.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             @Override
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { buscarCampus(); }
+            public void insertUpdate(DocumentEvent e) { buscarCampus(); }
             @Override
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { buscarCampus(); }
+            public void removeUpdate(DocumentEvent e) { buscarCampus(); }
             @Override
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { buscarCampus(); }
+            public void changedUpdate(DocumentEvent e) { buscarCampus(); }
         });
         
         // Duplo clique na tabela para editar

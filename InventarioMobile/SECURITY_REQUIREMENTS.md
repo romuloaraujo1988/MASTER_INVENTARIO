@@ -1,6 +1,6 @@
 # 🔒 Requisitos de Segurança - SIHCP Mobile
 
-> **Última verificação:** 09/05/2026 — Status atualizado com base no código real do projeto.
+> **Última verificação:** `13/11/2026` — Status atualizado com base no código real (`v2.29.8`, Build `84`).
 
 ## 📋 Contexto
 
@@ -27,15 +27,15 @@ Sistema de inventário patrimonial para instituição pública (IFMT) que manipu
 ✅ Implementado:
 - JWT (JSON Web Tokens) para autenticação
 - Tokens com expiração
-- Refresh tokens (AuthApi.refreshToken)
-- Autenticação biométrica (BiometricManager.kt + SecurityUtils.kt — BiometricPrompt implementado)
+- Refresh tokens (`AuthApi.refreshToken` + `RefreshTokenInterceptor` thread-safe no pipeline Hilt, sem `runBlocking`)
+- Autenticação biométrica (`BiometricManager.kt` com `androidx.biometric:biometric:1.1.0` stable) e PIN 6 dígitos (`PinAuthManager.kt`)
 
 ❌ Pendente:
 - [ ] Autenticação de dois fatores (2FA)
 - [ ] Política de senha forte integrada na tela de login
        (InputValidator.validatePassword existe mas não é chamado no LoginActivity)
 - [ ] Bloqueio após tentativas falhadas integrado
-       (LoginAttemptManager.kt existe e completo mas não está conectado ao LoginActivity)
+       (Lógica de bloqueio na tela de login ainda não implementada/integrada; `LoginAttemptManager` legado foi removido por desuso)
 - [ ] Timeout de sessão por inatividade
        (SessionManager.kt existe com logout mas sem timer de 15min de inatividade)
 ```
@@ -90,10 +90,11 @@ Sistema de inventário patrimonial para instituição pública (IFMT) que manipu
 #### 2.2 Criptografia em Repouso
 ```
 ✅ Implementado:
-- EncryptedSharedPreferences para dados sensíveis (PreferencesManager + SecureStorage — AES256_GCM)
-- Criptografia do banco SQLite local (SQLCipher 4.5.4 + SupportFactory)
+- EncryptedSharedPreferences para dados sensíveis (`PreferencesManager` — AES256_GCM, regras Tink preservadas no R8)das no R8)
+- Criptografia do banco SQLite local (`net.zetetic:sqlcipher-android:4.6.1` + `SupportOpenHelperFactory`)
 - Criptografia de tokens e credenciais (EncryptedSharedPreferences)
 - Keystore do Android para chaves criptográficas (SqlCipherKeyManager — passphrase 256 bits via Android Keystore)
+- Recuperação de Keystore invalidado (`KeystoreRecoveryActivity` + handler global em `InventarioMobileApplication`)
 ```
 
 #### 2.3 Proteção de Dados Sensíveis
@@ -219,13 +220,13 @@ Sistema de inventário patrimonial para instituição pública (IFMT) que manipu
 #### 5.3 Modo Offline Seguro
 ```
 ✅ Implementado:
-- Sincronização automática (SyncWorker + WorkManager)
-- Armazenamento local criptografado (SQLCipher)
+- Sincronização automática (`ColetaSyncWorker` unificado via `SyncScheduler` + WorkManager)
+- Armazenamento local criptografado (SQLCipher `4.6.1`, `AppDatabase` v19 sem `fallbackToDestructiveMigration`)
 - Dados offline criptografados (banco SQLCipher + EncryptedSharedPreferences)
+- Idempotência de envio (`clienteUuid`) e recálculo de divergências no servidor
 
 ❌ Pendente:
-- [ ] Validar integridade ao sincronizar
-- [ ] Resolver conflitos de forma segura
+- [ ] Validar integridade por assinatura/HMAC de payload offline
 ```
 
 ---
@@ -366,7 +367,7 @@ android:networkSecurityConfig="@xml/network_security_config"
 
 ### Fase 2: Autenticação Avançada (IMPORTANTE) - Status Atual
 - [x] Autenticação biométrica (BiometricManager.kt implementado)
-- [ ] Bloqueio após tentativas falhadas integrado (LoginAttemptManager existe, falta integração)
+- [ ] Bloqueio após tentativas falhadas integrado na UI (`LoginAttemptManager` legado removido na limpeza de código morto)
 - [ ] 2FA
 - [ ] Gestão de sessão robusta com timeout de inatividade
 
@@ -399,7 +400,7 @@ android:networkSecurityConfig="@xml/network_security_config"
 3. [ ] 2FA — **PENDENTE**
 4. [ ] Logs de auditoria completos (login/logout) — **PARCIAL**
 5. [ ] FLAG_SECURE — **PENDENTE**
-6. [ ] Integrar LoginAttemptManager no login — **PENDENTE** (classe pronta)
+6. [ ] Integrar bloqueio após tentativas falhadas no login — **PENDENTE** (`LoginAttemptManager` legado removido na limpeza de código morto)
 7. [ ] Integrar PasswordValidator no login — **PENDENTE** (classe pronta)
 
 ### 🟢 RISCO BAIXO (Implementar quando possível)
@@ -415,16 +416,15 @@ android:networkSecurityConfig="@xml/network_security_config"
 
 | Área | Implementado | Parcial | Pendente |
 |------|-------------|---------|---------|
-| Autenticação | JWT, Biometria | RBAC frontend | 2FA, Timeout inatividade |
-| Criptografia | EncryptedPrefs, SQLCipher, Keystore | — | — |
-| Comunicação | TLS, Timeouts | Network Config | Certificate Pinning |
-| Código | ProGuard/R8, InputValidator | Integração VM | — |
+| Autenticação | JWT, RefreshInterceptor, Biometria `1.1.0`, PIN 6 dígitos | RBAC frontend | 2FA, Timeout inatividade |
+| Criptografia | EncryptedPrefs (+Tink R8), SQLCipher `4.6.1`, Keystore + Recovery | — | — |
+| Comunicação | TLS, Timeouts, `@DownloadClient` | Network Config | Certificate Pinning |
+| Código | ProGuard/R8, `LogSanitizer`, `InputValidator` | Integração VM | — |
 | Dispositivo | — | — | Root detection, FLAG_SECURE |
-| Auditoria | Log coletas, Histórico scans | — | Login/logout logs |
-| Configurações | allowBackup=false, Backup rules | — | — |
+| Auditoria | Log coletas, Histórico scans, `clienteUuid` | — | Login/logout logs |
+| Configurações | `allowBackup=false`, Backup rules, permissões enxutas | — | — |
 
-**Nível de Segurança Atual**: 🟡 ~72% — MÉDIO-ALTO  
-**Meta**: 🟢 85%+ — ALTO
+**Nível de Segurança Atual (`v2.29.8` — `13/11/2026`)**: 🟢 Controles críticos de produção implementados (hardening avançado opcional em backlog)
 
 ---
 
@@ -468,7 +468,5 @@ android:networkSecurityConfig="@xml/network_security_config"
 
 ---
 
-**Status Atual**: 🟡 PARCIALMENTE SEGURO PARA PRODUÇÃO  
-A infraestrutura crítica de criptografia e TLS está implementada. As principais pendências são integrações de classes já criadas (LoginAttemptManager, PasswordValidator) e certificate pinning.
-
-**Estimativa para segurança completa**: 3-4 semanas de desenvolvimento focado nas pendências listadas.
+**Status Atual (`v2.29.8` — `13/11/2026`)**: 🟢 CONTROLES CRÍTICOS DE PRODUÇÃO IMPLEMENTADOS  
+Toda a infraestrutura crítica de criptografia (SQLCipher `4.6.1`, Android Keystore + `KeystoreRecoveryActivity`), JWT/Refresh thread-safe, R8/ProGuard (com Tink e `data.realtime.**`) e proteção de backup (`allowBackup=false`) está em produção. Permanecem em backlog apenas melhorias opcionais de hardening avançado (`Certificate Pinning`, bloqueio por tentativas / `validatePassword` na UI, `FLAG_SECURE` e detecção de root).

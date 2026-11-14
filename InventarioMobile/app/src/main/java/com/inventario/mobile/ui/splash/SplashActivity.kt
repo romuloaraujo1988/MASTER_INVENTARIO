@@ -13,8 +13,6 @@ import com.inventario.mobile.presentation.login.LoginActivity
 import com.inventario.mobile.presentation.main.MainActivity
 import com.inventario.mobile.presentation.setup.InitialSetupActivity
 import com.inventario.mobile.utils.PreferencesManager
-// import com.inventario.mobile.data.local.database.InventarioDatabase
-// import com.inventario.mobile.utils.DatabaseInitializer
 import kotlinx.coroutines.launch
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject

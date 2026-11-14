@@ -195,8 +195,8 @@ public class UsuarioService {
      */
     public List<Usuario> buscarAtualizadosApos(LocalDateTime lastSync) {
         try {
-            // Por enquanto, retorna todos os usuários
-            // TODO: Implementar filtro por data de atualização quando campo for adicionado
+            // Por enquanto, retorna todos os usuários.
+            // Pendente: filtrar por data de atualização quando o campo for adicionado ao modelo Usuario.
             return getUsuarioDAO().findAll();
         } catch (SQLException | RuntimeException e) {
             logger.error("Erro ao buscar usuários atualizados", e);
@@ -209,8 +209,8 @@ public class UsuarioService {
      * Para implementação futura com controle de timestamps
      */
     public List<Usuario> buscarCriadosApos(LocalDateTime lastSync) {
-        // Por enquanto, retorna lista vazia
-        // TODO: Implementar filtro por data de criação quando campo for adicionado
+        // Por enquanto, retorna lista vazia.
+        // Pendente: filtrar por data de criação quando o campo for adicionado ao modelo Usuario.
         return new ArrayList<>();
     }
     

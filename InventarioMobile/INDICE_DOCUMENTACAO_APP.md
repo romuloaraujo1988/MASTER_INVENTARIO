@@ -1,11 +1,13 @@
-# 📚 Índice da Documentação - App Android
+# 📚 Índice de Otimizações e Referência Técnica — App Android (`v2.29.8`)
+
+> **Nota de atualização (`13/11/2026`):** Documento revisado para refletir os nomes reais das classes na `v2.29.8` (`ColetaSyncWorker` unificado via `SyncScheduler`, `AppDatabase` v19, `forcarColeta` offline e base limpa após remoção de 143 arquivos inutilizados — nota: protótipos legados como `CacheInterceptor`, `RetryInterceptor`, `DatabaseCleanupWorker` e `InventarioDatabase` foram removidos da base compilada para emissão do hash INPI). Consulte também o índice geral em [INDICE_DOCUMENTACAO.md](INDICE_DOCUMENTACAO.md).
 
 ## 🎯 Guia Rápido
 
-**Novo no projeto?** Comece aqui:
-1. 📖 Leia o [RESUMO_IMPLEMENTACOES.md](#resumo-de-implementações) (10 min)
-2. 🔧 Siga [COMO_ATIVAR_WORKERS.md](#como-ativar-workers) (5 min)
-3. 🎨 Consulte [GUIA_UI_OTIMIZACOES.md](#guia-de-ui-otimizações) quando implementar UI
+**Novo no projeto?** Comece pelos documentos consolidados atuais:
+1. 📖 Leia [README.md](README.md) e [DOCUMENTACAO_PROJETO.md](DOCUMENTACAO_PROJETO.md)
+2. 🔧 Consulte [../DOCUMENTAÇÃO/DOCUMENTACAO_COMPLETA_APP_v2.29.5.md](../DOCUMENTAÇÃO/DOCUMENTACAO_COMPLETA_APP_v2.29.5.md)
+3. 📋 Veja o histórico recente em [../BUILD_HISTORY.md](../BUILD_HISTORY.md)
 
 ---
 
@@ -176,25 +178,20 @@ class InventarioMobileApplication : Application() {
 
 ---
 
-## 🗂️ Arquivos de Código Criados
+## 🗂️ Arquivos de Código Referenciados
 
-### Network (2 arquivos)
-1. `app/src/main/java/com/inventario/mobile/network/CacheInterceptor.kt`
-   - Cache HTTP com tempos configurados por endpoint
-   
-2. `app/src/main/java/com/inventario/mobile/network/RetryInterceptor.kt`
-   - Retry automático com backoff exponencial
+### Network (documentação de arquitetura — removidos por não uso na v2.29.8)
+1. ~~`app/src/main/java/com/inventario/mobile/network/CacheInterceptor.kt`~~ *(removido na limpeza de código morto `v2.29.8`)*
+2. ~~`app/src/main/java/com/inventario/mobile/network/RetryInterceptor.kt`~~ *(removido na limpeza de código morto `v2.29.8`)*
 
-### Workers (2 arquivos)
-3. `app/src/main/java/com/inventario/mobile/worker/DatabaseCleanupWorker.kt`
-   - Limpeza automática de dados antigos
-   
-4. `app/src/main/java/com/inventario/mobile/worker/SmartSyncWorker.kt`
-   - Sincronização inteligente em background
+### Workers (worker único ativo)
+3. ~~`app/src/main/java/com/inventario/mobile/worker/DatabaseCleanupWorker.kt`~~ *(removido na limpeza de código morto `v2.29.8`)*
+4. `app/src/main/java/com/inventario/mobile/worker/ColetaSyncWorker.kt`
+   - Worker único de sincronização em background (absorveu o antigo `SmartSyncWorker`/`SyncWorker` na auditoria de maio/2026)
 
-### Utils (1 arquivo)
-5. `app/src/main/java/com/inventario/mobile/utils/SyncScheduler.kt`
-   - Gerenciador de agendamento de workers
+### Sync (1 arquivo)
+5. `app/src/main/java/com/inventario/mobile/sync/SyncScheduler.kt`
+   - Gerenciador de agendamento de workers (`ExistingPeriodicWorkPolicy.KEEP`)
 
 ---
 
@@ -206,8 +203,7 @@ class InventarioMobileApplication : Application() {
 
 ### Dependency Injection (1 arquivo)
 2. `app/src/main/java/com/inventario/mobile/di/NetworkModule.kt`
-   - CacheInterceptor e RetryInterceptor adicionados
-   - Cache HTTP configurado
+   - Configuração OkHttp/interceptors de rede (`OfflineFallbackInterceptor`, `TimeoutFallbackInterceptor`, `RefreshTokenInterceptor`, `DeviceInfoInterceptor`)
 
 ### Entities (2 arquivos)
 3. `app/src/main/java/com/inventario/mobile/data/local/entity/ColetaEntity.kt`
@@ -217,8 +213,8 @@ class InventarioMobileApplication : Application() {
    - Índices simples e compostos adicionados
 
 ### Database (1 arquivo)
-5. `app/src/main/java/com/inventario/mobile/data/local/database/InventarioDatabase.kt`
-   - Versão incrementada (1 → 2)
+5. `app/src/main/java/com/inventario/mobile/data/local/database/AppDatabase.kt`
+   - Banco principal em produção (versão `19`, criptografado com SQLCipher `4.6.1`; legado `InventarioDatabase.kt` removido na limpeza `v2.29.8`)
 
 ### DAO (1 arquivo)
 6. `app/src/main/java/com/inventario/mobile/data/local/dao/ColetaDao.kt`
@@ -325,22 +321,21 @@ class InventarioMobileApplication : Application() {
 ### Por Tópico
 
 **Cache HTTP:**
-- [RESUMO_IMPLEMENTACOES.md](#1-resumo_implementacoesmd) - Seção 2
-- `network/CacheInterceptor.kt`
+- [RESUMO_IMPLEMENTACOES.md](#1-resumo_implementacoesmd) - Seção 2 *(nota: `CacheInterceptor.kt` legado removido na `v2.29.8`)*
 
 **Paginação:**
 - [EXEMPLO_PAGINACAO.kt](#2-exemplo_paginacaokt)
 - `data/local/dao/ColetaDao.kt`
 
 **Sincronização:**
-- [EXEMPLO_SINCRONIZACAO_DELTA.kt](#3-exemplo_sincronizacao_deltakt)
+- `sync/SyncScheduler.kt` e `sync/SyncManager.kt`
 - `utils/PreferencesManager.kt`
-- `worker/SmartSyncWorker.kt`
+- `worker/ColetaSyncWorker.kt`
 
 **Workers:**
-- [COMO_ATIVAR_WORKERS.md](#5-como_ativar_workersmd)
-- `utils/SyncScheduler.kt`
-- `worker/DatabaseCleanupWorker.kt`
+- `sync/SyncScheduler.kt`
+- `worker/ColetaSyncWorker.kt`
+- `worker/PhotoSyncWorker.kt`
 
 **UI/UX:**
 - [GUIA_UI_OTIMIZACOES.md](#4-guia_ui_otimizacoesmd)

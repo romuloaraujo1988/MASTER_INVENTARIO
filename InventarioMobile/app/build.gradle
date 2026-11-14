@@ -72,8 +72,13 @@ android {
         //     (ColetaEvento). Sem ele, o R8 ofuscava a data class e o Gson
         //     desserializava com tipo=null → ViewModel descartava o evento.
         //     Servidor transmitia OK (confirmado em log), o app é que não exibia.
-        versionCode 83
-        versionName "2.29.7"
+        // v2.29.8 — coleta forçada offline + limpeza de código inutilizado
+        //   - ColetaRepositoryImpl / ManualCollection / Scanner: suporte a
+        //     forcarColeta em modo offline (commit 03.06)
+        //   - Limpeza de 43 arquivos órfãos (.old, .disabled, placeholders,
+        //     layouts não referenciados, Activities/Factories legados e duplicatas)
+        versionCode 84
+        versionName "2.29.8"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

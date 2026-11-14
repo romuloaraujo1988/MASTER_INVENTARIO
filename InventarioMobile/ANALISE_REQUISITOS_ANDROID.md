@@ -1,14 +1,14 @@
-# Analise de Requisitos - SiHCP Mobile (Android) v2.23.0
+# Analise de Requisitos - SiHCP Mobile (Android) v2.29.8
 
 ## 1. Visao Geral do Produto
 
-O **SiHCP Mobile** e um aplicativo Android nativo desenvolvido em Kotlin para o Instituto Federal de Mato Grosso (IFMT). Permite coleta de patrimonios via QR Code, codigo de barras ou busca manual, com suporte completo a modo offline, sincronizacao inteligente e exportacao de relatorios.
+O **SIHCP Mobile** e um aplicativo Android nativo desenvolvido em Kotlin para o Instituto Federal de Mato Grosso (IFMT). Permite coleta de patrimonios via QR Code, codigo de barras, busca manual, busca por descricao ou item sem etiqueta, com suporte completo a modo offline, sincronizacao inteligente, monitor ao vivo via WebSocket e exportacao de relatorios.
 
 **Problema resolvido**: Eliminar coleta manual em planilhas, permitir trabalho offline em areas sem conectividade, garantir integridade dos dados com criptografia e fornecer auditoria completa das operacoes.
 
 **Publico-alvo**: Servidores publicos, tecnicos de patrimonio, auditores e administradores responsaveis pelo inventario institucional.
 
-**Status**: Producao (v2.23.0, versionCode 71)
+**Status**: Producao (`v2.29.8`, `versionCode 84` — 13/11/2026)
 
 ---
 
@@ -118,7 +118,13 @@ graph TD
 | RF-M62 | Configuracoes | Limpeza de cache | Implementado |
 | RF-M63 | Inventario | Selecao de inventario ativo | Implementado |
 | RF-M64 | Inventario | Listagem com Paging 3 | Implementado |
-| RF-M65 | Inventario | Detalhes do patrimonio | Implementado |
+| RF-M65 | Inventario | Detalhes do patrimonio + coleta direta | Implementado |
+| RF-M66 | Setup | Configuracao inicial dinamica de IP/porta (`InitialSetupActivity`) | Implementado |
+| RF-M67 | Monitor Live | Monitoramento de coletas ao vivo via WebSocket (`/ws-coletas-live`) | Implementado |
+| RF-M68 | Scanner | Atalhos rapidos na camera ao vivo + troca de camera (`CustomCaptureActivity`) | Implementado |
+| RF-M69 | Seguranca | Tela de recuperacao de Keystore (`KeystoreRecoveryActivity`) + PIN 6 digitos | Implementado |
+| RF-M70 | Sincronizacao | Verificacao hibrida online/offline e limpeza de coletas excluidas no servidor | Implementado |
+| RF-M71 | Integridade | Idempotencia de envio (`clienteUuid`) + envio e recalculo real de divergencias | Implementado |
 
 ---
 
@@ -156,7 +162,7 @@ graph TD
 | Modo offline | 100% funcional para coletas | Implementado |
 | Persistencia | 0% perda de dados | Implementado |
 | Retry automatico | Backoff exponencial (3 tentativas) | Implementado |
-| Backup local | DatabaseBackupWorker | Implementado |
+| Armazenamento seguro local | Room + SQLCipher (AES-256) sem perda silenciosa | Implementado |
 | Tolerancia a falhas | Graceful degradation | Implementado |
 | Consistencia | Eventual consistency (offline-first) | Implementado |
 
@@ -202,30 +208,30 @@ graph TD
 ```mermaid
 graph TB
     subgraph Presentation["Presentation Layer"]
-        ACT["25+ Activities<br/>@AndroidEntryPoint"]
-        FRAG["10+ Fragments"]
-        VM["15+ ViewModels<br/>@HiltViewModel"]
-        ADAPT["Adapters<br/>Paging + List"]
+        ACT["26 Activities<br/>@AndroidEntryPoint"]
+        FRAG["8 Fragments"]
+        VM["22 ViewModels<br/>@HiltViewModel"]
+        ADAPT["Adapters + UI Mappers<br/>Paging + DashboardUiMapper"]
     end
 
     subgraph Domain["Domain Layer"]
-        UC["12+ Use Cases"]
-        MODEL["Domain Models<br/>(Kotlin puro)"]
-        REPO_IF["Repository Interfaces"]
-        VALID["Validators"]
+        UC["38 Use Cases"]
+        MODEL["27 Domain Models<br/>(Kotlin puro)"]
+        REPO_IF["12 Repository Interfaces"]
+        VALID["Validators (ColetaValidator)"]
     end
 
     subgraph Data["Data Layer"]
-        REPO["Repository Impls<br/>(Offline-first)"]
-        ROOM["Room DB v17<br/>(SQLCipher)"]
-        RETRO["Retrofit APIs<br/>(40+ endpoints)"]
-        MAP["Mappers"]
+        REPO["15 Repository Impls<br/>(Offline-first)"]
+        ROOM["Room DB v19<br/>(SQLCipher 4.6.1)"]
+        RETRO["12 Retrofit APIs + WebSocket<br/>(/ws-coletas-live)"]
+        MAP["9 Mappers"]
     end
 
     subgraph Infra["Infrastructure"]
-        WORK["7 Workers<br/>(WorkManager)"]
-        NET["Network Monitors"]
-        SEC["Security<br/>(Keystore + Biometric)"]
+        WORK["2 Workers<br/>(ColetaSyncWorker unificado)"]
+        NET["7 Network Classes"]
+        SEC["6 Security Classes<br/>(Keystore + Biometric + PIN)"]
         AUDIT["Audit Service"]
     end
 
@@ -249,23 +255,23 @@ graph TB
 |--------|------------|--------|-----------|
 | UI | View Binding + Data Binding | - | Interface XML |
 | UI | Material Design 3 | 1.10.0 | Design system |
-| UI | MPAndroidChart | 3.1.0 | Graficos |
+| UI | MPAndroidChart | v3.1.0 | Graficos |
 | Arquitetura | MVVM + Clean Architecture | - | Separacao de camadas |
 | DI | Hilt | 2.48 | Injecao de dependencias |
 | Async | Coroutines + Flow | 1.7.3 | Programacao assincrona |
 | DB Local | Room + Paging 3 | 2.6.1 / 3.2.1 | Persistencia + Scroll infinito |
-| Criptografia | SQLCipher | 4.5.4 | Banco criptografado |
-| Network | Retrofit + OkHttp | 2.9.0 / 4.12.0 | Cliente HTTP |
+| Criptografia | SQLCipher (`sqlcipher-android`) | 4.6.1 | Banco criptografado AES-256 |
+| Network | Retrofit + OkHttp | 2.9.0 / 4.12.0 | Cliente HTTP REST + WebSocket |
 | JSON | Gson | (via Retrofit) | Serializacao |
 | Imagens | Glide | 4.16.0 | Carregamento de imagens |
 | Scanner | ZXing | 4.3.0 / 3.5.2 | QR Code + Barcode |
 | Camera | CameraX | 1.3.0 | Preview + Captura |
-| Security | AndroidX Security | 1.1.0-alpha06 | Prefs criptografadas |
-| Biometria | AndroidX Biometric | 1.2.0-alpha05 | Autenticacao biometrica |
+| Security | AndroidX Security | 1.1.0-alpha06 | Prefs criptografadas (Tink) |
+| Biometria | AndroidX Biometric | 1.1.0 | Autenticacao biometrica |
 | Background | WorkManager | 2.9.0 | Tarefas em background |
 | PDF | iText 7 | 7.2.5 | Geracao de relatorios |
 | Navegacao | Navigation Component | 2.7.5 | Navegacao entre telas |
-| Testes | Kotest + MockK | 5.8.0 / 1.12.8 | Property-based + Mocking |
+| Testes | Kotest + jqwik + MockK | 5.8.0 / 1.8.4 / 1.12.8 | Property-based + Mocking |
 
 ### 4.3 Estrutura de Pacotes
 
@@ -288,10 +294,10 @@ com.inventario.mobile/
 |   |-- usecase/            #   Casos de uso
 |   +-- validator/          #   Validadores
 |-- network/                # Monitoramento de rede
-|-- presentation/           # Camada de Apresentacao (27 subpacotes)
-|-- security/               # SQLCipher + Keystore
-|-- sync/                   # SyncManager + AutoSyncManager
-|-- worker/                 # 7 Workers (background)
+|-- presentation/           # Camada de Apresentacao (25 subpacotes)
+|-- security/               # SQLCipher + Keystore + Biometria + PIN
+|-- sync/                   # SyncManager + SyncScheduler
+|-- worker/                 # 2 Workers (background)
 +-- utils/                  # Utilitarios
 ```
 
@@ -349,12 +355,12 @@ GET    /api/mobile/responsaveis            # Responsaveis
 | Campo | Valor |
 |-------|-------|
 | Nome | `inventario_offline_secure.db` |
-| Versao | 17 |
-| Criptografia | SQLCipher (AES-256) |
-| Passphrase | Android Keystore (aleatoria) |
-| Entities | 10 |
-| DAOs | 11 |
-| Migracoes | 13 (v4 a v17) |
+| Versao | `19` (`clienteUuid` para idempotencia + indice composto `(idPatrimonio, dataColeta)`) |
+| Criptografia | SQLCipher `4.6.1` (AES-256) |
+| Passphrase | Android Keystore (aleatoria, 256 bits) |
+| Entities registradas | `10` (`11` arquivos em `entity/`) |
+| DAOs registrados | `11` (`12` arquivos em `dao/`) |
+| Migracoes | `15` (`v4` a `v19`) |
 
 ### 6.2 Entities
 
@@ -469,8 +475,8 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant WM as WorkManager
-    participant SW as SyncWorker
+    participant WM as WorkManager (SyncScheduler)
+    participant SW as ColetaSyncWorker
     participant UC as SincronizarColetasUseCase
     participant REPO as ColetaRepositoryImpl
     participant API as Servidor
@@ -567,13 +573,8 @@ graph TD
 
 | Worker | Funcao | Intervalo | Constraints |
 |--------|--------|-----------|-------------|
-| `SyncWorker` | Coletas + Fotos + Sugestoes | 30 min | Rede + Bateria |
-| `PhotoSyncWorker` | Upload de fotos (multipart) | Periodico | Wi-Fi + Bateria |
-| `SmartSyncWorker` | Sync inteligente | Condicional | Rede + Bateria > 20% |
-| `ColetaSyncWorker` | Sync de coletas | Sob demanda | Rede |
-| `DatabaseCleanupWorker` | Limpeza do banco | Periodico | - |
-| `DatabaseBackupWorker` | Backup do banco | Periodico | - |
-| `BackupWorker` | Backup geral | Periodico | - |
+| `ColetaSyncWorker` | Worker unico de sync (coletas + fotos ref + sugestoes) | Configuravel / sob demanda | Rede (ou Wi-Fi) + Bateria |
+| `PhotoSyncWorker` | Upload de fotos (multipart) | Periodico / sob demanda | Wi-Fi + Bateria |
 
 ---
 
@@ -623,10 +624,12 @@ graph TD
 | Seguranca (SQLCipher + Biometria) | Jan-Fev/2026 | Concluido |
 | Fotos + Divergencia + Metricas | Mar-Abr/2026 | Concluido |
 | Sugestoes + Relatorio Fotografico | Mai/2026 | Concluido |
+| Hardening Seguranca + Setup IP + WebSocket Live + Dashboard Redesign | Mai/2026 (v2.24.0 - v2.29.7) | Concluido |
+| Coleta Forcada Offline + Limpeza de Codigo Morto (143 arquivos) | Jun-Nov/2026 (v2.29.8 / Build 84) | Concluido |
 
 ---
 
-**Versao do documento**: 3.0.0
-**Data**: 09/05/2026
+**Versao do documento**: `4.1.0`
+**Data**: `13/11/2026` (alinhado ao codigo `v2.29.8` / `Build 84`)
 **Status**: Producao
-**Versao do app**: 2.23.0 (versionCode 71)
+**Versao do app**: `2.29.8` (`versionCode 84`)

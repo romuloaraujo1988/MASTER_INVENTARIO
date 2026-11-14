@@ -389,13 +389,15 @@ class MobileDescricaoControllerAuthPropertyTest {
         private TokenFactory() { /* util */ }
 
         static String placeholderValid(RoleFixture role) {
-            // TODO: substituir por jwtTokenProvider.generateToken(authenticationFor(role))
-            //       quando o teste for habilitado (requer refatoração para método não-estático).
+            // Pendente (ao habilitar o teste): substituir por
+            // jwtTokenProvider.generateToken(authenticationFor(role)) — requer
+            // refatoração para método não-estático.
             return "placeholder.valid." + role.name().toLowerCase();
         }
 
         static String placeholderExpired() {
-            // TODO: forjar token com exp=epoch.past e re-assinar com a chave do profile.
+            // Pendente (ao habilitar o teste): forjar token com exp=epoch.past e
+            // re-assinar com a chave do profile de teste via JwtTokenProvider.
             return "placeholder.expired.token";
         }
 

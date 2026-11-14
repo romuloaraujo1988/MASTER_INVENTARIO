@@ -1,6 +1,6 @@
 # 🚨 Plano de Ação Imediato - Segurança Crítica
 
-> **Última verificação:** 09/05/2026 — Status atualizado com base no código real do projeto.
+> **Última verificação:** `13/11/2026` — Status atualizado com base no código real (`v2.29.8`, Build `84`).
 
 ## 🎯 Objetivo
 Implementar as medidas de segurança CRÍTICAS nas próximas 3-4 semanas para tornar o aplicativo seguro para uso em produção.
@@ -13,38 +13,26 @@ Implementar as medidas de segurança CRÍTICAS nas próximas 3-4 semanas para to
 **Prioridade**: 🔴 CRÍTICA
 
 ```kotlin
-// Implementar armazenamento seguro
-class SecureStorage(context: Context) {
+// Armazenamento seguro efetivamente utilizado em producao (PreferencesManager.kt)
+class PreferencesManager(context: Context) {
     private val masterKey = MasterKey.Builder(context)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
         .build()
-    
+
     private val encryptedPrefs = EncryptedSharedPreferences.create(
         context,
-        "secure_prefs",
+        "inventario_prefs_secure",
         masterKey,
         EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
-    
-    fun saveToken(token: String) {
-        encryptedPrefs.edit().putString("jwt_token", token).apply()
-    }
-    
-    fun getToken(): String? {
-        return encryptedPrefs.getString("jwt_token", null)
-    }
-    
-    fun clearAll() {
-        encryptedPrefs.edit().clear().apply()
-    }
 }
 ```
 
 **Tarefas**:
 - [x] Adicionar dependência: `androidx.security:security-crypto:1.1.0-alpha06`
-- [x] Criar classe SecureStorage (`security/SecureStorage.kt` — JWT, refresh token, biometria)
-- [x] Migrar tokens JWT para armazenamento criptografado (`PreferencesManager` usa `EncryptedSharedPreferences` com `AES256_GCM`)
+- [x] Implementar armazenamento criptografado em `PreferencesManager` (`EncryptedSharedPreferences` com `AES256_GCM` — `SecureStorage.kt` duplicado foi removido na limpeza de código morto `v2.29.8`)
+- [x] Migrar tokens JWT para armazenamento criptografado (`PreferencesManager`)
 - [x] Migrar credenciais salvas (tokens e dados de sessão migrados)
 - [ ] Testar em diferentes dispositivos
 
@@ -54,21 +42,23 @@ class SecureStorage(context: Context) {
 ```kotlin
 // Usar SQLCipher para criptografar banco
 dependencies {
-    implementation "net.zetetic:android-database-sqlcipher:4.5.4"
+    implementation "net.zetetic:sqlcipher-android:4.6.1"
 }
 
-// Configurar Room com SQLCipher
-Room.databaseBuilder(context, AppDatabase::class.java, "inventario.db")
-    .openHelperFactory(SupportFactory(SQLiteDatabase.getBytes("sua_chave_segura".toCharArray())))
+// Configurar Room com SQLCipher (via SqlCipherKeyManager)
+System.loadLibrary("sqlcipher")
+val factory = net.zetetic.database.sqlcipher.SupportOpenHelperFactory(passphraseBytes)
+Room.databaseBuilder(context, AppDatabase::class.java, "inventario_offline_secure.db")
+    .openHelperFactory(factory)
     .build()
 ```
 
 **Tarefas**:
-- [x] Adicionar SQLCipher ao projeto (`net.zetetic:android-database-sqlcipher:4.5.4`)
+- [x] Atualizar SQLCipher legado para biblioteca ativa (`net.zetetic:sqlcipher-android:4.6.1`)
 - [x] Gerar chave de criptografia segura (`SqlCipherKeyManager` — passphrase aleatória de 256 bits via `SecureRandom`, armazenada no Android Keystore via `EncryptedSharedPreferences`)
-- [x] Configurar Room com SQLCipher (`AppDatabase` usa `SupportFactory(passphraseBytes)`)
-- [x] Migrar banco existente (migração one-shot implementada — banco antigo deletado na primeira execução)
-- [ ] Testar performance
+- [x] Configurar Room com SQLCipher (`AppDatabase` v19 usa `SupportOpenHelperFactory(passphraseBytes)` e `System.loadLibrary("sqlcipher")`)
+- [x] Remover `fallbackToDestructiveMigration()` (CR-01) e adicionar `KeystoreRecoveryActivity` (CR-02)
+- [x] Migrar banco e fotos existentes (`LegacyPhotoMigrator` — CR-03)
 
 ### Dia 5: Limpeza de Dados Sensíveis
 **Prioridade**: 🔴 CRÍTICA
@@ -328,24 +318,10 @@ class SessionManager(private val context: Context) {
 ### Dia 5: Bloqueio após Tentativas Falhadas
 **Prioridade**: 🔴 CRÍTICA
 
-```kotlin
-class LoginAttemptManager(context: Context) {
-    private val prefs = context.getSharedPreferences("login_attempts", Context.MODE_PRIVATE)
-    private val MAX_ATTEMPTS = 5
-    private val LOCKOUT_DURATION = TimeUnit.MINUTES.toMillis(15)
-    
-    fun recordFailedAttempt() { ... }
-    fun isLocked(): Boolean { ... }
-    fun reset() { ... }
-}
-```
-
 **Tarefas**:
-- [x] Criar LoginAttemptManager (`security/LoginAttemptManager.kt` — `recordFailedAttempt()`, `isLocked()`, `getRemainingAttempts()`, `getRemainingLockoutTimeFormatted()`, `reset()`)
-- [x] Limitar a 5 tentativas (`MAX_ATTEMPTS = 5`)
-- [x] Bloquear por 15 minutos (`LOCKOUT_DURATION_MINUTES = 15L`)
-- [ ] Mostrar tempo restante (método `getRemainingLockoutTimeFormatted()` existe mas **não está integrado** na `LoginActivity`)
-- [ ] Resetar após login bem-sucedido (`recordSuccessfulLogin()` existe mas **não está sendo chamado** no fluxo de login)
+- [ ] Implementar e integrar bloqueio após tentativas falhadas (`MAX_ATTEMPTS = 5`, bloqueio de 15 minutos) diretamente na `LoginActivity` / backend (`LoginAttemptManager.kt` legado foi removido na limpeza de código morto por não estar conectado à UI)
+- [ ] Mostrar tempo restante na interface de login
+- [ ] Resetar contador após login bem-sucedido
 
 ---
 
@@ -374,7 +350,7 @@ Código:
 Autenticação:
 - [ ] Política de senha forte (validatePassword existe mas não integrada no login)
 - [ ] Timeout de sessão por inatividade (SessionManager existe mas sem timer de inatividade)
-- [ ] Bloqueio após tentativas (LoginAttemptManager existe mas não integrado na LoginActivity)
+- [ ] Bloqueio após tentativas (integrar controle de tentativas falhadas na LoginActivity; `LoginAttemptManager` legado removido por desuso)
 - [x] Logout seguro (SessionManager.logout() limpa todos os dados)
 ```
 
@@ -390,28 +366,27 @@ Autenticação:
 
 ---
 
-## 📊 STATUS ATUAL (09/05/2026)
+## 📊 STATUS ATUAL (`v2.29.8` — `13/11/2026`)
 
 ### Implementado ✅
 | Item | Classe/Arquivo |
 |------|---------------|
-| EncryptedSharedPreferences | `PreferencesManager`, `SecureStorage` |
-| SQLCipher + Keystore | `SqlCipherKeyManager`, `AppDatabase` |
-| ProGuard/R8 | `build.gradle`, `proguard-rules.pro` |
-| allowBackup=false | `AndroidManifest.xml` |
-| TLS enforcement | `network_security_config.xml` |
-| Timeouts OkHttp | `ApiModule.kt` |
-| InputValidator | `security/InputValidator.kt` |
+| EncryptedSharedPreferences + Tink R8 | `PreferencesManager`, `proguard-rules.pro` (`SecureStorage` legado removido) |
+| SQLCipher `4.6.1` + Keystore + Recovery | `SqlCipherKeyManager`, `AppDatabase` (v19), `KeystoreRecoveryActivity` |
+| Refresh Token Thread-Safe | `RefreshTokenInterceptor` (sem `runBlocking`) |
+| ProGuard/R8 + `LogSanitizer` | `build.gradle`, `proguard-rules.pro` (`HttpLoggingInterceptor.Level.NONE` em release) |
+| `allowBackup=false` + Regras | `AndroidManifest.xml`, `data_extraction_rules.xml`, `backup_rules.xml` |
+| TLS enforcement + Permissões enxutas | `network_security_config.xml`, `AndroidManifest.xml` |
+| Timeouts OkHttp + `@DownloadClient` | `ApiModule.kt` |
+| InputValidator / PIN 6 dígitos | `security/InputValidator.kt`, `security/PinAuthManager.kt` |
 | SessionManager (logout) | `utils/SessionManager.kt` |
-| LoginAttemptManager (classe) | `security/LoginAttemptManager.kt` |
-| Biometric auth | `androidx.biometric:biometric:1.2.0-alpha05` |
-| Backup rules | `data_extraction_rules.xml`, `backup_rules.xml` |
+| Biometric auth (`1.1.0` stable) | `androidx.biometric:biometric:1.1.0`, `BiometricManager.kt` |
 
-### Pendente ⚠️ (classes existem mas não integradas)
+### Pendente ⚠️ (funcionalidades pendentes de integração/configuração)
 | Item | O que falta |
 |------|-------------|
 | Certificate Pinning | Adicionar `<pin-set>` com hash do certificado do servidor |
-| LoginAttemptManager | Integrar na `LoginActivity`/`LoginViewModel` |
+| Bloqueio após tentativas falhadas | Implementar/integrar lockout de login na `LoginActivity`/`LoginViewModel` |
 | PasswordValidator | Chamar `InputValidator.validatePassword` no fluxo de login |
 | Timeout de inatividade | Adicionar timer de 15min de inatividade no `SessionManager` |
 
@@ -445,7 +420,7 @@ Autenticação:
 ## 🚀 PRÓXIMOS PASSOS PRIORITÁRIOS
 
 1. **Certificate Pinning** — Obter hash SHA-256 do certificado do servidor IFMT e adicionar `<pin-set>` no `network_security_config.xml` (1-2 dias)
-2. **Integrar LoginAttemptManager** — Chamar `recordFailedAttempt()` e `isLocked()` na `LoginActivity` (1 dia)
+2. **Implementar bloqueio por tentativas falhadas** — Reintroduzir/integrar lockout progressivo no fluxo da `LoginActivity` (1 dia)
 3. **Integrar PasswordValidator** — Chamar `InputValidator.validatePassword()` no fluxo de login (1 dia)
 4. **Timeout de inatividade** — Adicionar timer de 15min no `SessionManager` (2-3 dias)
 5. **Root detection** — Implementar detecção de root/jailbreak (3-5 dias)
@@ -457,6 +432,6 @@ Autenticação:
 ## ✅ CONCLUSÃO
 
 **Status Atual**: 🟡 PARCIALMENTE SEGURO PARA PRODUÇÃO  
-A infraestrutura de segurança crítica (criptografia, TLS, ProGuard) está implementada. As pendências principais são integrações de classes já criadas (LoginAttemptManager, PasswordValidator) e certificate pinning.
+A infraestrutura de segurança crítica (criptografia, TLS, ProGuard) está implementada. As pendências principais são integrações de validação/bloqueio de login (`PasswordValidator`, lockout) e certificate pinning.
 
 **Status Após Pendências**: � SEGURO PARA PRODUÇÃO (com ressalvas)

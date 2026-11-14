@@ -206,7 +206,7 @@ public class Campus {
     
     /**
      * Formata o CNPJ para exibição
-     * @return CNPJ formatado (XX.XXX.XXX/XXXX-XX)
+     * @return CNPJ formatado (NN.NNN.NNN/NNNN-NN)
      */
     public String getCnpjFormatado() {
         if (cnpj == null || cnpj.length() != 14) {

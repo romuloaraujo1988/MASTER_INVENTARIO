@@ -4,10 +4,11 @@ Esta pasta concentra a documentação **mais recente** do app SIHCP Mobile, orga
 
 ---
 
-## 🆕 Documentação Atual (v2.29.5)
+## 🆕 Documentação Atual (`v2.29.8` — Build `84`)
 
 ### Visão Geral
-- [**DOCUMENTACAO_COMPLETA_APP_v2.29.5.md**](DOCUMENTACAO_COMPLETA_APP_v2.29.5.md) — Documento mestre consolidado (RECOMENDADO)
+- [**DOCUMENTACAO_COMPLETA_APP_v2.29.5.md**](DOCUMENTACAO_COMPLETA_APP_v2.29.5.md) — Documento mestre consolidado atualizado até `v2.29.8` (RECOMENDADO)
+- [**../REGISTRO_SOFTWARE_SIHCP_MOBILE/00_LEIA_ME_GUIA_REGISTRO_INPI.md**](../REGISTRO_SOFTWARE_SIHCP_MOBILE/00_LEIA_ME_GUIA_REGISTRO_INPI.md) — Pacote completo de Registro de Software (INPI / NIT-IFMT)
 
 ### Features e Correções Recentes
 - [**CONFIGURACAO_INICIAL_IP_SERVIDOR.md**](CONFIGURACAO_INICIAL_IP_SERVIDOR.md) — Tela de configuração inicial (v2.29.5)
@@ -63,6 +64,8 @@ Diretrizes obrigatórias para desenvolvimento:
 
 | Data | Documento | Mudança |
 |------|-----------|---------|
+| 13/11/2026 | DOCUMENTACAO_COMPLETA_APP_v2.29.5.md | Atualizado para v2.29.8 (Build 84): coleta forçada offline, limpeza total de 143 arquivos inutilizados (código morto e layouts órfãos), WebSocket Live e Dashboard Redesign |
+| 13/11/2026 | REGISTRO_SOFTWARE_SIHCP_MOBILE/ | Criada documentação completa para registro no INPI |
 | 22/05/2026 | DOCUMENTACAO_COMPLETA_APP_v2.29.5.md | Criado documento mestre |
 | 22/05/2026 | CONFIGURACAO_INICIAL_IP_SERVIDOR.md | Nova feature de setup inicial |
 | 22/05/2026 | CORRECAO_COLETA_EXCLUIDA_V2.29.5_HIBRIDA.md | Solução final híbrida |
@@ -89,6 +92,6 @@ Diretrizes obrigatórias para desenvolvimento:
 
 ---
 
-**Mantido por:** Equipe de Desenvolvimento SIHCP
-**Versão atual do app:** 2.29.5 (Build 81)
-**Última revisão:** 22/05/2026
+**Mantido por:** Equipe de Desenvolvimento SIHCP  
+**Versão atual do app:** `2.29.8` (Build `84`, `13/11/2026`)  
+**Última revisão documental:** `13/11/2026`
