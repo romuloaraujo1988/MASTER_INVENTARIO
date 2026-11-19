@@ -236,12 +236,6 @@ object ApiModule {
     
     @Provides
     @Singleton
-    fun provideSyncApi(retrofit: Retrofit): com.inventario.mobile.data.remote.api.SyncApi {
-        return retrofit.create(com.inventario.mobile.data.remote.api.SyncApi::class.java)
-    }
-    
-    @Provides
-    @Singleton
     fun provideOfflineSyncApi(retrofit: Retrofit): com.inventario.mobile.data.remote.api.OfflineSyncApi {
         return retrofit.create(com.inventario.mobile.data.remote.api.OfflineSyncApi::class.java)
     }

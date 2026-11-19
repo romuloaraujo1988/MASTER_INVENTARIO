@@ -2,9 +2,6 @@ package com.inventario.mobile.di
 
 import android.content.Context
 import com.inventario.mobile.data.pdf.PdfGenerator
-import com.inventario.mobile.data.repository.PdfRepositoryImpl
-import com.inventario.mobile.domain.repository.PdfRepository
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,27 +14,16 @@ import javax.inject.Singleton
  */
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class PdfModule {
-    
+object PdfModule {
+
     /**
-     * Bind PdfRepository para PdfRepositoryImpl
+     * Provê instância do PdfGenerator
      */
-    @Binds
+    @Provides
     @Singleton
-    abstract fun bindPdfRepository(
-        impl: PdfRepositoryImpl
-    ): PdfRepository
-    
-    companion object {
-        /**
-         * Provê instância do PdfGenerator
-         */
-        @Provides
-        @Singleton
-        fun providePdfGenerator(
-            @ApplicationContext context: Context
-        ): PdfGenerator {
-            return PdfGenerator(context)
-        }
+    fun providePdfGenerator(
+        @ApplicationContext context: Context
+    ): PdfGenerator {
+        return PdfGenerator(context)
     }
 }

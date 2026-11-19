@@ -16,7 +16,7 @@ import com.inventario.mobile.domain.usecase.BuscarSalasParaExportacaoUseCase
 import com.inventario.mobile.domain.usecase.GerarRelatorioUseCase
 import com.inventario.mobile.domain.usecase.NoDataException
 import com.inventario.mobile.presentation.state.RelatorioFotoState
-import com.inventario.mobile.util.NetworkChecker
+import com.inventario.mobile.utils.NetworkChecker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

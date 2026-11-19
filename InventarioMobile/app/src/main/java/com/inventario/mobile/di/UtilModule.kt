@@ -1,7 +1,7 @@
 package com.inventario.mobile.di
 
 import android.content.Context
-import com.inventario.mobile.util.NetworkChecker
+import com.inventario.mobile.utils.NetworkChecker
 import com.inventario.mobile.utils.PreferencesManager
 import com.inventario.mobile.utils.VibrationHelper
 import dagger.Module

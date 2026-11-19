@@ -626,25 +626,6 @@ object NotificationUtils {
     }
     
     /**
-     * Mostra notificação de sincronização bem-sucedida
-     * Usado pelo ColetaSyncWorker
-     */
-    fun showSyncSuccess(context: Context, stats: com.inventario.mobile.sync.SyncStats) {
-        val title = "Sincronização concluída"
-        val message = if (stats.failed > 0) {
-            "${stats.synced} coletas sincronizadas, ${stats.failed} falhas"
-        } else {
-            "${stats.synced} coletas sincronizadas com sucesso"
-        }
-        
-        showSyncCompletedNotification(
-            context = context,
-            success = true,
-            itemsCount = stats.synced
-        )
-    }
-    
-    /**
      * Mostra notificação de erro na sincronização
      * Usado pelo ColetaSyncWorker
      */

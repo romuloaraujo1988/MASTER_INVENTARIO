@@ -437,3 +437,8 @@ class GerarRelatorioUseCase @Inject constructor(
         )
     }
 }
+
+/**
+ * Exceção lançada quando não há dados disponíveis para exportar com os filtros selecionados.
+ */
+class NoDataException(message: String) : Exception(message)

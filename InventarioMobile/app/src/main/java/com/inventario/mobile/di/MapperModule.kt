@@ -2,8 +2,6 @@ package com.inventario.mobile.di
 
 import com.inventario.mobile.data.local.dao.PatrimonioDao
 import com.inventario.mobile.data.mapper.ColetaMapper
-import com.inventario.mobile.data.mapper.PatrimonioMapper
-import com.inventario.mobile.data.mapper.SalaMapper
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,18 +14,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object MapperModule {
-    
-    @Provides
-    @Singleton
-    fun providePatrimonioMapper(): PatrimonioMapper {
-        return PatrimonioMapper
-    }
-    
-    @Provides
-    @Singleton
-    fun provideSalaMapper(): SalaMapper {
-        return SalaMapper
-    }
     
     @Provides
     @Singleton

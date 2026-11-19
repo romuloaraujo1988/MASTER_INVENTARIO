@@ -122,7 +122,7 @@ REPRESENTATIVE_SOURCE_FILES = [
     ("Domínio — Contrato ColetaRepository", PKG_ROOT_DIR / "domain" / "repository" / "ColetaRepository.kt"),
     ("Domínio — Caso de Uso RegistrarColetaUseCase", PKG_ROOT_DIR / "domain" / "usecase" / "RegistrarColetaUseCase.kt"),
     ("Domínio — Caso de Uso SincronizarColetasPendentesUseCase", PKG_ROOT_DIR / "domain" / "usecase" / "SincronizarColetasPendentesUseCase.kt"),
-    ("Domínio — Caso de Uso SincronizarColetasDoServidorUseCase", PKG_ROOT_DIR / "domain" / "usecase" / "SincronizarColetasDoServidorUseCase.kt"),
+    ("Domínio — Caso de Uso BuscarColetasComFallbackUseCase", PKG_ROOT_DIR / "domain" / "usecase" / "BuscarColetasComFallbackUseCase.kt"),
     ("Dados — Repositório ColetaRepositoryImpl", PKG_ROOT_DIR / "data" / "repository" / "ColetaRepositoryImpl.kt"),
     ("Dados — Monitor ao Vivo WebSocket", PKG_ROOT_DIR / "data" / "realtime" / "RealtimeColetasManager.kt"),
     ("Dados — Gerador de Relatório PDF", PKG_ROOT_DIR / "data" / "pdf" / "PdfGenerator.kt"),

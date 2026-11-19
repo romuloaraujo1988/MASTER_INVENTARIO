@@ -4,7 +4,7 @@ import android.util.Log
 import com.inventario.mobile.data.local.dao.ColetaDao
 import com.inventario.mobile.data.model.Coleta
 import com.inventario.mobile.data.remote.api.ApiService
-import com.inventario.mobile.util.NetworkChecker
+import com.inventario.mobile.utils.NetworkChecker
 import com.inventario.mobile.utils.PreferencesManager
 import javax.inject.Inject
 
