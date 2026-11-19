@@ -24,12 +24,12 @@ No registro do INPI, **você NÃO envia o código-fonte ao INPI** — você info
 
 1. **Opção Padrão (já preenchida no Formulário 01):**
    - **Arquivo:** `04_Pacote_Codigo_Fonte_Guardado_INPI/SIHCP_Mobile_Documentacao_e_Codigo_Fonte_INPI.pdf`
-   - **SHA-512:** `0819a3f7e83dcc8397347ba74ea3007c3ffccd9fedeaa26070162c0b0dfdb44fe78abac42f5a95517483b4ca82e8394bc104d63b8cd685a2e6051dc89dbed1b7`
+   - **SHA-512:** `8180c598d1f5163778b6a2224a1aa2df327ee9b660e4ead41186224a02543aab703bf81c59c149e96cbe345e4cbdd96d8af6c11e081e3593c5263383d1ad1206`
    - *Vantagem:* formato padrão mais aceito pelos NITs universitários/federais, por conter capa, memorial, inventário e listagem de código em documento único e legível.
 
 2. **Opção Alternativa (Pacote ZIP integral com todo `src/main` + PDF):**
    - **Arquivo:** `04_Pacote_Codigo_Fonte_Guardado_INPI/SIHCP_Mobile_Codigo_Fonte_Completo_INPI.zip`
-   - **SHA-512:** `f4d6e4ac8fa490a5974a39e34ded58808ad54e24abd1c46d062ef4b7e34c78704b23acfc4eb1150f068aab5abcc70ba98a886eb3bf4b8f7be45955ef476b6f8b`
+   - **SHA-512:** `7e9214ea87292b72d93301ad9d66cde2b33761aaf1ba3070731debd8e449e2b8924d278940328cbc3026845f66ab75a253d22068606f16cc4d876513e638c5e4`
    - *Quando usar:* caso o NIT do IFMT solicite o hash calculado sobre o arquivo `.zip` completo contendo todos os XMLs e classes Kotlin. Basta copiar este hash para a linha *Resumo digital hash* do Formulário `01`.
 
 ---

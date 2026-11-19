@@ -5,7 +5,7 @@
 **Pacote Android:** `com.inventario.mobile`  
 **Titular:** Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso (IFMT)  
 **Autor Principal:** Romulo Rodrigues de Araujo  
-**Hash SHA-512 (PDF INPI):** `0819a3f7e83dcc8397347ba74ea3007c3ffccd9fedeaa26070162c0b0dfdb44fe78abac42f5a95517483b4ca82e8394bc104d63b8cd685a2e6051dc89dbed1b7`
+**Hash SHA-512 (PDF INPI):** `8180c598d1f5163778b6a2224a1aa2df327ee9b660e4ead41186224a02543aab703bf81c59c149e96cbe345e4cbdd96d8af6c11e081e3593c5263383d1ad1206`
 
 ---
 
@@ -27,15 +27,15 @@ O SIHCP Mobile (Sistema de Histórico e Coleta Patrimonial Mobile) é um aplicat
 | **Tempo Real** | WebSocket nativo `/ws-coletas-live` (`RealtimeColetasManager`) |
 | **Leitura Óptica** | ZXing 4.3.0 / Core 3.5.2 + CameraX 1.3.0 |
 | **Exportação** | PDF (iText 7.2.5), Excel (TSV/XLSX) e CSV |
-| **Métricas Verificadas** | 359 Kotlin em `src/main` (62,021 linhas) + 55 testes (`414` `.kt` totais) · 201 XML (15,392 linhas; 48 layouts) |
-| **Componentes** | 26 Activities · 8 Fragments · 22 ViewModels · 38 UseCases · 12/15 Repositories · 2 Workers |
+| **Métricas Verificadas** | 346 Kotlin em `src/main` (60,621 linhas) + 50 testes (`396` `.kt` totais) · 181 XML (15,083 linhas; 48 layouts) |
+| **Componentes** | 26 Activities · 8 Fragments · 22 ViewModels · 34 UseCases · 11/14 Repositories · 2 Workers |
 
 ## 3. Camadas Arquiteturais
 
 1. **Presentation (`presentation/*`):** 26 Activities, 8 Fragments, 22 ViewModels com `StateFlow`/`LiveData`, `DashboardUiMapper`, Paging 3 adapters e componentes reutilizáveis.
-2. **Domain (`domain/*`):** Modelos puros em Kotlin, 12 interfaces de repositório, `ColetaValidator` e 38 casos de uso de coleta, validação, sincronização, consulta e exportação.
-3. **Data (`data/*`):** `AppDatabase` v19 (10 entidades ativas, 11 DAOs ativos, 15 migrações), 12 APIs Retrofit, DTOs, mappers, cache em memória, `RealtimeColetasManager` e geradores de relatórios.
-4. **Infraestrutura (`security/*`, `network/*`, `worker/*`, `sync/*`, `di/*`):** 6 classes de segurança, 7 classes de monitoramento/interceptação de rede e 2 Workers em segundo plano (`ColetaSyncWorker` unificado via `SyncScheduler`).
+2. **Domain (`domain/*`):** Modelos puros em Kotlin, 11 interfaces de repositório, `ColetaValidator` e 34 casos de uso de coleta, validação, sincronização, consulta e exportação.
+3. **Data (`data/*`):** `AppDatabase` v19 (10 entidades ativas, 11 DAOs ativos, 15 migrações), 11 APIs Retrofit, DTOs, mappers, cache em memória, `RealtimeColetasManager` e geradores de relatórios.
+4. **Infraestrutura (`security/*`, `network/*`, `worker/*`, `sync/*`, `di/*`):** 5 classes de segurança, 7 classes de monitoramento/interceptação de rede e 2 Workers em segundo plano (`ColetaSyncWorker` unificado via `SyncScheduler`).
 
 ## 4. Conformidade Normativa
 

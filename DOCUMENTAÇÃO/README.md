@@ -64,7 +64,7 @@ Diretrizes obrigatórias para desenvolvimento:
 
 | Data | Documento | Mudança |
 |------|-----------|---------|
-| 13/11/2026 | DOCUMENTACAO_COMPLETA_APP_v2.29.5.md | Atualizado para v2.29.8 (Build 84): coleta forçada offline, limpeza total de 143 arquivos inutilizados (código morto e layouts órfãos), WebSocket Live e Dashboard Redesign |
+| 13/11/2026 | DOCUMENTACAO_COMPLETA_APP_v2.29.5.md | Atualizado para v2.29.8 (Build 84): coleta forçada offline, limpeza total de 181 arquivos inutilizados/redundantes (código morto, pacote `util/` duplicado e recursos XML órfãos), WebSocket Live e Dashboard Redesign |
 | 13/11/2026 | REGISTRO_SOFTWARE_SIHCP_MOBILE/ | Criada documentação completa para registro no INPI |
 | 22/05/2026 | DOCUMENTACAO_COMPLETA_APP_v2.29.5.md | Criado documento mestre |
 | 22/05/2026 | CONFIGURACAO_INICIAL_IP_SERVIDOR.md | Nova feature de setup inicial |

@@ -1,14 +1,14 @@
 # Comprovante de Resumo Digital Hash — INPI (SIHCP Mobile)
 
-**Data de Geração:** 13/11/2026 21:48:25  
+**Data de Geração:** 19/11/2026 11:30:41  
 **Programa:** SIHCP Mobile - Sistema de Histórico e Coleta Patrimonial Mobile (`2.29.8 (Build / versionCode 84)`)
 
 ## Resumos Digitais Calculados
 
 | Arquivo | Tamanho (bytes) | SHA-512 (Oficial INPI) | SHA-256 |
 |---|---:|---|---|
-| `SIHCP_Mobile_Documentacao_e_Codigo_Fonte_INPI.pdf` | 554,424 | `0819a3f7e83dcc8397347ba74ea3007c3ffccd9fedeaa26070162c0b0dfdb44fe78abac42f5a95517483b4ca82e8394bc104d63b8cd685a2e6051dc89dbed1b7` | `09edc7fe16c872930a3066fa4eee3bd380b9c1b9b7b1fa0ac2e0de1893401823` |
-| `SIHCP_Mobile_Codigo_Fonte_Completo_INPI.zip` | 2,173,613 | `f4d6e4ac8fa490a5974a39e34ded58808ad54e24abd1c46d062ef4b7e34c78704b23acfc4eb1150f068aab5abcc70ba98a886eb3bf4b8f7be45955ef476b6f8b` | `3257089696f1b936bbda50c3f2638699cfe663d9612463bb1e97a37f79707f74` |
+| `SIHCP_Mobile_Documentacao_e_Codigo_Fonte_INPI.pdf` | 554,842 | `8180c598d1f5163778b6a2224a1aa2df327ee9b660e4ead41186224a02543aab703bf81c59c149e96cbe345e4cbdd96d8af6c11e081e3593c5263383d1ad1206` | `948aa05531ae79d9e17c0b7c982ed32b8b9802cfad96d25b4895f13c590c0e22` |
+| `SIHCP_Mobile_Codigo_Fonte_Completo_INPI.zip` | 2,146,662 | `7e9214ea87292b72d93301ad9d66cde2b33761aaf1ba3070731debd8e449e2b8924d278940328cbc3026845f66ab75a253d22068606f16cc4d876513e638c5e4` | `db2b8bbddeafc7d81ed22711d14b1fc32535fe0bbaad15af1f4ce2630a9dca77` |
 
 ## Conferência no Windows PowerShell
 

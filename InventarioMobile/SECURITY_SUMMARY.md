@@ -51,7 +51,7 @@ Desde a série `v2.24.0+` (especificação `correcoes-seguranca`), todas as cama
 
 Estes itens permanecem mapeados em [SECURITY_REQUIREMENTS.md](SECURITY_REQUIREMENTS.md) caso a instituição deseje adotá-los em ciclos futuros:
 - **Certificate Pinning (`<pin-set>` / `CertificatePinner`):** aplicável quando o servidor institucional operar com domínio e certificado TLS fixos e gerenciados.
-- **Bloqueio por Tentativas Falhas e Política de Senha (`InputValidator.validatePassword`):** integração na UI de login e controle local de tentativas permanecem pendentes no backlog (`LoginAttemptManager` legado foi removido na limpeza de código morto).
+- **Bloqueio por Tentativas Falhas e Política de Senha:** integração na UI de login permanece no backlog (`LoginAttemptManager` e `InputValidator` legados foram removidos na limpeza de código morto para o hash INPI).
 - **Timeout por Inatividade, `FLAG_SECURE` e Detecção de Root / Play Integrity API.**
 
 ---

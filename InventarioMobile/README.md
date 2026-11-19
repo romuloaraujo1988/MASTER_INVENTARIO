@@ -43,12 +43,12 @@ com.inventario.mobile/
 ├── data/                           # Room v19 (dao, entity, database), Retrofit (api, dto),
 │                                   # mappers, repositories, paging, cache, export, pdf, realtime (WS)
 ├── di/                             # 13 módulos Hilt (ApiModule, DatabaseModule, RepositoryModule, ...)
-├── domain/                         # 27 modelos puros, 12 interfaces Repository, 38 UseCases, ColetaValidator
+├── domain/                         # 27 modelos puros, 11 interfaces Repository, 34 UseCases, ColetaValidator
 ├── network/                        # 7 classes (RefreshTokenInterceptor, OfflineFallbackInterceptor, Monitors...)
 ├── presentation/                   # 26 Activities, 8 Fragments, 22 ViewModels (@HiltViewModel), Mappers UI
-├── security/                       # 6 classes (SqlCipherKeyManager, KeystoreRecoveryActivity, Biometric, PIN...)
-├── sync/                           # SyncManager, SyncScheduler, SyncLogger, NetworkConnectivityObserver
-├── utils/                          # PreferencesManager, SessionManager, PhotoHelper, LegacyPhotoMigrator...
+├── security/                       # 5 classes (SqlCipherKeyManager, KeystoreRecoveryActivity, Biometric, PIN, LogSanitizer)
+├── sync/                           # SyncManager, SyncScheduler, SyncError, NetworkConnectivityObserver
+├── utils/                          # PreferencesManager, SessionManager, NetworkUtils, NetworkChecker, PhotoHelper...
 └── worker/                         # 2 Workers (ColetaSyncWorker e PhotoSyncWorker)
 ```
 

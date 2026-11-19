@@ -667,17 +667,17 @@ cd InventarioMobile
 
 | Métrica | Valor |
 |---------|-------|
-| **Arquivos Kotlin (`src/main`)** | `359` (`62.021` linhas) + `55` arquivos de teste (`414` totais) |
-| **Arquivos XML (`src/main`)** | `201` (`15.392` linhas; `48` layouts, `6` menus) |
+| **Arquivos Kotlin (`src/main`)** | `346` (`60.621` linhas) + `50` arquivos de teste (`396` totais) |
+| **Arquivos XML (`src/main`)** | `181` (`15.083` linhas; `48` layouts, `6` menus) |
 | **Activities** | `26` |
 | **Fragments** | `8` |
 | **ViewModels** | `22` |
-| **Use Cases** | `38` |
-| **Repositories (Domain / Data)** | `12` interfaces / `15` implementações |
+| **Use Cases** | `34` |
+| **Repositories (Domain / Data)** | `11` interfaces / `14` implementações |
 | **Workers** | `2` (`ColetaSyncWorker` e `PhotoSyncWorker`) |
 | **Entities / DAOs Room** | `10` ativas (`11` arquivos) / `11` ativos (`12` arquivos) |
 | **Migrações DB** | `15` (`v4` → `v19`) |
-| **Remote APIs (`data/remote/api`)** | `12` arquivos + WebSocket `/ws-coletas-live` |
+| **Remote APIs (`data/remote/api`)** | `11` arquivos + WebSocket `/ws-coletas-live` |
 | **Permissões no Manifesto** | `15` |
 
 ---
